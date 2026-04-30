@@ -2,4 +2,5 @@
 trigger: always_on
 ---
 
-Using pnpm
+Using pnpm for frontend
+Using npm for functions

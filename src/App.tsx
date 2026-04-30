@@ -9,6 +9,10 @@ import {
 /* ─── Data layer (in-memory or Firebase, sw via VITE_USE_FIREBASE) ─ */
 import useAppData, { USE_FIREBASE } from "./data/useAppData";
 
+/* ─── Cloud Functions ──────────────────────────────────────────── */
+import { httpsCallable } from "firebase/functions";
+import { functions } from "./firebase/config";
+
 /* ─── Utilities ────────────────────────────────────────────────── */
 import { countWorkdays, fmtDate } from "./utils/dateUtils";
 
@@ -87,26 +91,19 @@ export default function LeaveApp(){
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showManual, setShowManual] = useState(false);
 
-  // === LINE Bot integration (sends to backend → LINE Messaging API) ===
-  async function postToBackend(endpoint, payload){
-    try {
-      await fetch(endpoint, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify(payload),
-      });
-    } catch(e) {
-      console.warn("LINE notify failed (offline?):", e);
-    }
+  // === LINE Bot integration (via Cloud Functions) ===
+  const notifyAdvanceRequestFn = httpsCallable(functions, "notifyAdvanceRequest");
+  const notifyAdvanceApprovedFn = httpsCallable(functions, "notifyAdvanceApproved");
+  const notifyAdvanceRejectedFn = httpsCallable(functions, "notifyAdvanceRejected");
+
+  async function sendAdvanceRequestToLine(payload: Record<string, unknown>){
+    try { await notifyAdvanceRequestFn(payload); } catch(e) { console.warn("LINE notify failed:", e); }
   }
-  async function sendAdvanceRequestToLine(payload){
-    return postToBackend("/api/advance-request", payload);
+  async function notifyEmployeeApproved(payload: Record<string, unknown>){
+    try { await notifyAdvanceApprovedFn(payload); } catch(e) { console.warn("LINE notify failed:", e); }
   }
-  async function notifyEmployeeApproved(payload){
-    return postToBackend("/api/advance-approved", payload);
-  }
-  async function notifyEmployeeRejected(payload){
-    return postToBackend("/api/advance-rejected", payload);
+  async function notifyEmployeeRejected(payload: Record<string, unknown>){
+    try { await notifyAdvanceRejectedFn(payload); } catch(e) { console.warn("LINE notify failed:", e); }
   }
 
   async function submitAdvanceRequest({amount, reason, month}){

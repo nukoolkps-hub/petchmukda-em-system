@@ -1,7 +1,7 @@
 /* ─── Authentication ────────────────────────────────────────────
    Firebase Auth — รองรับ:
    ✅ Google Sign-in (พร้อมใช้)
-   🚧 LINE Login (ต้องมี backend ทำ Custom Token)
+   ✅ LINE Login (ผ่าน Cloud Function)
    ✅ Email/Password (สำหรับ admin)                                */
 
 import {
@@ -12,10 +12,13 @@ import {
   signOut as fbSignOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { auth } from "./config";
+import { httpsCallable } from "firebase/functions";
+import { auth, functions } from "./config";
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
+
+const lineAuthFn = httpsCallable(functions, "lineAuth");
 
 /* ─── Google Sign-in ────────────────────────────────────────── */
 export async function signInWithGoogle(){
@@ -50,12 +53,11 @@ export function startLineLogin({ channelId, redirectUri, state }){
 
 /**
  * ขั้นที่ 2: หลัง LINE redirect กลับมา (frontend callback page)
- * ส่ง code → backend → ได้ Firebase Custom Token → sign in
+ * ส่ง code → Cloud Function → ได้ Firebase Custom Token → sign in
  *
- * @param {string} backendUrl - เช่น "https://your-backend.railway.app"
  * @returns {Promise<User>}
  */
-export async function completeLineLogin(backendUrl){
+export async function completeLineLogin(){
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
   const state = params.get("state");
@@ -75,18 +77,10 @@ export async function completeLineLogin(backendUrl){
   }
   sessionStorage.removeItem("line_login_state");
 
-  // ส่ง code → backend
+  // ส่ง code → Cloud Function
   const redirectUri = window.location.origin + window.location.pathname;
-  const res = await fetch(`${backendUrl}/api/line-auth`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code, redirectUri }),
-  });
-  if(!res.ok){
-    const err = await res.json().catch(()=>({}));
-    throw new Error(err.error || "LINE auth failed");
-  }
-  const { customToken } = await res.json();
+  const result = await lineAuthFn({ code, redirectUri });
+  const { customToken } = result.data as { customToken: string };
 
   // Sign in ด้วย custom token
   return signInWithLineToken(customToken);

@@ -1,39 +1,24 @@
-/* ─── Admin Operations (calls backend) ───────────────────────
+/* ─── Admin Operations (via Cloud Functions) ─────────────────
    Custom Claims (admin role) ตั้งได้เฉพาะจาก Firebase Admin SDK
-   ดังนั้นต้องผ่าน backend                                       */
+   ดังนั้นต้องผ่าน Cloud Function                                  */
 
-import { auth } from "./config";
+import { httpsCallable } from "firebase/functions";
+import { auth, functions } from "./config";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const setAdminFn = httpsCallable(functions, "setAdmin");
 
 /**
  * Promote user เป็น admin
  * @param {string} uid - Firebase UID
  */
-export async function setAdminRole(uid, isAdmin = true){
+export async function setAdminRole(uid: string, isAdmin = true){
   const currentUser = auth.currentUser;
   if(!currentUser){
     throw new Error("ต้อง login ก่อน");
   }
 
-  // ส่ง ID token ของผู้เรียก → backend verify ว่าเป็น admin จริง
-  const idToken = await currentUser.getIdToken();
-
-  const res = await fetch(`${BACKEND_URL}/api/set-admin`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${idToken}`,
-    },
-    body: JSON.stringify({ uid, isAdmin }),
-  });
-
-  if(!res.ok){
-    const err = await res.json().catch(()=>({}));
-    throw new Error(err.error || "ตั้งสิทธิ์ admin ไม่สำเร็จ");
-  }
-
-  return res.json();
+  const result = await setAdminFn({ uid, isAdmin });
+  return result.data;
 }
 
 /**
