@@ -36,10 +36,20 @@ function makeSubscriptionHook<T>(subscribeFn: SubscribeFn<T>, defaultValue: T) {
         (newData) => {
           setData(newData);
           setLoading(false);
+          setError(null);
         },
         (err) => {
-          setError(err);
-          setLoading(false);
+          console.warn("[Firestore] subscription error (degrading gracefully):", err.message);
+          // For permission-denied errors, degrade gracefully
+          // (return default value instead of blocking the entire app)
+          if (err.message?.includes("permission") || err.message?.includes("allow")) {
+            setData(defaultValue);
+            setLoading(false);
+            // Don't propagate error — the hook will return default data
+          } else {
+            setError(err);
+            setLoading(false);
+          }
         }
       );
       return unsub;
