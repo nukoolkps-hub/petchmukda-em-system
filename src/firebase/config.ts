@@ -9,10 +9,10 @@
    3. รัน npm run dev                                              */
 
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getFunctions } from "firebase/functions";
-import { getStorage } from "firebase/storage";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
@@ -37,6 +37,22 @@ export const db  = getFirestore(app);
 export const auth = getAuth(app);
 export const functions = getFunctions(app);
 export const storage = getStorage(app);
+
+/* ─── Emulator connections (dev only) ──────────────────────────
+   เปิดอัตโนมัติตอน `npm run dev`
+   ปิดได้ด้วย VITE_USE_EMULATORS=false ใน .env.local
+   เปิดตอน production ได้ด้วย VITE_USE_EMULATORS=true (ไม่แนะนำ) */
+const useEmulators =
+  import.meta.env.VITE_USE_EMULATORS === "true" ||
+  (import.meta.env.VITE_USE_EMULATORS !== "false" && import.meta.env.DEV);
+
+if (useEmulators) {
+  console.log("🔧 Firebase Emulators: connecting to local emulators…");
+  connectFirestoreEmulator(db, "localhost", 8080);
+  connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+  connectFunctionsEmulator(functions, "localhost", 5001);
+  connectStorageEmulator(storage, "localhost", 9199);
+}
 
 /* ─── Collection paths (ใช้ที่นี่ที่เดียว) ────────────────────── */
 export const COLLECTIONS = {
