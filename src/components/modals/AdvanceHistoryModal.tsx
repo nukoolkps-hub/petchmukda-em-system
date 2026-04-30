@@ -3,7 +3,7 @@ import { TH_NUMBER } from "../../utils/format";
 
 /* ─── Advance History Modal ────────────────────────────────────── */
 export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
-  const list = [...(advanceRequests||[])].sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+  const list = [...(advanceRequests||[])].sort((a,b)=>new Date(b.submittedAt).getTime()-new Date(a.submittedAt).getTime());
   // group by month
   const grouped = {};
   list.forEach(r=>{

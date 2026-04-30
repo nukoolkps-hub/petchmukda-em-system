@@ -22,9 +22,10 @@ export async function signInWithGoogle(){
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user; // { uid, email, displayName, photoURL }
-  } catch(err){
+  } catch(err: unknown){
+    const e = err as { code?: string };
     console.error("[Auth] Google sign-in failed:", err);
-    throw new Error(err.code === "auth/popup-closed-by-user"
+    throw new Error(e.code === "auth/popup-closed-by-user"
       ? "ยกเลิกการลงชื่อเข้าใช้"
       : "ลงชื่อเข้าใช้ไม่สำเร็จ");
   }
@@ -43,7 +44,7 @@ export function startLineLogin({ channelId, redirectUri, state }){
   url.searchParams.set("state", state || crypto.randomUUID());
   url.searchParams.set("scope", "profile openid");
   // เก็บ state ใน sessionStorage เพื่อ verify ตอน callback
-  sessionStorage.setItem("line_login_state", url.searchParams.get("state"));
+  sessionStorage.setItem("line_login_state", url.searchParams.get("state") ?? "");
   window.location.href = url.toString();
 }
 
@@ -107,9 +108,10 @@ export async function signInWithEmail(email, password){
   try {
     const result = await signInWithEmailAndPassword(auth, email, password);
     return result.user;
-  } catch(err){
+  } catch(err: unknown){
+    const e = err as { code?: string };
     console.error("[Auth] Email sign-in failed:", err);
-    throw new Error(err.code === "auth/wrong-password" || err.code === "auth/user-not-found"
+    throw new Error(e.code === "auth/wrong-password" || e.code === "auth/user-not-found"
       ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
       : "ลงชื่อเข้าใช้ไม่สำเร็จ");
   }

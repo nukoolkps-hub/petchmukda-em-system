@@ -6,7 +6,7 @@ import { buildSalarySlipDocDef } from "./pdfBuilders/salarySlipPDF";
    • printSalarySlip()       → window.print() (เลือก Save as PDF เอง, bundle 0KB)
    • downloadSalarySlipPDF() → pdfmake (PDF text-searchable, lazy-loaded ~400KB) */
 
-function buildSalarySlipHTML({ profile, empInfo, empRole, data, calc, poolShare, selMonth, monthApprovedAdvances }, opts = {}) {
+function buildSalarySlipHTML({ profile, empInfo, empRole, data, calc, poolShare, selMonth, monthApprovedAdvances }: any, opts: { includePrintControls?: boolean } = {}) {
   if(!data || !calc) return null;
 
   // includePrintControls=true → มี banner + auto-print script
@@ -24,7 +24,7 @@ function buildSalarySlipHTML({ profile, empInfo, empRole, data, calc, poolShare,
   const NUM = (n) => Number(n||0).toLocaleString("th-TH");
 
   // ── สร้างรายการรายรับ ──
-  const earnRows = [];
+  const earnRows: { label: string; value: any }[] = [];
   earnRows.push({ label:"เงินเดือนพื้นฐาน", value:calc.baseSalary });
   if(calc.isSingle){
     if(calc.commSingle>0)
@@ -45,7 +45,7 @@ function buildSalarySlipHTML({ profile, empInfo, empRole, data, calc, poolShare,
     earnRows.push({ label:`โบนัสแห่งความขยัน(ไม่หยุด) (${calc.bonusDays} วัน × ฿${NUM(Math.round(calc.dayRate))})`, value:calc.attendBonus });
 
   // ── รายการหัก ──
-  const dedRows = [];
+  const dedRows: { label: string; value: any }[] = [];
   if(data.lateDeduction>0)
     dedRows.push({ label:"หักขาดงาน/มาสาย", value:data.lateDeduction });
   if(calc.advanceDed>0){
@@ -56,7 +56,7 @@ function buildSalarySlipHTML({ profile, empInfo, empRole, data, calc, poolShare,
   if(data.socialSecurity>0)
     dedRows.push({ label:"หักประกันสังคม", value:data.socialSecurity });
   if(calc.overQ>0){
-    let detail = [];
+    let detail: string[] = [];
     if(calc.wd>0) detail.push(`วันธรรมดา ${calc.wd} × ฿${NUM(Math.round(calc.dayRate))}`);
     if(calc.sun>0) detail.push(`วันอาทิตย์ ${calc.sun} × ฿${NUM(Math.round(calc.dayRate))} × 1.5`);
     dedRows.push({ label:`หักลาเกินโควต้า (${detail.join(" + ")})`, value:calc.overQ });

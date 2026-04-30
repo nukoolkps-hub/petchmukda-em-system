@@ -13,9 +13,9 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 /**
  * Validate file type and size
- * @returns {string|null} error message หรือ null ถ้าผ่าน
+ * @returns error message หรือ null ถ้าผ่าน
  */
-export function validateImageFile(file){
+export function validateImageFile(file: File): string | null {
   if(!file) return "ไม่พบไฟล์";
   if(!ALLOWED_TYPES.includes(file.type)){
     return "รองรับเฉพาะ JPG, PNG, WEBP, GIF";
@@ -26,18 +26,17 @@ export function validateImageFile(file){
   return null;
 }
 
+interface ResizeOptions {
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number;
+  maxBytes?: number;
+}
+
 /**
  * Resize image และ return เป็น base64 dataURL
- *
- * @param {File} file - input file
- * @param {Object} opts
- * @param {number} opts.maxWidth - ความกว้างสูงสุด (default 800)
- * @param {number} opts.maxHeight - ความสูงสูงสุด (default 800)
- * @param {number} opts.quality - JPEG quality 0-1 (default 0.85)
- * @param {number} opts.maxBytes - ถ้าเกิน → reduce quality อัตโนมัติ (default 700KB)
- * @returns {Promise<string>} base64 dataURL
  */
-export async function resizeImage(file, opts = {}){
+export async function resizeImage(file: File, opts: ResizeOptions = {}): Promise<string> {
   const {
     maxWidth = 800,
     maxHeight = 800,
@@ -58,7 +57,7 @@ export async function resizeImage(file, opts = {}){
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d")!;
   ctx.drawImage(img, 0, 0, width, height);
 
   // ลด quality จนกว่าจะใต้ maxBytes (max 4 รอบ)
@@ -87,7 +86,7 @@ export async function resizeImage(file, opts = {}){
 /**
  * Resize avatar (สี่เหลี่ยมจัตุรัส, เล็ก)
  */
-export async function resizeAvatar(file){
+export async function resizeAvatar(file: File): Promise<string> {
   return resizeImage(file, {
     maxWidth: 256,
     maxHeight: 256,
@@ -99,7 +98,7 @@ export async function resizeAvatar(file){
 /**
  * Resize slip (สลิปการโอน) — กว้างกว่า + คุณภาพดี
  */
-export async function resizeSlip(file){
+export async function resizeSlip(file: File): Promise<string> {
   return resizeImage(file, {
     maxWidth: 1000,
     maxHeight: 1400,
@@ -110,7 +109,7 @@ export async function resizeSlip(file){
 
 /* ─── Internal helpers ───────────────────────────────────────── */
 
-function loadImage(file){
+function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -126,7 +125,7 @@ function loadImage(file){
   });
 }
 
-function calculateDimensions(srcW, srcH, maxW, maxH){
+function calculateDimensions(srcW: number, srcH: number, maxW: number, maxH: number) {
   let width = srcW;
   let height = srcH;
   if(width > maxW){
@@ -141,14 +140,14 @@ function calculateDimensions(srcW, srcH, maxW, maxH){
 }
 
 /** Estimate decoded bytes from base64 string */
-function estimateBase64Bytes(dataUrl){
+function estimateBase64Bytes(dataUrl: string): number {
   // base64 strips ~33% overhead
   const base64 = dataUrl.split(",")[1] || "";
   return Math.ceil(base64.length * 0.75);
 }
 
 /* ─── Format byte count for display ────────────────────────── */
-export function formatBytes(bytes){
+export function formatBytes(bytes: number): string {
   if(bytes < 1024) return `${bytes} B`;
   if(bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)} KB`;
   return `${(bytes/1024/1024).toFixed(1)} MB`;

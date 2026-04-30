@@ -7,7 +7,7 @@ export default function RolesAdminPanel({ roles, setRoles, empDir, onUpdateEmpRo
   const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, icon}}
   const [newRole, setNewRole] = useState({ name:"", poolGroup:"", icon:"" });
   const [showAdd, setShowAdd] = useState(false);
-  const [confirmDel, setConfirmDel] = useState(null);
+  const [confirmDel, setConfirmDel] = useState<any>(null);
 
   function saveEdit(roleId){
     const e = editing[roleId];

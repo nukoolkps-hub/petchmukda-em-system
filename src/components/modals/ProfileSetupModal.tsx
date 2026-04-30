@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { C, EMOJI_LIST, TH_BANKS } from "../../constants";
 import { validateBankAccount, validateRequired } from "../../utils/validators";
 import AvatarCircle from "../shared/AvatarCircle";
+import Diamond from "../shared/Diamond";
 
 /* ─── Profile Setup Modal (first run / edit) ───────────────────── */
 export default function ProfileSetupModal({ initial, onSave, onClose }) {
@@ -14,7 +15,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
   const [nameErr, setNameErr] = useState("");
   const [avErr,   setAvErr]   = useState("");
   const [bankErr, setBankErr] = useState("");
-  const fileRef = useRef(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   // auto initials from name
   useEffect(()=>{
@@ -29,7 +30,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
     const file = e.target.files[0];
     if(!file) return;
     const reader = new FileReader();
-    reader.onload = ev => { setImg(ev.target.result); setAvType("image"); };
+    reader.onload = ev => { setImg((ev.target as FileReader).result as string); setAvType("image"); };
     reader.readAsDataURL(file);
   }
 
@@ -70,7 +71,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
 
         {/* preview */}
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
-          <AvatarCircle av={av||"?"} avType={avType} img={img} size={80} fontSize={24}
+          <AvatarCircle av={av||"?"} avType={avType} img={img} size={80} fontSize={24} border={`2px solid ${C.gold}40`}
             style={{boxShadow:`0 6px 20px ${C.gold}40`,marginBottom:10}}/>
           <div style={{fontSize:16,fontWeight:700,color:C.text}}>{name||"ชื่อของคุณ"}</div>
           <div style={{fontSize:13,color:C.textSoft,marginTop:2}}>ตำแหน่งกำหนดโดย Admin</div>
@@ -142,7 +143,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
                   <img src={img} alt="preview" style={{width:70,height:70,borderRadius:"50%",objectFit:"cover",border:`2px solid ${C.gold}`}}/>
                   <div style={{flex:1}}>
                     <div style={{fontSize:14,color:C.green,fontWeight:600,marginBottom:6}}>✓ อัปโหลดสำเร็จ</div>
-                    <button onClick={()=>fileRef.current.click()}
+                    <button onClick={()=>fileRef.current?.click()}
                       style={{padding:"8px 16px",borderRadius:10,border:`1.5px solid ${C.border}`,background:C.cream,
                         color:C.textMid,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                       เปลี่ยนรูป
@@ -150,7 +151,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
                   </div>
                 </div>
               ):(
-                <button onClick={()=>fileRef.current.click()}
+                <button onClick={()=>fileRef.current?.click()}
                   style={{width:"100%",padding:"20px",borderRadius:14,border:`2px dashed ${C.border}`,
                     background:C.cream,cursor:"pointer",fontFamily:"inherit",display:"flex",
                     flexDirection:"column",alignItems:"center",gap:8}}>

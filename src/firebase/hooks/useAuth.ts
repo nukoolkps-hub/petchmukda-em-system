@@ -3,19 +3,39 @@ import { useState, useEffect } from "react";
 import { onAuthChange } from "../auth";
 import { getEmployeeByLineId } from "../employees";
 
+interface AuthUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  provider: string | undefined;
+}
+
+interface AuthEmployee {
+  id: string;
+  [key: string]: any;
+}
+
+interface UseAuthReturn {
+  user: AuthUser | null;
+  employee: AuthEmployee | null;
+  isAdmin: boolean;
+  loading: boolean;
+  error: Error | null;
+  refreshClaims: () => Promise<void>;
+}
+
 /**
  * ติดตาม auth state + ดึง:
  * - employee record (จาก /employees collection)
  * - isAdmin (จาก custom claims)
- *
- * @returns {{ user, employee, isAdmin, loading, error }}
  */
-export default function useAuth(){
-  const [user, setUser]         = useState(null);
-  const [employee, setEmployee] = useState(null);
+export default function useAuth(): UseAuthReturn {
+  const [user, setUser]         = useState<AuthUser | null>(null);
+  const [employee, setEmployee] = useState<AuthEmployee | null>(null);
   const [isAdmin, setIsAdmin]   = useState(false);
   const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
+  const [error, setError]       = useState<Error | null>(null);
 
   useEffect(() => {
     const unsub = onAuthChange(async (firebaseUser) => {
@@ -48,7 +68,7 @@ export default function useAuth(){
         setEmployee(emp);
       } catch(err) {
         console.error("[useAuth]", err);
-        setError(err);
+        setError(err as Error);
       } finally {
         setLoading(false);
       }
@@ -66,4 +86,3 @@ export default function useAuth(){
 
   return { user, employee, isAdmin, loading, error, refreshClaims };
 }
-

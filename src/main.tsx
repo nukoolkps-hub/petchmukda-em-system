@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import LeaveApp from "./App.jsx";
-import ErrorBoundary from "./components/shared/ErrorBoundary.jsx";
+import LeaveApp from "./App";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <LeaveApp />

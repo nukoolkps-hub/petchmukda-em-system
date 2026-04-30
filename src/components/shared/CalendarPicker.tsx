@@ -8,8 +8,8 @@ export default function CalendarPicker({value,onChange,minDate,error}){
   const initD=value?new Date(value+"T00:00:00"):new Date();
   const [vy,setVy]=useState(initD.getFullYear());
   const [vm,setVm]=useState(initD.getMonth());
-  const ref=useRef(null);
-  useEffect(()=>{ const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);}; document.addEventListener("mousedown",h); return()=>document.removeEventListener("mousedown",h); },[]);
+  const ref=useRef<HTMLDivElement>(null);
+  useEffect(()=>{ const h=(e: MouseEvent)=>{if(ref.current&&!ref.current.contains(e.target as Node))setOpen(false);}; document.addEventListener("mousedown",h); return()=>document.removeEventListener("mousedown",h); },[]);
   useEffect(()=>{ if(value){const d=new Date(value+"T00:00:00");setVy(d.getFullYear());setVm(d.getMonth());} },[value]);
   const dim=new Date(vy,vm+1,0).getDate(),fd=new Date(vy,vm,1).getDay();
   const cells=[...Array(fd).fill(null),...Array.from({length:dim},(_,i)=>i+1)];

@@ -11,7 +11,7 @@ import AvatarCircle from "../shared/AvatarCircle";
 export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, advanceRequests, roles, payrollConfirms, setPayrollConfirms, showToast }) {
   const now = new Date();
   const [selMonth, setSelMonth] = useState(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`);
-  const [copiedAcc, setCopiedAcc] = useState(null);
+  const [copiedAcc, setCopiedAcc] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   function copyToClipboard(text, key){
@@ -78,9 +78,9 @@ export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, adv
   const totalAdvance = filtered.reduce((s,r)=>s+r.advanceTotal,0);
 
   // available months in salary data
-  const monthSet = new Set();
-  Object.values(salaryData).forEach(m=>Object.keys(m||{}).forEach(k=>monthSet.add(k)));
-  const months = [...monthSet].sort().reverse();
+  const monthSet = new Set<string>();
+  Object.values(salaryData).forEach(m=>Object.keys((m as Record<string, unknown>)||{}).forEach(k=>monthSet.add(k)));
+  const months: string[] = [...monthSet].sort().reverse();
   if(!months.includes(selMonth)) months.unshift(selMonth);
 
   return(

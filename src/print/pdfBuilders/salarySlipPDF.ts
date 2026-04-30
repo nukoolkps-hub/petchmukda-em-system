@@ -38,7 +38,7 @@ export function buildSalarySlipDocDef({ profile, empInfo, empRole, data, calc, p
   const bankAcc = empInfo?.bankAcc || profile?.bankAcc || "-";
 
   /* ─── สร้าง earnings rows ─────────────────────────────── */
-  const earnRows = [];
+  const earnRows: [string, string][] = [];
   earnRows.push(["เงินเดือนพื้นฐาน", num(calc.baseSalary)]);
   if(calc.isSingle){
     if(calc.commSingle > 0)
@@ -59,7 +59,7 @@ export function buildSalarySlipDocDef({ profile, empInfo, empRole, data, calc, p
     earnRows.push([`โบนัสแห่งความขยัน (${calc.bonusDays} วัน × ฿${NUM(Math.round(calc.dayRate))})`, num(calc.attendBonus)]);
 
   /* ─── สร้าง deductions rows ───────────────────────────── */
-  const dedRows = [];
+  const dedRows: [string, string][] = [];
   if(data.lateDeduction > 0)
     dedRows.push(["มาสาย / ขาดงาน", num(data.lateDeduction)]);
   if(calc.advanceDed > 0)

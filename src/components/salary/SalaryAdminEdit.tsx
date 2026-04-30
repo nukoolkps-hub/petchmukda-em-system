@@ -53,8 +53,8 @@ export default function SalaryAdminEdit({ empDir, salaryData, setSalaryData, all
 
   /* ─── Heavy computation: memoized ───────────────────────────────── */
   const { poolShare, poolGroupEmps, calc } = useMemo(() => {
-    let _poolShare = null;
-    let _poolGroupEmps = [];
+    let _poolShare: any = null;
+    let _poolGroupEmps: any[] = [];
     if(empRole?.poolGroup){
       _poolGroupEmps = empDir.filter(e=>{
         const r = roles.find(rl=>rl.id===e.roleId);
@@ -87,12 +87,14 @@ export default function SalaryAdminEdit({ empDir, salaryData, setSalaryData, all
   }
   function cancelAll(){ setDraft({}); }
 
-  const FIELDS_EARN = [
+  const FIELDS_EARN: { key: string; label: string; icon: string }[] = [
   ];
   const FIELDS_DED = [
     { key:"lateDeduction", label:"หักขาดงาน/มาสาย", icon:"⏰" },
     { key:"socialSecurity", label:"หักประกันสังคม", icon:"🏛" },
   ];
+
+  if(!calc) return <div style={{padding:20,color:C.textSoft,textAlign:"center"}}>ไม่มีข้อมูลเงินเดือน</div>;
 
   return (
     <div>

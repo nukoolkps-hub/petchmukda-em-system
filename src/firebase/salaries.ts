@@ -16,7 +16,7 @@ function monthRef(empId, ym){
 }
 
 /* ─── Subscribe to all salaries (all employees, all months) ────
-   ใช้ collectionGroup query — ดึง /salaries/*/months/* ทั้งหมด     */
+   ใช้ collectionGroup query — ดึง salaries/{empId}/months/{ym} ทั้งหมด */
 export function subscribeAllSalaries(onChange, onError){
   return onSnapshot(
     collectionGroup(db, "months"),

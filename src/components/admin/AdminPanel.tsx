@@ -34,10 +34,10 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
     window.addEventListener("beforeunload", handler);
     return ()=>window.removeEventListener("beforeunload", handler);
   },[unsavedDirty]);
-  const [confirmLeave,setConfirmLeave]=useState(null);
+  const [confirmLeave,setConfirmLeave]=useState<any>(null);
   const [filterEmp,setFilterEmp]=useState(""); const [filterType,setFilterType]=useState("");
   const [editingRole,setEditingRole]=useState({});
-  const [expandedEmpId,setExpandedEmpId]=useState(null);
+  const [expandedEmpId,setExpandedEmpId]=useState<string | null>(null);
   const [copiedLineId,setCopiedLineId]=useState(null);
 
   function copyLineId(text, empId){
@@ -61,7 +61,7 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
   const [selYear,setSelYear]=useState(`${now0.getFullYear()}`);
 
   const pastLeaves=allLeaves.filter(lv=>isPast(lv.end)).filter(lv=>!filterEmp||lv.empName.includes(filterEmp)).filter(lv=>!filterType||lv.type===filterType).sort((a,b)=>b.end.localeCompare(a.end));
-  const uniqueEmps=[...new Set(allLeaves.filter(lv=>isPast(lv.end)).map(lv=>lv.empName))];
+  const uniqueEmps: string[]=[...new Set(allLeaves.filter(lv=>isPast(lv.end)).map(lv=>lv.empName))] as string[];
 
   return(
     <div>
@@ -157,9 +157,9 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
         const now = new Date();
 
         // gather all unique employee names
-        const empNames = [...new Set(allLeaves.map(lv=>lv.empName))];
-        const months = [...new Set(allLeaves.map(lv=>lv.start.slice(0,7)))].sort().reverse();
-        const years  = [...new Set(allLeaves.map(lv=>lv.start.slice(0,4)))].sort().reverse();
+        const empNames: string[] = [...new Set(allLeaves.map(lv=>lv.empName))] as string[];
+        const months: string[] = ([...new Set(allLeaves.map(lv=>lv.start.slice(0,7)))] as string[]).sort().reverse();
+        const years: string[]  = ([...new Set(allLeaves.map(lv=>lv.start.slice(0,4)))] as string[]).sort().reverse();
 
         // count weekday vs sunday days in a leave entry
         function countByDayType(start, end){

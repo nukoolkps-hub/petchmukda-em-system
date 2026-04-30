@@ -24,7 +24,7 @@ export const ALL_LEAVES_INIT = [
 ];
 
 // employees directory (admin manages roles)
-const EMP_DIR_INIT = [
+export const EMP_DIR_INIT = [
   { id:"me", name:"นภัส สุขใจ",    role:"ฝ่ายบัญชี",   roleId:"accountant", av:"นส", avType:"text", img:null,
     bank:"ธนาคารกรุงไทย",    bankAcc:"456-7-89012-3", lineUserId:"U9999999999999999999999999999999",
     balance:{personal:15,sick:15}, used:{personal:0,sick:0},
@@ -58,7 +58,7 @@ const EMP_DIR_INIT = [
 ];
 
 /* ─── Salary data per employee per month (YYYY-MM) ──────────────── */
-const SALARY_INIT = {
+export const SALARY_INIT = {
   "me": {
     "2026-04": {
       base: 20000,
@@ -163,7 +163,7 @@ const SALARY_INIT = {
 };
 
 /* ─── Advance Requests (เบิกเงินล่วงหน้า) ────────────────────────── */
-const ADVANCE_REQUESTS_INIT = [
+export const ADVANCE_REQUESTS_INIT = [
   // นภัส (me — ฝ่ายบัญชี) — เบิก 1 ครั้ง อนุมัติแล้ว
   { id:1000, empId:"me", empName:"นภัส สุขใจ", amount:2500, reason:"ค่ารักษาพยาบาล", month:"2026-04",
     status:"approved", submittedAt:"2026-04-10T11:00:00.000Z", approvedAt:"2026-04-10T13:30:00.000Z", slipImg:null },

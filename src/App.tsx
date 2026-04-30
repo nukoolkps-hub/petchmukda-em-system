@@ -169,14 +169,14 @@ export default function LeaveApp(){
       });
     }
   }
-  const [errors,setErrors]       = useState({});
+  const [errors,setErrors]       = useState<Record<string, string>>({});
   const [histDetail,setHistDetail]= useState(null);
   const [toastMsg,setToastMsg]   = useState("");
   const [showPinModal,setShowPinModal] = useState(false);
   const [isAdmin,setIsAdmin]     = useState(false);
 
   // long-press — ใช้ CSS animation แทน interval ให้แม่นยำ
-  const holdTimer  = useRef(null);
+  const holdTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [holding,  setHolding]  = useState(false);
 
   function startHold(){
@@ -229,7 +229,7 @@ export default function LeaveApp(){
   const overLimit= remain!==null && days>remain;
 
   function validate(){
-    const e={};
+    const e: Record<string, string> ={};
     if(!form.type) e.type="กรุณาเลือกประเภทการลา";
     if(!form.startDate) e.startDate="กรุณาเลือกวันที่เริ่มลา";
     if(!form.endDate)   e.endDate="กรุณาเลือกวันที่สิ้นสุด";
@@ -265,7 +265,7 @@ export default function LeaveApp(){
     ...(salaryDisabled?[]:[{id:"salary",  label:"เงินเดือน",  icon:a=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:2} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" fill={a?C.gold+"30":"none"}/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5h.01M18 14.5h.01"/></svg>}]),
     ...(isAdmin?[{id:"admin",label:"Admin",icon:a=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill={a?C.maroon+"40":"none"}/></svg>}]:[]),
   ];
-  const pageTitle={home:null,request:"ยื่นคำขอลา",salary:"เงินเดือนของฉัน",admin:"จัดการรายการลา"};
+  const pageTitle: Record<string, string | null>={home:null,request:"ยื่นคำขอลา",salary:"เงินเดือนของฉัน",admin:"จัดการรายการลา"};
 
   /* ─── Loading & Error states (Firebase mode) ──────────────── */
   if(loading){

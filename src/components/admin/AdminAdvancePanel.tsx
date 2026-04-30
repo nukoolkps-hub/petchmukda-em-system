@@ -6,8 +6,8 @@ import AvatarCircle from "../shared/AvatarCircle";
 /* ─── Admin: Advance Requests Panel ────────────────────────────── */
 export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate }) {
   const [filter, setFilter] = useState("all");
-  const [confirmReject, setConfirmReject] = useState(null);
-  const [copiedAcc, setCopiedAcc] = useState(null); // request.id ที่เพิ่งกด copy
+  const [confirmReject, setConfirmReject] = useState<any>(null);
+  const [copiedAcc, setCopiedAcc] = useState<string | null>(null); // request.id ที่เพิ่งกด copy
 
   function copyToClipboard(text, reqId){
     if(!text) return;
@@ -30,14 +30,14 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
 
   const filtered = advanceRequests
     .filter(r=>filter==="all" ? true : r.status===filter)
-    .sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+    .sort((a,b)=>new Date(b.submittedAt).getTime()-new Date(a.submittedAt).getTime());
 
   function handleApproveSlip(reqId, file){
     const reader = new FileReader();
     reader.onload = ev => {
       onUpdate(reqId, {
         status:"approved",
-        slipImg: ev.target.result,
+        slipImg: (ev.target as FileReader).result,
         approvedAt: new Date().toISOString(),
       });
     };
@@ -60,7 +60,7 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
           {id:"rejected",label:"❌ ไม่อนุมัติ"},
         ].map(f=>(
           <button key={f.id} onClick={()=>setFilter(f.id)}
-            style={{padding:"7px 14px",borderRadius:20,border:"none",cursor:"pointer",fontFamily:"inherit",
+            style={{padding:"7px 14px",borderRadius:20,cursor:"pointer",fontFamily:"inherit",
               fontSize:12,fontWeight:600,whiteSpace:"nowrap",
               background:filter===f.id?C.maroon:C.cream,
               color:filter===f.id?C.goldLt:C.textMid,
@@ -167,7 +167,7 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
                     display:"flex",alignItems:"center",justifyContent:"center",gap:6,
                     boxShadow:`0 3px 10px ${C.gold}40`}}>
                     📤 อัปโหลดสลิป (อนุมัติ)
-                    <input type="file" accept="image/*" onChange={e=>{const f=e.target.files[0]; if(f) handleApproveSlip(req.id,f);}} style={{display:"none"}}/>
+                    <input type="file" accept="image/*" onChange={e=>{const f=e.target.files?.[0]; if(f) handleApproveSlip(req.id,f);}} style={{display:"none"}}/>
                   </label>
                 </div>
               )}
@@ -176,7 +176,7 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
                 <label style={{display:"block",padding:"10px 14px",borderRadius:10,border:`1.5px dashed ${C.gold}60`,
                   background:C.goldPale,color:C.maroon,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
                   📤 อัปโหลดสลิปย้อนหลัง
-                  <input type="file" accept="image/*" onChange={e=>{const f=e.target.files[0]; if(f) handleApproveSlip(req.id,f);}} style={{display:"none"}}/>
+                  <input type="file" accept="image/*" onChange={e=>{const f=e.target.files?.[0]; if(f) handleApproveSlip(req.id,f);}} style={{display:"none"}}/>
                 </label>
               )}
             </div>

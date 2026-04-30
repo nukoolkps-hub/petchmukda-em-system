@@ -27,7 +27,7 @@ export default function SalaryView({ profile, salaryData, allLeaves, empDir, adv
     const _approvedAdvanceTotal = _monthApprovedAdvances.reduce((s,r)=>s+r.amount,0);
 
     // Pool share — ถ้า role มี poolGroup
-    let _poolShare = null;
+    let _poolShare: any = null;
     if(empRole?.poolGroup){
       const groupEmps = empDir.filter(e=>{
         const r = roles.find(rl=>rl.id===e.roleId);
@@ -54,7 +54,7 @@ export default function SalaryView({ profile, salaryData, allLeaves, empDir, adv
   }, [profile, allLeaves, selMonth, advanceRequests, empRole, empDir, roles, salaryData, empInfo, data]);
 
   /* ─── PDF download handlers ─────────────────────────────────── */
-  const [pdfLoading, setPdfLoading] = useState(null); // null | "slip" | "cert"
+  const [pdfLoading, setPdfLoading] = useState<string | null>(null); // null | "slip" | "cert"
 
   async function handleDownloadSlipPDF(){
     if(!data || !calc){ alert("ไม่มีข้อมูลเงินเดือนเดือนนี้"); return; }
@@ -64,9 +64,9 @@ export default function SalaryView({ profile, salaryData, allLeaves, empDir, adv
         profile, empInfo, empRole, data, calc, poolShare,
         selMonth, monthApprovedAdvances,
       });
-    } catch(err){
+    } catch(err: unknown){
       console.error(err);
-      alert(err.message || "สร้าง PDF ไม่สำเร็จ — ลองใหม่อีกครั้ง");
+      alert((err as Error).message || "สร้าง PDF ไม่สำเร็จ — ลองใหม่อีกครั้ง");
     } finally {
       setPdfLoading(null);
     }
@@ -77,9 +77,9 @@ export default function SalaryView({ profile, salaryData, allLeaves, empDir, adv
     setPdfLoading("cert");
     try {
       await downloadSalaryCertificatePDF({ profile, empInfo, data });
-    } catch(err){
+    } catch(err: unknown){
       console.error(err);
-      alert(err.message || "สร้าง PDF ไม่สำเร็จ — ลองใหม่อีกครั้ง");
+      alert((err as Error).message || "สร้าง PDF ไม่สำเร็จ — ลองใหม่อีกครั้ง");
     } finally {
       setPdfLoading(null);
     }
@@ -99,7 +99,7 @@ export default function SalaryView({ profile, salaryData, allLeaves, empDir, adv
     printSalaryCertificate({ profile, empInfo, data });
   }
 
-  if(!data) {
+  if(!data || !calc) {
     const currentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
     return (
       <div>
@@ -307,7 +307,7 @@ export default function SalaryView({ profile, salaryData, allLeaves, empDir, adv
         <div style={{position:"relative"}}>
           <div style={{fontSize:13,color:C.goldLt+"AA"}}>เงินสุทธิที่ได้รับ</div>
           <div style={{display:"flex",alignItems:"baseline",gap:8,marginTop:4}}>
-            <span style={{fontSize:36,fontWeight:800,color:C.goldLt,letterSpacing:"-0.02em"}}>฿{TH_NUMBER(calc.net)}</span>
+            <span style={{fontSize:36,fontWeight:800,color:C.goldLt,letterSpacing:"-0.02em"}}>฿{TH_NUMBER(calc?.net ?? 0)}</span>
           </div>
           <div style={{display:"flex",gap:14,marginTop:14,paddingTop:14,borderTop:`1px solid ${C.goldLt}20`}}>
             <div>

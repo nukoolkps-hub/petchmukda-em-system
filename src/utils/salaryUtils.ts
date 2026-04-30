@@ -31,10 +31,10 @@ export function computePoolSharesForGroup({ groupEmpIds, salaryData, allLeaves, 
   if(!groupEmpIds||groupEmpIds.length===0) return {};
 
   // --- Step 0: คัดข้อมูลพื้นฐานของแต่ละคน ---
-  const sellPieces = {};   // ทั่วไป + พิเศษ ของตัวเอง
-  const buyPieces  = {};   // รับซื้อของตัวเอง
-  const totalLeave = {};   // วันหยุดรวม (ปกติ + อาทิตย์)
-  const poolExc    = {};
+  const sellPieces: Record<string, number> = {};   // ทั่วไป + พิเศษ ของตัวเอง
+  const buyPieces: Record<string, number>  = {};   // รับซื้อของตัวเอง
+  const totalLeave: Record<string, number> = {};   // วันหยุดรวม (ปกติ + อาทิตย์)
+  const poolExc: Record<string, string | null>    = {};
   groupEmpIds.forEach(empId=>{
     const sal = salaryData[empId]?.[ym];
     const emp = empDir.find(e=>e.id===empId);

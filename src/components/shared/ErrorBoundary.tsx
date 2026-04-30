@@ -5,8 +5,18 @@ import { C } from "../../constants";
    ดักจับ errors ทั้งหมดในระดับ React tree
    - แสดงหน้า fallback แทนที่จะ crash ทั้งแอป
    - log error ไป console (อนาคต: ส่งไป Sentry/LogRocket)             */
-export default class ErrorBoundary extends React.Component {
-  constructor(props){
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: React.ErrorInfo | null;
+}
+
+export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps){
     super(props);
     this.state = { hasError:false, error:null, errorInfo:null };
   }

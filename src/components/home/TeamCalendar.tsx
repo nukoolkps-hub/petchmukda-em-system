@@ -6,7 +6,7 @@ import AvatarCircle from "../shared/AvatarCircle";
 /* ─── Team Calendar ────────────────────────────────────────────── */
 export default function TeamCalendar({allLeaves,empDir}){
   const now=new Date();
-  const [vy,setVy]=useState(now.getFullYear()); const [vm,setVm]=useState(now.getMonth()); const [sel,setSel]=useState(TODAY);
+  const [vy,setVy]=useState(now.getFullYear()); const [vm,setVm]=useState(now.getMonth()); const [sel,setSel]=useState<string | null>(TODAY);
   function prevM(){if(vm===0){setVm(11);setVy(y=>y-1);}else setVm(m=>m-1);}
   function nextM(){if(vm===11){setVm(0);setVy(y=>y+1);}else setVm(m=>m+1);}
   const dim=new Date(vy,vm+1,0).getDate(),fd=new Date(vy,vm,1).getDay();

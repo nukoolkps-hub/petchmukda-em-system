@@ -56,7 +56,7 @@ export async function runSeed(){
 
   // 4. Salaries (nested: /salaries/{empId}/months/{ym})
   Object.entries(SALARY_INIT).forEach(([empId, months]) => {
-    Object.entries(months).forEach(([ym, data]) => {
+    Object.entries(months as Record<string, Record<string, unknown>>).forEach(([ym, data]) => {
       batch.set(
         doc(db, COLLECTIONS.SALARIES, empId, "months", ym),
         { ...data, createdAt: Date.now() }

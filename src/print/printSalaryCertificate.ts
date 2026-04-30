@@ -5,7 +5,7 @@ import { buildCertificateDocDef } from "./pdfBuilders/salaryCertificatePDF";
    • printSalaryCertificate()       → window.print() (เลือก Save as PDF)
    • downloadSalaryCertificatePDF() → pdfmake (PDF text-searchable)    */
 
-function buildCertificateHTML({ profile, empInfo, data, startDate }, opts = {}) {
+function buildCertificateHTML({ profile, empInfo, data, startDate }: any, opts: { includePrintControls?: boolean } = {}) {
   const empName = profile?.name || empInfo?.name || "-";
   const empRole = profile?.role || empInfo?.role || "-";
   const baseSalary = data?.base || 0;

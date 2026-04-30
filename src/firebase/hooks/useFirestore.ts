@@ -12,12 +12,23 @@ import { subscribeAdvances }        from "../advances";
 import { subscribeRoles }           from "../roles";
 import { subscribePayrollConfirms } from "../payrollConfirms";
 
+interface SubscriptionResult<T> {
+  data: T;
+  loading: boolean;
+  error: Error | null;
+}
+
+type SubscribeFn<T> = (
+  onChange: (data: T) => void,
+  onError?: (err: Error) => void,
+) => () => void;
+
 /* ─── Generic factory ────────────────────────────────────────── */
-function makeSubscriptionHook(subscribeFn, defaultValue=[]){
-  return function useSubscription(){
-    const [data, setData] = useState(defaultValue);
+function makeSubscriptionHook<T>(subscribeFn: SubscribeFn<T>, defaultValue: T) {
+  return function useSubscription(): SubscriptionResult<T> {
+    const [data, setData] = useState<T>(defaultValue);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
       setLoading(true);
@@ -39,11 +50,11 @@ function makeSubscriptionHook(subscribeFn, defaultValue=[]){
 }
 
 /* ─── Specific hooks ─────────────────────────────────────────── */
-export const useEmployees       = makeSubscriptionHook(subscribeEmployees, []);
-export const useLeaves          = makeSubscriptionHook(subscribeLeaves, []);
-export const useAdvances        = makeSubscriptionHook(subscribeAdvances, []);
-export const useRoles           = makeSubscriptionHook(subscribeRoles, []);
+export const useEmployees       = makeSubscriptionHook(subscribeEmployees, [] as any[]);
+export const useLeaves          = makeSubscriptionHook(subscribeLeaves, [] as any[]);
+export const useAdvances        = makeSubscriptionHook(subscribeAdvances, [] as any[]);
+export const useRoles           = makeSubscriptionHook(subscribeRoles, [] as any[]);
 
 // salaries และ payrollConfirms ใช้ object format
-export const useSalaries        = makeSubscriptionHook(subscribeAllSalaries, {});
-export const usePayrollConfirms = makeSubscriptionHook(subscribePayrollConfirms, {});
+export const useSalaries        = makeSubscriptionHook(subscribeAllSalaries, {} as Record<string, any>);
+export const usePayrollConfirms = makeSubscriptionHook(subscribePayrollConfirms, {} as Record<string, any>);
