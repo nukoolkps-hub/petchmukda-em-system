@@ -1,0 +1,204 @@
+/* ─── Seed data — Initial values for development ───────────────── */
+/* Production: replace with API calls or database. */
+
+export const ALL_LEAVES_INIT = [
+  // ── เดือนนี้ (เม.ย. 2569) ──
+  // กมลวรรณ — ลาธรรมดา 1 + อาทิตย์ 1 (ได้โบนัสหยุดน้อย แต่หักวันอาทิตย์)
+  { id:101, empId:"e1", empName:"กมลวรรณ สุขใจ", av:"กส", avType:"text", type:"personal", start:"2026-04-07", end:"2026-04-07", days:1, reason:"ธุระส่วนตัว",     submitted:"6 เม.ย. 2569 09:00" },
+  { id:102, empId:"e1", empName:"กมลวรรณ สุขใจ", av:"กส", avType:"text", type:"sick",     start:"2026-04-19", end:"2026-04-19", days:1, reason:"ไข้หวัด",           submitted:"18 เม.ย. 2569 08:30" },
+  // วิภา — ลา 2 ครั้ง พอดีโควต้า
+  { id:103, empId:"e2", empName:"วิภา รักดี",    av:"วร", avType:"text", type:"sick",     start:"2026-04-09", end:"2026-04-09", days:1, reason:"ไม่สบายท้อง",      submitted:"8 เม.ย. 2569 18:00" },
+  { id:104, empId:"e2", empName:"วิภา รักดี",    av:"วร", avType:"text", type:"personal", start:"2026-04-22", end:"2026-04-22", days:1, reason:"ไปทำเอกสาร",       submitted:"21 เม.ย. 2569 09:30" },
+  // ธนกร — ลา 1 ครั้ง
+  { id:105, empId:"e3", empName:"ธนกร มั่นคง",   av:"ธม", avType:"text", type:"personal", start:"2026-04-15", end:"2026-04-15", days:1, reason:"ประชุมต่างจังหวัด", submitted:"13 เม.ย. 2569 14:20" },
+  // ปิยะ — ลา 3 ครั้ง (เกินโควต้า)
+  { id:106, empId:"e5", empName:"ปิยะ เจริญงาม", av:"ปจ", avType:"text", type:"personal", start:"2026-04-03", end:"2026-04-03", days:1, reason:"ทำธุระ",            submitted:"2 เม.ย. 2569 19:00" },
+  { id:107, empId:"e5", empName:"ปิยะ เจริญงาม", av:"ปจ", avType:"text", type:"sick",     start:"2026-04-14", end:"2026-04-15", days:2, reason:"ป่วยเป็นไข้",       submitted:"13 เม.ย. 2569 22:00" },
+  { id:108, empId:"e5", empName:"ปิยะ เจริญงาม", av:"ปจ", avType:"text", type:"personal", start:"2026-04-28", end:"2026-04-28", days:1, reason:"งานครอบครัว",      submitted:"27 เม.ย. 2569 10:00" },
+  // นภัส (me) — ไม่ลาเลย → ได้โบนัสหยุดน้อยเต็ม
+
+  // ── เดือนที่แล้ว (มี.ค. 2569) ──
+  { id:201, empId:"e1", empName:"กมลวรรณ สุขใจ", av:"กส", avType:"text", type:"personal", start:"2026-03-12", end:"2026-03-12", days:1, reason:"ธุระส่วนตัว",     submitted:"11 มี.ค. 2569 16:00" },
+  { id:202, empId:"e2", empName:"วิภา รักดี",    av:"วร", avType:"text", type:"sick",     start:"2026-03-20", end:"2026-03-20", days:1, reason:"ไข้",               submitted:"19 มี.ค. 2569 21:00" },
+  { id:203, empId:"e3", empName:"ธนกร มั่นคง",   av:"ธม", avType:"text", type:"personal", start:"2026-03-05", end:"2026-03-06", days:2, reason:"ไปอบรม",           submitted:"3 มี.ค. 2569 11:30" },
+];
+
+// employees directory (admin manages roles)
+const EMP_DIR_INIT = [
+  { id:"me", name:"นภัส สุขใจ",    role:"ฝ่ายบัญชี",   roleId:"accountant", av:"นส", avType:"text", img:null,
+    bank:"ธนาคารกรุงไทย",    bankAcc:"456-7-89012-3", lineUserId:"U9999999999999999999999999999999",
+    balance:{personal:15,sick:15}, used:{personal:0,sick:0},
+    baseSalary:20000, ratePerPiece:35, ratePerPieceInvite:0, ratePerPieceTransfer:0 },
+  { id:"e1", name:"กมลวรรณ สุขใจ", role:"พนักงานขาย", roleId:"sales",       av:"กส", avType:"text", img:null,
+    bank:"ธนาคารกสิกรไทย",   bankAcc:"123-4-56789-0", lineUserId:"U1234567890abcdef1234567890abcdef",
+    balance:{personal:15,sick:15}, used:{personal:2,sick:1},
+    baseSalary:18000, ratePerPieceNormal:80,  ratePerPieceSpecial:150, ratePerPieceBuy:50, ratePerPieceInvite:30, ratePerPieceTransfer:20 },
+  { id:"e2", name:"วิภา รักดี",    role:"พนักงานขาย", roleId:"sales",       av:"วร", avType:"text", img:null,
+    bank:"ธนาคารกรุงเทพ",    bankAcc:"234-5-67890-1", lineUserId:"Uabcdef1234567890abcdef1234567890",
+    balance:{personal:15,sick:15}, used:{personal:2,sick:1},
+    baseSalary:16000, ratePerPieceNormal:60,  ratePerPieceSpecial:120, ratePerPieceBuy:40, ratePerPieceInvite:25, ratePerPieceTransfer:15 },
+  { id:"e6", name:"พิมพ์ใจ ทองดี", role:"พนักงานขาย", roleId:"sales",       av:"พท", avType:"text", img:null,
+    bank:"ธนาคารกสิกรไทย",   bankAcc:"678-9-01234-5", lineUserId:"",
+    balance:{personal:15,sick:15}, used:{personal:1,sick:0},
+    poolExclude:"buy",           // 🛍 Admin ปิดฝั่งรับซื้อ
+    baseSalary:16000, ratePerPieceNormal:70,  ratePerPieceSpecial:130, ratePerPieceBuy:45, ratePerPieceInvite:25, ratePerPieceTransfer:15 },
+  { id:"e7", name:"สมหญิง ใจเย็น", role:"พนักงานขาย", roleId:"sales",       av:"สญ", avType:"text", img:null,
+    bank:"ธนาคารออมสิน",     bankAcc:"789-0-12345-6", lineUserId:"",
+    balance:{personal:15,sick:15}, used:{personal:0,sick:1},
+    poolExclude:"both",        // 🔒 Admin ปิดสิทธิ์ Pool ทั้งคู่
+    baseSalary:15000, ratePerPieceNormal:65,  ratePerPieceSpecial:125, ratePerPieceBuy:42, ratePerPieceInvite:25, ratePerPieceTransfer:15 },
+  { id:"e3", name:"ธนกร มั่นคง",   role:"ผู้จัดการสาขา", roleId:"manager",  av:"ธม", avType:"text", img:null,
+    bank:"ธนาคารไทยพาณิชย์", bankAcc:"345-6-78901-2", lineUserId:"Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1",
+    balance:{personal:15,sick:15}, used:{personal:1,sick:1},
+    baseSalary:28000, ratePerPiece:120, ratePerPieceInvite:60, ratePerPieceTransfer:40 },
+  { id:"e5", name:"ปิยะ เจริญงาม", role:"ช่างทอง",      roleId:"goldsmith",  av:"ปจ", avType:"text", img:null,
+    bank:"ธนาคารกสิกรไทย",   bankAcc:"567-8-90123-4", lineUserId:"",
+    balance:{personal:15,sick:15}, used:{personal:2,sick:1},
+    baseSalary:22000, ratePerPiece:90, ratePerPieceInvite:0, ratePerPieceTransfer:0 },
+];
+
+/* ─── Salary data per employee per month (YYYY-MM) ──────────────── */
+const SALARY_INIT = {
+  "me": {
+    "2026-04": {
+      base: 20000,
+      pieces: 38,          // 38 × 35 = 1,330
+      piecesInvite: 0, piecesTransfer: 0,
+      lateDeduction: 0, socialSecurity: 750, note: "",
+    },
+    "2026-03": {
+      base: 20000, pieces: 32, piecesInvite:0, piecesTransfer:0,
+      lateDeduction:0, socialSecurity:750, note:"",
+    },
+    "2026-02": {
+      base: 20000, pieces: 28, piecesInvite:0, piecesTransfer:0,
+      lateDeduction:0, socialSecurity:750, note:"",
+    },
+    "2026-01": {
+      base: 20000, pieces: 35, piecesInvite:0, piecesTransfer:0,
+      lateDeduction:200, socialSecurity:750, note:"มาสายเช้า 4 ม.ค.",
+    },
+    "2025-12": {
+      base: 20000, pieces: 42, piecesInvite:0, piecesTransfer:0,
+      lateDeduction:0, socialSecurity:750, note:"โบนัสปีใหม่",
+    },
+    "2025-11": {
+      base: 19000, pieces: 30, piecesInvite:0, piecesTransfer:0,
+      lateDeduction:0, socialSecurity:750, note:"",
+    },
+    "2025-10": {
+      base: 19000, pieces: 27, piecesInvite:0, piecesTransfer:0,
+      lateDeduction:0, socialSecurity:750, note:"",
+    },
+    "2025-09": {
+      base: 19000, pieces: 25, piecesInvite:0, piecesTransfer:0,
+      lateDeduction:100, socialSecurity:750, note:"",
+    },
+  },
+  // ─── ตัวอย่างพนักงานขาย 4 คน — แสดง 4 กรณีของกฎ 80% ──
+  // กมลวรรณ = Top ทั้งขายและซื้อ ✅✅
+  "e1": {
+    "2026-04": {
+      base: 18000,
+      piecesNormal: 50,    // ขายทั่วไป
+      piecesSpecial: 10,   // ขายพิเศษ
+      // → ขายรวม 60 (Top)
+      piecesBuy: 40,       // รับซื้อ (Top)
+      piecesInvite: 14, piecesTransfer: 6,
+      lateDeduction: 0, socialSecurity: 750, note: "",
+    },
+  },
+  // วิภา = ผ่านทั้งคู่ ✅✅
+  "e2": {
+    "2026-04": {
+      base: 16000,
+      piecesNormal: 48,
+      piecesSpecial: 10,
+      // → ขายรวม 58 (96.7% ของ Top 60) ✅
+      piecesBuy: 35,       // (87.5% ของ Top 40) ✅
+      piecesInvite: 8, piecesTransfer: 4,
+      lateDeduction: 0, socialSecurity: 750, note: "",
+    },
+  },
+  // พิมพ์ใจ = ขายเก่ง รับซื้อน้อย → ผ่านขายเท่านั้น ✅❌
+  "e6": {
+    "2026-04": {
+      base: 16000,
+      piecesNormal: 50,
+      piecesSpecial: 8,
+      // → ขายรวม 58 (96.7%) ✅
+      piecesBuy: 20,       // (50% ของ Top 40) ❌
+      piecesInvite: 6, piecesTransfer: 3,
+      lateDeduction: 0, socialSecurity: 750, note: "",
+    },
+  },
+  // สมหญิง = ถูก Admin ปิดสิทธิ์ Pool + ขายน้อย → ไม่ได้เงินเดือนพื้นฐาน ❌🚫
+  "e7": {
+    "2026-04": {
+      base: 15000,
+      piecesNormal: 18,
+      piecesSpecial: 4,
+      // → ขายรวม 22 (36.7% ของ Top 60) ❌ < 50% ไม่ได้เงินเดือนพื้นฐาน
+      piecesBuy: 25,       // ไม่นับเพราะถูกปิดสิทธิ์อยู่แล้ว
+      piecesInvite: 4, piecesTransfer: 2,
+      lateDeduction: 0, socialSecurity: 750, note: "",
+    },
+  },
+  "e3": {
+    "2026-04": {
+      base: 28000,
+      pieces: 65,           // 65 × 120 = 7,800 (ผู้จัดการ — ค่าคอมแยก)
+      piecesInvite: 18, piecesTransfer: 9,
+      lateDeduction: 0, socialSecurity: 750, note: "",
+    },
+  },
+  "e5": {
+    "2026-04": {
+      base: 22000,
+      pieces: 42,           // 42 × 90 = 3,780 (ช่างทอง — ค่าคอมแยก)
+      piecesInvite: 0, piecesTransfer: 0,
+      lateDeduction: 500, socialSecurity: 750, note: "",
+    },
+  },
+};
+
+/* ─── Advance Requests (เบิกเงินล่วงหน้า) ────────────────────────── */
+const ADVANCE_REQUESTS_INIT = [
+  // นภัส (me — ฝ่ายบัญชี) — เบิก 1 ครั้ง อนุมัติแล้ว
+  { id:1000, empId:"me", empName:"นภัส สุขใจ", amount:2500, reason:"ค่ารักษาพยาบาล", month:"2026-04",
+    status:"approved", submittedAt:"2026-04-10T11:00:00.000Z", approvedAt:"2026-04-10T13:30:00.000Z", slipImg:null },
+
+  // กมลวรรณ — เดือนนี้ มี 2 รายการ (อนุมัติ 1, รออนุมัติ 1)
+  { id:1001, empId:"e1", empName:"กมลวรรณ สุขใจ", amount:3000, reason:"ค่ารักษาพยาบาล", month:"2026-04",
+    status:"approved", submittedAt:"2026-04-12T09:30:00.000Z", approvedAt:"2026-04-12T11:00:00.000Z", slipImg:null },
+  { id:1002, empId:"e1", empName:"กมลวรรณ สุขใจ", amount:2000, reason:"ค่าเล่าเรียนลูก", month:"2026-04",
+    status:"pending", submittedAt:"2026-04-25T14:20:00.000Z", slipImg:null },
+
+  // กมลวรรณ — เดือนที่แล้ว
+  { id:1003, empId:"e1", empName:"กมลวรรณ สุขใจ", amount:5000, reason:"ฉุกเฉิน — ซ่อมรถ", month:"2026-03",
+    status:"approved", submittedAt:"2026-03-18T10:00:00.000Z", approvedAt:"2026-03-18T15:30:00.000Z", slipImg:null },
+
+  // วิภา — รออนุมัติ
+  { id:1004, empId:"e2", empName:"วิภา รักดี", amount:1500, reason:"ค่าน้ำค่าไฟ", month:"2026-04",
+    status:"pending", submittedAt:"2026-04-26T19:45:00.000Z", slipImg:null },
+
+  // ธนกร — อนุมัติแล้ว
+  { id:1005, empId:"e3", empName:"ธนกร มั่นคง", amount:8000, reason:"ค่าหมอลูก", month:"2026-04",
+    status:"approved", submittedAt:"2026-04-08T08:15:00.000Z", approvedAt:"2026-04-08T09:00:00.000Z", slipImg:null },
+
+  // ปิยะ — ไม่อนุมัติ
+  { id:1006, empId:"e5", empName:"ปิยะ เจริญงาม", amount:10000, reason:"ลงทุนส่วนตัว", month:"2026-04",
+    status:"rejected", submittedAt:"2026-04-20T16:00:00.000Z", rejectedAt:"2026-04-20T17:00:00.000Z" },
+];
+
+/* ─── ตำแหน่งงาน (Roles config) ──────────────────────────────────
+   poolGroup:  ตำแหน่งใน group เดียวกัน → แชร์ Pool ค่าคอม
+               (รวมชิ้น แล้วแบ่งตามสัดส่วนวันทำงาน)
+   ตำแหน่งที่ไม่มี poolGroup (null)
+   → ใช้ Rate/ชิ้นเดียว (ค่าคอมแยก ใครขายใครได้)                       */
+export const ROLES_INIT = [
+  { id:"sales",     name:"พนักงานขาย",    poolGroup:"sales", icon:"💎" },
+  { id:"manager",   name:"ผู้จัดการสาขา", poolGroup:null,    icon:"👔" },
+  { id:"goldsmith", name:"ช่างทอง",        poolGroup:null,    icon:"🛠" },
+  { id:"accountant",name:"ฝ่ายบัญชี",     poolGroup:null,    icon:"📊" },
+];

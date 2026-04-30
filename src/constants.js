@@ -1,0 +1,90 @@
+/* ─── App-wide constants ─────────────────────────────────────────── */
+
+export const FONT_LINK = "https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap";
+export const ADMIN_PIN = "111111";
+
+export const C = {
+  maroon:"#7B1C1C", maroonDk:"#5C1212", maroonLt:"#9B3030",
+  gold:"#C9973A",   goldLt:"#E8C87A",   goldPale:"#F5E6C8",
+  cream:"#FDF8F0",  creamDk:"#F0E4CC",  white:"#FFFFFF",
+  text:"#2D1A0E",   textMid:"#7A5C3A",  textSoft:"#B89A72",
+  border:"#E8D5B0", red:"#C0392B",      redLt:"#FDECEA",
+  green:"#1A6B3A",  greenLt:"#E8F5EE",
+  amber:"#D97706",  amberLt:"#FEF3C7",
+};
+
+export const TH_MONTHS     = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+export const TH_DAYS_SHORT = ["อา","จ","อ","พ","พฤ","ศ","ส"];
+
+export const LEAVE_TYPES = [
+  { id:"personal", label:"ลากิจ",  icon:"💼", color:C.gold, colorLt:C.goldPale },
+  { id:"sick",     label:"ลาป่วย", icon:"🏥", color:C.red,  colorLt:C.redLt   },
+];
+
+export const EMOJI_LIST = [
+  "😊","😄","🙂","😎","🤩","🥰","😇","🤗","😏","🥳",
+  "👨‍💼","👩‍💼","👨‍⚕️","👩‍⚕️","👨‍🍳","👩‍🍳","👷","💁","🧑‍💻","👮",
+  "🧑‍🎨","🧑‍🏫","🦸","🦹","🧙","🧝","🧛","🐯","🦊","🐼",
+  "🌟","💎","🌺","🌸","🍀","🦋","🐉","👑","🎯","🔥",
+];
+
+/* ─── ธนาคารหลักในประเทศไทย ───────────────────────────────────── */
+export const TH_BANKS = [
+  { name:"ธนาคารกสิกรไทย",        short:"KBank",   emoji:"🟢" },
+  { name:"ธนาคารกรุงเทพ",          short:"BBL",     emoji:"🔵" },
+  { name:"ธนาคารกรุงไทย",          short:"KTB",     emoji:"🟦" },
+  { name:"ธนาคารไทยพาณิชย์",       short:"SCB",     emoji:"🟣" },
+  { name:"ธนาคารกรุงศรีอยุธยา",    short:"BAY",     emoji:"🟡" },
+  { name:"ธนาคารทหารไทยธนชาต",   short:"TTB",     emoji:"🟠" },
+  { name:"ธนาคารออมสิน",           short:"GSB",     emoji:"🩷" },
+  { name:"ธนาคาร ธ.ก.ส.",          short:"BAAC",    emoji:"🌾" },
+  { name:"ธนาคารอาคารสงเคราะห์",   short:"GHB",     emoji:"🏠" },
+  { name:"ธนาคารยูโอบี",            short:"UOB",     emoji:"🟦" },
+  { name:"ธนาคารซีไอเอ็มบี",       short:"CIMB",    emoji:"🔴" },
+  { name:"ธนาคารแลนด์ แอนด์ เฮ้าส์", short:"LH Bank", emoji:"🟧" },
+  { name:"ธนาคารไอซีบีซี",         short:"ICBC",    emoji:"🇨🇳" },
+  { name:"ธนาคารสแตนดาร์ดชาร์เตอร์ด",short:"SCBT", emoji:"🌐" },
+  { name:"ธนาคารทิสโก้",           short:"TISCO",   emoji:"💼" },
+  { name:"ธนาคารเกียรตินาคินภัทร",short:"KKP",     emoji:"💎" },
+  { name:"ธนาคารอิสลามแห่งประเทศไทย",short:"IBANK",emoji:"🕌" },
+];
+
+export const TODAY = (() => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+})();
+
+/* ─── Business rules (คอนฟิกของบริษัท) ─────────────────────────────
+   ค่าเหล่านี้คือ "สูตร/กฎของบริษัท" — แก้ที่นี่ที่เดียวจะปรับทุกที่
+   อนาคต: ย้ายไปเป็น settings ใน admin panel ให้แก้ผ่าน UI ได้     */
+export const BUSINESS_RULES = {
+  /** จำนวนวันต่อเดือน (สมมติให้คงที่ ใช้ในสูตร Pool) */
+  DAYS_PER_MONTH: 30,
+
+  /** โควต้าวันลาธรรมดา (ครั้ง/เดือน) — เกินจะถูกหัก */
+  WEEKDAY_LEAVE_QUOTA: 2,
+
+  /** ตัวคูณวันอาทิตย์ที่ลา (1.5 = 1.5 เท่าของ day rate) */
+  SUNDAY_LEAVE_MULTIPLIER: 1.5,
+
+  /** เกณฑ์ Pool — ขายต่ำกว่า 80% ของ Top → ตัดออกจาก Pool */
+  POOL_THRESHOLD: 0.80,
+
+  /** เกณฑ์เงินเดือนพื้นฐาน — poolExclude='both' + ขาย < 50% ของ Top → ไม่ได้เงินเดือนพื้นฐาน */
+  BASE_SALARY_THRESHOLD: 0.50,
+
+  /** เพดานการเบิกเงินล่วงหน้า — สูงสุดกี่ % ของเงินเดือนพื้นฐาน */
+  ADVANCE_LIMIT_PERCENT: 0.50,
+};
+
+/* ─── Validation patterns ─────────────────────────────────────────── */
+export const VALIDATION = {
+  /** LINE User ID: ต้องขึ้นต้น U + ตามด้วย hex 32 ตัว */
+  LINE_USER_ID_PATTERN: /^U[a-f0-9]{32}$/,
+
+  /** เลขบัญชีธนาคาร: ตัวเลข 9-15 หลัก (รวม dash) */
+  BANK_ACCOUNT_PATTERN: /^[\d-]{9,20}$/,
+
+  /** ขั้นต่ำเลขบัญชี (เลขเฉพาะ) */
+  BANK_ACCOUNT_MIN_DIGITS: 9,
+};

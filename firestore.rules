@@ -1,0 +1,80 @@
+// ╔═══════════════════════════════════════════════════════════════════╗
+// ║  Firestore Security Rules — copy ไปวางใน Firebase Console         ║
+// ║  https://console.firebase.google.com → Firestore → Rules         ║
+// ║                                                                  ║
+// ║  พื้นฐาน: ผู้ใช้ที่ login แล้วเท่านั้นที่อ่าน/เขียนได้             ║
+// ║  อนาคต: ทำ role-based access (admin/employee) ผ่าน custom claims ║
+// ╚═══════════════════════════════════════════════════════════════════╝
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper functions ────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // TODO: ตอนแรกใช้ true ก่อน — เพื่อความปลอดภัยในอนาคต
+      // ตั้ง custom claim "admin" ผ่าน Firebase Admin SDK
+      // return request.auth.token.admin == true;
+      return isSignedIn();
+    }
+
+    function isOwner(empId) {
+      // employee อ่าน/แก้ไขของตัวเองได้ (ตรวจ uid match กับ lineUserId)
+      return isSignedIn() && request.auth.uid == empId;
+    }
+
+    // ─── Employees ───────────────────────────────────────────────
+    // อ่าน: ทุกคนที่ login ได้
+    // เขียน: เฉพาะ admin
+    match /employees/{empId} {
+      allow read:   if isSignedIn();
+      allow write:  if isAdmin();
+    }
+
+    // ─── Leaves ──────────────────────────────────────────────────
+    // อ่าน: ทุกคนที่ login ได้ (ดูปฏิทินทีม)
+    // สร้าง: เจ้าของ (empId == auth.uid)
+    // แก้ไข/ลบ: admin หรือเจ้าของ
+    match /leaves/{leaveId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.empId == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.empId == request.auth.uid);
+    }
+
+    // ─── Salaries ────────────────────────────────────────────────
+    // อ่าน: เฉพาะเจ้าของ + admin
+    // เขียน: เฉพาะ admin
+    match /salaries/{empId}/months/{ym} {
+      allow read:   if isAdmin() || isOwner(empId);
+      allow write:  if isAdmin();
+    }
+
+    // ─── Advances ────────────────────────────────────────────────
+    // อ่าน: admin หรือเจ้าของ
+    // สร้าง: เจ้าของ
+    // อนุมัติ/ปฏิเสธ: admin
+    match /advances/{advanceId} {
+      allow read:   if isAdmin() || (isSignedIn() && resource.data.empId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.empId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Roles ───────────────────────────────────────────────────
+    // อ่าน: ทุกคน, เขียน: admin
+    match /roles/{roleId} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ─── Payroll Confirms ────────────────────────────────────────
+    // เฉพาะ admin
+    match /payrollConfirms/{key} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
