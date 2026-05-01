@@ -1,4 +1,4 @@
-import { C, LEAVE_TYPES } from "../../constants";
+import { LEAVE_TYPES } from "../../constants";
 import { fmtDate } from "../../utils/dateUtils";
 
 /* ─── Delete Confirm Modal ─────────────────────────────────────── */
@@ -6,29 +6,29 @@ export default function ConfirmModal({leave,onConfirm,onCancel}){
   if(!leave) return null;
   const lt=LEAVE_TYPES.find(t=>t.id===leave.type);
   return(
-    <div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",
-      background:"rgba(45,26,14,0.55)",backdropFilter:"blur(4px)",padding:"0 24px"}}>
-      <div style={{background:C.white,borderRadius:20,padding:"28px 24px",width:"100%",maxWidth:360,
-        boxShadow:"0 24px 60px rgba(45,26,14,0.3)",animation:"modalIn 0.2s cubic-bezier(.22,.68,0,1.2)"}}>
-        <div style={{width:56,height:56,borderRadius:"50%",background:C.redLt,
-          display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth="2.5" strokeLinecap="round">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-[4px] px-6">
+      <div className="bg-white rounded-[20px] px-6 py-7 w-full max-w-[360px] shadow-[0_24px_60px_rgba(45,26,14,0.3)] animate-[modalIn_0.2s_cubic-bezier(.22,.68,0,1.2)]">
+        <div className="w-14 h-14 rounded-full bg-red-lt flex items-center justify-center mx-auto mb-4">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-red)" strokeWidth="2.5" strokeLinecap="round">
             <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
             <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
           </svg>
         </div>
-        <div style={{fontWeight:700,fontSize:18,color:C.text,textAlign:"center",marginBottom:8}}>ลบรายการลานี้?</div>
-        <div style={{fontSize:14,color:C.textMid,textAlign:"center",marginBottom:20,lineHeight:1.8}}>
+        <div className="font-bold text-lg text-txt text-center mb-2">ลบรายการลานี้?</div>
+        <div className="text-sm text-txt-mid text-center mb-5 leading-[1.8]">
           <b>{leave.empName}</b><br/>
           {lt?.icon} {lt?.label} · {fmtDate(leave.start)}{leave.start!==leave.end?` – ${fmtDate(leave.end)}`:""}<br/>
-          <span style={{fontSize:13,color:C.textSoft}}>({leave.days} วันทำการ)</span>
+          <span className="text-[13px] text-txt-soft">({leave.days} วันทำการ)</span>
         </div>
-        <div style={{display:"flex",gap:10}}>
-          <button onClick={onCancel} style={{flex:1,padding:"13px",borderRadius:12,border:`1.5px solid ${C.border}`,
-            background:C.white,color:C.textMid,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>ยกเลิก</button>
-          <button onClick={onConfirm} style={{flex:1,padding:"13px",borderRadius:12,border:"none",
-            background:C.red,color:C.white,fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit",
-            boxShadow:`0 4px 12px ${C.red}50`}}>ลบรายการ</button>
+        <div className="flex gap-2.5">
+          <button onClick={onCancel}
+            className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-[15px] font-semibold cursor-pointer font-[inherit]">
+            ยกเลิก
+          </button>
+          <button onClick={onConfirm}
+            className="flex-1 p-3.5 rounded-xl border-none bg-red text-white text-[15px] font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_rgba(192,57,43,0.31)]">
+            ลบรายการ
+          </button>
         </div>
       </div>
     </div>

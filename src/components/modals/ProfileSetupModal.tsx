@@ -61,44 +61,38 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
   }
 
   return(
-    <div style={{position:"fixed",inset:0,zIndex:800,display:"flex",alignItems:"flex-end",justifyContent:"center",
-      background:"rgba(45,26,14,0.65)",backdropFilter:"blur(6px)"}}>
-      <div style={{background:C.white,borderRadius:"24px 24px 0 0",padding:"28px 24px 36px",width:"100%",maxWidth:430,
-        boxShadow:"0 -12px 40px rgba(45,26,14,0.25)",animation:"slideUp 0.3s cubic-bezier(.22,.68,0,1.1)",maxHeight:"92vh",overflowY:"auto"}}>
+    <div className="fixed inset-0 z-[800] flex items-end justify-center bg-[rgba(45,26,14,0.65)] backdrop-blur-[6px]">
+      <div className="bg-white rounded-t-3xl px-6 pt-7 pb-9 w-full max-w-[430px] shadow-[0_-12px_40px_rgba(45,26,14,0.25)] animate-[slideUp_0.3s_cubic-bezier(.22,.68,0,1.1)] max-h-[92vh] overflow-y-auto">
 
         {/* handle */}
-        <div style={{width:40,height:4,borderRadius:2,background:C.border,margin:"0 auto 20px"}}/>
+        <div className="w-10 h-1 rounded-sm bg-bdr mx-auto mb-5"/>
 
         {/* preview */}
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
+        <div className="flex flex-col items-center mb-6">
           <AvatarCircle av={av||"?"} avType={avType} img={img} size={80} fontSize={24} border={`2px solid ${C.gold}40`}
-            style={{boxShadow:`0 6px 20px ${C.gold}40`,marginBottom:10}}/>
-          <div style={{fontSize:16,fontWeight:700,color:C.text}}>{name||"ชื่อของคุณ"}</div>
-          <div style={{fontSize:13,color:C.textSoft,marginTop:2}}>ตำแหน่งกำหนดโดย Admin</div>
+            className="mb-2.5 shadow-gold-glow"/>
+          <div className="text-base font-bold text-txt">{name||"ชื่อของคุณ"}</div>
+          <div className="text-[13px] text-txt-soft mt-0.5">ตำแหน่งกำหนดโดย Admin</div>
         </div>
 
-        <div style={{width:"100%",height:1,background:C.border,marginBottom:20}}/>
+        <div className="w-full h-px bg-bdr mb-5"/>
 
         {/* name */}
-        <div style={{marginBottom:18}}>
-          <label style={{display:"block",fontSize:14,fontWeight:600,color:C.textMid,marginBottom:8}}>ชื่อ-นามสกุล</label>
+        <div className="mb-4.5">
+          <label className="block text-sm font-semibold text-txt-mid mb-2">ชื่อ-นามสกุล</label>
           <input value={name} onChange={e=>setName(e.target.value)} placeholder="กรอกชื่อ-นามสกุล"
-            style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`1.5px solid ${nameErr?C.red:C.border}`,
-              fontSize:15,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white}}/>
-          {nameErr&&<div style={{color:C.red,fontSize:12,marginTop:5}}>⚠ {nameErr}</div>}
+            className={`w-full px-4 py-3.5 rounded-xl text-[15px] outline-none font-[inherit] box-border text-txt bg-white border-[1.5px] ${nameErr ? "border-red" : "border-bdr"}`}/>
+          {nameErr&&<div className="text-red text-xs mt-1.5">⚠ {nameErr}</div>}
         </div>
 
         {/* avatar type tabs */}
-        <div style={{marginBottom:16}}>
-          <label style={{display:"block",fontSize:14,fontWeight:600,color:C.textMid,marginBottom:10}}>รูปโปรไฟล์</label>
-          <div style={{display:"flex",background:C.creamDk,borderRadius:12,padding:4,gap:2,marginBottom:16}}>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-txt-mid mb-2.5">รูปโปรไฟล์</label>
+          <div className="flex bg-cream-dk rounded-xl p-1 gap-0.5 mb-4">
             {[{id:"text",label:"✏️ ตัวอักษร"},{id:"emoji",label:"😊 Emoji"},{id:"image",label:"📷 รูปภาพ"}].map(t=>(
               <button key={t.id} onClick={()=>setAvType(t.id)}
-                style={{flex:1,padding:"9px 4px",borderRadius:9,border:"none",cursor:"pointer",fontFamily:"inherit",
-                  fontSize:12,fontWeight:600,transition:"all 0.2s",
-                  background:avType===t.id?C.white:"transparent",
-                  color:avType===t.id?C.maroon:C.textSoft,
-                  boxShadow:avType===t.id?"0 1px 6px rgba(90,30,10,0.10)":"none"}}>
+                className={`flex-1 py-2.5 px-1 rounded-[9px] border-none cursor-pointer font-[inherit] text-xs font-semibold transition-all
+                  ${avType===t.id ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}>
                 {t.label}
               </button>
             ))}
@@ -106,13 +100,13 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
 
           {/* text initials – auto generated, show preview only */}
           {avType==="text"&&(
-            <div style={{background:C.cream,borderRadius:12,padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:44,height:44,borderRadius:"50%",background:`linear-gradient(135deg,${C.gold},${C.goldLt})`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <span style={{color:C.white,fontWeight:800,fontSize:16,letterSpacing:"0.05em"}}>{av||"?"}</span>
+            <div className="bg-cream rounded-xl px-4 py-3 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-full bg-linear-135 from-gold to-gold-lt flex items-center justify-center shrink-0">
+                <span className="text-white font-extrabold text-base tracking-wide">{av||"?"}</span>
               </div>
               <div>
-                <div style={{fontSize:14,fontWeight:600,color:C.text}}>ตัวย่อ: <b>{av||"—"}</b></div>
-                <div style={{fontSize:12,color:C.textSoft,marginTop:2}}>ระบบสร้างอัตโนมัติจากชื่อ</div>
+                <div className="text-sm font-semibold text-txt">ตัวย่อ: <b>{av||"—"}</b></div>
+                <div className="text-xs text-txt-soft mt-0.5">ระบบสร้างอัตโนมัติจากชื่อ</div>
               </div>
             </div>
           )}
@@ -120,13 +114,12 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
           {/* emoji grid */}
           {avType==="emoji"&&(
             <div>
-              <div style={{fontSize:13,color:C.textSoft,marginBottom:8}}>เลือก Emoji</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:7,maxHeight:240,overflowY:"auto",paddingRight:2}}>
+              <div className="text-[13px] text-txt-soft mb-2">เลือก Emoji</div>
+              <div className="grid grid-cols-5 gap-[7px] max-h-60 overflow-y-auto pr-0.5">
                 {EMOJI_LIST.map(e=>(
                   <button key={e} onClick={()=>setAv(e)}
-                    style={{height:50,borderRadius:12,border:`2px solid ${av===e?C.gold:C.border}`,
-                      background:av===e?C.goldPale:C.white,fontSize:24,cursor:"pointer",
-                      boxShadow:av===e?`0 2px 8px ${C.gold}40`:"none",transition:"all 0.15s"}}>
+                    className={`h-[50px] rounded-xl text-2xl cursor-pointer transition-all duration-150 border-2
+                      ${av===e ? "border-gold bg-gold-pale shadow-[0_2px_8px_var(--color-gold)/0.25]" : "border-bdr bg-white shadow-none"}`}>
                     {e}
                   </button>
                 ))}
@@ -137,88 +130,76 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
           {/* image upload */}
           {avType==="image"&&(
             <div>
-              <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{display:"none"}}/>
+              <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden"/>
               {img?(
-                <div style={{display:"flex",alignItems:"center",gap:14}}>
-                  <img src={img} alt="preview" style={{width:70,height:70,borderRadius:"50%",objectFit:"cover",border:`2px solid ${C.gold}`}}/>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:14,color:C.green,fontWeight:600,marginBottom:6}}>✓ อัปโหลดสำเร็จ</div>
+                <div className="flex items-center gap-3.5">
+                  <img src={img} alt="preview" className="w-[70px] h-[70px] rounded-full object-cover border-2 border-gold"/>
+                  <div className="flex-1">
+                    <div className="text-sm text-green font-semibold mb-1.5">✓ อัปโหลดสำเร็จ</div>
                     <button onClick={()=>fileRef.current?.click()}
-                      style={{padding:"8px 16px",borderRadius:10,border:`1.5px solid ${C.border}`,background:C.cream,
-                        color:C.textMid,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                      className="px-4 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream text-txt-mid text-[13px] font-semibold cursor-pointer font-[inherit]">
                       เปลี่ยนรูป
                     </button>
                   </div>
                 </div>
               ):(
                 <button onClick={()=>fileRef.current?.click()}
-                  style={{width:"100%",padding:"20px",borderRadius:14,border:`2px dashed ${C.border}`,
-                    background:C.cream,cursor:"pointer",fontFamily:"inherit",display:"flex",
-                    flexDirection:"column",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:32}}>📷</span>
-                  <span style={{fontSize:14,fontWeight:600,color:C.textMid}}>แตะเพื่ออัปโหลดรูปภาพ</span>
-                  <span style={{fontSize:12,color:C.textSoft}}>JPG, PNG รองรับ</span>
+                  className="w-full p-5 rounded-[14px] border-2 border-dashed border-bdr bg-cream cursor-pointer font-[inherit] flex flex-col items-center gap-2">
+                  <span className="text-[32px]">📷</span>
+                  <span className="text-sm font-semibold text-txt-mid">แตะเพื่ออัปโหลดรูปภาพ</span>
+                  <span className="text-xs text-txt-soft">JPG, PNG รองรับ</span>
                 </button>
               )}
             </div>
           )}
-          {avErr&&<div style={{color:C.red,fontSize:12,marginTop:8}}>⚠ {avErr}</div>}
+          {avErr&&<div className="text-red text-xs mt-2">⚠ {avErr}</div>}
         </div>
 
         {/* ── Bank info section ── */}
-        <div style={{marginBottom:16,paddingTop:16,borderTop:`1px dashed ${C.border}`}}>
-          <label style={{display:"flex",alignItems:"center",gap:8,fontSize:14,fontWeight:600,color:C.textMid,marginBottom:10}}>
+        <div className="mb-4 pt-4 border-t border-dashed border-bdr">
+          <label className="flex items-center gap-2 text-sm font-semibold text-txt-mid mb-2.5">
             🏦 บัญชีธนาคารสำหรับรับเงินเดือน
-            <span style={{fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:20,background:C.cream,color:C.textSoft,marginLeft:"auto",border:`1px solid ${C.border}`}}>ไม่บังคับ</span>
+            <span className="text-[10px] font-semibold py-0.5 px-[7px] rounded-full bg-cream text-txt-soft ml-auto border border-bdr">ไม่บังคับ</span>
           </label>
 
           {/* bank dropdown */}
-          <label style={{display:"block",fontSize:12,color:C.textSoft,fontWeight:600,marginBottom:5}}>ธนาคาร</label>
-          <div style={{position:"relative",marginBottom:10}}>
+          <label className="block text-xs text-txt-soft font-semibold mb-1">ธนาคาร</label>
+          <div className="relative mb-2.5">
             <select value={bank} onChange={e=>setBank(e.target.value)}
-              style={{width:"100%",padding:"12px 38px 12px 16px",borderRadius:12,border:`1.5px solid ${bankErr?C.red:C.border}`,
-                fontSize:15,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:bank?C.text:C.textSoft,
-                background:bank?C.goldPale+"50":C.white,appearance:"none",cursor:"pointer",
-                fontWeight:bank?600:400}}>
+              className={`w-full py-3 pr-10 pl-4 rounded-xl text-[15px] outline-none font-[inherit] box-border appearance-none cursor-pointer border-[1.5px]
+                ${bankErr ? "border-red" : "border-bdr"}
+                ${bank ? "text-txt bg-gold-pale/30 font-semibold" : "text-txt-soft bg-white font-normal"}`}>
               <option value="">— เลือกธนาคาร —</option>
               {TH_BANKS.map(b=>(
                 <option key={b.name} value={b.name}>{b.emoji} {b.name}{b.short?`  (${b.short})`:""}</option>
               ))}
             </select>
-            <svg style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",pointerEvents:"none"}}
-              width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textSoft} strokeWidth="2.5" strokeLinecap="round">
+            <svg className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+              width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-txt-soft)" strokeWidth="2.5" strokeLinecap="round">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
           </div>
 
           {/* account number */}
-          <label style={{display:"block",fontSize:12,color:C.textSoft,fontWeight:600,marginBottom:5}}>เลขที่บัญชี</label>
+          <label className="block text-xs text-txt-soft font-semibold mb-1">เลขที่บัญชี</label>
           <input value={bankAcc} onChange={e=>setBankAcc(e.target.value)} placeholder="เช่น 123-4-56789-0"
-            style={{width:"100%",padding:"12px 16px",borderRadius:12,border:`1.5px solid ${bankErr?C.red:C.border}`,
-              fontSize:15,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,
-              letterSpacing:"0.04em"}}/>
+            className={`w-full px-4 py-3 rounded-xl text-[15px] outline-none font-[inherit] box-border text-txt bg-white tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"}`}/>
 
-          {bankErr&&<div style={{color:C.red,fontSize:12,marginTop:6}}>⚠ {bankErr}</div>}
+          {bankErr&&<div className="text-red text-xs mt-1.5">⚠ {bankErr}</div>}
         </div>
 
-        <button onClick={save} style={{width:"100%",padding:"16px",marginTop:8,
-          background:`linear-gradient(135deg,${C.gold},${C.goldLt})`,
-          color:C.maroonDk,border:"none",borderRadius:14,fontSize:17,fontWeight:700,
-          cursor:"pointer",fontFamily:"inherit",boxShadow:`0 6px 20px ${C.gold}40`,
-          display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+        <button onClick={save}
+          className="w-full p-4 mt-2 bg-linear-135 from-gold to-gold-lt text-maroon-dk border-none rounded-[14px] text-[17px] font-bold cursor-pointer font-[inherit] shadow-[0_6px_20px_rgba(201,151,58,0.25)] flex items-center justify-center gap-2">
           <Diamond size={16} color={C.maroonDk}/>
           {initial ? "บันทึกการเปลี่ยนแปลง" : "เริ่มใช้งาน"}
         </button>
         {initial && onClose && (
-          <button onClick={onClose} style={{width:"100%",padding:"13px",marginTop:10,
-            background:"none",border:`1.5px solid ${C.border}`,borderRadius:14,
-            fontSize:15,fontWeight:600,color:C.textSoft,cursor:"pointer",fontFamily:"inherit"}}>
+          <button onClick={onClose}
+            className="w-full p-3.5 mt-2.5 bg-transparent border-[1.5px] border-bdr rounded-[14px] text-[15px] font-semibold text-txt-soft cursor-pointer font-[inherit]">
             ยกเลิก
           </button>
         )}
       </div>
-      <style>{`@keyframes slideUp{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}`}</style>
     </div>
   );
 }
-

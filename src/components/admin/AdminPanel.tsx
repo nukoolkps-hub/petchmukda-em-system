@@ -66,11 +66,11 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
   return(
     <div>
       {/* admin badge */}
-      <div style={{display:"flex",alignItems:"center",gap:12,background:`linear-gradient(135deg,${C.maroon},${C.maroonLt})`,borderRadius:14,padding:"14px 16px",marginBottom:16,boxShadow:`0 4px 14px ${C.maroon}40`}}>
-        <div style={{width:40,height:40,borderRadius:12,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div className="flex items-center gap-3 bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-4 py-3.5 mb-4 shadow-maroon-glow">
+        <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.goldLt} strokeWidth="2" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <div style={{flex:1}}><div style={{color:C.goldLt,fontWeight:700,fontSize:16}}>โหมดผู้ดูแลระบบ</div></div>
+        <div className="flex-1"><div className="text-gold-lt font-bold text-base">โหมดผู้ดูแลระบบ</div></div>
         <button onClick={()=>{
           if(unsavedDirty){
             const ok = window.confirm("⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากออก ข้อมูลที่แก้ไขจะหายไป\n\nต้องการออกจากโหมด Admin ใช่ไหม?");
@@ -78,11 +78,11 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
             setUnsavedDirty(false);
           }
           onLogout();
-        }} style={{padding:"7px 14px",borderRadius:10,border:`1px solid ${C.goldLt}50`,background:"rgba(255,255,255,0.12)",color:C.goldLt,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>ออก</button>
+        }} className="px-3.5 py-[7px] rounded-[10px] bg-white/12 text-gold-lt text-[13px] font-semibold cursor-pointer font-[inherit] border border-[#E8C87A50]">ออก</button>
       </div>
 
       {/* section tabs — grouped by category */}
-      <div style={{background:C.creamDk,borderRadius:14,padding:10,marginBottom:18,display:"flex",flexDirection:"column",gap:10}}>
+      <div className="bg-cream-dk rounded-[14px] p-2.5 mb-[18px] flex flex-col gap-2.5">
         {[
           { cat:"งานลา", icon:"📅", color:C.maroon, items:[
             {id:"summary",label:"สรุปการลา",icon:"📊"},
@@ -99,27 +99,22 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
           ]},
         ].map(group=>(
           <div key={group.cat}>
-            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6,padding:"0 4px"}}>
-              <span style={{fontSize:11}}>{group.icon}</span>
-              <span style={{fontSize:11,fontWeight:700,color:group.color,letterSpacing:"0.02em"}}>{group.cat}</span>
-              <div style={{flex:1,height:1,background:`linear-gradient(to right, ${group.color}30, transparent)`}}/>
+            <div className="flex items-center gap-1.5 mb-1.5 px-1">
+              <span className="text-[11px]">{group.icon}</span>
+              <span className="text-[11px] font-bold tracking-[0.02em]" style={{color:group.color}}>{group.cat}</span>
+              <div className="flex-1 h-px" style={{background:`linear-gradient(to right, ${group.color}30, transparent)`}}/>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:`repeat(${group.items.length}, 1fr)`,gap:5}}>
+            <div className="grid gap-[5px]" style={{gridTemplateColumns:`repeat(${group.items.length}, 1fr)`}}>
               {group.items.map(s=>{
                 const pendingCount = s.id==="advance" ? (advanceRequests||[]).filter(r=>r.status==="pending").length : 0;
                 const active = section===s.id;
                 return (
                   <button key={s.id} onClick={()=>tryChangeSection(s.id)}
-                    style={{padding:"9px 6px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"inherit",
-                      fontSize:12,fontWeight:600,transition:"all 0.2s",
-                      background:active?C.white:"transparent",
-                      color:active?C.maroon:C.textSoft,
-                      boxShadow:active?"0 1px 6px rgba(90,30,10,0.10)":"none",
-                      display:"flex",alignItems:"center",justifyContent:"center",gap:5,position:"relative",whiteSpace:"nowrap"}}>
-                    <span style={{fontSize:14}}>{s.icon}</span>
+                    className={`px-1.5 py-[9px] rounded-[10px] border-none cursor-pointer font-[inherit] text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-[5px] relative whitespace-nowrap ${active?"bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]":"bg-transparent text-txt-soft"}`}>
+                    <span className="text-sm">{s.icon}</span>
                     <span>{s.label}</span>
                     {pendingCount>0&&(
-                      <span style={{position:"absolute",top:3,right:3,background:C.red,color:"#fff",fontSize:10,fontWeight:700,padding:"1px 6px",borderRadius:10,minWidth:16,textAlign:"center"}}>
+                      <span className="absolute top-[3px] right-[3px] bg-red text-white text-[10px] font-bold px-1.5 py-px rounded-[10px] min-w-4 text-center">
                         {pendingCount}
                       </span>
                     )}
@@ -182,19 +177,19 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
         return(
           <div>
             {/* Monthly summary */}
-            <div style={{background:C.white,borderRadius:16,padding:"16px",marginBottom:14,boxShadow:"0 2px 10px rgba(90,30,10,0.06)",border:`1px solid ${C.border}`}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-                <div style={{fontWeight:700,color:C.maroon,fontSize:15}}>📅 สรุปรายเดือน</div>
+            <div className="bg-white rounded-2xl p-4 mb-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr">
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="font-bold text-maroon text-[15px]">📅 สรุปรายเดือน</div>
                 <select value={selMonth} onChange={e=>setSelMonth(e.target.value)}
-                  style={{padding:"6px 10px",borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,background:C.cream,fontFamily:"inherit",outline:"none"}}>
+                  className="px-2.5 py-1.5 rounded-lg border border-bdr text-[13px] text-txt bg-cream font-[inherit] outline-none">
                   {months.map(m=>{
                     const [y,mo]=m.split("-");
                     return <option key={m} value={m}>{TH_MONTHS[parseInt(mo)-1]} {parseInt(y)+543}</option>;
                   })}
                 </select>
               </div>
-              {empNames.length===0&&<div style={{color:C.textSoft,fontSize:14,textAlign:"center",padding:"16px 0"}}>ไม่มีข้อมูล</div>}
-              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {empNames.length===0&&<div className="text-txt-soft text-sm text-center py-4">ไม่มีข้อมูล</div>}
+              <div className="flex flex-col gap-2">
                 {empNames.map(name=>{
                   const empInfo=empDir.find(e=>e.name===name);
                   const monthLeaves=allLeaves.filter(lv=>lv.empName===name&&lv.start.startsWith(selMonth));
@@ -206,57 +201,47 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
                   const sickDays=monthLeaves.filter(lv=>lv.type==="sick").reduce((s,lv)=>s+lv.days,0);
                   const overQuota=totalTimes>2;
                   return(
-                    <div key={name} style={{padding:"12px 14px",borderRadius:12,
-                      background:overQuota?C.redLt:C.cream,border:`1px solid ${overQuota?C.red+"30":C.border}`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+                    <div key={name} className={`px-3.5 py-3 rounded-xl border ${overQuota ? "bg-red-lt border-[#C0392B30]" : "bg-cream border-bdr"}`}>
+                      <div className="flex items-center gap-3 mb-2">
                         <AvatarCircle av={empInfo?.av||name.slice(0,2)} avType={empInfo?.avType||"text"} img={empInfo?.img||null} size={36} fontSize={12} border={`2px solid ${C.gold}40`}/>
-                        <div style={{flex:1}}>
-                          <div style={{fontWeight:700,color:C.text,fontSize:14}}>{name}</div>
-                          <div style={{fontSize:11,color:C.textSoft}}>{empInfo?.role||"-"}</div>
+                        <div className="flex-1">
+                          <div className="font-bold text-txt text-sm">{name}</div>
+                          <div className="text-[11px] text-txt-soft">{empInfo?.role||"-"}</div>
                         </div>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontWeight:800,fontSize:18,color:overQuota?C.red:C.maroon}}>{totalTimes} <span style={{fontSize:11,fontWeight:500,color:C.textSoft}}>ครั้ง</span></div>
-                          <div style={{fontSize:11,color:C.textSoft}}>{totalDays} วันรวม</div>
-                          {overQuota&&<div style={{fontSize:11,color:C.red,fontWeight:700}}>🚨 เกินโควต้า</div>}
+                        <div className="text-right">
+                          <div className={`font-extrabold text-lg ${overQuota ? "text-red" : "text-maroon"}`}>{totalTimes} <span className="text-[11px] font-medium text-txt-soft">ครั้ง</span></div>
+                          <div className="text-[11px] text-txt-soft">{totalDays} วันรวม</div>
+                          {overQuota&&<div className="text-[11px] text-red font-bold">🚨 เกินโควต้า</div>}
                         </div>
                       </div>
-                      {/* day type chips */}
-                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                        <div style={{background:C.goldPale,borderRadius:20,padding:"3px 10px",fontSize:12,color:C.textMid,fontWeight:600}}>
-                          💼 ลากิจ {personalDays} วัน
-                        </div>
-                        <div style={{background:"#CCFBF1",borderRadius:20,padding:"3px 10px",fontSize:12,color:"#0F766E",fontWeight:600}}>
-                          🏥 ลาป่วย {sickDays} วัน
-                        </div>
-                        <div style={{background:C.white,borderRadius:20,padding:"3px 10px",fontSize:12,color:C.textMid,fontWeight:600,border:`1px solid ${C.border}`}}>
-                          📅 วันธรรมดา {weekdays} วัน
-                        </div>
-                        <div style={{background:"#EDE9FE",borderRadius:20,padding:"3px 10px",fontSize:12,color:"#6D28D9",fontWeight:600}}>
-                          🌅 วันอาทิตย์ {sundays} วัน
-                        </div>
+                      <div className="flex gap-1.5 flex-wrap">
+                        <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-xs text-txt-mid font-semibold">💼 ลากิจ {personalDays} วัน</div>
+                        <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#CCFBF1] text-[#0F766E]">🏥 ลาป่วย {sickDays} วัน</div>
+                        <div className="bg-white rounded-[20px] px-2.5 py-[3px] text-xs text-txt-mid font-semibold border border-bdr">📅 วันธรรมดา {weekdays} วัน</div>
+                        <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9]">🌅 วันอาทิตย์ {sundays} วัน</div>
                       </div>
                     </div>
                   );
                 }).filter(Boolean)}
                 {empNames.every(name=>allLeaves.filter(lv=>lv.empName===name&&lv.start.startsWith(selMonth)).length===0)&&(
-                  <div style={{color:C.textSoft,fontSize:14,textAlign:"center",padding:"16px 0"}}>ไม่มีการลาในเดือนนี้</div>
+                  <div className="text-txt-soft text-sm text-center py-4">ไม่มีการลาในเดือนนี้</div>
                 )}
               </div>
             </div>
 
             {/* Yearly summary */}
-            <div style={{background:C.white,borderRadius:16,padding:"16px",boxShadow:"0 2px 10px rgba(90,30,10,0.06)",border:`1px solid ${C.border}`}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-                <div style={{fontWeight:700,color:C.maroon,fontSize:15}}>📆 สรุปรายปี</div>
+            <div className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr">
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="font-bold text-maroon text-[15px]">📆 สรุปรายปี</div>
                 <select value={selYear} onChange={e=>setSelYear(e.target.value)}
-                  style={{padding:"6px 10px",borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,background:C.cream,fontFamily:"inherit",outline:"none"}}>
+                  className="px-2.5 py-1.5 rounded-lg border border-bdr text-[13px] text-txt bg-cream font-[inherit] outline-none">
                   {years.map(y=>(
                     <option key={y} value={y}>ปี {parseInt(y)+543}</option>
                   ))}
                 </select>
               </div>
-              {empNames.length===0&&<div style={{color:C.textSoft,fontSize:14,textAlign:"center",padding:"16px 0"}}>ไม่มีข้อมูล</div>}
-              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {empNames.length===0&&<div className="text-txt-soft text-sm text-center py-4">ไม่มีข้อมูล</div>}
+              <div className="flex flex-col gap-2">
                 {empNames.map(name=>{
                   const empInfo=empDir.find(e=>e.name===name);
                   const yearLeaves=allLeaves.filter(lv=>lv.empName===name&&lv.start.startsWith(selYear));
@@ -268,42 +253,32 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
                   const sickDays=yearLeaves.filter(lv=>lv.type==="sick").reduce((s,lv)=>s+lv.days,0);
                   const barPct=Math.min(100,totalDays/30*100);
                   return(
-                    <div key={name} style={{padding:"14px",borderRadius:12,background:C.cream,border:`1px solid ${C.border}`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+                    <div key={name} className="p-3.5 rounded-xl bg-cream border border-bdr">
+                      <div className="flex items-center gap-3 mb-2.5">
                         <AvatarCircle av={empInfo?.av||name.slice(0,2)} avType={empInfo?.avType||"text"} img={empInfo?.img||null} size={38} fontSize={12} border={`2px solid ${C.gold}40`}/>
-                        <div style={{flex:1}}>
-                          <div style={{fontWeight:700,color:C.text,fontSize:14}}>{name}</div>
-                          <div style={{fontSize:12,color:C.textSoft}}>{empInfo?.role||"-"}</div>
+                        <div className="flex-1">
+                          <div className="font-bold text-txt text-sm">{name}</div>
+                          <div className="text-xs text-txt-soft">{empInfo?.role||"-"}</div>
                         </div>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontWeight:800,fontSize:20,color:C.maroon}}>{totalDays}</div>
-                          <div style={{fontSize:11,color:C.textSoft}}>วันรวม · {totalTimes} ครั้ง</div>
+                        <div className="text-right">
+                          <div className="font-extrabold text-xl text-maroon">{totalDays}</div>
+                          <div className="text-[11px] text-txt-soft">วันรวม · {totalTimes} ครั้ง</div>
                         </div>
                       </div>
-                      {/* bar */}
-                      <div style={{background:C.creamDk,borderRadius:6,height:7,overflow:"hidden",marginBottom:10}}>
-                        <div style={{width:`${barPct}%`,height:"100%",borderRadius:6,background:`linear-gradient(90deg,${C.gold},${C.goldLt})`}}/>
+                      <div className="bg-cream-dk rounded-md h-[7px] overflow-hidden mb-2.5">
+                        <div className="h-full rounded-md bg-linear-to-r from-gold to-gold-lt" style={{width:`${barPct}%`}}/>
                       </div>
-                      {/* breakdown chips */}
-                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                        <div style={{background:C.goldPale,borderRadius:20,padding:"3px 10px",fontSize:12,color:C.textMid,fontWeight:600}}>
-                          💼 ลากิจ {personalDays} วัน
-                        </div>
-                        <div style={{background:"#CCFBF1",borderRadius:20,padding:"3px 10px",fontSize:12,color:"#0F766E",fontWeight:600}}>
-                          🏥 ลาป่วย {sickDays} วัน
-                        </div>
-                        <div style={{background:C.white,borderRadius:20,padding:"3px 10px",fontSize:12,color:C.textMid,fontWeight:600,border:`1px solid ${C.border}`}}>
-                          📅 วันธรรมดา {weekdays} วัน
-                        </div>
-                        <div style={{background:"#EDE9FE",borderRadius:20,padding:"3px 10px",fontSize:12,color:"#6D28D9",fontWeight:600}}>
-                          🌅 วันอาทิตย์ {sundays} วัน
-                        </div>
+                      <div className="flex gap-1.5 flex-wrap">
+                        <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-xs text-txt-mid font-semibold">💼 ลากิจ {personalDays} วัน</div>
+                        <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#CCFBF1] text-[#0F766E]">🏥 ลาป่วย {sickDays} วัน</div>
+                        <div className="bg-white rounded-[20px] px-2.5 py-[3px] text-xs text-txt-mid font-semibold border border-bdr">📅 วันธรรมดา {weekdays} วัน</div>
+                        <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9]">🌅 วันอาทิตย์ {sundays} วัน</div>
                       </div>
                     </div>
                   );
                 }).filter(Boolean)}
                 {empNames.every(name=>allLeaves.filter(lv=>lv.empName===name&&lv.start.startsWith(selYear)).length===0)&&(
-                  <div style={{color:C.textSoft,fontSize:14,textAlign:"center",padding:"16px 0"}}>ไม่มีการลาในปีนี้</div>
+                  <div className="text-txt-soft text-sm text-center py-4">ไม่มีการลาในปีนี้</div>
                 )}
               </div>
             </div>
@@ -314,30 +289,30 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
       {/* ── LEAVES section ── */}
       {section==="leaves"&&(
         <div>
-          <div style={{display:"flex",gap:8,marginBottom:14}}>
-            <select value={filterEmp} onChange={e=>setFilterEmp(e.target.value)} style={{flex:1,padding:"10px 12px",borderRadius:10,border:`1.5px solid ${C.border}`,fontSize:14,color:C.text,background:C.white,fontFamily:"inherit",outline:"none"}}>
+          <div className="flex gap-2 mb-3.5">
+            <select value={filterEmp} onChange={e=>setFilterEmp(e.target.value)} className="flex-1 px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none">
               <option value="">พนักงานทั้งหมด</option>
               {uniqueEmps.map(e=><option key={e} value={e}>{e}</option>)}
             </select>
-            <select value={filterType} onChange={e=>setFilterType(e.target.value)} style={{flex:1,padding:"10px 12px",borderRadius:10,border:`1.5px solid ${C.border}`,fontSize:14,color:C.text,background:C.white,fontFamily:"inherit",outline:"none"}}>
+            <select value={filterType} onChange={e=>setFilterType(e.target.value)} className="flex-1 px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none">
               <option value="">ประเภททั้งหมด</option>
               {LEAVE_TYPES.map(lt=><option key={lt.id} value={lt.id}>{lt.label}</option>)}
             </select>
           </div>
-          {pastLeaves.length===0&&<div style={{textAlign:"center",color:C.textSoft,padding:"40px 0",fontSize:15}}>ไม่มีรายการลาย้อนหลัง</div>}
-          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {pastLeaves.length===0&&<div className="text-center text-txt-soft py-10 text-[15px]">ไม่มีรายการลาย้อนหลัง</div>}
+          <div className="flex flex-col gap-2.5">
             {pastLeaves.map(lv=>{
               const lt=LEAVE_TYPES.find(t=>t.id===lv.type);
               const empInfo=empDir.find(e=>e.name===lv.empName);
               return(
-                <div key={lv.id} style={{background:C.white,borderRadius:16,padding:"16px",boxShadow:"0 2px 10px rgba(90,30,10,0.06)",border:`1px solid ${C.border}`,display:"flex",alignItems:"flex-start",gap:12}}>
+                <div key={lv.id} className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3">
                   <AvatarCircle av={empInfo?.av||lv.av} avType={empInfo?.avType||"text"} img={empInfo?.img||null} size={42} fontSize={13} border={`2px solid ${C.gold}40`}/>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontWeight:700,color:C.text,fontSize:15,marginBottom:3}}>{lv.empName}</div>
-                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}><span style={{fontSize:13,color:lt?.color,fontWeight:600}}>{lt?.icon} {lt?.label}</span><span style={{fontSize:12,color:C.textSoft}}>· {lv.days} วันทำการ</span></div>
-                    <div style={{fontSize:13,color:C.textMid}}>{fmtDate(lv.start)}{lv.start!==lv.end?` – ${fmtDate(lv.end)}`:""}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-txt text-[15px] mb-[3px]">{lv.empName}</div>
+                    <div className="flex items-center gap-1.5 mb-1"><span className="text-[13px] font-semibold" style={{color:lt?.color}}>{lt?.icon} {lt?.label}</span><span className="text-xs text-txt-soft">· {lv.days} วันทำการ</span></div>
+                    <div className="text-[13px] text-txt-mid">{fmtDate(lv.start)}{lv.start!==lv.end?` – ${fmtDate(lv.end)}`:""}</div>
                   </div>
-                  <button onClick={()=>setConfirmLeave(lv)} style={{width:36,height:36,borderRadius:10,border:`1.5px solid ${C.red}30`,background:C.redLt,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                  <button onClick={()=>setConfirmLeave(lv)} className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth="2.2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                   </button>
                 </div>
@@ -351,20 +326,20 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
       {/* ── ROLES section ── */}
       {section==="roles"&&(
         <div>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,gap:8}}>
-            <div style={{fontSize:13,color:C.textSoft}}>กดที่ชื่อพนักงานเพื่อแก้ไข</div>
-            <div style={{display:"flex",gap:6}}>
+          <div className="flex items-center justify-between mb-3.5 gap-2">
+            <div className="text-[13px] text-txt-soft">กดที่ชื่อพนักงานเพื่อแก้ไข</div>
+            <div className="flex gap-1.5">
               <button onClick={()=>setExpandedEmpId("__ALL__")}
-                style={{padding:"5px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.white,color:C.maroon,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                className="px-2.5 py-[5px] rounded-lg border border-bdr bg-white text-maroon text-[11px] font-semibold cursor-pointer font-[inherit]">
                 ขยายทั้งหมด
               </button>
               <button onClick={()=>setExpandedEmpId(null)}
-                style={{padding:"5px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:C.white,color:C.textMid,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                className="px-2.5 py-[5px] rounded-lg border border-bdr bg-white text-txt-mid text-[11px] font-semibold cursor-pointer font-[inherit]">
                 ย่อทั้งหมด
               </button>
             </div>
           </div>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <div className="flex flex-col gap-2">
             {empDir.map(emp=>{
               const eRN      = editingRole[emp.id+"_rN"];
               const eRS      = editingRole[emp.id+"_rS"];
@@ -394,7 +369,7 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
               const isExpanded = expandedEmpId===emp.id || expandedEmpId==="__ALL__";
               const empR = roles?.find(r=>r.id===emp.roleId);
               return(
-                <div key={emp.id} style={{background:C.white,borderRadius:16,boxShadow:"0 2px 8px rgba(90,30,10,0.06)",border:`1px solid ${C.border}`,overflow:"hidden",transition:"all 0.2s"}}>
+                <div key={emp.id} className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(90,30,10,0.06)] border border-bdr overflow-hidden transition-all duration-200">
                   {/* Clickable header */}
                   <div onClick={()=>{
                     if(expandedEmpId==="__ALL__"){
@@ -403,82 +378,75 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
                       setExpandedEmpId(isExpanded?null:emp.id);
                     }
                   }}
-                    style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",cursor:"pointer",
-                      background:isExpanded?C.cream:"transparent",borderBottom:isExpanded?`1px solid ${C.border}`:"none"}}>
+                    className={`flex items-center gap-3 px-3.5 py-3 cursor-pointer ${isExpanded?"bg-cream border-b border-bdr":""}`}>
                     <AvatarCircle av={emp.av} avType={emp.avType} img={emp.img} size={40} fontSize={13} border={`2px solid ${C.gold}40`}/>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontWeight:700,color:C.text,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{emp.name}</div>
-                      <div style={{fontSize:11,color:C.textSoft,marginTop:1,display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-txt text-sm truncate">{emp.name}</div>
+                      <div className="text-[11px] text-txt-soft mt-px flex items-center gap-[5px] flex-wrap">
                         {empR?.icon} {emp.role||"-"}
                         {emp.poolExclude && (() => {
                           const m = {sell:"💎 ปิดขาย", buy:"🛍 ปิดซื้อ", both:"🔒 ปิดทั้งคู่"};
-                          return <span style={{padding:"1px 6px",borderRadius:6,background:C.redLt,color:C.red,fontWeight:700,fontSize:9}}>{m[emp.poolExclude]}</span>;
+                          return <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-[9px]">{m[emp.poolExclude]}</span>;
                         })()}
-                        {emp.salaryDisabled && <span style={{padding:"1px 6px",borderRadius:6,background:C.redLt,color:C.red,fontWeight:700,fontSize:9}}>🔒 ปิดเงินเดือน</span>}
-                        {emp.lineUserId && <span style={{padding:"1px 6px",borderRadius:6,background:"#06C75520",color:"#06A04E",fontWeight:700,fontSize:9}}>💬 LINE</span>}
+                        {emp.salaryDisabled && <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-[9px]">🔒 ปิดเงินเดือน</span>}
+                        {emp.lineUserId && <span className="px-1.5 py-px rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-[9px]">💬 LINE</span>}
                       </div>
                     </div>
                     {dirty&&!isExpanded&&(
-                      <span style={{padding:"2px 8px",borderRadius:8,background:C.amber+"30",color:C.amber,fontSize:10,fontWeight:700}}>มีการแก้ไข</span>
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#D9770630] text-amber">มีการแก้ไข</span>
                     )}
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textSoft} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-                      style={{flexShrink:0,transition:"transform 0.2s",transform:isExpanded?"rotate(180deg)":"rotate(0)"}}>
+                      className={`shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : "rotate-0"}`}>
                       <polyline points="6 9 12 15 18 9"/>
                     </svg>
                   </div>
 
                   {/* Expandable content */}
                   {isExpanded && (
-                  <div style={{padding:"14px 16px"}}>
+                  <div className="px-4 py-3.5">
 
                   {/* Role — read-only (แก้จากแท็บ "ตำแหน่ง") */}
-                  <div style={{marginBottom:10,padding:"10px 12px",background:C.cream,borderRadius:10,border:`1px dashed ${C.border}`}}>
-                    <div style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:5,display:"flex",alignItems:"center",gap:6}}>
+                  <div className="mb-2.5 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
+                    <div className="text-[11px] text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
                       <span>👤 ตำแหน่ง</span>
-                      <span style={{fontSize:9,padding:"1px 6px",borderRadius:8,background:C.border,color:C.textSoft,fontWeight:700,marginLeft:"auto"}}>แก้ในแท็บ "ตำแหน่ง"</span>
+                      <span className="text-[9px] px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">แก้ในแท็บ "ตำแหน่ง"</span>
                     </div>
-                    <div style={{fontSize:13,fontWeight:700,color:emp.role&&emp.role!=="-"?C.text:C.textSoft,fontStyle:emp.role&&emp.role!=="-"?"normal":"italic"}}>
+                    <div className={`text-[13px] font-bold ${emp.role&&emp.role!=="-" ? "text-txt" : "text-txt-soft italic"}`}>
                       {emp.role&&emp.role!=="-" ? emp.role : "ยังไม่กำหนดตำแหน่ง"}
                     </div>
                   </div>
                   {/* Bank info — read-only (พนักงานเป็นคนกรอกเอง) */}
-                  <div style={{marginBottom:12,padding:"10px 12px",background:C.cream,borderRadius:10,border:`1px dashed ${C.border}`}}>
-                    <div style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:5,display:"flex",alignItems:"center",gap:6}}>
+                  <div className="mb-3 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
+                    <div className="text-[11px] text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
                       <span>🏦 บัญชีรับเงินเดือน</span>
-                      <span style={{fontSize:9,padding:"1px 6px",borderRadius:8,background:C.border,color:C.textSoft,fontWeight:700,marginLeft:"auto"}}>พนักงานกรอกเอง</span>
+                      <span className="text-[9px] px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">พนักงานกรอกเอง</span>
                     </div>
                     {emp.bank||emp.bankAcc ? (
                       <>
-                        <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:1}}>{emp.bank||"-"}</div>
-                        <div style={{fontSize:13,color:C.textMid,letterSpacing:"0.05em"}}>{emp.bankAcc||"-"}</div>
+                        <div className="text-[13px] font-bold text-txt mb-px">{emp.bank||"-"}</div>
+                        <div className="text-[13px] text-txt-mid tracking-[0.05em]">{emp.bankAcc||"-"}</div>
                       </>
                     ):(
-                      <div style={{fontSize:13,color:C.textSoft,fontStyle:"italic"}}>ยังไม่มีข้อมูลบัญชี</div>
+                      <div className="text-[13px] text-txt-soft italic">ยังไม่มีข้อมูลบัญชี</div>
                     )}
                   </div>
 
                   {/* LINE User ID — read-only, copy only */}
-                  <div style={{marginBottom:12}}>
-                    <label style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:4,display:"flex",alignItems:"center",gap:6}}>
-                      <span style={{display:"inline-flex",alignItems:"center",gap:4}}>💬 LINE User ID
-                        {emp.lineUserId ? <span style={{fontSize:9,padding:"1px 6px",borderRadius:8,background:"#06C75520",color:"#06A04E",fontWeight:700}}>เชื่อมแล้ว</span>
-                                        : <span style={{fontSize:9,padding:"1px 6px",borderRadius:8,background:C.border,color:C.textSoft,fontWeight:700}}>ยังไม่เชื่อม</span>}
+                  <div className="mb-3">
+                    <label className="text-[11px] text-txt-soft font-semibold mb-1 flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1">💬 LINE User ID
+                        {emp.lineUserId ? <span className="text-[9px] px-1.5 py-px rounded-lg bg-[#06C75520] text-[#06A04E] font-bold">เชื่อมแล้ว</span>
+                                        : <span className="text-[9px] px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">ยังไม่เชื่อม</span>}
                       </span>
-                      <span style={{fontSize:9,padding:"1px 6px",borderRadius:8,background:C.border,color:C.textSoft,fontWeight:700,marginLeft:"auto"}}>อ่านอย่างเดียว</span>
+                      <span className="text-[9px] px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">อ่านอย่างเดียว</span>
                     </label>
                     {emp.lineUserId ? (
                       <button onClick={()=>copyLineId(emp.lineUserId, emp.id)}
-                        style={{width:"100%",padding:"9px 12px",borderRadius:9,
-                          border:`1px solid ${copiedLineId===emp.id?C.green:C.border}`,
-                          background:C.cream,cursor:"pointer",fontFamily:"inherit",
-                          display:"flex",alignItems:"center",gap:8,transition:"all 0.2s"}}>
-                        <span style={{flex:1,textAlign:"left",fontSize:12,color:C.text,fontFamily:"'Prompt',monospace",letterSpacing:"0.02em",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>
+                        className={`w-full px-3 py-[9px] rounded-[9px] bg-cream cursor-pointer font-[inherit] flex items-center gap-2 transition-all duration-200 border ${copiedLineId===emp.id ? "border-green" : "border-bdr"}`}>
+                        <span className="flex-1 text-left text-xs text-txt font-[Prompt,monospace] tracking-[0.02em] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                           {emp.lineUserId}
                         </span>
-                        <span style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:7,
-                          background:copiedLineId===emp.id?C.greenLt:C.goldPale,
-                          color:copiedLineId===emp.id?C.green:C.maroon,
-                          fontSize:11,fontWeight:700,whiteSpace:"nowrap",transition:"all 0.2s"}}>
+                        <span className={`flex items-center gap-1 px-[9px] py-1 rounded-[7px] text-[11px] font-bold whitespace-nowrap transition-all duration-200 ${copiedLineId===emp.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}>
                           {copiedLineId===emp.id ? (
                             <>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -493,45 +461,44 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
                         </span>
                       </button>
                     ) : (
-                      <div style={{padding:"10px 12px",borderRadius:9,border:`1px dashed ${C.border}`,
-                        background:C.cream,fontSize:12,color:C.textSoft,fontStyle:"italic",textAlign:"center"}}>
+                      <div className="px-3 py-2.5 rounded-[9px] border border-dashed border-bdr bg-cream text-xs text-txt-soft italic text-center">
                         — ยังไม่ได้เชื่อมต่อ LINE —
                       </div>
                     )}
-                    <div style={{fontSize:10,color:C.textSoft,marginTop:3,lineHeight:1.5}}>
+                    <div className="text-[10px] text-txt-soft mt-[3px] leading-[1.5]">
                       💡 ID จะถูกเก็บอัตโนมัติเมื่อพนักงานเข้าสู่ระบบผ่าน LINE
                     </div>
                   </div>
 
                   {/* Base Salary */}
-                  <div style={{marginBottom:10,padding:"12px",background:C.goldPale+"60",borderRadius:10,border:`1px solid ${C.gold}30`}}>
-                    <label style={{fontSize:11,color:C.maroon,fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
+                  <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                    <label className="text-[11px] text-maroon font-bold mb-1.5 flex items-center gap-1.5">
                       💼 เงินเดือนพื้นฐาน
                     </label>
-                    <div style={{position:"relative"}}>
-                      <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:C.textSoft,fontSize:14,fontWeight:600,pointerEvents:"none"}}>฿</span>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">฿</span>
                       <input type="number" inputMode="decimal" min="0"
                         value={eBase!==undefined ? eBase : (emp.baseSalary||0)}
                         onChange={e=>setEditingRole(r=>({...r,[emp.id+"_base"]:e.target.value}))}
-                        style={{width:"100%",padding:"9px 12px 9px 30px",borderRadius:9,border:`1.5px solid ${eBase!==undefined?C.gold:C.border}`,fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:eBase!==undefined?C.white:C.cream,textAlign:"right"}}/>
+                        className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${eBase!==undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}/>
                     </div>
-                    <div style={{fontSize:10,color:C.textSoft,marginTop:3}}>หน่วย: บาท/เดือน</div>
+                    <div className="text-[10px] text-txt-soft mt-[3px]">หน่วย: บาท/เดือน</div>
                   </div>
 
                   {/* Disable Salary toggle */}
                   {(() => {
                     const cur = eSalDis!==undefined ? eSalDis : !!emp.salaryDisabled;
                     return (
-                  <div style={{padding:"10px 12px",background:cur?C.redLt:C.cream,borderRadius:10,marginBottom:10,border:`1.5px solid ${cur?C.red+"50":C.border}`}}>
-                    <label style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer"}}>
+                  <div className={`px-3 py-2.5 rounded-[10px] mb-2.5 border-[1.5px] ${cur ? "bg-red-lt border-[#C0392B50]" : "bg-cream border-bdr"}`}>
+                    <label className="flex items-center gap-2.5 cursor-pointer">
                       <input type="checkbox" checked={cur}
                         onChange={e=>setEditingRole(r=>({...r,[emp.id+"_salDis"]:e.target.checked}))}
-                        style={{width:16,height:16,cursor:"pointer",accentColor:C.red}}/>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:12,fontWeight:700,color:cur?C.red:C.text}}>
+                        className="w-4 h-4 cursor-pointer accent-red"/>
+                      <div className="flex-1">
+                        <div className={`text-xs font-bold ${cur ? "text-red" : "text-txt"}`}>
                           🔒 ปิดสิทธิ์ระบบเงินเดือน
                         </div>
-                        <div style={{fontSize:10,color:C.textSoft,marginTop:2,lineHeight:1.5}}>
+                        <div className="text-[10px] text-txt-soft mt-0.5 leading-[1.5]">
                           ซ่อนแท็บ "เงินเดือน" จากพนักงาน · ใช้ได้แค่ระบบลา
                         </div>
                       </div>
@@ -547,43 +514,43 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
                     const eRSingle = editingRole[emp.id+"_rSingle"];
                     if(isSingle){
                       return (
-                        <div style={{padding:"12px",borderRadius:10,background:C.goldPale+"60",border:`1px solid ${C.gold}30`}}>
-                          <div style={{fontSize:12,fontWeight:700,color:C.maroon,marginBottom:8}}>💰 Rate ค่าคอมต่อชิ้น</div>
-                          <div style={{display:"flex",gap:8}}>
-                            <div style={{flex:1}}>
-                              <label style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:4,display:"block"}}>📦 ค่าคอมต่อชิ้น</label>
+                        <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                          <div className="text-xs font-bold text-maroon mb-2">💰 Rate ค่าคอมต่อชิ้น</div>
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <label className="text-[11px] text-txt-soft font-semibold mb-1 block">📦 ค่าคอมต่อชิ้น</label>
                               <input type="number" inputMode="decimal" min="0"
                                 value={eRSingle!==undefined ? eRSingle : (emp.ratePerPiece||0)}
                                 onChange={e=>setEditingRole(r=>({...r,[emp.id+"_rSingle"]:e.target.value}))}
-                                style={{width:"100%",padding:"9px 12px",borderRadius:9,border:`1.5px solid ${eRSingle!==undefined?C.gold:C.border}`,fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,textAlign:"center"}}/>
+                                className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRSingle!==undefined ? "border-gold" : "border-bdr"}`}/>
                             </div>
                           </div>
-                          <div style={{fontSize:10,color:C.textSoft,textAlign:"center",marginTop:6}}>หน่วย: ฿/ชิ้น</div>
+                          <div className="text-[10px] text-txt-soft text-center mt-1.5">หน่วย: ฿/ชิ้น</div>
 
-                          <div style={{height:1,background:C.gold+"30",margin:"10px 0"}}/>
-                          <div style={{fontSize:11,fontWeight:700,color:C.maroon,marginBottom:8}}>🎫 Rate บัตรสมาชิกต่อใบ</div>
-                          <div style={{display:"flex",gap:8}}>
-                            <div style={{flex:1}}>
-                              <label style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:4,display:"block"}}>🎫 เชิญชวนสมัคร</label>
+                          <div className="h-px my-2.5 bg-[#C9973A30]"/>
+                          <div className="text-[11px] font-bold text-maroon mb-2">🎫 Rate บัตรสมาชิกต่อใบ</div>
+                          <div className="flex gap-2">
+                            <div className="flex-1">
+                              <label className="text-[11px] text-txt-soft font-semibold mb-1 block">🎫 เชิญชวนสมัคร</label>
                               <input type="number" inputMode="decimal" min="0"
                                 value={eRI!==undefined ? eRI : (emp.ratePerPieceInvite||0)}
                                 onChange={e=>setEditingRole(r=>({...r,[emp.id+"_rI"]:e.target.value}))}
-                                style={{width:"100%",padding:"9px 12px",borderRadius:9,border:`1.5px solid ${eRI!==undefined?C.gold:C.border}`,fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,textAlign:"center"}}/>
+                                className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRI!==undefined ? "border-gold" : "border-bdr"}`}/>
                             </div>
-                            <div style={{flex:1}}>
-                              <label style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:4,display:"block"}}>🔄 ย้ายข้อมูล</label>
+                            <div className="flex-1">
+                              <label className="text-[11px] text-txt-soft font-semibold mb-1 block">🔄 ย้ายข้อมูล</label>
                               <input type="number" inputMode="decimal" min="0"
                                 value={eRT!==undefined ? eRT : (emp.ratePerPieceTransfer||0)}
                                 onChange={e=>setEditingRole(r=>({...r,[emp.id+"_rT"]:e.target.value}))}
-                                style={{width:"100%",padding:"9px 12px",borderRadius:9,border:`1.5px solid ${eRT!==undefined?C.gold:C.border}`,fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,textAlign:"center"}}/>
+                                className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRT!==undefined ? "border-gold" : "border-bdr"}`}/>
                             </div>
                           </div>
-                          <div style={{fontSize:10,color:C.textSoft,textAlign:"center",marginTop:6}}>หน่วย: ฿/ใบ</div>
+                          <div className="text-[10px] text-txt-soft text-center mt-1.5">หน่วย: ฿/ใบ</div>
                         </div>
                       );
                     }
                     return (
-                  <div style={{padding:"12px",borderRadius:10,background:C.goldPale+"60",border:`1px solid ${C.gold}30`}}>
+                  <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                     {/* Exclude from Pool — 3 levels (only for pool-group roles) */}
                     {empR?.poolGroup && (() => {
                       const cur = ePoolExc!==undefined ? ePoolExc : (emp.poolExclude || "");
@@ -594,26 +561,23 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
                         { id:"both", label:"ปิดทั้งคู่",     icon:"🔒", desc:"ไม่ได้ Pool ทั้งหมด · ถ้าขาย < 50% ไม่ได้เงินเดือนพื้นฐาน" },
                       ];
                       return (
-                        <div style={{padding:"10px 12px",background:cur?C.redLt+"80":C.cream,borderRadius:9,marginBottom:10,border:`1.5px solid ${cur?C.red+"50":C.border}`}}>
-                          <div style={{fontSize:12,fontWeight:700,color:cur?C.red:C.text,marginBottom:8,display:"flex",alignItems:"center",gap:6}}>
+                        <div className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${cur ? "bg-[#FDECEA80] border-[#C0392B50]" : "bg-cream border-bdr"}`}>
+                          <div className={`text-xs font-bold mb-2 flex items-center gap-1.5 ${cur ? "text-red" : "text-txt"}`}>
                             🚫 ปิดสิทธิ์ Pool ค่าคอม
                           </div>
-                          <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                          <div className="flex flex-col gap-[5px]">
                             {opts.map(o=>{
                               const active = cur===o.id;
                               return (
-                                <label key={o.id} style={{display:"flex",alignItems:"flex-start",gap:8,padding:"7px 10px",borderRadius:7,
-                                  background:active?(o.id?C.red+"15":C.greenLt):"transparent",
-                                  border:`1px solid ${active?(o.id?C.red+"40":C.green+"30"):"transparent"}`,
-                                  cursor:"pointer",transition:"all 0.15s"}}>
+                                <label key={o.id} className={`flex items-start gap-2 px-2.5 py-[7px] rounded-[7px] cursor-pointer transition-all duration-150 border ${active ? (o.id ? "bg-[#C0392B15] border-[#C0392B40]" : "bg-green-lt border-[#1A6B3A30]") : "bg-transparent border-transparent"}`}>
                                   <input type="radio" name={`poolExc_${emp.id}`} value={o.id} checked={active}
                                     onChange={()=>setEditingRole(r=>({...r,[emp.id+"_poolExc"]:o.id}))}
-                                    style={{marginTop:2,cursor:"pointer",accentColor:o.id?C.red:C.green}}/>
-                                  <div style={{flex:1,minWidth:0}}>
-                                    <div style={{fontSize:12,fontWeight:600,color:active?(o.id?C.red:C.green):C.text}}>
+                                    className={`mt-0.5 cursor-pointer ${o.id ? "accent-red" : "accent-green"}`}/>
+                                  <div className="flex-1 min-w-0">
+                                    <div className={`text-xs font-semibold ${active ? (o.id ? "text-red" : "text-green") : "text-txt"}`}>
                                       {o.icon} {o.label}
                                     </div>
-                                    <div style={{fontSize:10,color:C.textSoft,marginTop:1,lineHeight:1.5}}>{o.desc}</div>
+                                    <div className="text-[10px] text-txt-soft mt-px leading-[1.5]">{o.desc}</div>
                                   </div>
                                 </label>
                               );
@@ -622,64 +586,64 @@ export default function AdminPanel({allLeaves,empDir,onDelete,onLogout,onUpdateR
                         </div>
                       );
                     })()}
-                    <div style={{fontSize:12,fontWeight:700,color:C.maroon,marginBottom:8}}>💰 Rate ค่าคอมต่อชิ้น</div>
-                    <div style={{display:"flex",gap:8,marginBottom:8}}>
-                      <div style={{flex:1}}>
-                        <label style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:4,display:"block"}}>💎 ขาย-ทั่วไป</label>
+                    <div className="text-xs font-bold text-maroon mb-2">💰 Rate ค่าคอมต่อชิ้น</div>
+                    <div className="flex gap-2 mb-2">
+                      <div className="flex-1">
+                        <label className="text-[11px] text-txt-soft font-semibold mb-1 block">💎 ขาย-ทั่วไป</label>
                         <input type="number" inputMode="decimal" min="0"
                           value={eRN!==undefined ? eRN : (emp.ratePerPieceNormal||0)}
                           onChange={e=>setEditingRole(r=>({...r,[emp.id+"_rN"]:e.target.value}))}
-                          style={{width:"100%",padding:"9px 12px",borderRadius:9,border:`1.5px solid ${eRN!==undefined?C.gold:C.border}`,fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,textAlign:"center"}}/>
+                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRN!==undefined ? "border-gold" : "border-bdr"}`}/>
                       </div>
-                      <div style={{flex:1}}>
-                        <label style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:4,display:"block"}}>✨ ขาย-พิเศษ</label>
+                      <div className="flex-1">
+                        <label className="text-[11px] text-txt-soft font-semibold mb-1 block">✨ ขาย-พิเศษ</label>
                         <input type="number" inputMode="decimal" min="0"
                           value={eRS!==undefined ? eRS : (emp.ratePerPieceSpecial||0)}
                           onChange={e=>setEditingRole(r=>({...r,[emp.id+"_rS"]:e.target.value}))}
-                          style={{width:"100%",padding:"9px 12px",borderRadius:9,border:`1.5px solid ${eRS!==undefined?C.gold:C.border}`,fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,textAlign:"center"}}/>
+                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRS!==undefined ? "border-gold" : "border-bdr"}`}/>
                       </div>
-                      <div style={{flex:1}}>
-                        <label style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:4,display:"block"}}>🛍 รับซื้อ</label>
+                      <div className="flex-1">
+                        <label className="text-[11px] text-txt-soft font-semibold mb-1 block">🛍 รับซื้อ</label>
                         <input type="number" inputMode="decimal" min="0"
                           value={eRB!==undefined ? eRB : (emp.ratePerPieceBuy||0)}
                           onChange={e=>setEditingRole(r=>({...r,[emp.id+"_rB"]:e.target.value}))}
-                          style={{width:"100%",padding:"9px 12px",borderRadius:9,border:`1.5px solid ${eRB!==undefined?C.gold:C.border}`,fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,textAlign:"center"}}/>
+                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRB!==undefined ? "border-gold" : "border-bdr"}`}/>
                       </div>
                     </div>
-                    <div style={{fontSize:10,color:C.textSoft,textAlign:"center",marginBottom:10}}>หน่วย: ฿/ชิ้น</div>
+                    <div className="text-[10px] text-txt-soft text-center mb-2.5">หน่วย: ฿/ชิ้น</div>
 
-                    <div style={{height:1,background:C.gold+"30",margin:"6px 0 10px"}}/>
-                    <div style={{fontSize:11,fontWeight:700,color:C.maroon,marginBottom:8}}>🎫 Rate บัตรสมาชิกต่อใบ</div>
-                    <div style={{display:"flex",gap:8}}>
-                      <div style={{flex:1}}>
-                        <label style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:4,display:"block"}}>🎫 เชิญชวนสมัคร</label>
+                    <div className="h-px my-2.5 bg-[#C9973A30]"/>
+                    <div className="text-[11px] font-bold text-maroon mb-2">🎫 Rate บัตรสมาชิกต่อใบ</div>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="text-[11px] text-txt-soft font-semibold mb-1 block">🎫 เชิญชวนสมัคร</label>
                         <input type="number" inputMode="decimal" min="0"
                           value={eRI!==undefined ? eRI : (emp.ratePerPieceInvite||0)}
                           onChange={e=>setEditingRole(r=>({...r,[emp.id+"_rI"]:e.target.value}))}
-                          style={{width:"100%",padding:"9px 12px",borderRadius:9,border:`1.5px solid ${eRI!==undefined?C.gold:C.border}`,fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,textAlign:"center"}}/>
+                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRI!==undefined ? "border-gold" : "border-bdr"}`}/>
                       </div>
-                      <div style={{flex:1}}>
-                        <label style={{fontSize:11,color:C.textSoft,fontWeight:600,marginBottom:4,display:"block"}}>🔄 ย้ายข้อมูล</label>
+                      <div className="flex-1">
+                        <label className="text-[11px] text-txt-soft font-semibold mb-1 block">🔄 ย้ายข้อมูล</label>
                         <input type="number" inputMode="decimal" min="0"
                           value={eRT!==undefined ? eRT : (emp.ratePerPieceTransfer||0)}
                           onChange={e=>setEditingRole(r=>({...r,[emp.id+"_rT"]:e.target.value}))}
-                          style={{width:"100%",padding:"9px 12px",borderRadius:9,border:`1.5px solid ${eRT!==undefined?C.gold:C.border}`,fontSize:14,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,textAlign:"center"}}/>
+                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRT!==undefined ? "border-gold" : "border-bdr"}`}/>
                       </div>
                     </div>
-                    <div style={{fontSize:10,color:C.textSoft,textAlign:"center",marginTop:6}}>หน่วย: ฿/ใบ</div>
+                    <div className="text-[10px] text-txt-soft text-center mt-1.5">หน่วย: ฿/ใบ</div>
                   </div>
                     );
                   })()}
 
                   {/* Bottom save button (when dirty) */}
                   {dirty&&(
-                    <div style={{marginTop:14,paddingTop:14,borderTop:`1px dashed ${C.border}`,display:"flex",gap:8}}>
+                    <div className="mt-3.5 pt-3.5 border-t border-dashed border-bdr flex gap-2">
                       <button onClick={cancelAll}
-                        style={{flex:1,padding:"11px",borderRadius:10,border:`1.5px solid ${C.border}`,background:C.white,color:C.textMid,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                        className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-[13px] font-semibold cursor-pointer font-[inherit]">
                         ยกเลิกการแก้ไข
                       </button>
                       <button onClick={saveAll}
-                        style={{flex:2,padding:"11px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${C.gold},${C.goldLt})`,color:C.maroonDk,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:`0 4px 14px ${C.gold}50`,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                        className="flex-[2] py-[11px] rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         บันทึกการเปลี่ยนแปลง
                       </button>

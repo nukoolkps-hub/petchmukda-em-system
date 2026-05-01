@@ -1,47 +1,22 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import "./index.css";
 import LeaveApp from "./App";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import LoginScreen from "./components/auth/LoginScreen";
-import { C, FONT_LINK } from "./constants";
 import Diamond from "./components/shared/Diamond";
 
 /* ─── Loading Screen (Firebase auth initializing) ────────── */
 function AuthLoadingScreen() {
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: `linear-gradient(160deg, ${C.maroonDk} 0%, ${C.maroon} 55%, ${C.maroonLt} 100%)`,
-        fontFamily: "'Prompt',sans-serif",
-      }}
-    >
-      <link rel="stylesheet" href={FONT_LINK} />
-      <div
-        style={{
-          width: 64,
-          height: 64,
-          borderRadius: "50%",
-          background: `linear-gradient(135deg,${C.gold},${C.goldLt})`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: `0 6px 20px ${C.gold}50`,
-          animation: "pulse 1.5s ease-in-out infinite",
-        }}
-      >
-        <Diamond size={32} color={C.maroonDk} />
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-linear-160 from-maroon-dk via-maroon to-maroon-lt font-sans">
+      <div className="w-16 h-16 rounded-full bg-linear-135 from-gold to-gold-lt flex items-center justify-center shadow-[0_6px_20px_rgba(201,151,58,0.31)] animate-[pulse_1.5s_ease-in-out_infinite]">
+        <Diamond size={32} color="#5C1212" />
       </div>
-      <div style={{ marginTop: 18, fontSize: 14, fontWeight: 600, color: C.goldLt }}>
+      <div className="mt-4.5 text-sm font-semibold text-gold-lt">
         กำลังตรวจสอบสิทธิ์...
       </div>
-      <style>{`@keyframes pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.08);opacity:0.85;}}`}</style>
     </div>
   );
 }

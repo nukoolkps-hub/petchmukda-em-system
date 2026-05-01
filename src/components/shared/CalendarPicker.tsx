@@ -23,29 +23,47 @@ export default function CalendarPicker({value,onChange,minDate,error}){
   }
   const has=!!value;
   return(
-    <div ref={ref} style={{position:"relative",marginBottom:14}}>
-      <button onClick={()=>setOpen(v=>!v)} style={{width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 16px",border:`1.5px solid ${error?C.red:open?C.gold:has?C.gold+"90":C.border}`,borderRadius:14,cursor:"pointer",fontFamily:"inherit",background:has?C.goldPale+"50":C.white,boxShadow:open?`0 0 0 3px ${C.gold}20`:"none",transition:"all 0.2s",boxSizing:"border-box"}}>
-        <div style={{width:36,height:36,borderRadius:10,flexShrink:0,background:has?`linear-gradient(135deg,${C.gold},${C.goldLt})`:C.creamDk,display:"flex",alignItems:"center",justifyContent:"center"}}>
+    <div ref={ref} className="relative mb-3.5">
+      <button onClick={()=>setOpen(v=>!v)}
+        className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-[14px] cursor-pointer font-[inherit] box-border transition-all border-[1.5px]
+          ${has ? "bg-gold-pale/30" : "bg-white"}
+          ${open ? "shadow-[0_0_0_3px_var(--color-gold)/0.13]" : "shadow-none"}
+          ${error ? "border-red" : open ? "border-gold" : has ? "border-[#C9973A90]" : "border-bdr"}`}>
+        <div className={`w-9 h-9 rounded-[10px] shrink-0 flex items-center justify-center ${has ? "bg-linear-135 from-gold to-gold-lt" : "bg-cream-dk"}`}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={has?"#fff":C.textSoft} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
-        <div style={{flex:1,textAlign:"left"}}><div style={{fontSize:16,fontWeight:has?600:400,color:has?C.text:C.textSoft}}>{has?fmtShort(value):"เลือกวันที่"}</div></div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textSoft} strokeWidth="2.5" strokeLinecap="round" style={{transform:open?"rotate(180deg)":"rotate(0)",transition:"transform 0.2s"}}><polyline points="6 9 12 15 18 9"/></svg>
+        <div className="flex-1 text-left">
+          <div className={`text-base ${has ? "font-semibold text-txt" : "font-normal text-txt-soft"}`}>{has?fmtShort(value):"เลือกวันที่"}</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textSoft} strokeWidth="2.5" strokeLinecap="round"
+          className={`transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      {error&&<div style={{color:C.red,fontSize:13,marginTop:5}}>⚠ {error}</div>}
+      {error&&<div className="text-red text-[13px] mt-1.5">⚠ {error}</div>}
       {open&&(
-        <div style={{position:"absolute",top:"calc(100% + 6px)",left:0,right:0,zIndex:400,background:C.white,borderRadius:16,padding:"18px 16px 14px",boxShadow:"0 16px 48px rgba(90,30,10,0.15)",border:`1px solid ${C.border}`,animation:"calFade 0.18s ease"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-            <button onClick={prevM} style={{width:32,height:32,borderRadius:8,border:`1px solid ${C.border}`,background:C.cream,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMid} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-            <div style={{fontWeight:700,fontSize:15,color:C.maroon}}>{TH_MONTHS[vm]} {vy+543}</div>
-            <button onClick={nextM} style={{width:32,height:32,borderRadius:8,border:`1px solid ${C.border}`,background:C.cream,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMid} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-[400] bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]">
+          <div className="flex items-center justify-between mb-3.5">
+            <button onClick={prevM} className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMid} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+            <div className="font-bold text-[15px] text-maroon">{TH_MONTHS[vm]} {vy+543}</div>
+            <button onClick={nextM} className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMid} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>{TH_DAYS_SHORT.map((d,i)=>(<div key={d} style={{textAlign:"center",fontSize:12,fontWeight:600,padding:"4px 0",color:i===6?C.textSoft+"70":C.textSoft}}>{d}</div>))}</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
-            {cells.map((d,i)=>{ const st=cState(d),ok=st==="normal"||st==="today"; return(<button key={i} onClick={()=>ok&&pick(d)} style={{height:34,borderRadius:8,fontFamily:"inherit",fontSize:13,border:"none",cursor:!d?"default":ok?"pointer":"not-allowed",fontWeight:st==="selected"||st==="today"?700:400,background:st==="selected"?`linear-gradient(135deg,${C.gold},${C.goldLt})`:st==="today"?C.goldPale:"transparent",color:!d?"transparent":st==="selected"?C.white:st==="disabled"||st==="weekend"?C.border:st==="today"?C.gold:C.text,boxShadow:st==="selected"?`0 2px 8px ${C.gold}50`:"none"}}>{d||""}</button>); })}
+          <div className="grid grid-cols-7 mb-1.5">{TH_DAYS_SHORT.map((d,i)=>(
+            <div key={d} className={`text-center text-xs font-semibold py-1 ${i===6?"text-txt-soft/40":"text-txt-soft"}`}>{d}</div>
+          ))}</div>
+          <div className="grid grid-cols-7 gap-[3px]">
+            {cells.map((d,i)=>{ const st=cState(d),ok=st==="normal"||st==="today"; return(
+              <button key={i} onClick={()=>ok&&pick(d)}
+                className={`h-[34px] rounded-lg font-[inherit] text-[13px] border-none
+                  ${!d?"cursor-default":ok?"cursor-pointer":"cursor-not-allowed"}
+                  ${st==="selected"||st==="today"?"font-bold":"font-normal"}`}
+                style={{
+                  background:st==="selected"?`linear-gradient(135deg,${C.gold},${C.goldLt})`:st==="today"?C.goldPale:"transparent",
+                  color:!d?"transparent":st==="selected"?"#fff":st==="disabled"||st==="weekend"?C.border:st==="today"?C.gold:C.text,
+                  boxShadow:st==="selected"?`0 2px 8px ${C.gold}50`:"none",
+                }}>{d||""}</button>
+            ); })}
           </div>
         </div>
       )}
-      <style>{`@keyframes calFade{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}`}</style>
     </div>
   );
 }

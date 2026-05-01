@@ -52,7 +52,7 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
   return(
     <div>
       {/* filter chips */}
-      <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto"}}>
+      <div className="flex gap-1.5 mb-3.5 overflow-x-auto">
         {[
           {id:"all",label:"ทั้งหมด"},
           {id:"pending",label:"⏳ รออนุมัติ", count:advanceRequests.filter(r=>r.status==="pending").length},
@@ -60,24 +60,21 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
           {id:"rejected",label:"❌ ไม่อนุมัติ"},
         ].map(f=>(
           <button key={f.id} onClick={()=>setFilter(f.id)}
-            style={{padding:"7px 14px",borderRadius:20,cursor:"pointer",fontFamily:"inherit",
-              fontSize:12,fontWeight:600,whiteSpace:"nowrap",
-              background:filter===f.id?C.maroon:C.cream,
-              color:filter===f.id?C.goldLt:C.textMid,
-              border:`1px solid ${filter===f.id?C.maroon:C.border}`}}>
+            className={`px-3.5 py-[7px] rounded-[20px] cursor-pointer font-[inherit] text-xs font-semibold whitespace-nowrap border
+              ${filter===f.id ? "bg-maroon text-gold-lt border-maroon" : "bg-cream text-txt-mid border-bdr"}`}>
             {f.label}{f.count>0&&` (${f.count})`}
           </button>
         ))}
       </div>
 
       {filtered.length===0&&(
-        <div style={{textAlign:"center",color:C.textSoft,padding:"50px 0",fontSize:15}}>
-          <div style={{fontSize:42,marginBottom:12}}>💸</div>
+        <div className="text-center text-txt-soft py-[50px] text-[15px]">
+          <div className="text-[42px] mb-3">💸</div>
           ไม่มีคำขอเบิก
         </div>
       )}
 
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      <div className="flex flex-col gap-2.5">
         {filtered.map(req=>{
           const empInfo = empDir.find(e=>e.id===req.empId) || empDir.find(e=>e.name===req.empName);
           const sMap = {
@@ -88,46 +85,41 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
           const s = sMap[req.status]||sMap.pending;
           const dt = new Date(req.submittedAt);
           return(
-            <div key={req.id} style={{background:C.white,borderRadius:14,padding:"14px 16px",
-              boxShadow:"0 2px 10px rgba(90,30,10,0.06)",border:`1px solid ${C.border}`}}>
-              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+            <div key={req.id} className="bg-white rounded-[14px] px-4 py-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr">
+              <div className="flex items-center gap-3 mb-2.5">
                 {empInfo
                   ? <AvatarCircle av={empInfo.av} avType={empInfo.avType} img={empInfo.img} size={40} fontSize={13} border={`2px solid ${C.gold}40`}/>
-                  : <div style={{width:40,height:40,borderRadius:"50%",background:C.gold,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13}}>?</div>
+                  : <div className="w-10 h-10 rounded-full bg-gold flex items-center justify-center text-white font-bold text-[13px]">?</div>
                 }
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:700,color:C.text,fontSize:14}}>{req.empName}</div>
-                  <div style={{fontSize:11,color:C.textSoft}}>{dt.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-txt text-sm">{req.empName}</div>
+                  <div className="text-[11px] text-txt-soft">{dt.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}</div>
                 </div>
-                <span style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:20,background:s.bg,color:s.color,whiteSpace:"nowrap"}}>{s.label}</span>
+                <span className="text-[11px] font-semibold px-2.5 py-[3px] rounded-[20px] whitespace-nowrap" style={{background:s.bg,color:s.color}}>{s.label}</span>
               </div>
 
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:C.goldPale,borderRadius:10,marginBottom:10,border:`1px solid ${C.gold}30`}}>
-                <span style={{fontSize:12,color:C.textMid}}>จำนวนเงินที่ขอเบิก</span>
-                <span style={{fontSize:20,fontWeight:800,color:C.maroon}}>฿{TH_NUMBER(req.amount)}</span>
+              <div className="flex items-center justify-between px-3 py-2.5 bg-gold-pale rounded-[10px] mb-2.5 border border-[#C9973A30]">
+                <span className="text-xs text-txt-mid">จำนวนเงินที่ขอเบิก</span>
+                <span className="text-xl font-extrabold text-maroon">฿{TH_NUMBER(req.amount)}</span>
               </div>
 
-              <div style={{fontSize:13,color:C.textMid,marginBottom:10,lineHeight:1.5}}>
-                <span style={{color:C.textSoft}}>เหตุผล:</span> {req.reason}
+              <div className="text-[13px] text-txt-mid mb-2.5 leading-[1.5]">
+                <span className="text-txt-soft">เหตุผล:</span> {req.reason}
               </div>
 
               {empInfo&&(empInfo.bank||empInfo.bankAcc)&&(
                 <button onClick={()=>copyToClipboard(empInfo.bankAcc,req.id)}
-                  style={{width:"100%",fontSize:12,marginBottom:10,padding:"10px 12px",background:C.cream,
-                    border:`1px solid ${copiedAcc===req.id?C.green:C.border}`,borderRadius:8,
-                    cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:10,
-                    transition:"all 0.2s"}}>
-                  <span style={{fontSize:14}}>🏦</span>
-                  <div style={{flex:1,textAlign:"left",minWidth:0}}>
-                    <div style={{fontSize:11,color:C.textSoft,marginBottom:1}}>{empInfo.bank||"-"}</div>
-                    <div style={{fontSize:14,fontWeight:700,color:C.text,letterSpacing:"0.04em"}}>
+                  className={`w-full text-xs mb-2.5 px-3 py-2.5 bg-cream rounded-lg cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
+                    ${copiedAcc===req.id ? "border border-green" : "border border-bdr"}`}>
+                  <span className="text-sm">🏦</span>
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="text-[11px] text-txt-soft mb-px">{empInfo.bank||"-"}</div>
+                    <div className="text-sm font-bold text-txt tracking-[0.04em]">
                       {empInfo.bankAcc||"-"}
                     </div>
                   </div>
-                  <div style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:7,
-                    background:copiedAcc===req.id?C.greenLt:C.goldPale,
-                    color:copiedAcc===req.id?C.green:C.maroon,
-                    fontSize:11,fontWeight:700,whiteSpace:"nowrap",transition:"all 0.2s"}}>
+                  <div className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-[11px] font-bold whitespace-nowrap transition-all
+                    ${copiedAcc===req.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}>
                     {copiedAcc===req.id ? (
                       <>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -145,38 +137,32 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
 
               {/* slip preview */}
               {req.slipImg&&(
-                <div style={{marginBottom:10}}>
-                  <div style={{fontSize:11,color:C.textSoft,marginBottom:5,fontWeight:600}}>📄 สลิปการโอน</div>
+                <div className="mb-2.5">
+                  <div className="text-[11px] text-txt-soft mb-[5px] font-semibold">📄 สลิปการโอน</div>
                   <img src={req.slipImg} alt="slip"
-                    onClick={()=>{const w=window.open("","_blank");if(w){w.document.write(`<img src="${req.slipImg}" style="max-width:100%"/>`);}}}
-                    style={{maxWidth:"100%",maxHeight:200,borderRadius:10,border:`1px solid ${C.border}`,cursor:"pointer"}}/>
+                    onClick={()=>{const w=window.open("","_blank");if(w){w.document.write(`<img src="${req.slipImg}" style="max-width:100%"/>`);} }}
+                    className="max-w-full max-h-[200px] rounded-[10px] border border-bdr cursor-pointer"/>
                 </div>
               )}
 
               {/* actions */}
               {req.status==="pending"&&(
-                <div style={{display:"flex",gap:8,marginTop:10}}>
+                <div className="flex gap-2 mt-2.5">
                   <button onClick={()=>setConfirmReject(req)}
-                    style={{padding:"10px 14px",borderRadius:10,border:`1.5px solid ${C.red}40`,background:C.redLt,
-                      color:C.red,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                    className="px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-red/25 bg-red-lt text-red text-[13px] font-semibold cursor-pointer font-[inherit]">
                     ❌ ปฏิเสธ
                   </button>
-                  <label style={{flex:1,padding:"10px 14px",borderRadius:10,border:"none",
-                    background:`linear-gradient(135deg,${C.gold},${C.goldLt})`,color:C.maroonDk,
-                    fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",
-                    display:"flex",alignItems:"center",justifyContent:"center",gap:6,
-                    boxShadow:`0 3px 10px ${C.gold}40`}}>
+                  <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[13px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-gold)/0.25]">
                     📤 อัปโหลดสลิป (อนุมัติ)
-                    <input type="file" accept="image/*" onChange={e=>{const f=e.target.files?.[0]; if(f) handleApproveSlip(req.id,f);}} style={{display:"none"}}/>
+                    <input type="file" accept="image/*" onChange={e=>{const f=e.target.files?.[0]; if(f) handleApproveSlip(req.id,f);}} className="hidden"/>
                   </label>
                 </div>
               )}
 
               {req.status==="approved"&&!req.slipImg&&(
-                <label style={{display:"block",padding:"10px 14px",borderRadius:10,border:`1.5px dashed ${C.gold}60`,
-                  background:C.goldPale,color:C.maroon,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+                <label className="block px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-gold/40 bg-gold-pale text-maroon text-xs font-semibold cursor-pointer font-[inherit] text-center">
                   📤 อัปโหลดสลิปย้อนหลัง
-                  <input type="file" accept="image/*" onChange={e=>{const f=e.target.files?.[0]; if(f) handleApproveSlip(req.id,f);}} style={{display:"none"}}/>
+                  <input type="file" accept="image/*" onChange={e=>{const f=e.target.files?.[0]; if(f) handleApproveSlip(req.id,f);}} className="hidden"/>
                 </label>
               )}
             </div>
@@ -185,17 +171,16 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
       </div>
 
       {confirmReject&&(
-        <div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",
-          background:"rgba(45,26,14,0.55)",backdropFilter:"blur(4px)",padding:"0 24px"}}>
-          <div style={{background:C.white,borderRadius:20,padding:"28px 24px",width:"100%",maxWidth:340}}>
-            <div style={{textAlign:"center",fontSize:38,marginBottom:8}}>❌</div>
-            <div style={{fontWeight:700,fontSize:17,color:C.text,textAlign:"center",marginBottom:6}}>ปฏิเสธคำขอนี้?</div>
-            <div style={{fontSize:13,color:C.textMid,textAlign:"center",marginBottom:20}}>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-[4px] px-6">
+          <div className="bg-white rounded-[20px] px-6 py-7 w-full max-w-[340px]">
+            <div className="text-center text-[38px] mb-2">❌</div>
+            <div className="font-bold text-[17px] text-txt text-center mb-1.5">ปฏิเสธคำขอนี้?</div>
+            <div className="text-[13px] text-txt-mid text-center mb-5">
               {confirmReject.empName} · ฿{TH_NUMBER(confirmReject.amount)}
             </div>
-            <div style={{display:"flex",gap:10}}>
-              <button onClick={()=>setConfirmReject(null)} style={{flex:1,padding:"12px",borderRadius:12,border:`1.5px solid ${C.border}`,background:C.white,color:C.textMid,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>ยกเลิก</button>
-              <button onClick={()=>handleReject(confirmReject.id)} style={{flex:1,padding:"12px",borderRadius:12,border:"none",background:C.red,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>ปฏิเสธ</button>
+            <div className="flex gap-2.5">
+              <button onClick={()=>setConfirmReject(null)} className="flex-1 p-3 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]">ยกเลิก</button>
+              <button onClick={()=>handleReject(confirmReject.id)} className="flex-1 p-3 rounded-xl border-none bg-red text-white text-sm font-bold cursor-pointer font-[inherit]">ปฏิเสธ</button>
             </div>
           </div>
         </div>
@@ -203,4 +188,3 @@ export default function AdminAdvancePanel({ advanceRequests, empDir, onUpdate })
     </div>
   );
 }
-

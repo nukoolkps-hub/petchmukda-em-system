@@ -31,91 +31,86 @@ export default function AdvanceRequestModal({ profile, salaryData, advanceReques
   }
 
   return(
-    <div style={{position:"fixed",inset:0,zIndex:800,display:"flex",alignItems:"flex-end",justifyContent:"center",
-      background:"rgba(45,26,14,0.65)",backdropFilter:"blur(6px)"}}>
-      <div style={{background:C.white,borderRadius:"24px 24px 0 0",padding:"24px 22px 28px",width:"100%",maxWidth:430,
-        boxShadow:"0 -12px 40px rgba(45,26,14,0.25)",animation:"slideUp 0.3s cubic-bezier(.22,.68,0,1.1)",maxHeight:"92vh",overflowY:"auto"}}>
+    <div className="fixed inset-0 z-[800] flex items-end justify-center bg-[rgba(45,26,14,0.65)] backdrop-blur-[6px]">
+      <div className="bg-white rounded-t-3xl px-5.5 pt-6 pb-7 w-full max-w-[430px] shadow-[0_-12px_40px_rgba(45,26,14,0.25)] animate-[slideUp_0.3s_cubic-bezier(.22,.68,0,1.1)] max-h-[92vh] overflow-y-auto">
 
         {/* handle */}
-        <div style={{width:40,height:4,borderRadius:2,background:C.border,margin:"0 auto 16px"}}/>
+        <div className="w-10 h-1 rounded-sm bg-bdr mx-auto mb-4"/>
 
         {/* header */}
-        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:18}}>
-          <div style={{width:46,height:46,borderRadius:12,background:`linear-gradient(135deg,${C.maroon},${C.maroonLt})`,
-            display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 14px ${C.maroon}40`}}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.goldLt} strokeWidth="2.2" strokeLinecap="round">
+        <div className="flex items-center gap-3 mb-4.5">
+          <div className="w-[46px] h-[46px] rounded-xl bg-linear-135 from-maroon to-maroon-lt flex items-center justify-center shadow-[0_4px_14px_rgba(123,28,28,0.25)]">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-gold-lt)" strokeWidth="2.2" strokeLinecap="round">
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
             </svg>
           </div>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:800,fontSize:18,color:C.text}}>เบิกเงินล่วงหน้า</div>
-            <div style={{fontSize:12,color:C.textSoft,marginTop:2}}>{TH_MONTHS[now.getMonth()]} {now.getFullYear()+543}</div>
+          <div className="flex-1">
+            <div className="font-extrabold text-lg text-txt">เบิกเงินล่วงหน้า</div>
+            <div className="text-xs text-txt-soft mt-0.5">{TH_MONTHS[now.getMonth()]} {now.getFullYear()+543}</div>
           </div>
         </div>
 
         {/* limit info */}
-        <div style={{background:C.goldPale,borderRadius:12,padding:"12px 14px",marginBottom:14,border:`1px solid ${C.gold}40`}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-            <span style={{fontSize:12,color:C.textMid}}>วงเงินสูงสุด (50% ของเงินเดือน)</span>
-            <span style={{fontSize:13,fontWeight:700,color:C.maroon}}>฿{TH_NUMBER(maxAdvance)}</span>
+        <div className="bg-gold-pale rounded-xl px-3.5 py-3 mb-3.5 border border-gold/25">
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-xs text-txt-mid">วงเงินสูงสุด (50% ของเงินเดือน)</span>
+            <span className="text-[13px] font-bold text-maroon">฿{TH_NUMBER(maxAdvance)}</span>
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-            <span style={{fontSize:12,color:C.textMid}}>เบิกไปแล้วเดือนนี้</span>
-            <span style={{fontSize:13,fontWeight:700,color:C.textMid}}>฿{TH_NUMBER(alreadyRequested)}</span>
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-xs text-txt-mid">เบิกไปแล้วเดือนนี้</span>
+            <span className="text-[13px] font-bold text-txt-mid">฿{TH_NUMBER(alreadyRequested)}</span>
           </div>
-          <div style={{height:1,background:C.gold+"40",margin:"6px 0"}}/>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:13,fontWeight:700,color:C.text}}>คงเหลือเบิกได้</span>
-            <span style={{fontSize:18,fontWeight:800,color:C.green}}>฿{TH_NUMBER(remaining)}</span>
+          <div className="h-px bg-gold/25 my-1.5"/>
+          <div className="flex justify-between items-center">
+            <span className="text-[13px] font-bold text-txt">คงเหลือเบิกได้</span>
+            <span className="text-lg font-extrabold text-green">฿{TH_NUMBER(remaining)}</span>
           </div>
         </div>
 
         {/* amount */}
-        <label style={{display:"block",fontSize:13,color:C.textMid,fontWeight:600,marginBottom:6}}>จำนวนเงินที่ต้องการเบิก</label>
-        <div style={{position:"relative",marginBottom:12}}>
-          <span style={{position:"absolute",left:16,top:"50%",transform:"translateY(-50%)",fontSize:18,color:C.maroon,fontWeight:700}}>฿</span>
+        <label className="block text-[13px] text-txt-mid font-semibold mb-1.5">จำนวนเงินที่ต้องการเบิก</label>
+        <div className="relative mb-3">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-maroon font-bold">฿</span>
           <input type="number" inputMode="decimal" min="0" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="0"
-            style={{width:"100%",padding:"14px 16px 14px 36px",borderRadius:12,border:`1.5px solid ${err.includes("เงิน")||err.includes("วงเงิน")?C.red:C.border}`,
-              fontSize:18,fontWeight:700,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.cream}}/>
+            className={`w-full py-3.5 pr-4 pl-9 rounded-xl text-lg font-bold font-[inherit] text-txt bg-cream box-border outline-none border-[1.5px] ${err.includes("เงิน")||err.includes("วงเงิน") ? "border-red" : "border-bdr"}`}/>
         </div>
 
         {/* quick buttons */}
-        <div style={{display:"flex",gap:6,marginBottom:14}}>
+        <div className="flex gap-1.5 mb-3.5">
           {[1000,2000,5000,Math.floor(remaining/2),remaining].filter((v,i,a)=>v>0&&a.indexOf(v)===i).slice(0,4).map(v=>(
             <button key={v} onClick={()=>setAmount(String(v))}
-              style={{flex:1,padding:"7px 4px",borderRadius:9,border:`1px solid ${C.border}`,background:C.white,color:C.maroon,
-                fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              className="flex-1 py-1.5 px-1 rounded-[9px] border border-bdr bg-white text-maroon text-xs font-semibold cursor-pointer font-[inherit]">
               ฿{TH_NUMBER(v)}
             </button>
           ))}
         </div>
 
         {/* reason */}
-        <label style={{display:"block",fontSize:13,color:C.textMid,fontWeight:600,marginBottom:6}}>เหตุผล</label>
+        <label className="block text-[13px] text-txt-mid font-semibold mb-1.5">เหตุผล</label>
         <textarea value={reason} onChange={e=>setReason(e.target.value)} rows={3} maxLength={150} placeholder="เช่น ค่ารักษาพยาบาล, เหตุฉุกเฉิน"
-          style={{width:"100%",padding:"12px 14px",borderRadius:12,border:`1.5px solid ${err.includes("เหตุผล")?C.red:C.border}`,
-            fontSize:14,resize:"none",outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white,marginBottom:err?6:14,lineHeight:1.6}}/>
+          className={`w-full px-3.5 py-3 rounded-xl text-sm resize-none outline-none font-[inherit] box-border text-txt bg-white leading-relaxed border-[1.5px] ${err.includes("เหตุผล") ? "border-red" : "border-bdr"} ${err ? "mb-1.5" : "mb-3.5"}`}/>
 
-        {err&&<div style={{color:C.red,fontSize:12,marginBottom:14}}>⚠ {err}</div>}
+        {err&&<div className="text-red text-xs mb-3.5">⚠ {err}</div>}
 
         {/* LINE notice */}
-        <div style={{background:"#06C75510",borderRadius:10,padding:"10px 14px",marginBottom:16,border:"1px solid #06C75530",display:"flex",gap:10,alignItems:"center"}}>
-          <div style={{fontSize:18}}>💬</div>
-          <div style={{fontSize:11,color:C.textMid,lineHeight:1.5}}>
-            คำขอจะถูกส่งไปยัง Admin ผ่าน <b style={{color:"#06C755"}}>LINE</b> ทันที<br/>
+        <div className="bg-[#06C75510] rounded-[10px] px-3.5 py-2.5 mb-4 border border-[#06C75530] flex gap-2.5 items-center">
+          <div className="text-lg">💬</div>
+          <div className="text-[11px] text-txt-mid leading-normal">
+            คำขอจะถูกส่งไปยัง Admin ผ่าน <b className="text-[#06C755]">LINE</b> ทันที<br/>
             Admin จะโอนเงินและส่งสลิปกลับมาในแอป
           </div>
         </div>
 
-        <div style={{display:"flex",gap:10}}>
-          <button onClick={onClose} style={{flex:1,padding:"13px",borderRadius:12,border:`1.5px solid ${C.border}`,
-            background:C.white,color:C.textMid,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>ยกเลิก</button>
+        <div className="flex gap-2.5">
+          <button onClick={onClose}
+            className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-[15px] font-semibold cursor-pointer font-[inherit]">
+            ยกเลิก
+          </button>
           <button onClick={submit} disabled={remaining<=0}
-            style={{flex:2,padding:"13px",borderRadius:12,border:"none",
-              background: remaining<=0 ? C.border : `linear-gradient(135deg,${C.gold},${C.goldLt})`,
-              color: remaining<=0 ? C.textSoft : C.maroonDk,
-              fontSize:15,fontWeight:700,cursor: remaining<=0?"not-allowed":"pointer",fontFamily:"inherit",
-              boxShadow: remaining<=0?"none":`0 4px 14px ${C.gold}50`,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+            className={`flex-2 p-3.5 rounded-xl border-none text-[15px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5
+              ${remaining<=0
+                ? "bg-bdr text-txt-soft cursor-not-allowed shadow-none"
+                : "bg-linear-135 from-gold to-gold-lt text-maroon-dk shadow-[0_4px_14px_rgba(201,151,58,0.31)]"}`}>
             <Diamond size={14} color={remaining<=0?C.textSoft:C.maroonDk}/>
             {remaining<=0 ? "เต็มวงเงินแล้ว" : "ส่งคำขอผ่าน LINE"}
           </button>
@@ -124,4 +119,3 @@ export default function AdvanceRequestModal({ profile, salaryData, advanceReques
     </div>
   );
 }
-

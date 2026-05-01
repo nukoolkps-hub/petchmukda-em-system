@@ -86,13 +86,13 @@ export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, adv
   return(
     <div>
       {/* header bar */}
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-        <div style={{flex:1}}>
-          <div style={{fontSize:14,fontWeight:700,color:C.maroon}}>💳 สรุปการจ่ายเงินเดือน</div>
-          <div style={{fontSize:11,color:C.textSoft,marginTop:2}}>คัดลอกเลขบัญชีไปวางในแอปธนาคารได้</div>
+      <div className="flex items-center gap-2 mb-3.5">
+        <div className="flex-1">
+          <div className="text-sm font-bold text-maroon">💳 สรุปการจ่ายเงินเดือน</div>
+          <div className="text-[11px] text-txt-soft mt-0.5">คัดลอกเลขบัญชีไปวางในแอปธนาคารได้</div>
         </div>
         <select value={selMonth} onChange={e=>setSelMonth(e.target.value)}
-          style={{padding:"7px 10px",borderRadius:9,border:`1px solid ${C.border}`,fontSize:13,fontWeight:600,color:C.text,background:C.cream,fontFamily:"inherit",outline:"none"}}>
+          className="px-2.5 py-[7px] rounded-[9px] border border-bdr text-[13px] font-semibold text-txt bg-cream font-[inherit] outline-none">
           {months.map(m=>{
             const [y,mo]=m.split("-");
             return <option key={m} value={m}>{TH_MONTHS[parseInt(mo)-1]} {parseInt(y)+543}</option>;
@@ -101,17 +101,17 @@ export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, adv
       </div>
 
       {/* grand total card */}
-      <div style={{background:`linear-gradient(135deg,${C.maroonDk},${C.maroon})`,borderRadius:16,padding:"18px 20px",marginBottom:14,color:"#fff",boxShadow:`0 6px 20px ${C.maroon}40`,position:"relative",overflow:"hidden"}}>
-        <svg style={{position:"absolute",top:-10,right:-10,opacity:0.12}} width="100" height="100" viewBox="0 0 24 24" fill={C.goldLt}>
+      <div className="bg-linear-135 from-maroon-dk to-maroon rounded-2xl px-5 pt-4.5 pb-5 mb-3.5 text-white shadow-[0_6px_20px_var(--color-maroon)/0.25] relative overflow-hidden">
+        <svg className="absolute -top-2.5 -right-2.5 opacity-[0.12]" width="100" height="100" viewBox="0 0 24 24" fill={C.goldLt}>
           <path d="M6 3h12l4 6-10 12L2 9z"/>
         </svg>
-        <div style={{position:"relative"}}>
-          <div style={{fontSize:12,color:C.goldLt+"AA",marginBottom:3}}>ยอดที่ต้องโอนเดือนนี้ ({filtered.length} คน)</div>
-          <div style={{fontSize:30,fontWeight:800,color:C.goldLt,letterSpacing:"-0.02em",marginBottom:8}}>
+        <div className="relative">
+          <div className="text-xs text-gold-lt/65 mb-[3px]">ยอดที่ต้องโอนเดือนนี้ ({filtered.length} คน)</div>
+          <div className="text-[30px] font-extrabold text-gold-lt tracking-[-0.02em] mb-2">
             ฿{TH_NUMBER(totalPayout)}
           </div>
           {totalAdvance>0 && (
-            <div style={{fontSize:12,color:C.goldLt+"99",paddingTop:8,borderTop:`1px solid ${C.goldLt}25`}}>
+            <div className="text-xs text-gold-lt/60 pt-2 border-t border-gold-lt/15">
               💵 หักเบิกล่วงหน้าไปแล้ว: <b>฿{TH_NUMBER(totalAdvance)}</b> ({filtered.filter(r=>r.advanceTotal>0).length} คน)
             </div>
           )}
@@ -129,26 +129,24 @@ export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, adv
           const dtStr = dt.toLocaleString("th-TH",{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit"});
           const isStale = (confirmed.totalAmount !== totalForMonth) || (confirmed.empCount !== empCountForMonth);
           return (
-            <div style={{background:isStale?C.amberLt:C.greenLt, borderRadius:14, padding:"14px 16px", marginBottom:14,
-              border:`1.5px solid ${isStale?C.amber+"60":C.green+"40"}`}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                <div style={{width:36,height:36,borderRadius:10,background:isStale?C.amberLt:"#fff",
-                  display:"flex",alignItems:"center",justifyContent:"center",
-                  border:`1.5px solid ${isStale?C.amber:C.green}`}}>
+            <div className={`rounded-[14px] px-4 py-3.5 mb-3.5 border-[1.5px] ${isStale ? "bg-amber-lt border-amber/40" : "bg-green-lt border-green/25"}`}>
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className={`w-9 h-9 rounded-[10px] flex items-center justify-center border-[1.5px]
+                  ${isStale ? "bg-amber-lt border-amber" : "bg-white border-green"}`}>
                   {isStale ? "⚠️" : "✅"}
                 </div>
-                <div style={{flex:1}}>
-                  <div style={{fontWeight:700,fontSize:14,color:isStale?C.amber:C.green}}>
+                <div className="flex-1">
+                  <div className={`font-bold text-sm ${isStale ? "text-amber" : "text-green"}`}>
                     {isStale ? "ข้อมูลเปลี่ยนหลังยืนยัน" : "ยืนยันยอดเรียบร้อยแล้ว"}
                   </div>
-                  <div style={{fontSize:11,color:C.textSoft,marginTop:2}}>
+                  <div className="text-[11px] text-txt-soft mt-0.5">
                     📅 {dtStr}
                   </div>
                 </div>
               </div>
               {isStale ? (
                 <>
-                  <div style={{fontSize:12,color:C.textMid,padding:"8px 12px",background:"#fff",borderRadius:8,marginBottom:8,border:`1px dashed ${C.amber}40`,lineHeight:1.5}}>
+                  <div className="text-xs text-txt-mid px-3 py-2 bg-white rounded-lg mb-2 border border-dashed border-amber/25 leading-[1.5]">
                     <div>ตอนยืนยัน: <b>{confirmed.empCount} คน</b> · <b>฿{TH_NUMBER(confirmed.totalAmount)}</b></div>
                     <div>ตอนนี้: <b>{empCountForMonth} คน</b> · <b>฿{TH_NUMBER(totalForMonth)}</b></div>
                   </div>
@@ -158,15 +156,12 @@ export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, adv
                       totalAmount:totalForMonth, empCount:empCountForMonth,
                     }}));
                     showToast?.("ยืนยันยอดใหม่เรียบร้อย");
-                  }} style={{width:"100%",padding:"11px",borderRadius:10,border:"none",
-                    background:`linear-gradient(135deg,${C.amber},${C.gold})`,color:"#fff",
-                    fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",
-                    boxShadow:`0 3px 10px ${C.amber}40`}}>
+                  }} className="w-full py-[11px] rounded-[10px] border-none text-[13px] font-bold cursor-pointer font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640]">
                     🔄 ยืนยันยอดใหม่
                   </button>
                 </>
               ) : (
-                <div style={{fontSize:12,color:C.textMid,padding:"6px 10px",background:"#fff",borderRadius:8}}>
+                <div className="text-xs text-txt-mid px-2.5 py-1.5 bg-white rounded-lg">
                   ยอด <b>฿{TH_NUMBER(confirmed.totalAmount)}</b> · {confirmed.empCount} คน
                 </div>
               )}
@@ -182,10 +177,7 @@ export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, adv
               totalAmount:totalForMonth, empCount:empCountForMonth,
             }}));
             showToast?.("ยืนยันยอดเรียบร้อย");
-          }} style={{width:"100%",padding:"14px",marginBottom:14,borderRadius:12,border:"none",
-            background:`linear-gradient(135deg,${C.gold},${C.goldLt})`,color:C.maroonDk,
-            fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit",
-            boxShadow:`0 4px 14px ${C.gold}50`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          }} className="w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[15px] font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
@@ -195,67 +187,61 @@ export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, adv
       })()}
 
       {/* search */}
-      <div style={{position:"relative",marginBottom:14}}>
+      <div className="relative mb-3.5">
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ค้นหาชื่อหรือตำแหน่ง..."
-          style={{width:"100%",padding:"10px 14px 10px 38px",borderRadius:10,border:`1.5px solid ${C.border}`,fontSize:14,outline:"none",fontFamily:"inherit",boxSizing:"border-box",color:C.text,background:C.white}}/>
-        <svg style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)"}} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textSoft} strokeWidth="2.5" strokeLinecap="round">
+          className="w-full py-2.5 pr-3.5 pl-[38px] rounded-[10px] border-[1.5px] border-bdr text-sm outline-none font-[inherit] box-border text-txt bg-white"/>
+        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textSoft} strokeWidth="2.5" strokeLinecap="round">
           <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
         </svg>
       </div>
 
       {filtered.length===0 && (
-        <div style={{textAlign:"center",color:C.textSoft,padding:"40px 0",fontSize:14}}>
+        <div className="text-center text-txt-soft py-10 text-sm">
           {search.trim() ? `ไม่พบ "${search}"` : "ยังไม่มีข้อมูลเงินเดือนในเดือนนี้"}
         </div>
       )}
 
       {/* employee rows */}
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      <div className="flex flex-col gap-2.5">
         {filtered.map(({emp, empRole, calc, advanceTotal, poolShare})=>{
           const hasBank = emp.bank && emp.bankAcc;
           const lostBase = poolShare?.losesBaseSalary;
           return(
-            <div key={emp.id} style={{background:C.white,borderRadius:14,padding:"14px",
-              border:`1px solid ${lostBase?C.red+"40":C.border}`,
-              boxShadow:lostBase?`0 2px 10px ${C.red}15`:"0 2px 10px rgba(90,30,10,0.06)"}}>
+            <div key={emp.id} className={`bg-white rounded-[14px] p-3.5 border ${lostBase ? "border-[#C0392B40] shadow-[0_2px_10px_#C0392B15]" : "border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]"}`}>
               {/* row 1: name + role + net amount */}
-              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:hasBank?10:0}}>
+              <div className={`flex items-center gap-3 ${hasBank?"mb-2.5":""}`}>
                 <AvatarCircle av={emp.av} avType={emp.avType} img={emp.img} size={42} fontSize={13} border={`2px solid ${C.gold}40`}/>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:700,color:C.text,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{emp.name}</div>
-                  <div style={{fontSize:11,color:C.textSoft,display:"flex",alignItems:"center",gap:4}}>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-txt text-sm whitespace-nowrap overflow-hidden text-ellipsis">{emp.name}</div>
+                  <div className="text-[11px] text-txt-soft flex items-center gap-1">
                     {empRole?.icon} {emp.role||"-"}
                     {emp.poolExclude && (() => {
                       const m = {sell:"💎 ปิดขาย", buy:"🛍 ปิดซื้อ", both:"🔒 ปิดทั้งคู่"};
-                      return <span style={{padding:"1px 6px",borderRadius:6,background:C.redLt,color:C.red,fontWeight:700,fontSize:9}}>{m[emp.poolExclude]}</span>;
+                      return <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-[9px]">{m[emp.poolExclude]}</span>;
                     })()}
                   </div>
                 </div>
-                <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:11,color:C.textSoft}}>เงินสุทธิ</div>
-                  <div style={{fontSize:18,fontWeight:800,color:lostBase?C.red:C.maroon}}>฿{TH_NUMBER(calc.net)}</div>
-                  {advanceTotal>0&&<div style={{fontSize:10,color:C.textSoft,marginTop:1}}>(หักเบิก ฿{TH_NUMBER(advanceTotal)})</div>}
+                <div className="text-right">
+                  <div className="text-[11px] text-txt-soft">เงินสุทธิ</div>
+                  <div className={`text-lg font-extrabold ${lostBase?"text-red":"text-maroon"}`}>฿{TH_NUMBER(calc.net)}</div>
+                  {advanceTotal>0&&<div className="text-[10px] text-txt-soft mt-px">(หักเบิก ฿{TH_NUMBER(advanceTotal)})</div>}
                 </div>
               </div>
 
               {/* row 2: bank info with copy button */}
               {hasBank ? (
                 <button onClick={()=>copyToClipboard(emp.bankAcc,emp.id)}
-                  style={{width:"100%",fontSize:12,padding:"10px 12px",background:C.cream,
-                    border:`1px solid ${copiedAcc===emp.id?C.green:C.border}`,borderRadius:9,
-                    cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:10,
-                    transition:"all 0.2s"}}>
-                  <span style={{fontSize:14}}>🏦</span>
-                  <div style={{flex:1,textAlign:"left",minWidth:0}}>
-                    <div style={{fontSize:11,color:C.textSoft,marginBottom:1}}>{emp.bank}</div>
-                    <div style={{fontSize:14,fontWeight:700,color:C.text,letterSpacing:"0.04em"}}>
+                  className={`w-full text-xs px-3 py-2.5 bg-cream rounded-[9px] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
+                    ${copiedAcc===emp.id ? "border border-green" : "border border-bdr"}`}>
+                  <span className="text-sm">🏦</span>
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="text-[11px] text-txt-soft mb-px">{emp.bank}</div>
+                    <div className="text-sm font-bold text-txt tracking-[0.04em]">
                       {emp.bankAcc}
                     </div>
                   </div>
-                  <div style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:7,
-                    background:copiedAcc===emp.id?C.greenLt:C.goldPale,
-                    color:copiedAcc===emp.id?C.green:C.maroon,
-                    fontSize:11,fontWeight:700,whiteSpace:"nowrap",transition:"all 0.2s"}}>
+                  <div className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-[11px] font-bold whitespace-nowrap transition-all
+                    ${copiedAcc===emp.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}>
                     {copiedAcc===emp.id ? (
                       <>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -270,7 +256,7 @@ export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, adv
                   </div>
                 </button>
               ) : (
-                <div style={{padding:"8px 12px",background:C.redLt,borderRadius:9,fontSize:11,color:C.red,fontWeight:600,display:"flex",alignItems:"center",gap:6,border:`1px solid ${C.red}30`}}>
+                <div className="px-3 py-2 bg-red-lt rounded-[9px] text-[11px] text-red font-semibold flex items-center gap-1.5 border border-[#C0392B30]">
                   ⚠ พนักงานยังไม่กรอกข้อมูลธนาคาร
                 </div>
               )}
@@ -281,4 +267,3 @@ export default function PayrollSummaryPanel({ empDir, salaryData, allLeaves, adv
     </div>
   );
 }
-

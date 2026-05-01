@@ -3,7 +3,7 @@ import { useAuth } from "./contexts/AuthContext";
 
 /* ─── Constants & seed data ────────────────────────────────────── */
 import {
-  C, FONT_LINK, TODAY,
+  C, TODAY,
   LEAVE_TYPES,
 } from "./constants";
 
@@ -39,29 +39,16 @@ import SalaryView from "./components/salary/SalaryView";
 /* ─── Loading Screen ───────────────────────────────────────────── */
 function LoadingScreen({ message = "กำลังโหลดข้อมูล..." }){
   return (
-    <div style={{
-      position:"fixed", inset:0,
-      display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-      background:C.cream, fontFamily:"'Prompt',sans-serif",
-    }}>
-      <div style={{
-        width:64, height:64, borderRadius:"50%",
-        background:`linear-gradient(135deg,${C.gold},${C.goldLt})`,
-        display:"flex", alignItems:"center", justifyContent:"center",
-        boxShadow:`0 6px 20px ${C.gold}50`,
-        animation:"pulse 1.5s ease-in-out infinite",
-      }}>
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-cream font-sans">
+      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gold to-gold-lt flex items-center justify-center shadow-[0_6px_20px_rgba(201,151,58,0.31)] animate-[pulse_1.5s_ease-in-out_infinite]">
         <Diamond size={32} color={C.maroon}/>
       </div>
-      <div style={{ marginTop:18, fontSize:14, fontWeight:600, color:C.maroon }}>
+      <div className="mt-4.5 text-sm font-semibold text-maroon">
         {message}
       </div>
-      <div style={{ marginTop:6, fontSize:11, color:C.textSoft }}>
+      <div className="mt-1.5 text-[11px] text-txt-soft">
         ห้างเพชรทองมุกดา
       </div>
-      <style>{`
-        @keyframes pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.08);opacity:0.85;}}
-      `}</style>
     </div>
   );
 }
@@ -304,28 +291,16 @@ export default function LeaveApp(){
   }
   if(error){
     return (
-      <div style={{
-        position:"fixed", inset:0,
-        display:"flex", alignItems:"center", justifyContent:"center",
-        padding:24, background:C.cream, fontFamily:"'Prompt',sans-serif",
-      }}>
-        <div style={{
-          maxWidth:400, padding:"24px 20px",
-          background:C.white, borderRadius:18, border:`1px solid ${C.red}40`,
-          textAlign:"center", boxShadow:`0 8px 24px ${C.red}20`,
-        }}>
-          <div style={{ fontSize:32, marginBottom:8 }}>⚠️</div>
-          <div style={{ fontSize:16, fontWeight:700, color:C.red, marginBottom:8 }}>
+      <div className="fixed inset-0 flex items-center justify-center p-6 bg-cream font-sans">
+        <div className="max-w-[400px] px-5 py-6 bg-white rounded-[18px] border border-red/25 text-center shadow-[0_8px_24px_rgba(192,57,43,0.12)]">
+          <div className="text-[32px] mb-2">⚠️</div>
+          <div className="text-base font-bold text-red mb-2">
             เชื่อมต่อข้อมูลไม่สำเร็จ
           </div>
-          <div style={{ fontSize:13, color:C.textMid, lineHeight:1.6 }}>
+          <div className="text-[13px] text-txt-mid leading-relaxed">
             {error.message || "ไม่ทราบสาเหตุ"}
           </div>
-          <button onClick={()=>window.location.reload()} style={{
-            marginTop:16, padding:"10px 20px", borderRadius:10, border:"none",
-            background:C.maroon, color:C.white, fontWeight:700, cursor:"pointer",
-            fontFamily:"inherit", fontSize:14,
-          }}>โหลดใหม่</button>
+          <button onClick={()=>window.location.reload()} className="mt-4 px-5 py-2.5 rounded-[10px] border-none bg-maroon text-white font-bold cursor-pointer font-[inherit] text-sm">โหลดใหม่</button>
         </div>
       </div>
     );
@@ -333,68 +308,14 @@ export default function LeaveApp(){
 
   return(
     <>
-      <link rel="stylesheet" href={FONT_LINK}/>
-      <style>{`
-        *{box-sizing:border-box;}body{margin:0;}
-        ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:${C.gold}50;border-radius:2px;}
-        select:focus{outline:none;}
-        @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-        @keyframes ringFill{from{stroke-dashoffset:131.95;}to{stroke-dashoffset:0;}}
-        @keyframes ringFillSide{from{stroke-dashoffset:119.38;}to{stroke-dashoffset:0;}}
-        .leave-app-root{
-          min-height:100vh;
-          background:${C.cream};
-          font-family:'Prompt','Sarabun','Noto Sans Thai',sans-serif;
-          display:flex;
-          flex-direction:column;
-          max-width:430px;
-          margin:0 auto;
-          box-shadow:0 0 60px rgba(90,30,10,0.12);
-        }
-        @media(min-width:768px){
-          body{ background:${C.creamDk}; }
-          .leave-app-root{ max-width:100%; flex-direction:row; min-height:100vh; box-shadow:none; }
-          .leave-sidebar{
-            width:260px; min-width:260px; flex-shrink:0;
-            background:linear-gradient(180deg,${C.maroonDk} 0%,${C.maroon} 60%,${C.maroonLt} 100%);
-            display:flex; flex-direction:column;
-            position:sticky; top:0; height:100vh; overflow:hidden;
-          }
-          .leave-main{ flex:1; display:flex; flex-direction:column; min-width:0; max-width:780px; }
-          .leave-header-mobile{ display:none !important; }
-          .leave-bottom-nav{ display:none !important; }
-          .leave-content{ padding:24px 32px 40px !important; }
-          .leave-sidebar-profile{ padding:28px 24px 20px; border-bottom:1px solid rgba(255,255,255,0.1); }
-          .leave-sidebar-nav{ flex:1; padding:16px 12px; display:flex; flex-direction:column; gap:4px; }
-          .leave-sidebar-nav-item{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; cursor:pointer; border:none; background:none; font-family:inherit; font-size:15px; font-weight:500; color:rgba(255,255,255,0.6); width:100%; text-align:left; transition:all 0.2s; }
-          .leave-sidebar-nav-item:hover{ background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.9); }
-          .leave-sidebar-nav-item.active{ background:linear-gradient(135deg,${C.gold}30,${C.gold}15); color:${C.goldLt}; font-weight:700; border:1px solid ${C.gold}40; }
-          .leave-sidebar-footer{ padding:16px 24px; border-top:1px solid rgba(255,255,255,0.1); }
-          .leave-desktop-header{ background:linear-gradient(160deg,${C.maroonDk} 0%,${C.maroon} 55%,${C.maroonLt} 100%); padding:20px 32px; position:relative; overflow:hidden; flex-shrink:0; }
-        }
-        @media(max-width:767px){
-          .leave-sidebar{ display:none !important; }
-          .leave-desktop-header{ display:none !important; }
-          .leave-bottom-nav{
-            display:flex !important;
-            position:fixed !important;
-            bottom:0;
-            left:50%;
-            transform:translateX(-50%);
-            width:100%;
-            max-width:430px;
-            z-index:100;
-          }
-          .leave-content{ padding-bottom:90px !important; }
-        }
-      `}</style>
+      {/* Styles moved to index.css — layout shell, keyframes, media queries */}
 
       <div className="leave-app-root">
 
         {/* ══ SIDEBAR (desktop only) ══ */}
         <div className="leave-sidebar">
           {/* Mosaic bg */}
-          <svg style={{position:"absolute",top:0,right:0,height:"100%",width:"70%",pointerEvents:"none",opacity:0.6}} viewBox="0 0 220 500" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <svg className="absolute top-0 right-0 h-full w-[70%] pointer-events-none opacity-60" viewBox="0 0 220 500" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="sg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E8C87A" stopOpacity="0.18"/><stop offset="100%" stopColor="#C9973A" stopOpacity="0.04"/></linearGradient>
               <linearGradient id="sg2" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#E8C87A" stopOpacity="0.22"/><stop offset="100%" stopColor="#9B3030" stopOpacity="0.06"/></linearGradient>
@@ -407,38 +328,38 @@ export default function LeaveApp(){
           </svg>
 
           {/* Brand */}
-          <div className="leave-sidebar-profile" style={{position:"relative"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+          <div className="leave-sidebar-profile relative">
+            <div className="flex items-center gap-2.5 mb-4">
               {/* Long-press target — same as mobile */}
               <div onMouseDown={startHold} onMouseUp={endHold} onMouseLeave={endHold}
                 onTouchStart={startHold} onTouchEnd={endHold}
-                style={{position:"relative",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",cursor:"default",userSelect:"none",flexShrink:0}}>
+                className="relative w-7 h-7 flex items-center justify-center cursor-default select-none shrink-0">
                 {holding&&(
-                  <svg style={{position:"absolute",inset:-8,width:44,height:44,pointerEvents:"none"}} viewBox="0 0 44 44">
+                  <svg className="absolute -inset-2 w-11 h-11 pointer-events-none" viewBox="0 0 44 44">
                     <circle cx="22" cy="22" r="19" fill="none" stroke={C.goldLt} strokeWidth="2.5" strokeOpacity="0.25"/>
                     <circle cx="22" cy="22" r="19" fill="none" stroke={C.goldLt} strokeWidth="2.5"
                       strokeLinecap="round" strokeDasharray="119.38" strokeDashoffset="119.38"
                       transform="rotate(-90 22 22)"
                       onAnimationEnd={onRingComplete}
-                      style={{animation:"ringFillSide 5s linear forwards"}}/>
+                      className="animate-[ringFillSide_5s_linear_forwards]"/>
                   </svg>
                 )}
                 <Diamond size={18} color={holding?"#fff":C.goldLt}/>
               </div>
               <div>
-                <div style={{color:C.goldLt,fontWeight:800,fontSize:16,lineHeight:1}}>ห้างเพชรทองมุกดา</div>
-                <div style={{color:C.goldLt+"70",fontSize:11,marginTop:2}}>ระบบพนักงาน</div>
+                <div className="text-gold-lt font-extrabold text-base leading-none">ห้างเพชรทองมุกดา</div>
+                <div className="text-gold-lt/45 text-[11px] mt-0.5">ระบบพนักงาน</div>
               </div>
             </div>
             {/* Profile */}
             {profile && (
-              <button onClick={()=>setShowEditProfile(true)} style={{display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,0.08)",border:`1px solid ${C.goldLt}25`,borderRadius:14,padding:"10px 14px",width:"100%",cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}>
+              <button onClick={()=>setShowEditProfile(true)} className="flex items-center gap-3 bg-white/8 border border-gold-lt/15 rounded-[14px] px-3.5 py-2.5 w-full cursor-pointer font-[inherit] transition-all duration-200">
                 <AvatarCircle av={profile.av} avType={profile.avType} img={profile.img} size={40} fontSize={14} border={`2px solid ${C.goldLt}50`}/>
-                <div style={{textAlign:"left",flex:1,minWidth:0}}>
-                  <div style={{color:C.white,fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{profile.name}</div>
-                  <div style={{color:C.goldLt+"80",fontSize:12,marginTop:1}}>{profile.role}</div>
+                <div className="text-left flex-1 min-w-0">
+                  <div className="text-white font-bold text-sm truncate">{profile.name}</div>
+                  <div className="text-gold-lt/50 text-xs mt-px">{profile.role}</div>
                 </div>
-                <div style={{flexShrink:0,width:36,height:36,borderRadius:9,background:`${C.goldLt}25`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <div className="shrink-0 w-9 h-9 rounded-[9px] bg-gold-lt/15 flex items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -447,9 +368,9 @@ export default function LeaveApp(){
               </button>
             )}
             {!profile && (
-              <button onClick={()=>setShowEditProfile(true)} style={{display:"flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.08)",border:`1.5px dashed ${C.goldLt}50`,borderRadius:14,padding:"10px 14px",width:"100%",cursor:"pointer",fontFamily:"inherit"}}>
-                <span style={{fontSize:22}}>👤</span>
-                <span style={{color:C.goldLt,fontSize:14,fontWeight:600}}>ตั้งค่าโปรไฟล์</span>
+              <button onClick={()=>setShowEditProfile(true)} className="flex items-center gap-2.5 bg-white/8 border-[1.5px] border-dashed border-gold-lt/30 rounded-[14px] px-3.5 py-2.5 w-full cursor-pointer font-[inherit]">
+                <span className="text-[22px]">👤</span>
+                <span className="text-gold-lt text-sm font-semibold">ตั้งค่าโปรไฟล์</span>
               </button>
             )}
           </div>
@@ -460,22 +381,18 @@ export default function LeaveApp(){
               const active=tab===n.id, isAdminTab=n.id==="admin";
               return(
                 <button key={n.id} onClick={()=>goTab(n.id)}
-                  className={`leave-sidebar-nav-item${active?" active":""}`}
-                  style={{color: active?(isAdminTab?C.goldLt:C.goldLt):"rgba(255,255,255,0.55)"}}>
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 relative ${active ? "bg-white/12" : "bg-transparent"} ${active ? "text-gold-lt" : "text-white/55"}`}>
                   <span>{n.icon(active)}</span>
                   <span>{n.label}</span>
-                  {active && <div style={{marginLeft:"auto",width:6,height:6,borderRadius:"50%",background:C.gold}}/>}
+                  {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-gold"/>}
                 </button>
               );
             })}
           </div>
 
           {/* hold hint */}
-          <div className="leave-sidebar-footer" style={{position:"relative"}}>
-            <button onClick={authSignOut} style={{width:"100%",padding:"10px 16px",borderRadius:10,border:`1px solid rgba(255,255,255,0.15)`,background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.5)",cursor:"pointer",fontFamily:"inherit",fontSize:13,fontWeight:500,display:"flex",alignItems:"center",justifyContent:"center",gap:8,transition:"all 0.2s",marginBottom:12}}
-              onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.12)";e.currentTarget.style.color="rgba(255,255,255,0.8)"}}
-              onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.color="rgba(255,255,255,0.5)"}}
-            >
+          <div className="leave-sidebar-footer relative">
+            <button onClick={authSignOut} className="w-full px-4 py-2.5 rounded-[10px] border border-white/15 bg-white/6 text-white/50 cursor-pointer font-[inherit] text-[13px] font-medium flex items-center justify-center gap-2 transition-all duration-200 mb-3 hover:bg-white/12 hover:text-white/80">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
@@ -483,7 +400,7 @@ export default function LeaveApp(){
               </svg>
               ออกจากระบบ
             </button>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.25)",textAlign:"center"}}>
+            <div className="text-[11px] text-white/25 text-center">
               Haangpetchthongmukda Co., Ltd
             </div>
           </div>
@@ -493,8 +410,8 @@ export default function LeaveApp(){
         <div className="leave-main">
 
           {/* Desktop top bar */}
-          <div className="leave-desktop-header" style={{position:"relative",overflow:"hidden"}}>
-            <svg style={{position:"absolute",top:0,right:0,height:"100%",width:"54%",pointerEvents:"none"}} viewBox="0 0 220 160" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <div className="leave-desktop-header relative overflow-hidden">
+            <svg className="absolute top-0 right-0 h-full w-[54%] pointer-events-none" viewBox="0 0 220 160" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="dh1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E8C87A" stopOpacity="0.22"/><stop offset="100%" stopColor="#C9973A" stopOpacity="0.06"/></linearGradient>
                 <linearGradient id="dh2" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#E8C87A" stopOpacity="0.28"/><stop offset="100%" stopColor="#9B3030" stopOpacity="0.08"/></linearGradient>
@@ -503,25 +420,21 @@ export default function LeaveApp(){
                 <polygon key={i} points={p} fill={`url(#${g})`}/>
               ))}
             </svg>
-            <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div className="relative flex items-center justify-between">
               <div>
-                <div style={{color:C.white,fontWeight:700,fontSize:22}}>{tab==="home"?"หน้าแรก":pageTitle[tab]}</div>
-                {tab==="home"&&profile&&<div style={{color:C.goldLt+"90",fontSize:14,marginTop:2}}>สวัสดีค่ะ คุณ{profile.name}</div>}
+                <div className="text-white font-bold text-[22px]">{tab==="home"?"หน้าแรก":pageTitle[tab]}</div>
+                {tab==="home"&&profile&&<div className="text-gold-lt/55 text-sm mt-0.5">สวัสดีค่ะ คุณ{profile.name}</div>}
               </div>
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div className="flex items-center gap-2.5">
                 <button onClick={()=>setShowManual(true)} title="กฏการคำนวณต่างๆ"
-                  style={{display:"flex",alignItems:"center",gap:8,padding:"7px 12px",
-                    borderRadius:10,border:`1px solid ${C.goldLt}40`,
-                    background:"rgba(255,255,255,0.12)",cursor:"pointer",
-                    color:"#fff",fontFamily:"inherit",fontSize:12,fontWeight:600,
-                    flexShrink:0,whiteSpace:"nowrap"}}>
+                  className="flex items-center gap-2 px-3 py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-xs font-semibold shrink-0 whitespace-nowrap">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
                     <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
                   </svg>
                   กฏการคำนวณต่างๆ
                 </button>
-                <div style={{fontSize:13,color:C.goldLt+"80"}}>
+                <div className="text-[13px] text-gold-lt/50">
                   {new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
                 </div>
               </div>
@@ -529,10 +442,10 @@ export default function LeaveApp(){
           </div>
 
         {/* ── Mobile Header ── */}
-        <div className="leave-header-mobile" style={{background:`linear-gradient(160deg,${C.maroonDk} 0%,${C.maroon} 55%,${C.maroonLt} 100%)`,padding:"20px 20px 0",flexShrink:0,position:"relative",overflow:"hidden"}}>
+        <div className="leave-header-mobile bg-gradient-to-br from-maroon-dk via-maroon to-maroon-lt pt-5 px-5 pb-0 shrink-0 relative overflow-hidden">
 
           {/* Mosaic decoration – right side */}
-          <svg style={{position:"absolute",top:0,right:0,height:"100%",width:"54%",pointerEvents:"none",opacity:1}} viewBox="0 0 220 160" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <svg className="absolute top-0 right-0 h-full w-[54%] pointer-events-none" viewBox="0 0 220 160" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="mg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E8C87A" stopOpacity="0.22"/><stop offset="100%" stopColor="#C9973A" stopOpacity="0.06"/></linearGradient>
               <linearGradient id="mg2" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#E8C87A" stopOpacity="0.30"/><stop offset="100%" stopColor="#9B3030" stopOpacity="0.08"/></linearGradient>
@@ -594,15 +507,15 @@ export default function LeaveApp(){
             <line x1="130" y1="0" x2="220" y2="60" stroke="#E8C87A" strokeWidth="0.3" opacity="0.10"/>
           </svg>
 
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,position:"relative"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div className="flex items-center justify-between mb-4 relative">
+            <div className="flex items-center gap-2.5">
               {tab==="home"?(
-                <div style={{display:"flex",alignItems:"center",gap:10,userSelect:"none",WebkitUserSelect:"none"}}>
+                <div className="flex items-center gap-2.5 select-none">
                   {/* Long-press ONLY on diamond */}
                   <div onMouseDown={startHold} onMouseUp={endHold} onMouseLeave={endHold} onTouchStart={startHold} onTouchEnd={endHold}
-                    style={{position:"relative",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                    className="relative w-8 h-8 flex items-center justify-center cursor-pointer shrink-0">
                     {holding&&(
-                      <svg style={{position:"absolute",inset:-8,width:48,height:48,pointerEvents:"none"}}
+                      <svg className="absolute -inset-2 w-12 h-12 pointer-events-none"
                         viewBox="0 0 48 48">
                         <circle cx="24" cy="24" r="21" fill="none"
                           stroke={C.goldLt} strokeWidth="3" strokeOpacity="0.2"/>
@@ -613,25 +526,21 @@ export default function LeaveApp(){
                           strokeDashoffset="131.95"
                           transform="rotate(-90 24 24)"
                           onAnimationEnd={onRingComplete}
-                          style={{animation:"ringFill 5s linear forwards"}}/>
+                          className="animate-[ringFill_5s_linear_forwards]"/>
                       </svg>
                     )}
                     <Diamond size={20} color={holding ? "#fff" : C.goldLt}/>
                   </div>
                   <div>
-                    <div style={{color:C.goldLt,fontWeight:800,fontSize:18,lineHeight:1,letterSpacing:"0.01em"}}>ห้างเพชรทองมุกดา</div>
-                    <div style={{color:C.goldLt+"80",fontSize:11,letterSpacing:"0.04em",marginTop:1}}>ระบบพนักงาน</div>
+                    <div className="text-gold-lt font-extrabold text-lg leading-none tracking-tight">ห้างเพชรทองมุกดา</div>
+                    <div className="text-gold-lt/50 text-[11px] tracking-wider mt-px">ระบบพนักงาน</div>
                   </div>
                 </div>
-              ):(<div style={{color:C.white,fontWeight:700,fontSize:19}}>{pageTitle[tab]}</div>)}
+              ):(<div className="text-white font-bold text-[19px]">{pageTitle[tab]}</div>)}
             </div>
             {tab==="home"&&(
               <button onClick={()=>setShowManual(true)} title="กฏการคำนวณต่างๆ"
-                style={{display:"flex",alignItems:"center",gap:6,padding:"7px 11px",
-                  borderRadius:10,border:`1px solid ${C.goldLt}40`,
-                  background:"rgba(255,255,255,0.12)",cursor:"pointer",
-                  color:"#fff",fontFamily:"inherit",fontSize:11,fontWeight:600,
-                  flexShrink:0,whiteSpace:"nowrap"}}>
+                className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-[11px] font-semibold shrink-0 whitespace-nowrap">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
                   <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
@@ -639,21 +548,21 @@ export default function LeaveApp(){
                 กฏการคำนวณ
               </button>
             )}
-            {tab!=="home"&&<div style={{width:36,height:36}}/>}
+            {tab!=="home"&&<div className="w-9 h-9"/>}
           </div>
 
           {/* profile strip */}
           {tab==="home"&&(
-            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:18,position:"relative"}}>
+            <div className="flex items-center gap-3.5 mb-4.5 relative">
               {profile ? (
-                <button onClick={()=>setShowEditProfile(true)} style={{background:"none",border:"none",padding:0,cursor:"pointer",display:"flex",alignItems:"center",gap:14,flex:1}}>
+                <button onClick={()=>setShowEditProfile(true)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3.5 flex-1">
                   <AvatarCircle av={profile.av} avType={profile.avType} img={profile.img} size={56} fontSize={18} border={`2.5px solid ${C.goldLt}50`}/>
-                  <div style={{textAlign:"left"}}>
-                    <div style={{color:C.goldLt+"80",fontSize:13}}>สวัสดีค่ะ</div>
-                    <div style={{color:C.white,fontWeight:700,fontSize:20,lineHeight:1.15}}>{profile.name}</div>
-                    <div style={{color:C.goldLt+"90",fontSize:13,marginTop:2}}>{profile.role}</div>
+                  <div className="text-left">
+                    <div className="text-gold-lt/50 text-[13px]">สวัสดีค่ะ</div>
+                    <div className="text-white font-bold text-xl leading-[1.15]">{profile.name}</div>
+                    <div className="text-gold-lt/55 text-[13px] mt-0.5">{profile.role}</div>
                   </div>
-                  <div style={{marginLeft:"auto",width:40,height:40,borderRadius:10,background:`${C.goldLt}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <div className="ml-auto w-10 h-10 rounded-[10px] bg-gold-lt/13 flex items-center justify-center shrink-0">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -661,22 +570,22 @@ export default function LeaveApp(){
                   </div>
                 </button>
               ):(
-                <button onClick={()=>setShowEditProfile(true)} style={{display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,0.12)",border:`1.5px dashed ${C.goldLt}60`,borderRadius:14,padding:"12px 16px",cursor:"pointer",flex:1,fontFamily:"inherit"}}>
-                  <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>👤</div>
-                  <div style={{textAlign:"left"}}>
-                    <div style={{color:C.goldLt,fontWeight:700,fontSize:15}}>ตั้งค่าโปรไฟล์ของคุณ</div>
-                    <div style={{color:C.goldLt+"80",fontSize:12,marginTop:2}}>กรอกชื่อและเลือกรูปโปรไฟล์</div>
+                <button onClick={()=>setShowEditProfile(true)} className="flex items-center gap-3 bg-white/12 border-[1.5px] border-dashed border-gold-lt/37 rounded-[14px] px-4 py-3 cursor-pointer flex-1 font-[inherit]">
+                  <div className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center text-[22px]">👤</div>
+                  <div className="text-left">
+                    <div className="text-gold-lt font-bold text-[15px]">ตั้งค่าโปรไฟล์ของคุณ</div>
+                    <div className="text-gold-lt/50 text-xs mt-0.5">กรอกชื่อและเลือกรูปโปรไฟล์</div>
                   </div>
                 </button>
               )}
             </div>
           )}
-          {tab!=="home"&&<div style={{height:8}}/>}
-          <div style={{height:2,background:`linear-gradient(90deg,transparent,${C.gold}80,transparent)`}}/>
+          {tab!=="home"&&<div className="h-2"/>}
+          <div className="h-0.5 bg-gold-divider"/>
         </div>
 
           {/* ── Scrollable Body ── */}
-          <div className="leave-content" style={{flex:1,padding:"18px 16px 90px"}}>
+          <div className="leave-content flex-1 px-4 pt-4.5 pb-[90px]">
 
           {/* HOME */}
           {tab==="home"&&(
@@ -693,23 +602,23 @@ export default function LeaveApp(){
                 const overQ = remaining < 0;
                 const pct = Math.min(100, (usedThisMonth/quota)*100);
                 return (
-                  <div style={{background:C.white,borderRadius:18,padding:"18px 20px",boxShadow:"0 2px 14px rgba(90,30,10,0.08)",border:`1.5px solid ${overQ?C.red+"50":C.border}`,marginBottom:12}}>
+                  <div className={`bg-white rounded-[18px] px-5 py-4.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] mb-3 border-[1.5px] ${overQ ? "border-[#C0392B50]" : "border-bdr"}`}>
                     {/* title row */}
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                    <div className="flex items-center justify-between mb-3.5">
                       <div>
-                        <div style={{fontWeight:700,color:C.maroon,fontSize:16}}>โควต้าการลาเดือนนี้</div>
-                        <div style={{fontSize:12,color:C.textSoft,marginTop:2}}>{now.toLocaleDateString("th-TH",{month:"long",year:"numeric"})}</div>
+                        <div className="font-bold text-maroon text-base">โควต้าการลาเดือนนี้</div>
+                        <div className="text-xs text-txt-soft mt-0.5">{now.toLocaleDateString("th-TH",{month:"long",year:"numeric"})}</div>
                       </div>
-                      <div style={{textAlign:"right"}}>
-                        <div style={{fontSize:13,color:C.textSoft}}>ใช้ไปแล้ว</div>
-                        <div style={{fontSize:26,fontWeight:800,color:overQ?C.red:usedThisMonth>=quota?C.amber:C.maroon,lineHeight:1}}>
-                          {usedThisMonth}<span style={{fontSize:14,color:C.textSoft,fontWeight:500}}>/{quota} ครั้ง</span>
+                      <div className="text-right">
+                        <div className="text-[13px] text-txt-soft">ใช้ไปแล้ว</div>
+                        <div className={`text-[26px] font-extrabold leading-none ${overQ ? "text-red" : usedThisMonth>=quota ? "text-amber" : "text-maroon"}`}>
+                          {usedThisMonth}<span className="text-sm text-txt-soft font-medium">/{quota} ครั้ง</span>
                         </div>
                       </div>
                     </div>
 
                     {/* progress dots */}
-                    <div style={{display:"flex",gap:10,marginBottom:14}}>
+                    <div className="flex gap-2.5 mb-3.5">
                       {Array.from({length:quota}).map((_,i)=>{
                         const filled = i < usedThisMonth;
                         const overFill = usedThisMonth > quota && i < usedThisMonth;
@@ -723,38 +632,38 @@ export default function LeaveApp(){
                     </div>
 
                     {/* status chips */}
-                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    <div className="flex gap-2 flex-wrap">
                       {remaining > 0 && (
-                        <div style={{background:C.greenLt,borderRadius:20,padding:"5px 14px",display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{fontSize:14}}>✅</span>
-                          <span style={{fontSize:13,fontWeight:600,color:C.green}}>ลาได้อีก {remaining} ครั้ง</span>
+                        <div className="bg-green-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
+                          <span className="text-sm">✅</span>
+                          <span className="text-[13px] font-semibold text-green">ลาได้อีก {remaining} ครั้ง</span>
                         </div>
                       )}
                       {usedThisMonth === quota && (
-                        <div style={{background:C.amberLt,borderRadius:20,padding:"5px 14px",display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{fontSize:14}}>⚠️</span>
-                          <span style={{fontSize:13,fontWeight:600,color:C.amber}}>ใช้ครบโควต้าแล้ว</span>
+                        <div className="bg-amber-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
+                          <span className="text-sm">⚠️</span>
+                          <span className="text-[13px] font-semibold text-amber">ใช้ครบโควต้าแล้ว</span>
                         </div>
                       )}
                       {usedThisMonth > quota && (
-                        <div style={{background:C.redLt,borderRadius:20,padding:"5px 14px",display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{fontSize:14}}>🚨</span>
-                          <span style={{fontSize:13,fontWeight:600,color:C.red}}>เกินโควต้า {usedThisMonth - quota} ครั้ง</span>
+                        <div className="bg-red-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
+                          <span className="text-sm">🚨</span>
+                          <span className="text-[13px] font-semibold text-red">เกินโควต้า {usedThisMonth - quota} ครั้ง</span>
                         </div>
                       )}
-                      <div style={{background:C.cream,borderRadius:20,padding:"5px 14px",display:"flex",alignItems:"center",gap:6,border:`1px solid ${C.border}`}}>
-                        <span style={{fontSize:14}}>📋</span>
-                        <span style={{fontSize:12,color:C.textMid}}>ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน</span>
+                      <div className="bg-cream rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5 border border-bdr">
+                        <span className="text-sm">📋</span>
+                        <span className="text-xs text-txt-mid">ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน</span>
                       </div>
                     </div>
 
                     {/* banner – แสดงตั้งแต่ครั้งที่ 2 เป็นต้นไป */}
                     {usedThisMonth >= quota && (
-                      <div style={{marginTop:12,background:`linear-gradient(135deg,${C.red}10,${C.red}18)`,borderRadius:12,padding:"10px 14px",border:`1px solid ${C.red}30`,display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{fontSize:20,flexShrink:0}}>💰</div>
-                        <div style={{fontSize:13,color:C.red,fontWeight:600,lineHeight:1.5}}>
+                      <div className="mt-3 bg-gradient-to-br from-red/6 to-red/9 rounded-xl px-3.5 py-2.5 border border-red/19 flex items-center gap-2.5">
+                        <div className="text-xl shrink-0">💰</div>
+                        <div className="text-[13px] text-red font-semibold leading-relaxed">
                           การลาต่อจากนี้ไป ‼️<br/>
-                          <span style={{fontWeight:700}}>จะกระทบต่อเงินเดือน</span>
+                          <span className="font-bold">จะกระทบต่อเงินเดือน</span>
                         </div>
                       </div>
                     )}
@@ -763,23 +672,23 @@ export default function LeaveApp(){
               })()}
 
               {/* leave type mini stats */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:6}}>
+              <div className="grid grid-cols-2 gap-2.5 mb-1.5">
                 {LEAVE_TYPES.map(lt=>{
                   const now2 = new Date();
                   const ym2 = `${now2.getFullYear()}-${String(now2.getMonth()+1).padStart(2,"0")}`;
                   const usedType = profile ? allLeaves.filter(lv=>lv.empName===profile.name&&lv.type===lt.id&&lv.start.startsWith(ym2)).length : 0;
                   return(
-                    <div key={lt.id} style={{background:C.white,borderRadius:14,padding:"14px",boxShadow:"0 1px 6px rgba(90,30,10,0.06)",border:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:12}}>
-                      <div style={{width:36,height:36,borderRadius:10,background:lt.colorLt,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>{lt.icon}</div>
+                    <div className="bg-white rounded-[14px] p-3.5 shadow-[0_1px_6px_rgba(90,30,10,0.06)] border border-bdr flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[19px] shrink-0" style={{background:lt.colorLt}}>{lt.icon}</div>
                       <div>
-                        <div style={{fontSize:14,fontWeight:600,color:C.text}}>{lt.label}</div>
-                        <div style={{fontSize:13,color:C.textSoft,marginTop:1}}>เดือนนี้ <b style={{color:lt.color}}>{usedType}</b> ครั้ง</div>
+                        <div className="text-sm font-semibold text-txt">{lt.label}</div>
+                        <div className="text-[13px] text-txt-soft mt-px">เดือนนี้ <b style={{color:lt.color}}>{usedType}</b> ครั้ง</div>
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <div style={{fontSize:12,color:C.textSoft,textAlign:"right",marginBottom:14}}>ข้อมูล ณ วันที่ {new Date().toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"numeric"})}</div>
+              <div className="text-xs text-txt-soft text-right mb-3.5">ข้อมูล ณ วันที่ {new Date().toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"numeric"})}</div>
               <TeamCalendar allLeaves={allLeaves} empDir={[...empDir, ...(profile&&!empDir.find(e=>e.name===profile.name)?[{id:"me",name:profile.name,av:profile.av,avType:profile.avType,img:profile.img}]:[])]}/>
             </>
           )}
@@ -787,7 +696,7 @@ export default function LeaveApp(){
           {/* REQUEST */}
           {tab==="request"&&!submitted&&(
             <div>
-              <div style={{textAlign:"center",marginBottom:2}}><Diamond size={14}/></div>
+              <div className="text-center mb-0.5"><Diamond size={14}/></div>
               <GoldDivider/>
 
               {/* quota status in form — แสดงเสมอ แต่เปลี่ยน style ตามสถานะ */}
@@ -798,92 +707,88 @@ export default function LeaveApp(){
                 const rem = 2 - usedThisMonth;
                 const overQuota = usedThisMonth >= 2;
                 return (
-                  <div style={{background: overQuota?"#FEF2F2":C.goldPale, borderRadius:12, padding:"12px 16px", marginBottom:20,
-                    border:`1.5px solid ${overQuota?C.red+"50":C.gold+"50"}`, display:"flex", alignItems:"center", gap:12}}>
-                    <div style={{fontSize:22}}>{overQuota?"⚠️":"📋"}</div>
-                    <div style={{flex:1}}>
-                      <div style={{fontWeight:700,fontSize:14,color:overQuota?C.red:C.maroon}}>
+                  <div className={`rounded-xl px-4 py-3 mb-5 flex items-center gap-3 border-[1.5px] ${overQuota ? "bg-[#FEF2F2] border-[#C0392B50]" : "bg-gold-pale border-[#C9973A50]"}`}>
+                    <div className="text-[22px]">{overQuota?"⚠️":"📋"}</div>
+                    <div className="flex-1">
+                      <div className={`font-bold text-sm ${overQuota ? "text-red" : "text-maroon"}`}>
                         {overQuota
                           ? "หมดโควต้าแล้ว - การลาครั้งต่อไปจะกระทบต่อเงินเดือน"
                           : `โควต้าเดือนนี้เหลือ ${rem} ครั้ง`}
                       </div>
-                      <div style={{fontSize:12,color:C.textSoft,marginTop:2}}>ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน</div>
+                      <div className="text-xs text-txt-soft mt-0.5">ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน</div>
                     </div>
-                    <div style={{textAlign:"right",flexShrink:0}}>
-                      <div style={{fontSize:20,fontWeight:800,color:overQuota?C.red:C.gold}}>{usedThisMonth}</div>
-                      <div style={{fontSize:11,color:C.textSoft}}>/ 2 ครั้ง</div>
+                    <div className="text-right shrink-0">
+                      <div className={`text-xl font-extrabold ${overQuota ? "text-red" : "text-gold"}`}>{usedThisMonth}</div>
+                      <div className="text-[11px] text-txt-soft">/ 2 ครั้ง</div>
                     </div>
                   </div>
                 );
               })()}
 
-              <div style={{marginBottom:22}}>
-                <div style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:12}}>ประเภทการลา</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div className="mb-5.5">
+                <div className="text-base font-bold text-txt mb-3">ประเภทการลา</div>
+                <div className="grid grid-cols-2 gap-3">
                   {LEAVE_TYPES.map(lt=>(<LeaveTypeCard key={lt.id} lt={lt} selected={form.type} onClick={()=>setForm({...form,type:lt.id})} balance={balance[lt.id]||15} used={used[lt.id]||0}/>))}
                 </div>
-                {errors.type&&<div style={{color:C.red,fontSize:13,marginTop:8}}>⚠ {errors.type}</div>}
+                {errors.type&&<div className="text-red text-[13px] mt-2">⚠ {errors.type}</div>}
               </div>
-              <div style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:8}}>วันที่เริ่มลา</div>
+              <div className="text-base font-bold text-txt mb-2">วันที่เริ่มลา</div>
               <CalendarPicker value={form.startDate} onChange={v=>setForm(f=>({...f,startDate:v,endDate:f.endDate&&f.endDate<v?"":f.endDate}))} minDate={TODAY} error={errors.startDate}/>
-              <div style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:8,marginTop:4}}>วันที่สิ้นสุด</div>
+              <div className="text-base font-bold text-txt mb-2 mt-1">วันที่สิ้นสุด</div>
               <CalendarPicker value={form.endDate} onChange={v=>setForm(f=>({...f,endDate:v}))} minDate={form.startDate||TODAY} error={errors.endDate}/>
               {days>0&&(
-                <div style={{background:overLimit?C.redLt:C.goldPale,borderRadius:16,padding:"18px",border:`1.5px solid ${overLimit?C.red+"40":C.gold+"60"}`,margin:"14px 0",display:"flex",alignItems:"center",gap:16}}>
-                  <div style={{width:50,height:50,borderRadius:14,flexShrink:0,background:overLimit?C.red+"18":`linear-gradient(135deg,${C.gold},${C.goldLt})`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <div className={`rounded-2xl p-4.5 my-3.5 flex items-center gap-4 border-[1.5px] ${overLimit ? "bg-red-lt border-[#C0392B40]" : "bg-gold-pale border-[#C9973A60]"}`}>
+                  <div className={`w-[50px] h-[50px] rounded-[14px] shrink-0 flex items-center justify-center ${overLimit ? "bg-[#C0392B18]" : "bg-linear-135 from-gold to-gold-lt"}`}>
                     {overLimit?<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>:<Diamond size={22} color="#fff"/>}
                   </div>
                   <div>
-                    <div style={{fontSize:14,color:C.textMid,marginBottom:2}}>รวมจำนวนวันทำการ</div>
-                    <div style={{fontSize:28,fontWeight:800,color:overLimit?C.red:C.maroon,lineHeight:1.1}}>{days}<span style={{fontSize:16,fontWeight:600}}> วัน</span></div>
-                    <div style={{fontSize:13,color:overLimit?C.red:C.textSoft,marginTop:2}}>{overLimit?`⚠ เกินสิทธิ์! คงเหลือ ${remain} วัน`:"(ไม่รวมวันเสาร์)"}</div>
+                    <div className="text-sm text-txt-mid mb-0.5">รวมจำนวนวันทำการ</div>
+                    <div className={`text-[28px] font-extrabold leading-[1.1] ${overLimit ? "text-red" : "text-maroon"}`}>{days}<span className="text-base font-semibold"> วัน</span></div>
+                    <div className={`text-[13px] mt-0.5 ${overLimit ? "text-red" : "text-txt-soft"}`}>{overLimit?`⚠ เกินสิทธิ์! คงเหลือ ${remain} วัน`:"(ไม่รวมวันเสาร์)"}</div>
                   </div>
                 </div>
               )}
-              {errors.over&&<div style={{color:C.red,fontSize:13,margin:"4px 0 10px"}}>⚠ {errors.over}</div>}
+              {errors.over&&<div className="text-red text-[13px] mx-0 mt-1 mb-2.5">⚠ {errors.over}</div>}
 
-              <button onClick={submit} style={{width:"100%",padding:"17px",marginTop:6,background:`linear-gradient(135deg,${C.gold} 0%,${C.goldLt} 50%,${C.gold} 100%)`,color:C.maroonDk,border:"none",borderRadius:16,fontSize:18,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:10,boxShadow:`0 6px 20px ${C.gold}50`}}>
+              <button onClick={submit} className="w-full p-[17px] mt-1.5 border-none rounded-2xl text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-gradient-to-br from-gold via-gold-lt to-gold text-maroon-dk shadow-[0_6px_20px_rgba(201,151,58,0.31)]">
                 <Diamond size={18} color={C.maroonDk}/>ยื่นคำขอลา
               </button>
 
               {/* ── ประวัติการลาของฉัน ── */}
-              <div style={{marginTop:32}}>
-                <div style={{textAlign:"center",marginBottom:2}}><Diamond size={14}/></div>
+              <div className="mt-8">
+                <div className="text-center mb-0.5"><Diamond size={14}/></div>
                 <GoldDivider/>
-                <div style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+                <div className="text-base font-bold text-txt mb-3.5 flex items-center gap-2">
                   📋 ประวัติการลาของฉัน
-                  <span style={{fontSize:12,color:C.textSoft,fontWeight:500,marginLeft:"auto"}}>{myLeaves.length} รายการ</span>
+                  <span className="text-xs text-txt-soft font-medium ml-auto">{myLeaves.length} รายการ</span>
                 </div>
                 {myLeaves.length===0 && (
-                  <div style={{textAlign:"center",color:C.textSoft,padding:"30px 0",fontSize:14,background:C.cream,borderRadius:14,border:`1px dashed ${C.border}`}}>
+                  <div className="text-center text-txt-soft py-7.5 text-sm bg-cream rounded-[14px] border border-dashed border-bdr">
                     ยังไม่มีประวัติการลา
                   </div>
                 )}
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                <div className="flex flex-col gap-2.5">
                   {[...myLeaves].sort((a,b)=>b.start.localeCompare(a.start)).map(h=>{
                     const lt=LEAVE_TYPES.find(t=>t.id===h.type);
                     return(
                       <div key={h.id} onClick={()=>setHistDetail(histDetail===h.id?null:h.id)}
-                        style={{background:C.white,borderRadius:14,padding:"14px",
-                          boxShadow:"0 2px 10px rgba(90,30,10,0.06)",border:`1px solid ${C.border}`,
-                          display:"flex",alignItems:"flex-start",gap:12,cursor:"pointer"}}>
-                        <div style={{width:40,height:40,borderRadius:10,background:lt?.colorLt||C.creamDk,
-                          display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>
+                        className="bg-white rounded-[14px] p-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3 cursor-pointer">
+                        <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl shrink-0" style={{background:lt?.colorLt||C.creamDk}}>
                           {lt?.icon}
                         </div>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontWeight:700,color:C.text,fontSize:15,marginBottom:3}}>{lt?.label}</div>
-                          <div style={{fontSize:13,color:C.textMid}}>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-txt text-[15px] mb-0.5">{lt?.label}</div>
+                          <div className="text-[13px] text-txt-mid">
                             {fmtDate(h.start)}{h.start!==h.end?` – ${fmtDate(h.end)}`:""} ({h.days} วันทำการ)
                           </div>
                           {histDetail===h.id&&(
-                            <div style={{fontSize:12,color:C.textSoft,marginTop:6,paddingTop:6,borderTop:`1px dashed ${C.border}`}}>
+                            <div className="text-xs text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr">
                               📅 วันที่ยื่น: {h.submitted}
                             </div>
                           )}
                         </div>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textSoft} strokeWidth="2" strokeLinecap="round"
-                          style={{flexShrink:0,marginTop:4,transform:histDetail===h.id?"rotate(90deg)":"rotate(0)",transition:"transform 0.2s"}}>
+                          className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail===h.id ? "rotate-90" : "rotate-0"}`}>
                           <polyline points="9 18 15 12 9 6"/>
                         </svg>
                       </div>
@@ -896,19 +801,19 @@ export default function LeaveApp(){
 
           {/* SUCCESS */}
           {tab==="request"&&submitted&&(
-            <div style={{textAlign:"center",padding:"40px 0 20px"}}>
-              <div style={{width:80,height:80,borderRadius:"50%",background:`linear-gradient(135deg,${C.gold},${C.goldLt})`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",boxShadow:`0 8px 28px ${C.gold}45`}}>
+            <div className="text-center pt-10 pb-5">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gold to-gold-lt flex items-center justify-center mx-auto mb-5 shadow-[0_8px_28px_rgba(201,151,58,0.27)]">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
-              <h2 style={{color:C.maroon,fontWeight:800,fontSize:22,margin:"0 0 8px"}}>ส่งคำขอสำเร็จ!</h2>
-              <p style={{color:C.textMid,fontSize:16,margin:"0 0 22px"}}>บันทึกรายการลาของคุณเรียบร้อยแล้ว</p>
-              <div style={{background:C.goldPale,border:`1px solid ${C.gold}50`,borderRadius:16,padding:"16px 20px",margin:"0 auto 26px",display:"inline-block"}}>
-                <div style={{fontSize:16,color:C.text,fontWeight:700}}>{LEAVE_TYPES.find(t=>t.id===form.type)?.label} · {fmtDate(form.startDate)}{form.startDate!==form.endDate?` – ${fmtDate(form.endDate)}`:""}</div>
-                <div style={{fontSize:14,color:C.textMid,marginTop:4}}>{days} วันทำการ</div>
+              <h2 className="text-maroon font-extrabold text-[22px] m-0 mb-2">ส่งคำขอสำเร็จ!</h2>
+              <p className="text-txt-mid text-base m-0 mb-5.5">บันทึกรายการลาของคุณเรียบร้อยแล้ว</p>
+              <div className="bg-gold-pale border border-gold/30 rounded-2xl px-5 py-4 mx-auto mb-6.5 inline-block">
+                <div className="text-base text-txt font-bold">{LEAVE_TYPES.find(t=>t.id===form.type)?.label} · {fmtDate(form.startDate)}{form.startDate!==form.endDate?` – ${fmtDate(form.endDate)}`:""}</div>
+                <div className="text-sm text-txt-mid mt-1">{days} วันทำการ</div>
               </div><br/>
-              <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
-                <button onClick={reset} style={{padding:"13px 24px",background:`linear-gradient(135deg,${C.gold},${C.goldLt})`,color:C.maroonDk,border:"none",borderRadius:14,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:`0 4px 14px ${C.gold}40`}}>+ ยื่นคำขอใหม่</button>
-                <button onClick={()=>goTab("request")} style={{padding:"13px 24px",background:C.white,color:C.maroon,border:`1.5px solid ${C.gold}60`,borderRadius:14,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>ดูประวัติ</button>
+              <div className="flex gap-2.5 justify-center flex-wrap">
+                <button onClick={reset} className="px-6 py-3.5 bg-gradient-to-br from-gold to-gold-lt text-maroon-dk border-none rounded-[14px] text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_rgba(201,151,58,0.25)]">+ ยื่นคำขอใหม่</button>
+                <button onClick={()=>goTab("request")} className="px-6 py-3.5 bg-white text-maroon border-[1.5px] border-gold/37 rounded-[14px] text-base font-bold cursor-pointer font-[inherit]">ดูประวัติ</button>
               </div>
             </div>
           )}
@@ -916,7 +821,7 @@ export default function LeaveApp(){
           {/* HISTORY */}
           {/* SALARY (employee view) */}
           {tab==="salary"&&!salaryDisabled&&(
-            <div style={{minHeight:"100%"}}>
+            <div className="min-h-full">
               <SalaryView profile={profile} salaryData={salaryData} allLeaves={allLeaves} empDir={empDir}
                 advanceRequests={advanceRequests.filter(r=>r.empId==="me")}
                 onOpenAdvance={()=>setShowAdvanceModal(true)}
@@ -939,14 +844,14 @@ export default function LeaveApp(){
         </div>
 
         {/* ── Bottom nav (mobile only) ── */}
-        <div className="leave-bottom-nav" style={{background:C.white,borderTop:`1px solid ${C.border}`,boxShadow:"0 -4px 20px rgba(90,30,10,0.10)",zIndex:100}}>
+        <div className="leave-bottom-nav bg-white border-t border-bdr shadow-[0_-4px_20px_rgba(90,30,10,0.10)] z-[100]">
           {NAV.map(n=>{
             const active=tab===n.id, isAdminTab=n.id==="admin";
             return(
-              <button key={n.id} onClick={()=>goTab(n.id)} style={{flex:1,padding:"10px 0 12px",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:active?(isAdminTab?C.maroon:C.gold):C.textSoft,transition:"color 0.2s",position:"relative"}}>
-                {active&&(<div style={{position:"absolute",top:0,width:36,height:2,background:isAdminTab?`linear-gradient(90deg,${C.maroon},${C.maroonLt})`:`linear-gradient(90deg,${C.gold},${C.goldLt})`,borderRadius:"0 0 4px 4px"}}/>)}
-                <span style={{transition:"transform 0.15s",transform:active?"translateY(-1px)":"none"}}>{n.icon(active)}</span>
-                <span style={{fontSize:11,fontWeight:active?700:500}}>{n.label}</span>
+              <button key={n.id} onClick={()=>goTab(n.id)} className={`flex-1 pt-2.5 pb-3 bg-transparent border-none cursor-pointer font-[inherit] flex flex-col items-center gap-1 transition-colors duration-200 relative ${active ? (isAdminTab ? "text-maroon" : "text-gold") : "text-txt-soft"}`}>
+                {active&&(<div className={`absolute top-0 w-9 h-0.5 rounded-b ${isAdminTab ? "bg-linear-to-r from-maroon to-maroon-lt" : "bg-linear-to-r from-gold to-gold-lt"}`}/>)}
+                <span className={`transition-transform duration-150 ${active ? "-translate-y-px" : ""}`}>{n.icon(active)}</span>
+                <span className={`text-[11px] ${active?"font-bold":"font-medium"}`}>{n.label}</span>
               </button>
             );
           })}
@@ -976,7 +881,7 @@ export default function LeaveApp(){
         {showManual&&<ManualModal onClose={()=>setShowManual(false)}/>}
 
         {/* Toast */}
-        {toastMsg&&(<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:C.maroon,color:C.white,padding:"12px 22px",borderRadius:30,fontSize:14,fontWeight:600,fontFamily:"inherit",boxShadow:`0 6px 20px ${C.maroon}60`,zIndex:500,animation:"toastIn 0.25s ease",whiteSpace:"nowrap"}}>✓ {toastMsg}</div>)}
+        {toastMsg&&(<div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] z-[500] animate-[toastIn_0.25s_ease] whitespace-nowrap">✓ {toastMsg}</div>)}
         </div>{/* end leave-main */}
       </div>{/* end leave-app-root */}
     </>

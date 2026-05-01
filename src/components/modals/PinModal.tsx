@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { C, ADMIN_PIN } from "../../constants";
+import { ADMIN_PIN } from "../../constants";
 
 /* ─── PIN Modal ────────────────────────────────────────────────── */
 export default function PinModal({onSuccess,onClose}){
@@ -14,41 +14,38 @@ export default function PinModal({onSuccess,onClose}){
   }
   function del(){ setPin(p=>p.slice(0,-1)); }
   return(
-    <div style={{position:"fixed",inset:0,zIndex:900,display:"flex",alignItems:"center",justifyContent:"center",
-      background:"rgba(45,26,14,0.7)",backdropFilter:"blur(6px)",padding:"0 32px"}}>
-      <div style={{background:C.white,borderRadius:24,padding:"32px 28px 28px",width:"100%",maxWidth:340,
-        boxShadow:"0 28px 70px rgba(45,26,14,0.35)",animation:"modalIn 0.25s cubic-bezier(.22,.68,0,1.2)"}}>
-        <div style={{width:56,height:56,borderRadius:"50%",margin:"0 auto 18px",
-          background:`linear-gradient(135deg,${C.maroon},${C.maroonLt})`,
-          display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 6px 18px ${C.maroon}50`}}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.goldLt} strokeWidth="2" strokeLinecap="round">
+    <div className="fixed inset-0 z-[900] flex items-center justify-center bg-[rgba(45,26,14,0.7)] backdrop-blur-[6px] px-8">
+      <div className="bg-white rounded-3xl px-7 pt-8 pb-7 w-full max-w-[340px] shadow-[0_28px_70px_rgba(45,26,14,0.35)] animate-[modalIn_0.25s_cubic-bezier(.22,.68,0,1.2)]">
+        <div className="w-14 h-14 rounded-full mx-auto mb-4.5 bg-linear-135 from-maroon to-maroon-lt flex items-center justify-center shadow-[0_6px_18px_rgba(123,28,28,0.31)]">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-gold-lt)" strokeWidth="2" strokeLinecap="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </div>
-        <div style={{textAlign:"center",fontWeight:700,fontSize:18,color:C.text,marginBottom:4}}>รหัสผู้ดูแลระบบ</div>
-        <div style={{textAlign:"center",fontSize:13,color:C.textSoft,marginBottom:24}}>กรอก PIN 6 หลัก</div>
-        <div style={{display:"flex",justifyContent:"center",gap:14,marginBottom:28,animation:shake?"shake 0.5s ease":undefined}}>
+        <div className="text-center font-bold text-lg text-txt mb-1">รหัสผู้ดูแลระบบ</div>
+        <div className="text-center text-[13px] text-txt-soft mb-6">กรอก PIN 6 หลัก</div>
+        <div className={`flex justify-center gap-3.5 mb-7 ${shake ? "animate-[shake_0.5s_ease]" : ""}`}>
           {[0,1,2,3,4,5].map(i=>(
-            <div key={i} style={{width:14,height:14,borderRadius:"50%",transition:"all 0.15s",
-              background:i<pin.length?C.gold:C.creamDk,
-              boxShadow:i<pin.length?`0 2px 8px ${C.gold}60`:"none",
-              transform:i<pin.length?"scale(1.15)":"scale(1)"}}/>
+            <div key={i} className={`w-3.5 h-3.5 rounded-full transition-all duration-150
+                ${i<pin.length ? "bg-gold shadow-[0_2px_8px_rgba(201,151,58,0.37)] scale-115" : "bg-cream-dk shadow-none scale-100"}`}/>
           ))}
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+        <div className="grid grid-cols-3 gap-2.5">
           {[1,2,3,4,5,6,7,8,9,"",0,"⌫"].map((k,i)=>{
             if(k==="") return <div key={i}/>;
             const isDel=k==="⌫";
-            return(<button key={i} onClick={()=>isDel?del():pressKey(String(k))}
-              style={{height:56,borderRadius:14,border:"none",cursor:"pointer",fontFamily:"inherit",
-                fontSize:isDel?36:22,fontWeight:700,
-                background:isDel?C.redLt:C.cream,color:isDel?C.red:C.text,
-                boxShadow:"0 2px 6px rgba(90,30,10,0.08)",transition:"all 0.1s"}}>{k}</button>);
+            return(
+              <button key={i} onClick={()=>isDel?del():pressKey(String(k))}
+                className={`h-14 rounded-[14px] border-none cursor-pointer font-[inherit] font-bold shadow-[0_2px_6px_rgba(90,30,10,0.08)] transition-all duration-100
+                  ${isDel ? "bg-red-lt text-red text-4xl" : "bg-cream text-txt text-[22px]"}`}>
+                {k}
+              </button>
+            );
           })}
         </div>
-        <button onClick={onClose} style={{width:"100%",marginTop:16,padding:"12px",
-          background:"none",border:`1.5px solid ${C.border}`,borderRadius:12,
-          color:C.textSoft,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>ยกเลิก</button>
+        <button onClick={onClose}
+          className="w-full mt-4 p-3 bg-transparent border-[1.5px] border-bdr rounded-xl text-txt-soft text-[15px] font-semibold cursor-pointer font-[inherit]">
+          ยกเลิก
+        </button>
       </div>
       <style>{`
         @keyframes modalIn{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}

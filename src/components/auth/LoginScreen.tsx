@@ -7,13 +7,11 @@
    - Handles LINE callback loading state                     */
 
 import { useState } from "react";
-import { C, FONT_LINK } from "../../constants";
 import Diamond from "../shared/Diamond";
 import { startLineLogin } from "../../firebase/auth";
 import { auth } from "../../firebase/config";
 
 const LINE_GREEN = "#06C755";
-const LINE_GREEN_HOVER = "#05B04C";
 
 const LINE_CHANNEL_ID = import.meta.env.VITE_LINE_LOGIN_CHANNEL_ID || "";
 const USE_EMULATORS =
@@ -64,46 +62,21 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
 
   return (
     <>
-      <link rel="stylesheet" href={FONT_LINK} />
       <style>{`
-        * { box-sizing: border-box; }
-        body { margin: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.88; } }
         @keyframes shimmer {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
         }
-        .login-line-btn:hover { background: ${LINE_GREEN_HOVER} !important; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(6,199,85,0.35) !important; }
+        .login-line-btn:hover { background: #05B04C !important; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(6,199,85,0.35) !important; }
         .login-line-btn:active { transform: translateY(0); }
         .login-dev-btn:hover { background: rgba(255,255,255,0.15) !important; }
       `}</style>
 
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: `linear-gradient(160deg, ${C.maroonDk} 0%, ${C.maroon} 55%, ${C.maroonLt} 100%)`,
-          fontFamily: "'Prompt','Sarabun','Noto Sans Thai',sans-serif",
-          padding: 20,
-          overflow: "hidden",
-        }}
-      >
+      <div className="fixed inset-0 flex items-center justify-center bg-linear-160 from-maroon-dk via-maroon to-maroon-lt font-sans p-5 overflow-hidden">
         {/* Background mosaic pattern */}
-        <svg
-          style={{
-            position: "absolute",
-            top: 0, right: 0,
-            height: "100%", width: "60%",
-            pointerEvents: "none",
-            opacity: 0.5,
-          }}
-          viewBox="0 0 220 500"
-          preserveAspectRatio="xMaxYMid slice"
-        >
+        <svg className="absolute top-0 right-0 h-full w-[60%] pointer-events-none opacity-50"
+          viewBox="0 0 220 500" preserveAspectRatio="xMaxYMid slice">
           <defs>
             <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.18" />
@@ -122,113 +95,40 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
         </svg>
 
         {/* Login card */}
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            maxWidth: 380,
-            animation: "fadeIn 0.5s ease-out",
-          }}
-        >
+        <div className="relative w-full max-w-[380px] animate-[fadeIn_0.5s_ease-out]">
           {/* Logo & brand */}
-          <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <div
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: "50%",
-                background: `linear-gradient(135deg, ${C.gold}, ${C.goldLt})`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 16px",
-                boxShadow: `0 8px 32px ${C.gold}50`,
-              }}
-            >
-              <Diamond size={36} color={C.maroonDk} />
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 rounded-full bg-linear-135 from-gold to-gold-lt flex items-center justify-center mx-auto mb-4 shadow-[0_8px_32px_rgba(201,151,58,0.31)]">
+              <Diamond size={36} color="#5C1212" />
             </div>
-            <div
-              style={{
-                color: C.goldLt,
-                fontWeight: 800,
-                fontSize: 22,
-                lineHeight: 1.2,
-                letterSpacing: "0.01em",
-              }}
-            >
+            <div className="text-gold-lt font-extrabold text-[22px] leading-[1.2] tracking-tight">
               ห้างเพชรทองมุกดา
             </div>
-            <div
-              style={{
-                color: `${C.goldLt}80`,
-                fontSize: 14,
-                marginTop: 4,
-                letterSpacing: "0.04em",
-              }}
-            >
+            <div className="text-gold-lt/50 text-sm mt-1 tracking-wide">
               ระบบพนักงาน
             </div>
           </div>
 
           {/* Card */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.08)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderRadius: 24,
-              border: `1px solid ${C.goldLt}20`,
-              padding: "32px 24px",
-              boxShadow: "0 16px 48px rgba(0,0,0,0.2)",
-            }}
-          >
-            <div
-              style={{
-                textAlign: "center",
-                marginBottom: 28,
-              }}
-            >
-              <div
-                style={{
-                  color: C.white,
-                  fontWeight: 700,
-                  fontSize: 18,
-                  marginBottom: 6,
-                }}
-              >
+          <div className="bg-white/[0.08] backdrop-blur-[20px] rounded-3xl border border-gold-lt/[0.12] px-6 py-8 shadow-[0_16px_48px_rgba(0,0,0,0.2)]">
+            <div className="text-center mb-7">
+              <div className="text-white font-bold text-lg mb-1.5">
                 ยินดีต้อนรับ
               </div>
-              <div
-                style={{
-                  color: `${C.goldLt}90`,
-                  fontSize: 14,
-                  lineHeight: 1.5,
-                }}
-              >
+              <div className="text-gold-lt/55 text-sm leading-normal">
                 กรุณาลงชื่อเข้าใช้ด้วยบัญชี LINE ของคุณ
               </div>
             </div>
 
             {/* Error display */}
             {displayError && (
-              <div
-                style={{
-                  background: `${C.red}20`,
-                  border: `1px solid ${C.red}40`,
-                  borderRadius: 12,
-                  padding: "12px 16px",
-                  marginBottom: 20,
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 10,
-                }}
-              >
-                <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+              <div className="bg-red/[0.12] border border-red/25 rounded-xl px-4 py-3 mb-5 flex items-start gap-2.5">
+                <span className="text-lg shrink-0">⚠️</span>
                 <div>
-                  <div style={{ color: "#ffaaaa", fontWeight: 600, fontSize: 14 }}>
+                  <div className="text-[#ffaaaa] font-semibold text-sm">
                     เข้าสู่ระบบไม่สำเร็จ
                   </div>
-                  <div style={{ color: "#ff9999", fontSize: 13, marginTop: 2 }}>
+                  <div className="text-[#ff9999] text-[13px] mt-0.5">
                     {displayError}
                   </div>
                 </div>
@@ -237,26 +137,14 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
 
             {/* Loading state (handling LINE callback) */}
             {loading && (
-              <div style={{ textAlign: "center", padding: "20px 0" }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: "50%",
-                    background: `linear-gradient(135deg, ${C.gold}, ${C.goldLt})`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 12px",
-                    animation: "pulse 1.5s ease-in-out infinite",
-                  }}
-                >
-                  <Diamond size={22} color={C.maroonDk} />
+              <div className="text-center py-5">
+                <div className="w-12 h-12 rounded-full bg-linear-135 from-gold to-gold-lt flex items-center justify-center mx-auto mb-3 animate-[pulse_1.5s_ease-in-out_infinite]">
+                  <Diamond size={22} color="#5C1212" />
                 </div>
-                <div style={{ color: C.goldLt, fontSize: 14, fontWeight: 600 }}>
+                <div className="text-gold-lt text-sm font-semibold">
                   กำลังเข้าสู่ระบบ...
                 </div>
-                <div style={{ color: `${C.goldLt}60`, fontSize: 12, marginTop: 4 }}>
+                <div className="text-gold-lt/40 text-xs mt-1">
                   รอสักครู่
                 </div>
               </div>
@@ -267,27 +155,8 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
               <>
                 {/* LINE Login button */}
                 <button
-                  className="login-line-btn"
+                  className="login-line-btn w-full p-4 border-none rounded-[14px] text-[17px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-3 transition-all duration-200 mb-3 bg-[#06C755] text-white shadow-[0_6px_20px_rgba(6,199,85,0.25)]"
                   onClick={handleLineLogin}
-                  style={{
-                    width: "100%",
-                    padding: "16px",
-                    background: LINE_GREEN,
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 14,
-                    fontSize: 17,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 12,
-                    boxShadow: `0 6px 20px rgba(6,199,85,0.25)`,
-                    transition: "all 0.2s ease",
-                    marginBottom: 12,
-                  }}
                 >
                   {/* LINE icon */}
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
@@ -299,27 +168,9 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
                 {/* Dev Login (emulator mode only) */}
                 {USE_EMULATORS && (
                   <button
-                    className="login-dev-btn"
+                    className={`login-dev-btn w-full p-3.5 bg-white/[0.08] border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
                     onClick={handleDevLogin}
                     disabled={devLoading}
-                    style={{
-                      width: "100%",
-                      padding: "14px",
-                      background: "rgba(255,255,255,0.08)",
-                      color: `${C.goldLt}90`,
-                      border: `1px dashed ${C.goldLt}30`,
-                      borderRadius: 14,
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: devLoading ? "wait" : "pointer",
-                      fontFamily: "inherit",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      transition: "all 0.2s ease",
-                      opacity: devLoading ? 0.6 : 1,
-                    }}
                   >
                     🔧 {devLoading ? "กำลังเข้าสู่ระบบ..." : "Dev Login (Emulator)"}
                   </button>
@@ -329,14 +180,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
           </div>
 
           {/* Footer */}
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: 24,
-              color: `${C.goldLt}40`,
-              fontSize: 12,
-            }}
-          >
+          <div className="text-center mt-6 text-gold-lt/25 text-xs">
             Haangpetchthongmukda Co., Ltd
           </div>
         </div>

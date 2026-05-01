@@ -4,10 +4,13 @@ import { C } from "../../constants";
 export default function LeaveTypeCard({lt,selected,onClick,balance,used}){
   const sel=selected===lt.id,left=balance-used;
   return(
-    <button onClick={onClick} style={{padding:"20px 12px 16px",borderRadius:16,cursor:"pointer",fontFamily:"inherit",border:`2px solid ${sel?lt.color:C.border}`,background:sel?lt.colorLt:C.white,transition:"all 0.2s",position:"relative",boxShadow:sel?`0 4px 18px ${lt.color}30`:`0 1px 4px rgba(90,30,10,0.06)`}}>
-      {sel&&(<div style={{position:"absolute",top:10,right:10,width:20,height:20,borderRadius:"50%",background:lt.color,display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>)}
-      <div style={{fontSize:30,marginBottom:10}}>{lt.icon}</div>
-      <div style={{fontWeight:700,fontSize:17,color:sel?lt.color:C.text}}>{lt.label}</div>
+    <button onClick={onClick}
+      className={`rounded-2xl cursor-pointer font-[inherit] transition-all relative px-3 pt-5 pb-4 border-2
+        ${sel ? `shadow-[0_4px_18px_var(--color-${lt.id==="personal"?"gold":"red"})/0.19]` : "shadow-[0_1px_4px_rgba(90,30,10,0.06)]"}
+        ${sel ? (lt.id==="personal" ? "border-gold bg-gold-pale" : "border-red bg-red-lt") : "border-bdr bg-white"}`}>
+      {sel&&(<div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center" style={{background:lt.color}}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>)}
+      <div className="text-[30px] mb-2.5">{lt.icon}</div>
+      <div className={`font-bold text-[17px] ${sel ? (lt.id==="personal" ? "text-gold" : "text-red") : "text-txt"}`}>{lt.label}</div>
     </button>
   );
 }

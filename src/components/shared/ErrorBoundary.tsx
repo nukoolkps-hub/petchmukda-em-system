@@ -1,5 +1,4 @@
 import React from "react";
-import { C } from "../../constants";
 
 /* ─── Error Boundary ───────────────────────────────────────────────
    ดักจับ errors ทั้งหมดในระดับ React tree
@@ -43,21 +42,10 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
     if(!this.state.hasError) return this.props.children;
 
     return (
-      <div style={{
-        position:"fixed", inset:0, display:"flex", alignItems:"center", justifyContent:"center",
-        background:C.cream, padding:"20px", fontFamily:"'Prompt',sans-serif",
-      }}>
-        <div style={{
-          maxWidth:480, width:"100%", background:C.white, borderRadius:20, padding:"32px 28px",
-          boxShadow:"0 12px 40px rgba(45,26,14,0.15)", border:`1px solid ${C.border}`,
-        }}>
+      <div className="fixed inset-0 flex items-center justify-center bg-cream p-5 font-sans">
+        <div className="max-w-[480px] w-full bg-white rounded-[20px] px-7 py-8 shadow-[0_12px_40px_rgba(45,26,14,0.15)] border border-bdr">
           {/* icon */}
-          <div style={{
-            width:72, height:72, borderRadius:"50%", margin:"0 auto 20px",
-            background:`linear-gradient(135deg,${C.red},${C.maroon})`,
-            display:"flex", alignItems:"center", justifyContent:"center",
-            boxShadow:`0 6px 18px ${C.red}40`,
-          }}>
+          <div className="w-[72px] h-[72px] rounded-full mx-auto mb-5 bg-linear-135 from-red to-maroon flex items-center justify-center shadow-[0_6px_18px_rgba(192,57,43,0.25)]">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="12"/>
@@ -66,9 +54,9 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
           </div>
 
           {/* heading */}
-          <div style={{ textAlign:"center", marginBottom:20 }}>
-            <h2 style={{ margin:0, fontSize:22, fontWeight:800, color:C.text }}>เกิดข้อผิดพลาดในระบบ</h2>
-            <p style={{ margin:"8px 0 0", fontSize:14, color:C.textMid, lineHeight:1.6 }}>
+          <div className="text-center mb-5">
+            <h2 className="m-0 text-[22px] font-extrabold text-txt">เกิดข้อผิดพลาดในระบบ</h2>
+            <p className="mt-2 mb-0 text-sm text-txt-mid leading-relaxed">
               ขออภัย ระบบเกิดปัญหาบางอย่าง<br/>
               ลองโหลดหน้าใหม่ หรือกลับสู่หน้าหลัก
             </p>
@@ -76,20 +64,14 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
 
           {/* error details (dev only) */}
           {this.state.error && (
-            <details style={{
-              background:C.redLt, border:`1px solid ${C.red}30`, borderRadius:10,
-              padding:"12px 14px", marginBottom:20, fontSize:12,
-            }}>
-              <summary style={{ cursor:"pointer", fontWeight:600, color:C.red, marginBottom:6 }}>
+            <details className="bg-red-lt border border-red/20 rounded-[10px] px-3.5 py-3 mb-5 text-xs">
+              <summary className="cursor-pointer font-semibold text-red mb-1.5">
                 🔍 รายละเอียดข้อผิดพลาด (สำหรับ dev)
               </summary>
-              <div style={{
-                marginTop:8, fontFamily:"monospace", color:C.maroonDk,
-                whiteSpace:"pre-wrap", wordBreak:"break-word", lineHeight:1.5,
-              }}>
+              <div className="mt-2 font-mono text-maroon-dk whitespace-pre-wrap break-words leading-normal">
                 <b>{this.state.error.toString()}</b>
                 {this.state.errorInfo?.componentStack && (
-                  <div style={{ marginTop:8, opacity:0.8, fontSize:11 }}>
+                  <div className="mt-2 opacity-80 text-[11px]">
                     {this.state.errorInfo.componentStack}
                   </div>
                 )}
@@ -98,20 +80,13 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
           )}
 
           {/* actions */}
-          <div style={{ display:"flex", gap:10 }}>
-            <button onClick={this.handleReset} style={{
-              flex:1, padding:"13px", borderRadius:12, border:`1.5px solid ${C.border}`,
-              background:C.white, color:C.textMid, fontSize:15, fontWeight:600,
-              cursor:"pointer", fontFamily:"inherit",
-            }}>
+          <div className="flex gap-2.5">
+            <button onClick={this.handleReset}
+              className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-[15px] font-semibold cursor-pointer font-[inherit]">
               ลองใหม่
             </button>
-            <button onClick={this.handleReload} style={{
-              flex:1, padding:"13px", borderRadius:12, border:"none",
-              background:`linear-gradient(135deg,${C.maroon},${C.maroonLt})`,
-              color:C.white, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit",
-              boxShadow:`0 4px 14px ${C.maroon}50`,
-            }}>
+            <button onClick={this.handleReload}
+              className="flex-1 p-3.5 rounded-xl border-none bg-linear-135 from-maroon to-maroon-lt text-white text-[15px] font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_rgba(123,28,28,0.31)]">
               โหลดหน้าใหม่
             </button>
           </div>
