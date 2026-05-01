@@ -100,7 +100,7 @@ export default function useFirebaseAppData() {
   /* ─── Legacy setters (deprecated — แต่ component เก่าใช้) ───
      ใน Firebase mode setters เหล่านี้เป็น no-op
      เพราะ data sync ผ่าน real-time subscription                   */
-  const noop = () =>
+  const noop = (..._args: any[]) =>
     console.warn("[Firebase mode] setter ไม่ถูกใช้ — เรียก action method แทน");
 
   return {

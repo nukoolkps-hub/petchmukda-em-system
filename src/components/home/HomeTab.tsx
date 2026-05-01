@@ -1,0 +1,195 @@
+/* ─── HomeTab — Home dashboard content ───────────────────────── */
+
+import { C, LEAVE_TYPES } from "../../constants";
+import type { Employee, LeaveEntry } from "../../types";
+import TeamCalendar from "./TeamCalendar";
+
+interface HomeTabProps {
+  profile: any;
+  allLeaves: LeaveEntry[];
+  empDir: Employee[];
+}
+
+export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  /* ─── Monthly quota ────────────────────────────────────────── */
+  const usedThisMonth = profile
+    ? allLeaves.filter(
+        (lv) =>
+          lv.empName === profile.name && lv.start.startsWith(ym),
+      ).length
+    : 0;
+  const quota = 2;
+  const remaining = quota - usedThisMonth;
+  const overQ = remaining < 0;
+
+  return (
+    <>
+      {/* Monthly quota card */}
+      <div
+        className={`bg-white rounded-[18px] px-5 py-4.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] mb-3 border-[1.5px] ${overQ ? "border-[#C0392B50]" : "border-bdr"}`}
+      >
+        {/* title row */}
+        <div className="flex items-center justify-between mb-3.5">
+          <div>
+            <div className="font-bold text-maroon text-base">
+              โควต้าการลาเดือนนี้
+            </div>
+            <div className="text-xs text-txt-soft mt-0.5">
+              {now.toLocaleDateString("th-TH", {
+                month: "long",
+                year: "numeric",
+              })}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[13px] text-txt-soft">ใช้ไปแล้ว</div>
+            <div
+              className={`text-[26px] font-extrabold leading-none ${overQ ? "text-red" : usedThisMonth >= quota ? "text-amber" : "text-maroon"}`}
+            >
+              {usedThisMonth}
+              <span className="text-sm text-txt-soft font-medium">
+                /{quota} ครั้ง
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* progress dots */}
+        <div className="flex gap-2.5 mb-3.5">
+          {Array.from({ length: quota }).map((_, i) => {
+            const filled = i < usedThisMonth;
+            return (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  height: 10,
+                  borderRadius: 6,
+                  background: filled
+                    ? overQ
+                      ? C.red
+                      : `linear-gradient(90deg,${C.gold},${C.goldLt})`
+                    : C.creamDk,
+                  boxShadow: filled
+                    ? `0 2px 6px ${overQ ? C.red : C.gold}50`
+                    : "none",
+                  transition: "all 0.3s",
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* status chips */}
+        <div className="flex gap-2 flex-wrap">
+          {remaining > 0 && (
+            <div className="bg-green-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
+              <span className="text-sm">✅</span>
+              <span className="text-[13px] font-semibold text-green">
+                ลาได้อีก {remaining} ครั้ง
+              </span>
+            </div>
+          )}
+          {usedThisMonth === quota && (
+            <div className="bg-amber-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
+              <span className="text-sm">⚠️</span>
+              <span className="text-[13px] font-semibold text-amber">
+                ใช้ครบโควต้าแล้ว
+              </span>
+            </div>
+          )}
+          {usedThisMonth > quota && (
+            <div className="bg-red-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
+              <span className="text-sm">🚨</span>
+              <span className="text-[13px] font-semibold text-red">
+                เกินโควต้า {usedThisMonth - quota} ครั้ง
+              </span>
+            </div>
+          )}
+          <div className="bg-cream rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5 border border-bdr">
+            <span className="text-sm">📋</span>
+            <span className="text-xs text-txt-mid">
+              ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน
+            </span>
+          </div>
+        </div>
+
+        {/* banner – แสดงตั้งแต่ครั้งที่ 2 เป็นต้นไป */}
+        {usedThisMonth >= quota && (
+          <div className="mt-3 bg-gradient-to-br from-red/6 to-red/9 rounded-xl px-3.5 py-2.5 border border-red/19 flex items-center gap-2.5">
+            <div className="text-xl shrink-0">💰</div>
+            <div className="text-[13px] text-red font-semibold leading-relaxed">
+              การลาต่อจากนี้ไป ‼️
+              <br />
+              <span className="font-bold">จะกระทบต่อเงินเดือน</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* leave type mini stats */}
+      <div className="grid grid-cols-2 gap-2.5 mb-1.5">
+        {LEAVE_TYPES.map((lt) => {
+          const usedType = profile
+            ? allLeaves.filter(
+                (lv) =>
+                  lv.empName === profile.name &&
+                  lv.type === lt.id &&
+                  lv.start.startsWith(ym),
+              ).length
+            : 0;
+          return (
+            <div
+              key={lt.id}
+              className="bg-white rounded-[14px] p-3.5 shadow-[0_1px_6px_rgba(90,30,10,0.06)] border border-bdr flex items-center gap-3"
+            >
+              <div
+                className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[19px] shrink-0"
+                style={{ background: lt.colorLt }}
+              >
+                {lt.icon}
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-txt">
+                  {lt.label}
+                </div>
+                <div className="text-[13px] text-txt-soft mt-px">
+                  เดือนนี้ <b style={{ color: lt.color }}>{usedType}</b>{" "}
+                  ครั้ง
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="text-xs text-txt-soft text-right mb-3.5">
+        ข้อมูล ณ วันที่{" "}
+        {new Date().toLocaleDateString("th-TH", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })}
+      </div>
+      <TeamCalendar
+        allLeaves={allLeaves}
+        empDir={[
+          ...empDir,
+          ...(profile && !empDir.find((e) => e.name === profile.name)
+            ? [
+                {
+                  id: "me",
+                  name: profile.name,
+                  av: profile.av,
+                  avType: profile.avType,
+                  img: profile.img,
+                },
+              ]
+            : []),
+        ]}
+      />
+    </>
+  );
+}

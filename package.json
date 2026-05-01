@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "lint": "biome lint --write .",
     "format": "biome format --write .",
-    "check": "biome check --write ."
+    "check": "biome check --write .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "firebase": "^12.12.1",
