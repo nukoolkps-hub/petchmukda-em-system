@@ -1,5 +1,6 @@
 /* ─── RequestTab — Leave request form + history ──────────────── */
 
+import { IconAlertCircle, IconChevronRight } from "@tabler/icons-react";
 import { C, LEAVE_TYPES, TODAY } from "../../constants";
 import type { LeaveEntry } from "../../types";
 import { fmtDate } from "../../utils/dateUtils";
@@ -135,19 +136,7 @@ export default function RequestTab({
             className={`w-[50px] h-[50px] rounded-[14px] shrink-0 flex items-center justify-center ${overLimit ? "bg-[#C0392B18]" : "bg-linear-135 from-gold to-gold-lt"}`}
           >
             {overLimit ? (
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={C.red}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
+              <IconAlertCircle size={22} color={C.red} stroke={2.5} />
             ) : (
               <Diamond size={22} color="#fff" />
             )}
@@ -233,18 +222,12 @@ export default function RequestTab({
                       </div>
                     )}
                   </div>
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={C.textSoft}
-                    strokeWidth="2"
-                    strokeLinecap="round"
+                  <IconChevronRight
+                    size={14}
+                    color={C.textSoft}
+                    stroke={2}
                     className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail === h.id ? "rotate-90" : "rotate-0"}`}
-                  >
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
+                  />
                 </div>
               );
             })}

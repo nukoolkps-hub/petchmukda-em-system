@@ -1,5 +1,6 @@
 /* ─── Sidebar — Desktop navigation (≥768px) ─────────────────── */
 
+import { IconEdit, IconLogout } from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { C } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -111,19 +112,7 @@ export default function Sidebar({
               </div>
             </div>
             <div className="shrink-0 w-9 h-9 rounded-[9px] bg-gold-lt/15 flex items-center justify-center">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#fff"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
+              <IconEdit size={20} color="#fff" stroke={2.5} />
             </div>
           </button>
         )}
@@ -166,20 +155,7 @@ export default function Sidebar({
           onClick={onSignOut}
           className="w-full px-4 py-2.5 rounded-[10px] border border-white/15 bg-white/6 text-white/50 cursor-pointer font-[inherit] text-[13px] font-medium flex items-center justify-center gap-2 transition-all duration-200 mb-3 hover:bg-white/12 hover:text-white/80"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
+          <IconLogout size={16} stroke={2} />
           ออกจากระบบ
         </button>
         <div className="text-[11px] text-white/25 text-center">

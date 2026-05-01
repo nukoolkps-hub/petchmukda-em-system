@@ -1,3 +1,4 @@
+import { IconClock } from "@tabler/icons-react";
 import { TH_MONTHS } from "../../constants";
 import { TH_NUMBER } from "../../utils/format";
 
@@ -33,19 +34,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
 
         <div className="flex items-center gap-3 mb-4.5">
           <div className="w-[46px] h-[46px] rounded-xl bg-gold-pale flex items-center justify-center border border-gold/25">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--color-maroon)"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
+            <IconClock size={22} color="var(--color-maroon)" stroke={2.2} />
           </div>
           <div className="flex-1">
             <div className="font-extrabold text-lg text-txt">ประวัติการเบิก</div>

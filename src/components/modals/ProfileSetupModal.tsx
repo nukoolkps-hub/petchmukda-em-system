@@ -1,3 +1,4 @@
+import { IconChevronDown } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { C, EMOJI_LIST, TH_BANKS } from "../../constants";
 import { validateBankAccount, validateRequired } from "../../utils/validators";
@@ -263,18 +264,12 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
                 </option>
               ))}
             </select>
-            <svg
+            <IconChevronDown
               className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--color-txt-soft)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+              size={14}
+              color="var(--color-txt-soft)"
+              stroke={2.5}
+            />
           </div>
 
           {/* account number */}

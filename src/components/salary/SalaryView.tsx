@@ -1,3 +1,12 @@
+import {
+  IconArrowLeft,
+  IconBuildingBank,
+  IconCirclePlus,
+  IconClock,
+  IconDownload,
+  IconLoader2,
+  IconPrinter,
+} from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { C, TH_MONTHS } from "../../constants";
 import {
@@ -209,19 +218,7 @@ export default function SalaryView({
               onClick={() => setSelMonth(currentYM)}
               className="px-5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-gold)/0.25] inline-flex items-center gap-1.5"
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="11 17 6 12 11 7" />
-                <line x1="18" y1="12" x2="6" y2="12" />
-              </svg>
+              <IconArrowLeft size={14} stroke={2.5} />
               กลับไปเดือนปัจจุบัน
             </button>
           )}
@@ -235,21 +232,7 @@ export default function SalaryView({
       {/* Bank info card */}
       <div className="bg-white rounded-[14px] px-4 py-3.5 mb-2.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)] flex items-center gap-3">
         <div className="w-10 h-10 rounded-[11px] bg-linear-135 from-gold to-gold-lt flex items-center justify-center shrink-0 shadow-[0_2px_8px_var(--color-gold)/0.25]">
-          <svg
-            width="19"
-            height="19"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#fff"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 21h18" />
-            <path d="M5 21V10l7-5 7 5v11" />
-            <path d="M9 21v-6h6v6" />
-            <path d="M9 11h6" />
-          </svg>
+          <IconBuildingBank size={19} color="#fff" stroke={2.2} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[11px] text-txt-soft mb-0.5">โอนเข้าบัญชี</div>
@@ -279,19 +262,7 @@ export default function SalaryView({
           </svg>
           <div className="flex items-center gap-2 relative">
             <div className="w-[34px] h-[34px] rounded-[10px] bg-white/18 flex items-center justify-center shrink-0">
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={C.goldLt}
-                strokeWidth="2.4"
-                strokeLinecap="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="16" />
-                <line x1="8" y1="12" x2="16" y2="12" />
-              </svg>
+              <IconCirclePlus size={17} color={C.goldLt} stroke={2.4} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[13px] font-bold text-gold-lt leading-tight">
@@ -307,19 +278,7 @@ export default function SalaryView({
         >
           <div className="flex items-center gap-2">
             <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={C.maroon}
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
+              <IconClock size={17} color={C.maroon} stroke={2.2} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[13px] font-bold text-maroon leading-tight">
@@ -645,56 +604,13 @@ export default function SalaryView({
 
 /* ─── Icon helpers ────────────────────────────────────────────── */
 function DownloadIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
+  return <IconDownload size={12} stroke={2.4} />;
 }
 
 function PrintIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="6 9 6 2 18 2 18 9" />
-      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-      <rect x="6" y="14" width="12" height="8" />
-    </svg>
-  );
+  return <IconPrinter size={12} stroke={2.2} />;
 }
 
 function Spinner() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      className="animate-spin"
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-  );
+  return <IconLoader2 size={12} stroke={2.4} className="animate-spin" />;
 }

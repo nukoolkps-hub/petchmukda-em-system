@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tabler/icons-react": "^3.41.1",
     "firebase": "^12.12.1",
     "pdfmake": "^0.3.7",
     "react": "^19.2.5",

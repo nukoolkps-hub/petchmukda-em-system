@@ -1,3 +1,4 @@
+import { IconShield } from "@tabler/icons-react";
 import { useState } from "react";
 import { ADMIN_PIN } from "../../constants";
 
@@ -28,17 +29,7 @@ export default function PinModal({ onSuccess, onClose }) {
     <div className="fixed inset-0 z-[900] flex items-center justify-center bg-[rgba(45,26,14,0.7)] backdrop-blur-[6px] px-8">
       <div className="bg-white rounded-3xl px-7 pt-8 pb-7 w-full max-w-[340px] shadow-[0_28px_70px_rgba(45,26,14,0.35)] animate-[modalIn_0.25s_cubic-bezier(.22,.68,0,1.2)]">
         <div className="w-14 h-14 rounded-full mx-auto mb-4.5 bg-linear-135 from-maroon to-maroon-lt flex items-center justify-center shadow-[0_6px_18px_rgba(123,28,28,0.31)]">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--color-gold-lt)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          </svg>
+          <IconShield size={24} color="var(--color-gold-lt)" stroke={2} />
         </div>
         <div className="text-center font-bold text-lg text-txt mb-1">
           รหัสผู้ดูแลระบบ

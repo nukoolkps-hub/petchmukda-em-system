@@ -1,3 +1,4 @@
+import { IconCheck } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { C, TH_MONTHS } from "../../constants";
 import { TH_NUMBER } from "../../utils/format";
@@ -942,18 +943,7 @@ export default function SalaryAdminEdit({
             onClick={saveAll}
             className="flex-[2] py-3 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[15px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <IconCheck size={14} stroke={2.5} />
             บันทึกการเปลี่ยนแปลง
           </button>
         </div>

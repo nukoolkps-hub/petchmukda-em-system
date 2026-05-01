@@ -1,3 +1,9 @@
+import {
+  IconCalendar,
+  IconChevronDown,
+  IconChevronLeft,
+  IconChevronRight,
+} from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { C, TH_DAYS_SHORT, TH_MONTHS, TODAY } from "../../constants";
 import { fmtShort, toYMD } from "../../utils/dateUtils";
@@ -69,21 +75,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
         <div
           className={`w-9 h-9 rounded-[10px] shrink-0 flex items-center justify-center ${has ? "bg-linear-135 from-gold to-gold-lt" : "bg-cream-dk"}`}
         >
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke={has ? "#fff" : C.textSoft}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
+          <IconCalendar size={18} color={has ? "#fff" : C.textSoft} stroke={2} />
         </div>
         <div className="flex-1 text-left">
           <div
@@ -92,18 +84,12 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
             {has ? fmtShort(value) : "เลือกวันที่"}
           </div>
         </div>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={C.textSoft}
-          strokeWidth="2.5"
-          strokeLinecap="round"
+        <IconChevronDown
+          size={16}
+          color={C.textSoft}
+          stroke={2.5}
           className={`transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+        />
       </button>
       {error && <div className="text-red text-[13px] mt-1.5">⚠ {error}</div>}
       {open && (
@@ -113,17 +99,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
               onClick={prevM}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={C.textMid}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              >
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
+              <IconChevronLeft size={14} color={C.textMid} stroke={2.5} />
             </button>
             <div className="font-bold text-[15px] text-maroon">
               {TH_MONTHS[vm]} {vy + 543}
@@ -132,17 +108,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
               onClick={nextM}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={C.textMid}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+              <IconChevronRight size={14} color={C.textMid} stroke={2.5} />
             </button>
           </div>
           <div className="grid grid-cols-7 mb-1.5">

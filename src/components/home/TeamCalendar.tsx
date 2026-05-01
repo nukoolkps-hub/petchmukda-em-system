@@ -1,3 +1,4 @@
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useState } from "react";
 import {
   C,
@@ -56,17 +57,7 @@ export default function TeamCalendar({ allLeaves, empDir }) {
               onClick={prevM}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={C.textMid}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              >
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
+              <IconChevronLeft size={12} color={C.textMid} stroke={2.5} />
             </button>
             <span className="text-sm font-semibold text-txt min-w-[108px] text-center">
               {TH_MONTHS[vm]} {vy + 543}
@@ -75,17 +66,7 @@ export default function TeamCalendar({ allLeaves, empDir }) {
               onClick={nextM}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={C.textMid}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+              <IconChevronRight size={12} color={C.textMid} stroke={2.5} />
             </button>
           </div>
         </div>

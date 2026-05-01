@@ -1,5 +1,6 @@
 /* ─── DesktopHeader — Top bar for desktop layout ─────────────── */
 
+import { IconBook2 } from "@tabler/icons-react";
 import { useLocation } from "react-router-dom";
 import MosaicPattern from "../shared/MosaicPattern";
 import { PAGE_TITLES } from "./navConfig";
@@ -35,19 +36,7 @@ export default function DesktopHeader({
             title="กฏการคำนวณต่างๆ"
             className="flex items-center gap-2 px-3 py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-xs font-semibold shrink-0 whitespace-nowrap"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-            </svg>
+            <IconBook2 size={18} color="#fff" stroke={2.2} />
             กฏการคำนวณต่างๆ
           </button>
           <div className="text-[13px] text-gold-lt/50">

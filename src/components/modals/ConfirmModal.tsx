@@ -1,3 +1,4 @@
+import { IconTrash } from "@tabler/icons-react";
 import { LEAVE_TYPES } from "../../constants";
 import { fmtDate } from "../../utils/dateUtils";
 
@@ -9,21 +10,7 @@ export default function ConfirmModal({ leave, onConfirm, onCancel }) {
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-[4px] px-6">
       <div className="bg-white rounded-[20px] px-6 py-7 w-full max-w-[360px] shadow-[0_24px_60px_rgba(45,26,14,0.3)] animate-[modalIn_0.2s_cubic-bezier(.22,.68,0,1.2)]">
         <div className="w-14 h-14 rounded-full bg-red-lt flex items-center justify-center mx-auto mb-4">
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--color-red)"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          >
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-            <path d="M10 11v6" />
-            <path d="M14 11v6" />
-            <path d="M9 6V4h6v2" />
-          </svg>
+          <IconTrash size={26} color="var(--color-red)" stroke={2.5} />
         </div>
         <div className="font-bold text-lg text-txt text-center mb-2">
           ลบรายการลานี้?

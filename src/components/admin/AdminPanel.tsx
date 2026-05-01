@@ -1,3 +1,10 @@
+import {
+  IconCheck,
+  IconChevronDown,
+  IconCopy,
+  IconShield,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { C, LEAVE_TYPES, TH_MONTHS } from "../../constants";
 import { fmtDate, isPast } from "../../utils/dateUtils";
@@ -103,17 +110,7 @@ export default function AdminPanel({
       {/* admin badge */}
       <div className="flex items-center gap-3 bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-4 py-3.5 mb-4 shadow-maroon-glow">
         <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke={C.goldLt}
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          </svg>
+          <IconShield size={20} color={C.goldLt} stroke={2} />
         </div>
         <div className="flex-1">
           <div className="text-gold-lt font-bold text-base">โหมดผู้ดูแลระบบ</div>
@@ -624,21 +621,7 @@ export default function AdminPanel({
                     onClick={() => setConfirmLeave(lv)}
                     className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke={C.red}
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                    >
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                      <path d="M10 11v6" />
-                      <path d="M14 11v6" />
-                      <path d="M9 6V4h6v2" />
-                    </svg>
+                    <IconTrash size={16} color={C.red} stroke={2.2} />
                   </button>
                 </div>
               );
@@ -827,19 +810,12 @@ export default function AdminPanel({
                         มีการแก้ไข
                       </span>
                     )}
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke={C.textSoft}
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                    <IconChevronDown
+                      size={16}
+                      color={C.textSoft}
+                      stroke={2.2}
                       className={`shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : "rotate-0"}`}
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
+                    />
                   </div>
 
                   {/* Expandable content */}
@@ -917,40 +893,12 @@ export default function AdminPanel({
                             >
                               {copiedLineId === emp.id ? (
                                 <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
-                                  >
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
+                                  <IconCheck size={12} stroke={3} />
                                   คัดลอกแล้ว
                                 </>
                               ) : (
                                 <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <rect
-                                      x="9"
-                                      y="9"
-                                      width="13"
-                                      height="13"
-                                      rx="2"
-                                    />
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                  </svg>
+                                  <IconCopy size={12} stroke={2.2} />
                                   คัดลอก
                                 </>
                               )}
@@ -1355,18 +1303,7 @@ export default function AdminPanel({
                             onClick={saveAll}
                             className="flex-[2] py-[11px] rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
                           >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
+                            <IconCheck size={14} stroke={2.5} />
                             บันทึกการเปลี่ยนแปลง
                           </button>
                         </div>

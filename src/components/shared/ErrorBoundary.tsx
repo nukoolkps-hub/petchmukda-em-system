@@ -1,4 +1,5 @@
-import React from "react";
+import React, { Component } from "react";
+import { IconAlertCircle } from "@tabler/icons-react";
 
 /* ─── Error Boundary ───────────────────────────────────────────────
    ดักจับ errors ทั้งหมดในระดับ React tree
@@ -14,20 +15,17 @@ interface ErrorBoundaryState {
   errorInfo: React.ErrorInfo | null;
 }
 
-export default class ErrorBoundary extends React.Component<
+export default class ErrorBoundary extends Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
 > {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
-  }
+  state: ErrorBoundaryState = { hasError: false, error: null, errorInfo: null };
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log สำหรับ debug — production สามารถส่งไป error tracking service ได้
     console.error("[ErrorBoundary]", error, errorInfo);
     this.setState({ errorInfo });
@@ -41,6 +39,16 @@ export default class ErrorBoundary extends React.Component<
     window.location.reload();
   };
 
+  handleHome = () => (window.location.hash = "#/home");
+
+  handleClear = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
+    window.location.reload();
+  };
+
   render() {
     if (!this.state.hasError) return this.props.children;
 
@@ -49,19 +57,7 @@ export default class ErrorBoundary extends React.Component<
         <div className="max-w-[480px] w-full bg-white rounded-[20px] px-7 py-8 shadow-[0_12px_40px_rgba(45,26,14,0.15)] border border-bdr">
           {/* icon */}
           <div className="w-[72px] h-[72px] rounded-full mx-auto mb-5 bg-linear-135 from-red to-maroon flex items-center justify-center shadow-[0_6px_18px_rgba(192,57,43,0.25)]">
-            <svg
-              width="36"
-              height="36"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
+            <IconAlertCircle size={36} color="#fff" stroke={2.2} />
           </div>
 
           {/* heading */}

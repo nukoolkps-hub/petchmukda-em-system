@@ -1,5 +1,6 @@
 /* ─── MobileHeader — Mobile top header with profile strip ────── */
 
+import { IconBook2, IconEdit } from "@tabler/icons-react";
 import { useLocation } from "react-router-dom";
 import { C } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -99,19 +100,7 @@ export default function MobileHeader({
             title="กฏการคำนวณต่างๆ"
             className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-[11px] font-semibold shrink-0 whitespace-nowrap"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-            </svg>
+            <IconBook2 size={16} color="#fff" stroke={2.2} />
             กฏการคำนวณ
           </button>
         )}
@@ -144,19 +133,7 @@ export default function MobileHeader({
                 </div>
               </div>
               <div className="ml-auto w-10 h-10 rounded-[10px] bg-gold-lt/13 flex items-center justify-center shrink-0">
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#fff"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
+                <IconEdit size={22} color="#fff" stroke={2.5} />
               </div>
             </button>
           ) : (

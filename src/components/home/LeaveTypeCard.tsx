@@ -1,3 +1,5 @@
+import { IconCheck } from "@tabler/icons-react";
+
 /* ─── Leave Type Selection Card ────────────────────────────────── */
 export default function LeaveTypeCard({
   lt,
@@ -20,17 +22,7 @@ export default function LeaveTypeCard({
           className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center"
           style={{ background: lt.color }}
         >
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#fff"
-            strokeWidth="3"
-            strokeLinecap="round"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+          <IconCheck size={11} color="#fff" stroke={3} />
         </div>
       )}
       <div className="text-[30px] mb-2.5">{lt.icon}</div>

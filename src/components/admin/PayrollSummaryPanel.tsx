@@ -1,3 +1,4 @@
+import { IconCheck, IconCopy, IconSearch } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { C, TH_MONTHS } from "../../constants";
 import { TH_NUMBER } from "../../utils/format";
@@ -298,18 +299,7 @@ export default function PayrollSummaryPanel({
             }}
             className="w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[15px] font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <IconCheck size={18} stroke={2.5} />
             ยืนยันยอดก่อนโอนเงิน
           </button>
         );
@@ -323,19 +313,12 @@ export default function PayrollSummaryPanel({
           placeholder="ค้นหาชื่อหรือตำแหน่ง..."
           className="w-full py-2.5 pr-3.5 pl-[38px] rounded-[10px] border-[1.5px] border-bdr text-sm outline-none font-[inherit] box-border text-txt bg-white"
         />
-        <svg
+        <IconSearch
           className="absolute left-3.5 top-1/2 -translate-y-1/2"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={C.textSoft}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="M21 21l-4.35-4.35" />
-        </svg>
+          size={14}
+          color={C.textSoft}
+          stroke={2.5}
+        />
       </div>
 
       {filtered.length === 0 && (
@@ -424,35 +407,12 @@ export default function PayrollSummaryPanel({
                   >
                     {copiedAcc === emp.id ? (
                       <>
-                        <svg
-                          width="13"
-                          height="13"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        <IconCheck size={13} stroke={3} />
                         คัดลอกแล้ว
                       </>
                     ) : (
                       <>
-                        <svg
-                          width="13"
-                          height="13"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <rect x="9" y="9" width="13" height="13" rx="2" />
-                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                        </svg>
+                        <IconCopy size={13} stroke={2.2} />
                         คัดลอก
                       </>
                     )}
