@@ -4,6 +4,7 @@ import { C } from "../../constants";
 
 export interface NavItem {
   id: string;
+  path: string;
   label: string;
   icon: (active: boolean) => React.ReactNode;
 }
@@ -15,6 +16,7 @@ export function getNavItems(options: {
   return [
     {
       id: "home",
+      path: "/home",
       label: "หน้าแรก",
       icon: (a) => (
         <svg
@@ -37,6 +39,7 @@ export function getNavItems(options: {
     },
     {
       id: "request",
+      path: "/request",
       label: "ยื่นคำขอลา",
       icon: (a) => (
         <svg
@@ -64,6 +67,7 @@ export function getNavItems(options: {
       : [
           {
             id: "salary",
+            path: "/salary",
             label: "เงินเดือน",
             icon: (a: boolean) => (
               <svg
@@ -94,6 +98,7 @@ export function getNavItems(options: {
       ? [
           {
             id: "admin",
+            path: "/admin",
             label: "Admin",
             icon: (a: boolean) => (
               <svg

@@ -1,27 +1,26 @@
 /* ─── BottomNav — Mobile bottom tab bar ──────────────────────── */
 
+import { useLocation, useNavigate } from "react-router-dom";
 import type { NavItem } from "./navConfig";
 
 interface BottomNavProps {
   navItems: NavItem[];
-  tab: string;
-  onTabChange: (id: string) => void;
 }
 
-export default function BottomNav({
-  navItems,
-  tab,
-  onTabChange,
-}: BottomNavProps) {
+export default function BottomNav({ navItems }: BottomNavProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentPath = location.pathname;
+
   return (
     <div className="leave-bottom-nav bg-white border-t border-bdr shadow-[0_-4px_20px_rgba(90,30,10,0.10)] z-[100]">
       {navItems.map((n) => {
-        const active = tab === n.id,
+        const active = currentPath === n.path,
           isAdminTab = n.id === "admin";
         return (
           <button
             key={n.id}
-            onClick={() => onTabChange(n.id)}
+            onClick={() => navigate(n.path)}
             className={`flex-1 pt-2.5 pb-3 bg-transparent border-none cursor-pointer font-[inherit] flex flex-col items-center gap-1 transition-colors duration-200 relative ${active ? (isAdminTab ? "text-maroon" : "text-gold") : "text-txt-soft"}`}
           >
             {active && (

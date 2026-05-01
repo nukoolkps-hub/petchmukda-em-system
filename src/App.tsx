@@ -3,6 +3,7 @@
    This file wires everything together.                            */
 
 import { useEffect, useRef, useState } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import AdminPanel from "./components/admin/AdminPanel";
 import HomeTab from "./components/home/HomeTab";
 import RequestTab from "./components/home/RequestTab";
@@ -10,7 +11,7 @@ import SuccessScreen from "./components/home/SuccessScreen";
 import BottomNav from "./components/layout/BottomNav";
 import DesktopHeader from "./components/layout/DesktopHeader";
 import MobileHeader from "./components/layout/MobileHeader";
-import { getNavItems, PAGE_TITLES } from "./components/layout/navConfig";
+import { getNavItems } from "./components/layout/navConfig";
 import Sidebar from "./components/layout/Sidebar";
 import AdvanceHistoryModal from "./components/modals/AdvanceHistoryModal";
 import AdvanceRequestModal from "./components/modals/AdvanceRequestModal";
@@ -41,6 +42,11 @@ function LoadingScreen({ message = "กำลังโหลดข้อมู�
 
 /* ─── Main App ─────────────────────────────────────────────────── */
 export default function LeaveApp() {
+  /* ─── Router ───────────────────────────────────────────────── */
+  const navigate = useNavigate();
+  const location = useLocation();
+  const tab = location.pathname.replace("/", "") || "home";
+
   /* ─── Auth ─────────────────────────────────────────────────── */
   const { user: authUser, signOut: authSignOut } = useAuth();
 
@@ -74,8 +80,7 @@ export default function LeaveApp() {
     salaryDisabled,
   } = useProfile({ authUser, empDir, setEmpDir });
 
-  /* ─── Tab navigation ───────────────────────────────────────── */
-  const [tab, setTab] = useState("home");
+  /* ─── Toast ────────────────────────────────────────────────── */
   const [toastMsg, setToastMsg] = useState("");
 
   function showToast(msg: string) {
@@ -146,11 +151,11 @@ export default function LeaveApp() {
     setShowPinModal(true);
   }
 
-  /* ─── Tab change ───────────────────────────────────────────── */
-  function goTab(id: string) {
-    setTab(id);
+  /* ─── Navigation helper ────────────────────────────────────── */
+  function goTo(path: string) {
     leaveForm.setSubmitted(false);
     leaveForm.setHistDetail(null);
+    navigate(path);
   }
 
   /* ─── Role update handler (admin) ──────────────────────────── */
@@ -176,10 +181,10 @@ export default function LeaveApp() {
     showToast("ส่งคำขอผ่าน LINE แล้ว — รอ Admin โอนเงิน");
   }
 
-  // ถ้าอยู่ใน salary tab แต่ถูกปิดสิทธิ์ → กลับหน้าแรก
+  // ถ้าอยู่ใน salary route แต่ถูกปิดสิทธิ์ → redirect ไป home
   useEffect(() => {
-    if (salaryDisabled && tab === "salary") setTab("home");
-  }, [salaryDisabled, tab]);
+    if (salaryDisabled && tab === "salary") navigate("/home", { replace: true });
+  }, [salaryDisabled, tab, navigate]);
 
   /* ─── Nav items ────────────────────────────────────────────── */
   const navItems = getNavItems({ isAdmin, salaryDisabled });
@@ -217,10 +222,8 @@ export default function LeaveApp() {
         {/* ══ SIDEBAR (desktop only) ══ */}
         <Sidebar
           profile={profile}
-          tab={tab}
           navItems={navItems}
           holding={holding}
-          onTabChange={goTab}
           onEditProfile={() => setShowEditProfile(true)}
           onSignOut={authSignOut}
           startHold={startHold}
@@ -232,16 +235,12 @@ export default function LeaveApp() {
         <div className="leave-main">
           {/* Desktop top bar */}
           <DesktopHeader
-            tab={tab}
-            pageTitle={PAGE_TITLES}
             profile={profile}
             onShowManual={() => setShowManual(true)}
           />
 
           {/* Mobile Header */}
           <MobileHeader
-            tab={tab}
-            pageTitle={PAGE_TITLES}
             profile={profile}
             holding={holding}
             onEditProfile={() => setShowEditProfile(true)}
@@ -253,90 +252,113 @@ export default function LeaveApp() {
 
           {/* ── Scrollable Body ── */}
           <div className="leave-content flex-1 px-4 pt-4.5 pb-[90px]">
-            {/* HOME */}
-            {tab === "home" && (
-              <HomeTab
-                profile={profile}
-                allLeaves={allLeaves}
-                empDir={empDir}
+            <Routes>
+              {/* HOME */}
+              <Route
+                path="/home"
+                element={
+                  <HomeTab
+                    profile={profile}
+                    allLeaves={allLeaves}
+                    empDir={empDir}
+                  />
+                }
               />
-            )}
 
-            {/* REQUEST */}
-            {tab === "request" && !leaveForm.submitted && (
-              <RequestTab
-                profile={profile}
-                allLeaves={allLeaves}
-                form={leaveForm.form}
-                setForm={leaveForm.setForm}
-                errors={leaveForm.errors}
-                histDetail={leaveForm.histDetail}
-                setHistDetail={leaveForm.setHistDetail}
-                myLeaves={leaveForm.myLeaves}
-                balance={leaveForm.balance}
-                used={leaveForm.used}
-                days={leaveForm.days}
-                remain={leaveForm.remain}
-                overLimit={leaveForm.overLimit}
-                onSubmit={() => profile && leaveForm.submit(profile)}
+              {/* REQUEST */}
+              <Route
+                path="/request"
+                element={
+                  leaveForm.submitted ? (
+                    <SuccessScreen
+                      form={leaveForm.form}
+                      days={leaveForm.days}
+                      onReset={leaveForm.reset}
+                    />
+                  ) : (
+                    <RequestTab
+                      profile={profile}
+                      allLeaves={allLeaves}
+                      form={leaveForm.form}
+                      setForm={leaveForm.setForm}
+                      errors={leaveForm.errors}
+                      histDetail={leaveForm.histDetail}
+                      setHistDetail={leaveForm.setHistDetail}
+                      myLeaves={leaveForm.myLeaves}
+                      balance={leaveForm.balance}
+                      used={leaveForm.used}
+                      days={leaveForm.days}
+                      remain={leaveForm.remain}
+                      overLimit={leaveForm.overLimit}
+                      onSubmit={() => profile && leaveForm.submit(profile)}
+                    />
+                  )
+                }
               />
-            )}
 
-            {/* SUCCESS */}
-            {tab === "request" && leaveForm.submitted && (
-              <SuccessScreen
-                form={leaveForm.form}
-                days={leaveForm.days}
-                onReset={leaveForm.reset}
-                onGoTab={goTab}
+              {/* SALARY (employee view) */}
+              <Route
+                path="/salary"
+                element={
+                  salaryDisabled ? (
+                    <Navigate to="/home" replace />
+                  ) : (
+                    <div className="min-h-full">
+                      <SalaryView
+                        profile={profile}
+                        salaryData={salaryData}
+                        allLeaves={allLeaves}
+                        empDir={empDir}
+                        advanceRequests={advanceRequests.filter(
+                          (r) => r.empId === "me",
+                        )}
+                        onOpenAdvance={() => setShowAdvanceModal(true)}
+                        onOpenHistory={() => setShowHistoryModal(true)}
+                        roles={roles}
+                      />
+                    </div>
+                  )
+                }
               />
-            )}
 
-            {/* SALARY (employee view) */}
-            {tab === "salary" && !salaryDisabled && (
-              <div className="min-h-full">
-                <SalaryView
-                  profile={profile}
-                  salaryData={salaryData}
-                  allLeaves={allLeaves}
-                  empDir={empDir}
-                  advanceRequests={advanceRequests.filter(
-                    (r) => r.empId === "me",
-                  )}
-                  onOpenAdvance={() => setShowAdvanceModal(true)}
-                  onOpenHistory={() => setShowHistoryModal(true)}
-                  roles={roles}
-                />
-              </div>
-            )}
-
-            {/* ADMIN */}
-            {tab === "admin" && isAdmin && (
-              <AdminPanel
-                allLeaves={allLeaves}
-                empDir={empDir}
-                onDelete={leaveForm.handleDelete}
-                onLogout={() => {
-                  setIsAdmin(false);
-                  goTab("home");
-                  showToast("ออกจากโหมด Admin แล้ว");
-                }}
-                onUpdateRole={handleUpdateRole}
-                salaryData={salaryData}
-                setSalaryData={setSalaryData}
-                advanceRequests={advanceRequests}
-                onUpdateAdvance={adminUpdateAdvance}
-                roles={roles}
-                setRoles={setRoles}
-                payrollConfirms={payrollConfirms}
-                setPayrollConfirms={setPayrollConfirms}
-                showToast={showToast}
+              {/* ADMIN */}
+              <Route
+                path="/admin"
+                element={
+                  isAdmin ? (
+                    <AdminPanel
+                      allLeaves={allLeaves}
+                      empDir={empDir}
+                      onDelete={leaveForm.handleDelete}
+                      onLogout={() => {
+                        setIsAdmin(false);
+                        navigate("/home");
+                        showToast("ออกจากโหมด Admin แล้ว");
+                      }}
+                      onUpdateRole={handleUpdateRole}
+                      salaryData={salaryData}
+                      setSalaryData={setSalaryData}
+                      advanceRequests={advanceRequests}
+                      onUpdateAdvance={adminUpdateAdvance}
+                      roles={roles}
+                      setRoles={setRoles}
+                      payrollConfirms={payrollConfirms}
+                      setPayrollConfirms={setPayrollConfirms}
+                      showToast={showToast}
+                    />
+                  ) : (
+                    <Navigate to="/home" replace />
+                  )
+                }
               />
-            )}
+
+              {/* Catch-all: redirect to home */}
+              <Route path="*" element={<Navigate to="/home" replace />} />
+            </Routes>
           </div>
 
           {/* ── Bottom nav (mobile only) ── */}
-          <BottomNav navItems={navItems} tab={tab} onTabChange={goTab} />
+          <BottomNav navItems={navItems} />
 
           {/* Modals */}
           {(showEditProfile || !profile) && (
@@ -351,7 +373,7 @@ export default function LeaveApp() {
               onSuccess={() => {
                 setShowPinModal(false);
                 setIsAdmin(true);
-                setTab("admin");
+                navigate("/admin");
                 showToast("เข้าสู่โหมดผู้ดูแลระบบแล้ว");
               }}
               onClose={() => {

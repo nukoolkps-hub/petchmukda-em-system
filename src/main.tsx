@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { HashRouter } from "react-router-dom";
 import "./index.css";
 import LeaveApp from "./App";
 import LoginScreen from "./components/auth/LoginScreen";
@@ -39,9 +40,11 @@ function AuthGate() {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <AuthProvider>
-        <AuthGate />
-      </AuthProvider>
+      <HashRouter>
+        <AuthProvider>
+          <AuthGate />
+        </AuthProvider>
+      </HashRouter>
     </ErrorBoundary>
   </React.StrictMode>,
 );

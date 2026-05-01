@@ -1,13 +1,13 @@
 /* ─── MobileHeader — Mobile top header with profile strip ────── */
 
+import { useLocation } from "react-router-dom";
 import { C } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
 import Diamond from "../shared/Diamond";
 import MosaicPattern from "../shared/MosaicPattern";
+import { PAGE_TITLES } from "./navConfig";
 
 interface MobileHeaderProps {
-  tab: string;
-  pageTitle: Record<string, string | null>;
   profile: any;
   holding: boolean;
   onEditProfile: () => void;
@@ -18,8 +18,6 @@ interface MobileHeaderProps {
 }
 
 export default function MobileHeader({
-  tab,
-  pageTitle,
   profile,
   holding,
   onEditProfile,
@@ -28,6 +26,8 @@ export default function MobileHeader({
   endHold,
   onRingComplete,
 }: MobileHeaderProps) {
+  const tab = useLocation().pathname.replace("/", "") || "home";
+
   return (
     <div className="leave-header-mobile bg-gradient-to-br from-maroon-dk via-maroon to-maroon-lt pt-5 px-5 pb-0 shrink-0 relative overflow-hidden">
       {/* Mosaic decoration */}
@@ -89,7 +89,7 @@ export default function MobileHeader({
             </div>
           ) : (
             <div className="text-white font-bold text-[19px]">
-              {pageTitle[tab]}
+              {PAGE_TITLES[tab]}
             </div>
           )}
         </div>

@@ -1,27 +1,27 @@
 /* ─── DesktopHeader — Top bar for desktop layout ─────────────── */
 
+import { useLocation } from "react-router-dom";
 import MosaicPattern from "../shared/MosaicPattern";
+import { PAGE_TITLES } from "./navConfig";
 
 interface DesktopHeaderProps {
-  tab: string;
-  pageTitle: Record<string, string | null>;
   profile: any;
   onShowManual: () => void;
 }
 
 export default function DesktopHeader({
-  tab,
-  pageTitle,
   profile,
   onShowManual,
 }: DesktopHeaderProps) {
+  const tab = useLocation().pathname.replace("/", "") || "home";
+
   return (
     <div className="leave-desktop-header relative overflow-hidden">
       <MosaicPattern variant="header" idPrefix="dh" />
       <div className="relative flex items-center justify-between">
         <div>
           <div className="text-white font-bold text-[22px]">
-            {tab === "home" ? "หน้าแรก" : pageTitle[tab]}
+            {tab === "home" ? "หน้าแรก" : PAGE_TITLES[tab]}
           </div>
           {tab === "home" && profile && (
             <div className="text-gold-lt/55 text-sm mt-0.5">

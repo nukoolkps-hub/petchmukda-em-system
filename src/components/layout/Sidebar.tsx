@@ -1,5 +1,6 @@
 /* ─── Sidebar — Desktop navigation (≥768px) ─────────────────── */
 
+import { useLocation, useNavigate } from "react-router-dom";
 import { C } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
 import Diamond from "../shared/Diamond";
@@ -8,10 +9,8 @@ import type { NavItem } from "./navConfig";
 
 interface SidebarProps {
   profile: any;
-  tab: string;
   navItems: NavItem[];
   holding: boolean;
-  onTabChange: (id: string) => void;
   onEditProfile: () => void;
   onSignOut: () => void;
   startHold: () => void;
@@ -21,16 +20,18 @@ interface SidebarProps {
 
 export default function Sidebar({
   profile,
-  tab,
   navItems,
   holding,
-  onTabChange,
   onEditProfile,
   onSignOut,
   startHold,
   endHold,
   onRingComplete,
 }: SidebarProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentPath = location.pathname;
+
   return (
     <div className="leave-sidebar">
       {/* Mosaic bg */}
@@ -142,11 +143,11 @@ export default function Sidebar({
       {/* Nav */}
       <div className="leave-sidebar-nav">
         {navItems.map((n) => {
-          const active = tab === n.id;
+          const active = currentPath === n.path;
           return (
             <button
               key={n.id}
-              onClick={() => onTabChange(n.id)}
+              onClick={() => navigate(n.path)}
               className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 relative ${active ? "bg-white/12" : "bg-transparent"} ${active ? "text-gold-lt" : "text-white/55"}`}
             >
               <span>{n.icon(active)}</span>

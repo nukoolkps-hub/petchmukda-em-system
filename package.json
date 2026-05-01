@@ -5,8 +5,7 @@
   "description": "ระบบพนักงานห้างเพชรทองมุกดา - ระบบลา, เงินเดือน, ค่าคอม Pool, หนังสือรับรอง, LINE Bot",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:emulators": "firebase emulators:start --only auth,firestore,functions,storage & vite",
+    "dev": "firebase emulators:start --only auth,firestore,functions,storage & vite",
     "emulators": "firebase emulators:start --only auth,firestore,functions,storage",
     "build": "vite build",
     "build:functions": "npm --prefix functions run build",
@@ -20,7 +19,8 @@
     "firebase": "^12.12.1",
     "pdfmake": "^0.3.7",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^7.14.2"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.13",

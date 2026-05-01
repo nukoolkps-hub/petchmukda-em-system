@@ -1,5 +1,6 @@
 /* ─── SuccessScreen — Leave request success confirmation ──────── */
 
+import { useNavigate } from "react-router-dom";
 import { LEAVE_TYPES } from "../../constants";
 import { fmtDate } from "../../utils/dateUtils";
 import Diamond from "../shared/Diamond";
@@ -8,15 +9,15 @@ interface SuccessScreenProps {
   form: { type: string; startDate: string; endDate: string };
   days: number;
   onReset: () => void;
-  onGoTab: (id: string) => void;
 }
 
 export default function SuccessScreen({
   form,
   days,
   onReset,
-  onGoTab,
 }: SuccessScreenProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="text-center pt-10 pb-5">
       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gold to-gold-lt flex items-center justify-center mx-auto mb-5 shadow-[0_8px_28px_rgba(201,151,58,0.27)]">
@@ -58,7 +59,7 @@ export default function SuccessScreen({
           + ยื่นคำขอใหม่
         </button>
         <button
-          onClick={() => onGoTab("request")}
+          onClick={() => navigate("/request")}
           className="px-6 py-3.5 bg-white text-maroon border-[1.5px] border-gold/37 rounded-[14px] text-base font-bold cursor-pointer font-[inherit]"
         >
           ดูประวัติ
