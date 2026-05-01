@@ -42,13 +42,9 @@ export default function SuccessScreen({
         <div className="text-base text-txt font-bold">
           {LEAVE_TYPES.find((t) => t.id === form.type)?.label} ·{" "}
           {fmtDate(form.startDate)}
-          {form.startDate !== form.endDate
-            ? ` – ${fmtDate(form.endDate)}`
-            : ""}
+          {form.startDate !== form.endDate ? ` – ${fmtDate(form.endDate)}` : ""}
         </div>
-        <div className="text-sm text-txt-mid mt-1">
-          {days} วันทำการ
-        </div>
+        <div className="text-sm text-txt-mid mt-1">{days} วันทำการ</div>
       </div>
       <div className="flex items-center justify-center gap-1.5 text-sm text-txt-soft mb-1">
         <Diamond size={10} /> พร้อมส่งให้หัวหน้าอนุมัติ

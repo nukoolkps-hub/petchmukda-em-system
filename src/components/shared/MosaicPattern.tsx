@@ -104,18 +104,9 @@ export default function MosaicPattern({
       <polygon points="80,56 92,62 88,84 72,78" fill={`url(#${g1})`} />
       <polygon points="92,62 118,72 110,96 88,84" fill={`url(#${g3})`} />
       <polygon points="118,72 138,78 132,102 112,96" fill={`url(#${g2})`} />
-      <polygon
-        points="138,78 148,82 150,106 134,102"
-        fill={`url(#${g1})`}
-      />
-      <polygon
-        points="148,82 168,76 172,100 150,106"
-        fill={`url(#${g3})`}
-      />
-      <polygon
-        points="168,76 188,82 188,108 170,104"
-        fill={`url(#${g2})`}
-      />
+      <polygon points="138,78 148,82 150,106 134,102" fill={`url(#${g1})`} />
+      <polygon points="148,82 168,76 172,100 150,106" fill={`url(#${g3})`} />
+      <polygon points="168,76 188,82 188,108 170,104" fill={`url(#${g2})`} />
       <polygon
         points="188,82 192,88 220,95 220,118 192,112"
         fill={`url(#${g1})`}
@@ -125,30 +116,12 @@ export default function MosaicPattern({
       <polygon points="68,76 72,78 75,102 58,98" fill={`url(#${g3})`} />
       <polygon points="72,78 88,84 88,108 70,104" fill={`url(#${g2})`} />
       <polygon points="88,84 110,96 105,120 85,110" fill={`url(#${g1})`} />
-      <polygon
-        points="110,96 112,96 118,120 102,124"
-        fill={`url(#${g3})`}
-      />
-      <polygon
-        points="112,96 132,102 128,126 112,124"
-        fill={`url(#${g2})`}
-      />
-      <polygon
-        points="132,102 150,106 148,130 130,128"
-        fill={`url(#${g1})`}
-      />
-      <polygon
-        points="150,106 170,104 172,128 150,130"
-        fill={`url(#${g3})`}
-      />
-      <polygon
-        points="170,104 188,108 190,132 172,128"
-        fill={`url(#${g2})`}
-      />
-      <polygon
-        points="188,108 220,118 220,142 192,136"
-        fill={`url(#${g1})`}
-      />
+      <polygon points="110,96 112,96 118,120 102,124" fill={`url(#${g3})`} />
+      <polygon points="112,96 132,102 128,126 112,124" fill={`url(#${g2})`} />
+      <polygon points="132,102 150,106 148,130 130,128" fill={`url(#${g1})`} />
+      <polygon points="150,106 170,104 172,128 150,130" fill={`url(#${g3})`} />
+      <polygon points="170,104 188,108 190,132 172,128" fill={`url(#${g2})`} />
+      <polygon points="188,108 220,118 220,142 192,136" fill={`url(#${g1})`} />
       {/* row 5 – bottom fade */}
       <polygon
         points="40,78 55,98 45,118 30,100"
@@ -201,11 +174,7 @@ export default function MosaicPattern({
         opacity="0.25"
       />
       {/* subtle edge shimmer */}
-      <polygon
-        points="200,0 220,0 220,20"
-        fill="#E8C87A"
-        opacity="0.12"
-      />
+      <polygon points="200,0 220,0 220,20" fill="#E8C87A" opacity="0.12" />
       <line
         x1="110"
         y1="0"

@@ -84,9 +84,7 @@ export default function Sidebar({
             <div className="text-gold-lt font-extrabold text-base leading-none">
               ห้างเพชรทองมุกดา
             </div>
-            <div className="text-gold-lt/45 text-[11px] mt-0.5">
-              ระบบพนักงาน
-            </div>
+            <div className="text-gold-lt/45 text-[11px] mt-0.5">ระบบพนักงาน</div>
           </div>
         </div>
         {/* Profile */}

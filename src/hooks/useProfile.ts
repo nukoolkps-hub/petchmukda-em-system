@@ -1,7 +1,7 @@
 /* ─── useProfile — Profile state & sync ──────────────────────── */
 
-import { useEffect, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
+import { useEffect, useMemo, useState } from "react";
 import type { Employee } from "../types";
 
 interface ProfileData {
@@ -17,10 +17,16 @@ interface ProfileData {
 interface UseProfileOptions {
   authUser: User | null;
   empDir: Employee[];
-  setEmpDir: React.Dispatch<React.SetStateAction<Employee[]>> | ((...args: any[]) => void);
+  setEmpDir:
+    | React.Dispatch<React.SetStateAction<Employee[]>>
+    | ((...args: any[]) => void);
 }
 
-export default function useProfile({ authUser, empDir, setEmpDir }: UseProfileOptions) {
+export default function useProfile({
+  authUser,
+  empDir,
+  setEmpDir,
+}: UseProfileOptions) {
   /* ─── Auth-derived profile ─────────────────────────────────── */
   const authDerivedProfile = useMemo(() => {
     if (!authUser) return null;
@@ -64,45 +70,48 @@ export default function useProfile({ authUser, empDir, setEmpDir }: UseProfileOp
     setProfile({ ...data, role });
     if (existing) {
       // update bank info in empDir for the matching employee
-      (setEmpDir as React.Dispatch<React.SetStateAction<Employee[]>>)((d: Employee[]) =>
-        d.map((e) =>
-          e.name === data.name
-            ? {
-                ...e,
-                av: data.av,
-                avType: data.avType,
-                img: data.img,
-                bank: data.bank,
-                bankAcc: data.bankAcc,
-              }
-            : e,
-        ),
+      (setEmpDir as React.Dispatch<React.SetStateAction<Employee[]>>)(
+        (d: Employee[]) =>
+          d.map((e) =>
+            e.name === data.name
+              ? {
+                  ...e,
+                  av: data.av,
+                  avType: data.avType,
+                  img: data.img,
+                  bank: data.bank,
+                  bankAcc: data.bankAcc,
+                }
+              : e,
+          ),
       );
     } else {
       // new employee
       const newId = `e${Date.now()}`;
-      (setEmpDir as React.Dispatch<React.SetStateAction<Employee[]>>)((d: Employee[]) => [
-        ...d,
-        {
-          id: newId,
-          name: data.name,
-          role: "-",
-          roleId: "",
-          av: data.av,
-          avType: data.avType,
-          img: data.img,
-          bank: data.bank || "",
-          bankAcc: data.bankAcc || "",
-          lineUserId: "",
-          balance: { personal: 15, sick: 15 },
-          used: { personal: 0, sick: 0 },
-          ratePerPieceNormal: 0,
-          ratePerPieceSpecial: 0,
-          ratePerPieceBuy: 0,
-          ratePerPieceInvite: 0,
-          ratePerPieceTransfer: 0,
-        },
-      ]);
+      (setEmpDir as React.Dispatch<React.SetStateAction<Employee[]>>)(
+        (d: Employee[]) => [
+          ...d,
+          {
+            id: newId,
+            name: data.name,
+            role: "-",
+            roleId: "",
+            av: data.av,
+            avType: data.avType,
+            img: data.img,
+            bank: data.bank || "",
+            bankAcc: data.bankAcc || "",
+            lineUserId: "",
+            balance: { personal: 15, sick: 15 },
+            used: { personal: 0, sick: 0 },
+            ratePerPieceNormal: 0,
+            ratePerPieceSpecial: 0,
+            ratePerPieceBuy: 0,
+            ratePerPieceInvite: 0,
+            ratePerPieceTransfer: 0,
+          },
+        ],
+      );
     }
     setShowEditProfile(false);
   }

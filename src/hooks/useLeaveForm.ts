@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import type { LeaveEntry } from "../types";
-import { LEAVE_TYPES } from "../constants";
 import { countWorkdays } from "../utils/dateUtils";
 
 interface UseLeaveFormOptions {
   profileName: string | null;
   allLeaves: LeaveEntry[];
   empDir: { name: string; balance?: any; used?: any }[];
-  setAllLeaves: React.Dispatch<React.SetStateAction<LeaveEntry[]>> | ((...args: any[]) => void);
+  setAllLeaves:
+    | React.Dispatch<React.SetStateAction<LeaveEntry[]>>
+    | ((...args: any[]) => void);
   showToast: (msg: string) => void;
 }
 
@@ -66,22 +67,24 @@ export default function useLeaveForm({
       hour: "2-digit",
       minute: "2-digit",
     });
-    (setAllLeaves as React.Dispatch<React.SetStateAction<LeaveEntry[]>>)((prev: LeaveEntry[]) => [
-      {
-        id,
-        empId: "me",
-        empName: profile.name,
-        av: profile.av,
-        avType: profile.avType,
-        type: form.type as "personal" | "sick",
-        start: form.startDate,
-        end: form.endDate,
-        days,
-        reason: "",
-        submitted: now,
-      },
-      ...prev,
-    ]);
+    (setAllLeaves as React.Dispatch<React.SetStateAction<LeaveEntry[]>>)(
+      (prev: LeaveEntry[]) => [
+        {
+          id,
+          empId: "me",
+          empName: profile.name,
+          av: profile.av,
+          avType: profile.avType,
+          type: form.type as "personal" | "sick",
+          start: form.startDate,
+          end: form.endDate,
+          days,
+          reason: "",
+          submitted: now,
+        },
+        ...prev,
+      ],
+    );
     setSubmitted(true);
   }
 
@@ -94,8 +97,8 @@ export default function useLeaveForm({
 
   /* ─── Delete ───────────────────────────────────────────────── */
   function handleDelete(id: string | number) {
-    (setAllLeaves as React.Dispatch<React.SetStateAction<LeaveEntry[]>>)((prev: LeaveEntry[]) =>
-      prev.filter((lv) => lv.id !== id),
+    (setAllLeaves as React.Dispatch<React.SetStateAction<LeaveEntry[]>>)(
+      (prev: LeaveEntry[]) => prev.filter((lv) => lv.id !== id),
     );
     showToast("ลบรายการลาเรียบร้อยแล้ว");
   }

@@ -1,8 +1,8 @@
 /* ─── RequestTab — Leave request form + history ──────────────── */
 
 import { C, LEAVE_TYPES, TODAY } from "../../constants";
-import { fmtDate } from "../../utils/dateUtils";
 import type { LeaveEntry } from "../../types";
+import { fmtDate } from "../../utils/dateUtils";
 import CalendarPicker from "../shared/CalendarPicker";
 import Diamond from "../shared/Diamond";
 import GoldDivider from "../shared/GoldDivider";
@@ -12,7 +12,9 @@ interface RequestTabProps {
   profile: any;
   allLeaves: LeaveEntry[];
   form: { type: string; startDate: string; endDate: string };
-  setForm: React.Dispatch<React.SetStateAction<{ type: string; startDate: string; endDate: string }>>;
+  setForm: React.Dispatch<
+    React.SetStateAction<{ type: string; startDate: string; endDate: string }>
+  >;
   errors: Record<string, string>;
   histDetail: string | number | null;
   setHistDetail: (id: string | number | null) => void;
@@ -88,9 +90,7 @@ export default function RequestTab({
       </div>
 
       <div className="mb-5.5">
-        <div className="text-base font-bold text-txt mb-3">
-          ประเภทการลา
-        </div>
+        <div className="text-base font-bold text-txt mb-3">ประเภทการลา</div>
         <div className="grid grid-cols-2 gap-3">
           {LEAVE_TYPES.map((lt) => (
             <LeaveTypeCard
@@ -104,14 +104,10 @@ export default function RequestTab({
           ))}
         </div>
         {errors.type && (
-          <div className="text-red text-[13px] mt-2">
-            ⚠ {errors.type}
-          </div>
+          <div className="text-red text-[13px] mt-2">⚠ {errors.type}</div>
         )}
       </div>
-      <div className="text-base font-bold text-txt mb-2">
-        วันที่เริ่มลา
-      </div>
+      <div className="text-base font-bold text-txt mb-2">วันที่เริ่มลา</div>
       <CalendarPicker
         value={form.startDate}
         onChange={(v) =>
@@ -124,9 +120,7 @@ export default function RequestTab({
         minDate={TODAY}
         error={errors.startDate}
       />
-      <div className="text-base font-bold text-txt mb-2 mt-1">
-        วันที่สิ้นสุด
-      </div>
+      <div className="text-base font-bold text-txt mb-2 mt-1">วันที่สิ้นสุด</div>
       <CalendarPicker
         value={form.endDate}
         onChange={(v) => setForm((f) => ({ ...f, endDate: v }))}
@@ -159,9 +153,7 @@ export default function RequestTab({
             )}
           </div>
           <div>
-            <div className="text-sm text-txt-mid mb-0.5">
-              รวมจำนวนวันทำการ
-            </div>
+            <div className="text-sm text-txt-mid mb-0.5">รวมจำนวนวันทำการ</div>
             <div
               className={`text-[28px] font-extrabold leading-[1.1] ${overLimit ? "text-red" : "text-maroon"}`}
             >
@@ -171,9 +163,7 @@ export default function RequestTab({
             <div
               className={`text-[13px] mt-0.5 ${overLimit ? "text-red" : "text-txt-soft"}`}
             >
-              {overLimit
-                ? `⚠ เกินสิทธิ์! คงเหลือ ${remain} วัน`
-                : "(ไม่รวมวันเสาร์)"}
+              {overLimit ? `⚠ เกินสิทธิ์! คงเหลือ ${remain} วัน` : "(ไม่รวมวันเสาร์)"}
             </div>
           </div>
         </div>
@@ -234,10 +224,8 @@ export default function RequestTab({
                     </div>
                     <div className="text-[13px] text-txt-mid">
                       {fmtDate(h.start)}
-                      {h.start !== h.end
-                        ? ` – ${fmtDate(h.end)}`
-                        : ""}{" "}
-                      ({h.days} วันทำการ)
+                      {h.start !== h.end ? ` – ${fmtDate(h.end)}` : ""} (
+                      {h.days} วันทำการ)
                     </div>
                     {histDetail === h.id && (
                       <div className="text-xs text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr">

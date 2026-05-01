@@ -9,8 +9,14 @@ interface UseLineNotificationsOptions {
   empDir: Employee[];
   advanceRequests: AdvanceRequest[];
   submitAdvanceAction: (req: any) => string | number | Promise<string>;
-  approveAdvanceAction: (id: string | number, slipImg?: string | null | undefined) => void | Promise<void>;
-  rejectAdvanceAction: (id: string | number, reason?: string) => void | Promise<void>;
+  approveAdvanceAction: (
+    id: string | number,
+    slipImg?: string | null | undefined,
+  ) => void | Promise<void>;
+  rejectAdvanceAction: (
+    id: string | number,
+    reason?: string,
+  ) => void | Promise<void>;
 }
 
 export default function useLineNotifications({

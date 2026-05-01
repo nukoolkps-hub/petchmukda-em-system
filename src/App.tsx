@@ -98,7 +98,10 @@ export default function LeaveApp() {
     empDir,
     advanceRequests,
     submitAdvanceAction,
-    approveAdvanceAction: approveAdvanceAction as (id: string | number, slipImg?: string | null) => Promise<void>,
+    approveAdvanceAction: approveAdvanceAction as (
+      id: string | number,
+      slipImg?: string | null,
+    ) => Promise<void>,
     rejectAdvanceAction,
   });
 
@@ -159,7 +162,15 @@ export default function LeaveApp() {
   }
 
   /* ─── Advance request wrapper ──────────────────────────────── */
-  async function handleSubmitAdvance({ amount, reason, month }: { amount: number; reason: string; month: string }) {
+  async function handleSubmitAdvance({
+    amount,
+    reason,
+    month,
+  }: {
+    amount: number;
+    reason: string;
+    month: string;
+  }) {
     await submitAdvanceRequest({ amount, reason, month });
     setShowAdvanceModal(false);
     showToast("ส่งคำขอผ่าน LINE แล้ว — รอ Admin โอนเงิน");
@@ -325,11 +336,7 @@ export default function LeaveApp() {
           </div>
 
           {/* ── Bottom nav (mobile only) ── */}
-          <BottomNav
-            navItems={navItems}
-            tab={tab}
-            onTabChange={goTab}
-          />
+          <BottomNav navItems={navItems} tab={tab} onTabChange={goTab} />
 
           {/* Modals */}
           {(showEditProfile || !profile) && (

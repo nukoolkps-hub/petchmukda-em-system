@@ -17,8 +17,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
   /* ─── Monthly quota ────────────────────────────────────────── */
   const usedThisMonth = profile
     ? allLeaves.filter(
-        (lv) =>
-          lv.empName === profile.name && lv.start.startsWith(ym),
+        (lv) => lv.empName === profile.name && lv.start.startsWith(ym),
       ).length
     : 0;
   const quota = 2;
@@ -153,12 +152,9 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
                 {lt.icon}
               </div>
               <div>
-                <div className="text-sm font-semibold text-txt">
-                  {lt.label}
-                </div>
+                <div className="text-sm font-semibold text-txt">{lt.label}</div>
                 <div className="text-[13px] text-txt-soft mt-px">
-                  เดือนนี้ <b style={{ color: lt.color }}>{usedType}</b>{" "}
-                  ครั้ง
+                  เดือนนี้ <b style={{ color: lt.color }}>{usedType}</b> ครั้ง
                 </div>
               </div>
             </div>
