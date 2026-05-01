@@ -1,37 +1,45 @@
 /* ─── Roles CRUD (ตำแหน่งงาน) ──────────────────────────────── */
 import {
-  collection, doc, getDocs, setDoc, deleteDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
   onSnapshot,
+  setDoc,
 } from "firebase/firestore";
-import { db, COLLECTIONS } from "./config";
+import { COLLECTIONS, db } from "./config";
 
 const ref = collection(db, COLLECTIONS.ROLES);
 
-export function subscribeRoles(onChange, onError){
+export function subscribeRoles(onChange, onError) {
   return onSnapshot(
     ref,
-    (snap) => onChange(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+    (snap) => onChange(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
     (err) => {
       console.error("[Roles] subscribe error:", err);
       onError?.(err);
-    }
+    },
   );
 }
 
-export async function getAllRoles(){
+export async function getAllRoles() {
   const snap = await getDocs(ref);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-export async function upsertRole(role){
-  await setDoc(doc(ref, role.id), {
-    name: role.name,
-    poolGroup: role.poolGroup,
-    icon: role.icon,
-    updatedAt: Date.now(),
-  }, { merge: true });
+export async function upsertRole(role) {
+  await setDoc(
+    doc(ref, role.id),
+    {
+      name: role.name,
+      poolGroup: role.poolGroup,
+      icon: role.icon,
+      updatedAt: Date.now(),
+    },
+    { merge: true },
+  );
 }
 
-export async function deleteRole(id){
+export async function deleteRole(id) {
   await deleteDoc(doc(ref, id));
 }

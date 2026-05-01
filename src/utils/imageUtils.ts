@@ -16,12 +16,12 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
  * @returns error message หรือ null ถ้าผ่าน
  */
 export function validateImageFile(file: File): string | null {
-  if(!file) return "ไม่พบไฟล์";
-  if(!ALLOWED_TYPES.includes(file.type)){
+  if (!file) return "ไม่พบไฟล์";
+  if (!ALLOWED_TYPES.includes(file.type)) {
     return "รองรับเฉพาะ JPG, PNG, WEBP, GIF";
   }
-  if(file.size > MAX_INPUT_SIZE){
-    return `ไฟล์ใหญ่เกินไป (${(file.size/1024/1024).toFixed(1)}MB) — สูงสุด 8MB`;
+  if (file.size > MAX_INPUT_SIZE) {
+    return `ไฟล์ใหญ่เกินไป (${(file.size / 1024 / 1024).toFixed(1)}MB) — สูงสุด 8MB`;
   }
   return null;
 }
@@ -36,22 +36,30 @@ interface ResizeOptions {
 /**
  * Resize image และ return เป็น base64 dataURL
  */
-export async function resizeImage(file: File, opts: ResizeOptions = {}): Promise<string> {
+export async function resizeImage(
+  file: File,
+  opts: ResizeOptions = {},
+): Promise<string> {
   const {
     maxWidth = 800,
     maxHeight = 800,
     quality = 0.85,
-    maxBytes = 700 * 1024,    // 700KB — ปลอดภัยใต้ Firestore 1MB
+    maxBytes = 700 * 1024, // 700KB — ปลอดภัยใต้ Firestore 1MB
   } = opts;
 
   const validationError = validateImageFile(file);
-  if(validationError) throw new Error(validationError);
+  if (validationError) throw new Error(validationError);
 
   // อ่านไฟล์ → Image element
   const img = await loadImage(file);
 
   // คำนวณขนาดใหม่ (รักษาสัดส่วน)
-  let { width, height } = calculateDimensions(img.width, img.height, maxWidth, maxHeight);
+  let { width, height } = calculateDimensions(
+    img.width,
+    img.height,
+    maxWidth,
+    maxHeight,
+  );
 
   // วาดลง canvas
   const canvas = document.createElement("canvas");
@@ -64,14 +72,14 @@ export async function resizeImage(file: File, opts: ResizeOptions = {}): Promise
   let q = quality;
   let dataUrl = canvas.toDataURL("image/jpeg", q);
 
-  for(let i = 0; i < 4 && estimateBase64Bytes(dataUrl) > maxBytes; i++){
+  for (let i = 0; i < 4 && estimateBase64Bytes(dataUrl) > maxBytes; i++) {
     q -= 0.15;
-    if(q < 0.3) break;
+    if (q < 0.3) break;
     dataUrl = canvas.toDataURL("image/jpeg", q);
   }
 
   // ถ้ายังใหญ่ → ลดขนาดอีก
-  if(estimateBase64Bytes(dataUrl) > maxBytes){
+  if (estimateBase64Bytes(dataUrl) > maxBytes) {
     width = Math.round(width * 0.75);
     height = Math.round(height * 0.75);
     canvas.width = width;
@@ -91,7 +99,7 @@ export async function resizeAvatar(file: File): Promise<string> {
     maxWidth: 256,
     maxHeight: 256,
     quality: 0.85,
-    maxBytes: 100 * 1024,  // 100KB — avatar รูปเล็ก
+    maxBytes: 100 * 1024, // 100KB — avatar รูปเล็ก
   });
 }
 
@@ -125,14 +133,19 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
-function calculateDimensions(srcW: number, srcH: number, maxW: number, maxH: number) {
+function calculateDimensions(
+  srcW: number,
+  srcH: number,
+  maxW: number,
+  maxH: number,
+) {
   let width = srcW;
   let height = srcH;
-  if(width > maxW){
+  if (width > maxW) {
     height = Math.round((height * maxW) / width);
     width = maxW;
   }
-  if(height > maxH){
+  if (height > maxH) {
     width = Math.round((width * maxH) / height);
     height = maxH;
   }
@@ -148,7 +161,7 @@ function estimateBase64Bytes(dataUrl: string): number {
 
 /* ─── Format byte count for display ────────────────────────── */
 export function formatBytes(bytes: number): string {
-  if(bytes < 1024) return `${bytes} B`;
-  if(bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)} KB`;
-  return `${(bytes/1024/1024).toFixed(1)} MB`;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }

@@ -5,7 +5,10 @@ import { buildCertificateDocDef } from "./pdfBuilders/salaryCertificatePDF";
    • printSalaryCertificate()       → window.print() (เลือก Save as PDF)
    • downloadSalaryCertificatePDF() → pdfmake (PDF text-searchable)    */
 
-function buildCertificateHTML({ profile, empInfo, data, startDate }: any, opts: { includePrintControls?: boolean } = {}) {
+function buildCertificateHTML(
+  { profile, empInfo, data, startDate }: any,
+  opts: { includePrintControls?: boolean } = {},
+) {
   const empName = profile?.name || empInfo?.name || "-";
   const empRole = profile?.role || empInfo?.role || "-";
   const baseSalary = data?.base || 0;
@@ -16,32 +19,49 @@ function buildCertificateHTML({ profile, empInfo, data, startDate }: any, opts: 
   // ใช้คำนำหน้า "นางสาว / นาย" — default = นางสาว ถ้าไม่ระบุ
   const prefix = profile?.prefix || "นางสาว";
 
-  const printDate = new Date().toLocaleDateString("th-TH",{day:"numeric",month:"long",year:"numeric"});
+  const printDate = new Date().toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
   const startWork = startDate || "มีนาคม พ.ศ. 2566";
 
-  const num = (n) => Number(n||0).toLocaleString("th-TH");
+  const num = (n) => Number(n || 0).toLocaleString("th-TH");
   // แปลงตัวเลขเงินเป็นภาษาไทย (basic — รองรับ 0-9,999,999)
   const numToThai = (n) => {
-    const digits = ["ศูนย์","หนึ่ง","สอง","สาม","สี่","ห้า","หก","เจ็ด","แปด","เก้า"];
-    const places = ["","สิบ","ร้อย","พัน","หมื่น","แสน","ล้าน"];
-    if(!n||n<=0) return "ศูนย์บาทถ้วน";
+    const digits = [
+      "ศูนย์",
+      "หนึ่ง",
+      "สอง",
+      "สาม",
+      "สี่",
+      "ห้า",
+      "หก",
+      "เจ็ด",
+      "แปด",
+      "เก้า",
+    ];
+    const places = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
+    if (!n || n <= 0) return "ศูนย์บาทถ้วน";
     let str = "";
     const s = String(Math.floor(n));
     const len = s.length;
-    for(let i=0;i<len;i++){
-      const d = parseInt(s[i]);
+    for (let i = 0; i < len; i++) {
+      const d = parseInt(s[i], 10);
       const place = len - i - 1;
-      if(d===0) continue;
+      if (d === 0) continue;
       // หลักหน่วย ตัวเลข = 1 → "เอ็ด" (ไม่ใช่หนึ่ง)
-      if(place===0 && d===1 && len>1) str += "เอ็ด";
+      if (place === 0 && d === 1 && len > 1) str += "เอ็ด";
       // หลักสิบ ตัวเลข = 1 → ไม่ต้องอ่าน "หนึ่ง"
-      else if(place===1 && d===1) {/* ข้าม */}
+      else if (place === 1 && d === 1) {
+        /* ข้าม */
+      }
       // หลักสิบ ตัวเลข = 2 → "ยี่"
-      else if(place===1 && d===2) str += "ยี่";
+      else if (place === 1 && d === 2) str += "ยี่";
       else str += digits[d];
-      if(place>0) str += places[place];
+      if (place > 0) str += places[place];
     }
-    return str + "บาทถ้วน";
+    return `${str}บาทถ้วน`;
   };
   const baseInWords = numToThai(baseSalary);
 
@@ -206,7 +226,9 @@ function buildCertificateHTML({ profile, empInfo, data, startDate }: any, opts: 
     </div>
   </div>
 
-  ${includePrintControls ? `<div class="save-pdf-banner no-print" id="banner">
+  ${
+    includePrintControls
+      ? `<div class="save-pdf-banner no-print" id="banner">
     <div class="banner-icon">💡</div>
     <div class="banner-text">
       <div class="banner-title">บันทึกเป็น PDF ได้</div>
@@ -217,7 +239,9 @@ function buildCertificateHTML({ profile, empInfo, data, startDate }: any, opts: 
   <button class="print-btn no-print" onclick="window.print()">🖨 พิมพ์ / บันทึก PDF</button>
   <script>
     window.addEventListener('load',()=>setTimeout(()=>window.print(),800));
-  </script>` : ''}
+  </script>`
+      : ""
+  }
 </body>
 </html>`;
 
@@ -230,11 +254,11 @@ function buildCertificateHTML({ profile, empInfo, data, startDate }: any, opts: 
  * 🖨 พิมพ์ / บันทึก PDF ผ่าน window.print()
  * ✅ Bundle 0KB · ทำงานเร็ว · text searchable ใน PDF (ถ้าผู้ใช้เลือก Save as PDF)
  */
-export function printSalaryCertificate(args){
+export function printSalaryCertificate(args) {
   const html = buildCertificateHTML(args, { includePrintControls: true });
-  if(!html) return;
-  const w = window.open("","_blank","width=900,height=1000");
-  if(!w) return;
+  if (!html) return;
+  const w = window.open("", "_blank", "width=900,height=1000");
+  if (!w) return;
   w.document.open();
   w.document.write(html);
   w.document.close();
@@ -244,8 +268,8 @@ export function printSalaryCertificate(args){
  * 📥 ดาวน์โหลด PDF อัตโนมัติ ผ่าน pdfmake (lazy-loaded)
  * ✅ ดาวน์โหลดทันที · text searchable + select ได้ · ขนาดไฟล์เล็ก
  */
-export async function downloadSalaryCertificatePDF(args){
-  if(!args?.data) throw new Error("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
+export async function downloadSalaryCertificatePDF(args) {
+  if (!args?.data) throw new Error("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
 
   // Lazy-load pdfmake + Thai fonts
   const [{ default: pdfMake }, { ensureThaiFonts }] = await Promise.all([
@@ -256,8 +280,12 @@ export async function downloadSalaryCertificatePDF(args){
 
   const docDef = buildCertificateDocDef(args);
   const empName = args.profile?.name || args.empInfo?.name || "employee";
-  const today = new Date().toISOString().slice(0,10);
-  const safe = (s) => String(s||"").replace(/[\/\\?%*:|"<>]/g, "").replace(/\s+/g, "-").trim();
+  const today = new Date().toISOString().slice(0, 10);
+  const safe = (s) =>
+    String(s || "")
+      .replace(/[/\\?%*:|"<>]/g, "")
+      .replace(/\s+/g, "-")
+      .trim();
   const filename = `หนังสือรับรองเงินเดือน-${safe(empName)}-${today}.pdf`;
 
   pdfMake.createPdf(docDef).download(filename);

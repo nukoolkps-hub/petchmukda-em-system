@@ -5,9 +5,19 @@
    3. Provide { user, signOut } to child components
    4. Auto-handle LINE Login callback (?code=xxx)            */
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { User } from "firebase/auth";
-import { onAuthChange, signOut as fbSignOut, completeLineLogin } from "../firebase/auth";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import {
+  completeLineLogin,
+  signOut as fbSignOut,
+  onAuthChange,
+} from "../firebase/auth";
 
 interface AuthState {
   user: User | null;
@@ -71,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setHandlingCallback(false);
         });
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [handlingCallback]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ─── Sign out ────────────────────────────────────────────── */
   const handleSignOut = useCallback(async () => {
@@ -80,7 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading: loading || handlingCallback, error, signOut: handleSignOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading: loading || handlingCallback,
+        error,
+        signOut: handleSignOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

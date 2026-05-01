@@ -1,5 +1,5 @@
 /* ─── useAuth — Track current logged-in user ──────────────── */
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { onAuthChange } from "../auth";
 import { getEmployeeByLineId } from "../employees";
 
@@ -31,16 +31,16 @@ interface UseAuthReturn {
  * - isAdmin (จาก custom claims)
  */
 export default function useAuth(): UseAuthReturn {
-  const [user, setUser]         = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [employee, setEmployee] = useState<AuthEmployee | null>(null);
-  const [isAdmin, setIsAdmin]   = useState(false);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<Error | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const unsub = onAuthChange(async (firebaseUser) => {
       try {
-        if(!firebaseUser){
+        if (!firebaseUser) {
           setUser(null);
           setEmployee(null);
           setIsAdmin(false);
@@ -66,7 +66,7 @@ export default function useAuth(): UseAuthReturn {
         // - Google: matching by email หรือ uid
         const emp = await getEmployeeByLineId(firebaseUser.uid);
         setEmployee(emp);
-      } catch(err) {
+      } catch (err) {
         console.error("[useAuth]", err);
         setError(err as Error);
       } finally {
@@ -77,9 +77,9 @@ export default function useAuth(): UseAuthReturn {
   }, []);
 
   /** Force refresh token to get latest claims (เรียกหลังจาก backend อัพเดต claims) */
-  async function refreshClaims(){
+  async function refreshClaims() {
     const fbUser = (await import("firebase/auth")).getAuth().currentUser;
-    if(!fbUser) return;
+    if (!fbUser) return;
     const tokenResult = await fbUser.getIdTokenResult(true);
     setIsAdmin(tokenResult.claims.admin === true);
   }

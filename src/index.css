@@ -2,67 +2,119 @@
 
 @theme {
   /* ─── Brand Colors (from constants.ts C object) ──────────── */
-  --color-maroon: #7B1C1C;
-  --color-maroon-dk: #5C1212;
-  --color-maroon-lt: #9B3030;
-  --color-gold: #C9973A;
-  --color-gold-lt: #E8C87A;
-  --color-gold-pale: #F5E6C8;
-  --color-cream: #FDF8F0;
-  --color-cream-dk: #F0E4CC;
-  --color-txt: #2D1A0E;
-  --color-txt-mid: #7A5C3A;
-  --color-txt-soft: #B89A72;
-  --color-bdr: #E8D5B0;
-  --color-red: #C0392B;
-  --color-red-lt: #FDECEA;
-  --color-green: #1A6B3A;
-  --color-green-lt: #E8F5EE;
-  --color-amber: #D97706;
-  --color-amber-lt: #FEF3C7;
+  --color-maroon: #7b1c1c;
+  --color-maroon-dk: #5c1212;
+  --color-maroon-lt: #9b3030;
+  --color-gold: #c9973a;
+  --color-gold-lt: #e8c87a;
+  --color-gold-pale: #f5e6c8;
+  --color-cream: #fdf8f0;
+  --color-cream-dk: #f0e4cc;
+  --color-txt: #2d1a0e;
+  --color-txt-mid: #7a5c3a;
+  --color-txt-soft: #b89a72;
+  --color-bdr: #e8d5b0;
+  --color-red: #c0392b;
+  --color-red-lt: #fdecea;
+  --color-green: #1a6b3a;
+  --color-green-lt: #e8f5ee;
+  --color-amber: #d97706;
+  --color-amber-lt: #fef3c7;
 
   /* ─── Typography ─────────────────────────────────────────── */
-  --font-sans: 'Prompt', 'Sarabun', 'Noto Sans Thai', sans-serif;
+  --font-sans: "Prompt", "Sarabun", "Noto Sans Thai", sans-serif;
 }
 
 /* Google Fonts loaded via @import at top of file */
 
 /* ─── Base Styles ──────────────────────────────────────────── */
-* { box-sizing: border-box; }
-body { margin: 0; padding: 0; background: #FDF8F0; }
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background: #fdf8f0;
+}
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: rgba(201, 151, 58, 0.31); border-radius: 2px; }
-select:focus { outline: none; }
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 151, 58, 0.31);
+  border-radius: 2px;
+}
+select:focus {
+  outline: none;
+}
 
 /* ─── Keyframe Animations ──────────────────────────────────── */
 @keyframes toastIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 @keyframes ringFill {
-  from { stroke-dashoffset: 131.95; }
-  to   { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 131.95;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 @keyframes ringFillSide {
-  from { stroke-dashoffset: 119.38; }
-  to   { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 119.38;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 @keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.08); opacity: 0.85; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
 }
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(40px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes modalIn {
-  from { opacity: 0; transform: scale(.9); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @keyframes calFade {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ─── Layout Shell ─────────────────────────────────────────── */
@@ -79,7 +131,9 @@ select:focus { outline: none; }
 
 /* ─── Desktop Layout (≥768px) ──────────────────────────────── */
 @media (min-width: 768px) {
-  body { background: var(--color-cream-dk); }
+  body {
+    background: var(--color-cream-dk);
+  }
 
   .leave-app-root {
     max-width: 100%;
@@ -92,7 +146,12 @@ select:focus { outline: none; }
     width: 260px;
     min-width: 260px;
     flex-shrink: 0;
-    background: linear-gradient(180deg, var(--color-maroon-dk) 0%, var(--color-maroon) 60%, var(--color-maroon-lt) 100%);
+    background: linear-gradient(
+      180deg,
+      var(--color-maroon-dk) 0%,
+      var(--color-maroon) 60%,
+      var(--color-maroon-lt) 100%
+    );
     display: flex;
     flex-direction: column;
     position: sticky;
@@ -106,12 +165,17 @@ select:focus { outline: none; }
     display: flex;
     flex-direction: column;
     min-width: 0;
-    max-width: 780px;
   }
 
-  .leave-header-mobile { display: none !important; }
-  .leave-bottom-nav { display: none !important; }
-  .leave-content { padding: 24px 32px 40px !important; }
+  .leave-header-mobile {
+    display: none;
+  }
+  .leave-bottom-nav {
+    display: none;
+  }
+  .leave-content {
+    padding: 24px 32px 40px;
+  }
 
   .leave-sidebar-profile {
     padding: 28px 24px 20px;
@@ -150,7 +214,11 @@ select:focus { outline: none; }
   }
 
   .leave-sidebar-nav-item.active {
-    background: linear-gradient(135deg, rgba(201, 151, 58, 0.19), rgba(201, 151, 58, 0.09));
+    background: linear-gradient(
+      135deg,
+      rgba(201, 151, 58, 0.19),
+      rgba(201, 151, 58, 0.09)
+    );
     color: var(--color-gold-lt);
     font-weight: 700;
     border: 1px solid rgba(201, 151, 58, 0.25);
@@ -162,7 +230,12 @@ select:focus { outline: none; }
   }
 
   .leave-desktop-header {
-    background: linear-gradient(160deg, var(--color-maroon-dk) 0%, var(--color-maroon) 55%, var(--color-maroon-lt) 100%);
+    background: linear-gradient(
+      160deg,
+      var(--color-maroon-dk) 0%,
+      var(--color-maroon) 55%,
+      var(--color-maroon-lt) 100%
+    );
     padding: 20px 32px;
     position: relative;
     overflow: hidden;
@@ -172,12 +245,16 @@ select:focus { outline: none; }
 
 /* ─── Mobile Layout (<768px) ───────────────────────────────── */
 @media (max-width: 767px) {
-  .leave-sidebar { display: none !important; }
-  .leave-desktop-header { display: none !important; }
+  .leave-sidebar {
+    display: none;
+  }
+  .leave-desktop-header {
+    display: none;
+  }
 
   .leave-bottom-nav {
-    display: flex !important;
-    position: fixed !important;
+    display: flex;
+    position: fixed;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
@@ -186,28 +263,53 @@ select:focus { outline: none; }
     z-index: 100;
   }
 
-  .leave-content { padding-bottom: 90px !important; }
+  .leave-content {
+    padding-bottom: 90px;
+  }
 }
 
 /* ─── Utility Classes (replacing inline styles) ────────────────── */
 
 /* Box shadows with brand colors */
-.shadow-gold-glow   { box-shadow: 0 4px 14px rgba(201, 151, 58, 0.31); }
-.shadow-maroon-glow  { box-shadow: 0 4px 14px rgba(123, 28, 28, 0.25); }
-.shadow-red-glow     { box-shadow: 0 3px 10px rgba(192, 57, 43, 0.31); }
+.shadow-gold-glow {
+  box-shadow: 0 4px 14px rgba(201, 151, 58, 0.31);
+}
+.shadow-maroon-glow {
+  box-shadow: 0 4px 14px rgba(123, 28, 28, 0.25);
+}
+.shadow-red-glow {
+  box-shadow: 0 3px 10px rgba(192, 57, 43, 0.31);
+}
 
 /* Accent colors for checkboxes / radio buttons */
-.accent-red   { accent-color: var(--color-red); }
-.accent-green { accent-color: var(--color-green); }
+.accent-red {
+  accent-color: var(--color-red);
+}
+.accent-green {
+  accent-color: var(--color-green);
+}
 
 /* Common gold border with 30% alpha */
-.border-gold-30 { border: 1px solid rgba(201, 151, 58, 0.19); }
+.border-gold-30 {
+  border: 1px solid rgba(201, 151, 58, 0.19);
+}
 
 /* Gold divider line */
-.bg-gold-divider { background: linear-gradient(90deg, transparent, rgba(201, 151, 58, 0.5), transparent); }
+.bg-gold-divider {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(201, 151, 58, 0.5),
+    transparent
+  );
+}
 
 /* Gold hint background */
-.bg-gold-hint { background: rgba(201, 151, 58, 0.08); }
+.bg-gold-hint {
+  background: rgba(201, 151, 58, 0.08);
+}
 
 /* Dashed border top with gold */
-.border-t-gold-dashed { border-top: 1px dashed rgba(201, 151, 58, 0.31); }
+.border-t-gold-dashed {
+  border-top: 1px dashed rgba(201, 151, 58, 0.31);
+}

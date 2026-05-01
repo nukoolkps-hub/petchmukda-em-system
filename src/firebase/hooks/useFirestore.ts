@@ -3,14 +3,13 @@
    - subscribe to real-time updates
    - return { data, loading, error }
    - cleanup on unmount                                          */
-import { useState, useEffect } from "react";
-
-import { subscribeEmployees }       from "../employees";
-import { subscribeLeaves }          from "../leaves";
-import { subscribeAllSalaries }     from "../salaries";
-import { subscribeAdvances }        from "../advances";
-import { subscribeRoles }           from "../roles";
+import { useEffect, useState } from "react";
+import { subscribeAdvances } from "../advances";
+import { subscribeEmployees } from "../employees";
+import { subscribeLeaves } from "../leaves";
 import { subscribePayrollConfirms } from "../payrollConfirms";
+import { subscribeRoles } from "../roles";
+import { subscribeAllSalaries } from "../salaries";
 
 interface SubscriptionResult<T> {
   data: T;
@@ -39,10 +38,16 @@ function makeSubscriptionHook<T>(subscribeFn: SubscribeFn<T>, defaultValue: T) {
           setError(null);
         },
         (err) => {
-          console.warn("[Firestore] subscription error (degrading gracefully):", err.message);
+          console.warn(
+            "[Firestore] subscription error (degrading gracefully):",
+            err.message,
+          );
           // For permission-denied errors, degrade gracefully
           // (return default value instead of blocking the entire app)
-          if (err.message?.includes("permission") || err.message?.includes("allow")) {
+          if (
+            err.message?.includes("permission") ||
+            err.message?.includes("allow")
+          ) {
             setData(defaultValue);
             setLoading(false);
             // Don't propagate error — the hook will return default data
@@ -50,7 +55,7 @@ function makeSubscriptionHook<T>(subscribeFn: SubscribeFn<T>, defaultValue: T) {
             setError(err);
             setLoading(false);
           }
-        }
+        },
       );
       return unsub;
     }, []);
@@ -60,11 +65,20 @@ function makeSubscriptionHook<T>(subscribeFn: SubscribeFn<T>, defaultValue: T) {
 }
 
 /* ─── Specific hooks ─────────────────────────────────────────── */
-export const useEmployees       = makeSubscriptionHook(subscribeEmployees, [] as any[]);
-export const useLeaves          = makeSubscriptionHook(subscribeLeaves, [] as any[]);
-export const useAdvances        = makeSubscriptionHook(subscribeAdvances, [] as any[]);
-export const useRoles           = makeSubscriptionHook(subscribeRoles, [] as any[]);
+export const useEmployees = makeSubscriptionHook(
+  subscribeEmployees,
+  [] as any[],
+);
+export const useLeaves = makeSubscriptionHook(subscribeLeaves, [] as any[]);
+export const useAdvances = makeSubscriptionHook(subscribeAdvances, [] as any[]);
+export const useRoles = makeSubscriptionHook(subscribeRoles, [] as any[]);
 
 // salaries และ payrollConfirms ใช้ object format
-export const useSalaries        = makeSubscriptionHook(subscribeAllSalaries, {} as Record<string, any>);
-export const usePayrollConfirms = makeSubscriptionHook(subscribePayrollConfirms, {} as Record<string, any>);
+export const useSalaries = makeSubscriptionHook(
+  subscribeAllSalaries,
+  {} as Record<string, any>,
+);
+export const usePayrollConfirms = makeSubscriptionHook(
+  subscribePayrollConfirms,
+  {} as Record<string, any>,
+);

@@ -5,17 +5,16 @@
 
    Interface เหมือนกันทั้งคู่ → App.jsx ไม่รู้ว่ากำลังใช้แบบไหน    */
 
-import useInMemoryAppData from "./useInMemoryAppData";
 import useFirebaseAppData from "./useFirebaseAppData";
+import useInMemoryAppData from "./useInMemoryAppData";
 
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === "true";
 
-export default function useAppData(){
-  // Note: ห้ามเรียก hook แบบ conditional — ต้องเลือก implementation ทั้งฟังก์ชัน
-  if(USE_FIREBASE){
-    return useFirebaseAppData();
-  }
-  return useInMemoryAppData();
+// Pick implementation at module scope (build-time constant) to satisfy Rules of Hooks
+const useAppDataImpl = USE_FIREBASE ? useFirebaseAppData : useInMemoryAppData;
+
+export default function useAppData() {
+  return useAppDataImpl();
 }
 
 export { USE_FIREBASE };

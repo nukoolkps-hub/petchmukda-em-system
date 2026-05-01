@@ -28,7 +28,7 @@ export interface LeaveEntry {
   empId?: string;
   type: "personal" | "sick";
   start: string; // YYYY-MM-DD
-  end: string;   // YYYY-MM-DD
+  end: string; // YYYY-MM-DD
   days: number;
   av?: string;
   submitted?: string;
@@ -190,23 +190,52 @@ export interface AppData {
   loading: boolean;
   error: Error | null;
 
-  setAllLeaves: React.Dispatch<React.SetStateAction<LeaveEntry[]>> | (() => void);
+  setAllLeaves:
+    | React.Dispatch<React.SetStateAction<LeaveEntry[]>>
+    | (() => void);
   setEmpDir: React.Dispatch<React.SetStateAction<Employee[]>> | (() => void);
-  setSalaryData: React.Dispatch<React.SetStateAction<SalaryData>> | (() => void);
-  setAdvanceRequests: React.Dispatch<React.SetStateAction<AdvanceRequest[]>> | (() => void);
+  setSalaryData:
+    | React.Dispatch<React.SetStateAction<SalaryData>>
+    | (() => void);
+  setAdvanceRequests:
+    | React.Dispatch<React.SetStateAction<AdvanceRequest[]>>
+    | (() => void);
   setRoles: React.Dispatch<React.SetStateAction<Role[]>> | (() => void);
-  setPayrollConfirms: React.Dispatch<React.SetStateAction<PayrollConfirms>> | (() => void);
+  setPayrollConfirms:
+    | React.Dispatch<React.SetStateAction<PayrollConfirms>>
+    | (() => void);
 
-  addLeave: (leave: Omit<LeaveEntry, "id">) => string | number | Promise<string>;
+  addLeave: (
+    leave: Omit<LeaveEntry, "id">,
+  ) => string | number | Promise<string>;
   deleteLeave: (id: string | number) => void | Promise<void>;
-  updateEmployee: (id: string, fields: Partial<Employee>) => void | Promise<void>;
+  updateEmployee: (
+    id: string,
+    fields: Partial<Employee>,
+  ) => void | Promise<void>;
   upsertEmployee: (emp: Employee) => string | Promise<string>;
-  updateSalary: (empId: string, ym: string, fields: Partial<SalaryMonth>) => void | Promise<void>;
-  submitAdvance: (req: Omit<AdvanceRequest, "id" | "status" | "submittedAt">) => string | number | Promise<string>;
-  updateAdvance: (id: string | number, fields: Partial<AdvanceRequest>) => void | Promise<void>;
-  approveAdvance: (id: string | number, slipImg?: string | null) => void | Promise<void>;
+  updateSalary: (
+    empId: string,
+    ym: string,
+    fields: Partial<SalaryMonth>,
+  ) => void | Promise<void>;
+  submitAdvance: (
+    req: Omit<AdvanceRequest, "id" | "status" | "submittedAt">,
+  ) => string | number | Promise<string>;
+  updateAdvance: (
+    id: string | number,
+    fields: Partial<AdvanceRequest>,
+  ) => void | Promise<void>;
+  approveAdvance: (
+    id: string | number,
+    slipImg?: string | null,
+  ) => void | Promise<void>;
   rejectAdvance: (id: string | number, reason?: string) => void | Promise<void>;
   upsertRole: (role: Role) => void | Promise<void>;
   deleteRole: (id: string) => void | Promise<void>;
-  setPayrollConfirm: (ym: string, empId: string, confirmed: boolean) => void | Promise<void>;
+  setPayrollConfirm: (
+    ym: string,
+    empId: string,
+    confirmed: boolean,
+  ) => void | Promise<void>;
 }

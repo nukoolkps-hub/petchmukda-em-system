@@ -9,25 +9,25 @@ import { getStorage } from "firebase-admin/storage";
  * Returns null if the input is not a valid data URL.
  */
 export async function saveSlipToStorage(
-  dataURL: string | undefined,
-  requestId: string | number,
+	dataURL: string | undefined,
+	requestId: string | number,
 ): Promise<string | null> {
-  if (!dataURL || !dataURL.startsWith("data:image/")) return null;
+	if (!dataURL || !dataURL.startsWith("data:image/")) return null;
 
-  const m = dataURL.match(/^data:(image\/\w+);base64,(.+)$/);
-  if (!m) return null;
+	const m = dataURL.match(/^data:(image\/\w+);base64,(.+)$/);
+	if (!m) return null;
 
-  const ext = m[1].split("/")[1] === "jpeg" ? "jpg" : m[1].split("/")[1];
-  const buf = Buffer.from(m[2], "base64");
-  const fileName = `slips/slip-${requestId}-${Date.now()}.${ext}`;
+	const ext = m[1].split("/")[1] === "jpeg" ? "jpg" : m[1].split("/")[1];
+	const buf = Buffer.from(m[2], "base64");
+	const fileName = `slips/slip-${requestId}-${Date.now()}.${ext}`;
 
-  const bucket = getStorage().bucket();
-  const file = bucket.file(fileName);
-  await file.save(buf, {
-    contentType: m[1],
-    metadata: { cacheControl: "public, max-age=31536000" },
-  });
-  await file.makePublic();
+	const bucket = getStorage().bucket();
+	const file = bucket.file(fileName);
+	await file.save(buf, {
+		contentType: m[1],
+		metadata: { cacheControl: "public, max-age=31536000" },
+	});
+	await file.makePublic();
 
-  return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+	return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 }

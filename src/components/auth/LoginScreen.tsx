@@ -7,11 +7,11 @@
    - Handles LINE callback loading state                     */
 
 import { useState } from "react";
-import Diamond from "../shared/Diamond";
 import { startLineLogin } from "../../firebase/auth";
 import { auth } from "../../firebase/config";
+import Diamond from "../shared/Diamond";
 
-const LINE_GREEN = "#06C755";
+const _LINE_GREEN = "#06C755";
 
 const LINE_CHANNEL_ID = import.meta.env.VITE_LINE_LOGIN_CHANNEL_ID || "";
 const USE_EMULATORS =
@@ -37,7 +37,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
     try {
       startLineLogin({
         channelId: LINE_CHANNEL_ID,
-        redirectUri: window.location.origin + "/callback",
+        redirectUri: `${window.location.origin}/callback`,
         state: crypto.randomUUID(),
       });
     } catch (err: unknown) {
@@ -54,7 +54,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
       await signInAnonymously(auth);
     } catch (err: unknown) {
       console.error("[Dev Login] error:", err);
-      setLocalError("Dev Login ไม่สำเร็จ: " + (err as Error).message);
+      setLocalError(`Dev Login ไม่สำเร็จ: ${(err as Error).message}`);
     } finally {
       setDevLoading(false);
     }
@@ -75,8 +75,11 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
 
       <div className="fixed inset-0 flex items-center justify-center bg-linear-160 from-maroon-dk via-maroon to-maroon-lt font-sans p-5 overflow-hidden">
         {/* Background mosaic pattern */}
-        <svg className="absolute top-0 right-0 h-full w-[60%] pointer-events-none opacity-50"
-          viewBox="0 0 220 500" preserveAspectRatio="xMaxYMid slice">
+        <svg
+          className="absolute top-0 right-0 h-full w-[60%] pointer-events-none opacity-50"
+          viewBox="0 0 220 500"
+          preserveAspectRatio="xMaxYMid slice"
+        >
           <defs>
             <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.18" />
@@ -88,9 +91,21 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
             </linearGradient>
           </defs>
           {[0, 80, 160, 240, 320, 400].map((y) => [
-            <polygon key={`a${y}`} points={`80,${y} 140,${y} 110,${y + 40}`} fill="url(#lg1)" />,
-            <polygon key={`b${y}`} points={`140,${y} 220,${y} 220,${y + 55} 175,${y + 30}`} fill="url(#lg2)" />,
-            <polygon key={`c${y}`} points={`110,${y + 40} 175,${y + 30} 160,${y + 75} 95,${y + 70}`} fill="url(#lg1)" />,
+            <polygon
+              key={`a${y}`}
+              points={`80,${y} 140,${y} 110,${y + 40}`}
+              fill="url(#lg1)"
+            />,
+            <polygon
+              key={`b${y}`}
+              points={`140,${y} 220,${y} 220,${y + 55} 175,${y + 30}`}
+              fill="url(#lg2)"
+            />,
+            <polygon
+              key={`c${y}`}
+              points={`110,${y + 40} 175,${y + 30} 160,${y + 75} 95,${y + 70}`}
+              fill="url(#lg1)"
+            />,
           ])}
         </svg>
 
@@ -144,9 +159,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
                 <div className="text-gold-lt text-sm font-semibold">
                   กำลังเข้าสู่ระบบ...
                 </div>
-                <div className="text-gold-lt/40 text-xs mt-1">
-                  รอสักครู่
-                </div>
+                <div className="text-gold-lt/40 text-xs mt-1">รอสักครู่</div>
               </div>
             )}
 

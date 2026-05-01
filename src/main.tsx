@@ -2,10 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import LeaveApp from "./App";
-import ErrorBoundary from "./components/shared/ErrorBoundary";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import LoginScreen from "./components/auth/LoginScreen";
 import Diamond from "./components/shared/Diamond";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 /* ─── Loading Screen (Firebase auth initializing) ────────── */
 function AuthLoadingScreen() {
@@ -43,5 +43,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <AuthGate />
       </AuthProvider>
     </ErrorBoundary>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

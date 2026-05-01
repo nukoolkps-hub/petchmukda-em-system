@@ -9,31 +9,34 @@
    3. รัน npm run dev                                              */
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
-import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
-import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { connectAuthEmulator, getAuth } from "firebase/auth";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
+import { connectStorageEmulator, getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Validate config — warn user ถ้าลืมตั้งค่า
-const missingKeys = Object.entries(firebaseConfig).filter(([_,v])=>!v).map(([k])=>k);
-if(missingKeys.length > 0){
+const missingKeys = Object.entries(firebaseConfig)
+  .filter(([_, v]) => !v)
+  .map(([k]) => k);
+if (missingKeys.length > 0) {
   console.warn(
-    "[Firebase] Missing config keys:", missingKeys,
-    "\nสร้าง .env.local จาก .env.example แล้วใส่ค่า Firebase Config"
+    "[Firebase] Missing config keys:",
+    missingKeys,
+    "\nสร้าง .env.local จาก .env.example แล้วใส่ค่า Firebase Config",
   );
 }
 
 export const app = initializeApp(firebaseConfig);
-export const db  = getFirestore(app);
+export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const functions = getFunctions(app);
 export const storage = getStorage(app);
@@ -56,10 +59,10 @@ if (useEmulators) {
 
 /* ─── Collection paths (ใช้ที่นี่ที่เดียว) ────────────────────── */
 export const COLLECTIONS = {
-  EMPLOYEES:        "employees",
-  LEAVES:           "leaves",
-  SALARIES:         "salaries",      // /salaries/{empId}/months/{ym}
-  ADVANCES:         "advances",
-  ROLES:            "roles",
+  EMPLOYEES: "employees",
+  LEAVES: "leaves",
+  SALARIES: "salaries", // /salaries/{empId}/months/{ym}
+  ADVANCES: "advances",
+  ROLES: "roles",
   PAYROLL_CONFIRMS: "payrollConfirms",
 };
