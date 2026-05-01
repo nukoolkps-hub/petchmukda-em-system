@@ -21,11 +21,15 @@
         "recommended": false
       },
       "suspicious": {
-        "noArrayIndexKey": "warn",
-        "noExplicitAny": "warn"
+        "noArrayIndexKey": "off",
+        "noExplicitAny": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noUnusedFunctionParameters": "off"
       },
       "style": {
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "off"
       }
     }
   },

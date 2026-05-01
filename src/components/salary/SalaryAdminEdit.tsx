@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { C, TH_MONTHS } from "../../constants";
 import { TH_NUMBER } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";

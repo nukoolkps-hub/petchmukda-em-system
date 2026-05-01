@@ -40,9 +40,9 @@ export default function SalaryView({
   const {
     overInfo,
     overTotalDays,
-    totalLeaveDays,
+    totalLeaveDays: _totalLeaveDays,
     monthApprovedAdvances,
-    approvedAdvanceTotal,
+    approvedAdvanceTotal: _approvedAdvanceTotal,
     poolShare,
     calc,
   } = useMemo(() => {

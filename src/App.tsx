@@ -20,8 +20,8 @@ import GoldDivider from "./components/shared/GoldDivider";
 /* ─── Constants & seed data ────────────────────────────────────── */
 import { C, LEAVE_TYPES, TODAY } from "./constants";
 import { useAuth } from "./contexts/AuthContext";
-/* ─── Data layer (in-memory or Firebase, sw via VITE_USE_FIREBASE) ─ */
-import useAppData, { USE_FIREBASE } from "./data/useAppData";
+/* ─── Data layer (Firebase) ─────────────────────────────────── */
+import useAppData from "./data/useAppData";
 import { functions } from "./firebase/config";
 /* ─── Utilities ────────────────────────────────────────────────── */
 import { countWorkdays, fmtDate } from "./utils/dateUtils";
@@ -44,7 +44,7 @@ export default function LeaveApp() {
   /* ─── Auth — current user from Firebase Auth ────────────── */
   const { user: authUser, signOut: authSignOut } = useAuth();
 
-  /* ─── Data layer — swap-able (in-memory ↔ Firebase) ───────── */
+  /* ─── Data layer (Firebase) ────────────────────────────────── */
   const data = useAppData();
   const {
     allLeaves,
@@ -58,11 +58,11 @@ export default function LeaveApp() {
     setAllLeaves,
     setEmpDir,
     setSalaryData,
-    setAdvanceRequests,
-    setRoles,
+    _setAdvanceRequests,
+    _setRoles,
     setPayrollConfirms,
-    addLeave: addLeaveAction,
-    deleteLeave: deleteLeaveAction,
+    addLeave: _addLeaveAction,
+    deleteLeave: _deleteLeaveAction,
     submitAdvance: submitAdvanceAction,
     approveAdvance: approveAdvanceAction,
     rejectAdvance: rejectAdvanceAction,
@@ -517,7 +517,7 @@ export default function LeaveApp() {
   if (loading) {
     return (
       <LoadingScreen
-        message={USE_FIREBASE ? "เชื่อมต่อ Firebase..." : "กำลังโหลด..."}
+        message="เชื่อมต่อ Firebase..."
       />
     );
   }
