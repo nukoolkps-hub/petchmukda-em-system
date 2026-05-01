@@ -39,7 +39,7 @@ export default function SuccessScreen({
         <div className="text-sm text-txt-mid mt-1">{days} วันทำการ</div>
       </div>
       <div className="flex items-center justify-center gap-1.5 text-sm text-txt-soft mb-1">
-        <Diamond size={10} /> พร้อมส่งให้หัวหน้าอนุมัติ
+        <Diamond size={10} /> บันทึกเรียบร้อยแล้ว
       </div>
       <br />
       <div className="flex gap-2.5 justify-center flex-wrap">

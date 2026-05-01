@@ -24,14 +24,15 @@ export interface Employee {
 
 export interface LeaveEntry {
   id: string | number;
-  empName: string;
-  empId?: string;
+  employeeName: string;
+  employeeId: string;
   type: "personal" | "sick";
   start: string; // YYYY-MM-DD
   end: string; // YYYY-MM-DD
   days: number;
-  av?: string;
+  reason?: string;
   submitted?: string;
+  createdAt?: number;
 }
 
 export interface LeaveType {

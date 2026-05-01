@@ -16,7 +16,7 @@ export default function ConfirmModal({ leave, onConfirm, onCancel }) {
           ลบรายการลานี้?
         </div>
         <div className="text-sm text-txt-mid text-center mb-5 leading-[1.8]">
-          <b>{leave.empName}</b>
+          <b>{leave.employeeName}</b>
           <br />
           {lt?.icon} {lt?.label} · {fmtDate(leave.start)}
           {leave.start !== leave.end ? ` – ${fmtDate(leave.end)}` : ""}

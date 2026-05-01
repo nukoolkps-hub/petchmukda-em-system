@@ -8,9 +8,9 @@ interface UseLeaveFormOptions {
   profileName: string | null;
   allLeaves: LeaveEntry[];
   empDir: { name: string; balance?: any; used?: any }[];
-  setAllLeaves:
-    | React.Dispatch<React.SetStateAction<LeaveEntry[]>>
-    | ((...args: any[]) => void);
+  addLeave: (leave: Omit<LeaveEntry, "id">) => string | number | Promise<string>;
+  deleteLeave: (id: string | number) => void | Promise<void>;
+  authUid: string;
   showToast: (msg: string) => void;
 }
 
@@ -18,7 +18,9 @@ export default function useLeaveForm({
   profileName,
   allLeaves,
   empDir,
-  setAllLeaves,
+  addLeave,
+  deleteLeave,
+  authUid,
   showToast,
 }: UseLeaveFormOptions) {
   const [form, setForm] = useState({ type: "", startDate: "", endDate: "" });
@@ -28,7 +30,7 @@ export default function useLeaveForm({
 
   /* ─── Derived values ───────────────────────────────────────── */
   const myLeaves = allLeaves.filter(
-    (lv) => profileName && lv.empName === profileName,
+    (lv) => profileName && lv.employeeName === profileName,
   );
 
   const empEntry = empDir.find((e) => profileName && e.name === profileName);
@@ -51,15 +53,14 @@ export default function useLeaveForm({
     return e;
   }
 
-  /* ─── Submit ───────────────────────────────────────────────── */
-  function submit(profile: { name: string; av: string; avType: string }) {
+  /* ─── Submit — writes to Firestore ─────────────────────────── */
+  async function submit(profile: { name: string; av: string; avType: string }) {
     const e = validate();
     if (Object.keys(e).length) {
       setErrors(e);
       return;
     }
     setErrors({});
-    const id = Date.now();
     const now = new Date().toLocaleDateString("th-TH", {
       day: "numeric",
       month: "short",
@@ -67,25 +68,22 @@ export default function useLeaveForm({
       hour: "2-digit",
       minute: "2-digit",
     });
-    (setAllLeaves as React.Dispatch<React.SetStateAction<LeaveEntry[]>>)(
-      (prev: LeaveEntry[]) => [
-        {
-          id,
-          empId: "me",
-          empName: profile.name,
-          av: profile.av,
-          avType: profile.avType,
-          type: form.type as "personal" | "sick",
-          start: form.startDate,
-          end: form.endDate,
-          days,
-          reason: "",
-          submitted: now,
-        },
-        ...prev,
-      ],
-    );
-    setSubmitted(true);
+    try {
+      await addLeave({
+        employeeId: authUid,
+        employeeName: profile.name,
+        type: form.type as "personal" | "sick",
+        start: form.startDate,
+        end: form.endDate,
+        days,
+        reason: "",
+        submitted: now,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("[useLeaveForm] submit error:", err);
+      showToast("เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่");
+    }
   }
 
   /* ─── Reset ────────────────────────────────────────────────── */
@@ -95,12 +93,15 @@ export default function useLeaveForm({
     setErrors({});
   }
 
-  /* ─── Delete ───────────────────────────────────────────────── */
-  function handleDelete(id: string | number) {
-    (setAllLeaves as React.Dispatch<React.SetStateAction<LeaveEntry[]>>)(
-      (prev: LeaveEntry[]) => prev.filter((lv) => lv.id !== id),
-    );
-    showToast("ลบรายการลาเรียบร้อยแล้ว");
+  /* ─── Delete — deletes from Firestore ──────────────────────── */
+  async function handleDelete(id: string | number) {
+    try {
+      await deleteLeave(id);
+      showToast("ลบรายการลาเรียบร้อยแล้ว");
+    } catch (err) {
+      console.error("[useLeaveForm] delete error:", err);
+      showToast("ลบรายการไม่สำเร็จ กรุณาลองใหม่");
+    }
   }
 
   return {

@@ -17,7 +17,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
   /* ─── Monthly quota ────────────────────────────────────────── */
   const usedThisMonth = profile
     ? allLeaves.filter(
-        (lv) => lv.empName === profile.name && lv.start.startsWith(ym),
+        (lv) => lv.employeeName === profile.name && lv.start.startsWith(ym),
       ).length
     : 0;
   const quota = 2;
@@ -135,7 +135,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
           const usedType = profile
             ? allLeaves.filter(
                 (lv) =>
-                  lv.empName === profile.name &&
+                  lv.employeeName === profile.name &&
                   lv.type === lt.id &&
                   lv.start.startsWith(ym),
               ).length

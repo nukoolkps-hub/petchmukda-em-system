@@ -134,13 +134,14 @@ export default function TeamCalendar({ allLeaves, empDir }) {
                   <div className="flex flex-wrap gap-px justify-center mt-[3px]">
                     {lvList.slice(0, 3).map((lv, i) => {
                       const lt = LEAVE_TYPES.find((t) => t.id === lv.type);
+                      const emp = empDir.find((e) => e.name === lv.employeeName);
                       return (
                         <div
                           key={i}
                           className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] text-white font-bold border border-white"
                           style={{ background: lt?.color || C.gold }}
                         >
-                          {lv.av?.charAt(0) || "?"}
+                          {emp?.av?.charAt(0) || lv.employeeName?.charAt(0) || "?"}
                         </div>
                       );
                     })}
@@ -186,14 +187,14 @@ export default function TeamCalendar({ allLeaves, empDir }) {
             <div className="flex flex-col gap-2.5">
               {selLeaves.map((lv, i) => {
                 const lt = LEAVE_TYPES.find((t) => t.id === lv.type);
-                const empInfo = empDir.find((e) => e.name === lv.empName);
+                const empInfo = empDir.find((e) => e.name === lv.employeeName);
                 return (
                   <div
                     key={i}
                     className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-cream border border-bdr"
                   >
                     <AvatarCircle
-                      av={empInfo?.av || lv.av}
+                      av={empInfo?.av || lv.employeeName?.slice(0, 2)}
                       avType={empInfo?.avType || "text"}
                       img={empInfo?.img || null}
                       size={38}
@@ -202,7 +203,7 @@ export default function TeamCalendar({ allLeaves, empDir }) {
                     />
                     <div className="flex-1">
                       <div className="font-semibold text-txt text-[15px]">
-                        {lv.empName}
+                        {lv.employeeName}
                       </div>
                       <div className="text-[13px] text-txt-mid mt-0.5">
                         {lt?.icon} {lt?.label} · {lv.days} วันทำการ

@@ -96,12 +96,12 @@ export default function AdminPanel({
 
   const pastLeaves = allLeaves
     .filter((lv) => isPast(lv.end))
-    .filter((lv) => !filterEmp || lv.empName.includes(filterEmp))
+    .filter((lv) => !filterEmp || lv.employeeName.includes(filterEmp))
     .filter((lv) => !filterType || lv.type === filterType)
     .sort((a, b) => b.end.localeCompare(a.end));
   const uniqueEmps: string[] = [
     ...new Set(
-      allLeaves.filter((lv) => isPast(lv.end)).map((lv) => lv.empName),
+      allLeaves.filter((lv) => isPast(lv.end)).map((lv) => lv.employeeName),
     ),
   ] as string[];
 
@@ -268,7 +268,7 @@ export default function AdminPanel({
 
           // gather all unique employee names
           const empNames: string[] = [
-            ...new Set(allLeaves.map((lv) => lv.empName)),
+            ...new Set(allLeaves.map((lv) => lv.employeeName)),
           ] as string[];
           const months: string[] = (
             [
@@ -346,7 +346,7 @@ export default function AdminPanel({
                       const empInfo = empDir.find((e) => e.name === name);
                       const monthLeaves = allLeaves.filter(
                         (lv) =>
-                          lv.empName === name && lv.start.startsWith(selMonth),
+                          lv.employeeName === name && lv.start.startsWith(selMonth),
                       );
                       const totalTimes = monthLeaves.length;
                       if (totalTimes === 0) return null;
@@ -422,7 +422,7 @@ export default function AdminPanel({
                     (name) =>
                       allLeaves.filter(
                         (lv) =>
-                          lv.empName === name && lv.start.startsWith(selMonth),
+                          lv.employeeName === name && lv.start.startsWith(selMonth),
                       ).length === 0,
                   ) && (
                     <div className="text-txt-soft text-sm text-center py-4">
@@ -461,7 +461,7 @@ export default function AdminPanel({
                       const empInfo = empDir.find((e) => e.name === name);
                       const yearLeaves = allLeaves.filter(
                         (lv) =>
-                          lv.empName === name && lv.start.startsWith(selYear),
+                          lv.employeeName === name && lv.start.startsWith(selYear),
                       );
                       const totalTimes = yearLeaves.length;
                       if (totalTimes === 0) return null;
@@ -533,7 +533,7 @@ export default function AdminPanel({
                     (name) =>
                       allLeaves.filter(
                         (lv) =>
-                          lv.empName === name && lv.start.startsWith(selYear),
+                          lv.employeeName === name && lv.start.startsWith(selYear),
                       ).length === 0,
                   ) && (
                     <div className="text-txt-soft text-sm text-center py-4">
@@ -583,14 +583,14 @@ export default function AdminPanel({
           <div className="flex flex-col gap-2.5">
             {pastLeaves.map((lv) => {
               const lt = LEAVE_TYPES.find((t) => t.id === lv.type);
-              const empInfo = empDir.find((e) => e.name === lv.empName);
+              const empInfo = empDir.find((e) => e.name === lv.employeeName);
               return (
                 <div
                   key={lv.id}
                   className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3"
                 >
                   <AvatarCircle
-                    av={empInfo?.av || lv.av}
+                    av={empInfo?.av || lv.employeeName?.slice(0, 2)}
                     avType={empInfo?.avType || "text"}
                     img={empInfo?.img || null}
                     size={42}
@@ -599,7 +599,7 @@ export default function AdminPanel({
                   />
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-txt text-[15px] mb-[3px]">
-                      {lv.empName}
+                      {lv.employeeName}
                     </div>
                     <div className="flex items-center gap-1.5 mb-1">
                       <span

@@ -72,7 +72,7 @@ export default function PayrollSummaryPanel({
         const empRole = roles.find((r) => r.id === emp.roleId);
         const data = salaryData[emp.id]?.[selMonth] || null;
         const monthLeaves = allLeaves.filter(
-          (lv) => lv.empName === emp.name && lv.start.startsWith(selMonth),
+          (lv) => lv.employeeName === emp.name && lv.start.startsWith(selMonth),
         );
         const overInfo = getOverQuotaDays(monthLeaves);
         const totalLeaveDays = countWeekdayLeaves(monthLeaves);

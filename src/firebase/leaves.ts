@@ -11,16 +11,20 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import type { LeaveEntry } from "../types";
 import { COLLECTIONS, db } from "./config";
 
 const ref = collection(db, COLLECTIONS.LEAVES);
 
 /* ─── Real-time subscribe ──────────────────────────────────── */
-export function subscribeLeaves(onChange, onError) {
+export function subscribeLeaves(
+  onChange: (leaves: LeaveEntry[]) => void,
+  onError?: (err: Error) => void,
+) {
   return onSnapshot(
     query(ref, orderBy("start", "desc")),
     (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as LeaveEntry);
       onChange(list);
     },
     (err) => {
@@ -31,11 +35,15 @@ export function subscribeLeaves(onChange, onError) {
 }
 
 /* ─── Subscribe leaves for specific employee ───────────────── */
-export function subscribeLeavesByEmpId(empId, onChange, onError) {
+export function subscribeLeavesByEmployeeId(
+  employeeId: string,
+  onChange: (leaves: LeaveEntry[]) => void,
+  onError?: (err: Error) => void,
+) {
   return onSnapshot(
-    query(ref, where("empId", "==", empId), orderBy("start", "desc")),
+    query(ref, where("employeeId", "==", employeeId), orderBy("start", "desc")),
     (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as LeaveEntry);
       onChange(list);
     },
     onError,
@@ -43,13 +51,13 @@ export function subscribeLeavesByEmpId(empId, onChange, onError) {
 }
 
 /* ─── Get all (one-time) ───────────────────────────────────── */
-export async function getAllLeaves() {
+export async function getAllLeaves(): Promise<LeaveEntry[]> {
   const snap = await getDocs(query(ref, orderBy("start", "desc")));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as LeaveEntry);
 }
 
 /* ─── Add new leave ────────────────────────────────────────── */
-export async function addLeave(leave) {
+export async function addLeave(leave: Omit<LeaveEntry, "id">): Promise<string> {
   const docRef = await addDoc(ref, {
     ...leave,
     submitted: leave.submitted || new Date().toLocaleString("th-TH"),
@@ -59,7 +67,7 @@ export async function addLeave(leave) {
 }
 
 /* ─── Update leave ─────────────────────────────────────────── */
-export async function updateLeave(id, fields) {
+export async function updateLeave(id: string, fields: Partial<LeaveEntry>): Promise<void> {
   await updateDoc(doc(ref, id), {
     ...fields,
     updatedAt: Date.now(),
@@ -67,6 +75,6 @@ export async function updateLeave(id, fields) {
 }
 
 /* ─── Delete leave ─────────────────────────────────────────── */
-export async function deleteLeave(id) {
-  await deleteDoc(doc(ref, id));
+export async function deleteLeave(id: string | number): Promise<void> {
+  await deleteDoc(doc(ref, String(id)));
 }

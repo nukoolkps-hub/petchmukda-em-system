@@ -41,8 +41,8 @@ service cloud.firestore {
     // แก้ไข/ลบ: admin หรือเจ้าของ
     match /leaves/{leaveId} {
       allow read:   if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.empId == request.auth.uid;
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.empId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.employeeId == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
     }
 
     // ─── Salaries ────────────────────────────────────────────────

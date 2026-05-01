@@ -56,7 +56,7 @@ export function computePoolSharesForGroup({
     poolExc[empId] = emp?.poolExclude || null;
     const monthLeaves = emp
       ? allLeaves.filter(
-          (lv) => lv.empName === emp.name && lv.start.startsWith(ym),
+          (lv) => lv.employeeName === emp.name && lv.start.startsWith(ym),
         )
       : [];
     const w = countWeekdayLeaves(monthLeaves);
