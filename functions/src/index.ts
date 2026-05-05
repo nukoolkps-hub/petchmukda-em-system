@@ -15,6 +15,7 @@ export { notifyAdvanceRequest } from "./advance/notifyRequest.js";
 export { onAdvanceCreated } from "./advance/onAdvanceCreated.js";
 
 // Authentication
+export { devAuth } from "./auth/devAuth.js";
 export { lineAuth } from "./auth/lineAuth.js";
 export { setAdmin } from "./auth/setAdmin.js";
 

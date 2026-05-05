@@ -19,6 +19,7 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
 const lineAuthFn = httpsCallable(functions, "lineAuth");
+const devAuthFn = httpsCallable(functions, "devAuth");
 
 /* ─── Google Sign-in ────────────────────────────────────────── */
 export async function signInWithGoogle() {
@@ -99,6 +100,19 @@ export async function signInWithLineToken(customToken) {
   } catch (err) {
     console.error("[Auth] LINE sign-in failed:", err);
     throw new Error("LINE Login ไม่สำเร็จ — ลองใหม่อีกครั้ง");
+  }
+}
+
+/* ─── Dev custom token sign-in (emulator only) ─────────────── */
+export async function signInWithDevRole(role: "employee" | "admin") {
+  try {
+    const result = await devAuthFn({ role });
+    const { customToken } = result.data as { customToken: string };
+    const credential = await signInWithCustomToken(auth, customToken);
+    return credential.user;
+  } catch (err) {
+    console.error("[Auth] Dev role sign-in failed:", err);
+    throw new Error("Dev Login ไม่สำเร็จ — ตรวจสอบว่า Functions Emulator เปิดอยู่");
   }
 }
 

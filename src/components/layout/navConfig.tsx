@@ -19,6 +19,23 @@ export function getNavItems(options: {
   isAdmin: boolean;
   salaryDisabled: boolean;
 }): NavItem[] {
+  if (options.isAdmin) {
+    return [
+      {
+        id: "admin",
+        path: "/admin",
+        label: "Admin",
+        icon: (a: boolean) => (
+          <IconShield
+            size={22}
+            stroke={a ? 2.5 : 2}
+            fill={a ? `${C.maroon}40` : "none"}
+          />
+        ),
+      },
+    ];
+  }
+
   return [
     {
       id: "home",
@@ -60,22 +77,6 @@ export function getNavItems(options: {
             ),
           },
         ]),
-    ...(options.isAdmin
-      ? [
-          {
-            id: "admin",
-            path: "/admin",
-            label: "Admin",
-            icon: (a: boolean) => (
-              <IconShield
-                size={22}
-                stroke={a ? 2.5 : 2}
-                fill={a ? `${C.maroon}40` : "none"}
-              />
-            ),
-          },
-        ]
-      : []),
   ];
 }
 

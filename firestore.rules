@@ -16,40 +16,112 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // TODO: ตอนแรกใช้ true ก่อน — เพื่อความปลอดภัยในอนาคต
-      // ตั้ง custom claim "admin" ผ่าน Firebase Admin SDK
-      // return request.auth.token.admin == true;
-      return isSignedIn();
+      return isSignedIn() && request.auth.token.admin == true;
     }
 
-    function isOwner(empId) {
-      // employee อ่าน/แก้ไขของตัวเองได้ (ตรวจ uid match กับ lineUserId)
-      return isSignedIn() && request.auth.uid == empId;
+    function isEmployeeOwner(empId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/employees/$(empId))
+        && get(/databases/$(database)/documents/employees/$(empId)).data.lineUserId == request.auth.uid;
+    }
+
+    function isSelfProfileUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        "av",
+        "avType",
+        "img",
+        "bank",
+        "bankAcc",
+        "updatedAt"
+      ]);
+    }
+
+    function validSelfProfileData() {
+      return request.resource.data.av is string
+        && request.resource.data.av.size() <= 8
+        && request.resource.data.avType in ["text", "emoji", "image"]
+        && (!("img" in request.resource.data)
+          || request.resource.data.img == null
+          || (request.resource.data.img is string && request.resource.data.img.size() <= 2048))
+        && (!("bank" in request.resource.data)
+          || (request.resource.data.bank is string && request.resource.data.bank.size() <= 80))
+        && (!("bankAcc" in request.resource.data)
+          || (request.resource.data.bankAcc is string && request.resource.data.bankAcc.size() <= 40))
+        && request.resource.data.updatedAt is int;
+    }
+
+    function validLeaveCreate() {
+      return request.resource.data.keys().hasOnly([
+          "employeeId",
+          "employeeName",
+          "type",
+          "start",
+          "end",
+          "days",
+          "reason",
+          "submitted",
+          "createdAt"
+        ])
+        && request.resource.data.employeeName ==
+          get(/databases/$(database)/documents/employees/$(request.resource.data.employeeId)).data.name
+        && request.resource.data.type in ["personal", "sick"]
+        && request.resource.data.start is string
+        && request.resource.data.end is string
+        && request.resource.data.days is int
+        && request.resource.data.days > 0
+        && (!("reason" in request.resource.data)
+          || (request.resource.data.reason is string && request.resource.data.reason.size() <= 500))
+        && (!("submitted" in request.resource.data)
+          || (request.resource.data.submitted is string && request.resource.data.submitted.size() <= 120))
+        && request.resource.data.createdAt is int;
+    }
+
+    function validAdvanceCreate() {
+      return request.resource.data.keys().hasOnly([
+          "empId",
+          "empName",
+          "amount",
+          "reason",
+          "month",
+          "status",
+          "submittedAt"
+        ])
+        && request.resource.data.empName ==
+          get(/databases/$(database)/documents/employees/$(request.resource.data.empId)).data.name
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 500
+        && request.resource.data.month is string
+        && request.resource.data.status == "pending"
+        && request.resource.data.submittedAt is string;
     }
 
     // ─── Employees ───────────────────────────────────────────────
-    // อ่าน: ทุกคนที่ login ได้
-    // เขียน: เฉพาะ admin
+    // อ่าน: admin หรือเจ้าของ LINE-linked document
+    // เขียน: admin; employee แก้ได้เฉพาะ profile/bank fields ของตัวเอง
     match /employees/{empId} {
-      allow read:   if isSignedIn();
-      allow write:  if isAdmin();
+      allow read:   if isAdmin() || (isSignedIn() && resource.data.lineUserId == request.auth.uid);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (isEmployeeOwner(empId) && isSelfProfileUpdate() && validSelfProfileData());
     }
 
     // ─── Leaves ──────────────────────────────────────────────────
-    // อ่าน: ทุกคนที่ login ได้ (ดูปฏิทินทีม)
-    // สร้าง: เจ้าของ (empId == auth.uid)
-    // แก้ไข/ลบ: admin หรือเจ้าของ
+    // อ่าน/สร้าง/ลบ: admin หรือเจ้าของ employee document
+    // แก้ไข: admin only
     match /leaves/{leaveId} {
-      allow read:   if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.employeeId == request.auth.uid;
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
+      allow read:   if isAdmin() || isEmployeeOwner(resource.data.employeeId);
+      allow create: if isEmployeeOwner(request.resource.data.employeeId) && validLeaveCreate();
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || isEmployeeOwner(resource.data.employeeId);
     }
 
     // ─── Salaries ────────────────────────────────────────────────
     // อ่าน: เฉพาะเจ้าของ + admin
     // เขียน: เฉพาะ admin
     match /salaries/{empId}/months/{ym} {
-      allow read:   if isAdmin() || isOwner(empId);
+      allow read:   if isAdmin() || isEmployeeOwner(empId);
       allow write:  if isAdmin();
     }
 
@@ -65,8 +137,8 @@ service cloud.firestore {
     // สร้าง: เจ้าของ
     // อนุมัติ/ปฏิเสธ: admin
     match /advances/{advanceId} {
-      allow read:   if isAdmin() || (isSignedIn() && resource.data.empId == request.auth.uid);
-      allow create: if isSignedIn() && request.resource.data.empId == request.auth.uid;
+      allow read:   if isAdmin() || isEmployeeOwner(resource.data.empId);
+      allow create: if isEmployeeOwner(request.resource.data.empId) && validAdvanceCreate();
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }

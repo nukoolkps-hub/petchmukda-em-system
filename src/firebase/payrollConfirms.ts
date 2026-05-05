@@ -1,6 +1,6 @@
 /* ─── Payroll Confirmations ────────────────────────────────────
-   เก็บ status ว่า admin ยืนยันการจ่ายเงินเดือนเดือนใด/พนักงานคนไหน
-   key: "{ym}_{empId}" เช่น "2026-04_e1"                          */
+   เก็บ summary ว่า admin ยืนยันยอดเงินเดือนของเดือนใดแล้ว
+   doc id: "{ym}" เช่น "2026-04"                                  */
 import {
   collection,
   doc,
@@ -16,10 +16,9 @@ export function subscribePayrollConfirms(onChange, onError) {
   return onSnapshot(
     ref,
     (snap) => {
-      // แปลงเป็น { "ym_empId": true } ให้เข้ากับ format เดิม
       const result = {};
       snap.docs.forEach((d) => {
-        result[d.id] = d.data().confirmed === true;
+        result[d.id] = d.data();
       });
       onChange(result);
     },
@@ -34,17 +33,17 @@ export async function getAllPayrollConfirms() {
   const snap = await getDocs(ref);
   const result = {};
   snap.docs.forEach((d) => {
-    result[d.id] = d.data().confirmed === true;
+    result[d.id] = d.data();
   });
   return result;
 }
 
-export async function setPayrollConfirm(ym, empId, confirmed) {
-  const key = `${ym}_${empId}`;
-  await setDoc(doc(ref, key), {
+export async function setPayrollConfirm(ym, summary) {
+  await setDoc(doc(ref, ym), {
     ym,
-    empId,
-    confirmed,
-    confirmedAt: confirmed ? new Date().toISOString() : null,
+    confirmedAt: summary.confirmedAt,
+    totalAmount: summary.totalAmount,
+    empCount: summary.empCount,
+    updatedAt: Date.now(),
   });
 }

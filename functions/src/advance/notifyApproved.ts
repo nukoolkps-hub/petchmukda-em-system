@@ -17,6 +17,7 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 		amount,
 		reason,
 		month,
+		slipUrl,
 		slipImg,
 		approvedAt,
 		requestId,
@@ -35,7 +36,8 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 		dateStyle: "medium",
 		timeStyle: "short",
 	});
-	const slipUrl = await saveSlipToStorage(slipImg, requestId || Date.now());
+	const finalSlipUrl =
+		slipUrl || (await saveSlipToStorage(slipImg, requestId || Date.now()));
 
 	const flex = {
 		type: "flex" as const,
@@ -177,11 +179,11 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 	};
 
 	const messages: LineMessage[] = [flex];
-	if (slipUrl) {
+	if (finalSlipUrl) {
 		messages.push({
 			type: "image",
-			originalContentUrl: slipUrl,
-			previewImageUrl: slipUrl,
+			originalContentUrl: finalSlipUrl,
+			previewImageUrl: finalSlipUrl,
 		});
 	}
 
@@ -190,5 +192,5 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 		empLineUserId,
 		messages,
 	);
-	return { ok: true, requestId, slipUrl };
+	return { ok: true, requestId, slipUrl: finalSlipUrl };
 });

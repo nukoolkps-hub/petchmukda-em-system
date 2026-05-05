@@ -2,7 +2,6 @@
 
 export const FONT_LINK =
   "https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap";
-export const ADMIN_PIN = "111111";
 
 export const C = {
   maroon: "#7B1C1C",

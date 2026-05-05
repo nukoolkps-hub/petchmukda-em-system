@@ -12,7 +12,7 @@ interface UseLineNotificationsOptions {
   submitAdvanceAction: (req: any) => string | number | Promise<string>;
   approveAdvanceAction: (
     id: string | number,
-    slipImg?: string | null | undefined,
+    slipUrl?: string | null | undefined,
   ) => void | Promise<void>;
   rejectAdvanceAction: (
     id: string | number,
@@ -110,7 +110,7 @@ export default function useLineNotifications({
 
     // เรียก action ที่เหมาะสม (รองรับทั้ง in-memory และ Firebase)
     if (updates.status === "approved") {
-      await approveAdvanceAction(reqId, updates.slipImg || null);
+      await approveAdvanceAction(reqId, updates.slipUrl || null);
     } else if (updates.status === "rejected") {
       await rejectAdvanceAction(reqId, updates.rejectReason || "");
     }
@@ -127,6 +127,7 @@ export default function useLineNotifications({
         amount: req.amount,
         reason: req.reason,
         month: req.month,
+        slipUrl: updates.slipUrl || null,
         slipImg: updates.slipImg || null,
         approvedAt: updates.approvedAt || new Date().toISOString(),
         requestId: reqId,

@@ -11,7 +11,6 @@ interface ImportMetaEnv {
   readonly VITE_DEV_EMPLOYEE_ID: string;
   readonly VITE_DEV_EMPLOYEE_NAME: string;
   readonly VITE_LINE_LOGIN_CHANNEL_ID: string;
-  readonly VITE_ADMIN_PIN: string;
 }
 
 interface ImportMeta {

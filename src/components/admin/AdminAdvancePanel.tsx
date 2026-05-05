@@ -1,7 +1,9 @@
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useState } from "react";
 import { C } from "../../constants";
+import { uploadAdvanceSlip } from "../../firebase/storage";
 import { TH_NUMBER } from "../../utils/format";
+import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 
 /* ─── Admin: Advance Requests Panel ────────────────────────────── */
@@ -13,6 +15,9 @@ export default function AdminAdvancePanel({
   const [filter, setFilter] = useState("all");
   const [confirmReject, setConfirmReject] = useState<any>(null);
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null); // request.id ที่เพิ่งกด copy
+  const [uploadingSlip, setUploadingSlip] = useState<string | number | null>(
+    null,
+  );
 
   function copyToClipboard(text, reqId) {
     if (!text) return;
@@ -47,16 +52,22 @@ export default function AdminAdvancePanel({
         new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime(),
     );
 
-  function handleApproveSlip(reqId, file) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      onUpdate(reqId, {
+  async function handleApproveSlip(reqId, file) {
+    setUploadingSlip(reqId);
+    try {
+      const dataUrl = await resizeSlip(file);
+      const slipUrl = await uploadAdvanceSlip(reqId, dataUrl);
+      await onUpdate(reqId, {
         status: "approved",
-        slipImg: (ev.target as FileReader).result,
+        slipUrl,
         approvedAt: new Date().toISOString(),
       });
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("[AdminAdvancePanel] upload slip failed:", err);
+      alert((err as Error).message || "อัปโหลดสลิปไม่สำเร็จ");
+    } finally {
+      setUploadingSlip(null);
+    }
   }
 
   function handleReject(reqId) {
@@ -102,6 +113,7 @@ export default function AdminAdvancePanel({
 
       <div className="flex flex-col gap-2.5">
         {filtered.map((req) => {
+          const slipPreview = req.slipUrl || req.slipImg;
           const empInfo =
             empDir.find((e) => e.id === req.empId) ||
             empDir.find((e) => e.name === req.empName);
@@ -200,19 +212,19 @@ export default function AdminAdvancePanel({
               )}
 
               {/* slip preview */}
-              {req.slipImg && (
+              {slipPreview && (
                 <div className="mb-2.5">
                   <div className="text-xs text-txt-soft mb-[5px] font-semibold">
                     📄 สลิปการโอน
                   </div>
                   <img
-                    src={req.slipImg}
+                    src={slipPreview}
                     alt="slip"
                     onClick={() => {
                       const w = window.open("", "_blank");
                       if (w) {
                         w.document.write(
-                          `<img src="${req.slipImg}" style="max-width:100%"/>`,
+                          `<img src="${slipPreview}" style="max-width:100%"/>`,
                         );
                       }
                     }}
@@ -231,10 +243,13 @@ export default function AdminAdvancePanel({
                     ❌ ปฏิเสธ
                   </button>
                   <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-gold)/0.25]">
-                    📤 อัปโหลดสลิป (อนุมัติ)
+                    {uploadingSlip === req.id
+                      ? "กำลังอัปโหลด..."
+                      : "📤 อัปโหลดสลิป (อนุมัติ)"}
                     <input
                       type="file"
                       accept="image/*"
+                      disabled={uploadingSlip === req.id}
                       onChange={(e) => {
                         const f = e.target.files?.[0];
                         if (f) handleApproveSlip(req.id, f);
@@ -245,12 +260,15 @@ export default function AdminAdvancePanel({
                 </div>
               )}
 
-              {req.status === "approved" && !req.slipImg && (
+              {req.status === "approved" && !slipPreview && (
                 <label className="block px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-gold/40 bg-gold-pale text-maroon text-sm font-semibold cursor-pointer font-[inherit] text-center">
-                  📤 อัปโหลดสลิปย้อนหลัง
+                  {uploadingSlip === req.id
+                    ? "กำลังอัปโหลด..."
+                    : "📤 อัปโหลดสลิปย้อนหลัง"}
                   <input
                     type="file"
                     accept="image/*"
+                    disabled={uploadingSlip === req.id}
                     onChange={(e) => {
                       const f = e.target.files?.[0];
                       if (f) handleApproveSlip(req.id, f);

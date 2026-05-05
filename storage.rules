@@ -1,10 +1,42 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function isImageUpload() {
+      return request.resource != null
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches("image/.*");
+    }
+
+    function isEmployeeOwner(empId) {
+      return isSignedIn()
+        && firestore.get(/databases/(default)/documents/employees/$(empId)).data.lineUserId == request.auth.uid;
+    }
+
+    function isAdvanceOwner(advanceId) {
+      return isEmployeeOwner(
+        firestore.get(/databases/(default)/documents/advances/$(advanceId)).data.empId
+      );
+    }
+
+    match /avatars/{empId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if (isAdmin() || isEmployeeOwner(empId)) && isImageUpload();
+    }
+
+    match /advanceSlips/{advanceId}/{fileName} {
+      allow read: if isAdmin() || isAdvanceOwner(advanceId);
+      allow write: if isAdmin() && isImageUpload();
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

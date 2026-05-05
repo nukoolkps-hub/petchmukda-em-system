@@ -43,6 +43,19 @@ export function subscribePendingAdvances(onChange, onError) {
   );
 }
 
+/* ─── Subscribe advances for specific employee ───────────────── */
+export function subscribeAdvancesByEmployeeId(employeeId, onChange, onError) {
+  return onSnapshot(
+    query(
+      ref,
+      where("empId", "==", employeeId),
+      orderBy("submittedAt", "desc"),
+    ),
+    (snap) => onChange(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    onError,
+  );
+}
+
 /* ─── Get all (one-time) ───────────────────────────────────── */
 export async function getAllAdvances() {
   const snap = await getDocs(query(ref, orderBy("submittedAt", "desc")));
@@ -60,12 +73,13 @@ export async function submitAdvance(request) {
 }
 
 /* ─── Approve advance ──────────────────────────────────────── */
-export async function approveAdvance(id, slipImg = null) {
-  await updateDoc(doc(ref, id), {
+export async function approveAdvance(id, slipUrl = null) {
+  const fields: Record<string, unknown> = {
     status: "approved",
     approvedAt: new Date().toISOString(),
-    slipImg, // base64 ของสลิปโอน (optional)
-  });
+  };
+  if (slipUrl) fields.slipUrl = slipUrl;
+  await updateDoc(doc(ref, id), fields);
 }
 
 /* ─── Reject advance ───────────────────────────────────────── */

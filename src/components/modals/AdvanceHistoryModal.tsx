@@ -70,6 +70,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
               {monthList.map((r) => {
                 const s = sMap[r.status] || sMap.pending;
                 const dt = new Date(r.submittedAt);
+                const slipPreview = r.slipUrl || r.slipImg;
                 return (
                   <div
                     key={r.id}
@@ -98,13 +99,13 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                           minute: "2-digit",
                         })}
                       </div>
-                      {r.slipImg && (
+                      {slipPreview && (
                         <button
                           onClick={() => {
                             const w = window.open("", "_blank");
                             if (w) {
                               w.document.write(
-                                `<img src="${r.slipImg}" style="max-width:100%"/>`,
+                                `<img src="${slipPreview}" style="max-width:100%"/>`,
                               );
                             }
                           }}

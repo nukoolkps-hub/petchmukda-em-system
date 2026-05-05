@@ -28,6 +28,7 @@ export interface AdvanceApprovedData {
 	amount: number;
 	reason?: string;
 	month?: string;
+	slipUrl?: string;
 	slipImg?: string;
 	approvedAt?: string;
 	requestId?: string;
@@ -46,6 +47,10 @@ export interface AdvanceRejectedData {
 export interface LineAuthData {
 	code: string;
 	redirectUri: string;
+}
+
+export interface DevAuthData {
+	role: "employee" | "admin";
 }
 
 export interface SetAdminData {

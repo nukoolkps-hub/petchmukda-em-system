@@ -1,0 +1,30 @@
+/* ─── Firebase Storage uploads ───────────────────────────────── */
+
+import { getDownloadURL, ref, uploadString } from "firebase/storage";
+import { storage } from "./config";
+
+function safeSegment(value: string | number) {
+  return String(value).replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+
+async function uploadDataUrl(path: string, dataUrl: string) {
+  const fileRef = ref(storage, path);
+  await uploadString(fileRef, dataUrl, "data_url");
+  return await getDownloadURL(fileRef);
+}
+
+export async function uploadAvatar(empId: string, dataUrl: string) {
+  const id = safeSegment(empId);
+  return await uploadDataUrl(`avatars/${id}/avatar-${Date.now()}.jpg`, dataUrl);
+}
+
+export async function uploadAdvanceSlip(
+  advanceId: string | number,
+  dataUrl: string,
+) {
+  const id = safeSegment(advanceId);
+  return await uploadDataUrl(
+    `advanceSlips/${id}/slip-${Date.now()}.jpg`,
+    dataUrl,
+  );
+}

@@ -9,8 +9,6 @@ import {
   getDoc,
   getDocs,
   onSnapshot,
-  orderBy,
-  query,
   setDoc,
 } from "firebase/firestore";
 import { COLLECTIONS, db } from "./config";
@@ -48,6 +46,24 @@ export function subscribeAllSalaries(onChange, onError) {
   );
 }
 
+/* ─── Subscribe salaries for one employee ───────────────────── */
+export function subscribeEmployeeSalaries(empId, onChange, onError) {
+  return onSnapshot(
+    monthsRef(empId),
+    (snap) => {
+      const result = {};
+      snap.docs.forEach((d) => {
+        result[d.id] = d.data();
+      });
+      onChange({ [empId]: result });
+    },
+    (err) => {
+      console.error("[Salaries] employee subscribe error:", err);
+      onError?.(err);
+    },
+  );
+}
+
 /* ─── Get salary for specific employee/month ───────────────── */
 export async function getSalary(empId, ym) {
   const snap = await getDoc(monthRef(empId, ym));
@@ -56,9 +72,7 @@ export async function getSalary(empId, ym) {
 
 /* ─── Get all months for specific employee ─────────────────── */
 export async function getEmployeeSalaries(empId) {
-  const snap = await getDocs(
-    query(monthsRef(empId), orderBy("__name__", "desc")),
-  );
+  const snap = await getDocs(monthsRef(empId));
   const result = {};
   snap.docs.forEach((d) => {
     result[d.id] = d.data();

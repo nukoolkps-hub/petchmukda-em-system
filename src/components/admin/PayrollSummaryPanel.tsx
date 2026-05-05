@@ -16,7 +16,7 @@ export default function PayrollSummaryPanel({
   advanceRequests,
   roles,
   payrollConfirms,
-  setPayrollConfirms,
+  onSetPayrollConfirm,
   showToast,
 }) {
   const now = new Date();
@@ -252,16 +252,18 @@ export default function PayrollSummaryPanel({
                     </div>
                   </div>
                   <button
-                    onClick={() => {
-                      setPayrollConfirms((p) => ({
-                        ...p,
-                        [selMonth]: {
+                    onClick={async () => {
+                      try {
+                        await onSetPayrollConfirm(selMonth, {
                           confirmedAt: new Date().toISOString(),
                           totalAmount: totalForMonth,
                           empCount: empCountForMonth,
-                        },
-                      }));
-                      showToast?.("ยืนยันยอดใหม่เรียบร้อย");
+                        });
+                        showToast?.("ยืนยันยอดใหม่เรียบร้อย");
+                      } catch (err) {
+                        console.error("[PayrollSummary] confirm failed:", err);
+                        showToast?.("ยืนยันยอดไม่สำเร็จ");
+                      }
                     }}
                     className="w-full py-[11px] rounded-[10px] border-none text-sm font-bold cursor-pointer font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640]"
                   >
@@ -280,22 +282,24 @@ export default function PayrollSummaryPanel({
 
         return (
           <button
-            onClick={() => {
+            onClick={async () => {
               if (
                 !confirm(
                   `ยืนยันการโอนเงินเดือนเดือนนี้?\n\nยอดรวม ฿${TH_NUMBER(totalForMonth)}\nจำนวน ${empCountForMonth} คน\n\nคุณยังสามารถแก้ไขข้อมูลภายหลังได้`,
                 )
               )
                 return;
-              setPayrollConfirms((p) => ({
-                ...p,
-                [selMonth]: {
+              try {
+                await onSetPayrollConfirm(selMonth, {
                   confirmedAt: new Date().toISOString(),
                   totalAmount: totalForMonth,
                   empCount: empCountForMonth,
-                },
-              }));
-              showToast?.("ยืนยันยอดเรียบร้อย");
+                });
+                showToast?.("ยืนยันยอดเรียบร้อย");
+              } catch (err) {
+                console.error("[PayrollSummary] confirm failed:", err);
+                showToast?.("ยืนยันยอดไม่สำเร็จ");
+              }
             }}
             className="w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2"
           >

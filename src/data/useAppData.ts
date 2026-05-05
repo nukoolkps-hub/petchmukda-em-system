@@ -3,6 +3,6 @@
 
 import useFirebaseAppData from "./useFirebaseAppData";
 
-export default function useAppData() {
-  return useFirebaseAppData();
+export default function useAppData(options = {}) {
+  return useFirebaseAppData(options);
 }

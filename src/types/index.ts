@@ -70,6 +70,7 @@ export interface AdvanceRequest {
   approvedAt?: string;
   rejectedAt?: string;
   slipImg?: string | null;
+  slipUrl?: string | null;
   rejectReason?: string;
 }
 
@@ -86,7 +87,7 @@ export interface PayrollConfirmEntry {
   empCount: number;
 }
 
-export type PayrollConfirms = Record<string, PayrollConfirmEntry | boolean>;
+export type PayrollConfirms = Record<string, PayrollConfirmEntry>;
 
 export interface PoolShareResult {
   piecesNormal: number;
@@ -229,14 +230,13 @@ export interface AppData {
   ) => void | Promise<void>;
   approveAdvance: (
     id: string | number,
-    slipImg?: string | null,
+    slipUrl?: string | null,
   ) => void | Promise<void>;
   rejectAdvance: (id: string | number, reason?: string) => void | Promise<void>;
   upsertRole: (role: Role) => void | Promise<void>;
   deleteRole: (id: string) => void | Promise<void>;
   setPayrollConfirm: (
     ym: string,
-    empId: string,
-    confirmed: boolean,
+    summary: PayrollConfirmEntry,
   ) => void | Promise<void>;
 }

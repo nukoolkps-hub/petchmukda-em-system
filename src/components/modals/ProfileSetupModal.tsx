@@ -1,13 +1,21 @@
 import { IconChevronDown } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { C, EMOJI_LIST, TH_BANKS } from "../../constants";
+import { uploadAvatar } from "../../firebase/storage";
+import { resizeAvatar } from "../../utils/imageUtils";
 import { validateBankAccount, validateRequired } from "../../utils/validators";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import Diamond from "../shared/Diamond";
 
 /* ─── Profile Setup Modal (first run / edit) ───────────────────── */
-export default function ProfileSetupModal({ initial, onSave, onClose }) {
+export default function ProfileSetupModal({
+  initial,
+  employeeId,
+  lockName = false,
+  onSave,
+  onClose,
+}) {
   const [name, setName] = useState(initial?.name || "");
   const [avType, setAvType] = useState(initial?.avType || "text");
   const [av, setAv] = useState(initial?.av || "");
@@ -17,6 +25,12 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
   const [nameErr, setNameErr] = useState("");
   const [avErr, setAvErr] = useState("");
   const [bankErr, setBankErr] = useState("");
+  const [saveErr, setSaveErr] = useState("");
+  const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState<
+    string | null
+  >(null);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // auto initials from name
@@ -31,25 +45,35 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
     }
   }, [name, avType]);
 
-  function handleFile(e) {
+  async function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setImg((ev.target as FileReader).result as string);
+    setImageBusy(true);
+    setAvErr("");
+    try {
+      const dataUrl = await resizeAvatar(file);
+      setImg(dataUrl);
+      setPendingAvatarDataUrl(dataUrl);
       setAvType("image");
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      setAvErr((err as Error).message || "อัปโหลดรูปไม่ได้");
+    } finally {
+      setImageBusy(false);
+    }
   }
 
-  function save() {
+  async function save() {
+    if (saving || imageBusy) return;
     let ok = true;
+    setSaveErr("");
 
     // Name validation
-    const nameError = validateRequired(name, "ชื่อ-นามสกุล");
-    if (nameError) {
-      setNameErr(nameError);
-      ok = false;
+    if (!lockName) {
+      const nameError = validateRequired(name, "ชื่อ-นามสกุล");
+      if (nameError) {
+        setNameErr(nameError);
+        ok = false;
+      } else setNameErr("");
     } else setNameErr("");
 
     // Avatar validation
@@ -77,14 +101,28 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
     } else setBankErr("");
 
     if (!ok) return;
-    onSave({
-      name: name.trim(),
-      av,
-      avType,
-      img,
-      bank,
-      bankAcc: bankAcc.trim(),
-    });
+    setSaving(true);
+    try {
+      let finalImg = img;
+      if (avType === "image" && pendingAvatarDataUrl) {
+        if (!employeeId) throw new Error("ไม่พบรหัสพนักงานสำหรับอัปโหลดรูป");
+        finalImg = await uploadAvatar(employeeId, pendingAvatarDataUrl);
+      }
+      await onSave({
+        name: initial?.name || name.trim(),
+        av,
+        avType,
+        img: finalImg,
+        bank,
+        bankAcc: bankAcc.trim(),
+      });
+      setPendingAvatarDataUrl(null);
+    } catch (err) {
+      console.error("[ProfileSetupModal] save failed:", err);
+      setSaveErr((err as Error).message || "บันทึกโปรไฟล์ไม่สำเร็จ");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -118,11 +156,17 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
         </label>
         <input
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => !lockName && setName(e.target.value)}
+          readOnly={lockName}
           placeholder="กรอกชื่อ-นามสกุล"
-          className={`w-full px-4 py-3.5 rounded-xl text-base outline-none font-[inherit] box-border text-txt bg-white border-[1.5px] ${nameErr ? "border-red" : "border-bdr"}`}
+          className={`w-full px-4 py-3.5 rounded-xl text-base outline-none font-[inherit] box-border text-txt border-[1.5px] ${lockName ? "bg-cream text-txt-mid cursor-not-allowed" : "bg-white"} ${nameErr ? "border-red" : "border-bdr"}`}
         />
         {nameErr && <div className="text-red text-sm mt-1.5">⚠ {nameErr}</div>}
+        {lockName && (
+          <div className="text-xs text-txt-soft mt-1.5">
+            ชื่อถูกกำหนดโดยผู้ดูแลระบบ
+          </div>
+        )}
       </div>
 
       {/* avatar type tabs */}
@@ -204,7 +248,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
                 />
                 <div className="flex-1">
                   <div className="text-sm text-green font-semibold mb-1.5">
-                    ✓ อัปโหลดสำเร็จ
+                    {imageBusy ? "กำลังเตรียมรูป..." : "✓ เลือกรูปแล้ว"}
                   </div>
                   <button
                     onClick={() => fileRef.current?.click()}
@@ -282,12 +326,14 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
         {bankErr && <div className="text-red text-sm mt-1.5">⚠ {bankErr}</div>}
       </div>
 
+      {saveErr && <div className="text-red text-sm mb-3">⚠ {saveErr}</div>}
       <button
         onClick={save}
-        className="w-full p-4 mt-2 bg-linear-135 from-gold to-gold-lt text-maroon-dk border-none rounded-[14px] text-lg font-bold cursor-pointer font-[inherit] shadow-[0_6px_20px_rgba(201,151,58,0.25)] flex items-center justify-center gap-2"
+        disabled={saving || imageBusy}
+        className={`w-full p-4 mt-2 border-none rounded-[14px] text-lg font-bold font-[inherit] shadow-[0_6px_20px_rgba(201,151,58,0.25)] flex items-center justify-center gap-2 ${saving || imageBusy ? "bg-bdr text-txt-soft cursor-not-allowed" : "bg-linear-135 from-gold to-gold-lt text-maroon-dk cursor-pointer"}`}
       >
         <Diamond size={16} color={C.maroonDk} />
-        {initial ? "บันทึกการเปลี่ยนแปลง" : "เริ่มใช้งาน"}
+        {saving ? "กำลังบันทึก..." : initial ? "บันทึกการเปลี่ยนแปลง" : "เริ่มใช้งาน"}
       </button>
       {initial && onClose && (
         <button

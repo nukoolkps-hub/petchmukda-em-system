@@ -5,6 +5,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   onSnapshot,
   orderBy,
   query,
@@ -27,6 +28,21 @@ export function subscribeEmployees(onChange, onError) {
     },
     (err) => {
       console.error("[Employees] subscribe error:", err);
+      onError?.(err);
+    },
+  );
+}
+
+/* ─── Read linked employee for current auth uid ─────────────── */
+export function subscribeEmployeeByLineUserId(lineUserId, onChange, onError) {
+  return onSnapshot(
+    query(ref, where("lineUserId", "==", lineUserId), limit(1)),
+    (snap) => {
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      onChange(list);
+    },
+    (err) => {
+      console.error("[Employees] linked employee subscribe error:", err);
       onError?.(err);
     },
   );

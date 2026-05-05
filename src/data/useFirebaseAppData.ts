@@ -8,25 +8,48 @@ import * as advancesAPI from "../firebase/advances";
 
 import * as employeesAPI from "../firebase/employees";
 import {
-  useAdvances,
-  useEmployees,
-  useLeaves,
-  usePayrollConfirms,
+  useAdvancesForScope,
+  useEmployeesForScope,
+  useLeavesForScope,
+  usePayrollConfirmsForScope,
   useRoles,
-  useSalaries,
+  useSalariesForScope,
 } from "../firebase/hooks/useFirestore";
 import * as leavesAPI from "../firebase/leaves";
 import * as payrollConfirmsAPI from "../firebase/payrollConfirms";
 import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
 
-export default function useFirebaseAppData() {
-  const empResult = useEmployees();
-  const leavesResult = useLeaves();
-  const salResult = useSalaries();
-  const advResult = useAdvances();
+interface FirebaseAppDataOptions {
+  authUid?: string;
+  isAdmin?: boolean;
+}
+
+export default function useFirebaseAppData({
+  authUid = "",
+  isAdmin = false,
+}: FirebaseAppDataOptions = {}) {
+  const empResult = useEmployeesForScope({ isAdmin, authUid });
+  const currentEmployee =
+    authUid && !isAdmin
+      ? empResult.data.find((e) => e.lineUserId === authUid) || null
+      : null;
+  const currentEmployeeId = currentEmployee?.id || null;
+
+  const leavesResult = useLeavesForScope({
+    isAdmin,
+    employeeId: currentEmployeeId,
+  });
+  const salResult = useSalariesForScope({
+    isAdmin,
+    employeeId: currentEmployeeId,
+  });
+  const advResult = useAdvancesForScope({
+    isAdmin,
+    employeeId: currentEmployeeId,
+  });
   const rolesResult = useRoles();
-  const pcResult = usePayrollConfirms();
+  const pcResult = usePayrollConfirmsForScope({ isAdmin });
 
   // Aggregate loading/error states
   const loading =
@@ -72,13 +95,13 @@ export default function useFirebaseAppData() {
   async function updateAdvance(id, fields) {
     // Firestore: ไม่มี method generic update — ใช้ approve/reject แทน
     if (fields.status === "approved") {
-      await advancesAPI.approveAdvance(id, fields.slipImg);
+      await advancesAPI.approveAdvance(id, fields.slipUrl || fields.slipImg);
     } else if (fields.status === "rejected") {
       await advancesAPI.rejectAdvance(id, fields.rejectReason);
     }
   }
-  async function approveAdvance(id, slipImg = null) {
-    await advancesAPI.approveAdvance(id, slipImg);
+  async function approveAdvance(id, slipUrl = null) {
+    await advancesAPI.approveAdvance(id, slipUrl);
   }
   async function rejectAdvance(id, reason = "") {
     await advancesAPI.rejectAdvance(id, reason);
@@ -93,8 +116,8 @@ export default function useFirebaseAppData() {
   }
 
   /* ─── Payroll Confirms ──────────────────────────────────── */
-  async function setPayrollConfirm(ym, empId, confirmed) {
-    await payrollConfirmsAPI.setPayrollConfirm(ym, empId, confirmed);
+  async function setPayrollConfirm(ym, summary) {
+    await payrollConfirmsAPI.setPayrollConfirm(ym, summary);
   }
 
   /* ─── Legacy setters (deprecated — แต่ component เก่าใช้) ───

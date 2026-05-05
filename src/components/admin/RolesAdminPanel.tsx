@@ -5,56 +5,69 @@ import AvatarCircle from "../shared/AvatarCircle";
 /* ─── Admin: Roles Management Panel ────────────────────────────── */
 export default function RolesAdminPanel({
   roles,
-  setRoles,
   empDir,
   onUpdateEmpRole,
+  onUpsertRole,
+  onDeleteRole,
+  showToast,
 }) {
   const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, icon}}
   const [newRole, setNewRole] = useState({ name: "", poolGroup: "", icon: "" });
   const [showAdd, setShowAdd] = useState(false);
   const [confirmDel, setConfirmDel] = useState<any>(null);
 
-  function saveEdit(roleId) {
+  async function saveEdit(roleId) {
     const e = editing[roleId];
     if (!e) return;
-    setRoles((r) =>
-      r.map((rl) =>
-        rl.id === roleId
-          ? {
-              ...rl,
-              name: e.name || rl.name,
-              poolGroup: e.poolGroup || null,
-              icon: e.icon || rl.icon,
-            }
-          : rl,
-      ),
-    );
-    setEditing((prev) => {
-      const n = { ...prev };
-      delete n[roleId];
-      return n;
-    });
+    const current = roles.find((rl) => rl.id === roleId);
+    if (!current) return;
+    try {
+      await onUpsertRole({
+        ...current,
+        name: e.name || current.name,
+        poolGroup: e.poolGroup || null,
+        icon: e.icon || current.icon,
+      });
+      setEditing((prev) => {
+        const n = { ...prev };
+        delete n[roleId];
+        return n;
+      });
+      showToast?.("บันทึกตำแหน่งแล้ว");
+    } catch (err) {
+      console.error("[RolesAdminPanel] save role failed:", err);
+      showToast?.("บันทึกตำแหน่งไม่สำเร็จ");
+    }
   }
 
-  function addRole() {
+  async function addRole() {
     if (!newRole.name.trim()) return;
     const id = `r_${Date.now()}`;
-    setRoles((r) => [
-      ...r,
-      {
+    try {
+      await onUpsertRole({
         id,
         name: newRole.name.trim(),
         poolGroup: newRole.poolGroup.trim() || null,
         icon: newRole.icon || "💼",
-      },
-    ]);
-    setNewRole({ name: "", poolGroup: "", icon: "" });
-    setShowAdd(false);
+      });
+      setNewRole({ name: "", poolGroup: "", icon: "" });
+      setShowAdd(false);
+      showToast?.("เพิ่มตำแหน่งแล้ว");
+    } catch (err) {
+      console.error("[RolesAdminPanel] add role failed:", err);
+      showToast?.("เพิ่มตำแหน่งไม่สำเร็จ");
+    }
   }
 
-  function deleteRole(roleId) {
-    setRoles((r) => r.filter((rl) => rl.id !== roleId));
-    setConfirmDel(null);
+  async function deleteRole(roleId) {
+    try {
+      await onDeleteRole(roleId);
+      setConfirmDel(null);
+      showToast?.("ลบตำแหน่งแล้ว");
+    } catch (err) {
+      console.error("[RolesAdminPanel] delete role failed:", err);
+      showToast?.("ลบตำแหน่งไม่สำเร็จ");
+    }
   }
 
   // group roles by poolGroup

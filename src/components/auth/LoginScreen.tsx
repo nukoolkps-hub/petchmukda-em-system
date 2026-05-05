@@ -7,8 +7,7 @@
    - Handles LINE callback loading state                     */
 
 import { useState } from "react";
-import { startLineLogin } from "../../firebase/auth";
-import { auth } from "../../firebase/config";
+import { signInWithDevRole, startLineLogin } from "../../firebase/auth";
 import Diamond from "../shared/Diamond";
 
 const _LINE_GREEN = "#06C755";
@@ -24,7 +23,9 @@ interface LoginScreenProps {
 }
 
 export default function LoginScreen({ loading, error }: LoginScreenProps) {
-  const [devLoading, setDevLoading] = useState(false);
+  const [devLoading, setDevLoading] = useState<"employee" | "admin" | null>(
+    null,
+  );
   const [seedLoading, setSeedLoading] = useState(false);
   const [seedMessage, setSeedMessage] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -48,17 +49,16 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
   }
 
   /* ─── Dev Login (emulator only) ──────────────────────────── */
-  async function handleDevLogin() {
-    setDevLoading(true);
+  async function handleDevLogin(role: "employee" | "admin") {
+    setDevLoading(role);
     setLocalError(null);
     try {
-      const { signInAnonymously } = await import("firebase/auth");
-      await signInAnonymously(auth);
+      await signInWithDevRole(role);
     } catch (err: unknown) {
       console.error("[Dev Login] error:", err);
       setLocalError(`Dev Login ไม่สำเร็จ: ${(err as Error).message}`);
     } finally {
-      setDevLoading(false);
+      setDevLoading(null);
     }
   }
 
@@ -69,7 +69,9 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
     try {
       const { runDevSeed } = await import("../../firebase/seed");
       const count = await runDevSeed();
-      setSeedMessage(`Seed demo data สำเร็จ (${count} documents)`);
+      setSeedMessage(
+        `Seed demo data สำเร็จ (${count} documents) — ใช้ปุ่ม Employee/Admin ได้ทันที`,
+      );
     } catch (err: unknown) {
       console.error("[Seed Data] error:", err);
       setLocalError(`Seed data ไม่สำเร็จ: ${(err as Error).message}`);
@@ -214,17 +216,26 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
                 {/* Dev Login (emulator mode only) */}
                 {USE_EMULATORS && (
                   <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { role: "employee" as const, label: "Employee" },
+                      { role: "admin" as const, label: "Admin" },
+                    ].map((item) => (
+                      <button
+                        key={item.role}
+                        className={`login-dev-btn w-full p-3.5 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                        onClick={() => handleDevLogin(item.role)}
+                        disabled={!!devLoading || seedLoading}
+                      >
+                        🔧{" "}
+                        {devLoading === item.role
+                          ? "กำลังเข้า..."
+                          : `Login as ${item.label}`}
+                      </button>
+                    ))}
                     <button
-                      className={`login-dev-btn w-full p-3.5 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
-                      onClick={handleDevLogin}
-                      disabled={devLoading || seedLoading}
-                    >
-                      🔧 {devLoading ? "กำลังเข้า..." : "Dev Login"}
-                    </button>
-                    <button
-                      className={`login-seed-btn w-full p-3.5 bg-gold-lt/8 border border-dashed border-gold-lt/25 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/65 ${seedLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                      className={`login-seed-btn col-span-2 w-full p-3.5 bg-gold-lt/8 border border-dashed border-gold-lt/25 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/65 ${seedLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
                       onClick={handleSeedData}
-                      disabled={devLoading || seedLoading}
+                      disabled={!!devLoading || seedLoading}
                     >
                       🌱 {seedLoading ? "กำลัง seed..." : "Seed Data"}
                     </button>

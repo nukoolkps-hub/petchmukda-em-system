@@ -106,9 +106,10 @@ export default function AdminPanel({
   advanceRequests,
   onUpdateAdvance,
   roles,
-  setRoles,
+  onUpsertRole,
+  onDeleteRole,
   payrollConfirms,
-  setPayrollConfirms,
+  onSetPayrollConfirm,
   showToast,
 }) {
   const [section, setSection] = useState<AdminSectionId>("summary");
@@ -217,7 +218,7 @@ export default function AdminPanel({
           onClick={() => {
             if (unsavedDirty) {
               const ok = window.confirm(
-                "⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากออก ข้อมูลที่แก้ไขจะหายไป\n\nต้องการออกจากโหมด Admin ใช่ไหม?",
+                "⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากออก ข้อมูลที่แก้ไขจะหายไป\n\nต้องการออกจากระบบใช่ไหม?",
               );
               if (!ok) return;
               setUnsavedDirty(false);
@@ -226,7 +227,7 @@ export default function AdminPanel({
           }}
           className="px-3.5 py-[7px] rounded-[10px] bg-white/12 text-gold-lt text-sm font-semibold cursor-pointer font-[inherit] border border-[#E8C87A50]"
         >
-          ออก
+          ออกจากระบบ
         </button>
       </div>
 
@@ -301,9 +302,11 @@ export default function AdminPanel({
       {section === "positions" && (
         <RolesAdminPanel
           roles={roles}
-          setRoles={setRoles}
           empDir={empDir}
           onUpdateEmpRole={onUpdateRole}
+          onUpsertRole={onUpsertRole}
+          onDeleteRole={onDeleteRole}
+          showToast={showToast}
         />
       )}
 
@@ -316,7 +319,7 @@ export default function AdminPanel({
           advanceRequests={advanceRequests}
           roles={roles}
           payrollConfirms={payrollConfirms}
-          setPayrollConfirms={setPayrollConfirms}
+          onSetPayrollConfirm={onSetPayrollConfirm}
           showToast={showToast}
         />
       )}

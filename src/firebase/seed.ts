@@ -23,6 +23,10 @@ const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID;
 const USE_EMULATORS =
   import.meta.env.VITE_USE_EMULATORS === "true" ||
   (import.meta.env.VITE_USE_EMULATORS !== "false" && import.meta.env.DEV);
+const DEV_EMPLOYEE_UID = "dev_employee";
+const DEV_ADMIN_UID = "dev_admin";
+const DEV_EMPLOYEE_ID = "e3";
+const DEV_ADMIN_EMPLOYEE_ID = "me";
 
 function emulatorBaseUrl() {
   const host =
@@ -75,6 +79,16 @@ function updateWrite(path: string, data: Record<string, unknown>) {
       fields: firestoreFields(data),
     },
   };
+}
+
+function employeeWithDevLogin(emp: any) {
+  if (emp.id === DEV_EMPLOYEE_ID) {
+    return { ...emp, lineUserId: DEV_EMPLOYEE_UID };
+  }
+  if (emp.id === DEV_ADMIN_EMPLOYEE_ID) {
+    return { ...emp, lineUserId: DEV_ADMIN_UID };
+  }
+  return emp;
 }
 
 async function commitEmulatorWrites(writes: Record<string, unknown>[]) {
@@ -186,7 +200,7 @@ export async function runDevSeed() {
     );
   });
 
-  EMP_DIR_INIT.forEach((emp) => {
+  EMP_DIR_INIT.map(employeeWithDevLogin).forEach((emp) => {
     const { id, ...data } = emp;
     writes.push(
       updateWrite(`${COLLECTIONS.EMPLOYEES}/${id}`, {
@@ -229,7 +243,9 @@ export async function runDevSeed() {
   });
 
   await commitEmulatorWrites(writes);
-  console.log(`✅ Seeded ${writes.length} documents to Firestore emulator`);
+  console.log(
+    `✅ Seeded ${writes.length} documents to Firestore emulator. Dev employee UID: ${DEV_EMPLOYEE_UID}; dev admin UID: ${DEV_ADMIN_UID}`,
+  );
   return writes.length;
 }
 
