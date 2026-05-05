@@ -3,7 +3,13 @@
    This file wires everything together.                            */
 
 import { useEffect, useRef, useState } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import AdminPanel from "./components/admin/AdminPanel";
 import HomeTab from "./components/home/HomeTab";
 import RequestTab from "./components/home/RequestTab";
@@ -186,7 +192,8 @@ export default function LeaveApp() {
 
   // ถ้าอยู่ใน salary route แต่ถูกปิดสิทธิ์ → redirect ไป home
   useEffect(() => {
-    if (salaryDisabled && tab === "salary") navigate("/home", { replace: true });
+    if (salaryDisabled && tab === "salary")
+      navigate("/home", { replace: true });
   }, [salaryDisabled, tab, navigate]);
 
   /* ─── Nav items ────────────────────────────────────────────── */

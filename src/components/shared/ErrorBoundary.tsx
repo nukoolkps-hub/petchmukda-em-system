@@ -1,5 +1,6 @@
-import React, { Component } from "react";
 import { IconAlertCircle } from "@tabler/icons-react";
+import type React from "react";
+import { Component } from "react";
 
 /* ─── Error Boundary ───────────────────────────────────────────────
    ดักจับ errors ทั้งหมดในระดับ React tree

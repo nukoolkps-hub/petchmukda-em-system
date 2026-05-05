@@ -134,14 +134,18 @@ export default function TeamCalendar({ allLeaves, empDir }) {
                   <div className="flex flex-wrap gap-px justify-center mt-[3px]">
                     {lvList.slice(0, 3).map((lv, i) => {
                       const lt = LEAVE_TYPES.find((t) => t.id === lv.type);
-                      const emp = empDir.find((e) => e.name === lv.employeeName);
+                      const emp = empDir.find(
+                        (e) => e.name === lv.employeeName,
+                      );
                       return (
                         <div
                           key={i}
                           className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] text-white font-bold border border-white"
                           style={{ background: lt?.color || C.gold }}
                         >
-                          {emp?.av?.charAt(0) || lv.employeeName?.charAt(0) || "?"}
+                          {emp?.av?.charAt(0) ||
+                            lv.employeeName?.charAt(0) ||
+                            "?"}
                         </div>
                       );
                     })}

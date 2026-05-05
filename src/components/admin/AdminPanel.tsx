@@ -346,7 +346,8 @@ export default function AdminPanel({
                       const empInfo = empDir.find((e) => e.name === name);
                       const monthLeaves = allLeaves.filter(
                         (lv) =>
-                          lv.employeeName === name && lv.start.startsWith(selMonth),
+                          lv.employeeName === name &&
+                          lv.start.startsWith(selMonth),
                       );
                       const totalTimes = monthLeaves.length;
                       if (totalTimes === 0) return null;
@@ -422,7 +423,8 @@ export default function AdminPanel({
                     (name) =>
                       allLeaves.filter(
                         (lv) =>
-                          lv.employeeName === name && lv.start.startsWith(selMonth),
+                          lv.employeeName === name &&
+                          lv.start.startsWith(selMonth),
                       ).length === 0,
                   ) && (
                     <div className="text-txt-soft text-sm text-center py-4">
@@ -461,7 +463,8 @@ export default function AdminPanel({
                       const empInfo = empDir.find((e) => e.name === name);
                       const yearLeaves = allLeaves.filter(
                         (lv) =>
-                          lv.employeeName === name && lv.start.startsWith(selYear),
+                          lv.employeeName === name &&
+                          lv.start.startsWith(selYear),
                       );
                       const totalTimes = yearLeaves.length;
                       if (totalTimes === 0) return null;
@@ -533,7 +536,8 @@ export default function AdminPanel({
                     (name) =>
                       allLeaves.filter(
                         (lv) =>
-                          lv.employeeName === name && lv.start.startsWith(selYear),
+                          lv.employeeName === name &&
+                          lv.start.startsWith(selYear),
                       ).length === 0,
                   ) && (
                     <div className="text-txt-soft text-sm text-center py-4">

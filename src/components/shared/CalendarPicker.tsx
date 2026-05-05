@@ -75,7 +75,11 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
         <div
           className={`w-9 h-9 rounded-[10px] shrink-0 flex items-center justify-center ${has ? "bg-linear-135 from-gold to-gold-lt" : "bg-cream-dk"}`}
         >
-          <IconCalendar size={18} color={has ? "#fff" : C.textSoft} stroke={2} />
+          <IconCalendar
+            size={18}
+            color={has ? "#fff" : C.textSoft}
+            stroke={2}
+          />
         </div>
         <div className="flex-1 text-left">
           <div

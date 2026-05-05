@@ -8,7 +8,9 @@ interface UseLeaveFormOptions {
   profileName: string | null;
   allLeaves: LeaveEntry[];
   empDir: { name: string; balance?: any; used?: any }[];
-  addLeave: (leave: Omit<LeaveEntry, "id">) => string | number | Promise<string>;
+  addLeave: (
+    leave: Omit<LeaveEntry, "id">,
+  ) => string | number | Promise<string>;
   deleteLeave: (id: string | number) => void | Promise<void>;
   authUid: string;
   showToast: (msg: string) => void;

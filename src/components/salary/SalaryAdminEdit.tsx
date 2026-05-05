@@ -63,7 +63,8 @@ export default function SalaryAdminEdit({
 
   const monthLeaves = empInfo
     ? allLeaves.filter(
-        (lv) => lv.employeeName === empInfo.name && lv.start.startsWith(selMonth),
+        (lv) =>
+          lv.employeeName === empInfo.name && lv.start.startsWith(selMonth),
       )
     : [];
   const overInfo = getOverQuotaDays(monthLeaves);

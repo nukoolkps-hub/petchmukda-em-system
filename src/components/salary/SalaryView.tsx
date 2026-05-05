@@ -57,7 +57,8 @@ export default function SalaryView({
   } = useMemo(() => {
     const monthLeaves = profile
       ? allLeaves.filter(
-          (lv) => lv.employeeName === profile.name && lv.start.startsWith(selMonth),
+          (lv) =>
+            lv.employeeName === profile.name && lv.start.startsWith(selMonth),
         )
       : [];
     const _overInfo = getOverQuotaDays(monthLeaves);

@@ -24,7 +24,9 @@ export function subscribeLeaves(
   return onSnapshot(
     query(ref, orderBy("start", "desc")),
     (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as LeaveEntry);
+      const list = snap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as LeaveEntry,
+      );
       onChange(list);
     },
     (err) => {
@@ -43,7 +45,9 @@ export function subscribeLeavesByEmployeeId(
   return onSnapshot(
     query(ref, where("employeeId", "==", employeeId), orderBy("start", "desc")),
     (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as LeaveEntry);
+      const list = snap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as LeaveEntry,
+      );
       onChange(list);
     },
     onError,
@@ -67,7 +71,10 @@ export async function addLeave(leave: Omit<LeaveEntry, "id">): Promise<string> {
 }
 
 /* ─── Update leave ─────────────────────────────────────────── */
-export async function updateLeave(id: string, fields: Partial<LeaveEntry>): Promise<void> {
+export async function updateLeave(
+  id: string,
+  fields: Partial<LeaveEntry>,
+): Promise<void> {
   await updateDoc(doc(ref, id), {
     ...fields,
     updatedAt: Date.now(),

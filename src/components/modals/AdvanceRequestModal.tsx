@@ -60,7 +60,11 @@ export default function AdvanceRequestModal({
         {/* header */}
         <div className="flex items-center gap-3 mb-4.5">
           <div className="w-[46px] h-[46px] rounded-xl bg-linear-135 from-maroon to-maroon-lt flex items-center justify-center shadow-[0_4px_14px_rgba(123,28,28,0.25)]">
-            <IconCirclePlus size={22} color="var(--color-gold-lt)" stroke={2.2} />
+            <IconCirclePlus
+              size={22}
+              color="var(--color-gold-lt)"
+              stroke={2.2}
+            />
           </div>
           <div className="flex-1">
             <div className="font-extrabold text-lg text-txt">เบิกเงินล่วงหน้า</div>
