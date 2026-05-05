@@ -83,8 +83,8 @@ export default function TeamCalendar({
       <div className="bg-white rounded-[18px] px-4 pt-4.5 pb-4 shadow-[0_2px_14px_rgba(90,30,10,0.08)] border border-bdr mb-3.5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="font-bold text-maroon text-[17px]">ปฏิทินการลา</div>
-            <div className="text-[13px] text-txt-soft mt-0.5">
+            <div className="font-bold text-maroon text-lg">ปฏิทินการลา</div>
+            <div className="text-sm text-txt-soft mt-0.5">
               แตะวันเพื่อดูรายละเอียด
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function TeamCalendar({
                 }}
               >
                 <div
-                  className="text-center text-[13px] leading-none"
+                  className="text-center text-sm leading-none"
                   style={{
                     fontWeight: isToday || isSelectedDate ? 800 : 500,
                     color: isSelectedDate
@@ -185,26 +185,19 @@ export default function TeamCalendar({
                       const leaveType = LEAVE_TYPES.find(
                         (type) => type.id === leaveEntry.type,
                       );
-                      const employee = employeeDirectory.find(
-                        (directoryEmployee) =>
-                          directoryEmployee.name === leaveEntry.employeeName,
-                      );
                       return (
                         <div
                           key={leaveEntry.id}
-                          className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] text-white font-bold border border-white"
+                          title={`${leaveEntry.employeeName} (${leaveType?.label || leaveEntry.type})`}
+                          className="w-2.5 h-2.5 rounded-full border border-white"
                           style={{
                             background: leaveType?.color || colors.gold,
                           }}
-                        >
-                          {employee?.av?.charAt(0) ||
-                            leaveEntry.employeeName?.charAt(0) ||
-                            "?"}
-                        </div>
+                        />
                       );
                     })}
                     {leaveEntriesForDate.length > 3 && (
-                      <div className="w-3.5 h-3.5 rounded-full bg-txt-soft flex items-center justify-center text-[7px] text-white font-bold">
+                      <div className="min-w-5 h-4 px-1 rounded-full bg-txt-soft flex items-center justify-center text-xs leading-none text-white font-bold">
                         +{leaveEntriesForDate.length - 3}
                       </div>
                     )}
@@ -227,7 +220,7 @@ export default function TeamCalendar({
       </div>
       <div className="bg-white rounded-[18px] p-4 mb-3.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] border border-bdr">
         <div
-          className={`font-bold text-maroon text-[15px] ${selectedDateLeaves.length ? "mb-3" : ""}`}
+          className={`font-bold text-maroon text-base ${selectedDateLeaves.length ? "mb-3" : ""}`}
         >
           {new Date(`${selectedDate}T00:00:00`).toLocaleDateString("th-TH", {
             weekday: "long",
@@ -265,10 +258,10 @@ export default function TeamCalendar({
                     border={`2px solid ${colors.gold}40`}
                   />
                   <div className="flex-1">
-                    <div className="font-semibold text-txt text-[15px]">
+                    <div className="font-semibold text-txt text-base">
                       {leaveEntry.employeeName}
                     </div>
-                    <div className="text-[13px] text-txt-mid mt-0.5">
+                    <div className="text-sm text-txt-mid mt-0.5">
                       {leaveType?.icon} {leaveType?.label} · {leaveEntry.days}{" "}
                       วันทำการ
                     </div>

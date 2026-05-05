@@ -135,7 +135,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
             <div className="w-20 h-20 rounded-full bg-linear-135 from-gold to-gold-lt flex items-center justify-center mx-auto mb-4 shadow-[0_8px_32px_rgba(201,151,58,0.31)]">
               <Diamond size={36} color="#5C1212" />
             </div>
-            <div className="text-gold-lt font-extrabold text-[22px] leading-[1.2] tracking-tight">
+            <div className="text-gold-lt font-extrabold text-2xl leading-[1.2] tracking-tight">
               ห้างเพชรทองมุกดา
             </div>
             <div className="text-gold-lt/50 text-sm mt-1 tracking-wide">
@@ -162,7 +162,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
                   <div className="text-[#ffaaaa] font-semibold text-sm">
                     เข้าสู่ระบบไม่สำเร็จ
                   </div>
-                  <div className="text-[#ff9999] text-[13px] mt-0.5">
+                  <div className="text-[#ff9999] text-sm mt-0.5">
                     {displayError}
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
                   <div className="text-[#7EE8B5] font-semibold text-sm">
                     พร้อมใช้งานใน Emulator
                   </div>
-                  <div className="text-[#7EE8B5]/80 text-[13px] mt-0.5">
+                  <div className="text-[#7EE8B5]/80 text-sm mt-0.5">
                     {seedMessage}
                   </div>
                 </div>
@@ -201,7 +201,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
               <>
                 {/* LINE Login button */}
                 <button
-                  className="login-line-btn w-full p-4 border-none rounded-[14px] text-[17px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-3 transition-all duration-200 mb-3 bg-[#06C755] text-white shadow-[0_6px_20px_rgba(6,199,85,0.25)]"
+                  className="login-line-btn w-full p-4 border-none rounded-[14px] text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-3 transition-all duration-200 mb-3 bg-[#06C755] text-white shadow-[0_6px_20px_rgba(6,199,85,0.25)]"
                   onClick={handleLineLogin}
                 >
                   {/* LINE icon */}

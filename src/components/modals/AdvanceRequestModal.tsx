@@ -73,19 +73,19 @@ export default function AdvanceRequestModal({
       <div className="bg-gold-pale rounded-xl px-3.5 py-3 mb-3.5 border border-gold/25">
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-sm text-txt-mid">วงเงินสูงสุด (50% ของเงินเดือน)</span>
-          <span className="text-[13px] font-bold text-maroon">
+          <span className="text-sm font-bold text-maroon">
             ฿{TH_NUMBER(maxAdvance)}
           </span>
         </div>
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-sm text-txt-mid">เบิกไปแล้วเดือนนี้</span>
-          <span className="text-[13px] font-bold text-txt-mid">
+          <span className="text-sm font-bold text-txt-mid">
             ฿{TH_NUMBER(alreadyRequested)}
           </span>
         </div>
         <div className="h-px bg-gold/25 my-1.5" />
         <div className="flex justify-between items-center">
-          <span className="text-[13px] font-bold text-txt">คงเหลือเบิกได้</span>
+          <span className="text-sm font-bold text-txt">คงเหลือเบิกได้</span>
           <span className="text-lg font-extrabold text-green">
             ฿{TH_NUMBER(remaining)}
           </span>
@@ -93,7 +93,7 @@ export default function AdvanceRequestModal({
       </div>
 
       {/* amount */}
-      <label className="block text-[13px] text-txt-mid font-semibold mb-1.5">
+      <label className="block text-sm text-txt-mid font-semibold mb-1.5">
         จำนวนเงินที่ต้องการเบิก
       </label>
       <div className="relative mb-3">
@@ -128,7 +128,7 @@ export default function AdvanceRequestModal({
       </div>
 
       {/* reason */}
-      <label className="block text-[13px] text-txt-mid font-semibold mb-1.5">
+      <label className="block text-sm text-txt-mid font-semibold mb-1.5">
         เหตุผล
       </label>
       <textarea
@@ -145,7 +145,7 @@ export default function AdvanceRequestModal({
       {/* LINE notice */}
       <div className="bg-[#06C75510] rounded-[10px] px-3.5 py-2.5 mb-4 border border-[#06C75530] flex gap-2.5 items-center">
         <div className="text-lg">💬</div>
-        <div className="text-[11px] text-txt-mid leading-normal">
+        <div className="text-xs text-txt-mid leading-normal">
           คำขอจะถูกส่งไปยัง Admin ผ่าน <b className="text-[#06C755]">LINE</b> ทันที
           <br />
           Admin จะโอนเงินและส่งสลิปกลับมาในแอป
@@ -155,14 +155,14 @@ export default function AdvanceRequestModal({
       <div className="flex gap-2.5">
         <button
           onClick={onClose}
-          className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-[15px] font-semibold cursor-pointer font-[inherit]"
+          className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
         >
           ยกเลิก
         </button>
         <button
           onClick={submit}
           disabled={remaining <= 0}
-          className={`flex-2 p-3.5 rounded-xl border-none text-[15px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5
+          className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5
             ${
               remaining <= 0
                 ? "bg-bdr text-txt-soft cursor-not-allowed shadow-none"

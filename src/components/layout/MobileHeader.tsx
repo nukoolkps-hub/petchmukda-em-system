@@ -83,13 +83,13 @@ export default function MobileHeader({
                 <div className="text-gold-lt font-extrabold text-lg leading-none tracking-tight">
                   ห้างเพชรทองมุกดา
                 </div>
-                <div className="text-gold-lt/50 text-[11px] tracking-wider mt-px">
+                <div className="text-gold-lt/50 text-xs tracking-wider mt-px">
                   ระบบพนักงาน
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-white font-bold text-[19px]">
+            <div className="text-white font-bold text-xl">
               {PAGE_TITLES[tab]}
             </div>
           )}
@@ -98,7 +98,7 @@ export default function MobileHeader({
           <button
             onClick={onShowManual}
             title="กฏการคำนวณต่างๆ"
-            className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-[11px] font-semibold shrink-0 whitespace-nowrap"
+            className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-xs font-semibold shrink-0 whitespace-nowrap"
           >
             <IconBook2 size={16} color="#fff" stroke={2.2} />
             กฏการคำนวณ
@@ -124,11 +124,11 @@ export default function MobileHeader({
                 border={`2.5px solid ${C.goldLt}50`}
               />
               <div className="text-left">
-                <div className="text-gold-lt/50 text-[13px]">สวัสดีค่ะ</div>
+                <div className="text-gold-lt/50 text-sm">สวัสดีค่ะ</div>
                 <div className="text-white font-bold text-xl leading-[1.15]">
                   {profile.name}
                 </div>
-                <div className="text-gold-lt/55 text-[13px] mt-0.5">
+                <div className="text-gold-lt/55 text-sm mt-0.5">
                   {profile.role}
                 </div>
               </div>
@@ -141,11 +141,11 @@ export default function MobileHeader({
               onClick={onEditProfile}
               className="flex items-center gap-3 bg-white/12 border-[1.5px] border-dashed border-gold-lt/37 rounded-[14px] px-4 py-3 cursor-pointer flex-1 font-[inherit]"
             >
-              <div className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center text-[22px]">
+              <div className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center text-2xl">
                 👤
               </div>
               <div className="text-left">
-                <div className="text-gold-lt font-bold text-[15px]">
+                <div className="text-gold-lt font-bold text-base">
                   ตั้งค่าโปรไฟล์ของคุณ
                 </div>
                 <div className="text-gold-lt/50 text-sm mt-0.5">

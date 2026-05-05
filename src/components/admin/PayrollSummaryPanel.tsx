@@ -152,14 +152,14 @@ export default function PayrollSummaryPanel({
           <div className="text-sm font-bold text-maroon">
             💳 สรุปการจ่ายเงินเดือน
           </div>
-          <div className="text-[11px] text-txt-soft mt-0.5">
+          <div className="text-xs text-txt-soft mt-0.5">
             คัดลอกเลขบัญชีไปวางในแอปธนาคารได้
           </div>
         </div>
         <select
           value={selMonth}
           onChange={(e) => setSelMonth(e.target.value)}
-          className="px-2.5 py-[7px] rounded-[9px] border border-bdr text-[13px] font-semibold text-txt bg-cream font-[inherit] outline-none"
+          className="px-2.5 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
         >
           {months.map((m) => {
             const [y, mo] = m.split("-");
@@ -187,7 +187,7 @@ export default function PayrollSummaryPanel({
           <div className="text-sm text-gold-lt/65 mb-[3px]">
             ยอดที่ต้องโอนเดือนนี้ ({filtered.length} คน)
           </div>
-          <div className="text-[30px] font-extrabold text-gold-lt tracking-[-0.02em] mb-2">
+          <div className="text-3xl font-extrabold text-gold-lt tracking-[-0.02em] mb-2">
             ฿{TH_NUMBER(totalPayout)}
           </div>
           {totalAdvance > 0 && (
@@ -234,7 +234,7 @@ export default function PayrollSummaryPanel({
                   >
                     {isStale ? "ข้อมูลเปลี่ยนหลังยืนยัน" : "ยืนยันยอดเรียบร้อยแล้ว"}
                   </div>
-                  <div className="text-[11px] text-txt-soft mt-0.5">
+                  <div className="text-xs text-txt-soft mt-0.5">
                     📅 {dtStr}
                   </div>
                 </div>
@@ -263,7 +263,7 @@ export default function PayrollSummaryPanel({
                       }));
                       showToast?.("ยืนยันยอดใหม่เรียบร้อย");
                     }}
-                    className="w-full py-[11px] rounded-[10px] border-none text-[13px] font-bold cursor-pointer font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640]"
+                    className="w-full py-[11px] rounded-[10px] border-none text-sm font-bold cursor-pointer font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640]"
                   >
                     🔄 ยืนยันยอดใหม่
                   </button>
@@ -297,7 +297,7 @@ export default function PayrollSummaryPanel({
               }));
               showToast?.("ยืนยันยอดเรียบร้อย");
             }}
-            className="w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[15px] font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2"
+            className="w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2"
           >
             <IconCheck size={18} stroke={2.5} />
             ยืนยันยอดก่อนโอนเงิน
@@ -353,7 +353,7 @@ export default function PayrollSummaryPanel({
                   <div className="font-bold text-txt text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                     {emp.name}
                   </div>
-                  <div className="text-[11px] text-txt-soft flex items-center gap-1">
+                  <div className="text-xs text-txt-soft flex items-center gap-1">
                     {empRole?.icon} {emp.role || "-"}
                     {emp.poolExclude &&
                       (() => {
@@ -363,7 +363,7 @@ export default function PayrollSummaryPanel({
                           both: "🔒 ปิดทั้งคู่",
                         };
                         return (
-                          <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-[9px]">
+                          <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
                             {m[emp.poolExclude]}
                           </span>
                         );
@@ -371,14 +371,14 @@ export default function PayrollSummaryPanel({
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[11px] text-txt-soft">เงินสุทธิ</div>
+                  <div className="text-xs text-txt-soft">เงินสุทธิ</div>
                   <div
                     className={`text-lg font-extrabold ${lostBase ? "text-red" : "text-maroon"}`}
                   >
                     ฿{TH_NUMBER(calc.net)}
                   </div>
                   {advanceTotal > 0 && (
-                    <div className="text-[10px] text-txt-soft mt-px">
+                    <div className="text-xs text-txt-soft mt-px">
                       (หักเบิก ฿{TH_NUMBER(advanceTotal)})
                     </div>
                   )}
@@ -394,7 +394,7 @@ export default function PayrollSummaryPanel({
                 >
                   <span className="text-sm">🏦</span>
                   <div className="flex-1 text-left min-w-0">
-                    <div className="text-[11px] text-txt-soft mb-px">
+                    <div className="text-xs text-txt-soft mb-px">
                       {emp.bank}
                     </div>
                     <div className="text-sm font-bold text-txt tracking-[0.04em]">
@@ -402,7 +402,7 @@ export default function PayrollSummaryPanel({
                     </div>
                   </div>
                   <div
-                    className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-[11px] font-bold whitespace-nowrap transition-all
+                    className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-xs font-bold whitespace-nowrap transition-all
                     ${copiedAcc === emp.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
                   >
                     {copiedAcc === emp.id ? (
@@ -419,7 +419,7 @@ export default function PayrollSummaryPanel({
                   </div>
                 </button>
               ) : (
-                <div className="px-3 py-2 bg-red-lt rounded-[9px] text-[11px] text-red font-semibold flex items-center gap-1.5 border border-[#C0392B30]">
+                <div className="px-3 py-2 bg-red-lt rounded-[9px] text-xs text-red font-semibold flex items-center gap-1.5 border border-[#C0392B30]">
                   ⚠ พนักงานยังไม่กรอกข้อมูลธนาคาร
                 </div>
               )}

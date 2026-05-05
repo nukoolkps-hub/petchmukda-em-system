@@ -1,9 +1,19 @@
 import {
+  IconCalendarEvent,
+  IconCashBanknote,
+  IconChartBar,
   IconCheck,
   IconChevronDown,
+  IconClipboardList,
+  IconCoins,
   IconCopy,
+  IconCreditCard,
+  IconDiamond,
+  IconSettings,
   IconShield,
+  IconTag,
   IconTrash,
+  IconUsers,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { C, LEAVE_TYPES, TH_MONTHS } from "../../constants";
@@ -14,6 +24,74 @@ import AvatarCircle from "../shared/AvatarCircle";
 import AdminAdvancePanel from "./AdminAdvancePanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
 import RolesAdminPanel from "./RolesAdminPanel";
+
+type AdminSectionId =
+  | "summary"
+  | "leaves"
+  | "salary"
+  | "advance"
+  | "payroll"
+  | "roles"
+  | "positions";
+
+type AdminGroupId = "leave" | "payroll" | "settings";
+type AdminNavIcon = typeof IconShield;
+
+interface AdminNavItem {
+  id: AdminSectionId;
+  label: string;
+  Icon: AdminNavIcon;
+}
+
+interface AdminNavGroup {
+  id: AdminGroupId;
+  label: string;
+  defaultSection: AdminSectionId;
+  Icon: AdminNavIcon;
+  items: AdminNavItem[];
+}
+
+const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
+  {
+    id: "leave",
+    label: "งานลา",
+    defaultSection: "summary",
+    Icon: IconCalendarEvent,
+    items: [
+      { id: "summary", label: "สรุปลา", Icon: IconChartBar },
+      { id: "leaves", label: "รายการลา", Icon: IconClipboardList },
+    ],
+  },
+  {
+    id: "payroll",
+    label: "เงินเดือน",
+    defaultSection: "salary",
+    Icon: IconCoins,
+    items: [
+      { id: "salary", label: "ค่าคอม", Icon: IconDiamond },
+      { id: "advance", label: "เบิกเงิน", Icon: IconCashBanknote },
+      { id: "payroll", label: "จ่ายเงิน", Icon: IconCreditCard },
+    ],
+  },
+  {
+    id: "settings",
+    label: "ตั้งค่า",
+    defaultSection: "roles",
+    Icon: IconSettings,
+    items: [
+      { id: "roles", label: "พนักงาน", Icon: IconUsers },
+      { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
+    ],
+  },
+];
+
+function getAdminGroupForSection(section: AdminSectionId): AdminNavGroup {
+  return (
+    ADMIN_NAV_GROUPS.find((group) =>
+      group.items.some((item) => item.id === section),
+    ) || ADMIN_NAV_GROUPS[0]
+  );
+}
 
 /* ─── Admin Panel (main container) ─────────────────────────────── */
 export default function AdminPanel({
@@ -33,11 +111,20 @@ export default function AdminPanel({
   setPayrollConfirms,
   showToast,
 }) {
-  const [section, setSection] = useState("summary");
+  const [section, setSection] = useState<AdminSectionId>("summary");
   const [unsavedDirty, setUnsavedDirty] = useState(false);
+  const [lastSectionByGroup, setLastSectionByGroup] = useState<
+    Record<AdminGroupId, AdminSectionId>
+  >({
+    leave: "summary",
+    payroll: "salary",
+    settings: "roles",
+  });
 
   // ระบบเตือนก่อนเปลี่ยน section ถ้ามีข้อมูลยังไม่บันทึก
-  function tryChangeSection(newId) {
+  function tryChangeSection(newId: AdminSectionId) {
+    if (newId === section) return;
+
     if (unsavedDirty) {
       const ok = window.confirm(
         "⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากออกจากหน้านี้ ข้อมูลที่แก้ไขจะหายไป\n\nต้องการออกจากหน้านี้ใช่ไหม?",
@@ -46,6 +133,12 @@ export default function AdminPanel({
       setUnsavedDirty(false);
     }
     setSection(newId);
+    const nextGroup = getAdminGroupForSection(newId);
+    setLastSectionByGroup((prev) => ({ ...prev, [nextGroup.id]: newId }));
+  }
+
+  function tryChangeGroup(group: AdminNavGroup) {
+    tryChangeSection(lastSectionByGroup[group.id] || group.defaultSection);
   }
 
   // เตือนตอนปิดหน้า/refresh ถ้ามี unsaved
@@ -105,6 +198,10 @@ export default function AdminPanel({
       allLeaves.filter((lv) => isPast(lv.end)).map((lv) => lv.employeeName),
     ),
   ] as string[];
+  const activeGroup = getAdminGroupForSection(section);
+  const pendingAdvanceCount = (advanceRequests || []).filter(
+    (request) => request.status === "pending",
+  ).length;
 
   return (
     <div>
@@ -127,93 +224,77 @@ export default function AdminPanel({
             }
             onLogout();
           }}
-          className="px-3.5 py-[7px] rounded-[10px] bg-white/12 text-gold-lt text-[13px] font-semibold cursor-pointer font-[inherit] border border-[#E8C87A50]"
+          className="px-3.5 py-[7px] rounded-[10px] bg-white/12 text-gold-lt text-sm font-semibold cursor-pointer font-[inherit] border border-[#E8C87A50]"
         >
           ออก
         </button>
       </div>
 
-      {/* section tabs — grouped by category */}
-      <div className="bg-cream-dk rounded-[14px] p-2.5 mb-[18px] flex flex-col gap-2.5">
-        {[
-          {
-            cat: "งานลา",
-            icon: "📅",
-            color: C.maroon,
-            items: [
-              { id: "summary", label: "สรุปการลา", icon: "📊" },
-              { id: "leaves", label: "รายการลา", icon: "🗂" },
-            ],
-          },
-          {
-            cat: "เงินเดือน",
-            icon: "💰",
-            color: C.gold,
-            items: [
-              { id: "salary", label: "กำหนดค่าคอม", icon: "💎" },
-              { id: "advance", label: "เบิกล่วงหน้า", icon: "💸" },
-              { id: "payroll", label: "สรุปการจ่าย", icon: "💳" },
-            ],
-          },
-          {
-            cat: "ตั้งค่า",
-            icon: "⚙️",
-            color: C.textMid,
-            items: [
-              { id: "positions", label: "ตำแหน่ง", icon: "🏷" },
-              { id: "roles", label: "ข้อมูลพนักงาน", icon: "👤" },
-            ],
-          },
-        ].map((group) => (
-          <div key={group.cat}>
-            <div className="flex items-center gap-1.5 mb-1.5 px-1">
-              <span className="text-[11px]">{group.icon}</span>
-              <span
-                className="text-[11px] font-bold tracking-[0.02em]"
-                style={{ color: group.color }}
+      {/* section tabs — two-level admin navigation */}
+      <div className="bg-cream-dk rounded-[14px] p-2.5 mb-[18px] flex flex-col gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
+          {ADMIN_NAV_GROUPS.map((group) => {
+            const Icon = group.Icon;
+            const active = activeGroup.id === group.id;
+            const pendingCount =
+              group.id === "payroll" ? pendingAdvanceCount : 0;
+
+            return (
+              <button
+                key={group.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => tryChangeGroup(group)}
+                className={`relative min-w-0 px-2 py-2.5 rounded-[11px] cursor-pointer font-[inherit] transition-all duration-200 flex items-center justify-center gap-1.5 border ${active ? "bg-white text-maroon border-[#C9973A60] shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft border-transparent"}`}
               >
-                {group.cat}
-              </span>
-              <div
-                className="flex-1 h-px"
-                style={{
-                  background: `linear-gradient(to right, ${group.color}30, transparent)`,
-                }}
-              />
-            </div>
-            <div
-              className="grid gap-[5px]"
-              style={{
-                gridTemplateColumns: `repeat(${group.items.length}, 1fr)`,
-              }}
-            >
-              {group.items.map((s) => {
-                const pendingCount =
-                  s.id === "advance"
-                    ? (advanceRequests || []).filter(
-                        (r) => r.status === "pending",
-                      ).length
-                    : 0;
-                const active = section === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    onClick={() => tryChangeSection(s.id)}
-                    className={`px-1.5 py-[9px] rounded-[10px] border-none cursor-pointer font-[inherit] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-[5px] relative whitespace-nowrap ${active ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
-                  >
-                    <span className="text-sm">{s.icon}</span>
-                    <span>{s.label}</span>
-                    {pendingCount > 0 && (
-                      <span className="absolute top-[3px] right-[3px] bg-red text-white text-[10px] font-bold px-1.5 py-px rounded-[10px] min-w-4 text-center">
-                        {pendingCount}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+                <Icon
+                  size={16}
+                  color={active ? C.gold : C.textSoft}
+                  stroke={active ? 2.5 : 2}
+                />
+                <span className="min-w-0 truncate text-sm font-bold">
+                  {group.label}
+                </span>
+                {pendingCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red text-white text-xs font-bold px-1.5 py-px rounded-[10px] min-w-4 text-center shadow-red-glow">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {activeGroup.items.map((item) => {
+            const Icon = item.Icon;
+            const active = section === item.id;
+            const pendingCount =
+              item.id === "advance" ? pendingAdvanceCount : 0;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => tryChangeSection(item.id)}
+                className={`relative min-w-[96px] flex-1 px-2.5 py-[9px] rounded-[10px] border-none cursor-pointer font-[inherit] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap ${active ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
+              >
+                <Icon
+                  size={16}
+                  color={active ? C.maroon : C.textSoft}
+                  stroke={active ? 2.4 : 2}
+                />
+                <span>{item.label}</span>
+                {pendingCount > 0 && (
+                  <span className="absolute top-[3px] right-[3px] bg-red text-white text-xs font-bold px-1.5 py-px rounded-[10px] min-w-4 text-center">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── POSITIONS section ── */}
@@ -318,13 +399,13 @@ export default function AdminPanel({
               {/* Monthly summary */}
               <div className="bg-white rounded-2xl p-4 mb-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr">
                 <div className="flex items-center justify-between mb-3.5">
-                  <div className="font-bold text-maroon text-[15px]">
+                  <div className="font-bold text-maroon text-base">
                     📅 สรุปรายเดือน
                   </div>
                   <select
                     value={selMonth}
                     onChange={(e) => setSelMonth(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-lg border border-bdr text-[13px] text-txt bg-cream font-[inherit] outline-none"
+                    className="px-2.5 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
                   >
                     {months.map((m) => {
                       const [y, mo] = m.split("-");
@@ -380,7 +461,7 @@ export default function AdminPanel({
                               <div className="font-bold text-txt text-sm">
                                 {name}
                               </div>
-                              <div className="text-[11px] text-txt-soft">
+                              <div className="text-xs text-txt-soft">
                                 {empInfo?.role || "-"}
                               </div>
                             </div>
@@ -389,15 +470,15 @@ export default function AdminPanel({
                                 className={`font-extrabold text-lg ${overQuota ? "text-red" : "text-maroon"}`}
                               >
                                 {totalTimes}{" "}
-                                <span className="text-[11px] font-medium text-txt-soft">
+                                <span className="text-xs font-medium text-txt-soft">
                                   ครั้ง
                                 </span>
                               </div>
-                              <div className="text-[11px] text-txt-soft">
+                              <div className="text-xs text-txt-soft">
                                 {totalDays} วันรวม
                               </div>
                               {overQuota && (
-                                <div className="text-[11px] text-red font-bold">
+                                <div className="text-xs text-red font-bold">
                                   🚨 เกินโควต้า
                                 </div>
                               )}
@@ -439,13 +520,13 @@ export default function AdminPanel({
               {/* Yearly summary */}
               <div className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr">
                 <div className="flex items-center justify-between mb-3.5">
-                  <div className="font-bold text-maroon text-[15px]">
+                  <div className="font-bold text-maroon text-base">
                     📆 สรุปรายปี
                   </div>
                   <select
                     value={selYear}
                     onChange={(e) => setSelYear(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-lg border border-bdr text-[13px] text-txt bg-cream font-[inherit] outline-none"
+                    className="px-2.5 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
                   >
                     {years.map((y) => (
                       <option key={y} value={y}>
@@ -505,7 +586,7 @@ export default function AdminPanel({
                               <div className="font-extrabold text-xl text-maroon">
                                 {totalDays}
                               </div>
-                              <div className="text-[11px] text-txt-soft">
+                              <div className="text-xs text-txt-soft">
                                 วันรวม · {totalTimes} ครั้ง
                               </div>
                             </div>
@@ -582,7 +663,7 @@ export default function AdminPanel({
             </select>
           </div>
           {pastLeaves.length === 0 && (
-            <div className="text-center text-txt-soft py-10 text-[15px]">
+            <div className="text-center text-txt-soft py-10 text-base">
               ไม่มีรายการลาย้อนหลัง
             </div>
           )}
@@ -604,12 +685,12 @@ export default function AdminPanel({
                     border={`2px solid ${C.gold}40`}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-txt text-[15px] mb-[3px]">
+                    <div className="font-bold text-txt text-base mb-[3px]">
                       {lv.employeeName}
                     </div>
                     <div className="flex items-center gap-1.5 mb-1">
                       <span
-                        className="text-[13px] font-semibold"
+                        className="text-sm font-semibold"
                         style={{ color: lt?.color }}
                       >
                         {lt?.icon} {lt?.label}
@@ -618,7 +699,7 @@ export default function AdminPanel({
                         · {lv.days} วันทำการ
                       </span>
                     </div>
-                    <div className="text-[13px] text-txt-mid">
+                    <div className="text-sm text-txt-mid">
                       {fmtDate(lv.start)}
                       {lv.start !== lv.end ? ` – ${fmtDate(lv.end)}` : ""}
                     </div>
@@ -648,17 +729,17 @@ export default function AdminPanel({
       {section === "roles" && (
         <div>
           <div className="flex items-center justify-between mb-3.5 gap-2">
-            <div className="text-[13px] text-txt-soft">กดที่ชื่อพนักงานเพื่อแก้ไข</div>
+            <div className="text-sm text-txt-soft">กดที่ชื่อพนักงานเพื่อแก้ไข</div>
             <div className="flex gap-1.5">
               <button
                 onClick={() => setExpandedEmpId("__ALL__")}
-                className="px-2.5 py-[5px] rounded-lg border border-bdr bg-white text-maroon text-[11px] font-semibold cursor-pointer font-[inherit]"
+                className="px-2.5 py-[5px] rounded-lg border border-bdr bg-white text-maroon text-xs font-semibold cursor-pointer font-[inherit]"
               >
                 ขยายทั้งหมด
               </button>
               <button
                 onClick={() => setExpandedEmpId(null)}
-                className="px-2.5 py-[5px] rounded-lg border border-bdr bg-white text-txt-mid text-[11px] font-semibold cursor-pointer font-[inherit]"
+                className="px-2.5 py-[5px] rounded-lg border border-bdr bg-white text-txt-mid text-xs font-semibold cursor-pointer font-[inherit]"
               >
                 ย่อทั้งหมด
               </button>
@@ -784,7 +865,7 @@ export default function AdminPanel({
                       <div className="font-bold text-txt text-sm truncate">
                         {emp.name}
                       </div>
-                      <div className="text-[11px] text-txt-soft mt-px flex items-center gap-[5px] flex-wrap">
+                      <div className="text-xs text-txt-soft mt-px flex items-center gap-[5px] flex-wrap">
                         {empR?.icon} {emp.role || "-"}
                         {emp.poolExclude &&
                           (() => {
@@ -794,25 +875,25 @@ export default function AdminPanel({
                               both: "🔒 ปิดทั้งคู่",
                             };
                             return (
-                              <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-[9px]">
+                              <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
                                 {m[emp.poolExclude]}
                               </span>
                             );
                           })()}
                         {emp.salaryDisabled && (
-                          <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-[9px]">
+                          <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
                             🔒 ปิดเงินเดือน
                           </span>
                         )}
                         {emp.lineUserId && (
-                          <span className="px-1.5 py-px rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-[9px]">
+                          <span className="px-1.5 py-px rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs">
                             💬 LINE
                           </span>
                         )}
                       </div>
                     </div>
                     {dirty && !isExpanded && (
-                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#D9770630] text-amber">
+                      <span className="px-2 py-0.5 rounded-lg text-xs font-bold bg-[#D9770630] text-amber">
                         มีการแก้ไข
                       </span>
                     )}
@@ -829,14 +910,14 @@ export default function AdminPanel({
                     <div className="px-4 py-3.5">
                       {/* Role — read-only (แก้จากแท็บ "ตำแหน่ง") */}
                       <div className="mb-2.5 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
-                        <div className="text-[11px] text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
+                        <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
                           <span>👤 ตำแหน่ง</span>
-                          <span className="text-[9px] px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
+                          <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
                             แก้ในแท็บ "ตำแหน่ง"
                           </span>
                         </div>
                         <div
-                          className={`text-[13px] font-bold ${emp.role && emp.role !== "-" ? "text-txt" : "text-txt-soft italic"}`}
+                          className={`text-sm font-bold ${emp.role && emp.role !== "-" ? "text-txt" : "text-txt-soft italic"}`}
                         >
                           {emp.role && emp.role !== "-"
                             ? emp.role
@@ -845,23 +926,23 @@ export default function AdminPanel({
                       </div>
                       {/* Bank info — read-only (พนักงานเป็นคนกรอกเอง) */}
                       <div className="mb-3 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
-                        <div className="text-[11px] text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
+                        <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
                           <span>🏦 บัญชีรับเงินเดือน</span>
-                          <span className="text-[9px] px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
+                          <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
                             พนักงานกรอกเอง
                           </span>
                         </div>
                         {emp.bank || emp.bankAcc ? (
                           <>
-                            <div className="text-[13px] font-bold text-txt mb-px">
+                            <div className="text-sm font-bold text-txt mb-px">
                               {emp.bank || "-"}
                             </div>
-                            <div className="text-[13px] text-txt-mid tracking-wider">
+                            <div className="text-sm text-txt-mid tracking-wider">
                               {emp.bankAcc || "-"}
                             </div>
                           </>
                         ) : (
-                          <div className="text-[13px] text-txt-soft italic">
+                          <div className="text-sm text-txt-soft italic">
                             ยังไม่มีข้อมูลบัญชี
                           </div>
                         )}
@@ -869,20 +950,20 @@ export default function AdminPanel({
 
                       {/* LINE User ID — read-only, copy only */}
                       <div className="mb-3">
-                        <label className="text-[11px] text-txt-soft font-semibold mb-1 flex items-center gap-1.5">
+                        <label className="text-xs text-txt-soft font-semibold mb-1 flex items-center gap-1.5">
                           <span className="inline-flex items-center gap-1">
                             💬 LINE User ID
                             {emp.lineUserId ? (
-                              <span className="text-[9px] px-1.5 py-px rounded-lg bg-[#06C75520] text-[#06A04E] font-bold">
+                              <span className="text-xs px-1.5 py-px rounded-lg bg-[#06C75520] text-[#06A04E] font-bold">
                                 เชื่อมแล้ว
                               </span>
                             ) : (
-                              <span className="text-[9px] px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">
+                              <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">
                                 ยังไม่เชื่อม
                               </span>
                             )}
                           </span>
-                          <span className="text-[9px] px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
+                          <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
                             อ่านอย่างเดียว
                           </span>
                         </label>
@@ -895,7 +976,7 @@ export default function AdminPanel({
                               {emp.lineUserId}
                             </span>
                             <span
-                              className={`flex items-center gap-1 px-[9px] py-1 rounded-[7px] text-[11px] font-bold whitespace-nowrap transition-all duration-200 ${copiedLineId === emp.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
+                              className={`flex items-center gap-1 px-[9px] py-1 rounded-[7px] text-xs font-bold whitespace-nowrap transition-all duration-200 ${copiedLineId === emp.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
                             >
                               {copiedLineId === emp.id ? (
                                 <>
@@ -915,14 +996,14 @@ export default function AdminPanel({
                             — ยังไม่ได้เชื่อมต่อ LINE —
                           </div>
                         )}
-                        <div className="text-[10px] text-txt-soft mt-[3px] leading-normal">
+                        <div className="text-xs text-txt-soft mt-[3px] leading-normal">
                           💡 ID จะถูกเก็บอัตโนมัติเมื่อพนักงานเข้าสู่ระบบผ่าน LINE
                         </div>
                       </div>
 
                       {/* Base Salary */}
                       <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-                        <label className="text-[11px] text-maroon font-bold mb-1.5 flex items-center gap-1.5">
+                        <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
                           💼 เงินเดือนพื้นฐาน
                         </label>
                         <div className="relative">
@@ -945,7 +1026,7 @@ export default function AdminPanel({
                             className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${eBase !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
                           />
                         </div>
-                        <div className="text-[10px] text-txt-soft mt-[3px]">
+                        <div className="text-xs text-txt-soft mt-[3px]">
                           หน่วย: บาท/เดือน
                         </div>
                       </div>
@@ -978,7 +1059,7 @@ export default function AdminPanel({
                                 >
                                   🔒 ปิดสิทธิ์ระบบเงินเดือน
                                 </div>
-                                <div className="text-[10px] text-txt-soft mt-0.5 leading-normal">
+                                <div className="text-xs text-txt-soft mt-0.5 leading-normal">
                                   ซ่อนแท็บ "เงินเดือน" จากพนักงาน · ใช้ได้แค่ระบบลา
                                 </div>
                               </div>
@@ -1000,7 +1081,7 @@ export default function AdminPanel({
                               </div>
                               <div className="flex gap-2">
                                 <div className="flex-1">
-                                  <label className="text-[11px] text-txt-soft font-semibold mb-1 block">
+                                  <label className="text-xs text-txt-soft font-semibold mb-1 block">
                                     📦 ค่าคอมต่อชิ้น
                                   </label>
                                   <input
@@ -1022,17 +1103,17 @@ export default function AdminPanel({
                                   />
                                 </div>
                               </div>
-                              <div className="text-[10px] text-txt-soft text-center mt-1.5">
+                              <div className="text-xs text-txt-soft text-center mt-1.5">
                                 หน่วย: ฿/ชิ้น
                               </div>
 
                               <div className="h-px my-2.5 bg-[#C9973A30]" />
-                              <div className="text-[11px] font-bold text-maroon mb-2">
+                              <div className="text-xs font-bold text-maroon mb-2">
                                 🎫 Rate บัตรสมาชิกต่อใบ
                               </div>
                               <div className="flex gap-2">
                                 <div className="flex-1">
-                                  <label className="text-[11px] text-txt-soft font-semibold mb-1 block">
+                                  <label className="text-xs text-txt-soft font-semibold mb-1 block">
                                     🎫 เชิญชวนสมัคร
                                   </label>
                                   <input
@@ -1054,7 +1135,7 @@ export default function AdminPanel({
                                   />
                                 </div>
                                 <div className="flex-1">
-                                  <label className="text-[11px] text-txt-soft font-semibold mb-1 block">
+                                  <label className="text-xs text-txt-soft font-semibold mb-1 block">
                                     🔄 ย้ายข้อมูล
                                   </label>
                                   <input
@@ -1076,7 +1157,7 @@ export default function AdminPanel({
                                   />
                                 </div>
                               </div>
-                              <div className="text-[10px] text-txt-soft text-center mt-1.5">
+                              <div className="text-xs text-txt-soft text-center mt-1.5">
                                 หน่วย: ฿/ใบ
                               </div>
                             </div>
@@ -1153,7 +1234,7 @@ export default function AdminPanel({
                                               >
                                                 {o.icon} {o.label}
                                               </div>
-                                              <div className="text-[10px] text-txt-soft mt-px leading-normal">
+                                              <div className="text-xs text-txt-soft mt-px leading-normal">
                                                 {o.desc}
                                               </div>
                                             </div>
@@ -1169,7 +1250,7 @@ export default function AdminPanel({
                             </div>
                             <div className="flex gap-2 mb-2">
                               <div className="flex-1">
-                                <label className="text-[11px] text-txt-soft font-semibold mb-1 block">
+                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
                                   💎 ขาย-ทั่วไป
                                 </label>
                                 <input
@@ -1191,7 +1272,7 @@ export default function AdminPanel({
                                 />
                               </div>
                               <div className="flex-1">
-                                <label className="text-[11px] text-txt-soft font-semibold mb-1 block">
+                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
                                   ✨ ขาย-พิเศษ
                                 </label>
                                 <input
@@ -1213,7 +1294,7 @@ export default function AdminPanel({
                                 />
                               </div>
                               <div className="flex-1">
-                                <label className="text-[11px] text-txt-soft font-semibold mb-1 block">
+                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
                                   🛍 รับซื้อ
                                 </label>
                                 <input
@@ -1235,17 +1316,17 @@ export default function AdminPanel({
                                 />
                               </div>
                             </div>
-                            <div className="text-[10px] text-txt-soft text-center mb-2.5">
+                            <div className="text-xs text-txt-soft text-center mb-2.5">
                               หน่วย: ฿/ชิ้น
                             </div>
 
                             <div className="h-px my-2.5 bg-[#C9973A30]" />
-                            <div className="text-[11px] font-bold text-maroon mb-2">
+                            <div className="text-xs font-bold text-maroon mb-2">
                               🎫 Rate บัตรสมาชิกต่อใบ
                             </div>
                             <div className="flex gap-2">
                               <div className="flex-1">
-                                <label className="text-[11px] text-txt-soft font-semibold mb-1 block">
+                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
                                   🎫 เชิญชวนสมัคร
                                 </label>
                                 <input
@@ -1267,7 +1348,7 @@ export default function AdminPanel({
                                 />
                               </div>
                               <div className="flex-1">
-                                <label className="text-[11px] text-txt-soft font-semibold mb-1 block">
+                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
                                   🔄 ย้ายข้อมูล
                                 </label>
                                 <input
@@ -1289,7 +1370,7 @@ export default function AdminPanel({
                                 />
                               </div>
                             </div>
-                            <div className="text-[10px] text-txt-soft text-center mt-1.5">
+                            <div className="text-xs text-txt-soft text-center mt-1.5">
                               หน่วย: ฿/ใบ
                             </div>
                           </div>
@@ -1301,7 +1382,7 @@ export default function AdminPanel({
                         <div className="mt-3.5 pt-3.5 border-t border-dashed border-bdr flex gap-2">
                           <button
                             onClick={cancelAll}
-                            className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-[13px] font-semibold cursor-pointer font-[inherit]"
+                            className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
                           >
                             ยกเลิกการแก้ไข
                           </button>

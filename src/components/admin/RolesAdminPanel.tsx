@@ -73,12 +73,12 @@ export default function RolesAdminPanel({
   return (
     <div>
       <div className="flex items-center justify-between mb-3.5">
-        <div className="text-[13px] text-txt-soft">
+        <div className="text-sm text-txt-soft">
           กำหนดตำแหน่งและกลุ่ม Pool ค่าคอม
         </div>
         <button
           onClick={() => setShowAdd(!showAdd)}
-          className="px-3.5 py-[7px] rounded-[9px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[13px] font-bold cursor-pointer font-[inherit] shadow-[0_2px_8px_var(--color-gold)/0.25] flex items-center gap-[5px]"
+          className="px-3.5 py-[7px] rounded-[9px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] shadow-[0_2px_8px_var(--color-gold)/0.25] flex items-center gap-[5px]"
         >
           {showAdd ? "✕" : "+"} เพิ่มตำแหน่ง
         </button>
@@ -87,7 +87,7 @@ export default function RolesAdminPanel({
       {/* Add new role form */}
       {showAdd && (
         <div className="bg-gold-pale rounded-xl p-3.5 mb-3.5 border-[1.5px] border-dashed border-gold/40">
-          <div className="text-[13px] font-bold text-maroon mb-2.5">
+          <div className="text-sm font-bold text-maroon mb-2.5">
             🆕 ตำแหน่งใหม่
           </div>
           <div className="flex gap-2 mb-2">
@@ -113,12 +113,12 @@ export default function RolesAdminPanel({
               setNewRole({ ...newRole, poolGroup: e.target.value })
             }
             placeholder='Pool Group (ทิ้งว่างถ้าไม่แชร์ค่าคอม) เช่น "sales"'
-            className="w-full px-3 py-[9px] rounded-[9px] border border-bdr text-[13px] outline-none font-[Prompt,monospace] box-border mb-2.5"
+            className="w-full px-3 py-[9px] rounded-[9px] border border-bdr text-sm outline-none font-[Prompt,monospace] box-border mb-2.5"
           />
           <button
             onClick={addRole}
             disabled={!newRole.name.trim()}
-            className={`w-full p-2.5 rounded-[9px] border-none text-[13px] font-bold font-[inherit]
+            className={`w-full p-2.5 rounded-[9px] border-none text-sm font-bold font-[inherit]
               ${newRole.name.trim() ? "bg-linear-135 from-gold to-gold-lt text-maroon-dk cursor-pointer" : "bg-bdr text-txt-soft cursor-not-allowed"}`}
           >
             บันทึกตำแหน่ง
@@ -136,23 +136,23 @@ export default function RolesAdminPanel({
               {isPool ? (
                 <>
                   <span className="text-sm">🤝</span>
-                  <span className="text-[13px] font-bold text-maroon">
+                  <span className="text-sm font-bold text-maroon">
                     Pool:{" "}
                     <code className="bg-gold-pale px-2 py-px rounded-md text-sm">
                       {groupKey}
                     </code>
                   </span>
-                  <span className="text-[11px] text-txt-soft ml-auto">
+                  <span className="text-xs text-txt-soft ml-auto">
                     แชร์ค่าคอม
                   </span>
                 </>
               ) : (
                 <>
                   <span className="text-sm">👤</span>
-                  <span className="text-[13px] font-bold text-txt">
+                  <span className="text-sm font-bold text-txt">
                     ค่าคอมแยก (Rate ต่อชิ้นเดียว)
                   </span>
-                  <span className="text-[10px] text-txt-soft ml-auto">
+                  <span className="text-xs text-txt-soft ml-auto">
                     ใครขายใครได้
                   </span>
                 </>
@@ -203,13 +203,13 @@ export default function RolesAdminPanel({
                         className={`flex-1 px-2.5 py-2 rounded-lg text-sm font-semibold outline-none font-[inherit] box-border text-txt
                           ${dirty ? "border border-gold bg-gold-pale/30" : "border border-bdr bg-cream"}`}
                       />
-                      <span className="text-[11px] text-txt-soft px-2 py-0.5 rounded-lg bg-cream border border-bdr font-semibold whitespace-nowrap">
+                      <span className="text-xs text-txt-soft px-2 py-0.5 rounded-lg bg-cream border border-bdr font-semibold whitespace-nowrap">
                         {empCount} คน
                       </span>
                     </div>
                     {dirty && (
                       <div className="mb-2.5">
-                        <label className="text-[11px] text-txt-soft font-semibold mb-1 block">
+                        <label className="text-xs text-txt-soft font-semibold mb-1 block">
                           Pool Group (ทิ้งว่างถ้าไม่แชร์)
                         </label>
                         <input
@@ -228,7 +228,7 @@ export default function RolesAdminPanel({
                             }))
                           }
                           placeholder="เช่น sales"
-                          className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-[13px] outline-none font-[Prompt,monospace] box-border bg-gold-pale/30"
+                          className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[Prompt,monospace] box-border bg-gold-pale/30"
                         />
                       </div>
                     )}
@@ -291,7 +291,7 @@ export default function RolesAdminPanel({
 
       {/* Assign roles to employees */}
       <div className="mt-6 pt-4 border-t border-dashed border-bdr">
-        <div className="text-[13px] font-bold text-maroon mb-2.5 flex items-center gap-2">
+        <div className="text-sm font-bold text-maroon mb-2.5 flex items-center gap-2">
           🎯 กำหนดตำแหน่งให้พนักงาน
         </div>
         <div className="flex flex-col gap-2">
@@ -309,7 +309,7 @@ export default function RolesAdminPanel({
                 border={`1.5px solid ${C.gold}30`}
               />
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-bold text-txt whitespace-nowrap overflow-hidden text-ellipsis">
+                <div className="text-sm font-bold text-txt whitespace-nowrap overflow-hidden text-ellipsis">
                   {emp.name}
                 </div>
               </div>
@@ -319,7 +319,7 @@ export default function RolesAdminPanel({
                   const rl = roles.find((r) => r.id === ev.target.value);
                   if (rl) changeEmpRole(emp.id, rl.id, rl.name);
                 }}
-                className="px-2.5 py-[7px] rounded-lg border border-bdr text-[13px] font-semibold outline-none font-[inherit] bg-cream text-txt cursor-pointer min-w-[130px]"
+                className="px-2.5 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt cursor-pointer min-w-[130px]"
               >
                 <option value="">— เลือก —</option>
                 {roles.map((r) => (
@@ -337,11 +337,11 @@ export default function RolesAdminPanel({
       {confirmDel && (
         <div className="fixed inset-0 z-1000 flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-xs px-6">
           <div className="bg-white rounded-[20px] px-6 py-7 w-full max-w-[340px]">
-            <div className="text-center text-[38px] mb-2">🗑</div>
-            <div className="font-bold text-[17px] text-txt text-center mb-2">
+            <div className="text-center text-4xl mb-2">🗑</div>
+            <div className="font-bold text-lg text-txt text-center mb-2">
               ลบตำแหน่งนี้?
             </div>
-            <div className="text-[13px] text-txt-mid text-center mb-5">
+            <div className="text-sm text-txt-mid text-center mb-5">
               {confirmDel.icon} {confirmDel.name}
             </div>
             <div className="flex gap-2.5">

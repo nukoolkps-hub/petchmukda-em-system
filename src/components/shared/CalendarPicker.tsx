@@ -95,7 +95,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
           className={`transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
         />
       </button>
-      {error && <div className="text-red text-[13px] mt-1.5">⚠ {error}</div>}
+      {error && <div className="text-red text-sm mt-1.5">⚠ {error}</div>}
       {open && (
         <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-400 bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]">
           <div className="flex items-center justify-between mb-3.5">
@@ -105,7 +105,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
             >
               <IconChevronLeft size={14} color={C.textMid} stroke={2.5} />
             </button>
-            <div className="font-bold text-[15px] text-maroon">
+            <div className="font-bold text-base text-maroon">
               {TH_MONTHS[vm]} {vy + 543}
             </div>
             <button
@@ -133,7 +133,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
                 <button
                   key={i}
                   onClick={() => ok && pick(d)}
-                  className={`h-[34px] rounded-lg font-[inherit] text-[13px] border-none
+                  className={`h-[34px] rounded-lg font-[inherit] text-sm border-none
                   ${!d ? "cursor-default" : ok ? "cursor-pointer" : "cursor-not-allowed"}
                   ${st === "selected" || st === "today" ? "font-bold" : "font-normal"}`}
                   style={{

@@ -44,9 +44,9 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[13px] text-txt-soft">ใช้ไปแล้ว</div>
+            <div className="text-sm text-txt-soft">ใช้ไปแล้ว</div>
             <div
-              className={`text-[26px] font-extrabold leading-none ${overQ ? "text-red" : usedThisMonth >= quota ? "text-amber" : "text-maroon"}`}
+              className={`text-2xl font-extrabold leading-none ${overQ ? "text-red" : usedThisMonth >= quota ? "text-amber" : "text-maroon"}`}
             >
               {usedThisMonth}
               <span className="text-sm text-txt-soft font-medium">
@@ -87,7 +87,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
           {remaining > 0 && (
             <div className="bg-green-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
               <span className="text-sm">✅</span>
-              <span className="text-[13px] font-semibold text-green">
+              <span className="text-sm font-semibold text-green">
                 ลาได้อีก {remaining} ครั้ง
               </span>
             </div>
@@ -95,7 +95,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
           {usedThisMonth === quota && (
             <div className="bg-amber-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
               <span className="text-sm">⚠️</span>
-              <span className="text-[13px] font-semibold text-amber">
+              <span className="text-sm font-semibold text-amber">
                 ใช้ครบโควต้าแล้ว
               </span>
             </div>
@@ -103,7 +103,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
           {usedThisMonth > quota && (
             <div className="bg-red-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
               <span className="text-sm">🚨</span>
-              <span className="text-[13px] font-semibold text-red">
+              <span className="text-sm font-semibold text-red">
                 เกินโควต้า {usedThisMonth - quota} ครั้ง
               </span>
             </div>
@@ -120,7 +120,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
         {usedThisMonth >= quota && (
           <div className="mt-3 bg-linear-to-br from-red/6 to-red/9 rounded-xl px-3.5 py-2.5 border border-red/19 flex items-center gap-2.5">
             <div className="text-xl shrink-0">💰</div>
-            <div className="text-[13px] text-red font-semibold leading-relaxed">
+            <div className="text-sm text-red font-semibold leading-relaxed">
               การลาต่อจากนี้ไป ‼️
               <br />
               <span className="font-bold">จะกระทบต่อเงินเดือน</span>
@@ -146,14 +146,14 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
               className="bg-white rounded-[14px] p-3.5 shadow-[0_1px_6px_rgba(90,30,10,0.06)] border border-bdr flex items-center gap-3"
             >
               <div
-                className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[19px] shrink-0"
+                className="w-9 h-9 rounded-[10px] flex items-center justify-center text-xl shrink-0"
                 style={{ background: lt.colorLt }}
               >
                 {lt.icon}
               </div>
               <div>
                 <div className="text-sm font-semibold text-txt">{lt.label}</div>
-                <div className="text-[13px] text-txt-soft mt-px">
+                <div className="text-sm text-txt-soft mt-px">
                   เดือนนี้ <b style={{ color: lt.color }}>{usedType}</b> ครั้ง
                 </div>
               </div>

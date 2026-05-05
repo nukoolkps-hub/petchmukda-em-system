@@ -67,7 +67,7 @@ export default function RequestTab({
       <div
         className={`rounded-xl px-4 py-3 mb-5 flex items-center gap-3 border-[1.5px] ${overQuota ? "bg-[#FEF2F2] border-[#C0392B50]" : "bg-gold-pale border-[#C9973A50]"}`}
       >
-        <div className="text-[22px]">{overQuota ? "⚠️" : "📋"}</div>
+        <div className="text-2xl">{overQuota ? "⚠️" : "📋"}</div>
         <div className="flex-1">
           <div
             className={`font-bold text-sm ${overQuota ? "text-red" : "text-maroon"}`}
@@ -86,7 +86,7 @@ export default function RequestTab({
           >
             {usedThisMonth}
           </div>
-          <div className="text-[11px] text-txt-soft">/ 2 ครั้ง</div>
+          <div className="text-xs text-txt-soft">/ 2 ครั้ง</div>
         </div>
       </div>
 
@@ -105,7 +105,7 @@ export default function RequestTab({
           ))}
         </div>
         {errors.type && (
-          <div className="text-red text-[13px] mt-2">⚠ {errors.type}</div>
+          <div className="text-red text-sm mt-2">⚠ {errors.type}</div>
         )}
       </div>
       <div className="text-base font-bold text-txt mb-2">วันที่เริ่มลา</div>
@@ -144,13 +144,13 @@ export default function RequestTab({
           <div>
             <div className="text-sm text-txt-mid mb-0.5">รวมจำนวนวันทำการ</div>
             <div
-              className={`text-[28px] font-extrabold leading-[1.1] ${overLimit ? "text-red" : "text-maroon"}`}
+              className={`text-3xl font-extrabold leading-[1.1] ${overLimit ? "text-red" : "text-maroon"}`}
             >
               {days}
               <span className="text-base font-semibold"> วัน</span>
             </div>
             <div
-              className={`text-[13px] mt-0.5 ${overLimit ? "text-red" : "text-txt-soft"}`}
+              className={`text-sm mt-0.5 ${overLimit ? "text-red" : "text-txt-soft"}`}
             >
               {overLimit ? `⚠ เกินสิทธิ์! คงเหลือ ${remain} วัน` : "(ไม่รวมวันเสาร์)"}
             </div>
@@ -158,7 +158,7 @@ export default function RequestTab({
         </div>
       )}
       {errors.over && (
-        <div className="text-red text-[13px] mx-0 mt-1 mb-2.5">
+        <div className="text-red text-sm mx-0 mt-1 mb-2.5">
           ⚠ {errors.over}
         </div>
       )}
@@ -208,10 +208,10 @@ export default function RequestTab({
                     {lt?.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-txt text-[15px] mb-0.5">
+                    <div className="font-bold text-txt text-base mb-0.5">
                       {lt?.label}
                     </div>
-                    <div className="text-[13px] text-txt-mid">
+                    <div className="text-sm text-txt-mid">
                       {fmtDate(h.start)}
                       {h.start !== h.end ? ` – ${fmtDate(h.end)}` : ""} (
                       {h.days} วันทำการ)

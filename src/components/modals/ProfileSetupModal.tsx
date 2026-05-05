@@ -106,7 +106,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
           className="mb-2.5 shadow-gold-glow"
         />
         <div className="text-base font-bold text-txt">{name || "ชื่อของคุณ"}</div>
-        <div className="text-[13px] text-txt-soft mt-0.5">ตำแหน่งกำหนดโดย Admin</div>
+        <div className="text-sm text-txt-soft mt-0.5">ตำแหน่งกำหนดโดย Admin</div>
       </div>
 
       <div className="w-full h-px bg-bdr mb-5" />
@@ -120,7 +120,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="กรอกชื่อ-นามสกุล"
-          className={`w-full px-4 py-3.5 rounded-xl text-[15px] outline-none font-[inherit] box-border text-txt bg-white border-[1.5px] ${nameErr ? "border-red" : "border-bdr"}`}
+          className={`w-full px-4 py-3.5 rounded-xl text-base outline-none font-[inherit] box-border text-txt bg-white border-[1.5px] ${nameErr ? "border-red" : "border-bdr"}`}
         />
         {nameErr && <div className="text-red text-sm mt-1.5">⚠ {nameErr}</div>}
       </div>
@@ -169,7 +169,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
         {/* emoji grid */}
         {avType === "emoji" && (
           <div>
-            <div className="text-[13px] text-txt-soft mb-2">เลือก Emoji</div>
+            <div className="text-sm text-txt-soft mb-2">เลือก Emoji</div>
             <div className="grid grid-cols-5 gap-[7px] max-h-60 overflow-y-auto pr-0.5">
               {EMOJI_LIST.map((e) => (
                 <button
@@ -208,7 +208,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
                   </div>
                   <button
                     onClick={() => fileRef.current?.click()}
-                    className="px-4 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream text-txt-mid text-[13px] font-semibold cursor-pointer font-[inherit]"
+                    className="px-4 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
                   >
                     เปลี่ยนรูป
                   </button>
@@ -219,7 +219,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
                 onClick={() => fileRef.current?.click()}
                 className="w-full p-5 rounded-[14px] border-2 border-dashed border-bdr bg-cream cursor-pointer font-[inherit] flex flex-col items-center gap-2"
               >
-                <span className="text-[32px]">📷</span>
+                <span className="text-3xl">📷</span>
                 <span className="text-sm font-semibold text-txt-mid">
                   แตะเพื่ออัปโหลดรูปภาพ
                 </span>
@@ -235,7 +235,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
       <div className="mb-4 pt-4 border-t border-dashed border-bdr">
         <label className="flex items-center gap-2 text-sm font-semibold text-txt-mid mb-2.5">
           🏦 บัญชีธนาคารสำหรับรับเงินเดือน
-          <span className="text-[10px] font-semibold py-0.5 px-[7px] rounded-full bg-cream text-txt-soft ml-auto border border-bdr">
+          <span className="text-xs font-semibold py-0.5 px-[7px] rounded-full bg-cream text-txt-soft ml-auto border border-bdr">
             ไม่บังคับ
           </span>
         </label>
@@ -248,7 +248,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
           <select
             value={bank}
             onChange={(e) => setBank(e.target.value)}
-            className={`w-full py-3 pr-10 pl-4 rounded-xl text-[15px] outline-none font-[inherit] box-border appearance-none cursor-pointer border-[1.5px]
+            className={`w-full py-3 pr-10 pl-4 rounded-xl text-base outline-none font-[inherit] box-border appearance-none cursor-pointer border-[1.5px]
               ${bankErr ? "border-red" : "border-bdr"}
               ${bank ? "text-txt bg-gold-pale/30 font-semibold" : "text-txt-soft bg-white font-normal"}`}
           >
@@ -276,7 +276,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
           value={bankAcc}
           onChange={(e) => setBankAcc(e.target.value)}
           placeholder="เช่น 123-4-56789-0"
-          className={`w-full px-4 py-3 rounded-xl text-[15px] outline-none font-[inherit] box-border text-txt bg-white tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"}`}
+          className={`w-full px-4 py-3 rounded-xl text-base outline-none font-[inherit] box-border text-txt bg-white tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"}`}
         />
 
         {bankErr && <div className="text-red text-sm mt-1.5">⚠ {bankErr}</div>}
@@ -284,7 +284,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
 
       <button
         onClick={save}
-        className="w-full p-4 mt-2 bg-linear-135 from-gold to-gold-lt text-maroon-dk border-none rounded-[14px] text-[17px] font-bold cursor-pointer font-[inherit] shadow-[0_6px_20px_rgba(201,151,58,0.25)] flex items-center justify-center gap-2"
+        className="w-full p-4 mt-2 bg-linear-135 from-gold to-gold-lt text-maroon-dk border-none rounded-[14px] text-lg font-bold cursor-pointer font-[inherit] shadow-[0_6px_20px_rgba(201,151,58,0.25)] flex items-center justify-center gap-2"
       >
         <Diamond size={16} color={C.maroonDk} />
         {initial ? "บันทึกการเปลี่ยนแปลง" : "เริ่มใช้งาน"}
@@ -292,7 +292,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
       {initial && onClose && (
         <button
           onClick={onClose}
-          className="w-full p-3.5 mt-2.5 bg-transparent border-[1.5px] border-bdr rounded-[14px] text-[15px] font-semibold text-txt-soft cursor-pointer font-[inherit]"
+          className="w-full p-3.5 mt-2.5 bg-transparent border-[1.5px] border-bdr rounded-[14px] text-base font-semibold text-txt-soft cursor-pointer font-[inherit]"
         >
           ยกเลิก
         </button>

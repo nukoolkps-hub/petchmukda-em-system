@@ -17,10 +17,10 @@ export function Section({ title, color, children }) {
 export function Card({ title, color, children }) {
   return (
     <div className="bg-cream rounded-[10px] px-3.5 py-3 mb-2 border border-bdr">
-      <div className="text-[13px] font-bold mb-1.5" style={{ color }}>
+      <div className="text-sm font-bold mb-1.5" style={{ color }}>
         {title}
       </div>
-      <div className="text-[13px] text-txt-mid leading-[1.7]">{children}</div>
+      <div className="text-sm text-txt-mid leading-[1.7]">{children}</div>
     </div>
   );
 }
@@ -28,7 +28,7 @@ export function Card({ title, color, children }) {
 export function Box({ bg, border, children }) {
   return (
     <div
-      className="rounded-[10px] px-3.5 py-3 mt-2.5 text-[13px] text-txt-mid leading-[1.7]"
+      className="rounded-[10px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7]"
       style={{ background: bg, border: `1px solid ${border}` }}
     >
       {children}

@@ -35,7 +35,7 @@ export default function ManualModal({ onClose }) {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-1 px-2 py-2.5 rounded-[9px] border-none cursor-pointer font-[inherit] text-[13px] font-semibold transition-all
+            className={`flex-1 px-2 py-2.5 rounded-[9px] border-none cursor-pointer font-[inherit] text-sm font-semibold transition-all
               ${tab === t.id ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
           >
             {t.label}
@@ -213,7 +213,7 @@ export default function ManualModal({ onClose }) {
       {/* close */}
       <button
         onClick={onClose}
-        className="w-full p-3.5 mt-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-[15px] font-semibold cursor-pointer font-[inherit]"
+        className="w-full p-3.5 mt-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
       >
         ปิด
       </button>

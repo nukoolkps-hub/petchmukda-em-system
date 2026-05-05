@@ -94,8 +94,8 @@ export default function AdminAdvancePanel({
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center text-txt-soft py-[50px] text-[15px]">
-          <div className="text-[42px] mb-3">💸</div>
+        <div className="text-center text-txt-soft py-[50px] text-base">
+          <div className="text-5xl mb-3">💸</div>
           ไม่มีคำขอเบิก
         </div>
       )}
@@ -128,7 +128,7 @@ export default function AdminAdvancePanel({
                     border={`2px solid ${C.gold}40`}
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gold flex items-center justify-center text-white font-bold text-[13px]">
+                  <div className="w-10 h-10 rounded-full bg-gold flex items-center justify-center text-white font-bold text-sm">
                     ?
                   </div>
                 )}
@@ -136,7 +136,7 @@ export default function AdminAdvancePanel({
                   <div className="font-bold text-txt text-sm">
                     {req.empName}
                   </div>
-                  <div className="text-[11px] text-txt-soft">
+                  <div className="text-xs text-txt-soft">
                     {dt.toLocaleDateString("th-TH", {
                       day: "numeric",
                       month: "short",
@@ -147,7 +147,7 @@ export default function AdminAdvancePanel({
                   </div>
                 </div>
                 <span
-                  className="text-[11px] font-semibold px-2.5 py-[3px] rounded-[20px] whitespace-nowrap"
+                  className="text-xs font-semibold px-2.5 py-[3px] rounded-[20px] whitespace-nowrap"
                   style={{ background: s.bg, color: s.color }}
                 >
                   {s.label}
@@ -161,7 +161,7 @@ export default function AdminAdvancePanel({
                 </span>
               </div>
 
-              <div className="text-[13px] text-txt-mid mb-2.5 leading-normal">
+              <div className="text-sm text-txt-mid mb-2.5 leading-normal">
                 <span className="text-txt-soft">เหตุผล:</span> {req.reason}
               </div>
 
@@ -173,7 +173,7 @@ export default function AdminAdvancePanel({
                 >
                   <span className="text-sm">🏦</span>
                   <div className="flex-1 text-left min-w-0">
-                    <div className="text-[11px] text-txt-soft mb-px">
+                    <div className="text-xs text-txt-soft mb-px">
                       {empInfo.bank || "-"}
                     </div>
                     <div className="text-sm font-bold text-txt tracking-[0.04em]">
@@ -181,7 +181,7 @@ export default function AdminAdvancePanel({
                     </div>
                   </div>
                   <div
-                    className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-[11px] font-bold whitespace-nowrap transition-all
+                    className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-xs font-bold whitespace-nowrap transition-all
                     ${copiedAcc === req.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
                   >
                     {copiedAcc === req.id ? (
@@ -202,7 +202,7 @@ export default function AdminAdvancePanel({
               {/* slip preview */}
               {req.slipImg && (
                 <div className="mb-2.5">
-                  <div className="text-[11px] text-txt-soft mb-[5px] font-semibold">
+                  <div className="text-xs text-txt-soft mb-[5px] font-semibold">
                     📄 สลิปการโอน
                   </div>
                   <img
@@ -226,11 +226,11 @@ export default function AdminAdvancePanel({
                 <div className="flex gap-2 mt-2.5">
                   <button
                     onClick={() => setConfirmReject(req)}
-                    className="px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-red/25 bg-red-lt text-red text-[13px] font-semibold cursor-pointer font-[inherit]"
+                    className="px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-red/25 bg-red-lt text-red text-sm font-semibold cursor-pointer font-[inherit]"
                   >
                     ❌ ปฏิเสธ
                   </button>
-                  <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[13px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-gold)/0.25]">
+                  <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-gold)/0.25]">
                     📤 อัปโหลดสลิป (อนุมัติ)
                     <input
                       type="file"
@@ -267,11 +267,11 @@ export default function AdminAdvancePanel({
       {confirmReject && (
         <div className="fixed inset-0 z-1000 flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-xs px-6">
           <div className="bg-white rounded-[20px] px-6 py-7 w-full max-w-[340px]">
-            <div className="text-center text-[38px] mb-2">❌</div>
-            <div className="font-bold text-[17px] text-txt text-center mb-1.5">
+            <div className="text-center text-4xl mb-2">❌</div>
+            <div className="font-bold text-lg text-txt text-center mb-1.5">
               ปฏิเสธคำขอนี้?
             </div>
-            <div className="text-[13px] text-txt-mid text-center mb-5">
+            <div className="text-sm text-txt-mid text-center mb-5">
               {confirmReject.empName} · ฿{TH_NUMBER(confirmReject.amount)}
             </div>
             <div className="flex gap-2.5">

@@ -43,8 +43,8 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
       </div>
 
       {list.length === 0 && (
-        <div className="text-center text-txt-soft py-10 text-[15px]">
-          <div className="text-[42px] mb-3">📭</div>
+        <div className="text-center text-txt-soft py-10 text-base">
+          <div className="text-5xl mb-3">📭</div>
           ยังไม่มีประวัติการเบิก
         </div>
       )}
@@ -59,9 +59,9 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
         return (
           <div key={m} className="mb-4.5">
             <div className="flex items-center justify-between mb-2.5">
-              <div className="text-[13px] font-bold text-maroon">{monthLabel}</div>
+              <div className="text-sm font-bold text-maroon">{monthLabel}</div>
               {monthTotal > 0 && (
-                <div className="text-[11px] text-txt-soft">
+                <div className="text-xs text-txt-soft">
                   เบิกแล้ว <b className="text-green">฿{TH_NUMBER(monthTotal)}</b>
                 </div>
               )}
@@ -80,7 +80,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                         ฿{TH_NUMBER(r.amount)}
                       </div>
                       <span
-                        className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap ${s.cls}`}
+                        className={`text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap ${s.cls}`}
                       >
                         {s.icon} {s.label}
                       </span>
@@ -89,7 +89,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                       {r.reason}
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <div className="text-[11px] text-txt-soft">
+                      <div className="text-xs text-txt-soft">
                         📅{" "}
                         {dt.toLocaleDateString("th-TH", {
                           day: "numeric",
@@ -108,7 +108,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                               );
                             }
                           }}
-                          className="px-3 py-1 rounded-lg border border-gold/40 bg-gold-pale text-maroon text-[11px] font-semibold cursor-pointer font-[inherit]"
+                          className="px-3 py-1 rounded-lg border border-gold/40 bg-gold-pale text-maroon text-xs font-semibold cursor-pointer font-[inherit]"
                         >
                           📄 ดูสลิป
                         </button>
@@ -124,7 +124,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
 
       <button
         onClick={onClose}
-        className="w-full p-3.5 mt-2 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-[15px] font-semibold cursor-pointer font-[inherit]"
+        className="w-full p-3.5 mt-2 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
       >
         ปิด
       </button>

@@ -40,7 +40,7 @@ export default function PinModal({ onSuccess, onClose }) {
       <div className="text-center font-bold text-lg text-txt mb-1">
         รหัสผู้ดูแลระบบ
       </div>
-      <div className="text-center text-[13px] text-txt-soft mb-6">กรอก PIN 6 หลัก</div>
+      <div className="text-center text-sm text-txt-soft mb-6">กรอก PIN 6 หลัก</div>
       <div
         className={`flex justify-center gap-3.5 mb-7 ${shake ? "animate-[shake_0.5s_ease]" : ""}`}
       >
@@ -61,7 +61,7 @@ export default function PinModal({ onSuccess, onClose }) {
               key={i}
               onClick={() => (isDel ? del() : pressKey(String(k)))}
               className={`h-14 rounded-[14px] border-none cursor-pointer font-[inherit] font-bold shadow-[0_2px_6px_rgba(90,30,10,0.08)] transition-all duration-100
-                ${isDel ? "bg-red-lt text-red text-4xl" : "bg-cream text-txt text-[22px]"}`}
+                ${isDel ? "bg-red-lt text-red text-4xl" : "bg-cream text-txt text-2xl"}`}
             >
               {k}
             </button>
@@ -70,7 +70,7 @@ export default function PinModal({ onSuccess, onClose }) {
       </div>
       <button
         onClick={onClose}
-        className="w-full mt-4 p-3 bg-transparent border-[1.5px] border-bdr rounded-xl text-txt-soft text-[15px] font-semibold cursor-pointer font-[inherit]"
+        className="w-full mt-4 p-3 bg-transparent border-[1.5px] border-bdr rounded-xl text-txt-soft text-base font-semibold cursor-pointer font-[inherit]"
       >
         ยกเลิก
       </button>

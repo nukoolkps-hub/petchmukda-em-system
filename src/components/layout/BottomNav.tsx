@@ -34,7 +34,7 @@ export default function BottomNav({ navItems }: BottomNavProps) {
               {n.icon(active)}
             </span>
             <span
-              className={`text-[11px] ${active ? "font-bold" : "font-medium"}`}
+              className={`text-xs ${active ? "font-bold" : "font-medium"}`}
             >
               {n.label}
             </span>

@@ -204,11 +204,11 @@ export default function SalaryView({
     return (
       <div>
         <div className="flex items-center justify-between gap-2 mb-3.5">
-          <div className="text-[13px] text-txt-soft flex-1">สลิปเงินเดือน</div>
+          <div className="text-sm text-txt-soft flex-1">สลิปเงินเดือน</div>
           <select
             value={selMonth}
             onChange={(e) => setSelMonth(e.target.value)}
-            className="px-3 py-[7px] rounded-[9px] border border-bdr text-[13px] font-semibold text-txt bg-cream font-[inherit] outline-none"
+            className="px-3 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
           >
             {selectMonths.map((m) => {
               const [y, mo] = m.split("-");
@@ -220,10 +220,10 @@ export default function SalaryView({
             })}
           </select>
         </div>
-        <div className="text-center text-txt-soft py-[50px] px-6 text-[15px] bg-white rounded-[14px] border border-dashed border-bdr">
-          <div className="text-[42px] mb-3">💰</div>
+        <div className="text-center text-txt-soft py-[50px] px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr">
+          <div className="text-5xl mb-3">💰</div>
           <div className="font-bold text-txt mb-1">ยังไม่มีข้อมูลเงินเดือน</div>
-          <div className="text-[13px] text-txt-soft mb-5">
+          <div className="text-sm text-txt-soft mb-5">
             เดือน {(() => {
               const [y, mo] = selMonth.split("-");
               return `${TH_MONTHS[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
@@ -251,11 +251,11 @@ export default function SalaryView({
           <IconBuildingBank size={19} color="#fff" stroke={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[11px] text-txt-soft mb-0.5">โอนเข้าบัญชี</div>
+          <div className="text-xs text-txt-soft mb-0.5">โอนเข้าบัญชี</div>
           <div className="text-sm font-bold text-txt mb-px">
             {empInfo?.bank || "-"}
           </div>
-          <div className="text-[13px] text-txt-mid tracking-wider">
+          <div className="text-sm text-txt-mid tracking-wider">
             {empInfo?.bankAcc || "-"}
           </div>
         </div>
@@ -281,10 +281,10 @@ export default function SalaryView({
               <IconCirclePlus size={17} color={C.goldLt} stroke={2.4} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-bold text-gold-lt leading-tight">
+              <div className="text-sm font-bold text-gold-lt leading-tight">
                 เบิกเงิน
               </div>
-              <div className="text-[11px] text-gold-lt/65 mt-px">ล่วงหน้า</div>
+              <div className="text-xs text-gold-lt/65 mt-px">ล่วงหน้า</div>
             </div>
           </div>
         </button>
@@ -297,10 +297,10 @@ export default function SalaryView({
               <IconClock size={17} color={C.maroon} stroke={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-bold text-maroon leading-tight">
+              <div className="text-sm font-bold text-maroon leading-tight">
                 ประวัติ
               </div>
-              <div className="text-[11px] text-txt-soft mt-px">
+              <div className="text-xs text-txt-soft mt-px">
                 {advanceRequests && advanceRequests.length > 0
                   ? `${advanceRequests.length} คำขอ`
                   : "ยังไม่มี"}
@@ -315,11 +315,11 @@ export default function SalaryView({
 
       {/* month selector */}
       <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="text-[13px] text-txt-soft flex-1">สลิปเงินเดือน</div>
+        <div className="text-sm text-txt-soft flex-1">สลิปเงินเดือน</div>
         <select
           value={selMonth}
           onChange={(e) => setSelMonth(e.target.value)}
-          className="px-3 py-[7px] rounded-[9px] border border-bdr text-[13px] font-semibold text-txt bg-cream font-[inherit] outline-none"
+          className="px-3 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
         >
           {selectMonths.map((m) => {
             const [y, mo] = m.split("-");
@@ -335,14 +335,14 @@ export default function SalaryView({
       {/* Document buttons */}
       <div className="flex flex-col gap-2 mb-3.5 px-3 py-2.5 rounded-[11px] bg-gold-pale/20 border border-gold/15">
         <div className="flex items-center gap-1.5">
-          <div className="flex-[1_1_80px] text-[11px] text-txt-mid font-semibold min-w-0">
+          <div className="flex-[1_1_80px] text-xs text-txt-mid font-semibold min-w-0">
             📋 สลิป
           </div>
           <button
             onClick={handleDownloadSlipPDF}
             disabled={pdfLoading !== null}
             title="ดาวน์โหลด PDF"
-            className={`px-2.5 py-[7px] rounded-lg font-[inherit] text-[11px] font-bold flex items-center gap-1 whitespace-nowrap bg-linear-135 from-gold to-gold-lt text-maroon-dk shadow-[0_2px_6px_var(--color-gold)/0.2] border border-[#C9973A50] ${pdfLoading ? "cursor-wait" : "cursor-pointer"} ${pdfLoading && pdfLoading !== "slip" ? "opacity-50" : "opacity-100"}`}
+            className={`px-2.5 py-[7px] rounded-lg font-[inherit] text-xs font-bold flex items-center gap-1 whitespace-nowrap bg-linear-135 from-gold to-gold-lt text-maroon-dk shadow-[0_2px_6px_var(--color-gold)/0.2] border border-[#C9973A50] ${pdfLoading ? "cursor-wait" : "cursor-pointer"} ${pdfLoading && pdfLoading !== "slip" ? "opacity-50" : "opacity-100"}`}
           >
             {pdfLoading === "slip" ? (
               <>
@@ -359,21 +359,21 @@ export default function SalaryView({
           <button
             onClick={handlePrintSlip}
             title="พิมพ์"
-            className="px-2.5 py-[7px] rounded-lg border-[1.5px] border-bdr bg-white text-txt-mid text-[11px] font-semibold cursor-pointer font-[inherit] flex items-center gap-1 whitespace-nowrap"
+            className="px-2.5 py-[7px] rounded-lg border-[1.5px] border-bdr bg-white text-txt-mid text-xs font-semibold cursor-pointer font-[inherit] flex items-center gap-1 whitespace-nowrap"
           >
             <PrintIcon />
             พิมพ์
           </button>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="flex-[1_1_80px] text-[11px] text-txt-mid font-semibold min-w-0">
+          <div className="flex-[1_1_80px] text-xs text-txt-mid font-semibold min-w-0">
             📄 รับรอง
           </div>
           <button
             onClick={handleDownloadCertPDF}
             disabled={pdfLoading !== null}
             title="ดาวน์โหลดหนังสือรับรอง"
-            className={`px-2.5 py-[7px] rounded-lg font-[inherit] text-[11px] font-bold flex items-center gap-1 whitespace-nowrap bg-white text-maroon border-[1.5px] border-[#7B1C1C50] ${pdfLoading ? "cursor-wait" : "cursor-pointer"} ${pdfLoading && pdfLoading !== "cert" ? "opacity-50" : "opacity-100"}`}
+            className={`px-2.5 py-[7px] rounded-lg font-[inherit] text-xs font-bold flex items-center gap-1 whitespace-nowrap bg-white text-maroon border-[1.5px] border-[#7B1C1C50] ${pdfLoading ? "cursor-wait" : "cursor-pointer"} ${pdfLoading && pdfLoading !== "cert" ? "opacity-50" : "opacity-100"}`}
           >
             {pdfLoading === "cert" ? (
               <>
@@ -390,13 +390,13 @@ export default function SalaryView({
           <button
             onClick={handlePrintCert}
             title="พิมพ์"
-            className="px-2.5 py-[7px] rounded-lg border-[1.5px] border-bdr bg-white text-txt-mid text-[11px] font-semibold cursor-pointer font-[inherit] flex items-center gap-1 whitespace-nowrap"
+            className="px-2.5 py-[7px] rounded-lg border-[1.5px] border-bdr bg-white text-txt-mid text-xs font-semibold cursor-pointer font-[inherit] flex items-center gap-1 whitespace-nowrap"
           >
             <PrintIcon />
             พิมพ์
           </button>
         </div>
-        <div className="text-[10px] text-txt-soft leading-normal mt-0.5">
+        <div className="text-xs text-txt-soft leading-normal mt-0.5">
           💡 <b>PDF</b> = ดาวน์โหลดทันที (text ค้นหาได้) · <b>พิมพ์</b> = ในกล่องพิมพ์เลือก
           "Save as PDF"
         </div>
@@ -414,7 +414,7 @@ export default function SalaryView({
           <path d="M6 3h12l4 6-10 12L2 9z" />
         </svg>
         <div className="relative">
-          <div className="text-[13px] text-gold-lt/65">เงินสุทธิที่ได้รับ</div>
+          <div className="text-sm text-gold-lt/65">เงินสุทธิที่ได้รับ</div>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-4xl font-extrabold text-gold-lt tracking-[-0.02em]">
               ฿{TH_NUMBER(calc?.net ?? 0)}
@@ -422,13 +422,13 @@ export default function SalaryView({
           </div>
           <div className="flex gap-3.5 mt-3.5 pt-3.5 border-t border-gold-lt/12">
             <div>
-              <div className="text-[11px] text-gold-lt/50">รวมรายรับ</div>
+              <div className="text-xs text-gold-lt/50">รวมรายรับ</div>
               <div className="text-base font-bold text-[#7EE8B5]">
                 +฿{TH_NUMBER(calc.earnings)}
               </div>
             </div>
             <div>
-              <div className="text-[11px] text-gold-lt/50">รวมรายหัก</div>
+              <div className="text-xs text-gold-lt/50">รวมรายหัก</div>
               <div className="text-base font-bold text-[#FCA5A5]">
                 −฿{TH_NUMBER(calc.deductions)}
               </div>
@@ -441,7 +441,7 @@ export default function SalaryView({
       <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
         <div className="flex items-center gap-2 mb-3.5">
           <div className="w-1.5 h-4.5 rounded-sm bg-green" />
-          <div className="font-bold text-[15px] text-txt">รายรับ</div>
+          <div className="font-bold text-base text-txt">รายรับ</div>
         </div>
         {[
           { icon: "💼", main: "เงินเดือนพื้นฐาน", sub: "", value: calc.baseSalary },
@@ -512,12 +512,12 @@ export default function SalaryView({
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-txt-mid">{row.main}</div>
                 {row.sub && (
-                  <div className="text-[11px] text-txt-soft mt-px">
+                  <div className="text-xs text-txt-soft mt-px">
                     {row.sub}
                   </div>
                 )}
               </div>
-              <span className="text-[15px] font-semibold text-green whitespace-nowrap">
+              <span className="text-base font-semibold text-green whitespace-nowrap">
                 +฿{TH_NUMBER(row.value)}
               </span>
             </div>
@@ -534,7 +534,7 @@ export default function SalaryView({
       <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
         <div className="flex items-center gap-2 mb-3.5">
           <div className="w-1.5 h-4.5 rounded-sm bg-red" />
-          <div className="font-bold text-[15px] text-txt">รายการหัก</div>
+          <div className="font-bold text-base text-txt">รายการหัก</div>
         </div>
         {[
           {
@@ -580,12 +580,12 @@ export default function SalaryView({
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-txt-mid">{row.main}</div>
                 {row.sub && (
-                  <div className="text-[11px] text-txt-soft mt-px">
+                  <div className="text-xs text-txt-soft mt-px">
                     {row.sub}
                   </div>
                 )}
               </div>
-              <span className="text-[15px] font-semibold text-red whitespace-nowrap">
+              <span className="text-base font-semibold text-red whitespace-nowrap">
                 −฿{TH_NUMBER(row.value)}
               </span>
             </div>
@@ -606,12 +606,12 @@ export default function SalaryView({
       </div>
 
       {data.note && (
-        <div className="bg-gold-pale rounded-xl px-3.5 py-3 text-[13px] text-txt-mid border border-[#C9973A40]">
+        <div className="bg-gold-pale rounded-xl px-3.5 py-3 text-sm text-txt-mid border border-[#C9973A40]">
           📝 หมายเหตุ: {data.note}
         </div>
       )}
 
-      <div className="text-center text-[11px] text-txt-soft mt-4">
+      <div className="text-center text-xs text-txt-soft mt-4">
         ข้อมูลกำหนดโดย Admin · ติดต่อ HR หากมีข้อสงสัย
       </div>
     </div>

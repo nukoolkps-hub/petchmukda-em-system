@@ -86,7 +86,7 @@ export default function Sidebar({
             <div className="text-gold-lt font-extrabold text-base leading-none">
               ห้างเพชรทองมุกดา
             </div>
-            <div className="text-gold-lt/45 text-[11px] mt-0.5">ระบบพนักงาน</div>
+            <div className="text-gold-lt/45 text-xs mt-0.5">ระบบพนักงาน</div>
           </div>
         </div>
         {/* Profile */}
@@ -121,7 +121,7 @@ export default function Sidebar({
             onClick={onEditProfile}
             className="flex items-center gap-2.5 bg-white/8 border-[1.5px] border-dashed border-gold-lt/30 rounded-[14px] px-3.5 py-2.5 w-full cursor-pointer font-[inherit]"
           >
-            <span className="text-[22px]">👤</span>
+            <span className="text-2xl">👤</span>
             <span className="text-gold-lt text-sm font-semibold">
               ตั้งค่าโปรไฟล์
             </span>
@@ -153,12 +153,12 @@ export default function Sidebar({
       <div className="leave-sidebar-footer relative">
         <button
           onClick={onSignOut}
-          className="w-full px-4 py-2.5 rounded-[10px] border border-white/15 bg-white/6 text-white/50 cursor-pointer font-[inherit] text-[13px] font-medium flex items-center justify-center gap-2 transition-all duration-200 mb-3 hover:bg-white/12 hover:text-white/80"
+          className="w-full px-4 py-2.5 rounded-[10px] border border-white/15 bg-white/6 text-white/50 cursor-pointer font-[inherit] text-sm font-medium flex items-center justify-center gap-2 transition-all duration-200 mb-3 hover:bg-white/12 hover:text-white/80"
         >
           <IconLogout size={16} stroke={2} />
           ออกจากระบบ
         </button>
-        <div className="text-[11px] text-white/25 text-center">
+        <div className="text-xs text-white/25 text-center">
           Haangpetchthongmukda Co., Ltd
         </div>
       </div>

@@ -21,7 +21,7 @@ export default function DesktopHeader({
       <MosaicPattern variant="header" idPrefix="dh" />
       <div className="relative flex items-center justify-between">
         <div>
-          <div className="text-white font-bold text-[22px]">
+          <div className="text-white font-bold text-2xl">
             {tab === "home" ? "หน้าแรก" : PAGE_TITLES[tab]}
           </div>
           {tab === "home" && profile && (
@@ -39,7 +39,7 @@ export default function DesktopHeader({
             <IconBook2 size={18} color="#fff" stroke={2.2} />
             กฏการคำนวณต่างๆ
           </button>
-          <div className="text-[13px] text-gold-lt/50">
+          <div className="text-sm text-gold-lt/50">
             {new Date().toLocaleDateString("th-TH", {
               weekday: "long",
               day: "numeric",

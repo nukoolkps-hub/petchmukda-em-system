@@ -25,9 +25,9 @@ export default function LeaveTypeCard({
           <IconCheck size={11} color="#fff" stroke={3} />
         </div>
       )}
-      <div className="text-[30px] mb-2.5">{lt.icon}</div>
+      <div className="text-3xl mb-2.5">{lt.icon}</div>
       <div
-        className={`font-bold text-[17px] ${sel ? (lt.id === "personal" ? "text-gold" : "text-red") : "text-txt"}`}
+        className={`font-bold text-lg ${sel ? (lt.id === "personal" ? "text-gold" : "text-red") : "text-txt"}`}
       >
         {lt.label}
       </div>

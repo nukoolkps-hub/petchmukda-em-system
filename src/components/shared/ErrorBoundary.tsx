@@ -63,7 +63,7 @@ export default class ErrorBoundary extends Component<
 
           {/* heading */}
           <div className="text-center mb-5">
-            <h2 className="m-0 text-[22px] font-extrabold text-txt">
+            <h2 className="m-0 text-2xl font-extrabold text-txt">
               เกิดข้อผิดพลาดในระบบ
             </h2>
             <p className="mt-2 mb-0 text-sm text-txt-mid leading-relaxed">
@@ -82,7 +82,7 @@ export default class ErrorBoundary extends Component<
               <div className="mt-2 font-mono text-maroon-dk whitespace-pre-wrap wrap-break-word leading-normal">
                 <b>{this.state.error.toString()}</b>
                 {this.state.errorInfo?.componentStack && (
-                  <div className="mt-2 opacity-80 text-[11px]">
+                  <div className="mt-2 opacity-80 text-xs">
                     {this.state.errorInfo.componentStack}
                   </div>
                 )}
@@ -94,13 +94,13 @@ export default class ErrorBoundary extends Component<
           <div className="flex gap-2.5">
             <button
               onClick={this.handleReset}
-              className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-[15px] font-semibold cursor-pointer font-[inherit]"
+              className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
             >
               ลองใหม่
             </button>
             <button
               onClick={this.handleReload}
-              className="flex-1 p-3.5 rounded-xl border-none bg-linear-135 from-maroon to-maroon-lt text-white text-[15px] font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_rgba(123,28,28,0.31)]"
+              className="flex-1 p-3.5 rounded-xl border-none bg-linear-135 from-maroon to-maroon-lt text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_rgba(123,28,28,0.31)]"
             >
               โหลดหน้าใหม่
             </button>

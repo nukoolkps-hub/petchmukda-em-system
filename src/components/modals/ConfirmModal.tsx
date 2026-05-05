@@ -27,18 +27,18 @@ export default function ConfirmModal({ leave, onConfirm, onCancel }) {
         {lt?.icon} {lt?.label} · {fmtDate(leave.start)}
         {leave.start !== leave.end ? ` – ${fmtDate(leave.end)}` : ""}
         <br />
-        <span className="text-[13px] text-txt-soft">({leave.days} วันทำการ)</span>
+        <span className="text-sm text-txt-soft">({leave.days} วันทำการ)</span>
       </div>
       <div className="flex gap-2.5">
         <button
           onClick={onCancel}
-          className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-[15px] font-semibold cursor-pointer font-[inherit]"
+          className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
         >
           ยกเลิก
         </button>
         <button
           onClick={onConfirm}
-          className="flex-1 p-3.5 rounded-xl border-none bg-red text-white text-[15px] font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_rgba(192,57,43,0.31)]"
+          className="flex-1 p-3.5 rounded-xl border-none bg-red text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_rgba(192,57,43,0.31)]"
         >
           ลบรายการ
         </button>
