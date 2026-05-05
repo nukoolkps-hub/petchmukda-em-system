@@ -110,7 +110,7 @@ export default function TeamCalendar({
           {thaiShortDayNames.map((dayName, dayIndex) => (
             <div
               key={dayName}
-              className={`text-center text-xs font-bold py-[3px] ${dayIndex === 6 ? "text-txt-soft/70" : "text-txt-soft"}`}
+              className={`text-center text-sm font-bold py-[3px] ${dayIndex === 6 ? "text-txt-soft/70" : "text-txt-soft"}`}
             >
               {dayName}
             </div>
@@ -118,7 +118,15 @@ export default function TeamCalendar({
         </div>
         <div className="grid grid-cols-7 gap-[3px]">
           {calendarCells.map((dayOfMonth, cellIndex) => {
-            if (!dayOfMonth) return <div key={cellIndex} />;
+            if (!dayOfMonth) {
+              return (
+                <div
+                  key={`blank-${visibleYear}-${visibleMonth}-${cellIndex}`}
+                  className="min-h-[50px]"
+                  aria-hidden="true"
+                />
+              );
+            }
 
             const date = new Date(visibleYear, visibleMonth, dayOfMonth);
             const dateKey = toDateKey(date);
@@ -131,9 +139,9 @@ export default function TeamCalendar({
 
             return (
               <div
-                key={cellIndex}
+                key={dateKey}
                 onClick={() => selectDate(dateKey)}
-                className="min-h-[50px] rounded-[10px] px-0.5 pt-[5px] pb-1 cursor-pointer transition-all"
+                className="min-h-[50px] rounded-[10px] px-0.5 pt-[5px] pb-1 cursor-pointer transition-[background-color,border-color,box-shadow] duration-150"
                 style={{
                   background: isSelectedDate
                     ? colors.goldPale
@@ -209,11 +217,11 @@ export default function TeamCalendar({
         <div className="flex gap-3.5 mt-3.5 pt-3 border-t border-cream-dk">
           <div className="flex items-center gap-[5px]">
             <div className="w-2.5 h-2.5 rounded-full bg-gold" />
-            <span className="text-xs text-txt-soft">ลากิจ</span>
+            <span className="text-sm text-txt-soft">ลากิจ</span>
           </div>
           <div className="flex items-center gap-[5px]">
             <div className="w-2.5 h-2.5 rounded-full bg-red" />
-            <span className="text-xs text-txt-soft">ลาป่วย</span>
+            <span className="text-sm text-txt-soft">ลาป่วย</span>
           </div>
         </div>
       </div>

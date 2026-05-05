@@ -138,7 +138,7 @@ export default function RolesAdminPanel({
                   <span className="text-sm">🤝</span>
                   <span className="text-[13px] font-bold text-maroon">
                     Pool:{" "}
-                    <code className="bg-gold-pale px-2 py-px rounded-md text-xs">
+                    <code className="bg-gold-pale px-2 py-px rounded-md text-sm">
                       {groupKey}
                     </code>
                   </span>
@@ -242,13 +242,13 @@ export default function RolesAdminPanel({
                               return n;
                             })
                           }
-                          className="flex-1 p-2 rounded-lg border border-bdr bg-white text-txt-mid text-xs font-semibold cursor-pointer font-[inherit]"
+                          className="flex-1 p-2 rounded-lg border border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
                         >
                           ยกเลิก
                         </button>
                         <button
                           onClick={() => saveEdit(rl.id)}
-                          className="flex-1 p-2 rounded-lg border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-xs font-bold cursor-pointer font-[inherit]"
+                          className="flex-1 p-2 rounded-lg border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit]"
                         >
                           บันทึก
                         </button>
@@ -267,14 +267,14 @@ export default function RolesAdminPanel({
                               },
                             }))
                           }
-                          className="flex-1 py-[7px] rounded-lg border border-bdr bg-cream text-maroon text-xs font-semibold cursor-pointer font-[inherit]"
+                          className="flex-1 py-[7px] rounded-lg border border-bdr bg-cream text-maroon text-sm font-semibold cursor-pointer font-[inherit]"
                         >
                           ✎ แก้ไข
                         </button>
                         <button
                           onClick={() => setConfirmDel(rl)}
                           disabled={empCount > 0}
-                          className={`px-3 py-[7px] rounded-lg text-xs font-semibold font-[inherit]
+                          className={`px-3 py-[7px] rounded-lg text-sm font-semibold font-[inherit]
                             ${empCount > 0 ? "border border-bdr bg-cream text-txt-soft cursor-not-allowed" : "border border-red/25 bg-red-lt text-red cursor-pointer"}`}
                         >
                           🗑

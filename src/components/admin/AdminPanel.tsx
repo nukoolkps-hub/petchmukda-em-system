@@ -199,7 +199,7 @@ export default function AdminPanel({
                   <button
                     key={s.id}
                     onClick={() => tryChangeSection(s.id)}
-                    className={`px-1.5 py-[9px] rounded-[10px] border-none cursor-pointer font-[inherit] text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-[5px] relative whitespace-nowrap ${active ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
+                    className={`px-1.5 py-[9px] rounded-[10px] border-none cursor-pointer font-[inherit] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-[5px] relative whitespace-nowrap ${active ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
                   >
                     <span className="text-sm">{s.icon}</span>
                     <span>{s.label}</span>
@@ -404,16 +404,16 @@ export default function AdminPanel({
                             </div>
                           </div>
                           <div className="flex gap-1.5 flex-wrap">
-                            <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-xs text-txt-mid font-semibold">
+                            <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold">
                               💼 ลากิจ {personalDays} วัน
                             </div>
-                            <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#CCFBF1] text-[#0F766E]">
+                            <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E]">
                               🏥 ลาป่วย {sickDays} วัน
                             </div>
-                            <div className="bg-white rounded-[20px] px-2.5 py-[3px] text-xs text-txt-mid font-semibold border border-bdr">
+                            <div className="bg-white rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold border border-bdr">
                               📅 วันธรรมดา {weekdays} วัน
                             </div>
-                            <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9]">
+                            <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#EDE9FE] text-[#6D28D9]">
                               🌅 วันอาทิตย์ {sundays} วัน
                             </div>
                           </div>
@@ -497,7 +497,7 @@ export default function AdminPanel({
                               <div className="font-bold text-txt text-sm">
                                 {name}
                               </div>
-                              <div className="text-xs text-txt-soft">
+                              <div className="text-sm text-txt-soft">
                                 {empInfo?.role || "-"}
                               </div>
                             </div>
@@ -517,16 +517,16 @@ export default function AdminPanel({
                             />
                           </div>
                           <div className="flex gap-1.5 flex-wrap">
-                            <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-xs text-txt-mid font-semibold">
+                            <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold">
                               💼 ลากิจ {personalDays} วัน
                             </div>
-                            <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#CCFBF1] text-[#0F766E]">
+                            <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E]">
                               🏥 ลาป่วย {sickDays} วัน
                             </div>
-                            <div className="bg-white rounded-[20px] px-2.5 py-[3px] text-xs text-txt-mid font-semibold border border-bdr">
+                            <div className="bg-white rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold border border-bdr">
                               📅 วันธรรมดา {weekdays} วัน
                             </div>
-                            <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9]">
+                            <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#EDE9FE] text-[#6D28D9]">
                               🌅 วันอาทิตย์ {sundays} วัน
                             </div>
                           </div>
@@ -614,7 +614,7 @@ export default function AdminPanel({
                       >
                         {lt?.icon} {lt?.label}
                       </span>
-                      <span className="text-xs text-txt-soft">
+                      <span className="text-sm text-txt-soft">
                         · {lv.days} วันทำการ
                       </span>
                     </div>
@@ -891,7 +891,7 @@ export default function AdminPanel({
                             onClick={() => copyLineId(emp.lineUserId, emp.id)}
                             className={`w-full px-3 py-[9px] rounded-[9px] bg-cream cursor-pointer font-[inherit] flex items-center gap-2 transition-all duration-200 border ${copiedLineId === emp.id ? "border-green" : "border-bdr"}`}
                           >
-                            <span className="flex-1 text-left text-xs text-txt font-[Prompt,monospace] tracking-[0.02em] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+                            <span className="flex-1 text-left text-sm text-txt font-[Prompt,monospace] tracking-[0.02em] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                               {emp.lineUserId}
                             </span>
                             <span
@@ -911,7 +911,7 @@ export default function AdminPanel({
                             </span>
                           </button>
                         ) : (
-                          <div className="px-3 py-2.5 rounded-[9px] border border-dashed border-bdr bg-cream text-xs text-txt-soft italic text-center">
+                          <div className="px-3 py-2.5 rounded-[9px] border border-dashed border-bdr bg-cream text-sm text-txt-soft italic text-center">
                             — ยังไม่ได้เชื่อมต่อ LINE —
                           </div>
                         )}
@@ -974,7 +974,7 @@ export default function AdminPanel({
                               />
                               <div className="flex-1">
                                 <div
-                                  className={`text-xs font-bold ${cur ? "text-red" : "text-txt"}`}
+                                  className={`text-sm font-bold ${cur ? "text-red" : "text-txt"}`}
                                 >
                                   🔒 ปิดสิทธิ์ระบบเงินเดือน
                                 </div>
@@ -995,7 +995,7 @@ export default function AdminPanel({
                         if (isSingle) {
                           return (
                             <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-                              <div className="text-xs font-bold text-maroon mb-2">
+                              <div className="text-sm font-bold text-maroon mb-2">
                                 💰 Rate ค่าคอมต่อชิ้น
                               </div>
                               <div className="flex gap-2">
@@ -1122,7 +1122,7 @@ export default function AdminPanel({
                                     className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${cur ? "bg-[#FDECEA80] border-[#C0392B50]" : "bg-cream border-bdr"}`}
                                   >
                                     <div
-                                      className={`text-xs font-bold mb-2 flex items-center gap-1.5 ${cur ? "text-red" : "text-txt"}`}
+                                      className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${cur ? "text-red" : "text-txt"}`}
                                     >
                                       🚫 ปิดสิทธิ์ Pool ค่าคอม
                                     </div>
@@ -1149,7 +1149,7 @@ export default function AdminPanel({
                                             />
                                             <div className="flex-1 min-w-0">
                                               <div
-                                                className={`text-xs font-semibold ${active ? (o.id ? "text-red" : "text-green") : "text-txt"}`}
+                                                className={`text-sm font-semibold ${active ? (o.id ? "text-red" : "text-green") : "text-txt"}`}
                                               >
                                                 {o.icon} {o.label}
                                               </div>
@@ -1164,7 +1164,7 @@ export default function AdminPanel({
                                   </div>
                                 );
                               })()}
-                            <div className="text-xs font-bold text-maroon mb-2">
+                            <div className="text-sm font-bold text-maroon mb-2">
                               💰 Rate ค่าคอมต่อชิ้น
                             </div>
                             <div className="flex gap-2 mb-2">

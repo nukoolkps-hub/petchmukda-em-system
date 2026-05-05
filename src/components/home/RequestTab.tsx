@@ -76,7 +76,7 @@ export default function RequestTab({
               ? "หมดโควต้าแล้ว - การลาครั้งต่อไปจะกระทบต่อเงินเดือน"
               : `โควต้าเดือนนี้เหลือ ${rem} ครั้ง`}
           </div>
-          <div className="text-xs text-txt-soft mt-0.5">
+          <div className="text-sm text-txt-soft mt-0.5">
             ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function RequestTab({
         <GoldDivider />
         <div className="text-base font-bold text-txt mb-3.5 flex items-center gap-2">
           📋 ประวัติการลาของฉัน
-          <span className="text-xs text-txt-soft font-medium ml-auto">
+          <span className="text-sm text-txt-soft font-medium ml-auto">
             {myLeaves.length} รายการ
           </span>
         </div>
@@ -217,7 +217,7 @@ export default function RequestTab({
                       {h.days} วันทำการ)
                     </div>
                     {histDetail === h.id && (
-                      <div className="text-xs text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr">
+                      <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr">
                         📅 วันที่ยื่น: {h.submitted}
                       </div>
                     )}

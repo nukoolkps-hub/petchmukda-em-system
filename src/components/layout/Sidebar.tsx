@@ -107,7 +107,7 @@ export default function Sidebar({
               <div className="text-white font-bold text-sm truncate">
                 {profile.name}
               </div>
-              <div className="text-gold-lt/50 text-xs mt-px">
+              <div className="text-gold-lt/50 text-sm mt-px">
                 {profile.role}
               </div>
             </div>

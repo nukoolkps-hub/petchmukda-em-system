@@ -36,7 +36,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
             <div className="font-bold text-maroon text-base">
               โควต้าการลาเดือนนี้
             </div>
-            <div className="text-xs text-txt-soft mt-0.5">
+            <div className="text-sm text-txt-soft mt-0.5">
               {now.toLocaleDateString("th-TH", {
                 month: "long",
                 year: "numeric",
@@ -110,7 +110,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
           )}
           <div className="bg-cream rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5 border border-bdr">
             <span className="text-sm">📋</span>
-            <span className="text-xs text-txt-mid">
+            <span className="text-sm text-txt-mid">
               ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน
             </span>
           </div>
@@ -161,7 +161,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
           );
         })}
       </div>
-      <div className="text-xs text-txt-soft text-right mb-3.5">
+      <div className="text-sm text-txt-soft text-right mb-3.5">
         ข้อมูล ณ วันที่{" "}
         {new Date().toLocaleDateString("th-TH", {
           day: "numeric",

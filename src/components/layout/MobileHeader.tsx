@@ -148,7 +148,7 @@ export default function MobileHeader({
                 <div className="text-gold-lt font-bold text-[15px]">
                   ตั้งค่าโปรไฟล์ของคุณ
                 </div>
-                <div className="text-gold-lt/50 text-xs mt-0.5">
+                <div className="text-gold-lt/50 text-sm mt-0.5">
                   กรอกชื่อและเลือกรูปโปรไฟล์
                 </div>
               </div>

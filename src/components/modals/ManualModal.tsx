@@ -20,7 +20,7 @@ export default function ManualModal({ onClose }) {
         </div>
         <div className="flex-1">
           <div className="font-extrabold text-lg text-txt">คู่มือการใช้งาน</div>
-          <div className="text-xs text-txt-soft mt-0.5">
+          <div className="text-sm text-txt-soft mt-0.5">
             ห้างเพชรทองมุกดา · ระบบพนักงาน
           </div>
         </div>

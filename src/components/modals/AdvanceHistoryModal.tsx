@@ -36,7 +36,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
         </div>
         <div className="flex-1">
           <div className="font-extrabold text-lg text-txt">ประวัติการเบิก</div>
-          <div className="text-xs text-txt-soft mt-0.5">
+          <div className="text-sm text-txt-soft mt-0.5">
             คำขอเบิกเงินล่วงหน้าทั้งหมด
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                         {s.icon} {s.label}
                       </span>
                     </div>
-                    <div className="text-xs text-txt-mid mb-1 leading-normal">
+                    <div className="text-sm text-txt-mid mb-1 leading-normal">
                       {r.reason}
                     </div>
                     <div className="flex items-center justify-between gap-2">

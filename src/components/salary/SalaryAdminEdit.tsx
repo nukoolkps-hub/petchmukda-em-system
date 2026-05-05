@@ -214,7 +214,7 @@ export default function SalaryAdminEdit({
           />
           <div className="flex-1">
             <div className="font-bold text-txt text-sm">{empInfo.name}</div>
-            <div className="text-xs text-txt-soft">{empInfo.role || "-"}</div>
+            <div className="text-sm text-txt-soft">{empInfo.role || "-"}</div>
           </div>
           <div className="text-right">
             <div className="text-[11px] text-txt-soft">เงินสุทธิ</div>
@@ -266,7 +266,7 @@ export default function SalaryAdminEdit({
               };
               const info = labels[exc] || labels.both;
               return (
-                <div className="rounded-[9px] px-3 py-2.5 mb-1.5 text-xs text-red font-bold leading-relaxed flex items-center gap-2 bg-[linear-gradient(135deg,#C0392B15,#C0392B25)] border-[1.5px] border-[#C0392B50]">
+                <div className="rounded-[9px] px-3 py-2.5 mb-1.5 text-sm text-red font-bold leading-relaxed flex items-center gap-2 bg-[linear-gradient(135deg,#C0392B15,#C0392B25)] border-[1.5px] border-[#C0392B50]">
                   <span className="text-lg">{info.icon}</span>
                   <div className="flex-1">
                     <div>{info.title}</div>
@@ -278,7 +278,7 @@ export default function SalaryAdminEdit({
               );
             })()}
           {poolShare.losesBaseSalary && (
-            <div className="bg-red rounded-[9px] px-3 py-2.5 mb-1.5 text-xs text-white font-bold leading-relaxed shadow-red-glow">
+            <div className="bg-red rounded-[9px] px-3 py-2.5 mb-1.5 text-sm text-white font-bold leading-relaxed shadow-red-glow">
               💸 ไม่ได้รับเงินเดือนพื้นฐาน
               <div className="font-medium text-[11px] mt-[3px] text-[#FFE0E0]">
                 ขาย {poolShare.mySell} ชิ้น ·{" "}
@@ -294,7 +294,7 @@ export default function SalaryAdminEdit({
           {poolShare.poolExclude !== "sell" &&
             poolShare.poolExclude !== "both" &&
             !poolShare.eligibleSell && (
-              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-1.5 text-xs text-red font-semibold leading-relaxed border border-[#C0392B40]">
+              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-1.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40]">
                 ⚠ ฝั่งขาย: ไม่ได้รับชิ้นจาก Pool
                 <div className="font-medium text-[11px] mt-0.5">
                   ขาย {poolShare.mySell} ชิ้น ·{" "}
@@ -309,7 +309,7 @@ export default function SalaryAdminEdit({
           {poolShare.poolExclude !== "buy" &&
             poolShare.poolExclude !== "both" &&
             !poolShare.eligibleBuy && (
-              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-2.5 text-xs text-red font-semibold leading-relaxed border border-[#C0392B40]">
+              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-2.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40]">
                 ⚠ ฝั่งรับซื้อ: ไม่ได้รับชิ้นจาก Pool
                 <div className="font-medium text-[11px] mt-0.5">
                   รับซื้อ {poolShare.myBuy} ชิ้น ·{" "}
@@ -324,7 +324,7 @@ export default function SalaryAdminEdit({
 
           {/* this employee's share */}
           <div className="bg-white rounded-[10px] px-3 py-2.5 border border-bdr">
-            <div className="flex justify-between text-xs mb-[5px]">
+            <div className="flex justify-between text-sm mb-[5px]">
               <span className="text-txt-mid">หยุดทั้งหมด</span>
               <span className="font-bold text-txt">
                 {poolShare.leaveDays} วัน
@@ -746,7 +746,7 @@ export default function SalaryAdminEdit({
 
         {FIELDS_EARN.map((f) => (
           <div key={f.key} className="mb-2.5">
-            <label className="flex text-xs text-txt-mid mb-[5px] font-medium">
+            <label className="flex text-sm text-txt-mid mb-[5px] font-medium">
               {f.icon} {f.label}
             </label>
             <div className="relative">
@@ -767,7 +767,7 @@ export default function SalaryAdminEdit({
 
         {/* auto perfect-attendance bonus */}
         <div
-          className={`rounded-[9px] px-3.5 py-3 mt-1.5 text-xs leading-[1.7] border ${calc.attendBonus > 0 ? "bg-green-lt border-[#1A6B3A30]" : "bg-cream border-bdr"}`}
+          className={`rounded-[9px] px-3.5 py-3 mt-1.5 text-sm leading-[1.7] border ${calc.attendBonus > 0 ? "bg-green-lt border-[#1A6B3A30]" : "bg-cream border-bdr"}`}
         >
           <div
             className={`font-bold mb-1 flex items-center gap-1.5 ${calc.attendBonus > 0 ? "text-green" : "text-txt-mid"}`}
@@ -810,7 +810,7 @@ export default function SalaryAdminEdit({
         </div>
         {FIELDS_DED.map((f) => (
           <div key={f.key} className="mb-2.5">
-            <label className="flex text-xs text-txt-mid mb-[5px] font-medium">
+            <label className="flex text-sm text-txt-mid mb-[5px] font-medium">
               {f.icon} {f.label}
             </label>
             <div className="relative">
@@ -829,7 +829,7 @@ export default function SalaryAdminEdit({
           </div>
         ))}
         {/* over-quota auto note */}
-        <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-xs text-txt-mid leading-[1.7] border border-[#C9973A30]">
+        <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
           <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
             📋 หักลาเกินโควต้า{" "}
             <span className="text-[10px] font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
@@ -873,7 +873,7 @@ export default function SalaryAdminEdit({
         </div>
 
         {/* auto advance deduction note */}
-        <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-xs text-txt-mid leading-[1.7] border border-[#C9973A30]">
+        <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
           <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
             💵 หักเงินเบิกล่วงหน้า{" "}
             <span className="text-[10px] font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
@@ -927,7 +927,7 @@ export default function SalaryAdminEdit({
       {/* Net summary */}
       <div className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-[18px] py-4 text-white flex items-center justify-between shadow-maroon-glow">
         <div>
-          <div className="text-xs text-[#E8C87AAA]">
+          <div className="text-sm text-[#E8C87AAA]">
             เงินสุทธิ{" "}
             {dirty && (
               <span className="px-1.5 py-px rounded-md text-[9px] font-bold ml-[5px] bg-[#D9770640] text-gold-lt">
@@ -939,7 +939,7 @@ export default function SalaryAdminEdit({
             ฿{TH_NUMBER(calc.net)}
           </div>
         </div>
-        <div className="text-right text-xs leading-[1.7] text-[#E8C87A99]">
+        <div className="text-right text-sm leading-[1.7] text-[#E8C87A99]">
           รายรับ +฿{TH_NUMBER(calc.earnings)}
           <br />
           รายหัก −฿{TH_NUMBER(calc.deductions)}

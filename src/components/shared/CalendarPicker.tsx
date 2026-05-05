@@ -119,7 +119,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
             {TH_DAYS_SHORT.map((d, i) => (
               <div
                 key={d}
-                className={`text-center text-xs font-semibold py-1 ${i === 6 ? "text-txt-soft/40" : "text-txt-soft"}`}
+                className={`text-center text-sm font-semibold py-1 ${i === 6 ? "text-txt-soft/40" : "text-txt-soft"}`}
               >
                 {d}
               </div>

@@ -84,7 +84,7 @@ export default function AdminAdvancePanel({
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`px-3.5 py-[7px] rounded-[20px] cursor-pointer font-[inherit] text-xs font-semibold whitespace-nowrap border
+            className={`px-3.5 py-[7px] rounded-[20px] cursor-pointer font-[inherit] text-sm font-semibold whitespace-nowrap border
               ${filter === f.id ? "bg-maroon text-gold-lt border-maroon" : "bg-cream text-txt-mid border-bdr"}`}
           >
             {f.label}
@@ -155,7 +155,7 @@ export default function AdminAdvancePanel({
               </div>
 
               <div className="flex items-center justify-between px-3 py-2.5 bg-gold-pale rounded-[10px] mb-2.5 border border-[#C9973A30]">
-                <span className="text-xs text-txt-mid">จำนวนเงินที่ขอเบิก</span>
+                <span className="text-sm text-txt-mid">จำนวนเงินที่ขอเบิก</span>
                 <span className="text-xl font-extrabold text-maroon">
                   ฿{TH_NUMBER(req.amount)}
                 </span>
@@ -168,7 +168,7 @@ export default function AdminAdvancePanel({
               {empInfo && (empInfo.bank || empInfo.bankAcc) && (
                 <button
                   onClick={() => copyToClipboard(empInfo.bankAcc, req.id)}
-                  className={`w-full text-xs mb-2.5 px-3 py-2.5 bg-cream rounded-lg cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
+                  className={`w-full text-sm mb-2.5 px-3 py-2.5 bg-cream rounded-lg cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
                     ${copiedAcc === req.id ? "border border-green" : "border border-bdr"}`}
                 >
                   <span className="text-sm">🏦</span>
@@ -246,7 +246,7 @@ export default function AdminAdvancePanel({
               )}
 
               {req.status === "approved" && !req.slipImg && (
-                <label className="block px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-gold/40 bg-gold-pale text-maroon text-xs font-semibold cursor-pointer font-[inherit] text-center">
+                <label className="block px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-gold/40 bg-gold-pale text-maroon text-sm font-semibold cursor-pointer font-[inherit] text-center">
                   📤 อัปโหลดสลิปย้อนหลัง
                   <input
                     type="file"

@@ -192,7 +192,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
                 <div className="text-gold-lt text-sm font-semibold">
                   กำลังเข้าสู่ระบบ...
                 </div>
-                <div className="text-gold-lt/40 text-xs mt-1">รอสักครู่</div>
+                <div className="text-gold-lt/40 text-sm mt-1">รอสักครู่</div>
               </div>
             )}
 
@@ -235,7 +235,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
           </div>
 
           {/* Footer */}
-          <div className="text-center mt-6 text-gold-lt/25 text-xs">
+          <div className="text-center mt-6 text-gold-lt/25 text-sm">
             Haangpetchthongmukda Co., Ltd
           </div>
         </div>

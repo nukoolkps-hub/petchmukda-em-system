@@ -63,7 +63,7 @@ export default function AdvanceRequestModal({
         </div>
         <div className="flex-1">
           <div className="font-extrabold text-lg text-txt">เบิกเงินล่วงหน้า</div>
-          <div className="text-xs text-txt-soft mt-0.5">
+          <div className="text-sm text-txt-soft mt-0.5">
             {TH_MONTHS[now.getMonth()]} {now.getFullYear() + 543}
           </div>
         </div>
@@ -72,13 +72,13 @@ export default function AdvanceRequestModal({
       {/* limit info */}
       <div className="bg-gold-pale rounded-xl px-3.5 py-3 mb-3.5 border border-gold/25">
         <div className="flex justify-between items-center mb-1.5">
-          <span className="text-xs text-txt-mid">วงเงินสูงสุด (50% ของเงินเดือน)</span>
+          <span className="text-sm text-txt-mid">วงเงินสูงสุด (50% ของเงินเดือน)</span>
           <span className="text-[13px] font-bold text-maroon">
             ฿{TH_NUMBER(maxAdvance)}
           </span>
         </div>
         <div className="flex justify-between items-center mb-1.5">
-          <span className="text-xs text-txt-mid">เบิกไปแล้วเดือนนี้</span>
+          <span className="text-sm text-txt-mid">เบิกไปแล้วเดือนนี้</span>
           <span className="text-[13px] font-bold text-txt-mid">
             ฿{TH_NUMBER(alreadyRequested)}
           </span>
@@ -120,7 +120,7 @@ export default function AdvanceRequestModal({
             <button
               key={v}
               onClick={() => setAmount(String(v))}
-              className="flex-1 py-1.5 px-1 rounded-[9px] border border-bdr bg-white text-maroon text-xs font-semibold cursor-pointer font-[inherit]"
+              className="flex-1 py-1.5 px-1 rounded-[9px] border border-bdr bg-white text-maroon text-sm font-semibold cursor-pointer font-[inherit]"
             >
               ฿{TH_NUMBER(v)}
             </button>
@@ -140,7 +140,7 @@ export default function AdvanceRequestModal({
         className={`w-full px-3.5 py-3 rounded-xl text-sm resize-none outline-none font-[inherit] box-border text-txt bg-white leading-relaxed border-[1.5px] ${err.includes("เหตุผล") ? "border-red" : "border-bdr"} ${err ? "mb-1.5" : "mb-3.5"}`}
       />
 
-      {err && <div className="text-red text-xs mb-3.5">⚠ {err}</div>}
+      {err && <div className="text-red text-sm mb-3.5">⚠ {err}</div>}
 
       {/* LINE notice */}
       <div className="bg-[#06C75510] rounded-[10px] px-3.5 py-2.5 mb-4 border border-[#06C75530] flex gap-2.5 items-center">

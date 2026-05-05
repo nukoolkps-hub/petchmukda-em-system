@@ -184,14 +184,14 @@ export default function PayrollSummaryPanel({
           <path d="M6 3h12l4 6-10 12L2 9z" />
         </svg>
         <div className="relative">
-          <div className="text-xs text-gold-lt/65 mb-[3px]">
+          <div className="text-sm text-gold-lt/65 mb-[3px]">
             ยอดที่ต้องโอนเดือนนี้ ({filtered.length} คน)
           </div>
           <div className="text-[30px] font-extrabold text-gold-lt tracking-[-0.02em] mb-2">
             ฿{TH_NUMBER(totalPayout)}
           </div>
           {totalAdvance > 0 && (
-            <div className="text-xs text-gold-lt/60 pt-2 border-t border-gold-lt/15">
+            <div className="text-sm text-gold-lt/60 pt-2 border-t border-gold-lt/15">
               💵 หักเบิกล่วงหน้าไปแล้ว: <b>฿{TH_NUMBER(totalAdvance)}</b> (
               {filtered.filter((r) => r.advanceTotal > 0).length} คน)
             </div>
@@ -241,7 +241,7 @@ export default function PayrollSummaryPanel({
               </div>
               {isStale ? (
                 <>
-                  <div className="text-xs text-txt-mid px-3 py-2 bg-white rounded-lg mb-2 border border-dashed border-amber/25 leading-normal">
+                  <div className="text-sm text-txt-mid px-3 py-2 bg-white rounded-lg mb-2 border border-dashed border-amber/25 leading-normal">
                     <div>
                       ตอนยืนยัน: <b>{confirmed.empCount} คน</b> ·{" "}
                       <b>฿{TH_NUMBER(confirmed.totalAmount)}</b>
@@ -269,7 +269,7 @@ export default function PayrollSummaryPanel({
                   </button>
                 </>
               ) : (
-                <div className="text-xs text-txt-mid px-2.5 py-1.5 bg-white rounded-lg">
+                <div className="text-sm text-txt-mid px-2.5 py-1.5 bg-white rounded-lg">
                   ยอด <b>฿{TH_NUMBER(confirmed.totalAmount)}</b> ·{" "}
                   {confirmed.empCount} คน
                 </div>
@@ -389,7 +389,7 @@ export default function PayrollSummaryPanel({
               {hasBank ? (
                 <button
                   onClick={() => copyToClipboard(emp.bankAcc, emp.id)}
-                  className={`w-full text-xs px-3 py-2.5 bg-cream rounded-[9px] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
+                  className={`w-full text-sm px-3 py-2.5 bg-cream rounded-[9px] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
                     ${copiedAcc === emp.id ? "border border-green" : "border border-bdr"}`}
                 >
                   <span className="text-sm">🏦</span>

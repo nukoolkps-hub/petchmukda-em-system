@@ -122,7 +122,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
           placeholder="กรอกชื่อ-นามสกุล"
           className={`w-full px-4 py-3.5 rounded-xl text-[15px] outline-none font-[inherit] box-border text-txt bg-white border-[1.5px] ${nameErr ? "border-red" : "border-bdr"}`}
         />
-        {nameErr && <div className="text-red text-xs mt-1.5">⚠ {nameErr}</div>}
+        {nameErr && <div className="text-red text-sm mt-1.5">⚠ {nameErr}</div>}
       </div>
 
       {/* avatar type tabs */}
@@ -139,7 +139,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
             <button
               key={t.id}
               onClick={() => setAvType(t.id)}
-              className={`flex-1 py-2.5 px-1 rounded-[9px] border-none cursor-pointer font-[inherit] text-xs font-semibold transition-all
+              className={`flex-1 py-2.5 px-1 rounded-[9px] border-none cursor-pointer font-[inherit] text-sm font-semibold transition-all
                 ${avType === t.id ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
             >
               {t.label}
@@ -159,7 +159,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
               <div className="text-sm font-semibold text-txt">
                 ตัวย่อ: <b>{av || "—"}</b>
               </div>
-              <div className="text-xs text-txt-soft mt-0.5">
+              <div className="text-sm text-txt-soft mt-0.5">
                 ระบบสร้างอัตโนมัติจากชื่อ
               </div>
             </div>
@@ -223,12 +223,12 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
                 <span className="text-sm font-semibold text-txt-mid">
                   แตะเพื่ออัปโหลดรูปภาพ
                 </span>
-                <span className="text-xs text-txt-soft">JPG, PNG รองรับ</span>
+                <span className="text-sm text-txt-soft">JPG, PNG รองรับ</span>
               </button>
             )}
           </div>
         )}
-        {avErr && <div className="text-red text-xs mt-2">⚠ {avErr}</div>}
+        {avErr && <div className="text-red text-sm mt-2">⚠ {avErr}</div>}
       </div>
 
       {/* ── Bank info section ── */}
@@ -241,7 +241,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
         </label>
 
         {/* bank dropdown */}
-        <label className="block text-xs text-txt-soft font-semibold mb-1">
+        <label className="block text-sm text-txt-soft font-semibold mb-1">
           ธนาคาร
         </label>
         <div className="relative mb-2.5">
@@ -269,7 +269,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
         </div>
 
         {/* account number */}
-        <label className="block text-xs text-txt-soft font-semibold mb-1">
+        <label className="block text-sm text-txt-soft font-semibold mb-1">
           เลขที่บัญชี
         </label>
         <input
@@ -279,7 +279,7 @@ export default function ProfileSetupModal({ initial, onSave, onClose }) {
           className={`w-full px-4 py-3 rounded-xl text-[15px] outline-none font-[inherit] box-border text-txt bg-white tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"}`}
         />
 
-        {bankErr && <div className="text-red text-xs mt-1.5">⚠ {bankErr}</div>}
+        {bankErr && <div className="text-red text-sm mt-1.5">⚠ {bankErr}</div>}
       </div>
 
       <button
