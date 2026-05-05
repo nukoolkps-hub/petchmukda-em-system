@@ -37,7 +37,7 @@ import useProfile from "./hooks/useProfile";
 function LoadingScreen({ message = "กำลังโหลดข้อมูล..." }) {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-cream font-sans">
-      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gold to-gold-lt flex items-center justify-center shadow-[0_6px_20px_rgba(201,151,58,0.31)] animate-[pulse_1.5s_ease-in-out_infinite]">
+      <div className="w-16 h-16 rounded-full bg-linear-to-br from-gold to-gold-lt flex items-center justify-center shadow-[0_6px_20px_rgba(201,151,58,0.31)] animate-[pulse_1.5s_ease-in-out_infinite]">
         <Diamond size={32} color={C.maroon} />
       </div>
       <div className="mt-4.5 text-sm font-semibold text-maroon">{message}</div>
@@ -414,7 +414,7 @@ export default function LeaveApp() {
 
           {/* Toast */}
           {toastMsg && (
-            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] z-[500] animate-[toastIn_0.25s_ease] whitespace-nowrap">
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] z-500 animate-[toastIn_0.25s_ease] whitespace-nowrap">
               ✓ {toastMsg}
             </div>
           )}

@@ -173,7 +173,7 @@ export default function SalaryAdminEdit({
         <select
           value={selEmp}
           onChange={(e) => tryChangeEmp(e.target.value)}
-          className="flex-[2] px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
+          className="flex-2 px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
         >
           {empDir.map((emp) => (
             <option key={emp.id} value={emp.id}>
@@ -942,7 +942,7 @@ export default function SalaryAdminEdit({
           </button>
           <button
             onClick={saveAll}
-            className="flex-[2] py-3 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[15px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
+            className="flex-2 py-3 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[15px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
           >
             <IconCheck size={14} stroke={2.5} />
             บันทึกการเปลี่ยนแปลง

@@ -125,7 +125,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
           </div>
 
           {/* Card */}
-          <div className="bg-white/[0.08] backdrop-blur-[20px] rounded-3xl border border-gold-lt/[0.12] px-6 py-8 shadow-[0_16px_48px_rgba(0,0,0,0.2)]">
+          <div className="bg-white/8 backdrop-blur-[20px] rounded-3xl border border-gold-lt/12 px-6 py-8 shadow-[0_16px_48px_rgba(0,0,0,0.2)]">
             <div className="text-center mb-7">
               <div className="text-white font-bold text-lg mb-1.5">
                 ยินดีต้อนรับ
@@ -137,7 +137,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
 
             {/* Error display */}
             {displayError && (
-              <div className="bg-red/[0.12] border border-red/25 rounded-xl px-4 py-3 mb-5 flex items-start gap-2.5">
+              <div className="bg-red/12 border border-red/25 rounded-xl px-4 py-3 mb-5 flex items-start gap-2.5">
                 <span className="text-lg shrink-0">⚠️</span>
                 <div>
                   <div className="text-[#ffaaaa] font-semibold text-sm">
@@ -181,7 +181,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
                 {/* Dev Login (emulator mode only) */}
                 {USE_EMULATORS && (
                   <button
-                    className={`login-dev-btn w-full p-3.5 bg-white/[0.08] border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                    className={`login-dev-btn w-full p-3.5 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
                     onClick={handleDevLogin}
                     disabled={devLoading}
                   >

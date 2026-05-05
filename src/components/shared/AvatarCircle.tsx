@@ -19,7 +19,7 @@ export default function AvatarCircle({
   if (avType === "image" && img) {
     return (
       <div
-        className={`rounded-full shrink-0 flex items-center justify-center overflow-hidden border-[2px] border-gold-lt/30 ${className}`}
+        className={`rounded-full shrink-0 flex items-center justify-center overflow-hidden border-2 border-gold-lt/30 ${className}`}
         style={base}
       >
         <img src={img} alt="avatar" className="w-full h-full object-cover" />
@@ -29,7 +29,7 @@ export default function AvatarCircle({
   if (avType === "emoji") {
     return (
       <div
-        className={`rounded-full shrink-0 flex items-center justify-center overflow-hidden bg-gold-pale border-[2px] border-gold-lt/30 ${className}`}
+        className={`rounded-full shrink-0 flex items-center justify-center overflow-hidden bg-gold-pale border-2 border-gold-lt/30 ${className}`}
         style={base}
       >
         {av}
@@ -39,7 +39,7 @@ export default function AvatarCircle({
   // text (initials)
   return (
     <div
-      className={`rounded-full shrink-0 flex items-center justify-center overflow-hidden bg-linear-135 from-gold to-gold-lt border-[2px] border-gold-lt/30 ${className}`}
+      className={`rounded-full shrink-0 flex items-center justify-center overflow-hidden bg-linear-135 from-gold to-gold-lt border-2 border-gold-lt/30 ${className}`}
       style={base}
     >
       <span

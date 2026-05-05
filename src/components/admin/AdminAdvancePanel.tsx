@@ -161,7 +161,7 @@ export default function AdminAdvancePanel({
                 </span>
               </div>
 
-              <div className="text-[13px] text-txt-mid mb-2.5 leading-[1.5]">
+              <div className="text-[13px] text-txt-mid mb-2.5 leading-normal">
                 <span className="text-txt-soft">เหตุผล:</span> {req.reason}
               </div>
 
@@ -265,7 +265,7 @@ export default function AdminAdvancePanel({
       </div>
 
       {confirmReject && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-[4px] px-6">
+        <div className="fixed inset-0 z-1000 flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-xs px-6">
           <div className="bg-white rounded-[20px] px-6 py-7 w-full max-w-[340px]">
             <div className="text-center text-[38px] mb-2">❌</div>
             <div className="font-bold text-[17px] text-txt text-center mb-1.5">

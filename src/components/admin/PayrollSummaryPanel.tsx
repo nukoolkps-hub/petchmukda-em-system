@@ -241,7 +241,7 @@ export default function PayrollSummaryPanel({
               </div>
               {isStale ? (
                 <>
-                  <div className="text-xs text-txt-mid px-3 py-2 bg-white rounded-lg mb-2 border border-dashed border-amber/25 leading-[1.5]">
+                  <div className="text-xs text-txt-mid px-3 py-2 bg-white rounded-lg mb-2 border border-dashed border-amber/25 leading-normal">
                     <div>
                       ตอนยืนยัน: <b>{confirmed.empCount} คน</b> ·{" "}
                       <b>฿{TH_NUMBER(confirmed.totalAmount)}</b>

@@ -79,7 +79,7 @@ export default class ErrorBoundary extends Component<
               <summary className="cursor-pointer font-semibold text-red mb-1.5">
                 🔍 รายละเอียดข้อผิดพลาด (สำหรับ dev)
               </summary>
-              <div className="mt-2 font-mono text-maroon-dk whitespace-pre-wrap break-words leading-normal">
+              <div className="mt-2 font-mono text-maroon-dk whitespace-pre-wrap wrap-break-word leading-normal">
                 <b>{this.state.error.toString()}</b>
                 {this.state.errorInfo?.componentStack && (
                   <div className="mt-2 opacity-80 text-[11px]">

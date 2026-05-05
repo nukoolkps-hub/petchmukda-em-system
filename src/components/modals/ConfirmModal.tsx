@@ -7,7 +7,7 @@ export default function ConfirmModal({ leave, onConfirm, onCancel }) {
   if (!leave) return null;
   const lt = LEAVE_TYPES.find((t) => t.id === leave.type);
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-[4px] px-6">
+    <div className="fixed inset-0 z-1000 flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-xs px-6">
       <div className="bg-white rounded-[20px] px-6 py-7 w-full max-w-[360px] shadow-[0_24px_60px_rgba(45,26,14,0.3)] animate-[modalIn_0.2s_cubic-bezier(.22,.68,0,1.2)]">
         <div className="w-14 h-14 rounded-full bg-red-lt flex items-center justify-center mx-auto mb-4">
           <IconTrash size={26} color="var(--color-red)" stroke={2.5} />

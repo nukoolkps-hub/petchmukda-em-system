@@ -240,7 +240,7 @@ export default function SalaryView({
           <div className="text-sm font-bold text-txt mb-px">
             {empInfo?.bank || "-"}
           </div>
-          <div className="text-[13px] text-txt-mid tracking-[0.05em]">
+          <div className="text-[13px] text-txt-mid tracking-wider">
             {empInfo?.bankAcc || "-"}
           </div>
         </div>
@@ -381,7 +381,7 @@ export default function SalaryView({
             พิมพ์
           </button>
         </div>
-        <div className="text-[10px] text-txt-soft leading-[1.5] mt-0.5">
+        <div className="text-[10px] text-txt-soft leading-normal mt-0.5">
           💡 <b>PDF</b> = ดาวน์โหลดทันที (text ค้นหาได้) · <b>พิมพ์</b> = ในกล่องพิมพ์เลือก
           "Save as PDF"
         </div>

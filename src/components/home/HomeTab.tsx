@@ -118,7 +118,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
 
         {/* banner – แสดงตั้งแต่ครั้งที่ 2 เป็นต้นไป */}
         {usedThisMonth >= quota && (
-          <div className="mt-3 bg-gradient-to-br from-red/6 to-red/9 rounded-xl px-3.5 py-2.5 border border-red/19 flex items-center gap-2.5">
+          <div className="mt-3 bg-linear-to-br from-red/6 to-red/9 rounded-xl px-3.5 py-2.5 border border-red/19 flex items-center gap-2.5">
             <div className="text-xl shrink-0">💰</div>
             <div className="text-[13px] text-red font-semibold leading-relaxed">
               การลาต่อจากนี้ไป ‼️

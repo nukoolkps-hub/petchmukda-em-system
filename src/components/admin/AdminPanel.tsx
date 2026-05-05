@@ -854,7 +854,7 @@ export default function AdminPanel({
                             <div className="text-[13px] font-bold text-txt mb-px">
                               {emp.bank || "-"}
                             </div>
-                            <div className="text-[13px] text-txt-mid tracking-[0.05em]">
+                            <div className="text-[13px] text-txt-mid tracking-wider">
                               {emp.bankAcc || "-"}
                             </div>
                           </>
@@ -913,7 +913,7 @@ export default function AdminPanel({
                             — ยังไม่ได้เชื่อมต่อ LINE —
                           </div>
                         )}
-                        <div className="text-[10px] text-txt-soft mt-[3px] leading-[1.5]">
+                        <div className="text-[10px] text-txt-soft mt-[3px] leading-normal">
                           💡 ID จะถูกเก็บอัตโนมัติเมื่อพนักงานเข้าสู่ระบบผ่าน LINE
                         </div>
                       </div>
@@ -976,7 +976,7 @@ export default function AdminPanel({
                                 >
                                   🔒 ปิดสิทธิ์ระบบเงินเดือน
                                 </div>
-                                <div className="text-[10px] text-txt-soft mt-0.5 leading-[1.5]">
+                                <div className="text-[10px] text-txt-soft mt-0.5 leading-normal">
                                   ซ่อนแท็บ "เงินเดือน" จากพนักงาน · ใช้ได้แค่ระบบลา
                                 </div>
                               </div>
@@ -1151,7 +1151,7 @@ export default function AdminPanel({
                                               >
                                                 {o.icon} {o.label}
                                               </div>
-                                              <div className="text-[10px] text-txt-soft mt-px leading-[1.5]">
+                                              <div className="text-[10px] text-txt-soft mt-px leading-normal">
                                                 {o.desc}
                                               </div>
                                             </div>
@@ -1305,7 +1305,7 @@ export default function AdminPanel({
                           </button>
                           <button
                             onClick={saveAll}
-                            className="flex-[2] py-[11px] rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
+                            className="flex-2 py-[11px] rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
                           >
                             <IconCheck size={14} stroke={2.5} />
                             บันทึกการเปลี่ยนแปลง

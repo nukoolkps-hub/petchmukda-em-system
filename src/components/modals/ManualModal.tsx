@@ -7,7 +7,7 @@ import { Box, Card, Section } from "../shared/Layout";
 export default function ManualModal({ onClose }) {
   const [tab, setTab] = useState("leave");
   return (
-    <div className="fixed inset-0 z-[800] flex items-end justify-center bg-[rgba(45,26,14,0.65)] backdrop-blur-[6px]">
+    <div className="fixed inset-0 z-800 flex items-end justify-center bg-[rgba(45,26,14,0.65)] backdrop-blur-[6px]">
       <div className="bg-white rounded-t-3xl px-5.5 pt-6 pb-7 w-full max-w-[560px] shadow-[0_-12px_40px_rgba(45,26,14,0.25)] animate-[slideUp_0.3s_cubic-bezier(.22,.68,0,1.1)] max-h-[92vh] overflow-y-auto">
         <div className="w-10 h-1 rounded-sm bg-bdr mx-auto mb-4" />
 

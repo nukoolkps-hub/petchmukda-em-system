@@ -30,7 +30,7 @@ export default function MobileHeader({
   const tab = useLocation().pathname.replace("/", "") || "home";
 
   return (
-    <div className="leave-header-mobile bg-gradient-to-br from-maroon-dk via-maroon to-maroon-lt pt-5 px-5 pb-0 shrink-0 relative overflow-hidden">
+    <div className="leave-header-mobile bg-linear-to-br from-maroon-dk via-maroon to-maroon-lt pt-5 px-5 pb-0 shrink-0 relative overflow-hidden">
       {/* Mosaic decoration */}
       <MosaicPattern variant="header" idPrefix="mg" />
 

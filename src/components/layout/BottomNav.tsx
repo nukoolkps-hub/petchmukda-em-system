@@ -13,7 +13,7 @@ export default function BottomNav({ navItems }: BottomNavProps) {
   const currentPath = location.pathname;
 
   return (
-    <div className="leave-bottom-nav bg-white border-t border-bdr shadow-[0_-4px_20px_rgba(90,30,10,0.10)] z-[100]">
+    <div className="leave-bottom-nav bg-white border-t border-bdr shadow-[0_-4px_20px_rgba(90,30,10,0.10)] z-100">
       {navItems.map((n) => {
         const active = currentPath === n.path,
           isAdminTab = n.id === "admin";

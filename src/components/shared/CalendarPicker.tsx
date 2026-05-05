@@ -97,7 +97,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
       </button>
       {error && <div className="text-red text-[13px] mt-1.5">⚠ {error}</div>}
       {open && (
-        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-[400] bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]">
+        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-400 bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]">
           <div className="flex items-center justify-between mb-3.5">
             <button
               onClick={prevM}
