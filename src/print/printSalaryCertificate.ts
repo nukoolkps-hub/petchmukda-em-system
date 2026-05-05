@@ -153,28 +153,6 @@ function buildCertificateHTML(
       font-weight:700;cursor:pointer;font-family:inherit;
       box-shadow:0 6px 20px rgba(201,151,58,0.5);z-index:999;
     }
-    /* Banner: แนะนำผู้ใช้ให้เลือก Save as PDF */
-    .save-pdf-banner{
-      position:fixed;top:20px;left:50%;transform:translateX(-50%);
-      background:linear-gradient(135deg,#7B1C1C,#5C1212);color:#fff;
-      padding:14px 18px;border-radius:14px;display:flex;align-items:center;gap:12px;
-      box-shadow:0 8px 28px rgba(91,18,18,0.4);z-index:1000;
-      max-width:560px;width:calc(100% - 40px);font-family:'Prompt',sans-serif;
-      animation:slideDown 0.4s cubic-bezier(.22,.68,0,1.1);
-    }
-    @keyframes slideDown{from{opacity:0;transform:translate(-50%,-20px)}to{opacity:1;transform:translate(-50%,0)}}
-    .banner-icon{font-size:24px;flex-shrink:0;}
-    .banner-text{flex:1;line-height:1.4;}
-    .banner-title{font-weight:700;font-size:14px;color:#E8C87A;}
-    .banner-sub{font-size:12px;opacity:0.92;margin-top:2px;}
-    .banner-sub b{color:#E8C87A;}
-    .banner-close{
-      background:rgba(255,255,255,0.15);border:none;color:#fff;
-      width:28px;height:28px;border-radius:50%;cursor:pointer;
-      font-size:14px;display:flex;align-items:center;justify-content:center;
-      flex-shrink:0;
-    }
-    .banner-close:hover{background:rgba(255,255,255,0.25);}
   </style>
 </head>
 <body>
@@ -228,15 +206,7 @@ function buildCertificateHTML(
 
   ${
     includePrintControls
-      ? `<div class="save-pdf-banner no-print" id="banner">
-    <div class="banner-icon">💡</div>
-    <div class="banner-text">
-      <div class="banner-title">บันทึกเป็น PDF ได้</div>
-      <div class="banner-sub">ในกล่องพิมพ์ → เลือก <b>"Save as PDF"</b> ที่ Destination → กด Save</div>
-    </div>
-    <button class="banner-close" onclick="document.getElementById('banner').style.display='none'">✕</button>
-  </div>
-  <button class="print-btn no-print" onclick="window.print()">🖨 พิมพ์ / บันทึก PDF</button>
+      ? `<button class="print-btn no-print" onclick="window.print()">🖨 พิมพ์ / บันทึก PDF</button>
   <script>
     window.addEventListener('load',()=>setTimeout(()=>window.print(),800));
   </script>`

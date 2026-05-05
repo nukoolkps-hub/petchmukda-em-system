@@ -141,7 +141,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
                       st === "selected"
                         ? `linear-gradient(135deg,${C.gold},${C.goldLt})`
                         : st === "today"
-                          ? C.goldPale
+                          ? "#E8E8E8"
                           : "transparent",
                     color: !d
                       ? "transparent"
@@ -150,7 +150,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
                         : st === "disabled" || st === "weekend"
                           ? C.border
                           : st === "today"
-                            ? C.gold
+                            ? "#666"
                             : C.text,
                     boxShadow:
                       st === "selected" ? `0 2px 8px ${C.gold}50` : "none",

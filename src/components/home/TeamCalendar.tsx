@@ -136,13 +136,21 @@ export default function TeamCalendar({
                 className="min-h-[50px] rounded-[10px] px-0.5 pt-[5px] pb-1 cursor-pointer transition-all"
                 style={{
                   background: isSelectedDate
-                    ? "#E8E8E8"
+                    ? colors.goldPale
                     : isToday
-                      ? colors.goldPale
+                      ? "#E8E8E8"
                       : colors.white,
-                  border: `1.5px solid ${isSelectedDate ? "#C8C8C8" : hasLeaveEntries ? `${colors.gold}70` : "transparent"}`,
+                  border: `1.5px solid ${
+                    isSelectedDate
+                      ? `${colors.gold}70`
+                      : isToday
+                        ? "#C8C8C8"
+                        : hasLeaveEntries
+                          ? `${colors.gold}70`
+                          : "transparent"
+                  }`,
                   boxShadow: isSelectedDate
-                    ? "0 2px 6px rgba(0,0,0,0.10)"
+                    ? `0 1px 4px ${colors.gold}25`
                     : hasLeaveEntries
                       ? `0 1px 4px ${colors.gold}25`
                       : "none",
@@ -153,21 +161,15 @@ export default function TeamCalendar({
                   style={{
                     fontWeight: isToday || isSelectedDate ? 800 : 500,
                     color: isSelectedDate
-                      ? "#666"
+                      ? colors.gold
                       : isWeekend
                         ? `${colors.textSoft}80`
                         : isToday
-                          ? colors.gold
+                          ? "#666"
                           : colors.text,
                   }}
                 >
-                  {isToday && !isSelectedDate ? (
-                    <span className="inline-flex w-[22px] h-[22px] rounded-full bg-gold text-white items-center justify-center text-xs font-extrabold">
-                      {dayOfMonth}
-                    </span>
-                  ) : (
-                    dayOfMonth
-                  )}
+                  {dayOfMonth}
                 </div>
                 {hasLeaveEntries && (
                   <div className="flex flex-wrap gap-px justify-center mt-[3px]">
