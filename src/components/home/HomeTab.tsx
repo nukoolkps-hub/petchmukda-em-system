@@ -170,8 +170,8 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
         })}
       </div>
       <TeamCalendar
-        allLeaves={allLeaves}
-        empDir={[
+        leaveEntries={allLeaves}
+        employeeDirectory={[
           ...empDir,
           ...(profile && !empDir.find((e) => e.name === profile.name)
             ? [
