@@ -71,6 +71,8 @@ export default function LeaveApp() {
     setSalaryData,
     setRoles,
     setPayrollConfirms,
+    updateEmployee,
+    updateSalary,
     addLeave: addLeaveAction,
     deleteLeave: deleteLeaveAction,
     submitAdvance: submitAdvanceAction,
@@ -84,8 +86,14 @@ export default function LeaveApp() {
     showEditProfile,
     setShowEditProfile,
     handleProfileSave,
+    meEmp,
+    employeeId,
     salaryDisabled,
   } = useProfile({ authUser, empDir, setEmpDir });
+  const currentEmpId = employeeId || "";
+  const myAdvanceRequests = currentEmpId
+    ? advanceRequests.filter((r) => r.empId === currentEmpId)
+    : [];
 
   /* ─── Toast ────────────────────────────────────────────────── */
   const [toastMsg, setToastMsg] = useState("");
@@ -109,6 +117,7 @@ export default function LeaveApp() {
   /* ─── LINE notifications hook ──────────────────────────────── */
   const { submitAdvanceRequest, adminUpdateAdvance } = useLineNotifications({
     profileName: profile?.name || "-",
+    currentEmployee: meEmp,
     empDir,
     advanceRequests,
     submitAdvanceAction,
@@ -168,11 +177,14 @@ export default function LeaveApp() {
   }
 
   /* ─── Role update handler (admin) ──────────────────────────── */
-  function handleUpdateRole(empId: string, field: string, value: any) {
-    (setEmpDir as React.Dispatch<React.SetStateAction<any[]>>)((d: any[]) =>
-      d.map((e: any) => (e.id === empId ? { ...e, [field]: value } : e)),
-    );
-    showToast("บันทึกข้อมูลแล้ว");
+  async function handleUpdateRole(empId: string, field: string, value: any) {
+    try {
+      await updateEmployee(empId, { [field]: value });
+      showToast("บันทึกข้อมูลแล้ว");
+    } catch (err) {
+      console.error("[Admin] update employee failed:", err);
+      showToast("บันทึกข้อมูลไม่สำเร็จ");
+    }
   }
 
   /* ─── Advance request wrapper ──────────────────────────────── */
@@ -316,12 +328,11 @@ export default function LeaveApp() {
                     <div className="min-h-full">
                       <SalaryView
                         profile={profile}
+                        employeeId={currentEmpId}
                         salaryData={salaryData}
                         allLeaves={allLeaves}
                         empDir={empDir}
-                        advanceRequests={advanceRequests.filter(
-                          (r) => r.empId === "me",
-                        )}
+                        advanceRequests={myAdvanceRequests}
                         onOpenAdvance={() => setShowAdvanceModal(true)}
                         onOpenHistory={() => setShowHistoryModal(true)}
                         roles={roles}
@@ -348,6 +359,7 @@ export default function LeaveApp() {
                       onUpdateRole={handleUpdateRole}
                       salaryData={salaryData}
                       setSalaryData={setSalaryData}
+                      onSaveSalary={updateSalary}
                       advanceRequests={advanceRequests}
                       onUpdateAdvance={adminUpdateAdvance}
                       roles={roles}
@@ -396,8 +408,10 @@ export default function LeaveApp() {
           {showAdvanceModal && (
             <AdvanceRequestModal
               profile={profile}
+              employee={meEmp}
+              employeeId={currentEmpId}
               salaryData={salaryData}
-              advanceRequests={advanceRequests.filter((r) => r.empId === "me")}
+              advanceRequests={myAdvanceRequests}
               onSubmit={handleSubmitAdvance}
               onClose={() => setShowAdvanceModal(false)}
             />
@@ -405,7 +419,7 @@ export default function LeaveApp() {
 
           {showHistoryModal && (
             <AdvanceHistoryModal
-              advanceRequests={advanceRequests.filter((r) => r.empId === "me")}
+              advanceRequests={myAdvanceRequests}
               onClose={() => setShowHistoryModal(false)}
             />
           )}

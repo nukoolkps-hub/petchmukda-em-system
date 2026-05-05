@@ -7,7 +7,7 @@ import {
   IconLoader2,
   IconPrinter,
 } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { C, TH_MONTHS } from "../../constants";
 import {
   downloadSalaryCertificatePDF,
@@ -24,6 +24,7 @@ import { calcSalary, computePoolSharesForGroup } from "../../utils/salaryUtils";
 /* ─── Salary View (employee — read only) ───────────────────────── */
 export default function SalaryView({
   profile,
+  employeeId,
   salaryData,
   allLeaves,
   empDir,
@@ -33,17 +34,32 @@ export default function SalaryView({
   roles,
 }) {
   const now = new Date();
-  const empId = "me";
+  const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const empInfo =
+    empDir.find((e) => e.id === employeeId) ||
+    empDir.find((e) => e.name === profile?.name);
+  const empId = empInfo?.id || employeeId || "";
   const [selMonth, setSelMonth] = useState(
-    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+    currentYM,
   );
-  const months = Object.keys(salaryData[empId] || {})
-    .sort()
-    .reverse()
-    .slice(0, 12);
+  const months = useMemo(
+    () =>
+      Object.keys(salaryData[empId] || {})
+        .sort()
+        .reverse()
+        .slice(0, 12),
+    [salaryData, empId],
+  );
+  const selectMonths = months.includes(selMonth)
+    ? months
+    : [selMonth, ...months];
+
+  useEffect(() => {
+    if (months.length === 0) return;
+    if (!months.includes(selMonth)) setSelMonth(months[0]);
+  }, [months, selMonth]);
 
   const data = salaryData[empId]?.[selMonth];
-  const empInfo = empDir.find((e) => e.name === profile?.name);
   const empRole = roles?.find((r) => r.id === empInfo?.roleId);
 
   const {
@@ -185,7 +201,6 @@ export default function SalaryView({
   }
 
   if (!data || !calc) {
-    const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     return (
       <div>
         <div className="flex items-center justify-between gap-2 mb-3.5">
@@ -195,7 +210,7 @@ export default function SalaryView({
             onChange={(e) => setSelMonth(e.target.value)}
             className="px-3 py-[7px] rounded-[9px] border border-bdr text-[13px] font-semibold text-txt bg-cream font-[inherit] outline-none"
           >
-            {months.map((m) => {
+            {selectMonths.map((m) => {
               const [y, mo] = m.split("-");
               return (
                 <option key={m} value={m}>
@@ -214,7 +229,7 @@ export default function SalaryView({
               return `${TH_MONTHS[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
             })()}
           </div>
-          {selMonth !== currentYM && (
+          {months.includes(currentYM) && selMonth !== currentYM && (
             <button
               onClick={() => setSelMonth(currentYM)}
               className="px-5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-gold)/0.25] inline-flex items-center gap-1.5"
@@ -306,7 +321,7 @@ export default function SalaryView({
           onChange={(e) => setSelMonth(e.target.value)}
           className="px-3 py-[7px] rounded-[9px] border border-bdr text-[13px] font-semibold text-txt bg-cream font-[inherit] outline-none"
         >
-          {months.map((m) => {
+          {selectMonths.map((m) => {
             const [y, mo] = m.split("-");
             return (
               <option key={m} value={m}>
@@ -429,7 +444,7 @@ export default function SalaryView({
           <div className="font-bold text-[15px] text-txt">รายรับ</div>
         </div>
         {[
-          { icon: "💼", main: "เงินเดือนพื้นฐาน", sub: "", value: data.base },
+          { icon: "💼", main: "เงินเดือนพื้นฐาน", sub: "", value: calc.baseSalary },
           ...(calc.isSingle
             ? [
                 {

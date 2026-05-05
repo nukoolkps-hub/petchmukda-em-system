@@ -7,6 +7,8 @@ import Diamond from "../shared/Diamond";
 /* ─── Advance Request Modal ────────────────────────────────────── */
 export default function AdvanceRequestModal({
   profile,
+  employee,
+  employeeId,
   salaryData,
   advanceRequests,
   onSubmit,
@@ -14,8 +16,8 @@ export default function AdvanceRequestModal({
 }) {
   const now = new Date();
   const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const empSalary = salaryData.me?.[ym];
-  const baseSalary = empSalary?.base || 0;
+  const empSalary = employeeId ? salaryData[employeeId]?.[ym] : null;
+  const baseSalary = employee?.baseSalary ?? empSalary?.base ?? 0;
   const maxAdvance = Math.floor(
     baseSalary * BUSINESS_RULES.ADVANCE_LIMIT_PERCENT,
   );

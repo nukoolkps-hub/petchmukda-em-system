@@ -24,6 +24,7 @@ export default function AdminPanel({
   onUpdateRole,
   salaryData,
   setSalaryData,
+  onSaveSalary,
   advanceRequests,
   onUpdateAdvance,
   roles,
@@ -254,6 +255,7 @@ export default function AdminPanel({
           empDir={empDir}
           salaryData={salaryData}
           setSalaryData={setSalaryData}
+          onSaveSalary={onSaveSalary}
           allLeaves={allLeaves}
           advanceRequests={advanceRequests}
           roles={roles}

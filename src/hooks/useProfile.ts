@@ -4,6 +4,13 @@ import type { User } from "firebase/auth";
 import { useEffect, useMemo, useState } from "react";
 import type { Employee } from "../types";
 
+const USE_EMULATORS =
+  import.meta.env.VITE_USE_EMULATORS === "true" ||
+  (import.meta.env.VITE_USE_EMULATORS !== "false" && import.meta.env.DEV);
+const DEV_EMPLOYEE_ID = import.meta.env.VITE_DEV_EMPLOYEE_ID || "me";
+const DEV_EMPLOYEE_NAME =
+  import.meta.env.VITE_DEV_EMPLOYEE_NAME || "นภัส สุขใจ";
+
 interface ProfileData {
   name: string;
   av: string;
@@ -28,20 +35,37 @@ export default function useProfile({
   setEmpDir,
 }: UseProfileOptions) {
   /* ─── Auth-derived profile ─────────────────────────────────── */
+  const authEmployee = useMemo(() => {
+    if (!authUser) return null;
+    const byLineId = empDir.find(
+      (e) => e.lineUserId && e.lineUserId === authUser.uid,
+    );
+    if (byLineId) return byLineId;
+    if (USE_EMULATORS && authUser.isAnonymous) {
+      return empDir.find((e) => e.id === DEV_EMPLOYEE_ID) || null;
+    }
+    return null;
+  }, [authUser, empDir]);
+
   const authDerivedProfile = useMemo(() => {
     if (!authUser) return null;
-    const displayName = authUser.displayName || "พนักงาน";
-    const initials = displayName.slice(0, 2);
+    const displayName =
+      authEmployee?.name ||
+      authUser.displayName ||
+      (USE_EMULATORS && authUser.isAnonymous
+        ? DEV_EMPLOYEE_NAME
+        : "พนักงาน");
+    const initials = authEmployee?.av || displayName.slice(0, 2);
     return {
       name: displayName,
       av: initials,
-      avType: authUser.photoURL ? "img" : "text",
-      img: authUser.photoURL || null,
-      role: "-",
-      bank: "",
-      bankAcc: "",
+      avType: authEmployee?.avType || (authUser.photoURL ? "img" : "text"),
+      img: authEmployee?.img ?? authUser.photoURL ?? null,
+      role: authEmployee?.role || "-",
+      bank: authEmployee?.bank || "",
+      bankAcc: authEmployee?.bankAcc || "",
     };
-  }, [authUser]);
+  }, [authUser, authEmployee]);
 
   const [profile, setProfile] = useState<ProfileData | null>(
     authDerivedProfile || {
@@ -56,12 +80,18 @@ export default function useProfile({
   );
   const [showEditProfile, setShowEditProfile] = useState(false);
 
-  // Sync profile when auth user changes (e.g. after LINE login provides displayName)
+  // Sync profile when auth user changes or resolves to an employee record.
   useEffect(() => {
-    if (authDerivedProfile && profile?.name === "พนักงาน") {
+    if (!authDerivedProfile) return;
+    if (
+      !profile ||
+      profile.name === "พนักงาน" ||
+      profile.name === authUser?.displayName ||
+      authEmployee
+    ) {
       setProfile(authDerivedProfile);
     }
-  }, [authDerivedProfile, profile?.name]);
+  }, [authDerivedProfile, authEmployee, authUser?.displayName, profile]);
 
   /* ─── Profile save handler ─────────────────────────────────── */
   function handleProfileSave(data: any) {
@@ -126,7 +156,12 @@ export default function useProfile({
   }, [empDir, profile?.role, profile?.name, profile]);
 
   // salary disabled check
-  const meEmp = empDir.find((e) => e.name === profile?.name);
+  const meEmp =
+    authEmployee ||
+    empDir.find((e) => e.name === profile?.name) ||
+    (USE_EMULATORS && authUser?.isAnonymous
+      ? empDir.find((e) => e.id === DEV_EMPLOYEE_ID)
+      : null);
   const salaryDisabled = !!meEmp?.salaryDisabled;
 
   return {
@@ -136,6 +171,7 @@ export default function useProfile({
     setShowEditProfile,
     handleProfileSave,
     meEmp,
+    employeeId: meEmp?.id || null,
     salaryDisabled,
   };
 }

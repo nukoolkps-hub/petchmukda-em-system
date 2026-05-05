@@ -11,6 +11,7 @@ export default function SalaryAdminEdit({
   empDir,
   salaryData,
   setSalaryData,
+  onSaveSalary,
   allLeaves,
   advanceRequests,
   roles,
@@ -22,6 +23,7 @@ export default function SalaryAdminEdit({
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
   );
   const [draft, setDraft] = useState({});
+  const [saving, setSaving] = useState(false);
 
   const empInfo = empDir.find((e) => e.id === selEmp);
   const empRole = roles?.find((r) => r.id === empInfo?.roleId);
@@ -143,15 +145,28 @@ export default function SalaryAdminEdit({
     setDraft((d) => ({ ...d, [field]: num }));
   }
 
-  function saveAll() {
-    if (!dirty) return;
-    setSalaryData((d) => {
-      const next = { ...d };
-      if (!next[selEmp]) next[selEmp] = {};
-      next[selEmp][selMonth] = { ...savedData, ...draft };
-      return next;
-    });
-    setDraft({});
+  async function saveAll() {
+    if (!dirty || saving) return;
+    const nextMonthData = { ...savedData, ...draft };
+    setSaving(true);
+    try {
+      if (onSaveSalary) {
+        await onSaveSalary(selEmp, selMonth, nextMonthData);
+      } else {
+        setSalaryData((d) => {
+          const next = { ...d };
+          if (!next[selEmp]) next[selEmp] = {};
+          next[selEmp][selMonth] = nextMonthData;
+          return next;
+        });
+      }
+      setDraft({});
+    } catch (err) {
+      console.error("[SalaryAdminEdit] save salary failed:", err);
+      alert("บันทึกเงินเดือนไม่สำเร็จ");
+    } finally {
+      setSaving(false);
+    }
   }
   function cancelAll() {
     setDraft({});
@@ -942,10 +957,11 @@ export default function SalaryAdminEdit({
           </button>
           <button
             onClick={saveAll}
-            className="flex-2 py-3 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[15px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
+            disabled={saving}
+            className={`flex-2 py-3 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-[15px] font-bold font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow ${saving ? "cursor-wait opacity-70" : "cursor-pointer"}`}
           >
             <IconCheck size={14} stroke={2.5} />
-            บันทึกการเปลี่ยนแปลง
+            {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
           </button>
         </div>
       )}

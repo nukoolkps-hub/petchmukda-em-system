@@ -6,6 +6,7 @@ import type { AdvanceRequest, Employee } from "../types";
 
 interface UseLineNotificationsOptions {
   profileName: string;
+  currentEmployee?: Employee | null;
   empDir: Employee[];
   advanceRequests: AdvanceRequest[];
   submitAdvanceAction: (req: any) => string | number | Promise<string>;
@@ -21,6 +22,7 @@ interface UseLineNotificationsOptions {
 
 export default function useLineNotifications({
   profileName,
+  currentEmployee,
   empDir,
   advanceRequests,
   submitAdvanceAction,
@@ -73,9 +75,12 @@ export default function useLineNotifications({
     reason: string;
     month: string;
   }) {
+    const employee =
+      currentEmployee || empDir.find((e) => e.name === profileName) || null;
+    const empId = employee?.id || "";
     const reqData = {
-      empId: "me",
-      empName: profileName || "-",
+      empId,
+      empName: employee?.name || profileName || "-",
       amount,
       reason,
       month,
@@ -88,8 +93,8 @@ export default function useLineNotifications({
       amount: reqData.amount,
       reason: reqData.reason,
       month: reqData.month,
-      bank: empDir.find((e) => e.id === "me")?.bank,
-      bankAcc: empDir.find((e) => e.id === "me")?.bankAcc,
+      bank: employee?.bank,
+      bankAcc: employee?.bankAcc,
       submittedAt: new Date().toISOString(),
       requestId: id,
     });
