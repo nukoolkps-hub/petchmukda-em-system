@@ -276,6 +276,15 @@ export const EMP_DIR_INIT = [
 /* ─── Salary data per employee per month (YYYY-MM) ──────────────── */
 export const SALARY_INIT = {
   me: {
+    "2026-05": {
+      base: 20000,
+      pieces: 41, // 41 × 35 = 1,435
+      piecesInvite: 0,
+      piecesTransfer: 0,
+      lateDeduction: 0,
+      socialSecurity: 750,
+      note: "Mock data for Dev Login",
+    },
     "2026-04": {
       base: 20000,
       pieces: 38, // 38 × 35 = 1,330

@@ -53,6 +53,13 @@ service cloud.firestore {
       allow write:  if isAdmin();
     }
 
+    // collectionGroup(db, "months") in the app needs an explicit recursive
+    // match. Without this, salary subscriptions degrade to empty data.
+    match /{path=**}/months/{ym} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ─── Advances ────────────────────────────────────────────────
     // อ่าน: admin หรือเจ้าของ
     // สร้าง: เจ้าของ

@@ -25,6 +25,8 @@ interface LoginScreenProps {
 
 export default function LoginScreen({ loading, error }: LoginScreenProps) {
   const [devLoading, setDevLoading] = useState(false);
+  const [seedLoading, setSeedLoading] = useState(false);
+  const [seedMessage, setSeedMessage] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const displayError = error || localError;
@@ -60,6 +62,22 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
     }
   }
 
+  async function handleSeedData() {
+    setSeedLoading(true);
+    setLocalError(null);
+    setSeedMessage(null);
+    try {
+      const { runDevSeed } = await import("../../firebase/seed");
+      const count = await runDevSeed();
+      setSeedMessage(`Seed demo data สำเร็จ (${count} documents)`);
+    } catch (err: unknown) {
+      console.error("[Seed Data] error:", err);
+      setLocalError(`Seed data ไม่สำเร็จ: ${(err as Error).message}`);
+    } finally {
+      setSeedLoading(false);
+    }
+  }
+
   return (
     <>
       <style>{`
@@ -71,6 +89,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
         .login-line-btn:hover { background: #05B04C !important; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(6,199,85,0.35) !important; }
         .login-line-btn:active { transform: translateY(0); }
         .login-dev-btn:hover { background: rgba(255,255,255,0.15) !important; }
+        .login-seed-btn:hover { background: rgba(232,200,122,0.16) !important; }
       `}</style>
 
       <div className="fixed inset-0 flex items-center justify-center bg-linear-160 from-maroon-dk via-maroon to-maroon-lt font-sans p-5 overflow-hidden">
@@ -150,6 +169,20 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
               </div>
             )}
 
+            {seedMessage && !displayError && (
+              <div className="bg-[#1A6B3A20] border border-[#1A6B3A40] rounded-xl px-4 py-3 mb-5 flex items-start gap-2.5">
+                <span className="text-lg shrink-0">✓</span>
+                <div>
+                  <div className="text-[#7EE8B5] font-semibold text-sm">
+                    พร้อมใช้งานใน Emulator
+                  </div>
+                  <div className="text-[#7EE8B5]/80 text-[13px] mt-0.5">
+                    {seedMessage}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Loading state (handling LINE callback) */}
             {loading && (
               <div className="text-center py-5">
@@ -180,13 +213,22 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
 
                 {/* Dev Login (emulator mode only) */}
                 {USE_EMULATORS && (
-                  <button
-                    className={`login-dev-btn w-full p-3.5 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
-                    onClick={handleDevLogin}
-                    disabled={devLoading}
-                  >
-                    🔧 {devLoading ? "กำลังเข้าสู่ระบบ..." : "Dev Login (Emulator)"}
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      className={`login-dev-btn w-full p-3.5 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                      onClick={handleDevLogin}
+                      disabled={devLoading || seedLoading}
+                    >
+                      🔧 {devLoading ? "กำลังเข้า..." : "Dev Login"}
+                    </button>
+                    <button
+                      className={`login-seed-btn w-full p-3.5 bg-gold-lt/8 border border-dashed border-gold-lt/25 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/65 ${seedLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                      onClick={handleSeedData}
+                      disabled={devLoading || seedLoading}
+                    >
+                      🌱 {seedLoading ? "กำลัง seed..." : "Seed Data"}
+                    </button>
+                  </div>
                 )}
               </>
             )}
