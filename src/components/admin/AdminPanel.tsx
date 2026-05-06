@@ -94,6 +94,14 @@ function getAdminGroupForSection(section: AdminSectionId): AdminNavGroup {
   );
 }
 
+function AdminNavBadge({ count }: { count: number }) {
+  return (
+    <span className="absolute top-[3px] right-[3px] flex h-5 min-w-5 items-center justify-center rounded-full bg-red px-1.5 text-xs font-bold leading-none text-white shadow-red-glow">
+      {count}
+    </span>
+  );
+}
+
 /* ─── Admin Panel (main container) ─────────────────────────────── */
 export default function AdminPanel({
   allLeaves,
@@ -257,11 +265,7 @@ export default function AdminPanel({
                 <span className="min-w-0 truncate text-sm font-bold">
                   {group.label}
                 </span>
-                {pendingCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red text-white text-xs font-bold px-1.5 py-px rounded-[10px] min-w-4 text-center shadow-red-glow">
-                    {pendingCount}
-                  </span>
-                )}
+                {pendingCount > 0 && <AdminNavBadge count={pendingCount} />}
               </button>
             );
           })}
@@ -290,11 +294,7 @@ export default function AdminPanel({
                   stroke={active ? 2.4 : 2}
                 />
                 <span>{item.label}</span>
-                {pendingCount > 0 && (
-                  <span className="absolute top-[3px] right-[3px] bg-red text-white text-xs font-bold px-1.5 py-px rounded-[10px] min-w-4 text-center">
-                    {pendingCount}
-                  </span>
-                )}
+                {pendingCount > 0 && <AdminNavBadge count={pendingCount} />}
               </button>
             );
           })}
