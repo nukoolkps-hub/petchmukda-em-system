@@ -43,6 +43,30 @@ export function subscribePendingAdvances(onChange, onError) {
   );
 }
 
+/* ─── Subscribe advances by status + payroll month ─────────── */
+export function subscribeAdvancesByStatusAndMonth(
+  status,
+  ym,
+  onChange,
+  onError,
+) {
+  return onSnapshot(
+    query(
+      ref,
+      where("status", "==", status),
+      where("month", "==", ym),
+      orderBy("submittedAt", "desc"),
+    ),
+    (snap) => onChange(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    onError,
+  );
+}
+
+/* ─── Subscribe approved advances for a payroll month ───────── */
+export function subscribeApprovedAdvancesByMonth(ym, onChange, onError) {
+  return subscribeAdvancesByStatusAndMonth("approved", ym, onChange, onError);
+}
+
 /* ─── Subscribe advances for specific employee ───────────────── */
 export function subscribeAdvancesByEmployeeId(employeeId, onChange, onError) {
   return onSnapshot(

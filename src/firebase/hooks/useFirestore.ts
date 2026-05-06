@@ -4,8 +4,17 @@
    - return { data, loading, error }
    - cleanup on unmount                                          */
 import { useEffect, useState, type DependencyList } from "react";
-import { subscribeAdvances, subscribeAdvancesByEmployeeId } from "../advances";
-import { subscribeEmployeeByLineUserId, subscribeEmployees } from "../employees";
+import {
+  subscribeAdvances,
+  subscribeAdvancesByEmployeeId,
+  subscribeAdvancesByStatusAndMonth,
+  subscribeApprovedAdvancesByMonth,
+  subscribePendingAdvances,
+} from "../advances";
+import {
+  subscribeEmployeeByLineUserId,
+  subscribeEmployees,
+} from "../employees";
 import { subscribeLeaves, subscribeLeavesByEmployeeId } from "../leaves";
 import { subscribePayrollConfirms } from "../payrollConfirms";
 import { subscribeRoles } from "../roles";
@@ -119,6 +128,10 @@ export const useEmployees = makeSubscriptionHook(
 );
 export const useLeaves = makeSubscriptionHook(subscribeLeaves, [] as any[]);
 export const useAdvances = makeSubscriptionHook(subscribeAdvances, [] as any[]);
+export const usePendingAdvances = makeSubscriptionHook(
+  subscribePendingAdvances,
+  [] as any[],
+);
 export const useRoles = makeSubscriptionHook(subscribeRoles, [] as any[]);
 
 // salaries และ payrollConfirms ใช้ object format
@@ -182,7 +195,7 @@ export function useAdvancesForScope({
 }) {
   return useScopedSubscription(
     () => {
-      if (isAdmin) return subscribeAdvances;
+      if (isAdmin) return subscribePendingAdvances;
       if (employeeId) {
         return (onChange, onError) =>
           subscribeAdvancesByEmployeeId(employeeId, onChange, onError);
@@ -191,6 +204,38 @@ export function useAdvancesForScope({
     },
     [] as any[],
     [isAdmin, employeeId],
+  );
+}
+
+export function useAdvancesByStatusAndMonth({
+  status,
+  ym,
+  enabled = true,
+}: {
+  status: "pending" | "approved" | "rejected" | null;
+  ym: string;
+  enabled?: boolean;
+}) {
+  return useScopedSubscription(
+    () => {
+      if (!enabled || !status || !ym) return null;
+      return (onChange, onError) =>
+        subscribeAdvancesByStatusAndMonth(status, ym, onChange, onError);
+    },
+    [] as any[],
+    [enabled, status, ym],
+  );
+}
+
+export function useApprovedAdvancesByMonth(ym: string | null) {
+  return useScopedSubscription(
+    () => {
+      if (!ym) return null;
+      return (onChange, onError) =>
+        subscribeApprovedAdvancesByMonth(ym, onChange, onError);
+    },
+    [] as any[],
+    [ym],
   );
 }
 

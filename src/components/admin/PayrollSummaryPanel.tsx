@@ -1,6 +1,7 @@
 import { IconCheck, IconCopy, IconSearch } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { C, TH_MONTHS } from "../../constants";
+import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { TH_NUMBER } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import { calcSalary, computePoolSharesForGroup } from "../../utils/salaryUtils";
@@ -25,6 +26,9 @@ export default function PayrollSummaryPanel({
   );
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selMonth);
+  const advanceDataBlocked =
+    monthlyApprovedAdvances.loading || Boolean(monthlyApprovedAdvances.error);
 
   function copyToClipboard(text, key) {
     if (!text) return;
@@ -76,12 +80,9 @@ export default function PayrollSummaryPanel({
         );
         const overInfo = getOverQuotaDays(monthLeaves);
         const totalLeaveDays = countWeekdayLeaves(monthLeaves);
-        const monthApprovedAdvances = (advanceRequests || []).filter(
-          (r) =>
-            r.empId === emp.id &&
-            r.month === selMonth &&
-            r.status === "approved",
-        );
+        const monthApprovedAdvances = (
+          monthlyApprovedAdvances.data || []
+        ).filter((r) => r.empId === emp.id);
         const approvedAdvanceTotal = monthApprovedAdvances.reduce(
           (s, r) => s + r.amount,
           0,
@@ -120,7 +121,14 @@ export default function PayrollSummaryPanel({
         };
       })
       .filter((r) => r.calc);
-  }, [empDir, roles, salaryData, selMonth, allLeaves, advanceRequests]);
+  }, [
+    empDir,
+    roles,
+    salaryData,
+    selMonth,
+    allLeaves,
+    monthlyApprovedAdvances.data,
+  ]);
 
   // filter by search
   const filtered = search.trim()
@@ -171,6 +179,18 @@ export default function PayrollSummaryPanel({
           })}
         </select>
       </div>
+
+      {monthlyApprovedAdvances.loading && (
+        <div className="mb-3.5 px-3.5 py-2.5 rounded-[10px] bg-cream border border-bdr text-sm text-txt-soft">
+          กำลังโหลดข้อมูลเบิกเงินเดือนนี้...
+        </div>
+      )}
+
+      {monthlyApprovedAdvances.error && (
+        <div className="mb-3.5 px-3.5 py-2.5 rounded-[10px] bg-red-lt border border-red/25 text-sm text-red">
+          โหลดข้อมูลเบิกเงินเดือนนี้ไม่สำเร็จ
+        </div>
+      )}
 
       {/* grand total card */}
       <div className="bg-linear-135 from-maroon-dk to-maroon rounded-2xl px-5 pt-4.5 pb-5 mb-3.5 text-white shadow-[0_6px_20px_var(--color-maroon)/0.25] relative overflow-hidden">
@@ -234,9 +254,7 @@ export default function PayrollSummaryPanel({
                   >
                     {isStale ? "ข้อมูลเปลี่ยนหลังยืนยัน" : "ยืนยันยอดเรียบร้อยแล้ว"}
                   </div>
-                  <div className="text-xs text-txt-soft mt-0.5">
-                    📅 {dtStr}
-                  </div>
+                  <div className="text-xs text-txt-soft mt-0.5">📅 {dtStr}</div>
                 </div>
               </div>
               {isStale ? (
@@ -253,6 +271,7 @@ export default function PayrollSummaryPanel({
                   </div>
                   <button
                     onClick={async () => {
+                      if (advanceDataBlocked) return;
                       try {
                         await onSetPayrollConfirm(selMonth, {
                           confirmedAt: new Date().toISOString(),
@@ -265,7 +284,8 @@ export default function PayrollSummaryPanel({
                         showToast?.("ยืนยันยอดไม่สำเร็จ");
                       }
                     }}
-                    className="w-full py-[11px] rounded-[10px] border-none text-sm font-bold cursor-pointer font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640]"
+                    disabled={advanceDataBlocked}
+                    className={`w-full py-[11px] rounded-[10px] border-none text-sm font-bold font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640] ${advanceDataBlocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     🔄 ยืนยันยอดใหม่
                   </button>
@@ -283,6 +303,7 @@ export default function PayrollSummaryPanel({
         return (
           <button
             onClick={async () => {
+              if (advanceDataBlocked) return;
               if (
                 !confirm(
                   `ยืนยันการโอนเงินเดือนเดือนนี้?\n\nยอดรวม ฿${TH_NUMBER(totalForMonth)}\nจำนวน ${empCountForMonth} คน\n\nคุณยังสามารถแก้ไขข้อมูลภายหลังได้`,
@@ -301,7 +322,8 @@ export default function PayrollSummaryPanel({
                 showToast?.("ยืนยันยอดไม่สำเร็จ");
               }
             }}
-            className="w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2"
+            disabled={advanceDataBlocked}
+            className={`w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2 ${advanceDataBlocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
           >
             <IconCheck size={18} stroke={2.5} />
             ยืนยันยอดก่อนโอนเงิน

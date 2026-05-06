@@ -1,6 +1,7 @@
 import { IconCheck } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { C, TH_MONTHS } from "../../constants";
+import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { TH_NUMBER } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import { calcSalary, computePoolSharesForGroup } from "../../utils/salaryUtils";
@@ -24,6 +25,7 @@ export default function SalaryAdminEdit({
   );
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
+  const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selMonth);
 
   const empInfo = empDir.find((e) => e.id === selEmp);
   const empRole = roles?.find((r) => r.id === empInfo?.roleId);
@@ -72,9 +74,8 @@ export default function SalaryAdminEdit({
   const overInfo = getOverQuotaDays(monthLeaves);
   const overTotalDays = overInfo.weekdays + overInfo.sundays;
   const totalLeaveDays = countWeekdayLeaves(monthLeaves);
-  const monthApprovedAdvances = (advanceRequests || []).filter(
-    (r) =>
-      r.empId === selEmp && r.month === selMonth && r.status === "approved",
+  const monthApprovedAdvances = (monthlyApprovedAdvances.data || []).filter(
+    (r) => r.empId === selEmp,
   );
   const approvedAdvanceTotal = monthApprovedAdvances.reduce(
     (s, r) => s + r.amount,
@@ -551,9 +552,7 @@ export default function SalaryAdminEdit({
           {/* Special — ใครขายใครได้ ไม่ขึ้นกับ poolExclude */}
           <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-txt">
-                ✨ ขาย (พิเศษ)
-              </div>
+              <div className="text-sm font-bold text-txt">✨ ขาย (พิเศษ)</div>
               <div className="text-xs text-txt-soft">
                 Rate:{" "}
                 <b className="text-maroon">
@@ -656,9 +655,7 @@ export default function SalaryAdminEdit({
         {/* Invite */}
         <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-bold text-txt">
-              🎫 เชิญชวนสมัครบัตร
-            </div>
+            <div className="text-sm font-bold text-txt">🎫 เชิญชวนสมัครบัตร</div>
             <div className="text-xs text-txt-soft">
               Rate:{" "}
               <b className="text-maroon">

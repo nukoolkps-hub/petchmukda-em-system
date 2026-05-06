@@ -103,9 +103,13 @@ export default function useLineNotifications({
   }
 
   /* ─── Admin update advance (approve/reject) ────────────────── */
-  async function adminUpdateAdvance(reqId: string | number, updates: any) {
+  async function adminUpdateAdvance(
+    reqId: string | number,
+    updates: any,
+    currentRequest?: AdvanceRequest,
+  ) {
     // หา request ปัจจุบันเพื่อใช้ส่ง LINE
-    const req = advanceRequests.find((r) => r.id === reqId);
+    const req = currentRequest || advanceRequests.find((r) => r.id === reqId);
     if (!req) return;
 
     // เรียก action ที่เหมาะสม (รองรับทั้ง in-memory และ Firebase)

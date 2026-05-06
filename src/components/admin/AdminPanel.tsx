@@ -3,7 +3,6 @@ import {
   IconCashBanknote,
   IconChartBar,
   IconCheck,
-  IconChevronDown,
   IconClipboardList,
   IconCoins,
   IconCopy,
@@ -14,6 +13,7 @@ import {
   IconTag,
   IconTrash,
   IconUsers,
+  IconX,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { C, LEAVE_TYPES, TH_MONTHS } from "../../constants";
@@ -21,6 +21,7 @@ import { fmtDate, isPast } from "../../utils/dateUtils";
 import ConfirmModal from "../modals/ConfirmModal";
 import SalaryAdminEdit from "../salary/SalaryAdminEdit";
 import AvatarCircle from "../shared/AvatarCircle";
+import BaseModal from "../shared/BaseModal";
 import AdminAdvancePanel from "./AdminAdvancePanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
 import RolesAdminPanel from "./RolesAdminPanel";
@@ -157,7 +158,7 @@ export default function AdminPanel({
   const [filterEmp, setFilterEmp] = useState("");
   const [filterType, setFilterType] = useState("");
   const [editingRole, setEditingRole] = useState({});
-  const [expandedEmpId, setExpandedEmpId] = useState<string | null>(null);
+  const [editingEmpId, setEditingEmpId] = useState<string | null>(null);
   const [copiedLineId, setCopiedLineId] = useState(null);
 
   function copyLineId(text, empId) {
@@ -246,7 +247,7 @@ export default function AdminPanel({
                 type="button"
                 aria-pressed={active}
                 onClick={() => tryChangeGroup(group)}
-                className={`relative min-w-0 px-2 py-2.5 rounded-[11px] cursor-pointer font-[inherit] transition-all duration-200 flex items-center justify-center gap-1.5 border ${active ? "bg-white text-maroon border-[#C9973A60] shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft border-transparent"}`}
+                className={`relative min-w-0 px-2 py-2.5 rounded-[11px] cursor-pointer font-[inherit] transition-all duration-200 flex items-center justify-center gap-1.5 border ${active ? "bg-white text-maroon border-[#C9973A60] shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft border-[#C9973A30] hover:border-[#C9973A50]"}`}
               >
                 <Icon
                   size={16}
@@ -266,6 +267,8 @@ export default function AdminPanel({
           })}
         </div>
 
+        <div className="h-px bg-[#C9973A30]" />
+
         <div className="flex flex-wrap gap-1.5">
           {activeGroup.items.map((item) => {
             const Icon = item.Icon;
@@ -279,7 +282,7 @@ export default function AdminPanel({
                 type="button"
                 aria-pressed={active}
                 onClick={() => tryChangeSection(item.id)}
-                className={`relative min-w-[96px] flex-1 px-2.5 py-[9px] rounded-[10px] border-none cursor-pointer font-[inherit] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap ${active ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
+                className={`relative min-w-[96px] flex-1 px-2.5 py-[9px] rounded-[10px] border cursor-pointer font-[inherit] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap ${active ? "bg-white text-maroon border-[#C9973A60] shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft border-[#C9973A30] hover:border-[#C9973A50]"}`}
               >
                 <Icon
                   size={16}
@@ -732,20 +735,8 @@ export default function AdminPanel({
       {section === "roles" && (
         <div>
           <div className="flex items-center justify-between mb-3.5 gap-2">
-            <div className="text-sm text-txt-soft">กดที่ชื่อพนักงานเพื่อแก้ไข</div>
-            <div className="flex gap-1.5">
-              <button
-                onClick={() => setExpandedEmpId("__ALL__")}
-                className="px-2.5 py-[5px] rounded-lg border border-bdr bg-white text-maroon text-xs font-semibold cursor-pointer font-[inherit]"
-              >
-                ขยายทั้งหมด
-              </button>
-              <button
-                onClick={() => setExpandedEmpId(null)}
-                className="px-2.5 py-[5px] rounded-lg border border-bdr bg-white text-txt-mid text-xs font-semibold cursor-pointer font-[inherit]"
-              >
-                ย่อทั้งหมด
-              </button>
+            <div className="text-sm text-txt-soft">
+              กดที่ชื่อพนักงานเพื่อเปิดหน้าต่างแก้ไข
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -769,45 +760,53 @@ export default function AdminPanel({
                 eBase !== undefined ||
                 eSalDis !== undefined ||
                 ePoolExc !== undefined;
-              const saveAll = () => {
+              const saveAll = async () => {
                 if (eRN !== undefined)
-                  onUpdateRole(
+                  await onUpdateRole(
                     emp.id,
                     "ratePerPieceNormal",
                     parseFloat(eRN) || 0,
                   );
                 if (eRS !== undefined)
-                  onUpdateRole(
+                  await onUpdateRole(
                     emp.id,
                     "ratePerPieceSpecial",
                     parseFloat(eRS) || 0,
                   );
                 if (eRB !== undefined)
-                  onUpdateRole(emp.id, "ratePerPieceBuy", parseFloat(eRB) || 0);
+                  await onUpdateRole(
+                    emp.id,
+                    "ratePerPieceBuy",
+                    parseFloat(eRB) || 0,
+                  );
                 if (eRI !== undefined)
-                  onUpdateRole(
+                  await onUpdateRole(
                     emp.id,
                     "ratePerPieceInvite",
                     parseFloat(eRI) || 0,
                   );
                 if (eRT !== undefined)
-                  onUpdateRole(
+                  await onUpdateRole(
                     emp.id,
                     "ratePerPieceTransfer",
                     parseFloat(eRT) || 0,
                   );
                 if (eRSingle !== undefined)
-                  onUpdateRole(
+                  await onUpdateRole(
                     emp.id,
                     "ratePerPiece",
                     parseFloat(eRSingle) || 0,
                   );
                 if (eBase !== undefined)
-                  onUpdateRole(emp.id, "baseSalary", parseFloat(eBase) || 0);
+                  await onUpdateRole(
+                    emp.id,
+                    "baseSalary",
+                    parseFloat(eBase) || 0,
+                  );
                 if (eSalDis !== undefined)
-                  onUpdateRole(emp.id, "salaryDisabled", eSalDis);
+                  await onUpdateRole(emp.id, "salaryDisabled", eSalDis);
                 if (ePoolExc !== undefined)
-                  onUpdateRole(emp.id, "poolExclude", ePoolExc || null);
+                  await onUpdateRole(emp.id, "poolExclude", ePoolExc || null);
                 setEditingRole((r) => {
                   const n = { ...r };
                   delete n[`${emp.id}_rN`];
@@ -821,8 +820,9 @@ export default function AdminPanel({
                   delete n[`${emp.id}_poolExc`];
                   return n;
                 });
+                setEditingEmpId(null);
               };
-              const cancelAll = () => {
+              const cancelAll = (closeModal = false) => {
                 setEditingRole((r) => {
                   const n = { ...r };
                   delete n[`${emp.id}_rN`];
@@ -836,25 +836,18 @@ export default function AdminPanel({
                   delete n[`${emp.id}_poolExc`];
                   return n;
                 });
+                if (closeModal) setEditingEmpId(null);
               };
-              const isExpanded =
-                expandedEmpId === emp.id || expandedEmpId === "__ALL__";
               const empR = roles?.find((r) => r.id === emp.roleId);
               return (
                 <div
                   key={emp.id}
                   className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(90,30,10,0.06)] border border-bdr overflow-hidden transition-all duration-200"
                 >
-                  {/* Clickable header */}
-                  <div
-                    onClick={() => {
-                      if (expandedEmpId === "__ALL__") {
-                        setExpandedEmpId(null);
-                      } else {
-                        setExpandedEmpId(isExpanded ? null : emp.id);
-                      }
-                    }}
-                    className={`flex items-center gap-3 px-3.5 py-3 cursor-pointer ${isExpanded ? "bg-cream border-b border-bdr" : ""}`}
+                  <button
+                    type="button"
+                    onClick={() => setEditingEmpId(emp.id)}
+                    className="w-full flex items-center gap-3 px-3.5 py-3 cursor-pointer border-0 bg-white text-left font-[inherit] transition-colors duration-200 hover:bg-cream/70"
                   >
                     <AvatarCircle
                       av={emp.av}
@@ -895,218 +888,462 @@ export default function AdminPanel({
                         )}
                       </div>
                     </div>
-                    {dirty && !isExpanded && (
+                    {dirty && (
                       <span className="px-2 py-0.5 rounded-lg text-xs font-bold bg-[#D9770630] text-amber">
                         มีการแก้ไข
                       </span>
                     )}
-                    <IconChevronDown
+                    <IconSettings
                       size={16}
                       color={C.textSoft}
                       stroke={2.2}
-                      className={`shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : "rotate-0"}`}
+                      className="shrink-0"
                     />
-                  </div>
+                  </button>
 
-                  {/* Expandable content */}
-                  {isExpanded && (
-                    <div className="px-4 py-3.5">
-                      {/* Role — read-only (แก้จากแท็บ "ตำแหน่ง") */}
-                      <div className="mb-2.5 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
-                        <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
-                          <span>👤 ตำแหน่ง</span>
-                          <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
-                            แก้ในแท็บ "ตำแหน่ง"
-                          </span>
-                        </div>
-                        <div
-                          className={`text-sm font-bold ${emp.role && emp.role !== "-" ? "text-txt" : "text-txt-soft italic"}`}
-                        >
-                          {emp.role && emp.role !== "-"
-                            ? emp.role
-                            : "ยังไม่กำหนดตำแหน่ง"}
-                        </div>
-                      </div>
-                      {/* Bank info — read-only (พนักงานเป็นคนกรอกเอง) */}
-                      <div className="mb-3 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
-                        <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
-                          <span>🏦 บัญชีรับเงินเดือน</span>
-                          <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
-                            พนักงานกรอกเอง
-                          </span>
-                        </div>
-                        {emp.bank || emp.bankAcc ? (
-                          <>
-                            <div className="text-sm font-bold text-txt mb-px">
-                              {emp.bank || "-"}
-                            </div>
-                            <div className="text-sm text-txt-mid tracking-wider">
-                              {emp.bankAcc || "-"}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="text-sm text-txt-soft italic">
-                            ยังไม่มีข้อมูลบัญชี
+                  {editingEmpId === emp.id && (
+                    <BaseModal
+                      onClose={() => setEditingEmpId(null)}
+                      maxWidthClass="max-w-[760px]"
+                    >
+                      <div className="sticky top-0 z-10 bg-cream px-5 py-4 border-b border-bdr flex items-center gap-3">
+                        <AvatarCircle
+                          av={emp.av}
+                          avType={emp.avType}
+                          img={emp.img}
+                          size={46}
+                          fontSize={15}
+                          border={`2px solid ${C.gold}40`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-extrabold text-lg text-txt truncate">
+                            {emp.name}
                           </div>
-                        )}
+                          <div className="text-sm text-txt-soft mt-0.5 truncate">
+                            {empR?.icon} {emp.role || "ยังไม่กำหนดตำแหน่ง"}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label="ปิดหน้าต่างแก้ไขพนักงาน"
+                          onClick={() => setEditingEmpId(null)}
+                          className="w-9 h-9 rounded-[10px] border border-bdr bg-white text-txt-mid cursor-pointer flex items-center justify-center"
+                        >
+                          <IconX size={18} stroke={2.3} />
+                        </button>
                       </div>
-
-                      {/* LINE User ID — read-only, copy only */}
-                      <div className="mb-3">
-                        <label className="text-xs text-txt-soft font-semibold mb-1 flex items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1">
-                            💬 LINE User ID
-                            {emp.lineUserId ? (
-                              <span className="text-xs px-1.5 py-px rounded-lg bg-[#06C75520] text-[#06A04E] font-bold">
-                                เชื่อมแล้ว
-                              </span>
-                            ) : (
-                              <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">
-                                ยังไม่เชื่อม
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
-                            อ่านอย่างเดียว
-                          </span>
-                        </label>
-                        {emp.lineUserId ? (
-                          <button
-                            onClick={() => copyLineId(emp.lineUserId, emp.id)}
-                            className={`w-full px-3 py-[9px] rounded-[9px] bg-cream cursor-pointer font-[inherit] flex items-center gap-2 transition-all duration-200 border ${copiedLineId === emp.id ? "border-green" : "border-bdr"}`}
-                          >
-                            <span className="flex-1 text-left text-sm text-txt font-[Prompt,monospace] tracking-[0.02em] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
-                              {emp.lineUserId}
+                      <div className="px-4 py-3.5">
+                        {/* Role — read-only (แก้จากแท็บ "ตำแหน่ง") */}
+                        <div className="mb-2.5 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
+                          <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
+                            <span>👤 ตำแหน่ง</span>
+                            <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
+                              แก้ในแท็บ "ตำแหน่ง"
                             </span>
-                            <span
-                              className={`flex items-center gap-1 px-[9px] py-1 rounded-[7px] text-xs font-bold whitespace-nowrap transition-all duration-200 ${copiedLineId === emp.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
-                            >
-                              {copiedLineId === emp.id ? (
-                                <>
-                                  <IconCheck size={12} stroke={3} />
-                                  คัดลอกแล้ว
-                                </>
+                          </div>
+                          <div
+                            className={`text-sm font-bold ${emp.role && emp.role !== "-" ? "text-txt" : "text-txt-soft italic"}`}
+                          >
+                            {emp.role && emp.role !== "-"
+                              ? emp.role
+                              : "ยังไม่กำหนดตำแหน่ง"}
+                          </div>
+                        </div>
+                        {/* Bank info — read-only (พนักงานเป็นคนกรอกเอง) */}
+                        <div className="mb-3 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
+                          <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
+                            <span>🏦 บัญชีรับเงินเดือน</span>
+                            <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
+                              พนักงานกรอกเอง
+                            </span>
+                          </div>
+                          {emp.bank || emp.bankAcc ? (
+                            <>
+                              <div className="text-sm font-bold text-txt mb-px">
+                                {emp.bank || "-"}
+                              </div>
+                              <div className="text-sm text-txt-mid tracking-wider">
+                                {emp.bankAcc || "-"}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-sm text-txt-soft italic">
+                              ยังไม่มีข้อมูลบัญชี
+                            </div>
+                          )}
+                        </div>
+
+                        {/* LINE User ID — read-only, copy only */}
+                        <div className="mb-3">
+                          <label className="text-xs text-txt-soft font-semibold mb-1 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1">
+                              💬 LINE User ID
+                              {emp.lineUserId ? (
+                                <span className="text-xs px-1.5 py-px rounded-lg bg-[#06C75520] text-[#06A04E] font-bold">
+                                  เชื่อมแล้ว
+                                </span>
                               ) : (
-                                <>
-                                  <IconCopy size={12} stroke={2.2} />
-                                  คัดลอก
-                                </>
+                                <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">
+                                  ยังไม่เชื่อม
+                                </span>
                               )}
                             </span>
-                          </button>
-                        ) : (
-                          <div className="px-3 py-2.5 rounded-[9px] border border-dashed border-bdr bg-cream text-sm text-txt-soft italic text-center">
-                            — ยังไม่ได้เชื่อมต่อ LINE —
+                            <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
+                              อ่านอย่างเดียว
+                            </span>
+                          </label>
+                          {emp.lineUserId ? (
+                            <button
+                              onClick={() => copyLineId(emp.lineUserId, emp.id)}
+                              className={`w-full px-3 py-[9px] rounded-[9px] bg-cream cursor-pointer font-[inherit] flex items-center gap-2 transition-all duration-200 border ${copiedLineId === emp.id ? "border-green" : "border-bdr"}`}
+                            >
+                              <span className="flex-1 text-left text-sm text-txt font-[Prompt,monospace] tracking-[0.02em] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+                                {emp.lineUserId}
+                              </span>
+                              <span
+                                className={`flex items-center gap-1 px-[9px] py-1 rounded-[7px] text-xs font-bold whitespace-nowrap transition-all duration-200 ${copiedLineId === emp.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
+                              >
+                                {copiedLineId === emp.id ? (
+                                  <>
+                                    <IconCheck size={12} stroke={3} />
+                                    คัดลอกแล้ว
+                                  </>
+                                ) : (
+                                  <>
+                                    <IconCopy size={12} stroke={2.2} />
+                                    คัดลอก
+                                  </>
+                                )}
+                              </span>
+                            </button>
+                          ) : (
+                            <div className="px-3 py-2.5 rounded-[9px] border border-dashed border-bdr bg-cream text-sm text-txt-soft italic text-center">
+                              — ยังไม่ได้เชื่อมต่อ LINE —
+                            </div>
+                          )}
+                          <div className="text-xs text-txt-soft mt-[3px] leading-normal">
+                            💡 ID จะถูกเก็บอัตโนมัติเมื่อพนักงานเข้าสู่ระบบผ่าน LINE
                           </div>
-                        )}
-                        <div className="text-xs text-txt-soft mt-[3px] leading-normal">
-                          💡 ID จะถูกเก็บอัตโนมัติเมื่อพนักงานเข้าสู่ระบบผ่าน LINE
                         </div>
-                      </div>
 
-                      {/* Base Salary */}
-                      <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-                        <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
-                          💼 เงินเดือนพื้นฐาน
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
-                            ฿
-                          </span>
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            min="0"
-                            value={
-                              eBase !== undefined ? eBase : emp.baseSalary || 0
-                            }
-                            onChange={(e) =>
-                              setEditingRole((r) => ({
-                                ...r,
-                                [`${emp.id}_base`]: e.target.value,
-                              }))
-                            }
-                            className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${eBase !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
-                          />
+                        {/* Base Salary */}
+                        <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                          <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
+                            💼 เงินเดือนพื้นฐาน
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
+                              ฿
+                            </span>
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min="0"
+                              value={
+                                eBase !== undefined
+                                  ? eBase
+                                  : emp.baseSalary || 0
+                              }
+                              onChange={(e) =>
+                                setEditingRole((r) => ({
+                                  ...r,
+                                  [`${emp.id}_base`]: e.target.value,
+                                }))
+                              }
+                              className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${eBase !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                            />
+                          </div>
+                          <div className="text-xs text-txt-soft mt-[3px]">
+                            หน่วย: บาท/เดือน
+                          </div>
                         </div>
-                        <div className="text-xs text-txt-soft mt-[3px]">
-                          หน่วย: บาท/เดือน
-                        </div>
-                      </div>
 
-                      {/* Disable Salary toggle */}
-                      {(() => {
-                        const cur =
-                          eSalDis !== undefined
-                            ? eSalDis
-                            : !!emp.salaryDisabled;
-                        return (
-                          <div
-                            className={`px-3 py-2.5 rounded-[10px] mb-2.5 border-[1.5px] ${cur ? "bg-red-lt border-[#C0392B50]" : "bg-cream border-bdr"}`}
-                          >
-                            <label className="flex items-center gap-2.5 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={cur}
-                                onChange={(e) =>
-                                  setEditingRole((r) => ({
-                                    ...r,
-                                    [`${emp.id}_salDis`]: e.target.checked,
-                                  }))
-                                }
-                                className="w-4 h-4 cursor-pointer accent-red"
-                              />
-                              <div className="flex-1">
-                                <div
-                                  className={`text-sm font-bold ${cur ? "text-red" : "text-txt"}`}
-                                >
-                                  🔒 ปิดสิทธิ์ระบบเงินเดือน
+                        {/* Disable Salary toggle */}
+                        {(() => {
+                          const cur =
+                            eSalDis !== undefined
+                              ? eSalDis
+                              : !!emp.salaryDisabled;
+                          return (
+                            <div
+                              className={`px-3 py-2.5 rounded-[10px] mb-2.5 border-[1.5px] ${cur ? "bg-red-lt border-[#C0392B50]" : "bg-cream border-bdr"}`}
+                            >
+                              <label className="flex items-center gap-2.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={cur}
+                                  onChange={(e) =>
+                                    setEditingRole((r) => ({
+                                      ...r,
+                                      [`${emp.id}_salDis`]: e.target.checked,
+                                    }))
+                                  }
+                                  className="w-4 h-4 cursor-pointer accent-red"
+                                />
+                                <div className="flex-1">
+                                  <div
+                                    className={`text-sm font-bold ${cur ? "text-red" : "text-txt"}`}
+                                  >
+                                    🔒 ปิดสิทธิ์ระบบเงินเดือน
+                                  </div>
+                                  <div className="text-xs text-txt-soft mt-0.5 leading-normal">
+                                    ซ่อนแท็บ "เงินเดือน" จากพนักงาน · ใช้ได้แค่ระบบลา
+                                  </div>
                                 </div>
-                                <div className="text-xs text-txt-soft mt-0.5 leading-normal">
-                                  ซ่อนแท็บ "เงินเดือน" จากพนักงาน · ใช้ได้แค่ระบบลา
+                              </label>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Commission rates per piece */}
+                        {(() => {
+                          const empR = roles?.find((r) => r.id === emp.roleId);
+                          const isSingle = empR && !empR.poolGroup;
+                          const eRSingle = editingRole[`${emp.id}_rSingle`];
+                          if (isSingle) {
+                            return (
+                              <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                                <div className="text-sm font-bold text-maroon mb-2">
+                                  💰 Rate ค่าคอมต่อชิ้น
+                                </div>
+                                <div className="flex gap-2">
+                                  <div className="flex-1">
+                                    <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                                      📦 ค่าคอมต่อชิ้น
+                                    </label>
+                                    <input
+                                      type="number"
+                                      inputMode="decimal"
+                                      min="0"
+                                      value={
+                                        eRSingle !== undefined
+                                          ? eRSingle
+                                          : emp.ratePerPiece || 0
+                                      }
+                                      onChange={(e) =>
+                                        setEditingRole((r) => ({
+                                          ...r,
+                                          [`${emp.id}_rSingle`]: e.target.value,
+                                        }))
+                                      }
+                                      className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRSingle !== undefined ? "border-gold" : "border-bdr"}`}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="text-xs text-txt-soft text-center mt-1.5">
+                                  หน่วย: ฿/ชิ้น
+                                </div>
+
+                                <div className="h-px my-2.5 bg-[#C9973A30]" />
+                                <div className="text-xs font-bold text-maroon mb-2">
+                                  🎫 Rate บัตรสมาชิกต่อใบ
+                                </div>
+                                <div className="flex gap-2">
+                                  <div className="flex-1">
+                                    <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                                      🎫 เชิญชวนสมัคร
+                                    </label>
+                                    <input
+                                      type="number"
+                                      inputMode="decimal"
+                                      min="0"
+                                      value={
+                                        eRI !== undefined
+                                          ? eRI
+                                          : emp.ratePerPieceInvite || 0
+                                      }
+                                      onChange={(e) =>
+                                        setEditingRole((r) => ({
+                                          ...r,
+                                          [`${emp.id}_rI`]: e.target.value,
+                                        }))
+                                      }
+                                      className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRI !== undefined ? "border-gold" : "border-bdr"}`}
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                                      🔄 ย้ายข้อมูล
+                                    </label>
+                                    <input
+                                      type="number"
+                                      inputMode="decimal"
+                                      min="0"
+                                      value={
+                                        eRT !== undefined
+                                          ? eRT
+                                          : emp.ratePerPieceTransfer || 0
+                                      }
+                                      onChange={(e) =>
+                                        setEditingRole((r) => ({
+                                          ...r,
+                                          [`${emp.id}_rT`]: e.target.value,
+                                        }))
+                                      }
+                                      className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRT !== undefined ? "border-gold" : "border-bdr"}`}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="text-xs text-txt-soft text-center mt-1.5">
+                                  หน่วย: ฿/ใบ
                                 </div>
                               </div>
-                            </label>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Commission rates per piece */}
-                      {(() => {
-                        const empR = roles?.find((r) => r.id === emp.roleId);
-                        const isSingle = empR && !empR.poolGroup;
-                        const eRSingle = editingRole[`${emp.id}_rSingle`];
-                        if (isSingle) {
+                            );
+                          }
                           return (
                             <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                              {/* Exclude from Pool — 3 levels (only for pool-group roles) */}
+                              {empR?.poolGroup &&
+                                (() => {
+                                  const cur =
+                                    ePoolExc !== undefined
+                                      ? ePoolExc
+                                      : emp.poolExclude || "";
+                                  const opts = [
+                                    {
+                                      id: "",
+                                      label: "ไม่ปิด",
+                                      icon: "✅",
+                                      desc: "ใช้กฎ 80% ปกติทั้ง 2 ฝั่ง",
+                                    },
+                                    {
+                                      id: "sell",
+                                      label: "ปิดฝั่งขาย",
+                                      icon: "💎",
+                                      desc: "ไม่ได้ Pool ขาย · รับซื้อยังใช้กฎ 80%",
+                                    },
+                                    {
+                                      id: "buy",
+                                      label: "ปิดฝั่งรับซื้อ",
+                                      icon: "🛍",
+                                      desc: "ไม่ได้ Pool รับซื้อ · ขายยังใช้กฎ 80%",
+                                    },
+                                    {
+                                      id: "both",
+                                      label: "ปิดทั้งคู่",
+                                      icon: "🔒",
+                                      desc: "ไม่ได้ Pool ทั้งหมด · ถ้าขาย < 50% ไม่ได้เงินเดือนพื้นฐาน",
+                                    },
+                                  ];
+                                  return (
+                                    <div
+                                      className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${cur ? "bg-[#FDECEA80] border-[#C0392B50]" : "bg-cream border-bdr"}`}
+                                    >
+                                      <div
+                                        className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${cur ? "text-red" : "text-txt"}`}
+                                      >
+                                        🚫 ปิดสิทธิ์ Pool ค่าคอม
+                                      </div>
+                                      <div className="flex flex-col gap-[5px]">
+                                        {opts.map((o) => {
+                                          const active = cur === o.id;
+                                          return (
+                                            <label
+                                              key={o.id}
+                                              className={`flex items-start gap-2 px-2.5 py-[7px] rounded-[7px] cursor-pointer transition-all duration-150 border ${active ? (o.id ? "bg-[#C0392B15] border-[#C0392B40]" : "bg-green-lt border-[#1A6B3A30]") : "bg-transparent border-transparent"}`}
+                                            >
+                                              <input
+                                                type="radio"
+                                                name={`poolExc_${emp.id}`}
+                                                value={o.id}
+                                                checked={active}
+                                                onChange={() =>
+                                                  setEditingRole((r) => ({
+                                                    ...r,
+                                                    [`${emp.id}_poolExc`]: o.id,
+                                                  }))
+                                                }
+                                                className={`mt-0.5 cursor-pointer ${o.id ? "accent-red" : "accent-green"}`}
+                                              />
+                                              <div className="flex-1 min-w-0">
+                                                <div
+                                                  className={`text-sm font-semibold ${active ? (o.id ? "text-red" : "text-green") : "text-txt"}`}
+                                                >
+                                                  {o.icon} {o.label}
+                                                </div>
+                                                <div className="text-xs text-txt-soft mt-px leading-normal">
+                                                  {o.desc}
+                                                </div>
+                                              </div>
+                                            </label>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                               <div className="text-sm font-bold text-maroon mb-2">
                                 💰 Rate ค่าคอมต่อชิ้น
                               </div>
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 mb-2">
                                 <div className="flex-1">
                                   <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                    📦 ค่าคอมต่อชิ้น
+                                    💎 ขาย-ทั่วไป
                                   </label>
                                   <input
                                     type="number"
                                     inputMode="decimal"
                                     min="0"
                                     value={
-                                      eRSingle !== undefined
-                                        ? eRSingle
-                                        : emp.ratePerPiece || 0
+                                      eRN !== undefined
+                                        ? eRN
+                                        : emp.ratePerPieceNormal || 0
                                     }
                                     onChange={(e) =>
                                       setEditingRole((r) => ({
                                         ...r,
-                                        [`${emp.id}_rSingle`]: e.target.value,
+                                        [`${emp.id}_rN`]: e.target.value,
                                       }))
                                     }
-                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRSingle !== undefined ? "border-gold" : "border-bdr"}`}
+                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRN !== undefined ? "border-gold" : "border-bdr"}`}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                                    ✨ ขาย-พิเศษ
+                                  </label>
+                                  <input
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    value={
+                                      eRS !== undefined
+                                        ? eRS
+                                        : emp.ratePerPieceSpecial || 0
+                                    }
+                                    onChange={(e) =>
+                                      setEditingRole((r) => ({
+                                        ...r,
+                                        [`${emp.id}_rS`]: e.target.value,
+                                      }))
+                                    }
+                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRS !== undefined ? "border-gold" : "border-bdr"}`}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                                    🛍 รับซื้อ
+                                  </label>
+                                  <input
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    value={
+                                      eRB !== undefined
+                                        ? eRB
+                                        : emp.ratePerPieceBuy || 0
+                                    }
+                                    onChange={(e) =>
+                                      setEditingRole((r) => ({
+                                        ...r,
+                                        [`${emp.id}_rB`]: e.target.value,
+                                      }))
+                                    }
+                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRB !== undefined ? "border-gold" : "border-bdr"}`}
                                   />
                                 </div>
                               </div>
-                              <div className="text-xs text-txt-soft text-center mt-1.5">
+                              <div className="text-xs text-txt-soft text-center mb-2.5">
                                 หน่วย: ฿/ชิ้น
                               </div>
 
@@ -1165,240 +1402,36 @@ export default function AdminPanel({
                               </div>
                             </div>
                           );
-                        }
-                        return (
-                          <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-                            {/* Exclude from Pool — 3 levels (only for pool-group roles) */}
-                            {empR?.poolGroup &&
-                              (() => {
-                                const cur =
-                                  ePoolExc !== undefined
-                                    ? ePoolExc
-                                    : emp.poolExclude || "";
-                                const opts = [
-                                  {
-                                    id: "",
-                                    label: "ไม่ปิด",
-                                    icon: "✅",
-                                    desc: "ใช้กฎ 80% ปกติทั้ง 2 ฝั่ง",
-                                  },
-                                  {
-                                    id: "sell",
-                                    label: "ปิดฝั่งขาย",
-                                    icon: "💎",
-                                    desc: "ไม่ได้ Pool ขาย · รับซื้อยังใช้กฎ 80%",
-                                  },
-                                  {
-                                    id: "buy",
-                                    label: "ปิดฝั่งรับซื้อ",
-                                    icon: "🛍",
-                                    desc: "ไม่ได้ Pool รับซื้อ · ขายยังใช้กฎ 80%",
-                                  },
-                                  {
-                                    id: "both",
-                                    label: "ปิดทั้งคู่",
-                                    icon: "🔒",
-                                    desc: "ไม่ได้ Pool ทั้งหมด · ถ้าขาย < 50% ไม่ได้เงินเดือนพื้นฐาน",
-                                  },
-                                ];
-                                return (
-                                  <div
-                                    className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${cur ? "bg-[#FDECEA80] border-[#C0392B50]" : "bg-cream border-bdr"}`}
-                                  >
-                                    <div
-                                      className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${cur ? "text-red" : "text-txt"}`}
-                                    >
-                                      🚫 ปิดสิทธิ์ Pool ค่าคอม
-                                    </div>
-                                    <div className="flex flex-col gap-[5px]">
-                                      {opts.map((o) => {
-                                        const active = cur === o.id;
-                                        return (
-                                          <label
-                                            key={o.id}
-                                            className={`flex items-start gap-2 px-2.5 py-[7px] rounded-[7px] cursor-pointer transition-all duration-150 border ${active ? (o.id ? "bg-[#C0392B15] border-[#C0392B40]" : "bg-green-lt border-[#1A6B3A30]") : "bg-transparent border-transparent"}`}
-                                          >
-                                            <input
-                                              type="radio"
-                                              name={`poolExc_${emp.id}`}
-                                              value={o.id}
-                                              checked={active}
-                                              onChange={() =>
-                                                setEditingRole((r) => ({
-                                                  ...r,
-                                                  [`${emp.id}_poolExc`]: o.id,
-                                                }))
-                                              }
-                                              className={`mt-0.5 cursor-pointer ${o.id ? "accent-red" : "accent-green"}`}
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                              <div
-                                                className={`text-sm font-semibold ${active ? (o.id ? "text-red" : "text-green") : "text-txt"}`}
-                                              >
-                                                {o.icon} {o.label}
-                                              </div>
-                                              <div className="text-xs text-txt-soft mt-px leading-normal">
-                                                {o.desc}
-                                              </div>
-                                            </div>
-                                          </label>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                );
-                              })()}
-                            <div className="text-sm font-bold text-maroon mb-2">
-                              💰 Rate ค่าคอมต่อชิ้น
-                            </div>
-                            <div className="flex gap-2 mb-2">
-                              <div className="flex-1">
-                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                  💎 ขาย-ทั่วไป
-                                </label>
-                                <input
-                                  type="number"
-                                  inputMode="decimal"
-                                  min="0"
-                                  value={
-                                    eRN !== undefined
-                                      ? eRN
-                                      : emp.ratePerPieceNormal || 0
-                                  }
-                                  onChange={(e) =>
-                                    setEditingRole((r) => ({
-                                      ...r,
-                                      [`${emp.id}_rN`]: e.target.value,
-                                    }))
-                                  }
-                                  className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRN !== undefined ? "border-gold" : "border-bdr"}`}
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                  ✨ ขาย-พิเศษ
-                                </label>
-                                <input
-                                  type="number"
-                                  inputMode="decimal"
-                                  min="0"
-                                  value={
-                                    eRS !== undefined
-                                      ? eRS
-                                      : emp.ratePerPieceSpecial || 0
-                                  }
-                                  onChange={(e) =>
-                                    setEditingRole((r) => ({
-                                      ...r,
-                                      [`${emp.id}_rS`]: e.target.value,
-                                    }))
-                                  }
-                                  className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRS !== undefined ? "border-gold" : "border-bdr"}`}
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                  🛍 รับซื้อ
-                                </label>
-                                <input
-                                  type="number"
-                                  inputMode="decimal"
-                                  min="0"
-                                  value={
-                                    eRB !== undefined
-                                      ? eRB
-                                      : emp.ratePerPieceBuy || 0
-                                  }
-                                  onChange={(e) =>
-                                    setEditingRole((r) => ({
-                                      ...r,
-                                      [`${emp.id}_rB`]: e.target.value,
-                                    }))
-                                  }
-                                  className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRB !== undefined ? "border-gold" : "border-bdr"}`}
-                                />
-                              </div>
-                            </div>
-                            <div className="text-xs text-txt-soft text-center mb-2.5">
-                              หน่วย: ฿/ชิ้น
-                            </div>
-
-                            <div className="h-px my-2.5 bg-[#C9973A30]" />
-                            <div className="text-xs font-bold text-maroon mb-2">
-                              🎫 Rate บัตรสมาชิกต่อใบ
-                            </div>
-                            <div className="flex gap-2">
-                              <div className="flex-1">
-                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                  🎫 เชิญชวนสมัคร
-                                </label>
-                                <input
-                                  type="number"
-                                  inputMode="decimal"
-                                  min="0"
-                                  value={
-                                    eRI !== undefined
-                                      ? eRI
-                                      : emp.ratePerPieceInvite || 0
-                                  }
-                                  onChange={(e) =>
-                                    setEditingRole((r) => ({
-                                      ...r,
-                                      [`${emp.id}_rI`]: e.target.value,
-                                    }))
-                                  }
-                                  className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRI !== undefined ? "border-gold" : "border-bdr"}`}
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                  🔄 ย้ายข้อมูล
-                                </label>
-                                <input
-                                  type="number"
-                                  inputMode="decimal"
-                                  min="0"
-                                  value={
-                                    eRT !== undefined
-                                      ? eRT
-                                      : emp.ratePerPieceTransfer || 0
-                                  }
-                                  onChange={(e) =>
-                                    setEditingRole((r) => ({
-                                      ...r,
-                                      [`${emp.id}_rT`]: e.target.value,
-                                    }))
-                                  }
-                                  className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRT !== undefined ? "border-gold" : "border-bdr"}`}
-                                />
-                              </div>
-                            </div>
-                            <div className="text-xs text-txt-soft text-center mt-1.5">
-                              หน่วย: ฿/ใบ
-                            </div>
+                        })()}
+                      </div>
+                      <div className="sticky bottom-0 z-10 bg-white px-4 py-3 border-t border-bdr shadow-[0_-8px_20px_rgba(90,30,10,0.06)]">
+                        {dirty ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => cancelAll(true)}
+                              className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+                            >
+                              ยกเลิกการแก้ไข
+                            </button>
+                            <button
+                              onClick={saveAll}
+                              className="flex-2 py-[11px] rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
+                            >
+                              <IconCheck size={14} stroke={2.5} />
+                              บันทึกการเปลี่ยนแปลง
+                            </button>
                           </div>
-                        );
-                      })()}
-
-                      {/* Bottom save button (when dirty) */}
-                      {dirty && (
-                        <div className="mt-3.5 pt-3.5 border-t border-dashed border-bdr flex gap-2">
+                        ) : (
                           <button
-                            onClick={cancelAll}
-                            className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+                            type="button"
+                            onClick={() => setEditingEmpId(null)}
+                            className="w-full py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
                           >
-                            ยกเลิกการแก้ไข
+                            ปิด
                           </button>
-                          <button
-                            onClick={saveAll}
-                            className="flex-2 py-[11px] rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
-                          >
-                            <IconCheck size={14} stroke={2.5} />
-                            บันทึกการเปลี่ยนแปลง
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    </BaseModal>
                   )}
                 </div>
               );
