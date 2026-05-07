@@ -17,7 +17,7 @@ import {
   ROLES_INIT,
   SALARY_INIT,
 } from "../seedData";
-import { COLLECTIONS, db } from "./config";
+import { COLLECTIONS, db, FIRESTORE_DATABASE_ID } from "./config";
 
 const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID;
 const USE_EMULATORS =
@@ -39,7 +39,7 @@ function emulatorBaseUrl() {
 }
 
 function docName(path: string) {
-  return `projects/${PROJECT_ID}/databases/(default)/documents/${path}`;
+  return `projects/${PROJECT_ID}/databases/${FIRESTORE_DATABASE_ID}/documents/${path}`;
 }
 
 function firestoreValue(value: unknown): Record<string, unknown> {
@@ -93,7 +93,7 @@ function employeeWithDevLogin(employee: any) {
 
 async function commitEmulatorWrites(writes: Record<string, unknown>[]) {
   const res = await fetch(
-    `${emulatorBaseUrl()}/v1/projects/${PROJECT_ID}/databases/(default)/documents:commit`,
+    `${emulatorBaseUrl()}/v1/projects/${PROJECT_ID}/databases/${FIRESTORE_DATABASE_ID}/documents:commit`,
     {
       method: "POST",
       headers: {

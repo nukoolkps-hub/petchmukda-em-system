@@ -27,8 +27,9 @@
 
 1. ใน Firebase Console → **Build > Firestore Database**
 2. คลิก **"Create database"**
-3. เลือก **"Start in production mode"**
-4. เลือก location: **`asia-southeast1`** (สิงคโปร์ — เร็วที่สุดสำหรับไทย)
+3. ตั้ง **Database ID** เป็น **`petchmukda-bot`**
+4. เลือก **"Start in production mode"**
+5. เลือก location: **`asia-southeast1`** (สิงคโปร์ — เร็วที่สุดสำหรับไทย)
 
 ## 3️⃣ เปิดใช้ Authentication
 
@@ -58,6 +59,7 @@ VITE_FIREBASE_PROJECT_ID=muktha-xxx
 VITE_FIREBASE_STORAGE_BUCKET=muktha-xxx.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
 VITE_FIREBASE_APP_ID=1:123:web:abc...
+VITE_FIRESTORE_DATABASE_ID=petchmukda-bot
 ```
 
 ## 5️⃣ ติดตั้ง Security Rules

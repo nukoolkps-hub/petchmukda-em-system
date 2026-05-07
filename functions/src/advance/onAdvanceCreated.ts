@@ -3,11 +3,11 @@
  */
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { getLineConfig } from "../helpers/config.js";
+import { FIRESTORE_DATABASE_ID, getLineConfig } from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
 
 export const onAdvanceCreated = onDocumentCreated(
-	"advances/{advanceId}",
+	{ document: "advances/{advanceId}", database: FIRESTORE_DATABASE_ID },
 	async (event) => {
 		const advance = event.data?.data();
 		if (!advance) return;

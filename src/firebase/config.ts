@@ -23,6 +23,9 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+export const FIRESTORE_DATABASE_ID =
+  import.meta.env.VITE_FIRESTORE_DATABASE_ID || "petchmukda-bot";
+
 // Validate config — warn user ถ้าลืมตั้งค่า
 const missingKeys = Object.entries(firebaseConfig)
   .filter(([_, v]) => !v)
@@ -36,7 +39,7 @@ if (missingKeys.length > 0) {
 }
 
 export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const db = getFirestore(app, FIRESTORE_DATABASE_ID);
 export const auth = getAuth(app);
 export const functions = getFunctions(app);
 export const storage = getStorage(app);

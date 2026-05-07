@@ -5,6 +5,13 @@
 import { getFirestore } from "firebase-admin/firestore";
 import type { LineConfig } from "../types.js";
 
+export const FIRESTORE_DATABASE_ID =
+	process.env.FIRESTORE_DATABASE_ID || "petchmukda-bot";
+
+export function getAppFirestore() {
+	return getFirestore(FIRESTORE_DATABASE_ID);
+}
+
 /* ─── Color palette (LINE Flex Messages) ──────────────────────── */
 export const COLORS = {
 	maroon: "#7B1C1C",
@@ -23,7 +30,7 @@ export const formatThaiNumber = (n: number | string | undefined): string =>
 
 /* ─── Read LINE secrets from Firestore ────────────────────────── */
 export async function getLineConfig(): Promise<LineConfig> {
-	const db = getFirestore();
+	const db = getAppFirestore();
 	const doc = await db.doc("config/secrets").get();
 	return (doc.data() as LineConfig) || {};
 }

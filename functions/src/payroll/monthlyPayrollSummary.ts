@@ -2,15 +2,14 @@
  * monthlyPayrollSummary — สรุปเงินเดือนตอนสิ้นเดือน (28th, 23:00 ICT)
  */
 
-import { getFirestore } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { getLineConfig } from "../helpers/config.js";
+import { getAppFirestore, getLineConfig } from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
 
 export const monthlyPayrollSummary = onSchedule(
 	{ schedule: "0 23 28 * *", timeZone: "Asia/Bangkok" },
 	async () => {
-		const db = getFirestore();
+		const db = getAppFirestore();
 		const now = new Date();
 		const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 		console.log(`[monthlyPayrollSummary] Running for ${yearMonth}`);

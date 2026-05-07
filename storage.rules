@@ -18,12 +18,12 @@ service firebase.storage {
 
     function isEmployeeOwner(employeeId) {
       return isSignedIn()
-        && firestore.get(/databases/(default)/documents/employees/$(employeeId)).data.lineUserId == request.auth.uid;
+        && firestore.get(/databases/petchmukda-bot/documents/employees/$(employeeId)).data.lineUserId == request.auth.uid;
     }
 
     function isAdvanceOwner(advanceId) {
       return isEmployeeOwner(
-        firestore.get(/databases/(default)/documents/advances/$(advanceId)).data.employeeId
+        firestore.get(/databases/petchmukda-bot/documents/advances/$(advanceId)).data.employeeId
       );
     }
 

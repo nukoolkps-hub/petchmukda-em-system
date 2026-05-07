@@ -2,16 +2,19 @@
  * onLeaveCreated — update leave stats when a new leave document is created
  */
 
-import { getFirestore } from "firebase-admin/firestore";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import {
+	FIRESTORE_DATABASE_ID,
+	getAppFirestore,
+} from "../helpers/config.js";
 
 export const onLeaveCreated = onDocumentCreated(
-	"leaves/{leaveId}",
+	{ document: "leaves/{leaveId}", database: FIRESTORE_DATABASE_ID },
 	async (event) => {
 		const leave = event.data?.data();
 		if (!leave?.start) return;
 
-		const db = getFirestore();
+		const db = getAppFirestore();
 		const yearMonth = (leave.start as string).substring(0, 7);
 		const statsRef = db.doc(`stats/${yearMonth}`);
 
