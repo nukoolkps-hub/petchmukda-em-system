@@ -12,15 +12,15 @@ interface LineEvent {
 	source: { userId: string };
 }
 
-export const lineWebhook = onRequest(async (req, res) => {
-	if (req.method !== "POST") {
+export const lineWebhook = onRequest(async (request, res) => {
+	if (request.method !== "POST") {
 		res.status(405).send("Method Not Allowed");
 		return;
 	}
 
 	try {
 		const config = await getLineConfig();
-		const events = (req.body.events || []) as LineEvent[];
+		const events = (request.body.events || []) as LineEvent[];
 
 		for (const event of events) {
 			if (event.type === "message" && event.message.type === "text") {

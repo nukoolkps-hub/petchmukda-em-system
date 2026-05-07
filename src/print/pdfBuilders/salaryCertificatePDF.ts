@@ -3,12 +3,12 @@
 
 const COLORS = {
   maroon: "#7B1C1C",
-  maroonDk: "#5C1212",
+  maroonDark: "#5C1212",
   gold: "#C9973A",
-  goldLt: "#E8C87A",
+  goldLight: "#E8C87A",
   goldPale: "#F5E6C8",
   text: "#2D1A0E",
-  textMid: "#7A5C3A",
+  textMedium: "#7A5C3A",
   textSoft: "#B89A72",
   border: "#E8D5B0",
 };
@@ -28,18 +28,18 @@ const DIGITS = [
 ];
 const PLACES = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
 
-function numToThai(n) {
+function formatThaiBahtText(n) {
   if (!n || n <= 0) return "ศูนย์บาทถ้วน";
   let str = "";
-  const num = Math.floor(n);
-  const numStr = String(num);
-  const len = numStr.length;
+  const roundedAmount = Math.floor(n);
+  const amountText = String(roundedAmount);
+  const digitCount = amountText.length;
 
-  for (let i = 0; i < len; i++) {
-    const digit = parseInt(numStr[i], 10);
-    const place = len - 1 - i;
+  for (let digitIndex = 0; digitIndex < digitCount; digitIndex++) {
+    const digit = parseInt(amountText[digitIndex], 10);
+    const place = digitCount - 1 - digitIndex;
     if (digit === 0) continue;
-    if (place === 0 && digit === 1 && len > 1) str += "เอ็ด";
+    if (place === 0 && digit === 1 && digitCount > 1) str += "เอ็ด";
     else if (place === 1 && digit === 2) str += "ยี่";
     else if (place === 1 && digit === 1) str += "";
     else str += DIGITS[digit];
@@ -48,15 +48,20 @@ function numToThai(n) {
   return `${str}บาทถ้วน`;
 }
 
-const NUM = (n) => Number(n || 0).toLocaleString("th-TH");
+const formatNumber = (n) => Number(n || 0).toLocaleString("th-TH");
 
 /**
  * Build pdfmake document definition for salary certificate
  */
-export function buildCertificateDocDef({ profile, empInfo, data, startDate }) {
-  const empName = profile?.name || empInfo?.name || "-";
-  const empRole = profile?.role || empInfo?.role || "-";
-  const baseSalary = data?.base || 0;
+export function buildCertificateDocDef({
+  profile,
+  employeeInfo,
+  data,
+  startDate,
+}) {
+  const employeeName = profile?.name || employeeInfo?.name || "-";
+  const employeeRole = profile?.role || employeeInfo?.role || "-";
+  const baseSalary = data?.baseSalary || 0;
   const prefix = profile?.prefix || "นางสาว";
   const printDate = new Date().toLocaleDateString("th-TH", {
     day: "numeric",
@@ -79,7 +84,7 @@ export function buildCertificateDocDef({ profile, empInfo, data, startDate }) {
       lineHeight: 1.5,
     },
     info: {
-      title: `หนังสือรับรองเงินเดือน — ${empName}`,
+      title: `หนังสือรับรองเงินเดือน — ${employeeName}`,
       author: "ห้างเพชรทองมุกดา",
       subject: "Salary Certificate",
     },
@@ -104,14 +109,14 @@ export function buildCertificateDocDef({ profile, empInfo, data, startDate }) {
           {
             text: "เลขที่ 123/45 ถนนเยาวราช แขวงสัมพันธวงศ์ เขตสัมพันธวงศ์ กรุงเทพมหานคร 10100",
             fontSize: 10,
-            color: COLORS.textMid,
+            color: COLORS.textMedium,
             alignment: "center",
             margin: [0, 6, 0, 0],
           },
           {
             text: "โทรศัพท์: 02-123-4567   อีเมล: contact@muktha.co.th",
             fontSize: 10,
-            color: COLORS.textMid,
+            color: COLORS.textMedium,
             alignment: "center",
             margin: [0, 1, 0, 0],
           },
@@ -138,11 +143,11 @@ export function buildCertificateDocDef({ profile, empInfo, data, startDate }) {
       /* ─── Reference number + date ─── */
       {
         columns: [
-          { text: `เลขที่ ${refNo}`, fontSize: 11, color: COLORS.textMid },
+          { text: `เลขที่ ${refNo}`, fontSize: 11, color: COLORS.textMedium },
           {
             text: `วันที่ ${printDate}`,
             fontSize: 11,
-            color: COLORS.textMid,
+            color: COLORS.textMedium,
             alignment: "right",
           },
         ],
@@ -161,7 +166,7 @@ export function buildCertificateDocDef({ profile, empInfo, data, startDate }) {
       {
         text: "Certificate of Employment & Salary",
         fontSize: 11,
-        color: COLORS.textMid,
+        color: COLORS.textMedium,
         alignment: "center",
         italics: true,
         margin: [0, 0, 0, 28],
@@ -171,19 +176,27 @@ export function buildCertificateDocDef({ profile, empInfo, data, startDate }) {
       {
         text: [
           { text: "         ขอรับรองว่า " },
-          { text: `${prefix}${empName} `, bold: true, color: COLORS.maroon },
+          {
+            text: `${prefix}${employeeName} `,
+            bold: true,
+            color: COLORS.maroon,
+          },
           { text: "เป็นพนักงานประจำของ " },
           { text: "ห้างเพชรทองมุกดา ", bold: true },
           { text: "ตำแหน่ง " },
-          { text: `${empRole} `, bold: true },
+          { text: `${employeeRole} `, bold: true },
           { text: "เริ่มปฏิบัติงานตั้งแต่เดือน " },
           { text: `${startWork} `, bold: true },
           { text: "จนถึงปัจจุบัน โดยได้รับเงินเดือน เดือนละ " },
-          { text: `${NUM(baseSalary)} บาท `, bold: true, color: COLORS.maroon },
           {
-            text: `(${numToThai(baseSalary)})`,
+            text: `${formatNumber(baseSalary)} บาท `,
+            bold: true,
+            color: COLORS.maroon,
+          },
+          {
+            text: `(${formatThaiBahtText(baseSalary)})`,
             italics: true,
-            color: COLORS.textMid,
+            color: COLORS.textMedium,
           },
         ],
         alignment: "justify",
@@ -232,7 +245,7 @@ export function buildCertificateDocDef({ profile, empInfo, data, startDate }) {
               {
                 text: "ผู้จัดการฝ่ายบุคคล",
                 fontSize: 11,
-                color: COLORS.textMid,
+                color: COLORS.textMedium,
                 alignment: "center",
               },
               {

@@ -3,27 +3,29 @@
  */
 
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { COLOR, getLineConfig, TH_NUM } from "../helpers/config.js";
+import { COLORS, formatThaiNumber, getLineConfig } from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
+import { parseNotifyAdvanceApprovedPayload } from "../helpers/payload.js";
 import { saveSlipToStorage } from "../helpers/storage.js";
-import type { AdvanceApprovedData, LineMessage } from "../types.js";
+import type { LinePushMessage } from "../types.js";
 
 export const notifyAdvanceApproved = onCall(async (request) => {
 	if (!request.auth) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+	if (!(request.auth.token as { admin?: boolean }).admin) {
+		throw new HttpsError("permission-denied", "Caller is not admin");
+	}
 
 	const {
-		empLineUserId,
-		empName,
+		employeeLineUserId,
+		employeeName,
 		amount,
-		reason,
+		requestReason,
 		month,
-		slipUrl,
-		slipImg,
+		slipImageUrl,
+		slipImageDataUrl,
 		approvedAt,
 		requestId,
-	} = request.data as AdvanceApprovedData;
-	if (!empLineUserId)
-		throw new HttpsError("invalid-argument", "missing empLineUserId");
+	} = parseNotifyAdvanceApprovedPayload(request.data);
 
 	const config = await getLineConfig();
 	if (!config.LINE_CHANNEL_ACCESS_TOKEN) {
@@ -31,24 +33,28 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 		return { ok: true, skipped: true };
 	}
 
-	const dt = new Date(approvedAt || Date.now());
-	const dtStr = dt.toLocaleString("th-TH", {
+	const date = new Date(approvedAt || Date.now());
+	const dateText = date.toLocaleString("th-TH", {
 		dateStyle: "medium",
 		timeStyle: "short",
 	});
 	const finalSlipUrl =
-		slipUrl || (await saveSlipToStorage(slipImg, requestId || Date.now()));
+		slipImageUrl ||
+		(await saveSlipToStorage(
+			slipImageDataUrl ?? undefined,
+			requestId ?? Date.now(),
+		));
 
 	const flex = {
 		type: "flex" as const,
-		altText: `✅ เบิกเงินล่วงหน้าได้รับการอนุมัติ — ฿${TH_NUM(amount)}`,
+		altText: `✅ เบิกเงินล่วงหน้าได้รับการอนุมัติ — ฿${formatThaiNumber(amount)}`,
 		contents: {
 			type: "bubble",
 			size: "mega",
 			header: {
 				type: "box",
 				layout: "vertical",
-				backgroundColor: COLOR.green,
+				backgroundColor: COLORS.green,
 				paddingAll: "16px",
 				contents: [
 					{
@@ -74,22 +80,22 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 				contents: [
 					{
 						type: "text",
-						text: `สวัสดี คุณ${empName}`,
+						text: `สวัสดี คุณ${employeeName}`,
 						size: "md",
 						weight: "bold",
-						color: COLOR.text,
+						color: COLORS.text,
 					},
 					{
 						type: "text",
 						text: "เงินที่คุณขอเบิกได้รับการอนุมัติและโอนเข้าบัญชีเรียบร้อยแล้ว",
 						size: "sm",
-						color: COLOR.textMid,
+						color: COLORS.textMedium,
 						wrap: true,
 					},
 					{
 						type: "box",
 						layout: "vertical",
-						backgroundColor: COLOR.greenLt,
+						backgroundColor: COLORS.greenLight,
 						cornerRadius: "8px",
 						paddingAll: "12px",
 						margin: "md",
@@ -98,14 +104,14 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 								type: "text",
 								text: "จำนวนที่โอน",
 								size: "xs",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 							},
 							{
 								type: "text",
-								text: `฿${TH_NUM(amount)}`,
+								text: `฿${formatThaiNumber(amount)}`,
 								size: "xxl",
 								weight: "bold",
-								color: COLOR.green,
+								color: COLORS.green,
 							},
 						],
 					},
@@ -118,14 +124,14 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 								type: "text",
 								text: "📅 เดือน",
 								size: "sm",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 								flex: 2,
 							},
 							{
 								type: "text",
 								text: month || "-",
 								size: "sm",
-								color: COLOR.text,
+								color: COLORS.text,
 								flex: 4,
 							},
 						],
@@ -139,14 +145,14 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 								type: "text",
 								text: "📝 เหตุผล",
 								size: "sm",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 								flex: 2,
 							},
 							{
 								type: "text",
-								text: reason || "-",
+								text: requestReason,
 								size: "sm",
-								color: COLOR.text,
+								color: COLORS.text,
 								flex: 4,
 								wrap: true,
 							},
@@ -154,7 +160,7 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 					},
 					{
 						type: "text",
-						text: `⏰ อนุมัติเมื่อ: ${dtStr}`,
+						text: `⏰ อนุมัติเมื่อ: ${dateText}`,
 						size: "xs",
 						color: "#B89A72",
 						margin: "md",
@@ -170,7 +176,7 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 						type: "text",
 						text: "กรุณาตรวจสอบยอดในบัญชีของคุณ",
 						size: "xs",
-						color: COLOR.textMid,
+						color: COLORS.textMedium,
 						align: "center",
 					},
 				],
@@ -178,7 +184,7 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 		},
 	};
 
-	const messages: LineMessage[] = [flex];
+	const messages: LinePushMessage[] = [flex];
 	if (finalSlipUrl) {
 		messages.push({
 			type: "image",
@@ -189,8 +195,8 @@ export const notifyAdvanceApproved = onCall(async (request) => {
 
 	await pushLineMessage(
 		config.LINE_CHANNEL_ACCESS_TOKEN,
-		empLineUserId,
+		employeeLineUserId,
 		messages,
 	);
-	return { ok: true, requestId, slipUrl: finalSlipUrl };
+	return { ok: true, requestId, slipImageUrl: finalSlipUrl };
 });

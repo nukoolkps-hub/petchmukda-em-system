@@ -6,7 +6,7 @@ import {
   IconHome,
   IconShield,
 } from "@tabler/icons-react";
-import { C } from "../../constants";
+import { COLORS } from "../../constants";
 
 export interface NavItem {
   id: string;
@@ -29,7 +29,7 @@ export function getNavItems(options: {
           <IconShield
             size={22}
             stroke={a ? 2.5 : 2}
-            fill={a ? `${C.maroon}40` : "none"}
+            fill={a ? `${COLORS.maroon}40` : "none"}
           />
         ),
       },
@@ -45,7 +45,7 @@ export function getNavItems(options: {
         <IconHome
           size={22}
           stroke={a ? 2.5 : 2}
-          fill={a ? `${C.gold}30` : "none"}
+          fill={a ? `${COLORS.gold}30` : "none"}
         />
       ),
     },
@@ -57,7 +57,7 @@ export function getNavItems(options: {
         <IconFilePlus
           size={22}
           stroke={a ? 2.5 : 2}
-          fill={a ? `${C.gold}30` : "none"}
+          fill={a ? `${COLORS.gold}30` : "none"}
         />
       ),
     },
@@ -72,7 +72,7 @@ export function getNavItems(options: {
               <IconCash
                 size={22}
                 stroke={a ? 2.5 : 2}
-                fill={a ? `${C.gold}30` : "none"}
+                fill={a ? `${COLORS.gold}30` : "none"}
               />
             ),
           },

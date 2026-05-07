@@ -29,10 +29,10 @@ export default function useFirebaseAppData({
   authUid = "",
   isAdmin = false,
 }: FirebaseAppDataOptions = {}) {
-  const empResult = useEmployeesForScope({ isAdmin, authUid });
+  const employeeResult = useEmployeesForScope({ isAdmin, authUid });
   const currentEmployee =
     authUid && !isAdmin
-      ? empResult.data.find((e) => e.lineUserId === authUid) || null
+      ? employeeResult.data.find((e) => e.lineUserId === authUid) || null
       : null;
   const currentEmployeeId = currentEmployee?.id || null;
 
@@ -53,14 +53,14 @@ export default function useFirebaseAppData({
 
   // Aggregate loading/error states
   const loading =
-    empResult.loading ||
+    employeeResult.loading ||
     leavesResult.loading ||
     salResult.loading ||
     advResult.loading ||
     rolesResult.loading ||
     pcResult.loading;
   const error =
-    empResult.error ||
+    employeeResult.error ||
     leavesResult.error ||
     salResult.error ||
     advResult.error ||
@@ -79,29 +79,32 @@ export default function useFirebaseAppData({
   async function updateEmployee(id, fields) {
     await employeesAPI.updateEmployee(id, fields);
   }
-  async function upsertEmployee(emp) {
-    return await employeesAPI.upsertEmployee(emp.id, emp);
+  async function upsertEmployee(employee) {
+    return await employeesAPI.upsertEmployee(employee.id, employee);
   }
 
   /* ─── Salaries ──────────────────────────────────────────── */
-  async function updateSalary(empId, ym, fields) {
-    await salariesAPI.updateSalary(empId, ym, fields);
+  async function updateSalary(employeeId, yearMonth, fields) {
+    await salariesAPI.updateSalary(employeeId, yearMonth, fields);
   }
 
   /* ─── Advances ──────────────────────────────────────────── */
-  async function submitAdvance(req) {
-    return await advancesAPI.submitAdvance(req);
+  async function submitAdvance(request) {
+    return await advancesAPI.submitAdvance(request);
   }
   async function updateAdvance(id, fields) {
     // Firestore: ไม่มี method generic update — ใช้ approve/reject แทน
     if (fields.status === "approved") {
-      await advancesAPI.approveAdvance(id, fields.slipUrl || fields.slipImg);
+      await advancesAPI.approveAdvance(
+        id,
+        fields.slipImageUrl || fields.slipImageDataUrl,
+      );
     } else if (fields.status === "rejected") {
-      await advancesAPI.rejectAdvance(id, fields.rejectReason);
+      await advancesAPI.rejectAdvance(id, fields.rejectionReason);
     }
   }
-  async function approveAdvance(id, slipUrl = null) {
-    await advancesAPI.approveAdvance(id, slipUrl);
+  async function approveAdvance(id, slipImageUrl = null) {
+    await advancesAPI.approveAdvance(id, slipImageUrl);
   }
   async function rejectAdvance(id, reason = "") {
     await advancesAPI.rejectAdvance(id, reason);
@@ -116,8 +119,8 @@ export default function useFirebaseAppData({
   }
 
   /* ─── Payroll Confirms ──────────────────────────────────── */
-  async function setPayrollConfirm(ym, summary) {
-    await payrollConfirmsAPI.setPayrollConfirm(ym, summary);
+  async function setPayrollConfirm(yearMonth, summary) {
+    await payrollConfirmsAPI.setPayrollConfirm(yearMonth, summary);
   }
 
   /* ─── Legacy setters (deprecated — แต่ component เก่าใช้) ───
@@ -129,7 +132,7 @@ export default function useFirebaseAppData({
   return {
     // State (real-time from Firestore)
     allLeaves: leavesResult.data,
-    empDir: empResult.data,
+    employeeDirectory: employeeResult.data,
     salaryData: salResult.data,
     advanceRequests: advResult.data,
     roles: rolesResult.data,
@@ -141,7 +144,7 @@ export default function useFirebaseAppData({
 
     // Legacy setters (warn instead of update)
     setAllLeaves: noop,
-    setEmpDir: noop,
+    setEmployeeDirectory: noop,
     setSalaryData: noop,
     setAdvanceRequests: noop,
     setRoles: noop,

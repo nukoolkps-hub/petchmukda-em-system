@@ -1,8 +1,8 @@
 /* ─── Avatar renderer ──────────────────────────────────────────── */
 export default function AvatarCircle({
-  av,
-  avType,
-  img,
+  avatar,
+  avatarType,
+  avatarImageUrl,
   size = 56,
   fontSize = 18,
   border,
@@ -13,26 +13,30 @@ export default function AvatarCircle({
     width: size,
     height: size,
     border: border || undefined,
-    fontSize: avType === "emoji" ? size * 0.5 : fontSize,
+    fontSize: avatarType === "emoji" ? size * 0.5 : fontSize,
     ...style,
   };
-  if (avType === "image" && img) {
+  if (avatarType === "image" && avatarImageUrl) {
     return (
       <div
         className={`rounded-full shrink-0 flex items-center justify-center overflow-hidden border-2 border-gold-lt/30 ${className}`}
         style={base}
       >
-        <img src={img} alt="avatar" className="w-full h-full object-cover" />
+        <img
+          src={avatarImageUrl}
+          alt="avatar"
+          className="w-full h-full object-cover"
+        />
       </div>
     );
   }
-  if (avType === "emoji") {
+  if (avatarType === "emoji") {
     return (
       <div
         className={`rounded-full shrink-0 flex items-center justify-center overflow-hidden bg-gold-pale border-2 border-gold-lt/30 ${className}`}
         style={base}
       >
-        {av}
+        {avatar}
       </div>
     );
   }
@@ -46,7 +50,7 @@ export default function AvatarCircle({
         className="text-white font-bold font-[inherit]"
         style={{ fontSize }}
       >
-        {av}
+        {avatar}
       </span>
     </div>
   );

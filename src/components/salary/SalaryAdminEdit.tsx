@@ -1,15 +1,18 @@
 import { IconCheck } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
-import { C, TH_MONTHS } from "../../constants";
+import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
-import { TH_NUMBER } from "../../utils/format";
+import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
-import { calcSalary, computePoolSharesForGroup } from "../../utils/salaryUtils";
+import {
+  calculateSalary,
+  computePoolSharesForGroup,
+} from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 
 /* ─── Salary Admin Edit ────────────────────────────────────────── */
 export default function SalaryAdminEdit({
-  empDir,
+  employeeDirectory,
   salaryData,
   setSalaryData,
   onSaveSalary,
@@ -19,23 +22,27 @@ export default function SalaryAdminEdit({
   setUnsavedDirty,
 }) {
   const now = new Date();
-  const [selEmp, setSelEmp] = useState(empDir[0]?.id || "");
-  const [selMonth, _setSelMonth] = useState(
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(
+    employeeDirectory[0]?.id || "",
+  );
+  const [selectedMonth] = useState(
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
   );
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
-  const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selMonth);
+  const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selectedMonth);
 
-  const empInfo = empDir.find((e) => e.id === selEmp);
-  const empRole = roles?.find((r) => r.id === empInfo?.roleId);
-  const savedData = salaryData[selEmp]?.[selMonth] || {
-    base: 0,
-    piecesNormal: 0,
-    piecesSpecial: 0,
-    piecesBuy: 0,
-    piecesInvite: 0,
-    piecesTransfer: 0,
+  const employeeInfo = employeeDirectory.find(
+    (e) => e.id === selectedEmployeeId,
+  );
+  const employeeRole = roles?.find((r) => r.id === employeeInfo?.roleId);
+  const savedData = salaryData[selectedEmployeeId]?.[selectedMonth] || {
+    baseSalary: 0,
+    normalSalePieces: 0,
+    specialSalePieces: 0,
+    buyPieces: 0,
+    invitePieces: 0,
+    transferPieces: 0,
     lateDeduction: 0,
     socialSecurity: 0,
     note: "",
@@ -49,8 +56,8 @@ export default function SalaryAdminEdit({
   }, [dirty, setUnsavedDirty]);
   useEffect(() => () => setUnsavedDirty?.(false), [setUnsavedDirty]); // unmount → clear
 
-  // ถ้าเปลี่ยน emp ภายในหน้านี้ — ถ้ามี draft ให้เตือนก่อน
-  function tryChangeEmp(newId) {
+  // ถ้าเปลี่ยน employee ภายในหน้านี้ — ถ้ามี draft ให้เตือนก่อน
+  function tryChangeEmployee(newId) {
     if (dirty) {
       const ok = window.confirm(
         "⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากเปลี่ยนพนักงาน ข้อมูลที่แก้ไขจะหายไป\n\nต้องการเปลี่ยนพนักงานใช่ไหม?",
@@ -58,24 +65,25 @@ export default function SalaryAdminEdit({
       if (!ok) return;
     }
     setDraft({});
-    setSelEmp(newId);
+    setSelectedEmployeeId(newId);
   }
 
   useEffect(() => {
     setDraft({});
   }, []);
 
-  const monthLeaves = empInfo
+  const monthLeaves = employeeInfo
     ? allLeaves.filter(
         (lv) =>
-          lv.employeeName === empInfo.name && lv.start.startsWith(selMonth),
+          lv.employeeName === employeeInfo.name &&
+          lv.start.startsWith(selectedMonth),
       )
     : [];
   const overInfo = getOverQuotaDays(monthLeaves);
   const overTotalDays = overInfo.weekdays + overInfo.sundays;
   const totalLeaveDays = countWeekdayLeaves(monthLeaves);
   const monthApprovedAdvances = (monthlyApprovedAdvances.data || []).filter(
-    (r) => r.empId === selEmp,
+    (r) => r.employeeId === selectedEmployeeId,
   );
   const approvedAdvanceTotal = monthApprovedAdvances.reduce(
     (s, r) => s + r.amount,
@@ -87,56 +95,60 @@ export default function SalaryAdminEdit({
   const liveSalaryData = dirty
     ? {
         ...salaryData,
-        [selEmp]: {
-          ...(salaryData[selEmp] || {}),
-          [selMonth]: data,
+        [selectedEmployeeId]: {
+          ...(salaryData[selectedEmployeeId] || {}),
+          [selectedMonth]: data,
         },
       }
     : salaryData;
 
   /* ─── Heavy computation: memoized ───────────────────────────────── */
-  const { poolShare, poolGroupEmps, calc } = useMemo(() => {
-    let _poolShare: any = null;
-    let _poolGroupEmps: any[] = [];
-    if (empRole?.poolGroup) {
-      _poolGroupEmps = empDir.filter((e) => {
-        const r = roles.find((rl) => rl.id === e.roleId);
-        return r?.poolGroup === empRole.poolGroup;
+  const { poolShare, poolGroupEmployees, salaryCalculation } = useMemo(() => {
+    let employeePoolShare: any = null;
+    let poolGroupEmployeesDraft: any[] = [];
+    if (employeeRole?.poolGroup) {
+      poolGroupEmployeesDraft = employeeDirectory.filter((employee) => {
+        const role = roles.find(
+          (candidateRole) => candidateRole.id === employee.roleId,
+        );
+        return role?.poolGroup === employeeRole.poolGroup;
       });
       const shares = computePoolSharesForGroup({
-        groupEmpIds: _poolGroupEmps.map((e) => e.id),
+        groupEmployeeIds: poolGroupEmployeesDraft.map(
+          (employee) => employee.id,
+        ),
         salaryData: liveSalaryData,
         allLeaves,
-        ym: selMonth,
-        empDir,
+        yearMonth: selectedMonth,
+        employeeDirectory,
       });
-      _poolShare = shares[selEmp];
+      employeePoolShare = shares[selectedEmployeeId];
     }
-    const _calc = calcSalary(
+    const computedSalary = calculateSalary(
       data,
       overInfo,
-      empInfo,
+      employeeInfo,
       totalLeaveDays,
       approvedAdvanceTotal,
-      _poolShare,
-      empRole,
+      employeePoolShare,
+      employeeRole,
     );
     return {
-      poolShare: _poolShare,
-      poolGroupEmps: _poolGroupEmps,
-      calc: _calc,
+      poolShare: employeePoolShare,
+      poolGroupEmployees: poolGroupEmployeesDraft,
+      salaryCalculation: computedSalary,
     };
   }, [
-    empRole,
-    empDir,
+    employeeRole,
+    employeeDirectory,
     roles,
     liveSalaryData,
     allLeaves,
-    selMonth,
-    selEmp,
+    selectedMonth,
+    selectedEmployeeId,
     data,
     overInfo,
-    empInfo,
+    employeeInfo,
     totalLeaveDays,
     approvedAdvanceTotal,
   ]);
@@ -152,12 +164,12 @@ export default function SalaryAdminEdit({
     setSaving(true);
     try {
       if (onSaveSalary) {
-        await onSaveSalary(selEmp, selMonth, nextMonthData);
+        await onSaveSalary(selectedEmployeeId, selectedMonth, nextMonthData);
       } else {
         setSalaryData((d) => {
           const next = { ...d };
-          if (!next[selEmp]) next[selEmp] = {};
-          next[selEmp][selMonth] = nextMonthData;
+          if (!next[selectedEmployeeId]) next[selectedEmployeeId] = {};
+          next[selectedEmployeeId][selectedMonth] = nextMonthData;
           return next;
         });
       }
@@ -179,7 +191,7 @@ export default function SalaryAdminEdit({
     { key: "socialSecurity", label: "หักประกันสังคม", icon: "🏛" },
   ];
 
-  if (!calc)
+  if (!salaryCalculation)
     return <div className="p-5 text-txt-soft text-center">ไม่มีข้อมูลเงินเดือน</div>;
 
   return (
@@ -187,55 +199,59 @@ export default function SalaryAdminEdit({
       {/* selectors */}
       <div className="flex gap-2 mb-3.5">
         <select
-          value={selEmp}
-          onChange={(e) => tryChangeEmp(e.target.value)}
+          value={selectedEmployeeId}
+          onChange={(e) => tryChangeEmployee(e.target.value)}
           className="flex-2 px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
         >
-          {empDir.map((emp) => (
-            <option key={emp.id} value={emp.id}>
-              {emp.name}
+          {employeeDirectory.map((employee) => (
+            <option key={employee.id} value={employee.id}>
+              {employee.name}
             </option>
           ))}
         </select>
         <div className="flex-1 px-3 py-2.5 rounded-[10px] text-sm font-semibold text-maroon bg-gold-pale font-[inherit] flex items-center justify-center gap-1.5 border-[1.5px] border-[#C9973A40]">
-          📅 {TH_MONTHS[now.getMonth()]} {now.getFullYear() + 543}
+          📅 {THAI_MONTH_NAMES[now.getMonth()]} {now.getFullYear() + 543}
         </div>
       </div>
 
       {/* employee preview */}
-      {empInfo && (
+      {employeeInfo && (
         <div className="bg-cream rounded-xl px-3.5 py-3 mb-3.5 flex items-center gap-3 border border-bdr">
           <AvatarCircle
-            av={empInfo.av}
-            avType={empInfo.avType}
-            img={empInfo.img}
+            avatar={employeeInfo.avatar}
+            avatarType={employeeInfo.avatarType}
+            avatarImageUrl={employeeInfo.avatarImageUrl}
             size={40}
             fontSize={13}
-            border={`2px solid ${C.gold}40`}
+            border={`2px solid ${COLORS.gold}40`}
           />
           <div className="flex-1">
-            <div className="font-bold text-txt text-sm">{empInfo.name}</div>
-            <div className="text-sm text-txt-soft">{empInfo.role || "-"}</div>
+            <div className="font-bold text-txt text-sm">
+              {employeeInfo.name}
+            </div>
+            <div className="text-sm text-txt-soft">
+              {employeeInfo.role || "-"}
+            </div>
           </div>
           <div className="text-right">
             <div className="text-xs text-txt-soft">เงินสุทธิ</div>
             <div className="text-base font-extrabold text-maroon">
-              ฿{TH_NUMBER(calc.net)}
+              ฿{formatThaiNumber(salaryCalculation.netSalary)}
             </div>
           </div>
         </div>
       )}
 
       {/* Pool info card — แสดงตอนอยู่ใน group */}
-      {poolShare && poolGroupEmps.length > 1 && (
+      {poolShare && poolGroupEmployees.length > 1 && (
         <div className="rounded-xl p-3.5 mb-3.5 bg-[linear-gradient(135deg,#7B1C1C08,#C9973A10)] border border-[#C9973A40]">
           <div className="flex items-center gap-2 mb-2.5">
             <div className="text-lg">🤝</div>
             <div className="text-sm font-bold text-maroon">
-              Pool ค่าคอม "{empRole?.name}"
+              Pool ค่าคอม "{employeeRole?.name}"
             </div>
             <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
-              {poolGroupEmps.length} คน
+              {poolGroupEmployees.length} คน
             </span>
           </div>
           <div className="text-xs text-txt-mid mb-2 leading-relaxed">
@@ -245,9 +261,9 @@ export default function SalaryAdminEdit({
           </div>
 
           {/* Admin-locked: ปิดสิทธิ์ Pool */}
-          {poolShare.poolExclude &&
+          {poolShare.poolExclusion &&
             (() => {
-              const exc = poolShare.poolExclude;
+              const exc = poolShare.poolExclusion;
               const labels = {
                 sell: {
                   icon: "💎",
@@ -282,43 +298,53 @@ export default function SalaryAdminEdit({
             <div className="bg-red rounded-[9px] px-3 py-2.5 mb-1.5 text-sm text-white font-bold leading-relaxed shadow-red-glow">
               💸 ไม่ได้รับเงินเดือนพื้นฐาน
               <div className="font-medium text-xs mt-[3px] text-[#FFE0E0]">
-                ขาย {poolShare.mySell} ชิ้น ·{" "}
-                {poolShare.topSell > 0
-                  ? ((poolShare.mySell / poolShare.topSell) * 100).toFixed(1)
+                ขาย {poolShare.employeeSellPieces} ชิ้น ·{" "}
+                {poolShare.topSellPieces > 0
+                  ? (
+                      (poolShare.employeeSellPieces / poolShare.topSellPieces) *
+                      100
+                    ).toFixed(1)
                   : "0"}
-                % ของ Top {poolShare.topSell} (ต่ำกว่า 50%)
+                % ของ Top {poolShare.topSellPieces} (ต่ำกว่า 50%)
               </div>
             </div>
           )}
 
           {/* not eligible warnings (เฉพาะคนที่ไม่ถูก Admin ปิดในฝั่งนั้น) */}
-          {poolShare.poolExclude !== "sell" &&
-            poolShare.poolExclude !== "both" &&
+          {poolShare.poolExclusion !== "sell" &&
+            poolShare.poolExclusion !== "both" &&
             !poolShare.eligibleSell && (
               <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-1.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40]">
                 ⚠ ฝั่งขาย: ไม่ได้รับชิ้นจาก Pool
                 <div className="font-medium text-xs mt-0.5">
-                  ขาย {poolShare.mySell} ชิ้น ·{" "}
-                  {poolShare.topSell > 0
-                    ? ((poolShare.mySell / poolShare.topSell) * 100).toFixed(1)
+                  ขาย {poolShare.employeeSellPieces} ชิ้น ·{" "}
+                  {poolShare.topSellPieces > 0
+                    ? (
+                        (poolShare.employeeSellPieces /
+                          poolShare.topSellPieces) *
+                        100
+                      ).toFixed(1)
                     : "0"}
-                  % ของ Top {poolShare.topSell} (ขั้นต่ำ{" "}
-                  {poolShare.sellThreshold.toFixed(1)})
+                  % ของ Top {poolShare.topSellPieces} (ขั้นต่ำ{" "}
+                  {poolShare.sellEligibilityThreshold.toFixed(1)})
                 </div>
               </div>
             )}
-          {poolShare.poolExclude !== "buy" &&
-            poolShare.poolExclude !== "both" &&
+          {poolShare.poolExclusion !== "buy" &&
+            poolShare.poolExclusion !== "both" &&
             !poolShare.eligibleBuy && (
               <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-2.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40]">
                 ⚠ ฝั่งรับซื้อ: ไม่ได้รับชิ้นจาก Pool
                 <div className="font-medium text-xs mt-0.5">
-                  รับซื้อ {poolShare.myBuy} ชิ้น ·{" "}
-                  {poolShare.topBuy > 0
-                    ? ((poolShare.myBuy / poolShare.topBuy) * 100).toFixed(1)
+                  รับซื้อ {poolShare.employeeBuyPieces} ชิ้น ·{" "}
+                  {poolShare.topBuyPieces > 0
+                    ? (
+                        (poolShare.employeeBuyPieces / poolShare.topBuyPieces) *
+                        100
+                      ).toFixed(1)
                     : "0"}
-                  % ของ Top {poolShare.topBuy} (ขั้นต่ำ{" "}
-                  {poolShare.buyThreshold.toFixed(1)})
+                  % ของ Top {poolShare.topBuyPieces} (ขั้นต่ำ{" "}
+                  {poolShare.buyEligibilityThreshold.toFixed(1)})
                 </div>
               </div>
             )}
@@ -338,17 +364,21 @@ export default function SalaryAdminEdit({
               <div className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]">
                 <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
                   <span>
-                    💎 ฝั่งขาย ({poolShare.sellN} คน · Base{" "}
-                    {poolShare.sellBase.toFixed(1)}%)
+                    💎 ฝั่งขาย ({poolShare.eligibleSellEmployeeCount} คน · Base{" "}
+                    {poolShare.sellBaseSharePercent.toFixed(1)}%)
                   </span>
-                  <span>{poolShare.sellPct.toFixed(2)}%</span>
+                  <span>{poolShare.sellSharePercent.toFixed(2)}%</span>
                 </div>
                 <div className="text-xs text-txt-soft leading-relaxed">
-                  หัก: <b>{poolShare.sellDeductPct.toFixed(2)}%</b> · แบ่งเพื่อน:{" "}
-                  <b>{poolShare.sellSharePct.toFixed(2)}%</b>
+                  หัก: <b>{poolShare.sellLeaveDeductionPercent.toFixed(2)}%</b> ·
+                  แบ่งเพื่อน:{" "}
+                  <b>{poolShare.sellRedistributedPercent.toFixed(2)}%</b>
                   <br />
-                  ได้ชิ้น: <b className="text-green">{calc.pcsN.toFixed(1)}</b> /{" "}
-                  {poolShare.poolN}
+                  ได้ชิ้น:{" "}
+                  <b className="text-green">
+                    {salaryCalculation.normalSalePieces.toFixed(1)}
+                  </b>{" "}
+                  / {poolShare.totalSellPoolPieces}
                 </div>
               </div>
             )}
@@ -363,17 +393,21 @@ export default function SalaryAdminEdit({
               <div className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]">
                 <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
                   <span>
-                    🛍 ฝั่งรับซื้อ ({poolShare.buyN} คน · Base{" "}
-                    {poolShare.buyBase.toFixed(1)}%)
+                    🛍 ฝั่งรับซื้อ ({poolShare.eligibleBuyEmployeeCount} คน · Base{" "}
+                    {poolShare.buyBaseSharePercent.toFixed(1)}%)
                   </span>
-                  <span>{poolShare.buyPct.toFixed(2)}%</span>
+                  <span>{poolShare.buySharePercent.toFixed(2)}%</span>
                 </div>
                 <div className="text-xs text-txt-soft leading-relaxed">
-                  หัก: <b>{poolShare.buyDeductPct.toFixed(2)}%</b> · แบ่งเพื่อน:{" "}
-                  <b>{poolShare.buySharePct.toFixed(2)}%</b>
+                  หัก: <b>{poolShare.buyLeaveDeductionPercent.toFixed(2)}%</b> ·
+                  แบ่งเพื่อน:{" "}
+                  <b>{poolShare.buyRedistributedPercent.toFixed(2)}%</b>
                   <br />
-                  ได้ชิ้น: <b className="text-green">{calc.pcsB.toFixed(1)}</b> /{" "}
-                  {poolShare.poolB}
+                  ได้ชิ้น:{" "}
+                  <b className="text-green">
+                    {salaryCalculation.buyPieces.toFixed(1)}
+                  </b>{" "}
+                  / {poolShare.totalBuyPoolPieces}
                 </div>
               </div>
             )}
@@ -393,20 +427,21 @@ export default function SalaryAdminEdit({
           <div className="mt-2.5">
             <div className="text-xs text-txt-soft mb-1.5">สมาชิกในกลุ่ม:</div>
             <div className="flex flex-col gap-1">
-              {poolGroupEmps.map((g) => {
-                const gSal = salaryData[g.id]?.[selMonth];
+              {poolGroupEmployees.map((g) => {
+                const gSal = salaryData[g.id]?.[selectedMonth];
                 const gSell =
-                  (gSal?.piecesNormal || 0) + (gSal?.piecesSpecial || 0);
-                const gBuy = gSal?.piecesBuy || 0;
+                  (gSal?.normalSalePieces || 0) +
+                  (gSal?.specialSalePieces || 0);
+                const gBuy = gSal?.buyPieces || 0;
                 const gES =
-                  poolShare.topSell === 0
+                  poolShare.topSellPieces === 0
                     ? true
-                    : gSell >= poolShare.sellThreshold;
+                    : gSell >= poolShare.sellEligibilityThreshold;
                 const gEB =
-                  poolShare.topBuy === 0
+                  poolShare.topBuyPieces === 0
                     ? true
-                    : gBuy >= poolShare.buyThreshold;
-                const isMe = g.id === selEmp;
+                    : gBuy >= poolShare.buyEligibilityThreshold;
+                const isMe = g.id === selectedEmployeeId;
                 return (
                   <div
                     key={g.id}
@@ -415,7 +450,7 @@ export default function SalaryAdminEdit({
                     <span
                       className={`min-w-8 ${isMe ? "font-bold" : "font-medium"}`}
                     >
-                      {g.av}
+                      {g.avatar}
                     </span>
                     <span
                       className={`px-1.5 py-px rounded-md text-xs font-semibold ${gES ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
@@ -436,14 +471,14 @@ export default function SalaryAdminEdit({
       )}
 
       {/* Commission section — single rate or 3 sub-sections */}
-      {empRole && !empRole.poolGroup ? (
+      {employeeRole && !employeeRole.poolGroup ? (
         /* Single rate (เช่น ฝ่ายบัญชี) */
         <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
           <div className="flex items-center gap-2 mb-3.5">
             <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
             <div className="font-bold text-sm text-txt">ค่าคอม</div>
             <div className="ml-auto text-sm font-bold text-gold">
-              +฿{TH_NUMBER(calc.commSingle)}
+              +฿{formatThaiNumber(salaryCalculation.singleRateCommission)}
             </div>
           </div>
           <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
@@ -452,7 +487,7 @@ export default function SalaryAdminEdit({
               <div className="text-xs text-txt-soft">
                 Rate:{" "}
                 <b className="text-maroon">
-                  ฿{TH_NUMBER(empInfo?.ratePerPiece || 0)}/ชิ้น
+                  ฿{formatThaiNumber(employeeInfo?.singlePieceRate || 0)}/ชิ้น
                 </b>
               </div>
             </div>
@@ -461,8 +496,8 @@ export default function SalaryAdminEdit({
                 <input
                   type="number"
                   inputMode="numeric"
-                  value={data.pieces || 0}
-                  onChange={(e) => update("pieces", e.target.value)}
+                  value={data.singleRatePieces || 0}
+                  onChange={(e) => update("singleRatePieces", e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
@@ -471,7 +506,7 @@ export default function SalaryAdminEdit({
               </div>
               <div className="text-sm text-txt-soft font-semibold">=</div>
               <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                ฿{TH_NUMBER(calc.commSingle)}
+                ฿{formatThaiNumber(salaryCalculation.singleRateCommission)}
               </div>
             </div>
           </div>
@@ -486,13 +521,18 @@ export default function SalaryAdminEdit({
             <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
             <div className="font-bold text-sm text-txt">ค่าคอมตามจำนวนชิ้น</div>
             <div className="ml-auto text-sm font-bold text-gold">
-              +฿{TH_NUMBER(calc.commNormal + calc.commSpecial + calc.commBuy)}
+              +฿
+              {formatThaiNumber(
+                salaryCalculation.normalSaleCommission +
+                  salaryCalculation.specialSaleCommission +
+                  salaryCalculation.buyCommission,
+              )}
             </div>
           </div>
 
           {/* Pre-compute disabled flags */}
           {(() => {
-            const exc = empInfo?.poolExclude;
+            const exc = employeeInfo?.poolExclusion;
             const _sellDisabled = exc === "sell" || exc === "both";
             const _buyDisabled = exc === "buy" || exc === "both";
             return null;
@@ -500,7 +540,7 @@ export default function SalaryAdminEdit({
 
           {/* Normal */}
           {(() => {
-            const exc = empInfo?.poolExclude;
+            const exc = employeeInfo?.poolExclusion;
             const disabled = exc === "sell" || exc === "both";
             return (
               <div
@@ -520,7 +560,9 @@ export default function SalaryAdminEdit({
                   <div className="text-xs text-txt-soft">
                     Rate:{" "}
                     <b className="text-maroon">
-                      ฿{TH_NUMBER(empInfo?.ratePerPieceNormal || 0)}/ชิ้น
+                      ฿
+                      {formatThaiNumber(employeeInfo?.normalSalePieceRate || 0)}
+                      /ชิ้น
                     </b>
                   </div>
                 </div>
@@ -529,9 +571,11 @@ export default function SalaryAdminEdit({
                     <input
                       type="number"
                       inputMode="numeric"
-                      value={disabled ? 0 : data.piecesNormal || 0}
+                      value={disabled ? 0 : data.normalSalePieces || 0}
                       disabled={disabled}
-                      onChange={(e) => update("piecesNormal", e.target.value)}
+                      onChange={(e) =>
+                        update("normalSalePieces", e.target.value)
+                      }
                       className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
@@ -542,21 +586,25 @@ export default function SalaryAdminEdit({
                   <div
                     className={`min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-right border border-bdr ${disabled ? "text-txt-soft" : "text-green"}`}
                   >
-                    ฿{TH_NUMBER(disabled ? 0 : calc.commNormal)}
+                    ฿
+                    {formatThaiNumber(
+                      disabled ? 0 : salaryCalculation.normalSaleCommission,
+                    )}
                   </div>
                 </div>
               </div>
             );
           })()}
 
-          {/* Special — ใครขายใครได้ ไม่ขึ้นกับ poolExclude */}
+          {/* Special — ใครขายใครได้ ไม่ขึ้นกับ poolExclusion */}
           <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm font-bold text-txt">✨ ขาย (พิเศษ)</div>
               <div className="text-xs text-txt-soft">
                 Rate:{" "}
                 <b className="text-maroon">
-                  ฿{TH_NUMBER(empInfo?.ratePerPieceSpecial || 0)}/ชิ้น
+                  ฿{formatThaiNumber(employeeInfo?.specialSalePieceRate || 0)}
+                  /ชิ้น
                 </b>
               </div>
             </div>
@@ -565,8 +613,8 @@ export default function SalaryAdminEdit({
                 <input
                   type="number"
                   inputMode="numeric"
-                  value={data.piecesSpecial || 0}
-                  onChange={(e) => update("piecesSpecial", e.target.value)}
+                  value={data.specialSalePieces || 0}
+                  onChange={(e) => update("specialSalePieces", e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
@@ -575,14 +623,14 @@ export default function SalaryAdminEdit({
               </div>
               <div className="text-sm text-txt-soft font-semibold">=</div>
               <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                ฿{TH_NUMBER(calc.commSpecial)}
+                ฿{formatThaiNumber(salaryCalculation.specialSaleCommission)}
               </div>
             </div>
           </div>
 
           {/* Buy */}
           {(() => {
-            const exc = empInfo?.poolExclude;
+            const exc = employeeInfo?.poolExclusion;
             const disabled = exc === "buy" || exc === "both";
             return (
               <div
@@ -602,7 +650,7 @@ export default function SalaryAdminEdit({
                   <div className="text-xs text-txt-soft">
                     Rate:{" "}
                     <b className="text-maroon">
-                      ฿{TH_NUMBER(empInfo?.ratePerPieceBuy || 0)}/ชิ้น
+                      ฿{formatThaiNumber(employeeInfo?.buyPieceRate || 0)}/ชิ้น
                     </b>
                   </div>
                 </div>
@@ -611,9 +659,9 @@ export default function SalaryAdminEdit({
                     <input
                       type="number"
                       inputMode="numeric"
-                      value={disabled ? 0 : data.piecesBuy || 0}
+                      value={disabled ? 0 : data.buyPieces || 0}
                       disabled={disabled}
-                      onChange={(e) => update("piecesBuy", e.target.value)}
+                      onChange={(e) => update("buyPieces", e.target.value)}
                       className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
@@ -624,7 +672,10 @@ export default function SalaryAdminEdit({
                   <div
                     className={`min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-right border border-bdr ${disabled ? "text-txt-soft" : "text-green"}`}
                   >
-                    ฿{TH_NUMBER(disabled ? 0 : calc.commBuy)}
+                    ฿
+                    {formatThaiNumber(
+                      disabled ? 0 : salaryCalculation.buyCommission,
+                    )}
                   </div>
                 </div>
               </div>
@@ -648,7 +699,7 @@ export default function SalaryAdminEdit({
           <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
           <div className="font-bold text-sm text-txt">โบนัสบัตรสมาชิก</div>
           <div className="ml-auto text-sm font-bold text-maroon">
-            +฿{TH_NUMBER(calc.memberBonusTotal)}
+            +฿{formatThaiNumber(salaryCalculation.memberBonusTotal)}
           </div>
         </div>
 
@@ -659,7 +710,7 @@ export default function SalaryAdminEdit({
             <div className="text-xs text-txt-soft">
               Rate:{" "}
               <b className="text-maroon">
-                ฿{TH_NUMBER(empInfo?.ratePerPieceInvite || 0)}/ใบ
+                ฿{formatThaiNumber(employeeInfo?.invitePieceRate || 0)}/ใบ
               </b>
             </div>
           </div>
@@ -668,8 +719,8 @@ export default function SalaryAdminEdit({
               <input
                 type="number"
                 inputMode="numeric"
-                value={data.piecesInvite || 0}
-                onChange={(e) => update("piecesInvite", e.target.value)}
+                value={data.invitePieces || 0}
+                onChange={(e) => update("invitePieces", e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
@@ -678,7 +729,7 @@ export default function SalaryAdminEdit({
             </div>
             <div className="text-sm text-txt-soft font-semibold">=</div>
             <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-              ฿{TH_NUMBER(calc.commInvite)}
+              ฿{formatThaiNumber(salaryCalculation.inviteCommission)}
             </div>
           </div>
         </div>
@@ -690,7 +741,7 @@ export default function SalaryAdminEdit({
             <div className="text-xs text-txt-soft">
               Rate:{" "}
               <b className="text-maroon">
-                ฿{TH_NUMBER(empInfo?.ratePerPieceTransfer || 0)}/ใบ
+                ฿{formatThaiNumber(employeeInfo?.transferPieceRate || 0)}/ใบ
               </b>
             </div>
           </div>
@@ -699,8 +750,8 @@ export default function SalaryAdminEdit({
               <input
                 type="number"
                 inputMode="numeric"
-                value={data.piecesTransfer || 0}
-                onChange={(e) => update("piecesTransfer", e.target.value)}
+                value={data.transferPieces || 0}
+                onChange={(e) => update("transferPieces", e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
@@ -709,7 +760,7 @@ export default function SalaryAdminEdit({
             </div>
             <div className="text-sm text-txt-soft font-semibold">=</div>
             <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-              ฿{TH_NUMBER(calc.commTransfer)}
+              ฿{formatThaiNumber(salaryCalculation.transferCommission)}
             </div>
           </div>
         </div>
@@ -721,7 +772,7 @@ export default function SalaryAdminEdit({
           <div className="w-1.5 h-4.5 rounded-sm bg-green" />
           <div className="font-bold text-sm text-txt">รายรับ</div>
           <div className="ml-auto text-sm font-bold text-green">
-            +฿{TH_NUMBER(calc.earnings)}
+            +฿{formatThaiNumber(salaryCalculation.earnings)}
           </div>
         </div>
 
@@ -736,7 +787,7 @@ export default function SalaryAdminEdit({
               </span>
             </div>
             <div className="text-base font-bold text-txt mt-px">
-              ฿{TH_NUMBER(empInfo?.baseSalary || 0)}
+              ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)}
             </div>
           </div>
         </div>
@@ -764,10 +815,10 @@ export default function SalaryAdminEdit({
 
         {/* auto perfect-attendance bonus */}
         <div
-          className={`rounded-[9px] px-3.5 py-3 mt-1.5 text-sm leading-[1.7] border ${calc.attendBonus > 0 ? "bg-green-lt border-[#1A6B3A30]" : "bg-cream border-bdr"}`}
+          className={`rounded-[9px] px-3.5 py-3 mt-1.5 text-sm leading-[1.7] border ${salaryCalculation.attendanceBonus > 0 ? "bg-green-lt border-[#1A6B3A30]" : "bg-cream border-bdr"}`}
         >
           <div
-            className={`font-bold mb-1 flex items-center gap-1.5 ${calc.attendBonus > 0 ? "text-green" : "text-txt-mid"}`}
+            className={`font-bold mb-1 flex items-center gap-1.5 ${salaryCalculation.attendanceBonus > 0 ? "text-green" : "text-txt-mid"}`}
           >
             🌟 โบนัสแห่งความขยัน(ไม่หยุด){" "}
             <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
@@ -775,18 +826,26 @@ export default function SalaryAdminEdit({
             </span>
           </div>
           <div className="text-txt-mid">
-            เรท/วัน = ฿{TH_NUMBER(empInfo?.baseSalary || 0)} ÷ 30 ={" "}
-            <b>฿{TH_NUMBER(Math.round(calc.dayRate || 0))}</b>
+            เรท/วัน = ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)} ÷ 30 ={" "}
+            <b>
+              ฿
+              {formatThaiNumber(
+                Math.round(salaryCalculation.dailySalaryRate || 0),
+              )}
+            </b>
           </div>
           <div className="text-txt-mid">
-            เดือนนี้ลาวันธรรมดา <b>{calc.lvDays}</b> วัน{" "}
+            เดือนนี้ลาวันธรรมดา <b>{salaryCalculation.leaveDays}</b> วัน{" "}
             <span className="text-xs text-txt-soft">(ไม่นับวันอาทิตย์)</span>
           </div>
-          {calc.lvDays <= 2 ? (
+          {salaryCalculation.leaveDays <= 2 ? (
             <div className="text-green font-bold mt-1 pt-1 border-t border-dashed border-[#1A6B3A40]">
-              ได้โบนัส (2 − {calc.lvDays}) × ฿
-              {TH_NUMBER(Math.round(calc.dayRate || 0))} = +฿
-              {TH_NUMBER(calc.attendBonus)}
+              ได้โบนัส (2 − {salaryCalculation.leaveDays}) × ฿
+              {formatThaiNumber(
+                Math.round(salaryCalculation.dailySalaryRate || 0),
+              )}{" "}
+              = +฿
+              {formatThaiNumber(salaryCalculation.attendanceBonus)}
             </div>
           ) : (
             <div className="text-txt-soft mt-1 pt-1 border-t border-dashed border-bdr">
@@ -802,7 +861,7 @@ export default function SalaryAdminEdit({
           <div className="w-1.5 h-4.5 rounded-sm bg-red" />
           <div className="font-bold text-sm text-txt">รายการหัก</div>
           <div className="ml-auto text-sm font-bold text-red">
-            −฿{TH_NUMBER(calc.deductions)}
+            −฿{formatThaiNumber(salaryCalculation.deductions)}
           </div>
         </div>
         {FIELDS_DED.map((f) => (
@@ -834,27 +893,47 @@ export default function SalaryAdminEdit({
             </span>
           </div>
           <div>
-            เรท/วัน = ฿{TH_NUMBER(empInfo?.baseSalary || 0)} ÷ 30 ={" "}
-            <b>฿{TH_NUMBER(Math.round(calc.dayRate || 0))}</b>
+            เรท/วัน = ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)} ÷ 30 ={" "}
+            <b>
+              ฿
+              {formatThaiNumber(
+                Math.round(salaryCalculation.dailySalaryRate || 0),
+              )}
+            </b>
           </div>
           {overInfo.weekdays > 0 && (
             <div>
               วันธรรมดา {overInfo.weekdays} วัน × ฿
-              {TH_NUMBER(Math.round(calc.dayRate || 0))} ={" "}
+              {formatThaiNumber(
+                Math.round(salaryCalculation.dailySalaryRate || 0),
+              )}{" "}
+              ={" "}
               <b>
                 ฿
-                {TH_NUMBER(Math.round(overInfo.weekdays * (calc.dayRate || 0)))}
+                {formatThaiNumber(
+                  Math.round(
+                    overInfo.weekdays *
+                      (salaryCalculation.dailySalaryRate || 0),
+                  ),
+                )}
               </b>
             </div>
           )}
           {overInfo.sundays > 0 && (
             <div>
               วันอาทิตย์ {overInfo.sundays} วัน × ฿
-              {TH_NUMBER(Math.round(calc.dayRate || 0))} × 1.5 ={" "}
+              {formatThaiNumber(
+                Math.round(salaryCalculation.dailySalaryRate || 0),
+              )}{" "}
+              × 1.5 ={" "}
               <b>
                 ฿
-                {TH_NUMBER(
-                  Math.round(overInfo.sundays * (calc.dayRate || 0) * 1.5),
+                {formatThaiNumber(
+                  Math.round(
+                    overInfo.sundays *
+                      (salaryCalculation.dailySalaryRate || 0) *
+                      1.5,
+                  ),
                 )}
               </b>
             </div>
@@ -864,7 +943,7 @@ export default function SalaryAdminEdit({
           )}
           {overTotalDays > 0 && (
             <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-              รวมหัก: −฿{TH_NUMBER(calc.overQ)}
+              รวมหัก: −฿{formatThaiNumber(salaryCalculation.overQuotaDeduction)}
             </div>
           )}
         </div>
@@ -882,25 +961,25 @@ export default function SalaryAdminEdit({
           ) : (
             <>
               {monthApprovedAdvances.map((r, i) => {
-                const dt = new Date(r.approvedAt || r.submittedAt);
+                const date = new Date(r.approvedAt || r.submittedAt);
                 return (
                   <div
                     key={i}
                     className="flex justify-between items-center py-[3px]"
                   >
                     <span>
-                      {dt.toLocaleDateString("th-TH", {
+                      {date.toLocaleDateString("th-TH", {
                         day: "numeric",
                         month: "short",
                       })}{" "}
                       · {r.reason || "-"}
                     </span>
-                    <b>฿{TH_NUMBER(r.amount)}</b>
+                    <b>฿{formatThaiNumber(r.amount)}</b>
                   </div>
                 );
               })}
               <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-                รวมหัก: −฿{TH_NUMBER(calc.advanceDed)}
+                รวมหัก: −฿{formatThaiNumber(salaryCalculation.advanceDeduction)}
               </div>
             </>
           )}
@@ -933,13 +1012,13 @@ export default function SalaryAdminEdit({
             )}
           </div>
           <div className="text-2xl font-extrabold text-gold-lt mt-0.5">
-            ฿{TH_NUMBER(calc.net)}
+            ฿{formatThaiNumber(salaryCalculation.netSalary)}
           </div>
         </div>
         <div className="text-right text-sm leading-[1.7] text-[#E8C87A99]">
-          รายรับ +฿{TH_NUMBER(calc.earnings)}
+          รายรับ +฿{formatThaiNumber(salaryCalculation.earnings)}
           <br />
-          รายหัก −฿{TH_NUMBER(calc.deductions)}
+          รายหัก −฿{formatThaiNumber(salaryCalculation.deductions)}
         </div>
       </div>
 

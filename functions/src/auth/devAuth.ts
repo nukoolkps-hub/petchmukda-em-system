@@ -4,7 +4,7 @@
 
 import { getAuth } from "firebase-admin/auth";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import type { DevAuthData } from "../types.js";
+import { parseDevAuthPayload } from "../helpers/payload.js";
 
 const DEV_USERS = {
 	employee: {
@@ -27,9 +27,8 @@ export const devAuth = onCall(async (request) => {
 		);
 	}
 
-	const { role } = request.data as DevAuthData;
+	const { role } = parseDevAuthPayload(request.data);
 	const user = DEV_USERS[role];
-	if (!user) throw new HttpsError("invalid-argument", "Invalid dev role");
 
 	const auth = getAuth();
 	try {

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* ─── Brand Colors (from constants.ts C object) ──────────── */
+  /* ─── Brand Colors (from constants.ts COLORS object) ──────────── */
   --color-maroon: #7b1c1c;
   --color-maroon-dk: #5c1212;
   --color-maroon-lt: #9b3030;

@@ -10,50 +10,55 @@ export interface LineConfig {
 	LINE_LOGIN_CHANNEL_SECRET?: string;
 }
 
+export type ISODateString = string;
+export type PayrollMonth = string;
+export type RequestId = string | number;
+
 /* ─── onCall payload types ────────────────────────────────────── */
-export interface AdvanceRequestData {
-	empName: string;
+export interface NotifyAdvanceRequestPayload {
+	employeeName: string;
 	amount: number;
-	reason?: string;
-	month?: string;
+	reason: string;
+	month: PayrollMonth;
 	bank?: string;
-	bankAcc?: string;
-	submittedAt?: string;
-	requestId?: string;
+	bankAccountNumber?: string;
+	submittedAt?: ISODateString;
+	requestId?: RequestId;
 }
 
-export interface AdvanceApprovedData {
-	empLineUserId: string;
-	empName: string;
+export interface NotifyAdvanceApprovedPayload {
+	employeeLineUserId: string;
+	employeeName: string;
 	amount: number;
-	reason?: string;
-	month?: string;
-	slipUrl?: string;
-	slipImg?: string;
-	approvedAt?: string;
-	requestId?: string;
+	requestReason: string;
+	month: PayrollMonth;
+	slipImageUrl?: string | null;
+	slipImageDataUrl?: string | null;
+	approvedAt?: ISODateString;
+	requestId?: RequestId;
 }
 
-export interface AdvanceRejectedData {
-	empLineUserId: string;
-	empName: string;
+export interface NotifyAdvanceRejectedPayload {
+	employeeLineUserId: string;
+	employeeName: string;
 	amount: number;
-	reason?: string;
-	month?: string;
-	rejectedAt?: string;
-	requestId?: string;
+	requestReason: string;
+	rejectionReason?: string | null;
+	month: PayrollMonth;
+	rejectedAt?: ISODateString;
+	requestId?: RequestId;
 }
 
-export interface LineAuthData {
+export interface LineAuthPayload {
 	code: string;
 	redirectUri: string;
 }
 
-export interface DevAuthData {
+export interface DevAuthPayload {
 	role: "employee" | "admin";
 }
 
-export interface SetAdminData {
+export interface SetAdminPayload {
 	uid: string;
 	isAdmin: boolean;
 }
@@ -76,4 +81,7 @@ export interface LineImageMessage {
 	previewImageUrl: string;
 }
 
-export type LineMessage = LineTextMessage | LineFlexMessage | LineImageMessage;
+export type LinePushMessage =
+	| LineTextMessage
+	| LineFlexMessage
+	| LineImageMessage;

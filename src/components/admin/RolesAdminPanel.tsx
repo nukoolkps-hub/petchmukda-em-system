@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { C } from "../../constants";
+import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
 
 /* ─── Admin: Roles Management Panel ────────────────────────────── */
 export default function RolesAdminPanel({
   roles,
-  empDir,
-  onUpdateEmpRole,
+  employeeDirectory,
+  onUpdateEmployeeRole,
   onUpsertRole,
   onDeleteRole,
   showToast,
@@ -78,9 +78,9 @@ export default function RolesAdminPanel({
     groups[k].push(r);
   });
 
-  function changeEmpRole(empId, roleId, roleName) {
-    onUpdateEmpRole(empId, "roleId", roleId);
-    onUpdateEmpRole(empId, "role", roleName);
+  function changeEmpRole(employeeId, roleId, roleName) {
+    onUpdateEmployeeRole(employeeId, "roleId", roleId);
+    onUpdateEmployeeRole(employeeId, "role", roleName);
   }
 
   return (
@@ -176,8 +176,8 @@ export default function RolesAdminPanel({
               {groupRoles.map((rl) => {
                 const e = editing[rl.id];
                 const dirty = !!e;
-                const empCount = empDir.filter(
-                  (emp) => emp.roleId === rl.id,
+                const employeeCount = employeeDirectory.filter(
+                  (employee) => employee.roleId === rl.id,
                 ).length;
                 return (
                   <div
@@ -217,7 +217,7 @@ export default function RolesAdminPanel({
                           ${dirty ? "border border-gold bg-gold-pale/30" : "border border-bdr bg-cream"}`}
                       />
                       <span className="text-xs text-txt-soft px-2 py-0.5 rounded-lg bg-cream border border-bdr font-semibold whitespace-nowrap">
-                        {empCount} คน
+                        {employeeCount} คน
                       </span>
                     </div>
                     {dirty && (
@@ -286,9 +286,9 @@ export default function RolesAdminPanel({
                         </button>
                         <button
                           onClick={() => setConfirmDel(rl)}
-                          disabled={empCount > 0}
+                          disabled={employeeCount > 0}
                           className={`px-3 py-[7px] rounded-lg text-sm font-semibold font-[inherit]
-                            ${empCount > 0 ? "border border-bdr bg-cream text-txt-soft cursor-not-allowed" : "border border-red/25 bg-red-lt text-red cursor-pointer"}`}
+                            ${employeeCount > 0 ? "border border-bdr bg-cream text-txt-soft cursor-not-allowed" : "border border-red/25 bg-red-lt text-red cursor-pointer"}`}
                         >
                           🗑
                         </button>
@@ -308,29 +308,29 @@ export default function RolesAdminPanel({
           🎯 กำหนดตำแหน่งให้พนักงาน
         </div>
         <div className="flex flex-col gap-2">
-          {empDir.map((emp) => (
+          {employeeDirectory.map((employee) => (
             <div
-              key={emp.id}
+              key={employee.id}
               className="bg-white rounded-[10px] px-3 py-2.5 border border-bdr flex items-center gap-2.5"
             >
               <AvatarCircle
-                av={emp.av}
-                avType={emp.avType}
-                img={emp.img}
+                avatar={employee.avatar}
+                avatarType={employee.avatarType}
+                avatarImageUrl={employee.avatarImageUrl}
                 size={34}
                 fontSize={11}
-                border={`1.5px solid ${C.gold}30`}
+                border={`1.5px solid ${COLORS.gold}30`}
               />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-txt whitespace-nowrap overflow-hidden text-ellipsis">
-                  {emp.name}
+                  {employee.name}
                 </div>
               </div>
               <select
-                value={emp.roleId || ""}
+                value={employee.roleId || ""}
                 onChange={(ev) => {
                   const rl = roles.find((r) => r.id === ev.target.value);
-                  if (rl) changeEmpRole(emp.id, rl.id, rl.name);
+                  if (rl) changeEmpRole(employee.id, rl.id, rl.name);
                 }}
                 className="px-2.5 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt cursor-pointer min-w-[130px]"
               >

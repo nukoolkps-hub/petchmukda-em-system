@@ -12,22 +12,24 @@ export const monthlyPayrollSummary = onSchedule(
 	async () => {
 		const db = getFirestore();
 		const now = new Date();
-		const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-		console.log(`[monthlyPayrollSummary] Running for ${ym}`);
+		const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+		console.log(`[monthlyPayrollSummary] Running for ${yearMonth}`);
 
-		const empsSnap = await db.collection("employees").get();
+		const employeesSnapshot = await db.collection("employees").get();
 		let total = 0;
 		let count = 0;
 
-		for (const emp of empsSnap.docs) {
-			const salDoc = await db.doc(`salaries/${emp.id}/months/${ym}`).get();
-			if (salDoc.exists) {
-				const data = salDoc.data()!;
-				const base = (data.base as number) || 0;
+		for (const employee of employeesSnapshot.docs) {
+			const salDoc = await db
+				.doc(`salaries/${employee.id}/months/${yearMonth}`)
+				.get();
+			const data = salDoc.data();
+			if (data) {
+				const base = (data.baseSalary as number) || 0;
 				const pieces =
-					((data.pieces as number) || 0) +
-					((data.piecesNormal as number) || 0) +
-					((data.piecesSpecial as number) || 0);
+					((data.singleRatePieces as number) || 0) +
+					((data.normalSalePieces as number) || 0) +
+					((data.specialSalePieces as number) || 0);
 				total += base + pieces * 50;
 				count++;
 			}
@@ -40,7 +42,7 @@ export const monthlyPayrollSummary = onSchedule(
 				config.ADMIN_LINE_USER_ID,
 				{
 					type: "text",
-					text: `📊 สรุปเงินเดือน ${ym}\n\nพนักงาน: ${count} คน\nยอดประมาณ: ฿${total.toLocaleString("th-TH")}\n\nเปิดระบบเพื่อดูรายละเอียด`,
+					text: `📊 สรุปเงินเดือน ${yearMonth}\n\nพนักงาน: ${count} คน\nยอดประมาณ: ฿${total.toLocaleString("th-TH")}\n\nเปิดระบบเพื่อดูรายละเอียด`,
 				},
 			);
 		}

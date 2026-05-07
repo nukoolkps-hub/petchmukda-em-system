@@ -1,6 +1,6 @@
 /* ─── Payroll Confirmations ────────────────────────────────────
    เก็บ summary ว่า admin ยืนยันยอดเงินเดือนของเดือนใดแล้ว
-   doc id: "{ym}" เช่น "2026-04"                                  */
+   doc id: "{yearMonth}" เช่น "2026-04"                                  */
 import {
   collection,
   doc,
@@ -38,12 +38,12 @@ export async function getAllPayrollConfirms() {
   return result;
 }
 
-export async function setPayrollConfirm(ym, summary) {
-  await setDoc(doc(ref, ym), {
-    ym,
+export async function setPayrollConfirm(yearMonth, summary) {
+  await setDoc(doc(ref, yearMonth), {
+    yearMonth,
     confirmedAt: summary.confirmedAt,
     totalAmount: summary.totalAmount,
-    empCount: summary.empCount,
+    employeeCount: summary.employeeCount,
     updatedAt: Date.now(),
   });
 }

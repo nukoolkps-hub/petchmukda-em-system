@@ -21,7 +21,7 @@ export const onAdvanceCreated = onDocumentCreated(
 
 		const flexMessage = {
 			type: "flex" as const,
-			altText: `💸 คำขอเบิก ฿${advance.amount} — ${advance.empName}`,
+			altText: `💸 คำขอเบิก ฿${advance.amount} — ${advance.employeeName}`,
 			contents: {
 				type: "bubble",
 				body: {
@@ -38,7 +38,7 @@ export const onAdvanceCreated = onDocumentCreated(
 						{ type: "separator", margin: "md" },
 						{
 							type: "text",
-							text: advance.empName as string,
+							text: advance.employeeName as string,
 							weight: "bold",
 							size: "lg",
 							margin: "md",

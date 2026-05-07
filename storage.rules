@@ -16,20 +16,20 @@ service firebase.storage {
         && request.resource.contentType.matches("image/.*");
     }
 
-    function isEmployeeOwner(empId) {
+    function isEmployeeOwner(employeeId) {
       return isSignedIn()
-        && firestore.get(/databases/(default)/documents/employees/$(empId)).data.lineUserId == request.auth.uid;
+        && firestore.get(/databases/(default)/documents/employees/$(employeeId)).data.lineUserId == request.auth.uid;
     }
 
     function isAdvanceOwner(advanceId) {
       return isEmployeeOwner(
-        firestore.get(/databases/(default)/documents/advances/$(advanceId)).data.empId
+        firestore.get(/databases/(default)/documents/advances/$(advanceId)).data.employeeId
       );
     }
 
-    match /avatars/{empId}/{fileName} {
+    match /avatars/{employeeId}/{fileName} {
       allow read: if isSignedIn();
-      allow write: if (isAdmin() || isEmployeeOwner(empId)) && isImageUpload();
+      allow write: if (isAdmin() || isEmployeeOwner(employeeId)) && isImageUpload();
     }
 
     match /advanceSlips/{advanceId}/{fileName} {

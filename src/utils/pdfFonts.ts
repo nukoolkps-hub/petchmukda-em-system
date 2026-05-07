@@ -10,9 +10,9 @@
 // pdfmake รองรับเฉพาะ TTF — เปลี่ยนเป็น TTF จาก CDN อื่น
 const FONT_URLS_TTF: Record<string, string> = {
   "Sarabun-Regular":
-    "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/sarabun/Sarabun-Regular.ttf",
+    "https://cdn.jsdelivr.netSalary/gh/google/fonts@main/ofl/sarabun/Sarabun-Regular.ttf",
   "Sarabun-Bold":
-    "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/sarabun/Sarabun-Bold.ttf",
+    "https://cdn.jsdelivr.netSalary/gh/google/fonts@main/ofl/sarabun/Sarabun-Bold.ttf",
 };
 
 const CACHE_VERSION = "v1";

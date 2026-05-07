@@ -1,5 +1,5 @@
 /* ─── Salaries CRUD (nested structure) ─────────────────────────
-   Path: /salaries/{empId}/months/{ym}
+   Path: /salaries/{employeeId}/months/{yearMonth}
    เช่น  /salaries/e1/months/2026-04                              */
 import {
   collection,
@@ -13,29 +13,29 @@ import {
 } from "firebase/firestore";
 import { COLLECTIONS, db } from "./config";
 
-function monthsRef(empId) {
-  return collection(db, COLLECTIONS.SALARIES, empId, "months");
+function monthsRef(employeeId) {
+  return collection(db, COLLECTIONS.SALARIES, employeeId, "months");
 }
 
-function monthRef(empId, ym) {
-  return doc(db, COLLECTIONS.SALARIES, empId, "months", ym);
+function monthRef(employeeId, yearMonth) {
+  return doc(db, COLLECTIONS.SALARIES, employeeId, "months", yearMonth);
 }
 
 /* ─── Subscribe to all salaries (all employees, all months) ────
-   ใช้ collectionGroup query — ดึง salaries/{empId}/months/{ym} ทั้งหมด */
+   ใช้ collectionGroup query — ดึง salaries/{employeeId}/months/{yearMonth} ทั้งหมด */
 export function subscribeAllSalaries(onChange, onError) {
   return onSnapshot(
     collectionGroup(db, "months"),
     (snap) => {
-      // แปลงเป็น { empId: { ym: data } } ให้เข้ากับ format เดิม
+      // แปลงเป็น { employeeId: { yearMonth: data } } ให้เข้ากับ format เดิม
       const result = {};
       snap.docs.forEach((d) => {
-        // path = salaries/{empId}/months/{ym}
+        // path = salaries/{employeeId}/months/{yearMonth}
         const parts = d.ref.path.split("/");
-        const empId = parts[1];
-        const ym = parts[3];
-        if (!result[empId]) result[empId] = {};
-        result[empId][ym] = d.data();
+        const employeeId = parts[1];
+        const yearMonth = parts[3];
+        if (!result[employeeId]) result[employeeId] = {};
+        result[employeeId][yearMonth] = d.data();
       });
       onChange(result);
     },
@@ -47,15 +47,15 @@ export function subscribeAllSalaries(onChange, onError) {
 }
 
 /* ─── Subscribe salaries for one employee ───────────────────── */
-export function subscribeEmployeeSalaries(empId, onChange, onError) {
+export function subscribeEmployeeSalaries(employeeId, onChange, onError) {
   return onSnapshot(
-    monthsRef(empId),
+    monthsRef(employeeId),
     (snap) => {
       const result = {};
       snap.docs.forEach((d) => {
         result[d.id] = d.data();
       });
-      onChange({ [empId]: result });
+      onChange({ [employeeId]: result });
     },
     (err) => {
       console.error("[Salaries] employee subscribe error:", err);
@@ -65,14 +65,14 @@ export function subscribeEmployeeSalaries(empId, onChange, onError) {
 }
 
 /* ─── Get salary for specific employee/month ───────────────── */
-export async function getSalary(empId, ym) {
-  const snap = await getDoc(monthRef(empId, ym));
+export async function getSalary(employeeId, yearMonth) {
+  const snap = await getDoc(monthRef(employeeId, yearMonth));
   return snap.exists() ? snap.data() : null;
 }
 
 /* ─── Get all months for specific employee ─────────────────── */
-export async function getEmployeeSalaries(empId) {
-  const snap = await getDocs(monthsRef(empId));
+export async function getEmployeeSalaries(employeeId) {
+  const snap = await getDocs(monthsRef(employeeId));
   const result = {};
   snap.docs.forEach((d) => {
     result[d.id] = d.data();
@@ -81,17 +81,17 @@ export async function getEmployeeSalaries(empId) {
 }
 
 /* ─── Set salary (create/replace) ──────────────────────────── */
-export async function setSalary(empId, ym, data) {
-  await setDoc(monthRef(empId, ym), {
+export async function setSalary(employeeId, yearMonth, data) {
+  await setDoc(monthRef(employeeId, yearMonth), {
     ...data,
     updatedAt: Date.now(),
   });
 }
 
 /* ─── Update salary (merge fields) ─────────────────────────── */
-export async function updateSalary(empId, ym, fields) {
+export async function updateSalary(employeeId, yearMonth, fields) {
   await setDoc(
-    monthRef(empId, ym),
+    monthRef(employeeId, yearMonth),
     {
       ...fields,
       updatedAt: Date.now(),
@@ -101,6 +101,6 @@ export async function updateSalary(empId, ym, fields) {
 }
 
 /* ─── Delete salary ────────────────────────────────────────── */
-export async function deleteSalary(empId, ym) {
-  await deleteDoc(monthRef(empId, ym));
+export async function deleteSalary(employeeId, yearMonth) {
+  await deleteDoc(monthRef(employeeId, yearMonth));
 }

@@ -2,7 +2,7 @@
 
 import { IconBook2, IconEdit } from "@tabler/icons-react";
 import { useLocation } from "react-router-dom";
-import { C } from "../../constants";
+import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
 import Diamond from "../shared/Diamond";
 import MosaicPattern from "../shared/MosaicPattern";
@@ -57,7 +57,7 @@ export default function MobileHeader({
                       cy="24"
                       r="21"
                       fill="none"
-                      stroke={C.goldLt}
+                      stroke={COLORS.goldLight}
                       strokeWidth="3"
                       strokeOpacity="0.2"
                     />
@@ -66,7 +66,7 @@ export default function MobileHeader({
                       cy="24"
                       r="21"
                       fill="none"
-                      stroke={C.goldLt}
+                      stroke={COLORS.goldLight}
                       strokeWidth="3"
                       strokeLinecap="round"
                       strokeDasharray="131.95"
@@ -77,7 +77,10 @@ export default function MobileHeader({
                     />
                   </svg>
                 )}
-                <Diamond size={20} color={holding ? "#fff" : C.goldLt} />
+                <Diamond
+                  size={20}
+                  color={holding ? "#fff" : COLORS.goldLight}
+                />
               </div>
               <div>
                 <div className="text-gold-lt font-extrabold text-lg leading-none tracking-tight">
@@ -116,12 +119,12 @@ export default function MobileHeader({
               className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3.5 flex-1"
             >
               <AvatarCircle
-                av={profile.av}
-                avType={profile.avType}
-                img={profile.img}
+                avatar={profile.avatar}
+                avatarType={profile.avatarType}
+                avatarImageUrl={profile.avatarImageUrl}
                 size={56}
                 fontSize={18}
-                border={`2.5px solid ${C.goldLt}50`}
+                border={`2.5px solid ${COLORS.goldLight}50`}
               />
               <div className="text-left">
                 <div className="text-gold-lt/50 text-sm">สวัสดีค่ะ</div>

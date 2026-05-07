@@ -64,8 +64,8 @@ export default function useAuth(): UseAuthReturn {
         // หา employee record ที่ผูกกับ user นี้
         // - LINE: uid = LINE userId (จาก custom token)
         // - Google: matching by email หรือ uid
-        const emp = await getEmployeeByLineId(firebaseUser.uid);
-        setEmployee(emp);
+        const employee = await getEmployeeByLineId(firebaseUser.uid);
+        setEmployee(employee);
       } catch (err) {
         console.error("[useAuth]", err);
         setError(err as Error);

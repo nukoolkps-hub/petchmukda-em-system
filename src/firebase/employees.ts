@@ -69,7 +69,7 @@ export async function getEmployeeByLineId(lineUserId) {
 }
 
 /* ─── Create / Update ─────────────────────────────────────────
-   id = firebase auto ID (สำหรับใหม่) หรือ existing emp.id           */
+   id = firebase auto ID (สำหรับใหม่) หรือ existing employee.id           */
 export async function upsertEmployee(id, data) {
   const cleanId = id || doc(ref).id; // gen ใหม่ถ้าไม่มี
   await setDoc(

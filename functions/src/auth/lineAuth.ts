@@ -5,12 +5,10 @@
 import { getAuth } from "firebase-admin/auth";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { getLineConfig } from "../helpers/config.js";
-import type { LineAuthData } from "../types.js";
+import { parseLineAuthPayload } from "../helpers/payload.js";
 
 export const lineAuth = onCall(async (request) => {
-	const { code, redirectUri } = request.data as LineAuthData;
-	if (!code || !redirectUri)
-		throw new HttpsError("invalid-argument", "Missing code or redirectUri");
+	const { code, redirectUri } = parseLineAuthPayload(request.data);
 
 	const config = await getLineConfig();
 	if (!config.LINE_LOGIN_CHANNEL_ID || !config.LINE_LOGIN_CHANNEL_SECRET) {

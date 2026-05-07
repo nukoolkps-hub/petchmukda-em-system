@@ -1,35 +1,35 @@
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useState } from "react";
-import { C, TH_MONTHS } from "../../constants";
+import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useAdvancesByStatusAndMonth } from "../../firebase/hooks/useFirestore";
 import { uploadAdvanceSlip } from "../../firebase/storage";
-import { TH_NUMBER } from "../../utils/format";
+import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 
 type AdvanceFilter = "pending" | "approved" | "rejected";
 
-function currentYm() {
+function currentYearMonth() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function formatMonthLabel(ym) {
-  const [y, mo] = String(ym || "").split("-");
-  const monthName = TH_MONTHS[parseInt(mo, 10) - 1];
-  if (!monthName || !y) return ym;
+function formatMonthLabel(yearMonth) {
+  const [y, mo] = String(yearMonth || "").split("-");
+  const monthName = THAI_MONTH_NAMES[parseInt(mo, 10) - 1];
+  if (!monthName || !y) return yearMonth;
   return `${monthName} ${parseInt(y, 10) + 543}`;
 }
 
 /* ─── Admin: Advance Requests Panel ────────────────────────────── */
 export default function AdminAdvancePanel({
   advanceRequests,
-  empDir,
+  employeeDirectory,
   onUpdate,
 }) {
   const [filter, setFilter] = useState<AdvanceFilter>("pending");
-  const [selectedMonth, setSelectedMonth] = useState(currentYm);
+  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth);
   const [confirmReject, setConfirmReject] = useState<any>(null);
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null); // request.id ที่เพิ่งกด copy
   const [uploadingSlip, setUploadingSlip] = useState<string | number | null>(
@@ -37,7 +37,7 @@ export default function AdminAdvancePanel({
   );
   const monthScopedResult = useAdvancesByStatusAndMonth({
     status: filter === "pending" ? null : filter,
-    ym: selectedMonth,
+    yearMonth: selectedMonth,
     enabled: filter !== "pending",
   });
 
@@ -80,19 +80,19 @@ export default function AdminAdvancePanel({
   const loading = showMonthFilter && monthScopedResult.loading;
   const error = showMonthFilter ? monthScopedResult.error : null;
 
-  async function handleApproveSlip(req, file) {
-    setUploadingSlip(req.id);
+  async function handleApproveSlip(request, file) {
+    setUploadingSlip(request.id);
     try {
       const dataUrl = await resizeSlip(file);
-      const slipUrl = await uploadAdvanceSlip(req.id, dataUrl);
+      const slipImageUrl = await uploadAdvanceSlip(request.id, dataUrl);
       await onUpdate(
-        req.id,
+        request.id,
         {
           status: "approved",
-          slipUrl,
+          slipImageUrl,
           approvedAt: new Date().toISOString(),
         },
-        req,
+        request,
       );
     } catch (err) {
       console.error("[AdminAdvancePanel] upload slip failed:", err);
@@ -102,14 +102,14 @@ export default function AdminAdvancePanel({
     }
   }
 
-  function handleReject(req) {
+  function handleReject(request) {
     onUpdate(
-      req.id,
+      request.id,
       {
         status: "rejected",
         rejectedAt: new Date().toISOString(),
       },
-      req,
+      request,
     );
     setConfirmReject(null);
   }
@@ -149,7 +149,9 @@ export default function AdminAdvancePanel({
           <input
             type="month"
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value || currentYm())}
+            onChange={(e) =>
+              setSelectedMonth(e.target.value || currentYearMonth())
+            }
             className="px-2.5 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-white font-[inherit] outline-none"
           />
           <span className="text-xs text-txt-soft min-w-0 truncate">
@@ -179,32 +181,45 @@ export default function AdminAdvancePanel({
 
       {!loading && !error && (
         <div className="flex flex-col gap-2.5">
-          {filtered.map((req) => {
-            const slipPreview = req.slipUrl || req.slipImg;
-            const empInfo =
-              empDir.find((e) => e.id === req.empId) ||
-              empDir.find((e) => e.name === req.empName);
+          {filtered.map((request) => {
+            const slipPreview =
+              request.slipImageUrl || request.slipImageDataUrl;
+            const employeeInfo =
+              employeeDirectory.find((e) => e.id === request.employeeId) ||
+              employeeDirectory.find((e) => e.name === request.employeeName);
             const sMap = {
-              pending: { bg: C.amberLt, color: C.amber, label: "รออนุมัติ" },
-              approved: { bg: C.greenLt, color: C.green, label: "โอนแล้ว" },
-              rejected: { bg: C.redLt, color: C.red, label: "ไม่อนุมัติ" },
+              pending: {
+                bg: COLORS.amberLight,
+                color: COLORS.amber,
+                label: "รออนุมัติ",
+              },
+              approved: {
+                bg: COLORS.greenLight,
+                color: COLORS.green,
+                label: "โอนแล้ว",
+              },
+              rejected: {
+                bg: COLORS.redLight,
+                color: COLORS.red,
+                label: "ไม่อนุมัติ",
+              },
             };
-            const s = sMap[req.status] || sMap.pending;
-            const dt = new Date(req.submittedAt);
+            const s = sMap[request.status] || sMap.pending;
+            const date = new Date(request.submittedAt);
             return (
               <div
-                key={req.id}
+                key={request.id}
                 className="bg-white rounded-[14px] px-4 py-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr"
               >
                 <div className="flex items-center gap-3 mb-2.5">
-                  {empInfo ? (
+                  {employeeInfo ? (
                     <AvatarCircle
-                      av={empInfo.av}
-                      avType={empInfo.avType}
-                      img={empInfo.img}
+                      avatar={employeeInfo.avatar}
+                      avatarType={employeeInfo.avatarType}
+                      avatarImageUrl={employeeInfo.avatarImageUrl}
                       size={40}
                       fontSize={13}
-                      border={`2px solid ${C.gold}40`}
+                      border={`2px solid ${COLORS.gold}40`}
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gold flex items-center justify-center text-white font-bold text-sm">
@@ -213,10 +228,10 @@ export default function AdminAdvancePanel({
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-txt text-sm">
-                      {req.empName}
+                      {request.employeeName}
                     </div>
                     <div className="text-xs text-txt-soft">
-                      {dt.toLocaleDateString("th-TH", {
+                      {date.toLocaleDateString("th-TH", {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
@@ -236,47 +251,53 @@ export default function AdminAdvancePanel({
                 <div className="flex items-center justify-between px-3 py-2.5 bg-gold-pale rounded-[10px] mb-2.5 border border-[#C9973A30]">
                   <span className="text-sm text-txt-mid">จำนวนเงินที่ขอเบิก</span>
                   <span className="text-xl font-extrabold text-maroon">
-                    ฿{TH_NUMBER(req.amount)}
+                    ฿{formatThaiNumber(request.amount)}
                   </span>
                 </div>
 
                 <div className="text-sm text-txt-mid mb-2.5 leading-normal">
-                  <span className="text-txt-soft">เหตุผล:</span> {req.reason}
+                  <span className="text-txt-soft">เหตุผล:</span> {request.reason}
                 </div>
 
-                {empInfo && (empInfo.bank || empInfo.bankAcc) && (
-                  <button
-                    onClick={() => copyToClipboard(empInfo.bankAcc, req.id)}
-                    className={`w-full text-sm mb-2.5 px-3 py-2.5 bg-cream rounded-lg cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
-                    ${copiedAcc === req.id ? "border border-green" : "border border-bdr"}`}
-                  >
-                    <span className="text-sm">🏦</span>
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="text-xs text-txt-soft mb-px">
-                        {empInfo.bank || "-"}
-                      </div>
-                      <div className="text-sm font-bold text-txt tracking-[0.04em]">
-                        {empInfo.bankAcc || "-"}
-                      </div>
-                    </div>
-                    <div
-                      className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-xs font-bold whitespace-nowrap transition-all
-                    ${copiedAcc === req.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
+                {employeeInfo &&
+                  (employeeInfo.bank || employeeInfo.bankAccountNumber) && (
+                    <button
+                      onClick={() =>
+                        copyToClipboard(
+                          employeeInfo.bankAccountNumber,
+                          request.id,
+                        )
+                      }
+                      className={`w-full text-sm mb-2.5 px-3 py-2.5 bg-cream rounded-lg cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
+                    ${copiedAcc === request.id ? "border border-green" : "border border-bdr"}`}
                     >
-                      {copiedAcc === req.id ? (
-                        <>
-                          <IconCheck size={13} stroke={3} />
-                          คัดลอกแล้ว
-                        </>
-                      ) : (
-                        <>
-                          <IconCopy size={13} stroke={2.2} />
-                          คัดลอก
-                        </>
-                      )}
-                    </div>
-                  </button>
-                )}
+                      <span className="text-sm">🏦</span>
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="text-xs text-txt-soft mb-px">
+                          {employeeInfo.bank || "-"}
+                        </div>
+                        <div className="text-sm font-bold text-txt tracking-[0.04em]">
+                          {employeeInfo.bankAccountNumber || "-"}
+                        </div>
+                      </div>
+                      <div
+                        className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-xs font-bold whitespace-nowrap transition-all
+                    ${copiedAcc === request.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
+                      >
+                        {copiedAcc === request.id ? (
+                          <>
+                            <IconCheck size={13} stroke={3} />
+                            คัดลอกแล้ว
+                          </>
+                        ) : (
+                          <>
+                            <IconCopy size={13} stroke={2.2} />
+                            คัดลอก
+                          </>
+                        )}
+                      </div>
+                    </button>
+                  )}
 
                 {/* slip preview */}
                 {slipPreview && (
@@ -301,25 +322,25 @@ export default function AdminAdvancePanel({
                 )}
 
                 {/* actions */}
-                {req.status === "pending" && (
+                {request.status === "pending" && (
                   <div className="flex gap-2 mt-2.5">
                     <button
-                      onClick={() => setConfirmReject(req)}
+                      onClick={() => setConfirmReject(request)}
                       className="px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-red/25 bg-red-lt text-red text-sm font-semibold cursor-pointer font-[inherit]"
                     >
                       ❌ ปฏิเสธ
                     </button>
                     <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-gold)/0.25]">
-                      {uploadingSlip === req.id
+                      {uploadingSlip === request.id
                         ? "กำลังอัปโหลด..."
                         : "📤 อัปโหลดสลิป (อนุมัติ)"}
                       <input
                         type="file"
                         accept="image/*"
-                        disabled={uploadingSlip === req.id}
+                        disabled={uploadingSlip === request.id}
                         onChange={(e) => {
                           const f = e.target.files?.[0];
-                          if (f) handleApproveSlip(req, f);
+                          if (f) handleApproveSlip(request, f);
                         }}
                         className="hidden"
                       />
@@ -327,18 +348,18 @@ export default function AdminAdvancePanel({
                   </div>
                 )}
 
-                {req.status === "approved" && !slipPreview && (
+                {request.status === "approved" && !slipPreview && (
                   <label className="block px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-gold/40 bg-gold-pale text-maroon text-sm font-semibold cursor-pointer font-[inherit] text-center">
-                    {uploadingSlip === req.id
+                    {uploadingSlip === request.id
                       ? "กำลังอัปโหลด..."
                       : "📤 อัปโหลดสลิปย้อนหลัง"}
                     <input
                       type="file"
                       accept="image/*"
-                      disabled={uploadingSlip === req.id}
+                      disabled={uploadingSlip === request.id}
                       onChange={(e) => {
                         const f = e.target.files?.[0];
-                        if (f) handleApproveSlip(req, f);
+                        if (f) handleApproveSlip(request, f);
                       }}
                       className="hidden"
                     />
@@ -361,7 +382,8 @@ export default function AdminAdvancePanel({
             ปฏิเสธคำขอนี้?
           </div>
           <div className="text-sm text-txt-mid text-center mb-5">
-            {confirmReject.empName} · ฿{TH_NUMBER(confirmReject.amount)}
+            {confirmReject.employeeName} · ฿
+            {formatThaiNumber(confirmReject.amount)}
           </div>
           <div className="flex gap-2.5">
             <button

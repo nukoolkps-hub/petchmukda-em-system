@@ -61,7 +61,7 @@ if (useEmulators) {
 export const COLLECTIONS = {
   EMPLOYEES: "employees",
   LEAVES: "leaves",
-  SALARIES: "salaries", // /salaries/{empId}/months/{ym}
+  SALARIES: "salaries", // /salaries/{employeeId}/months/{yearMonth}
   ADVANCES: "advances",
   ROLES: "roles",
   PAYROLL_CONFIRMS: "payrollConfirms",

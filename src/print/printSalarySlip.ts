@@ -1,4 +1,4 @@
-import { TH_MONTHS } from "../constants";
+import { THAI_MONTH_NAMES } from "../constants";
 import { buildSalarySlipDocDef } from "./pdfBuilders/salarySlipPDF";
 
 /* ─── Print Salary Slip ──────────────────────────────────────────
@@ -9,106 +9,107 @@ import { buildSalarySlipDocDef } from "./pdfBuilders/salarySlipPDF";
 function buildSalarySlipHTML(
   {
     profile,
-    empInfo,
-    empRole,
+    employeeInfo,
+    employeeRole,
     data,
-    calc,
+    salaryCalculation,
     poolShare,
-    selMonth,
+    selectedMonth,
     monthApprovedAdvances,
   }: any,
   opts: { includePrintControls?: boolean } = {},
 ) {
-  if (!data || !calc) return null;
+  if (!data || !salaryCalculation) return null;
 
   // includePrintControls=true → มีปุ่มพิมพ์ + auto-print script
   const includePrintControls = opts.includePrintControls !== false;
 
-  const [y, mo] = selMonth.split("-");
-  const monthLabel = `${TH_MONTHS[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+  const [y, mo] = selectedMonth.split("-");
+  const monthLabel = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
   const printDate = new Date().toLocaleDateString("th-TH", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  const empName = profile?.name || empInfo?.name || "-";
-  const empPosition = profile?.role || empInfo?.role || "-";
-  const bank = empInfo?.bank || profile?.bank || "-";
-  const bankAcc = empInfo?.bankAcc || profile?.bankAcc || "-";
+  const employeeName = profile?.name || employeeInfo?.name || "-";
+  const employeePosition = profile?.role || employeeInfo?.role || "-";
+  const bank = employeeInfo?.bank || profile?.bank || "-";
+  const bankAccountNumber =
+    employeeInfo?.bankAccountNumber || profile?.bankAccountNumber || "-";
 
-  const num = (n) =>
-    Number(n || 0).toLocaleString("th-TH", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  const NUM = (n) => Number(n || 0).toLocaleString("th-TH");
+  const formatNumber = (value) => Number(value || 0).toLocaleString("th-TH");
 
   // ── สร้างรายการรายรับ ──
   const earnRows: { label: string; value: any }[] = [];
-  earnRows.push({ label: "เงินเดือนพื้นฐาน", value: calc.baseSalary });
-  if (calc.isSingle) {
-    if (calc.commSingle > 0)
+  earnRows.push({ label: "เงินเดือนพื้นฐาน", value: salaryCalculation.baseSalary });
+  if (salaryCalculation.usesSinglePieceRate) {
+    if (salaryCalculation.singleRateCommission > 0)
       earnRows.push({
-        label: `ค่าคอมตามจำนวนชิ้น (${calc.pcsSingle} ชิ้น × ฿${NUM(calc.rSingle)})`,
-        value: calc.commSingle,
+        label: `ค่าคอมตามจำนวนชิ้น (${salaryCalculation.singleRatePieces} ชิ้น × ฿${formatNumber(salaryCalculation.singlePieceRate)})`,
+        value: salaryCalculation.singleRateCommission,
       });
   } else {
-    if (calc.commNormal > 0)
+    if (salaryCalculation.normalSaleCommission > 0)
       earnRows.push({
-        label: `ค่าคอมขาย-ทั่วไป (${calc.pcsN.toFixed(1)} ชิ้น × ฿${NUM(calc.rNormal)})`,
-        value: calc.commNormal,
+        label: `ค่าคอมขาย-ทั่วไป (${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatNumber(salaryCalculation.normalSalePieceRate)})`,
+        value: salaryCalculation.normalSaleCommission,
       });
-    if (calc.commSpecial > 0)
+    if (salaryCalculation.specialSaleCommission > 0)
       earnRows.push({
-        label: `ค่าคอมขาย-พิเศษ (${calc.pcsS} ชิ้น × ฿${NUM(calc.rSpecial)})`,
-        value: calc.commSpecial,
+        label: `ค่าคอมขาย-พิเศษ (${salaryCalculation.specialSalePieces} ชิ้น × ฿${formatNumber(salaryCalculation.specialSalePieceRate)})`,
+        value: salaryCalculation.specialSaleCommission,
       });
-    if (calc.commBuy > 0)
+    if (salaryCalculation.buyCommission > 0)
       earnRows.push({
-        label: `ค่าคอมรับซื้อ (${calc.pcsB.toFixed(1)} ชิ้น × ฿${NUM(calc.rBuy)})`,
-        value: calc.commBuy,
+        label: `ค่าคอมรับซื้อ (${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatNumber(salaryCalculation.buyPieceRate)})`,
+        value: salaryCalculation.buyCommission,
       });
   }
-  if (calc.commInvite > 0)
+  if (salaryCalculation.inviteCommission > 0)
     earnRows.push({
-      label: `โบนัสเชิญชวนสมัครบัตร (${calc.pcsI} ใบ × ฿${NUM(calc.rInvite)})`,
-      value: calc.commInvite,
+      label: `โบนัสเชิญชวนสมัครบัตร (${salaryCalculation.invitePieces} ใบ × ฿${formatNumber(salaryCalculation.invitePieceRate)})`,
+      value: salaryCalculation.inviteCommission,
     });
-  if (calc.commTransfer > 0)
+  if (salaryCalculation.transferCommission > 0)
     earnRows.push({
-      label: `โบนัสย้ายข้อมูลบัตร (${calc.pcsT} ใบ × ฿${NUM(calc.rTransfer)})`,
-      value: calc.commTransfer,
+      label: `โบนัสย้ายข้อมูลบัตร (${salaryCalculation.transferPieces} ใบ × ฿${formatNumber(salaryCalculation.transferPieceRate)})`,
+      value: salaryCalculation.transferCommission,
     });
-  if (calc.attendBonus > 0)
+  if (salaryCalculation.attendanceBonus > 0)
     earnRows.push({
-      label: `โบนัสแห่งความขยัน(ไม่หยุด) (${calc.bonusDays} วัน × ฿${NUM(Math.round(calc.dayRate))})`,
-      value: calc.attendBonus,
+      label: `โบนัสแห่งความขยัน(ไม่หยุด) (${salaryCalculation.bonusDays} วัน × ฿${formatNumber(Math.round(salaryCalculation.dailySalaryRate))})`,
+      value: salaryCalculation.attendanceBonus,
     });
 
   // ── รายการหัก ──
   const dedRows: { label: string; value: any }[] = [];
   if (data.lateDeduction > 0)
     dedRows.push({ label: "หักขาดงาน/มาสาย", value: data.lateDeduction });
-  if (calc.advanceDed > 0) {
+  if (salaryCalculation.advanceDeduction > 0) {
     const detail =
       monthApprovedAdvances && monthApprovedAdvances.length > 0
         ? ` (${monthApprovedAdvances.length} รายการ)`
         : "";
-    dedRows.push({ label: `หักเงินเบิกล่วงหน้า${detail}`, value: calc.advanceDed });
+    dedRows.push({
+      label: `หักเงินเบิกล่วงหน้า${detail}`,
+      value: salaryCalculation.advanceDeduction,
+    });
   }
   if (data.socialSecurity > 0)
     dedRows.push({ label: "หักประกันสังคม", value: data.socialSecurity });
-  if (calc.overQ > 0) {
+  if (salaryCalculation.overQuotaDeduction > 0) {
     const detail: string[] = [];
-    if (calc.wd > 0)
-      detail.push(`วันธรรมดา ${calc.wd} × ฿${NUM(Math.round(calc.dayRate))}`);
-    if (calc.sun > 0)
+    if (salaryCalculation.weekdayOverQuotaDays > 0)
       detail.push(
-        `วันอาทิตย์ ${calc.sun} × ฿${NUM(Math.round(calc.dayRate))} × 1.5`,
+        `วันธรรมดา ${salaryCalculation.weekdayOverQuotaDays} × ฿${formatNumber(Math.round(salaryCalculation.dailySalaryRate))}`,
+      );
+    if (salaryCalculation.sundayOverQuotaDays > 0)
+      detail.push(
+        `วันอาทิตย์ ${salaryCalculation.sundayOverQuotaDays} × ฿${formatNumber(Math.round(salaryCalculation.dailySalaryRate))} × 1.5`,
       );
     dedRows.push({
       label: `หักลาเกินโควต้า (${detail.join(" + ")})`,
-      value: calc.overQ,
+      value: salaryCalculation.overQuotaDeduction,
     });
   }
 
@@ -116,7 +117,7 @@ function buildSalarySlipHTML(
 <html lang="th">
 <head>
   <meta charset="utf-8"/>
-  <title>สลิปเงินเดือน — ${empName} ${monthLabel}</title>
+  <title>สลิปเงินเดือน — ${employeeName} ${monthLabel}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -161,7 +162,7 @@ function buildSalarySlipHTML(
     }
     table{width:100%;border-collapse:collapse;font-size:13px;}
     table td{padding:8px 4px;border-bottom:1px dashed #E8D5B0;color:#2D1A0E;}
-    table td.amt{text-align:right;font-weight:600;font-family:'Prompt';white-space:nowrap;}
+    table td.amountValue{text-align:right;font-weight:600;font-family:'Prompt';white-space:nowrap;}
     table td.green{color:#1A6B3A;}
     table td.red{color:#C0392B;}
     .row-total{
@@ -169,15 +170,15 @@ function buildSalarySlipHTML(
       padding:8px 4px;font-weight:700;border-top:2px solid #C9973A;margin-top:4px;
     }
     .row-total .label{font-size:13px;color:#2D1A0E;}
-    .row-total .amt{font-size:15px;}
-    .net-pay{
+    .row-total .amountValue{font-size:15px;}
+    .netSalary-pay{
       margin-top:18px;background:linear-gradient(135deg,#5C1212,#7B1C1C);
       color:#E8C87A;padding:18px 22px;border-radius:10px;
       display:flex;justify-content:space-between;align-items:center;
     }
-    .net-pay .lbl{font-size:13px;color:#F5E6C8;font-weight:500;}
-    .net-pay .lbl-big{font-size:16px;color:#fff;font-weight:700;margin-top:2px;}
-    .net-pay .amt{font-size:28px;font-weight:800;color:#E8C87A;letter-spacing:-0.01em;}
+    .netSalary-pay .lbl{font-size:13px;color:#F5E6C8;font-weight:500;}
+    .netSalary-pay .lbl-big{font-size:16px;color:#fff;font-weight:700;margin-top:2px;}
+    .netSalary-pay .amountValue{font-size:28px;font-weight:800;color:#E8C87A;letter-spacing:-0.01em;}
     .signatures{
       margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:30px;
       padding:24px;
@@ -226,16 +227,16 @@ function buildSalarySlipHTML(
 
     <div class="body">
       <div class="info-grid">
-        <div><span class="label">ชื่อ-นามสกุล:</span> <span class="value">${empName}</span></div>
-        <div><span class="label">ตำแหน่ง:</span> <span class="value">${empPosition}</span></div>
+        <div><span class="label">ชื่อ-นามสกุล:</span> <span class="value">${employeeName}</span></div>
+        <div><span class="label">ตำแหน่ง:</span> <span class="value">${employeePosition}</span></div>
         <div><span class="label">ธนาคาร:</span> <span class="value">${bank}</span></div>
-        <div><span class="label">เลขที่บัญชี:</span> <span class="value" style="letter-spacing:0.05em">${bankAcc}</span></div>
+        <div><span class="label">เลขที่บัญชี:</span> <span class="value" style="letter-spacing:0.05em">${bankAccountNumber}</span></div>
         <div><span class="label">วันที่ออกสลิป:</span> <span class="value">${printDate}</span></div>
         <div><span class="label">รอบเงินเดือน:</span> <span class="value">${monthLabel}</span></div>
       </div>
 
       ${
-        calc.losesBaseSalary
+        salaryCalculation.losesBaseSalary
           ? `
       <div style="background:#FDECEA;border:1.5px solid #C0392B40;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#C0392B;font-weight:600;">
         ⚠ ไม่ได้รับเงินเดือนพื้นฐาน — ยอดขายต่ำกว่าเกณฑ์ขั้นต่ำ
@@ -250,14 +251,14 @@ function buildSalarySlipHTML(
             (r) => `
           <tr>
             <td>${r.label}</td>
-            <td class="amt green">+ ฿${num(r.value)}</td>
+            <td class="amountValue green">+ ฿${formatNumber(r.value)}</td>
           </tr>`,
           )
           .join("")}
       </table>
       <div class="row-total">
         <span class="label">รวมรายรับ</span>
-        <span class="amt green" style="color:#1A6B3A">฿${num(calc.earnings)}</span>
+        <span class="amountValue green" style="color:#1A6B3A">฿${formatNumber(salaryCalculation.earnings)}</span>
       </div>
 
       <div class="section-title">รายการหัก</div>
@@ -270,32 +271,32 @@ function buildSalarySlipHTML(
             (r) => `
           <tr>
             <td>${r.label}</td>
-            <td class="amt red">− ฿${num(r.value)}</td>
+            <td class="amountValue red">− ฿${formatNumber(r.value)}</td>
           </tr>`,
           )
           .join("")}
       </table>
       <div class="row-total">
         <span class="label">รวมรายการหัก</span>
-        <span class="amt red" style="color:#C0392B">฿${num(calc.deductions)}</span>
+        <span class="amountValue red" style="color:#C0392B">฿${formatNumber(salaryCalculation.deductions)}</span>
       </div>`
           : `
       <div style="text-align:center;padding:14px;color:#7A5C3A;font-size:13px;">— ไม่มีรายการหัก —</div>`
       }
 
-      <div class="net-pay">
+      <div class="netSalary-pay">
         <div>
           <div class="lbl">เงินสุทธิที่ได้รับ</div>
           <div class="lbl-big">Net Pay</div>
         </div>
-        <div class="amt">฿${num(calc.net)}</div>
+        <div class="amountValue">฿${formatNumber(salaryCalculation.netSalary)}</div>
       </div>
     </div>
 
     <div class="signatures">
       <div class="sig-box">
         <div class="sig-line">ลายเซ็นพนักงาน</div>
-        <div class="sig-name">(${empName})</div>
+        <div class="sig-name">(${employeeName})</div>
       </div>
       <div class="sig-box">
         <div class="sig-line">กรรมการผู้บริหาร</div>
@@ -346,7 +347,8 @@ export function printSalarySlip(args) {
  * ⚠️  โหลด pdfmake ครั้งแรก ~400KB
  */
 export async function downloadSalarySlipPDF(args) {
-  if (!args?.data || !args?.calc) throw new Error("ไม่มีข้อมูลเงินเดือนเดือนนี้");
+  if (!args?.data || !args?.salaryCalculation)
+    throw new Error("ไม่มีข้อมูลเงินเดือนเดือนนี้");
 
   // Lazy-load pdfmake + Thai fonts (ทำครั้งแรกครั้งเดียว)
   const [{ default: pdfMake }, { ensureThaiFonts }] = await Promise.all([
@@ -356,13 +358,14 @@ export async function downloadSalarySlipPDF(args) {
   await ensureThaiFonts(pdfMake);
 
   const docDef = buildSalarySlipDocDef(args);
-  const empName = args.profile?.name || args.empInfo?.name || "employee";
+  const employeeName =
+    args.profile?.name || args.employeeInfo?.name || "employee";
   const safe = (s) =>
     String(s || "")
       .replace(/[/\\?%*:|"<>]/g, "")
       .replace(/\s+/g, "-")
       .trim();
-  const filename = `สลิปเงินเดือน-${safe(empName)}-${args.selMonth}.pdf`;
+  const filename = `สลิปเงินเดือน-${safe(employeeName)}-${args.selectedMonth}.pdf`;
 
   pdfMake.createPdf(docDef).download(filename);
 }

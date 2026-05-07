@@ -5,7 +5,12 @@ import {
   IconChevronRight,
 } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
-import { C, TH_DAYS_SHORT, TH_MONTHS, TODAY } from "../../constants";
+import {
+  COLORS,
+  THAI_MONTH_NAMES,
+  THAI_SHORT_WEEKDAY_NAMES,
+  TODAY,
+} from "../../constants";
 import { fmtShort, toYMD } from "../../utils/dateUtils";
 
 /* ─── Calendar date picker ─────────────────────────────────────── */
@@ -77,7 +82,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
         >
           <IconCalendar
             size={18}
-            color={has ? "#fff" : C.textSoft}
+            color={has ? "#fff" : COLORS.textSoft}
             stroke={2}
           />
         </div>
@@ -90,33 +95,41 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
         </div>
         <IconChevronDown
           size={16}
-          color={C.textSoft}
+          color={COLORS.textSoft}
           stroke={2.5}
           className={`transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
         />
       </button>
       {error && <div className="text-red text-sm mt-1.5">⚠ {error}</div>}
       {open && (
-        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-400 bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]">
+        <div className="absolute top-[salaryCalculation(100%+6px)] left-0 right-0 z-400 bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]">
           <div className="flex items-center justify-between mb-3.5">
             <button
               onClick={prevM}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
             >
-              <IconChevronLeft size={14} color={C.textMid} stroke={2.5} />
+              <IconChevronLeft
+                size={14}
+                color={COLORS.textMedium}
+                stroke={2.5}
+              />
             </button>
             <div className="font-bold text-base text-maroon">
-              {TH_MONTHS[vm]} {vy + 543}
+              {THAI_MONTH_NAMES[vm]} {vy + 543}
             </div>
             <button
               onClick={nextM}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
             >
-              <IconChevronRight size={14} color={C.textMid} stroke={2.5} />
+              <IconChevronRight
+                size={14}
+                color={COLORS.textMedium}
+                stroke={2.5}
+              />
             </button>
           </div>
           <div className="grid grid-cols-7 mb-1.5">
-            {TH_DAYS_SHORT.map((d, i) => (
+            {THAI_SHORT_WEEKDAY_NAMES.map((d, i) => (
               <div
                 key={d}
                 className={`text-center text-sm font-semibold py-1 ${i === 6 ? "text-txt-soft/40" : "text-txt-soft"}`}
@@ -139,7 +152,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
                   style={{
                     background:
                       st === "selected"
-                        ? `linear-gradient(135deg,${C.gold},${C.goldLt})`
+                        ? `linear-gradient(135deg,${COLORS.gold},${COLORS.goldLight})`
                         : st === "today"
                           ? "#E8E8E8"
                           : "transparent",
@@ -148,12 +161,12 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
                       : st === "selected"
                         ? "#fff"
                         : st === "disabled" || st === "weekend"
-                          ? C.border
+                          ? COLORS.border
                           : st === "today"
                             ? "#666"
-                            : C.text,
+                            : COLORS.text,
                     boxShadow:
-                      st === "selected" ? `0 2px 8px ${C.gold}50` : "none",
+                      st === "selected" ? `0 2px 8px ${COLORS.gold}50` : "none",
                   }}
                 >
                   {d || ""}

@@ -19,34 +19,34 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.admin == true;
     }
 
-    function isEmployeeOwner(empId) {
+    function isEmployeeOwner(employeeId) {
       return isSignedIn()
-        && exists(/databases/$(database)/documents/employees/$(empId))
-        && get(/databases/$(database)/documents/employees/$(empId)).data.lineUserId == request.auth.uid;
+        && exists(/databases/$(database)/documents/employees/$(employeeId))
+        && get(/databases/$(database)/documents/employees/$(employeeId)).data.lineUserId == request.auth.uid;
     }
 
     function isSelfProfileUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-        "av",
-        "avType",
-        "img",
+        "avatar",
+        "avatarType",
+        "avatarImageUrl",
         "bank",
-        "bankAcc",
+        "bankAccountNumber",
         "updatedAt"
       ]);
     }
 
     function validSelfProfileData() {
-      return request.resource.data.av is string
-        && request.resource.data.av.size() <= 8
-        && request.resource.data.avType in ["text", "emoji", "image"]
-        && (!("img" in request.resource.data)
-          || request.resource.data.img == null
-          || (request.resource.data.img is string && request.resource.data.img.size() <= 2048))
+      return request.resource.data.avatar is string
+        && request.resource.data.avatar.size() <= 8
+        && request.resource.data.avatarType in ["text", "emoji", "image"]
+        && (!("avatarImageUrl" in request.resource.data)
+          || request.resource.data.avatarImageUrl == null
+          || (request.resource.data.avatarImageUrl is string && request.resource.data.avatarImageUrl.size() <= 2048))
         && (!("bank" in request.resource.data)
           || (request.resource.data.bank is string && request.resource.data.bank.size() <= 80))
-        && (!("bankAcc" in request.resource.data)
-          || (request.resource.data.bankAcc is string && request.resource.data.bankAcc.size() <= 40))
+        && (!("bankAccountNumber" in request.resource.data)
+          || (request.resource.data.bankAccountNumber is string && request.resource.data.bankAccountNumber.size() <= 40))
         && request.resource.data.updatedAt is int;
     }
 
@@ -78,16 +78,16 @@ service cloud.firestore {
 
     function validAdvanceCreate() {
       return request.resource.data.keys().hasOnly([
-          "empId",
-          "empName",
+          "employeeId",
+          "employeeName",
           "amount",
           "reason",
           "month",
           "status",
           "submittedAt"
         ])
-        && request.resource.data.empName ==
-          get(/databases/$(database)/documents/employees/$(request.resource.data.empId)).data.name
+        && request.resource.data.employeeName ==
+          get(/databases/$(database)/documents/employees/$(request.resource.data.employeeId)).data.name
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
         && request.resource.data.reason is string
@@ -100,11 +100,11 @@ service cloud.firestore {
     // ─── Employees ───────────────────────────────────────────────
     // อ่าน: admin หรือเจ้าของ LINE-linked document
     // เขียน: admin; employee แก้ได้เฉพาะ profile/bank fields ของตัวเอง
-    match /employees/{empId} {
+    match /employees/{employeeId} {
       allow read:   if isAdmin() || (isSignedIn() && resource.data.lineUserId == request.auth.uid);
       allow create, delete: if isAdmin();
       allow update: if isAdmin()
-        || (isEmployeeOwner(empId) && isSelfProfileUpdate() && validSelfProfileData());
+        || (isEmployeeOwner(employeeId) && isSelfProfileUpdate() && validSelfProfileData());
     }
 
     // ─── Leaves ──────────────────────────────────────────────────
@@ -120,14 +120,14 @@ service cloud.firestore {
     // ─── Salaries ────────────────────────────────────────────────
     // อ่าน: เฉพาะเจ้าของ + admin
     // เขียน: เฉพาะ admin
-    match /salaries/{empId}/months/{ym} {
-      allow read:   if isAdmin() || isEmployeeOwner(empId);
+    match /salaries/{employeeId}/months/{yearMonth} {
+      allow read:   if isAdmin() || isEmployeeOwner(employeeId);
       allow write:  if isAdmin();
     }
 
     // collectionGroup(db, "months") in the app needs an explicit recursive
     // match. Without this, salary subscriptions degrade to empty data.
-    match /{path=**}/months/{ym} {
+    match /{path=**}/months/{yearMonth} {
       allow read: if isAdmin();
       allow write: if false;
     }
@@ -137,8 +137,8 @@ service cloud.firestore {
     // สร้าง: เจ้าของ
     // อนุมัติ/ปฏิเสธ: admin
     match /advances/{advanceId} {
-      allow read:   if isAdmin() || isEmployeeOwner(resource.data.empId);
-      allow create: if isEmployeeOwner(request.resource.data.empId) && validAdvanceCreate();
+      allow read:   if isAdmin() || isEmployeeOwner(resource.data.employeeId);
+      allow create: if isEmployeeOwner(request.resource.data.employeeId) && validAdvanceCreate();
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }

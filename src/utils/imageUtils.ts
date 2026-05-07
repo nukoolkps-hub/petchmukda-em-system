@@ -51,12 +51,12 @@ export async function resizeImage(
   if (validationError) throw new Error(validationError);
 
   // อ่านไฟล์ → Image element
-  const img = await loadImage(file);
+  const avatarImageUrl = await loadImage(file);
 
   // คำนวณขนาดใหม่ (รักษาสัดส่วน)
   let { width, height } = calculateDimensions(
-    img.width,
-    img.height,
+    avatarImageUrl.width,
+    avatarImageUrl.height,
     maxWidth,
     maxHeight,
   );
@@ -66,7 +66,7 @@ export async function resizeImage(
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, 0, 0, width, height);
+  ctx.drawImage(avatarImageUrl, 0, 0, width, height);
 
   // ลด quality จนกว่าจะใต้ maxBytes (max 4 รอบ)
   let q = quality;
@@ -84,7 +84,7 @@ export async function resizeImage(
     height = Math.round(height * 0.75);
     canvas.width = width;
     canvas.height = height;
-    ctx.drawImage(img, 0, 0, width, height);
+    ctx.drawImage(avatarImageUrl, 0, 0, width, height);
     dataUrl = canvas.toDataURL("image/jpeg", 0.75);
   }
 
@@ -119,17 +119,17 @@ export async function resizeSlip(file: File): Promise<string> {
 
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const img = new Image();
+    const avatarImageUrl = new Image();
     const url = URL.createObjectURL(file);
-    img.onload = () => {
+    avatarImageUrl.onload = () => {
       URL.revokeObjectURL(url);
-      resolve(img);
+      resolve(avatarImageUrl);
     };
-    img.onerror = () => {
+    avatarImageUrl.onerror = () => {
       URL.revokeObjectURL(url);
       reject(new Error("โหลดรูปไม่ได้ — ไฟล์อาจเสีย"));
     };
-    img.src = url;
+    avatarImageUrl.src = url;
   });
 }
 

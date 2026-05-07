@@ -7,12 +7,12 @@ import type { AdvanceRequest, Employee } from "../types";
 interface UseLineNotificationsOptions {
   profileName: string;
   currentEmployee?: Employee | null;
-  empDir: Employee[];
+  employeeDirectory: Employee[];
   advanceRequests: AdvanceRequest[];
-  submitAdvanceAction: (req: any) => string | number | Promise<string>;
+  submitAdvanceAction: (request: any) => string | number | Promise<string>;
   approveAdvanceAction: (
     id: string | number,
-    slipUrl?: string | null | undefined,
+    slipImageUrl?: string | null | undefined,
   ) => void | Promise<void>;
   rejectAdvanceAction: (
     id: string | number,
@@ -23,7 +23,7 @@ interface UseLineNotificationsOptions {
 export default function useLineNotifications({
   profileName,
   currentEmployee,
-  empDir,
+  employeeDirectory,
   advanceRequests,
   submitAdvanceAction,
   approveAdvanceAction,
@@ -76,11 +76,13 @@ export default function useLineNotifications({
     month: string;
   }) {
     const employee =
-      currentEmployee || empDir.find((e) => e.name === profileName) || null;
-    const empId = employee?.id || "";
+      currentEmployee ||
+      employeeDirectory.find((e) => e.name === profileName) ||
+      null;
+    const employeeId = employee?.id || "";
     const reqData = {
-      empId,
-      empName: employee?.name || profileName || "-",
+      employeeId,
+      employeeName: employee?.name || profileName || "-",
       amount,
       reason,
       month,
@@ -89,12 +91,12 @@ export default function useLineNotifications({
 
     // ส่ง LINE notification (best-effort)
     sendAdvanceRequestToLine({
-      empName: reqData.empName,
+      employeeName: reqData.employeeName,
       amount: reqData.amount,
       reason: reqData.reason,
       month: reqData.month,
       bank: employee?.bank,
-      bankAcc: employee?.bankAcc,
+      bankAccountNumber: employee?.bankAccountNumber,
       submittedAt: new Date().toISOString(),
       requestId: id,
     });
@@ -109,40 +111,42 @@ export default function useLineNotifications({
     currentRequest?: AdvanceRequest,
   ) {
     // หา request ปัจจุบันเพื่อใช้ส่ง LINE
-    const req = currentRequest || advanceRequests.find((r) => r.id === reqId);
-    if (!req) return;
+    const request =
+      currentRequest || advanceRequests.find((r) => r.id === reqId);
+    if (!request) return;
 
     // เรียก action ที่เหมาะสม (รองรับทั้ง in-memory และ Firebase)
     if (updates.status === "approved") {
-      await approveAdvanceAction(reqId, updates.slipUrl || null);
+      await approveAdvanceAction(reqId, updates.slipImageUrl || null);
     } else if (updates.status === "rejected") {
-      await rejectAdvanceAction(reqId, updates.rejectReason || "");
+      await rejectAdvanceAction(reqId, updates.rejectionReason || "");
     }
 
     // ส่ง LINE notification ไปหาพนักงาน
-    const emp =
-      empDir.find((e) => e.id === req.empId) ||
-      empDir.find((e) => e.name === req.empName);
-    const empLineId = emp?.lineUserId;
+    const employee =
+      employeeDirectory.find((e) => e.id === request.employeeId) ||
+      employeeDirectory.find((e) => e.name === request.employeeName);
+    const empLineId = employee?.lineUserId;
     if (updates.status === "approved" && empLineId) {
       notifyEmployeeApproved({
-        empLineUserId: empLineId,
-        empName: req.empName,
-        amount: req.amount,
-        reason: req.reason,
-        month: req.month,
-        slipUrl: updates.slipUrl || null,
-        slipImg: updates.slipImg || null,
+        employeeLineUserId: empLineId,
+        employeeName: request.employeeName,
+        amount: request.amount,
+        requestReason: request.reason,
+        month: request.month,
+        slipImageUrl: updates.slipImageUrl || null,
+        slipImageDataUrl: updates.slipImageDataUrl || null,
         approvedAt: updates.approvedAt || new Date().toISOString(),
         requestId: reqId,
       });
     } else if (updates.status === "rejected" && empLineId) {
       notifyEmployeeRejected({
-        empLineUserId: empLineId,
-        empName: req.empName,
-        amount: req.amount,
-        reason: req.reason,
-        month: req.month,
+        employeeLineUserId: empLineId,
+        employeeName: request.employeeName,
+        amount: request.amount,
+        requestReason: request.reason,
+        rejectionReason: updates.rejectionReason || "",
+        month: request.month,
         rejectedAt: updates.rejectedAt || new Date().toISOString(),
         requestId: reqId,
       });

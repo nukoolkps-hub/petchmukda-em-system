@@ -1,7 +1,7 @@
 import { IconCirclePlus } from "@tabler/icons-react";
 import { useState } from "react";
-import { BUSINESS_RULES, C, TH_MONTHS } from "../../constants";
-import { TH_NUMBER } from "../../utils/format";
+import { BUSINESS_RULES, COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
 import Diamond from "../shared/Diamond";
 
@@ -16,15 +16,17 @@ export default function AdvanceRequestModal({
   onClose,
 }) {
   const now = new Date();
-  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const empSalary = employeeId ? salaryData[employeeId]?.[ym] : null;
-  const baseSalary = employee?.baseSalary ?? empSalary?.base ?? 0;
+  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const employeeSalary = employeeId
+    ? salaryData[employeeId]?.[yearMonth]
+    : null;
+  const baseSalary = employee?.baseSalary ?? employeeSalary?.baseSalary ?? 0;
   const maxAdvance = Math.floor(
     baseSalary * BUSINESS_RULES.ADVANCE_LIMIT_PERCENT,
   );
 
   // total already approved this month
-  const myReqs = (advanceRequests || []).filter((r) => r.month === ym);
+  const myReqs = (advanceRequests || []).filter((r) => r.month === yearMonth);
   const alreadyRequested = myReqs
     .filter((r) => r.status !== "rejected")
     .reduce((s, r) => s + r.amount, 0);
@@ -35,13 +37,13 @@ export default function AdvanceRequestModal({
   const [err, setErr] = useState("");
 
   function submit() {
-    const amt = parseFloat(amount) || 0;
-    if (amt <= 0) {
+    const amountValue = parseFloat(amount) || 0;
+    if (amountValue <= 0) {
       setErr("กรุณาระบุจำนวนเงิน");
       return;
     }
-    if (amt > remaining) {
-      setErr(`เกินวงเงินคงเหลือ (สูงสุด ฿${TH_NUMBER(remaining)})`);
+    if (amountValue > remaining) {
+      setErr(`เกินวงเงินคงเหลือ (สูงสุด ฿${formatThaiNumber(remaining)})`);
       return;
     }
     if (!reason.trim()) {
@@ -49,7 +51,7 @@ export default function AdvanceRequestModal({
       return;
     }
     setErr("");
-    onSubmit({ amount: amt, reason: reason.trim(), month: ym });
+    onSubmit({ amount: amountValue, reason: reason.trim(), month: yearMonth });
     setAmount("");
     setReason("");
   }
@@ -64,7 +66,7 @@ export default function AdvanceRequestModal({
         <div className="flex-1">
           <div className="font-extrabold text-lg text-txt">เบิกเงินล่วงหน้า</div>
           <div className="text-sm text-txt-soft mt-0.5">
-            {TH_MONTHS[now.getMonth()]} {now.getFullYear() + 543}
+            {THAI_MONTH_NAMES[now.getMonth()]} {now.getFullYear() + 543}
           </div>
         </div>
       </div>
@@ -72,22 +74,24 @@ export default function AdvanceRequestModal({
       {/* limit info */}
       <div className="bg-gold-pale rounded-xl px-3.5 py-3 mb-3.5 border border-gold/25">
         <div className="flex justify-between items-center mb-1.5">
-          <span className="text-sm text-txt-mid">วงเงินสูงสุด (50% ของเงินเดือน)</span>
+          <span className="text-sm text-txt-mid">
+            วงเงินสูงสุด (50% ของเงินเดือน)
+          </span>
           <span className="text-sm font-bold text-maroon">
-            ฿{TH_NUMBER(maxAdvance)}
+            ฿{formatThaiNumber(maxAdvance)}
           </span>
         </div>
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-sm text-txt-mid">เบิกไปแล้วเดือนนี้</span>
           <span className="text-sm font-bold text-txt-mid">
-            ฿{TH_NUMBER(alreadyRequested)}
+            ฿{formatThaiNumber(alreadyRequested)}
           </span>
         </div>
         <div className="h-px bg-gold/25 my-1.5" />
         <div className="flex justify-between items-center">
           <span className="text-sm font-bold text-txt">คงเหลือเบิกได้</span>
           <span className="text-lg font-extrabold text-green">
-            ฿{TH_NUMBER(remaining)}
+            ฿{formatThaiNumber(remaining)}
           </span>
         </div>
       </div>
@@ -122,7 +126,7 @@ export default function AdvanceRequestModal({
               onClick={() => setAmount(String(v))}
               className="flex-1 py-1.5 px-1 rounded-[9px] border border-bdr bg-white text-maroon text-sm font-semibold cursor-pointer font-[inherit]"
             >
-              ฿{TH_NUMBER(v)}
+              ฿{formatThaiNumber(v)}
             </button>
           ))}
       </div>
@@ -169,7 +173,10 @@ export default function AdvanceRequestModal({
                 : "bg-linear-135 from-gold to-gold-lt text-maroon-dk shadow-[0_4px_14px_rgba(201,151,58,0.31)]"
             }`}
         >
-          <Diamond size={14} color={remaining <= 0 ? C.textSoft : C.maroonDk} />
+          <Diamond
+            size={14}
+            color={remaining <= 0 ? COLORS.textSoft : COLORS.maroonDark}
+          />
           {remaining <= 0 ? "เต็มวงเงินแล้ว" : "ส่งคำขอผ่าน LINE"}
         </button>
       </div>

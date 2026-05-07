@@ -6,19 +6,19 @@ import { getFirestore } from "firebase-admin/firestore";
 import type { LineConfig } from "../types.js";
 
 /* ─── Color palette (LINE Flex Messages) ──────────────────────── */
-export const COLOR = {
+export const COLORS = {
 	maroon: "#7B1C1C",
-	goldLt: "#E8C87A",
+	goldLight: "#E8C87A",
 	goldPale: "#F5E6C8",
 	text: "#2D1A0E",
-	textMid: "#7A5C3A",
+	textMedium: "#7A5C3A",
 	green: "#1A6B3A",
-	greenLt: "#E8F5EE",
+	greenLight: "#E8F5EE",
 	red: "#C0392B",
 } as const;
 
 /* ─── Thai number formatter ───────────────────────────────────── */
-export const TH_NUM = (n: number | string | undefined): string =>
+export const formatThaiNumber = (n: number | string | undefined): string =>
 	Number(n || 0).toLocaleString("th-TH");
 
 /* ─── Read LINE secrets from Firestore ────────────────────────── */

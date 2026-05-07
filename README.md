@@ -40,7 +40,7 @@ import('/src/firebase/seed.js').then(m => m.runSeed())
 muktha/
 ├── src/
 │   ├── App.jsx                    ← Main app (data-mode aware)
-│   ├── constants.js               ← C palette, BUSINESS_RULES
+│   ├── constants.js               ← COLORS palette, BUSINESS_RULES
 │   ├── seedData.js                ← Initial demo data
 │   │
 │   ├── data/                      ← 🆕 Data abstraction
@@ -106,7 +106,7 @@ muktha/
 ### Core
 - 📅 ระบบลา — ลากิจ/ลาป่วย พร้อมโควต้า
 - 💰 เงินเดือน — คำนวณตามชิ้น × rate + Pool
-- 🤝 Pool ค่าคอม — สูตร Excel (Base/30 × N-1)
+- 🤝 Pool ค่าคอม — สูตร Excel จากเปอร์เซ็นต์ฐานและตัวคูณหักวันลา
 - 💸 เบิกล่วงหน้า — สูงสุด 50% ของฐาน
 - 🖨 พิมพ์เอกสาร — สลิป + หนังสือรับรอง
 - 💬 LINE Bot — แจ้งเตือน + Flex Message

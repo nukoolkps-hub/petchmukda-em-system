@@ -1,6 +1,6 @@
 import { IconChevronDown } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
-import { C, EMOJI_LIST, TH_BANKS } from "../../constants";
+import { COLORS, EMOJI_LIST, THAI_BANKS } from "../../constants";
 import { uploadAvatar } from "../../firebase/storage";
 import { resizeAvatar } from "../../utils/imageUtils";
 import { validateBankAccount, validateRequired } from "../../utils/validators";
@@ -17,11 +17,15 @@ export default function ProfileSetupModal({
   onClose,
 }) {
   const [name, setName] = useState(initial?.name || "");
-  const [avType, setAvType] = useState(initial?.avType || "text");
-  const [av, setAv] = useState(initial?.av || "");
-  const [img, setImg] = useState(initial?.img || null);
+  const [avatarType, setAvType] = useState(initial?.avatarType || "text");
+  const [avatar, setAv] = useState(initial?.avatar || "");
+  const [avatarImageUrl, setAvatarImageUrl] = useState(
+    initial?.avatarImageUrl || null,
+  );
   const [bank, setBank] = useState(initial?.bank || "");
-  const [bankAcc, setBankAcc] = useState(initial?.bankAcc || "");
+  const [bankAccountNumber, setBankAcc] = useState(
+    initial?.bankAccountNumber || "",
+  );
   const [nameErr, setNameErr] = useState("");
   const [avErr, setAvErr] = useState("");
   const [bankErr, setBankErr] = useState("");
@@ -35,7 +39,7 @@ export default function ProfileSetupModal({
 
   // auto initials from name
   useEffect(() => {
-    if (avType === "text" && name.trim()) {
+    if (avatarType === "text" && name.trim()) {
       const parts = name.trim().split(" ");
       const initials = parts
         .map((p) => p.charAt(0))
@@ -43,7 +47,7 @@ export default function ProfileSetupModal({
         .slice(0, 2);
       setAv(initials);
     }
-  }, [name, avType]);
+  }, [name, avatarType]);
 
   async function handleFile(e) {
     const file = e.target.files[0];
@@ -52,7 +56,7 @@ export default function ProfileSetupModal({
     setAvErr("");
     try {
       const dataUrl = await resizeAvatar(file);
-      setImg(dataUrl);
+      setAvatarImageUrl(dataUrl);
       setPendingAvatarDataUrl(dataUrl);
       setAvType("image");
     } catch (err) {
@@ -77,23 +81,26 @@ export default function ProfileSetupModal({
     } else setNameErr("");
 
     // Avatar validation
-    if (avType === "text" && !av.trim()) {
+    if (avatarType === "text" && !avatar.trim()) {
       setAvErr("กรุณาระบุตัวย่อ (2-3 ตัวอักษร)");
       ok = false;
-    } else if (avType === "emoji" && !av) {
+    } else if (avatarType === "emoji" && !avatar) {
       setAvErr("กรุณาเลือก Emoji");
       ok = false;
-    } else if (avType === "image" && !img) {
+    } else if (avatarType === "image" && !avatarImageUrl) {
       setAvErr("กรุณาอัปโหลดรูปภาพ");
       ok = false;
     } else setAvErr("");
 
     // Bank validation: optional field, but if either filled, both required + format check
-    if ((bank && !bankAcc.trim()) || (!bank && bankAcc.trim())) {
+    if (
+      (bank && !bankAccountNumber.trim()) ||
+      (!bank && bankAccountNumber.trim())
+    ) {
       setBankErr("กรุณาเลือกธนาคารและกรอกเลขบัญชีให้ครบ");
       ok = false;
-    } else if (bankAcc.trim()) {
-      const accError = validateBankAccount(bankAcc);
+    } else if (bankAccountNumber.trim()) {
+      const accError = validateBankAccount(bankAccountNumber);
       if (accError) {
         setBankErr(accError);
         ok = false;
@@ -103,18 +110,21 @@ export default function ProfileSetupModal({
     if (!ok) return;
     setSaving(true);
     try {
-      let finalImg = img;
-      if (avType === "image" && pendingAvatarDataUrl) {
+      let finalAvatarImageUrl = avatarImageUrl;
+      if (avatarType === "image" && pendingAvatarDataUrl) {
         if (!employeeId) throw new Error("ไม่พบรหัสพนักงานสำหรับอัปโหลดรูป");
-        finalImg = await uploadAvatar(employeeId, pendingAvatarDataUrl);
+        finalAvatarImageUrl = await uploadAvatar(
+          employeeId,
+          pendingAvatarDataUrl,
+        );
       }
       await onSave({
         name: initial?.name || name.trim(),
-        av,
-        avType,
-        img: finalImg,
+        avatar,
+        avatarType,
+        avatarImageUrl: finalAvatarImageUrl,
         bank,
-        bankAcc: bankAcc.trim(),
+        bankAccountNumber: bankAccountNumber.trim(),
       });
       setPendingAvatarDataUrl(null);
     } catch (err) {
@@ -135,12 +145,12 @@ export default function ProfileSetupModal({
       {/* preview */}
       <div className="flex flex-col items-center mb-6">
         <AvatarCircle
-          av={av || "?"}
-          avType={avType}
-          img={img}
+          avatar={avatar || "?"}
+          avatarType={avatarType}
+          avatarImageUrl={avatarImageUrl}
           size={80}
           fontSize={24}
-          border={`2px solid ${C.gold}40`}
+          border={`2px solid ${COLORS.gold}40`}
           className="mb-2.5 shadow-gold-glow"
         />
         <div className="text-base font-bold text-txt">{name || "ชื่อของคุณ"}</div>
@@ -184,7 +194,7 @@ export default function ProfileSetupModal({
               key={t.id}
               onClick={() => setAvType(t.id)}
               className={`flex-1 py-2.5 px-1 rounded-[9px] border-none cursor-pointer font-[inherit] text-sm font-semibold transition-all
-                ${avType === t.id ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
+                ${avatarType === t.id ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
             >
               {t.label}
             </button>
@@ -192,16 +202,16 @@ export default function ProfileSetupModal({
         </div>
 
         {/* text initials – auto generated, show preview only */}
-        {avType === "text" && (
+        {avatarType === "text" && (
           <div className="bg-cream rounded-xl px-4 py-3 flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-linear-135 from-gold to-gold-lt flex items-center justify-center shrink-0">
               <span className="text-white font-extrabold text-base tracking-wide">
-                {av || "?"}
+                {avatar || "?"}
               </span>
             </div>
             <div>
               <div className="text-sm font-semibold text-txt">
-                ตัวย่อ: <b>{av || "—"}</b>
+                ตัวย่อ: <b>{avatar || "—"}</b>
               </div>
               <div className="text-sm text-txt-soft mt-0.5">
                 ระบบสร้างอัตโนมัติจากชื่อ
@@ -211,7 +221,7 @@ export default function ProfileSetupModal({
         )}
 
         {/* emoji grid */}
-        {avType === "emoji" && (
+        {avatarType === "emoji" && (
           <div>
             <div className="text-sm text-txt-soft mb-2">เลือก Emoji</div>
             <div className="grid grid-cols-5 gap-[7px] max-h-60 overflow-y-auto pr-0.5">
@@ -220,7 +230,7 @@ export default function ProfileSetupModal({
                   key={e}
                   onClick={() => setAv(e)}
                   className={`h-[50px] rounded-xl text-2xl cursor-pointer transition-all duration-150 border-2
-                    ${av === e ? "border-gold bg-gold-pale shadow-[0_2px_8px_var(--color-gold)/0.25]" : "border-bdr bg-white shadow-none"}`}
+                    ${avatar === e ? "border-gold bg-gold-pale shadow-[0_2px_8px_var(--color-gold)/0.25]" : "border-bdr bg-white shadow-none"}`}
                 >
                   {e}
                 </button>
@@ -230,7 +240,7 @@ export default function ProfileSetupModal({
         )}
 
         {/* image upload */}
-        {avType === "image" && (
+        {avatarType === "image" && (
           <div>
             <input
               ref={fileRef}
@@ -239,10 +249,10 @@ export default function ProfileSetupModal({
               onChange={handleFile}
               className="hidden"
             />
-            {img ? (
+            {avatarImageUrl ? (
               <div className="flex items-center gap-3.5">
                 <img
-                  src={img}
+                  src={avatarImageUrl}
                   alt="preview"
                   className="w-[70px] h-[70px] rounded-full object-cover border-2 border-gold"
                 />
@@ -297,7 +307,7 @@ export default function ProfileSetupModal({
               ${bank ? "text-txt bg-gold-pale/30 font-semibold" : "text-txt-soft bg-white font-normal"}`}
           >
             <option value="">— เลือกธนาคาร —</option>
-            {TH_BANKS.map((b) => (
+            {THAI_BANKS.map((b) => (
               <option key={b.name} value={b.name}>
                 {b.emoji} {b.name}
                 {b.short ? `  (${b.short})` : ""}
@@ -317,7 +327,7 @@ export default function ProfileSetupModal({
           เลขที่บัญชี
         </label>
         <input
-          value={bankAcc}
+          value={bankAccountNumber}
           onChange={(e) => setBankAcc(e.target.value)}
           placeholder="เช่น 123-4-56789-0"
           className={`w-full px-4 py-3 rounded-xl text-base outline-none font-[inherit] box-border text-txt bg-white tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"}`}
@@ -332,7 +342,7 @@ export default function ProfileSetupModal({
         disabled={saving || imageBusy}
         className={`w-full p-4 mt-2 border-none rounded-[14px] text-lg font-bold font-[inherit] shadow-[0_6px_20px_rgba(201,151,58,0.25)] flex items-center justify-center gap-2 ${saving || imageBusy ? "bg-bdr text-txt-soft cursor-not-allowed" : "bg-linear-135 from-gold to-gold-lt text-maroon-dk cursor-pointer"}`}
       >
-        <Diamond size={16} color={C.maroonDk} />
+        <Diamond size={16} color={COLORS.maroonDark} />
         {saving ? "กำลังบันทึก..." : initial ? "บันทึกการเปลี่ยนแปลง" : "เริ่มใช้งาน"}
       </button>
       {initial && onClose && (

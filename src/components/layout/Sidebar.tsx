@@ -2,7 +2,7 @@
 
 import { IconEdit, IconLogout } from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { C } from "../../constants";
+import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
 import Diamond from "../shared/Diamond";
 import MosaicPattern from "../shared/MosaicPattern";
@@ -60,7 +60,7 @@ export default function Sidebar({
                   cy="22"
                   r="19"
                   fill="none"
-                  stroke={C.goldLt}
+                  stroke={COLORS.goldLight}
                   strokeWidth="2.5"
                   strokeOpacity="0.25"
                 />
@@ -69,7 +69,7 @@ export default function Sidebar({
                   cy="22"
                   r="19"
                   fill="none"
-                  stroke={C.goldLt}
+                  stroke={COLORS.goldLight}
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeDasharray="119.38"
@@ -80,7 +80,7 @@ export default function Sidebar({
                 />
               </svg>
             )}
-            <Diamond size={18} color={holding ? "#fff" : C.goldLt} />
+            <Diamond size={18} color={holding ? "#fff" : COLORS.goldLight} />
           </div>
           <div>
             <div className="text-gold-lt font-extrabold text-base leading-none">
@@ -96,12 +96,12 @@ export default function Sidebar({
             className="flex items-center gap-3 bg-white/8 border border-gold-lt/15 rounded-[14px] px-3.5 py-2.5 w-full cursor-pointer font-[inherit] transition-all duration-200"
           >
             <AvatarCircle
-              av={profile.av}
-              avType={profile.avType}
-              img={profile.img}
+              avatar={profile.avatar}
+              avatarType={profile.avatarType}
+              avatarImageUrl={profile.avatarImageUrl}
               size={40}
               fontSize={14}
-              border={`2px solid ${C.goldLt}50`}
+              border={`2px solid ${COLORS.goldLight}50`}
             />
             <div className="text-left flex-1 min-w-0">
               <div className="text-white font-bold text-sm truncate">

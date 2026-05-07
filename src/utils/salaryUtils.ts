@@ -15,183 +15,218 @@ const {
    ฝั่ง "ขาย"   = ทั่วไป + พิเศษ ของแต่ละคน → รวมเป็น Pool ขาย
    ฝั่ง "รับซื้อ" = รับซื้อ ของแต่ละคน         → รวมเป็น Pool รับซื้อ
 
-   สูตรการแบ่ง (ทำแยกฝั่ง ขาย / ซื้อ):
-   ┌──────────────────────────────────────────────────────────
-   │ N = จำนวนคนใน Pool (หลังตัดสิทธิ์)
-   │ Base = 100 / N         (% ของแต่ละคนแบบเท่ากัน)
-   │ K = Base / 30          (ตัวคูณการหัก)
-   │
-   │ % การหัก_i = วันหยุดรวม_i × K × (N-1)
-   │ % แบ่งเพื่อน_i = % การหัก_i / (N-1)
-   │ % ที่ได้_i = Base − % การหัก_i + Σ(% แบ่งเพื่อน ของคนอื่น)
-   │ ชิ้น_i = (% ที่ได้_i × Pool รวม) / 100
-   └──────────────────────────────────────────────────────────
+   สูตรการแบ่งทำแยกฝั่งขายและฝั่งรับซื้อ:
+   - เปอร์เซ็นต์ฐาน = 100 / จำนวนคนที่มีสิทธิ์ใน Pool
+   - ตัวคูณหักวันลา = เปอร์เซ็นต์ฐาน / จำนวนวันทำงานต่อเดือน
+   - เปอร์เซ็นต์หัก = วันลารวม × ตัวคูณหักวันลา × (จำนวนคนที่มีสิทธิ์ - 1)
+   - เปอร์เซ็นต์แบ่งเพื่อน = เปอร์เซ็นต์หัก / (จำนวนคนที่มีสิทธิ์ - 1)
+   - เปอร์เซ็นต์สุทธิ = เปอร์เซ็นต์ฐาน - เปอร์เซ็นต์หัก + ผลรวมเปอร์เซ็นต์แบ่งจากคนอื่น
+   - ชิ้นที่ได้ = เปอร์เซ็นต์สุทธิ × จำนวนชิ้นรวมใน Pool
 
-   poolExclude (Admin ตั้งให้แต่ละคน):
-   - "sell"  → ปิดฝั่งขาย → ตัดออกจาก Pool ขาย → N ลดลง
+   poolExclusion (Admin ตั้งให้แต่ละคน):
+   - "sell"  → ปิดฝั่งขาย → ตัดออกจาก Pool ขาย
    - "buy"   → ปิดฝั่งรับซื้อ
    - "both"  → ปิดทั้งคู่ + ถ้าขาย < 50% ของ Top → ไม่ได้เงินเดือนพื้นฐาน
 
    กฎ 80%: ถ้าชิ้นน้อยกว่า 80% ของ Top → ตัดออกจาก Pool
    ขาย-พิเศษ → ใครขายใครได้ (ไม่ใช่ Pool เดียวกัน — แต่นับรวม sellPieces) */
 export function computePoolSharesForGroup({
-  groupEmpIds,
+  groupEmployeeIds,
   salaryData,
   allLeaves,
-  ym,
-  empDir,
+  yearMonth,
+  employeeDirectory,
 }) {
-  if (!groupEmpIds || groupEmpIds.length === 0) return {};
+  if (!groupEmployeeIds || groupEmployeeIds.length === 0) return {};
 
   // --- Step 0: คัดข้อมูลพื้นฐานของแต่ละคน ---
   const sellPieces: Record<string, number> = {}; // ทั่วไป + พิเศษ ของตัวเอง
   const buyPieces: Record<string, number> = {}; // รับซื้อของตัวเอง
   const totalLeave: Record<string, number> = {}; // วันหยุดรวม (ปกติ + อาทิตย์)
-  const poolExc: Record<string, string | null> = {};
-  groupEmpIds.forEach((empId) => {
-    const sal = salaryData[empId]?.[ym];
-    const emp = empDir.find((e) => e.id === empId);
-    sellPieces[empId] = (sal?.piecesNormal || 0) + (sal?.piecesSpecial || 0);
-    buyPieces[empId] = sal?.piecesBuy || 0;
-    poolExc[empId] = emp?.poolExclude || null;
-    const monthLeaves = emp
+  const poolExclusion: Record<string, string | null> = {};
+  groupEmployeeIds.forEach((employeeId) => {
+    const salary = salaryData[employeeId]?.[yearMonth];
+    const employee = employeeDirectory.find(
+      (candidateEmployee) => candidateEmployee.id === employeeId,
+    );
+    sellPieces[employeeId] =
+      (salary?.normalSalePieces || 0) + (salary?.specialSalePieces || 0);
+    buyPieces[employeeId] = salary?.buyPieces || 0;
+    poolExclusion[employeeId] = employee?.poolExclusion || null;
+    const monthLeaves = employee
       ? allLeaves.filter(
-          (lv) => lv.employeeName === emp.name && lv.start.startsWith(ym),
+          (leave) =>
+            leave.employeeName === employee.name &&
+            leave.start.startsWith(yearMonth),
         )
       : [];
-    const w = countWeekdayLeaves(monthLeaves);
+    const weekdayLeaves = countWeekdayLeaves(monthLeaves);
     const overInfo = getOverQuotaDays(monthLeaves);
     // วันหยุดรวมตาม Excel = ปกติ + อาทิตย์ทั้งหมด (ไม่ใช่แค่ที่เกินโควต้า)
-    totalLeave[empId] = w + (overInfo.sundays || 0);
+    totalLeave[employeeId] = weekdayLeaves + (overInfo.sundays || 0);
   });
-  const topSell = Math.max(0, ...Object.values(sellPieces));
-  const topBuy = Math.max(0, ...Object.values(buyPieces));
-  const sellThreshold = topSell * POOL_THRESHOLD;
-  const buyThreshold = topBuy * POOL_THRESHOLD;
-  const baseSalaryThreshold = topSell * BASE_SALARY_THRESHOLD;
+  const topSellPieces = Math.max(0, ...Object.values(sellPieces));
+  const topBuyPieces = Math.max(0, ...Object.values(buyPieces));
+  const sellEligibilityThreshold = topSellPieces * POOL_THRESHOLD;
+  const buyEligibilityThreshold = topBuyPieces * POOL_THRESHOLD;
+  const baseSalaryEligibilityThreshold = topSellPieces * BASE_SALARY_THRESHOLD;
 
   // --- Step 1: หาว่าใครเข้า Pool ฝั่งไหนบ้าง ---
-  const eligibleSell = {};
-  const eligibleBuy = {};
-  groupEmpIds.forEach((empId) => {
-    const exc = poolExc[empId];
-    if (exc === "sell" || exc === "both") {
-      eligibleSell[empId] = false;
+  const sellPoolEligibility = {};
+  const buyPoolEligibility = {};
+  groupEmployeeIds.forEach((employeeId) => {
+    const employeePoolExclusion = poolExclusion[employeeId];
+    if (employeePoolExclusion === "sell" || employeePoolExclusion === "both") {
+      sellPoolEligibility[employeeId] = false;
     } else {
-      eligibleSell[empId] =
-        topSell === 0 ? true : sellPieces[empId] >= sellThreshold;
+      sellPoolEligibility[employeeId] =
+        topSellPieces === 0
+          ? true
+          : sellPieces[employeeId] >= sellEligibilityThreshold;
     }
-    if (exc === "buy" || exc === "both") {
-      eligibleBuy[empId] = false;
+    if (employeePoolExclusion === "buy" || employeePoolExclusion === "both") {
+      buyPoolEligibility[employeeId] = false;
     } else {
-      eligibleBuy[empId] =
-        topBuy === 0 ? true : buyPieces[empId] >= buyThreshold;
+      buyPoolEligibility[employeeId] =
+        topBuyPieces === 0
+          ? true
+          : buyPieces[employeeId] >= buyEligibilityThreshold;
     }
   });
 
   // --- Step 2: รวม Pool จากชิ้นของทุกคน (รวมคนที่ถูกตัด) ---
-  let poolN_total = 0,
-    poolB_total = 0;
-  groupEmpIds.forEach((empId) => {
-    const sal = salaryData[empId]?.[ym];
-    if (sal) {
-      poolN_total += sellPieces[empId]; // ทั่วไป + พิเศษ
-      poolB_total += buyPieces[empId]; // รับซื้อ
+  let totalSellPoolPieces = 0;
+  let totalBuyPoolPieces = 0;
+  groupEmployeeIds.forEach((employeeId) => {
+    const salary = salaryData[employeeId]?.[yearMonth];
+    if (salary) {
+      totalSellPoolPieces += sellPieces[employeeId]; // ทั่วไป + พิเศษ
+      totalBuyPoolPieces += buyPieces[employeeId]; // รับซื้อ
     }
   });
 
   // --- Step 3: คำนวณตามสูตร Excel แยก 2 ฝั่ง ---
-  function computeShares(eligible, poolTotal) {
-    const eligibleIds = groupEmpIds.filter((id) => eligible[id]);
-    const N = eligibleIds.length;
-    if (N === 0) return { shares: {}, N: 0, base: 0, K: 0 };
-    const base = 100 / N;
-    const K = base / DAYS_PER_MONTH;
+  function computeShares(poolEligibility, totalPoolPieces) {
+    const eligibleEmployeeIds = groupEmployeeIds.filter(
+      (employeeId) => poolEligibility[employeeId],
+    );
+    const eligibleEmployeeCount = eligibleEmployeeIds.length;
+    if (eligibleEmployeeCount === 0) {
+      return {
+        shares: {},
+        eligibleEmployeeCount: 0,
+        baseSharePercent: 0,
+        leaveDeductionFactor: 0,
+      };
+    }
+    const baseSharePercent = 100 / eligibleEmployeeCount;
+    const leaveDeductionFactor = baseSharePercent / DAYS_PER_MONTH;
 
     // % การหัก ของแต่ละคน
-    const deductPct = {};
-    const sharePct = {};
-    eligibleIds.forEach((id) => {
-      deductPct[id] = totalLeave[id] * K * (N - 1);
-      sharePct[id] = N > 1 ? deductPct[id] / (N - 1) : 0;
+    const leaveDeductionPercent = {};
+    const redistributedPercent = {};
+    eligibleEmployeeIds.forEach((employeeId) => {
+      leaveDeductionPercent[employeeId] =
+        totalLeave[employeeId] *
+        leaveDeductionFactor *
+        (eligibleEmployeeCount - 1);
+      redistributedPercent[employeeId] =
+        eligibleEmployeeCount > 1
+          ? leaveDeductionPercent[employeeId] / (eligibleEmployeeCount - 1)
+          : 0;
     });
+
     // % ที่ได้
     const shares = {};
-    const sumShareAll = eligibleIds.reduce((s, id) => s + sharePct[id], 0);
-    eligibleIds.forEach((id) => {
-      const sumOthers = sumShareAll - sharePct[id];
-      const pct = base - deductPct[id] + sumOthers;
-      const pieces = (pct / 100) * poolTotal;
-      shares[id] = {
-        pct,
-        pieces,
-        deductPct: deductPct[id],
-        sharePct: sharePct[id],
-        leaveDays: totalLeave[id],
+    const totalRedistributedPercent = eligibleEmployeeIds.reduce(
+      (sum, employeeId) => sum + redistributedPercent[employeeId],
+      0,
+    );
+    eligibleEmployeeIds.forEach((employeeId) => {
+      const redistributedFromOthers =
+        totalRedistributedPercent - redistributedPercent[employeeId];
+      const finalSharePercent =
+        baseSharePercent -
+        leaveDeductionPercent[employeeId] +
+        redistributedFromOthers;
+      const allocatedPieces = (finalSharePercent / 100) * totalPoolPieces;
+      shares[employeeId] = {
+        finalSharePercent,
+        allocatedPieces,
+        leaveDeductionPercent: leaveDeductionPercent[employeeId],
+        redistributedPercent: redistributedPercent[employeeId],
+        leaveDays: totalLeave[employeeId],
       };
     });
-    return { shares, N, base, K, eligibleIds };
+    return {
+      shares,
+      eligibleEmployeeCount,
+      baseSharePercent,
+      leaveDeductionFactor,
+      eligibleEmployeeIds,
+    };
   }
 
-  const sellResult = computeShares(eligibleSell, poolN_total);
-  const buyResult = computeShares(eligibleBuy, poolB_total);
+  const sellResult = computeShares(sellPoolEligibility, totalSellPoolPieces);
+  const buyResult = computeShares(buyPoolEligibility, totalBuyPoolPieces);
 
   // --- Step 4: ประกอบผลลัพธ์ของแต่ละคน ---
   const result = {};
-  groupEmpIds.forEach((empId) => {
-    const sShare = sellResult.shares[empId];
-    const bShare = buyResult.shares[empId];
+  groupEmployeeIds.forEach((employeeId) => {
+    const sellShare = sellResult.shares[employeeId];
+    const buyShare = buyResult.shares[employeeId];
     const losesBaseSalary =
-      poolExc[empId] === "both" &&
-      topSell > 0 &&
-      sellPieces[empId] < baseSalaryThreshold;
+      poolExclusion[employeeId] === "both" &&
+      topSellPieces > 0 &&
+      sellPieces[employeeId] < baseSalaryEligibilityThreshold;
 
-    result[empId] = {
+    result[employeeId] = {
       // จำนวนชิ้นที่ได้
-      piecesNormal: sShare ? sShare.pieces : 0,
-      piecesBuy: bShare ? bShare.pieces : 0,
+      normalSalePieces: sellShare ? sellShare.allocatedPieces : 0,
+      buyPieces: buyShare ? buyShare.allocatedPieces : 0,
       // เปอร์เซ็นต์ (สำหรับแสดงผล)
-      sellPct: sShare ? sShare.pct : 0,
-      sellDeductPct: sShare ? sShare.deductPct : 0,
-      sellSharePct: sShare ? sShare.sharePct : 0,
-      buyPct: bShare ? bShare.pct : 0,
-      buyDeductPct: bShare ? bShare.deductPct : 0,
-      buySharePct: bShare ? bShare.sharePct : 0,
+      sellSharePercent: sellShare ? sellShare.finalSharePercent : 0,
+      sellLeaveDeductionPercent: sellShare
+        ? sellShare.leaveDeductionPercent
+        : 0,
+      sellRedistributedPercent: sellShare ? sellShare.redistributedPercent : 0,
+      buySharePercent: buyShare ? buyShare.finalSharePercent : 0,
+      buyLeaveDeductionPercent: buyShare ? buyShare.leaveDeductionPercent : 0,
+      buyRedistributedPercent: buyShare ? buyShare.redistributedPercent : 0,
       // ข้อมูล Pool
-      poolN: poolN_total,
-      poolB: poolB_total,
-      sellN: sellResult.N,
-      sellBase: sellResult.base,
-      sellK: sellResult.K,
-      buyN: buyResult.N,
-      buyBase: buyResult.base,
-      buyK: buyResult.K,
-      leaveDays: totalLeave[empId],
+      totalSellPoolPieces,
+      totalBuyPoolPieces,
+      eligibleSellEmployeeCount: sellResult.eligibleEmployeeCount,
+      sellBaseSharePercent: sellResult.baseSharePercent,
+      sellLeaveDeductionFactor: sellResult.leaveDeductionFactor,
+      eligibleBuyEmployeeCount: buyResult.eligibleEmployeeCount,
+      buyBaseSharePercent: buyResult.baseSharePercent,
+      buyLeaveDeductionFactor: buyResult.leaveDeductionFactor,
+      leaveDays: totalLeave[employeeId],
       // สิทธิ์
-      eligibleSell: eligibleSell[empId],
-      eligibleBuy: eligibleBuy[empId],
-      mySell: sellPieces[empId],
-      myBuy: buyPieces[empId],
-      topSell,
-      topBuy,
-      sellThreshold,
-      buyThreshold,
-      baseSalaryThreshold,
-      poolExclude: poolExc[empId],
+      eligibleForSellPool: sellPoolEligibility[employeeId],
+      eligibleForBuyPool: buyPoolEligibility[employeeId],
+      employeeSellPieces: sellPieces[employeeId],
+      employeeBuyPieces: buyPieces[employeeId],
+      topSellPieces,
+      topBuyPieces,
+      sellEligibilityThreshold,
+      buyEligibilityThreshold,
+      baseSalaryEligibilityThreshold,
+      poolExclusion: poolExclusion[employeeId],
       losesBaseSalary,
-      // (เพื่อความเข้ากันได้ย้อนหลังกับ UI เดิม)
-      ratioSell: sShare ? sShare.pct / 100 : 0,
-      ratioBuy: bShare ? bShare.pct / 100 : 0,
-      workDay: DAYS_PER_MONTH - totalLeave[empId],
-      totalWorkSell: DAYS_PER_MONTH * sellResult.N,
-      totalWorkBuy: DAYS_PER_MONTH * buyResult.N,
+      sellShareRatio: sellShare ? sellShare.finalSharePercent / 100 : 0,
+      buyShareRatio: buyShare ? buyShare.finalSharePercent / 100 : 0,
+      workDays: DAYS_PER_MONTH - totalLeave[employeeId],
+      totalSellWorkDays: DAYS_PER_MONTH * sellResult.eligibleEmployeeCount,
+      totalBuyWorkDays: DAYS_PER_MONTH * buyResult.eligibleEmployeeCount,
     };
   });
   return result;
 }
 
-export function calcSalary(
-  s,
+export function calculateSalary(
+  salary,
   overQuotaInfo,
   rates,
   totalLeaveDays,
@@ -199,104 +234,112 @@ export function calcSalary(
   poolShare,
   roleConfig,
 ) {
-  if (!s) return null;
-  const wd = overQuotaInfo?.weekdays || 0;
-  const sun = overQuotaInfo?.sundays || 0;
-  // เงินเดือนพื้นฐาน — ดึงจาก empInfo (Admin กรอกในแท็บ "ข้อมูลพนักงาน")
-  const baseAmt = rates?.baseSalary ?? (s.base || 0);
-  const dayRate = baseAmt / DAYS_PER_MONTH;
-  const overQ = Math.round(
-    wd * dayRate + sun * dayRate * SUNDAY_LEAVE_MULTIPLIER,
+  if (!salary) return null;
+  const weekdayOverQuotaDays = overQuotaInfo?.weekdays || 0;
+  const sundayOverQuotaDays = overQuotaInfo?.sundays || 0;
+  // เงินเดือนพื้นฐาน — ดึงจาก employeeInfo (Admin กรอกในแท็บ "ข้อมูลพนักงาน")
+  const baseSalaryAmount = rates?.baseSalary ?? (salary.baseSalary || 0);
+  const dailySalaryRate = baseSalaryAmount / DAYS_PER_MONTH;
+  const overQuotaDeduction = Math.round(
+    weekdayOverQuotaDays * dailySalaryRate +
+      sundayOverQuotaDays * dailySalaryRate * SUNDAY_LEAVE_MULTIPLIER,
   );
 
-  const isSingle = roleConfig && !roleConfig.poolGroup;
-  const rSingle = rates?.ratePerPiece || 0;
-  const rNormal = rates?.ratePerPieceNormal || 0;
-  const rSpecial = rates?.ratePerPieceSpecial || 0;
-  const rBuy = rates?.ratePerPieceBuy || 0;
-  const rInvite = rates?.ratePerPieceInvite || 0;
-  const rTransfer = rates?.ratePerPieceTransfer || 0;
+  const usesSinglePieceRate = roleConfig && !roleConfig.poolGroup;
+  const singlePieceRate = rates?.singlePieceRate || 0;
+  const normalSalePieceRate = rates?.normalSalePieceRate || 0;
+  const specialSalePieceRate = rates?.specialSalePieceRate || 0;
+  const buyPieceRate = rates?.buyPieceRate || 0;
+  const invitePieceRate = rates?.invitePieceRate || 0;
+  const transferPieceRate = rates?.transferPieceRate || 0;
 
-  let pcsSingle = 0,
-    pcsN = 0,
-    pcsS = 0,
-    pcsB = 0;
-  let commSingle = 0,
-    commNormal = 0,
-    commSpecial = 0,
-    commBuy = 0;
+  let singleRatePieces = 0,
+    normalSalePieces = 0,
+    specialSalePieces = 0,
+    buyPieces = 0;
+  let singleRateCommission = 0,
+    normalSaleCommission = 0,
+    specialSaleCommission = 0,
+    buyCommission = 0;
 
-  if (isSingle) {
-    pcsSingle = s.pieces || 0;
-    commSingle = Math.round(pcsSingle * rSingle);
+  if (usesSinglePieceRate) {
+    singleRatePieces = salary.singleRatePieces || 0;
+    singleRateCommission = Math.round(singleRatePieces * singlePieceRate);
   } else {
     const inPool = !!poolShare;
-    pcsN = inPool ? poolShare.piecesNormal || 0 : s.piecesNormal || 0;
-    pcsS = s.piecesSpecial || 0; // always personal
-    pcsB = inPool ? poolShare.piecesBuy || 0 : s.piecesBuy || 0;
-    commNormal = Math.round(pcsN * rNormal);
-    commSpecial = Math.round(pcsS * rSpecial);
-    commBuy = Math.round(pcsB * rBuy);
+    normalSalePieces = inPool
+      ? poolShare.normalSalePieces || 0
+      : salary.normalSalePieces || 0;
+    specialSalePieces = salary.specialSalePieces || 0; // always personal
+    buyPieces = inPool ? poolShare.buyPieces || 0 : salary.buyPieces || 0;
+    normalSaleCommission = Math.round(normalSalePieces * normalSalePieceRate);
+    specialSaleCommission = Math.round(
+      specialSalePieces * specialSalePieceRate,
+    );
+    buyCommission = Math.round(buyPieces * buyPieceRate);
   }
 
-  const pcsI = s.piecesInvite || 0;
-  const pcsT = s.piecesTransfer || 0;
-  const commInvite = pcsI * rInvite;
-  const commTransfer = pcsT * rTransfer;
-  const memberBonusTotal = commInvite + commTransfer;
+  const invitePieces = salary.invitePieces || 0;
+  const transferPieces = salary.transferPieces || 0;
+  const inviteCommission = invitePieces * invitePieceRate;
+  const transferCommission = transferPieces * transferPieceRate;
+  const memberBonusTotal = inviteCommission + transferCommission;
 
-  const lvDays = totalLeaveDays || 0;
-  const bonusDays = Math.max(0, WEEKDAY_LEAVE_QUOTA - lvDays);
-  const attendBonus = Math.round(bonusDays * dayRate);
+  const leaveDays = totalLeaveDays || 0;
+  const bonusDays = Math.max(0, WEEKDAY_LEAVE_QUOTA - leaveDays);
+  const attendanceBonus = Math.round(bonusDays * dailySalaryRate);
 
   // ถ้าถูกปิดสิทธิ์ Pool และขาย < 50% ของ Top → เงินเดือนพื้นฐาน = 0
   const losesBaseSalary = !!poolShare?.losesBaseSalary;
-  const baseSalary = losesBaseSalary ? 0 : baseAmt;
+  const baseSalary = losesBaseSalary ? 0 : baseSalaryAmount;
 
   const earnings =
     baseSalary +
-    commSingle +
-    commNormal +
-    commSpecial +
-    commBuy +
+    singleRateCommission +
+    normalSaleCommission +
+    specialSaleCommission +
+    buyCommission +
     memberBonusTotal +
-    attendBonus;
-  const advanceDed = approvedAdvanceTotal || 0;
+    attendanceBonus;
+  const advanceDeduction = approvedAdvanceTotal || 0;
   const deductions =
-    (s.lateDeduction || 0) + advanceDed + (s.socialSecurity || 0) + overQ;
-  const net = earnings - deductions;
+    (salary.lateDeduction || 0) +
+    advanceDeduction +
+    (salary.socialSecurity || 0) +
+    overQuotaDeduction;
+  const netSalary = earnings - deductions;
   return {
     earnings,
     deductions,
-    net,
-    overQ,
-    dayRate,
-    wd,
-    sun,
-    isSingle,
-    pcsSingle,
-    commSingle,
-    rSingle,
-    commNormal,
-    commSpecial,
-    commBuy,
-    commInvite,
-    commTransfer,
+    netSalary,
+    overQuotaDeduction,
+    dailySalaryRate,
+    weekdayOverQuotaDays,
+    sundayOverQuotaDays,
+    usesSinglePieceRate,
+    singleRatePieces,
+    singleRateCommission,
+    singlePieceRate,
+    normalSaleCommission,
+    specialSaleCommission,
+    buyCommission,
+    inviteCommission,
+    transferCommission,
     memberBonusTotal,
-    pcsN,
-    pcsS,
-    pcsB,
-    pcsI,
-    pcsT,
-    rNormal,
-    rSpecial,
-    rBuy,
-    rInvite,
-    rTransfer,
-    attendBonus,
+    normalSalePieces,
+    specialSalePieces,
+    buyPieces,
+    invitePieces,
+    transferPieces,
+    normalSalePieceRate,
+    specialSalePieceRate,
+    buyPieceRate,
+    invitePieceRate,
+    transferPieceRate,
+    attendanceBonus,
     bonusDays,
-    lvDays,
-    advanceDed,
+    leaveDays,
+    advanceDeduction,
     baseSalary,
     losesBaseSalary,
   };

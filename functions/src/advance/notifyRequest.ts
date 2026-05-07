@@ -3,25 +3,23 @@
  */
 
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { COLOR, getLineConfig, TH_NUM } from "../helpers/config.js";
+import { COLORS, formatThaiNumber, getLineConfig } from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
-import type { AdvanceRequestData } from "../types.js";
+import { parseNotifyAdvanceRequestPayload } from "../helpers/payload.js";
 
 export const notifyAdvanceRequest = onCall(async (request) => {
 	if (!request.auth) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
 
 	const {
-		empName,
+		employeeName,
 		amount,
 		reason,
 		month,
 		bank,
-		bankAcc,
+		bankAccountNumber,
 		submittedAt,
 		requestId,
-	} = request.data as AdvanceRequestData;
-	if (!empName || !amount)
-		throw new HttpsError("invalid-argument", "missing fields");
+	} = parseNotifyAdvanceRequestPayload(request.data);
 
 	const config = await getLineConfig();
 	if (!config.LINE_CHANNEL_ACCESS_TOKEN || !config.ADMIN_LINE_USER_ID) {
@@ -29,35 +27,35 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 		return { ok: true, skipped: true };
 	}
 
-	const dt = new Date(submittedAt || Date.now());
-	const dtStr = dt.toLocaleString("th-TH", {
+	const date = new Date(submittedAt || Date.now());
+	const dateText = date.toLocaleString("th-TH", {
 		dateStyle: "medium",
 		timeStyle: "short",
 	});
 
 	const flex = {
 		type: "flex" as const,
-		altText: `💸 คำขอเบิกเงินล่วงหน้า — ${empName} ฿${TH_NUM(amount)}`,
+		altText: `💸 คำขอเบิกเงินล่วงหน้า — ${employeeName} ฿${formatThaiNumber(amount)}`,
 		contents: {
 			type: "bubble",
 			size: "mega",
 			header: {
 				type: "box",
 				layout: "vertical",
-				backgroundColor: COLOR.maroon,
+				backgroundColor: COLORS.maroon,
 				paddingAll: "16px",
 				contents: [
 					{
 						type: "text",
 						text: "💸 คำขอเบิกเงินล่วงหน้า",
-						color: COLOR.goldLt,
+						color: COLORS.goldLight,
 						weight: "bold",
 						size: "lg",
 					},
 					{
 						type: "text",
 						text: "ห้างเพชรทองมุกดา",
-						color: COLOR.goldLt,
+						color: COLORS.goldLight,
 						size: "xs",
 						margin: "sm",
 					},
@@ -71,7 +69,7 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 					{
 						type: "box",
 						layout: "vertical",
-						backgroundColor: COLOR.goldPale,
+						backgroundColor: COLORS.goldPale,
 						cornerRadius: "8px",
 						paddingAll: "12px",
 						contents: [
@@ -79,14 +77,14 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 								type: "text",
 								text: "จำนวนเงิน",
 								size: "xs",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 							},
 							{
 								type: "text",
-								text: `฿${TH_NUM(amount)}`,
+								text: `฿${formatThaiNumber(amount)}`,
 								size: "xxl",
 								weight: "bold",
-								color: COLOR.maroon,
+								color: COLORS.maroon,
 							},
 						],
 					},
@@ -99,15 +97,15 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 								type: "text",
 								text: "👤 พนักงาน",
 								size: "sm",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 								flex: 2,
 							},
 							{
 								type: "text",
-								text: empName,
+								text: employeeName,
 								size: "sm",
 								weight: "bold",
-								color: COLOR.text,
+								color: COLORS.text,
 								flex: 4,
 								wrap: true,
 							},
@@ -122,14 +120,14 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 								type: "text",
 								text: "📅 เดือน",
 								size: "sm",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 								flex: 2,
 							},
 							{
 								type: "text",
 								text: month || "-",
 								size: "sm",
-								color: COLOR.text,
+								color: COLORS.text,
 								flex: 4,
 							},
 						],
@@ -143,14 +141,14 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 								type: "text",
 								text: "📝 เหตุผล",
 								size: "sm",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 								flex: 2,
 							},
 							{
 								type: "text",
 								text: reason || "-",
 								size: "sm",
-								color: COLOR.text,
+								color: COLORS.text,
 								flex: 4,
 								wrap: true,
 							},
@@ -166,14 +164,14 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 								type: "text",
 								text: "🏦 ธนาคาร",
 								size: "sm",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 								flex: 2,
 							},
 							{
 								type: "text",
 								text: bank || "-",
 								size: "sm",
-								color: COLOR.text,
+								color: COLORS.text,
 								flex: 4,
 								wrap: true,
 							},
@@ -188,14 +186,14 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 								type: "text",
 								text: "💳 เลขบัญชี",
 								size: "sm",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 								flex: 2,
 							},
 							{
 								type: "text",
-								text: bankAcc || "-",
+								text: bankAccountNumber || "-",
 								size: "sm",
-								color: COLOR.text,
+								color: COLORS.text,
 								flex: 4,
 								weight: "bold",
 							},
@@ -203,7 +201,7 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 					},
 					{
 						type: "text",
-						text: `⏰ ส่งคำขอ: ${dtStr}`,
+						text: `⏰ ส่งคำขอ: ${dateText}`,
 						size: "xs",
 						color: "#B89A72",
 						margin: "md",

@@ -8,7 +8,7 @@ import {
   IconPrinter,
 } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
-import { C, TH_MONTHS } from "../../constants";
+import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import {
   downloadSalaryCertificatePDF,
   printSalaryCertificate,
@@ -17,125 +17,129 @@ import {
   downloadSalarySlipPDF,
   printSalarySlip,
 } from "../../print/printSalarySlip";
-import { TH_NUMBER } from "../../utils/format";
+import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
-import { calcSalary, computePoolSharesForGroup } from "../../utils/salaryUtils";
+import {
+  calculateSalary,
+  computePoolSharesForGroup,
+} from "../../utils/salaryUtils";
 
 /* ─── Salary View (employee — read only) ───────────────────────── */
 export default function SalaryView({
   profile,
-  employeeId,
+  employeeId: profileEmployeeId,
   salaryData,
   allLeaves,
-  empDir,
+  employeeDirectory,
   advanceRequests,
   onOpenAdvance,
   onOpenHistory,
   roles,
 }) {
   const now = new Date();
-  const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const empInfo =
-    empDir.find((e) => e.id === employeeId) ||
-    empDir.find((e) => e.name === profile?.name);
-  const empId = empInfo?.id || employeeId || "";
-  const [selMonth, setSelMonth] = useState(
-    currentYM,
-  );
+  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const employeeInfo =
+    employeeDirectory.find((employee) => employee.id === profileEmployeeId) ||
+    employeeDirectory.find((employee) => employee.name === profile?.name);
+  const salaryEmployeeId = employeeInfo?.id || profileEmployeeId || "";
+  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth);
   const months = useMemo(
     () =>
-      Object.keys(salaryData[empId] || {})
+      Object.keys(salaryData[salaryEmployeeId] || {})
         .sort()
         .reverse()
         .slice(0, 12),
-    [salaryData, empId],
+    [salaryData, salaryEmployeeId],
   );
-  const selectMonths = months.includes(selMonth)
+  const selectMonths = months.includes(selectedMonth)
     ? months
-    : [selMonth, ...months];
+    : [selectedMonth, ...months];
 
   useEffect(() => {
     if (months.length === 0) return;
-    if (!months.includes(selMonth)) setSelMonth(months[0]);
-  }, [months, selMonth]);
+    if (!months.includes(selectedMonth)) setSelectedMonth(months[0]);
+  }, [months, selectedMonth]);
 
-  const data = salaryData[empId]?.[selMonth];
-  const empRole = roles?.find((r) => r.id === empInfo?.roleId);
+  const data = salaryData[salaryEmployeeId]?.[selectedMonth];
+  const employeeRole = roles?.find((role) => role.id === employeeInfo?.roleId);
 
   const {
     overInfo,
     overTotalDays,
-    totalLeaveDays: _totalLeaveDays,
     monthApprovedAdvances,
-    approvedAdvanceTotal: _approvedAdvanceTotal,
     poolShare,
-    calc,
+    salaryCalculation,
   } = useMemo(() => {
     const monthLeaves = profile
       ? allLeaves.filter(
-          (lv) =>
-            lv.employeeName === profile.name && lv.start.startsWith(selMonth),
+          (leave) =>
+            leave.employeeName === profile.name &&
+            leave.start.startsWith(selectedMonth),
         )
       : [];
-    const _overInfo = getOverQuotaDays(monthLeaves);
-    const _totalLeaveDays = countWeekdayLeaves(monthLeaves);
-    const _monthApprovedAdvances = (advanceRequests || []).filter(
-      (r) => r.month === selMonth && r.status === "approved",
+    const overQuotaInfo = getOverQuotaDays(monthLeaves);
+    const leaveDays = countWeekdayLeaves(monthLeaves);
+    const approvedAdvancesForMonth = (advanceRequests || []).filter(
+      (advanceRequest) =>
+        advanceRequest.month === selectedMonth &&
+        advanceRequest.status === "approved",
     );
-    const _approvedAdvanceTotal = _monthApprovedAdvances.reduce(
-      (s, r) => s + r.amount,
+    const approvedAdvanceAmountTotal = approvedAdvancesForMonth.reduce(
+      (sum, advanceRequest) => sum + advanceRequest.amount,
       0,
     );
-    let _poolShare: any = null;
-    if (empRole?.poolGroup) {
-      const groupEmps = empDir.filter((e) => {
-        const r = roles.find((rl) => rl.id === e.roleId);
-        return r?.poolGroup === empRole.poolGroup;
+    let employeePoolShare: any = null;
+    if (employeeRole?.poolGroup) {
+      const groupEmployees = employeeDirectory.filter((employee) => {
+        const role = roles.find(
+          (candidateRole) => candidateRole.id === employee.roleId,
+        );
+        return role?.poolGroup === employeeRole.poolGroup;
       });
       const shares = computePoolSharesForGroup({
-        groupEmpIds: groupEmps.map((e) => e.id),
+        groupEmployeeIds: groupEmployees.map((employee) => employee.id),
         salaryData,
         allLeaves,
-        ym: selMonth,
-        empDir,
+        yearMonth: selectedMonth,
+        employeeDirectory,
       });
-      _poolShare = shares[empInfo?.id];
+      employeePoolShare = shares[employeeInfo?.id];
     }
-    const _calc = calcSalary(
+    const computedSalary = calculateSalary(
       data,
-      _overInfo,
-      empInfo,
-      _totalLeaveDays,
-      _approvedAdvanceTotal,
-      _poolShare,
-      empRole,
+      overQuotaInfo,
+      employeeInfo,
+      leaveDays,
+      approvedAdvanceAmountTotal,
+      employeePoolShare,
+      employeeRole,
     );
     return {
-      overInfo: _overInfo,
-      overTotalDays: _overInfo.weekdays + _overInfo.sundays,
-      totalLeaveDays: _totalLeaveDays,
-      monthApprovedAdvances: _monthApprovedAdvances,
-      approvedAdvanceTotal: _approvedAdvanceTotal,
-      poolShare: _poolShare,
-      calc: _calc,
+      overInfo: overQuotaInfo,
+      overTotalDays: overQuotaInfo.weekdays + overQuotaInfo.sundays,
+      totalLeaveDays: leaveDays,
+      monthApprovedAdvances: approvedAdvancesForMonth,
+      approvedAdvanceTotal: approvedAdvanceAmountTotal,
+      poolShare: employeePoolShare,
+      salaryCalculation: computedSalary,
     };
   }, [
     profile,
     allLeaves,
-    selMonth,
+    selectedMonth,
     advanceRequests,
-    empRole,
-    empDir,
+    employeeRole,
+    employeeDirectory,
     roles,
     salaryData,
-    empInfo,
+    employeeInfo,
     data,
   ]);
 
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
 
   async function handleDownloadSlipPDF() {
-    if (!data || !calc) {
+    if (!data || !salaryCalculation) {
       alert("ไม่มีข้อมูลเงินเดือนเดือนนี้");
       return;
     }
@@ -143,12 +147,12 @@ export default function SalaryView({
     try {
       await downloadSalarySlipPDF({
         profile,
-        empInfo,
-        empRole,
+        employeeInfo,
+        employeeRole,
         data,
-        calc,
+        salaryCalculation,
         poolShare,
-        selMonth,
+        selectedMonth,
         monthApprovedAdvances,
       });
     } catch (err: unknown) {
@@ -166,7 +170,7 @@ export default function SalaryView({
     }
     setPdfLoading("cert");
     try {
-      await downloadSalaryCertificatePDF({ profile, empInfo, data });
+      await downloadSalaryCertificatePDF({ profile, employeeInfo, data });
     } catch (err: unknown) {
       console.error(err);
       alert((err as Error).message || "สร้าง PDF ไม่สำเร็จ — ลองใหม่อีกครั้ง");
@@ -176,18 +180,18 @@ export default function SalaryView({
   }
 
   function handlePrintSlip() {
-    if (!data || !calc) {
+    if (!data || !salaryCalculation) {
       alert("ไม่มีข้อมูลเงินเดือนเดือนนี้");
       return;
     }
     printSalarySlip({
       profile,
-      empInfo,
-      empRole,
+      employeeInfo,
+      employeeRole,
       data,
-      calc,
+      salaryCalculation,
       poolShare,
-      selMonth,
+      selectedMonth,
       monthApprovedAdvances,
     });
   }
@@ -197,24 +201,25 @@ export default function SalaryView({
       alert("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
       return;
     }
-    printSalaryCertificate({ profile, empInfo, data });
+    printSalaryCertificate({ profile, employeeInfo, data });
   }
 
-  if (!data || !calc) {
+  if (!data || !salaryCalculation) {
     return (
       <div>
         <div className="flex items-center justify-between gap-2 mb-3.5">
           <div className="text-sm text-txt-soft flex-1">สลิปเงินเดือน</div>
           <select
-            value={selMonth}
-            onChange={(e) => setSelMonth(e.target.value)}
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
             className="px-3 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
           >
             {selectMonths.map((m) => {
               const [y, mo] = m.split("-");
               return (
                 <option key={m} value={m}>
-                  {TH_MONTHS[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
+                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
+                  {parseInt(y, 10) + 543}
                 </option>
               );
             })}
@@ -225,19 +230,20 @@ export default function SalaryView({
           <div className="font-bold text-txt mb-1">ยังไม่มีข้อมูลเงินเดือน</div>
           <div className="text-sm text-txt-soft mb-5">
             เดือน {(() => {
-              const [y, mo] = selMonth.split("-");
-              return `${TH_MONTHS[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+              const [y, mo] = selectedMonth.split("-");
+              return `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
             })()}
           </div>
-          {months.includes(currentYM) && selMonth !== currentYM && (
-            <button
-              onClick={() => setSelMonth(currentYM)}
-              className="px-5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-gold)/0.25] inline-flex items-center gap-1.5"
-            >
-              <IconArrowLeft size={14} stroke={2.5} />
-              กลับไปเดือนปัจจุบัน
-            </button>
-          )}
+          {months.includes(currentYearMonth) &&
+            selectedMonth !== currentYearMonth && (
+              <button
+                onClick={() => setSelectedMonth(currentYearMonth)}
+                className="px-5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-gold)/0.25] inline-flex items-center gap-1.5"
+              >
+                <IconArrowLeft size={14} stroke={2.5} />
+                กลับไปเดือนปัจจุบัน
+              </button>
+            )}
         </div>
       </div>
     );
@@ -253,10 +259,10 @@ export default function SalaryView({
         <div className="flex-1 min-w-0">
           <div className="text-xs text-txt-soft mb-0.5">โอนเข้าบัญชี</div>
           <div className="text-sm font-bold text-txt mb-px">
-            {empInfo?.bank || "-"}
+            {employeeInfo?.bank || "-"}
           </div>
           <div className="text-sm text-txt-mid tracking-wider">
-            {empInfo?.bankAcc || "-"}
+            {employeeInfo?.bankAccountNumber || "-"}
           </div>
         </div>
       </div>
@@ -272,13 +278,13 @@ export default function SalaryView({
             width="50"
             height="50"
             viewBox="0 0 24 24"
-            fill={C.goldLt}
+            fill={COLORS.goldLight}
           >
             <path d="M6 3h12l4 6-10 12L2 9z" />
           </svg>
           <div className="flex items-center gap-2 relative">
             <div className="w-[34px] h-[34px] rounded-[10px] bg-white/18 flex items-center justify-center shrink-0">
-              <IconCirclePlus size={17} color={C.goldLt} stroke={2.4} />
+              <IconCirclePlus size={17} color={COLORS.goldLight} stroke={2.4} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-gold-lt leading-tight">
@@ -294,7 +300,7 @@ export default function SalaryView({
         >
           <div className="flex items-center gap-2">
             <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
-              <IconClock size={17} color={C.maroon} stroke={2.2} />
+              <IconClock size={17} color={COLORS.maroon} stroke={2.2} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-maroon leading-tight">
@@ -317,15 +323,15 @@ export default function SalaryView({
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="text-sm text-txt-soft flex-1">สลิปเงินเดือน</div>
         <select
-          value={selMonth}
-          onChange={(e) => setSelMonth(e.target.value)}
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
           className="px-3 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
         >
           {selectMonths.map((m) => {
             const [y, mo] = m.split("-");
             return (
               <option key={m} value={m}>
-                {TH_MONTHS[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
+                {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
               </option>
             );
           })}
@@ -409,7 +415,7 @@ export default function SalaryView({
           width="120"
           height="120"
           viewBox="0 0 24 24"
-          fill={C.goldLt}
+          fill={COLORS.goldLight}
         >
           <path d="M6 3h12l4 6-10 12L2 9z" />
         </svg>
@@ -417,20 +423,20 @@ export default function SalaryView({
           <div className="text-sm text-gold-lt/65">เงินสุทธิที่ได้รับ</div>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-4xl font-extrabold text-gold-lt tracking-[-0.02em]">
-              ฿{TH_NUMBER(calc?.net ?? 0)}
+              ฿{formatThaiNumber(salaryCalculation?.netSalary ?? 0)}
             </span>
           </div>
           <div className="flex gap-3.5 mt-3.5 pt-3.5 border-t border-gold-lt/12">
             <div>
               <div className="text-xs text-gold-lt/50">รวมรายรับ</div>
               <div className="text-base font-bold text-[#7EE8B5]">
-                +฿{TH_NUMBER(calc.earnings)}
+                +฿{formatThaiNumber(salaryCalculation.earnings)}
               </div>
             </div>
             <div>
               <div className="text-xs text-gold-lt/50">รวมรายหัก</div>
               <div className="text-base font-bold text-[#FCA5A5]">
-                −฿{TH_NUMBER(calc.deductions)}
+                −฿{formatThaiNumber(salaryCalculation.deductions)}
               </div>
             </div>
           </div>
@@ -444,14 +450,19 @@ export default function SalaryView({
           <div className="font-bold text-base text-txt">รายรับ</div>
         </div>
         {[
-          { icon: "💼", main: "เงินเดือนพื้นฐาน", sub: "", value: calc.baseSalary },
-          ...(calc.isSingle
+          {
+            icon: "💼",
+            main: "เงินเดือนพื้นฐาน",
+            sub: "",
+            value: salaryCalculation.baseSalary,
+          },
+          ...(salaryCalculation.usesSinglePieceRate
             ? [
                 {
                   icon: "📦",
                   main: "ค่าคอม",
-                  sub: `${calc.pcsSingle} ชิ้น × ฿${TH_NUMBER(calc.rSingle)}`,
-                  value: calc.commSingle,
+                  sub: `${salaryCalculation.singleRatePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.singlePieceRate)}`,
+                  value: salaryCalculation.singleRateCommission,
                 },
               ]
             : [
@@ -459,45 +470,45 @@ export default function SalaryView({
                   icon: "💎",
                   main: "ค่าคอมขาย (ทั่วไป)",
                   sub: poolShare
-                    ? `Pool ${poolShare.poolN} ชิ้น · ได้ ${poolShare.sellPct.toFixed(2)}% = ${calc.pcsN.toFixed(1)} ชิ้น × ฿${TH_NUMBER(calc.rNormal)}`
-                    : `${calc.pcsN} ชิ้น × ฿${TH_NUMBER(calc.rNormal)}`,
-                  value: calc.commNormal,
+                    ? `Pool ${poolShare.totalSellPoolPieces} ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`
+                    : `${salaryCalculation.normalSalePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`,
+                  value: salaryCalculation.normalSaleCommission,
                 },
                 {
                   icon: "✨",
                   main: "ค่าคอมขาย (พิเศษ)",
-                  sub: `${calc.pcsS} ชิ้น × ฿${TH_NUMBER(calc.rSpecial)}`,
-                  value: calc.commSpecial,
+                  sub: `${salaryCalculation.specialSalePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.specialSalePieceRate)}`,
+                  value: salaryCalculation.specialSaleCommission,
                 },
                 {
                   icon: "🛍",
                   main: "ค่าคอมรับซื้อ",
                   sub: poolShare
-                    ? `Pool ${poolShare.poolB} ชิ้น · ได้ ${poolShare.buyPct.toFixed(2)}% = ${calc.pcsB.toFixed(1)} ชิ้น × ฿${TH_NUMBER(calc.rBuy)}`
-                    : `${calc.pcsB} ชิ้น × ฿${TH_NUMBER(calc.rBuy)}`,
-                  value: calc.commBuy,
+                    ? `Pool ${poolShare.totalBuyPoolPieces} ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`
+                    : `${salaryCalculation.buyPieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`,
+                  value: salaryCalculation.buyCommission,
                 },
               ]),
           {
             icon: "🎫",
             main: "โบนัสเชิญชวนสมัครบัตร",
-            sub: `${calc.pcsI} ใบ × ฿${TH_NUMBER(calc.rInvite)}`,
-            value: calc.commInvite,
+            sub: `${salaryCalculation.invitePieces} ใบ × ฿${formatThaiNumber(salaryCalculation.invitePieceRate)}`,
+            value: salaryCalculation.inviteCommission,
           },
           {
             icon: "🔄",
             main: "โบนัสย้ายข้อมูลบัตร",
-            sub: `${calc.pcsT} ใบ × ฿${TH_NUMBER(calc.rTransfer)}`,
-            value: calc.commTransfer,
+            sub: `${salaryCalculation.transferPieces} ใบ × ฿${formatThaiNumber(salaryCalculation.transferPieceRate)}`,
+            value: salaryCalculation.transferCommission,
           },
           {
             icon: "🌟",
             main: "โบนัสแห่งความขยัน(ไม่หยุด)",
             sub:
-              calc.lvDays <= 2
-                ? `ลาวันธรรมดา ${calc.lvDays} วัน → ${calc.bonusDays} วัน × ฿${TH_NUMBER(Math.round(calc.dayRate))}`
-                : `ลาวันธรรมดา ${calc.lvDays} วัน — ไม่ได้รับโบนัส`,
-            value: calc.attendBonus,
+              salaryCalculation.leaveDays <= 2
+                ? `ลาวันธรรมดา ${salaryCalculation.leaveDays} วัน → ${salaryCalculation.bonusDays} วัน × ฿${formatThaiNumber(Math.round(salaryCalculation.dailySalaryRate))}`
+                : `ลาวันธรรมดา ${salaryCalculation.leaveDays} วัน — ไม่ได้รับโบนัส`,
+            value: salaryCalculation.attendanceBonus,
           },
         ]
           .filter((x) => x.value > 0)
@@ -512,20 +523,18 @@ export default function SalaryView({
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-txt-mid">{row.main}</div>
                 {row.sub && (
-                  <div className="text-xs text-txt-soft mt-px">
-                    {row.sub}
-                  </div>
+                  <div className="text-xs text-txt-soft mt-px">{row.sub}</div>
                 )}
               </div>
               <span className="text-base font-semibold text-green whitespace-nowrap">
-                +฿{TH_NUMBER(row.value)}
+                +฿{formatThaiNumber(row.value)}
               </span>
             </div>
           ))}
         <div className="flex justify-between items-center pt-3 border-t-[1.5px] border-cream-dk mt-2">
           <span className="text-sm font-bold text-txt">รวมรายรับ</span>
           <span className="text-lg font-extrabold text-green">
-            ฿{TH_NUMBER(calc.earnings)}
+            ฿{formatThaiNumber(salaryCalculation.earnings)}
           </span>
         </div>
       </div>
@@ -550,7 +559,7 @@ export default function SalaryView({
               monthApprovedAdvances.length > 0
                 ? `เบิกแล้ว ${monthApprovedAdvances.length} ครั้งในเดือนนี้`
                 : "",
-            value: calc.advanceDed,
+            value: salaryCalculation.advanceDeduction,
           },
           {
             icon: "🏛",
@@ -565,7 +574,7 @@ export default function SalaryView({
               overTotalDays > 0
                 ? `${overInfo.weekdays > 0 ? `${overInfo.weekdays} วันธรรมดา` : ""}${overInfo.weekdays > 0 && overInfo.sundays > 0 ? " + " : ""}${overInfo.sundays > 0 ? `${overInfo.sundays} วันอาทิตย์ ×1.5` : ""}`
                 : "",
-            value: calc.overQ,
+            value: salaryCalculation.overQuotaDeduction,
           },
         ]
           .filter((x) => x.value > 0)
@@ -580,26 +589,24 @@ export default function SalaryView({
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-txt-mid">{row.main}</div>
                 {row.sub && (
-                  <div className="text-xs text-txt-soft mt-px">
-                    {row.sub}
-                  </div>
+                  <div className="text-xs text-txt-soft mt-px">{row.sub}</div>
                 )}
               </div>
               <span className="text-base font-semibold text-red whitespace-nowrap">
-                −฿{TH_NUMBER(row.value)}
+                −฿{formatThaiNumber(row.value)}
               </span>
             </div>
           ))}
-        {calc.deductions === 0 && (
+        {salaryCalculation.deductions === 0 && (
           <div className="text-center text-txt-soft text-sm py-2">
             ไม่มีรายการหัก ✨
           </div>
         )}
-        {calc.deductions > 0 && (
+        {salaryCalculation.deductions > 0 && (
           <div className="flex justify-between items-center pt-3 border-t-[1.5px] border-cream-dk mt-2">
             <span className="text-sm font-bold text-txt">รวมรายหัก</span>
             <span className="text-lg font-extrabold text-red">
-              ฿{TH_NUMBER(calc.deductions)}
+              ฿{formatThaiNumber(salaryCalculation.deductions)}
             </span>
           </div>
         )}

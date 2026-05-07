@@ -12,8 +12,8 @@ export const onLeaveCreated = onDocumentCreated(
 		if (!leave?.start) return;
 
 		const db = getFirestore();
-		const ym = (leave.start as string).substring(0, 7);
-		const statsRef = db.doc(`stats/${ym}`);
+		const yearMonth = (leave.start as string).substring(0, 7);
+		const statsRef = db.doc(`stats/${yearMonth}`);
 
 		await db.runTransaction(async (tx) => {
 			const stats = await tx.get(statsRef);
@@ -21,6 +21,6 @@ export const onLeaveCreated = onDocumentCreated(
 			tx.set(statsRef, { leaveCount: current + 1 }, { merge: true });
 		});
 
-		console.log(`[onLeaveCreated] Updated stats for ${ym}`);
+		console.log(`[onLeaveCreated] Updated stats for ${yearMonth}`);
 	},
 );

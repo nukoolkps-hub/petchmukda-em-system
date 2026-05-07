@@ -6,17 +6,17 @@ import type { Employee } from "../types";
 
 interface ProfileData {
   name: string;
-  av: string;
-  avType: string;
-  img: string | null;
+  avatar: string;
+  avatarType: string;
+  avatarImageUrl: string | null;
   role: string;
   bank: string;
-  bankAcc: string;
+  bankAccountNumber: string;
 }
 
 interface UseProfileOptions {
   authUser: User | null;
-  empDir: Employee[];
+  employeeDirectory: Employee[];
   updateEmployee: (
     id: string,
     fields: Partial<Employee>,
@@ -25,31 +25,32 @@ interface UseProfileOptions {
 
 export default function useProfile({
   authUser,
-  empDir,
+  employeeDirectory,
   updateEmployee,
 }: UseProfileOptions) {
   /* ─── Auth-derived profile ─────────────────────────────────── */
   const authEmployee = useMemo(() => {
     if (!authUser) return null;
-    const byLineId = empDir.find(
+    const byLineId = employeeDirectory.find(
       (e) => e.lineUserId && e.lineUserId === authUser.uid,
     );
     return byLineId || null;
-  }, [authUser, empDir]);
+  }, [authUser, employeeDirectory]);
 
   const authDerivedProfile = useMemo(() => {
     if (!authUser) return null;
     if (!authEmployee) return null;
     const displayName = authEmployee.name;
-    const initials = authEmployee?.av || displayName.slice(0, 2);
+    const initials = authEmployee?.avatar || displayName.slice(0, 2);
     return {
       name: displayName,
-      av: initials,
-      avType: authEmployee?.avType || (authUser.photoURL ? "image" : "text"),
-      img: authEmployee?.img ?? authUser.photoURL ?? null,
+      avatar: initials,
+      avatarType:
+        authEmployee?.avatarType || (authUser.photoURL ? "image" : "text"),
+      avatarImageUrl: authEmployee?.avatarImageUrl ?? authUser.photoURL ?? null,
       role: authEmployee?.role || "-",
       bank: authEmployee?.bank || "",
-      bankAcc: authEmployee?.bankAcc || "",
+      bankAccountNumber: authEmployee?.bankAccountNumber || "",
     };
   }, [authUser, authEmployee]);
 
@@ -77,11 +78,11 @@ export default function useProfile({
       throw new Error("ไม่พบข้อมูลพนักงานที่เชื่อมกับบัญชี LINE นี้");
     }
     const fields = {
-      av: data.av,
-      avType: data.avType,
-      img: data.img,
+      avatar: data.avatar,
+      avatarType: data.avatarType,
+      avatarImageUrl: data.avatarImageUrl,
       bank: data.bank || "",
-      bankAcc: data.bankAcc || "",
+      bankAccountNumber: data.bankAccountNumber || "",
     };
     await updateEmployee(authEmployee.id, fields);
     setProfile({
@@ -95,15 +96,15 @@ export default function useProfile({
   // keep profile.role in sync when admin updates roles
   useEffect(() => {
     if (profile) {
-      const emp = empDir.find((e) => e.name === profile.name);
-      if (emp && emp.role !== profile.role)
-        setProfile((p) => (p ? { ...p, role: emp.role } : p));
+      const employee = employeeDirectory.find((e) => e.name === profile.name);
+      if (employee && employee.role !== profile.role)
+        setProfile((p) => (p ? { ...p, role: employee.role } : p));
     }
-  }, [empDir, profile?.role, profile?.name, profile]);
+  }, [employeeDirectory, profile?.role, profile?.name, profile]);
 
   // salary disabled check
-  const meEmp = authEmployee;
-  const salaryDisabled = !!meEmp?.salaryDisabled;
+  const currentEmployee = authEmployee;
+  const salaryDisabled = !!currentEmployee?.salaryDisabled;
 
   return {
     profile,
@@ -111,8 +112,8 @@ export default function useProfile({
     showEditProfile,
     setShowEditProfile,
     handleProfileSave,
-    meEmp,
-    employeeId: meEmp?.id || null,
+    currentEmployee,
+    employeeId: currentEmployee?.id || null,
     salaryDisabled,
   };
 }

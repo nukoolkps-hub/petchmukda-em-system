@@ -3,29 +3,29 @@
 export const FONT_LINK =
   "https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap";
 
-export const C = {
+export const COLORS = {
   maroon: "#7B1C1C",
-  maroonDk: "#5C1212",
+  maroonDark: "#5C1212",
   maroonLt: "#9B3030",
   gold: "#C9973A",
-  goldLt: "#E8C87A",
+  goldLight: "#E8C87A",
   goldPale: "#F5E6C8",
   cream: "#FDF8F0",
-  creamDk: "#F0E4CC",
+  creamDark: "#F0E4CC",
   white: "#FFFFFF",
   text: "#2D1A0E",
-  textMid: "#7A5C3A",
+  textMedium: "#7A5C3A",
   textSoft: "#B89A72",
   border: "#E8D5B0",
   red: "#C0392B",
-  redLt: "#FDECEA",
+  redLight: "#FDECEA",
   green: "#1A6B3A",
-  greenLt: "#E8F5EE",
+  greenLight: "#E8F5EE",
   amber: "#D97706",
-  amberLt: "#FEF3C7",
+  amberLight: "#FEF3C7",
 };
 
-export const TH_MONTHS = [
+export const THAI_MONTH_NAMES = [
   "มกราคม",
   "กุมภาพันธ์",
   "มีนาคม",
@@ -39,17 +39,23 @@ export const TH_MONTHS = [
   "พฤศจิกายน",
   "ธันวาคม",
 ];
-export const TH_DAYS_SHORT = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+export const THAI_SHORT_WEEKDAY_NAMES = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
 
 export const LEAVE_TYPES = [
   {
     id: "personal",
     label: "ลากิจ",
     icon: "💼",
-    color: C.gold,
-    colorLt: C.goldPale,
+    color: COLORS.gold,
+    colorLt: COLORS.goldPale,
   },
-  { id: "sick", label: "ลาป่วย", icon: "🏥", color: C.red, colorLt: C.redLt },
+  {
+    id: "sick",
+    label: "ลาป่วย",
+    icon: "🏥",
+    color: COLORS.red,
+    colorLt: COLORS.redLight,
+  },
 ];
 
 export const EMOJI_LIST = [
@@ -96,7 +102,7 @@ export const EMOJI_LIST = [
 ];
 
 /* ─── ธนาคารหลักในประเทศไทย ───────────────────────────────────── */
-export const TH_BANKS = [
+export const THAI_BANKS = [
   { name: "ธนาคารกสิกรไทย", short: "KBank", emoji: "🟢" },
   { name: "ธนาคารกรุงเทพ", short: "BBL", emoji: "🔵" },
   { name: "ธนาคารกรุงไทย", short: "KTB", emoji: "🟦" },
@@ -137,7 +143,7 @@ export const BUSINESS_RULES = {
   /** เกณฑ์ Pool — ขายต่ำกว่า 80% ของ Top → ตัดออกจาก Pool */
   POOL_THRESHOLD: 0.8,
 
-  /** เกณฑ์เงินเดือนพื้นฐาน — poolExclude='both' + ขาย < 50% ของ Top → ไม่ได้เงินเดือนพื้นฐาน */
+  /** เกณฑ์เงินเดือนพื้นฐาน — poolExclusion='both' + ขาย < 50% ของ Top → ไม่ได้เงินเดือนพื้นฐาน */
   BASE_SALARY_THRESHOLD: 0.5,
 
   /** เพดานการเบิกเงินล่วงหน้า — สูงสุดกี่ % ของเงินเดือนพื้นฐาน */

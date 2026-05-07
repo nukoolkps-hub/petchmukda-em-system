@@ -100,24 +100,24 @@ import { runSeed } from "./firebase/seed";
 ## 🗂 Schema (Firestore Collections)
 
 ```
-employees/{empId}
-├─ name, role, roleId, av, avType, img
-├─ bank, bankAcc, lineUserId
-├─ baseSalary, ratePerPiece*
-└─ poolExclude, salaryDisabled
+employees/{employeeId}
+├─ name, role, roleId, avatar, avatarType, avatarImageUrl
+├─ bank, bankAccountNumber, lineUserId
+├─ baseSalary, singlePieceRate*
+└─ poolExclusion, salaryDisabled
 
 leaves/{leaveId}                    ← auto ID
-├─ empId, empName, type, start, end
+├─ employeeId, employeeName, type, start, end
 └─ days, reason, submitted
 
-salaries/{empId}/months/{ym}        ← nested
-├─ base, pieces*, lateDeduction
+salaries/{employeeId}/months/{yearMonth}        ← nested
+├─ baseSalary, singleRatePieces, normalSalePieces, lateDeduction
 └─ socialSecurity, note
 
 advances/{advanceId}                ← auto ID
-├─ empId, empName, amount, reason
+├─ employeeId, employeeName, amount, reason
 ├─ month, status: pending|approved|rejected
-└─ submittedAt, approvedAt, slipImg (base64)
+└─ submittedAt, approvedAt, slipImageDataUrl (base64)
 
 roles/{roleId}
 ├─ name, poolGroup, icon
@@ -168,8 +168,8 @@ await signInWithLineToken(customToken);
 // ต้องติดตั้ง: firebase-admin
 import { getAuth } from "firebase-admin/auth";
 
-app.post("/api/line-auth", async (req, res) => {
-  const { code } = req.body;
+app.post("/api/line-auth", async (request, res) => {
+  const { code } = request.body;
 
   // 1. Verify LINE code → ได้ access token
   const lineToken = await verifyLineCode(code);

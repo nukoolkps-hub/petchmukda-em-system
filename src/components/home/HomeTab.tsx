@@ -1,34 +1,39 @@
 /* ─── HomeTab — Home dashboard content ───────────────────────── */
 
-import { C, LEAVE_TYPES } from "../../constants";
+import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { Employee, LeaveEntry } from "../../types";
 import TeamCalendar from "./TeamCalendar";
 
 interface HomeTabProps {
   profile: any;
   allLeaves: LeaveEntry[];
-  empDir: Employee[];
+  employeeDirectory: Employee[];
 }
 
-export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
+export default function HomeTab({
+  profile,
+  allLeaves,
+  employeeDirectory,
+}: HomeTabProps) {
   const now = new Date();
-  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   /* ─── Monthly quota ────────────────────────────────────────── */
   const usedThisMonth = profile
     ? allLeaves.filter(
-        (lv) => lv.employeeName === profile.name && lv.start.startsWith(ym),
+        (lv) =>
+          lv.employeeName === profile.name && lv.start.startsWith(yearMonth),
       ).length
     : 0;
   const quota = 2;
   const remaining = quota - usedThisMonth;
-  const overQ = remaining < 0;
+  const overQuotaDeduction = remaining < 0;
 
   return (
     <>
       {/* Monthly quota card */}
       <div
-        className={`bg-white rounded-[18px] px-5 py-4.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] mb-3 border-[1.5px] ${overQ ? "border-[#C0392B50]" : "border-bdr"}`}
+        className={`bg-white rounded-[18px] px-5 py-4.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] mb-3 border-[1.5px] ${overQuotaDeduction ? "border-[#C0392B50]" : "border-bdr"}`}
       >
         {/* title row */}
         <div className="flex items-center justify-between mb-3.5">
@@ -46,7 +51,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
           <div className="text-right">
             <div className="text-sm text-txt-soft">ใช้ไปแล้ว</div>
             <div
-              className={`text-2xl font-extrabold leading-none ${overQ ? "text-red" : usedThisMonth >= quota ? "text-amber" : "text-maroon"}`}
+              className={`text-2xl font-extrabold leading-none ${overQuotaDeduction ? "text-red" : usedThisMonth >= quota ? "text-amber" : "text-maroon"}`}
             >
               {usedThisMonth}
               <span className="text-sm text-txt-soft font-medium">
@@ -68,12 +73,12 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
                   height: 10,
                   borderRadius: 6,
                   background: filled
-                    ? overQ
-                      ? C.red
-                      : `linear-gradient(90deg,${C.gold},${C.goldLt})`
-                    : C.creamDk,
+                    ? overQuotaDeduction
+                      ? COLORS.red
+                      : `linear-gradient(90deg,${COLORS.gold},${COLORS.goldLight})`
+                    : COLORS.creamDark,
                   boxShadow: filled
-                    ? `0 2px 6px ${overQ ? C.red : C.gold}50`
+                    ? `0 2px 6px ${overQuotaDeduction ? COLORS.red : COLORS.gold}50`
                     : "none",
                   transition: "all 0.3s",
                 }}
@@ -137,7 +142,7 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
                 (lv) =>
                   lv.employeeName === profile.name &&
                   lv.type === lt.id &&
-                  lv.start.startsWith(ym),
+                  lv.start.startsWith(yearMonth),
               ).length
             : 0;
           return (
@@ -172,15 +177,15 @@ export default function HomeTab({ profile, allLeaves, empDir }: HomeTabProps) {
       <TeamCalendar
         leaveEntries={allLeaves}
         employeeDirectory={[
-          ...empDir,
-          ...(profile && !empDir.find((e) => e.name === profile.name)
+          ...employeeDirectory,
+          ...(profile && !employeeDirectory.find((e) => e.name === profile.name)
             ? [
                 {
                   id: "me",
                   name: profile.name,
-                  av: profile.av,
-                  avType: profile.avType,
-                  img: profile.img,
+                  avatar: profile.avatar,
+                  avatarType: profile.avatarType,
+                  avatarImageUrl: profile.avatarImageUrl,
                 },
               ]
             : []),

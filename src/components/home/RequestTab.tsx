@@ -1,7 +1,7 @@
 /* ─── RequestTab — Leave request form + history ──────────────── */
 
 import { IconAlertCircle, IconChevronRight } from "@tabler/icons-react";
-import { C, LEAVE_TYPES, TODAY } from "../../constants";
+import { COLORS, LEAVE_TYPES, TODAY } from "../../constants";
 import type { LeaveEntry } from "../../types";
 import { fmtDate } from "../../utils/dateUtils";
 import CalendarPicker from "../shared/CalendarPicker";
@@ -46,11 +46,11 @@ export default function RequestTab({
 }: RequestTabProps) {
   /* ─── Quota status for this month ──────────────────────────── */
   const now = new Date();
-  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const usedThisMonth = profile
     ? allLeaves.filter(
         (lv: LeaveEntry) =>
-          lv.employeeName === profile.name && lv.start.startsWith(ym),
+          lv.employeeName === profile.name && lv.start.startsWith(yearMonth),
       ).length
     : 0;
   const rem = 2 - usedThisMonth;
@@ -136,7 +136,7 @@ export default function RequestTab({
             className={`w-[50px] h-[50px] rounded-[14px] shrink-0 flex items-center justify-center ${overLimit ? "bg-[#C0392B18]" : "bg-linear-135 from-gold to-gold-lt"}`}
           >
             {overLimit ? (
-              <IconAlertCircle size={22} color={C.red} stroke={2.5} />
+              <IconAlertCircle size={22} color={COLORS.red} stroke={2.5} />
             ) : (
               <Diamond size={22} color="#fff" />
             )}
@@ -158,16 +158,14 @@ export default function RequestTab({
         </div>
       )}
       {errors.over && (
-        <div className="text-red text-sm mx-0 mt-1 mb-2.5">
-          ⚠ {errors.over}
-        </div>
+        <div className="text-red text-sm mx-0 mt-1 mb-2.5">⚠ {errors.over}</div>
       )}
 
       <button
         onClick={onSubmit}
         className="w-full p-[17px] mt-1.5 border-none rounded-2xl text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-linear-to-br from-gold via-gold-lt to-gold text-maroon-dk shadow-[0_6px_20px_rgba(201,151,58,0.31)]"
       >
-        <Diamond size={18} color={C.maroonDk} />
+        <Diamond size={18} color={COLORS.maroonDark} />
         ยื่นคำขอลา
       </button>
 
@@ -203,7 +201,7 @@ export default function RequestTab({
                 >
                   <div
                     className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl shrink-0"
-                    style={{ background: lt?.colorLt || C.creamDk }}
+                    style={{ background: lt?.colorLt || COLORS.creamDark }}
                   >
                     {lt?.icon}
                   </div>
@@ -224,7 +222,7 @@ export default function RequestTab({
                   </div>
                   <IconChevronRight
                     size={14}
-                    color={C.textSoft}
+                    color={COLORS.textSoft}
                     stroke={2}
                     className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail === h.id ? "rotate-90" : "rotate-0"}`}
                   />

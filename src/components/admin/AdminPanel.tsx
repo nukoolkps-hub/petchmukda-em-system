@@ -16,7 +16,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { C, LEAVE_TYPES, TH_MONTHS } from "../../constants";
+import { COLORS, LEAVE_TYPES, THAI_MONTH_NAMES } from "../../constants";
 import { fmtDate, isPast } from "../../utils/dateUtils";
 import ConfirmModal from "../modals/ConfirmModal";
 import SalaryAdminEdit from "../salary/SalaryAdminEdit";
@@ -105,7 +105,7 @@ function AdminNavBadge({ count }: { count: number }) {
 /* ─── Admin Panel (main container) ─────────────────────────────── */
 export default function AdminPanel({
   allLeaves,
-  empDir,
+  employeeDirectory,
   onDelete,
   onLogout,
   onUpdateRole,
@@ -163,19 +163,19 @@ export default function AdminPanel({
     return () => window.removeEventListener("beforeunload", handler);
   }, [unsavedDirty]);
   const [confirmLeave, setConfirmLeave] = useState<any>(null);
-  const [filterEmp, setFilterEmp] = useState("");
+  const [employeeFilter, setFilterEmp] = useState("");
   const [filterType, setFilterType] = useState("");
   const [editingRole, setEditingRole] = useState({});
   const [editingEmpId, setEditingEmpId] = useState<string | null>(null);
   const [copiedLineId, setCopiedLineId] = useState(null);
 
-  function copyLineId(text, empId) {
+  function copyLineId(text, employeeId) {
     if (!text) return;
     if (navigator.clipboard?.writeText) {
       navigator.clipboard
         .writeText(text)
         .then(() => {
-          setCopiedLineId(empId);
+          setCopiedLineId(employeeId);
           setTimeout(() => setCopiedLineId(null), 1500);
         })
         .catch(() => {});
@@ -186,24 +186,24 @@ export default function AdminPanel({
       ta.select();
       try {
         document.execCommand("copy");
-        setCopiedLineId(empId);
+        setCopiedLineId(employeeId);
         setTimeout(() => setCopiedLineId(null), 1500);
       } catch (_e) {}
       document.body.removeChild(ta);
     }
   }
   const now0 = new Date();
-  const [selMonth, setSelMonth] = useState(
+  const [selectedMonth, setSelectedMonth] = useState(
     `${now0.getFullYear()}-${String(now0.getMonth() + 1).padStart(2, "0")}`,
   );
   const [selYear, setSelYear] = useState(`${now0.getFullYear()}`);
 
   const pastLeaves = allLeaves
     .filter((lv) => isPast(lv.end))
-    .filter((lv) => !filterEmp || lv.employeeName.includes(filterEmp))
+    .filter((lv) => !employeeFilter || lv.employeeName.includes(employeeFilter))
     .filter((lv) => !filterType || lv.type === filterType)
     .sort((a, b) => b.end.localeCompare(a.end));
-  const uniqueEmps: string[] = [
+  const uniqueEmployees: string[] = [
     ...new Set(
       allLeaves.filter((lv) => isPast(lv.end)).map((lv) => lv.employeeName),
     ),
@@ -218,7 +218,7 @@ export default function AdminPanel({
       {/* admin badge */}
       <div className="flex items-center gap-3 bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-4 py-3.5 mb-4 shadow-maroon-glow">
         <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
-          <IconShield size={20} color={C.goldLt} stroke={2} />
+          <IconShield size={20} color={COLORS.goldLight} stroke={2} />
         </div>
         <div className="flex-1">
           <div className="text-gold-lt font-bold text-base">โหมดผู้ดูแลระบบ</div>
@@ -259,7 +259,7 @@ export default function AdminPanel({
               >
                 <Icon
                   size={16}
-                  color={active ? C.gold : C.textSoft}
+                  color={active ? COLORS.gold : COLORS.textSoft}
                   stroke={active ? 2.5 : 2}
                 />
                 <span className="min-w-0 truncate text-sm font-bold">
@@ -290,7 +290,7 @@ export default function AdminPanel({
               >
                 <Icon
                   size={16}
-                  color={active ? C.maroon : C.textSoft}
+                  color={active ? COLORS.maroon : COLORS.textSoft}
                   stroke={active ? 2.4 : 2}
                 />
                 <span>{item.label}</span>
@@ -305,8 +305,8 @@ export default function AdminPanel({
       {section === "positions" && (
         <RolesAdminPanel
           roles={roles}
-          empDir={empDir}
-          onUpdateEmpRole={onUpdateRole}
+          employeeDirectory={employeeDirectory}
+          onUpdateEmployeeRole={onUpdateRole}
           onUpsertRole={onUpsertRole}
           onDeleteRole={onDeleteRole}
           showToast={showToast}
@@ -316,7 +316,7 @@ export default function AdminPanel({
       {/* ── PAYROLL SUMMARY section ── */}
       {section === "payroll" && (
         <PayrollSummaryPanel
-          empDir={empDir}
+          employeeDirectory={employeeDirectory}
           salaryData={salaryData}
           allLeaves={allLeaves}
           advanceRequests={advanceRequests}
@@ -331,7 +331,7 @@ export default function AdminPanel({
       {section === "advance" && (
         <AdminAdvancePanel
           advanceRequests={advanceRequests || []}
-          empDir={empDir}
+          employeeDirectory={employeeDirectory}
           onUpdate={onUpdateAdvance}
         />
       )}
@@ -339,7 +339,7 @@ export default function AdminPanel({
       {/* ── SALARY edit section ── */}
       {section === "salary" && (
         <SalaryAdminEdit
-          empDir={empDir}
+          employeeDirectory={employeeDirectory}
           salaryData={salaryData}
           setSalaryData={setSalaryData}
           onSaveSalary={onSaveSalary}
@@ -409,15 +409,15 @@ export default function AdminPanel({
                     📅 สรุปรายเดือน
                   </div>
                   <select
-                    value={selMonth}
-                    onChange={(e) => setSelMonth(e.target.value)}
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
                     className="px-2.5 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
                   >
                     {months.map((m) => {
                       const [y, mo] = m.split("-");
                       return (
                         <option key={m} value={m}>
-                          {TH_MONTHS[parseInt(mo, 10) - 1]}{" "}
+                          {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
                           {parseInt(y, 10) + 543}
                         </option>
                       );
@@ -432,11 +432,13 @@ export default function AdminPanel({
                 <div className="flex flex-col gap-2">
                   {empNames
                     .map((name) => {
-                      const empInfo = empDir.find((e) => e.name === name);
+                      const employeeInfo = employeeDirectory.find(
+                        (e) => e.name === name,
+                      );
                       const monthLeaves = allLeaves.filter(
                         (lv) =>
                           lv.employeeName === name &&
-                          lv.start.startsWith(selMonth),
+                          lv.start.startsWith(selectedMonth),
                       );
                       const totalTimes = monthLeaves.length;
                       if (totalTimes === 0) return null;
@@ -456,19 +458,21 @@ export default function AdminPanel({
                         >
                           <div className="flex items-center gap-3 mb-2">
                             <AvatarCircle
-                              av={empInfo?.av || name.slice(0, 2)}
-                              avType={empInfo?.avType || "text"}
-                              img={empInfo?.img || null}
+                              avatar={employeeInfo?.avatar || name.slice(0, 2)}
+                              avatarType={employeeInfo?.avatarType || "text"}
+                              avatarImageUrl={
+                                employeeInfo?.avatarImageUrl || null
+                              }
                               size={36}
                               fontSize={12}
-                              border={`2px solid ${C.gold}40`}
+                              border={`2px solid ${COLORS.gold}40`}
                             />
                             <div className="flex-1">
                               <div className="font-bold text-txt text-sm">
                                 {name}
                               </div>
                               <div className="text-xs text-txt-soft">
-                                {empInfo?.role || "-"}
+                                {employeeInfo?.role || "-"}
                               </div>
                             </div>
                             <div className="text-right">
@@ -513,7 +517,7 @@ export default function AdminPanel({
                       allLeaves.filter(
                         (lv) =>
                           lv.employeeName === name &&
-                          lv.start.startsWith(selMonth),
+                          lv.start.startsWith(selectedMonth),
                       ).length === 0,
                   ) && (
                     <div className="text-txt-soft text-sm text-center py-4">
@@ -549,7 +553,9 @@ export default function AdminPanel({
                 <div className="flex flex-col gap-2">
                   {empNames
                     .map((name) => {
-                      const empInfo = empDir.find((e) => e.name === name);
+                      const employeeInfo = employeeDirectory.find(
+                        (e) => e.name === name,
+                      );
                       const yearLeaves = allLeaves.filter(
                         (lv) =>
                           lv.employeeName === name &&
@@ -573,19 +579,21 @@ export default function AdminPanel({
                         >
                           <div className="flex items-center gap-3 mb-2.5">
                             <AvatarCircle
-                              av={empInfo?.av || name.slice(0, 2)}
-                              avType={empInfo?.avType || "text"}
-                              img={empInfo?.img || null}
+                              avatar={employeeInfo?.avatar || name.slice(0, 2)}
+                              avatarType={employeeInfo?.avatarType || "text"}
+                              avatarImageUrl={
+                                employeeInfo?.avatarImageUrl || null
+                              }
                               size={38}
                               fontSize={12}
-                              border={`2px solid ${C.gold}40`}
+                              border={`2px solid ${COLORS.gold}40`}
                             />
                             <div className="flex-1">
                               <div className="font-bold text-txt text-sm">
                                 {name}
                               </div>
                               <div className="text-sm text-txt-soft">
-                                {empInfo?.role || "-"}
+                                {employeeInfo?.role || "-"}
                               </div>
                             </div>
                             <div className="text-right">
@@ -644,12 +652,12 @@ export default function AdminPanel({
         <div>
           <div className="flex gap-2 mb-3.5">
             <select
-              value={filterEmp}
+              value={employeeFilter}
               onChange={(e) => setFilterEmp(e.target.value)}
               className="flex-1 px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
             >
               <option value="">พนักงานทั้งหมด</option>
-              {uniqueEmps.map((e) => (
+              {uniqueEmployees.map((e) => (
                 <option key={e} value={e}>
                   {e}
                 </option>
@@ -676,19 +684,23 @@ export default function AdminPanel({
           <div className="flex flex-col gap-2.5">
             {pastLeaves.map((lv) => {
               const lt = LEAVE_TYPES.find((t) => t.id === lv.type);
-              const empInfo = empDir.find((e) => e.name === lv.employeeName);
+              const employeeInfo = employeeDirectory.find(
+                (e) => e.name === lv.employeeName,
+              );
               return (
                 <div
                   key={lv.id}
                   className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3"
                 >
                   <AvatarCircle
-                    av={empInfo?.av || lv.employeeName?.slice(0, 2)}
-                    avType={empInfo?.avType || "text"}
-                    img={empInfo?.img || null}
+                    avatar={
+                      employeeInfo?.avatar || lv.employeeName?.slice(0, 2)
+                    }
+                    avatarType={employeeInfo?.avatarType || "text"}
+                    avatarImageUrl={employeeInfo?.avatarImageUrl || null}
                     size={42}
                     fontSize={13}
-                    border={`2px solid ${C.gold}40`}
+                    border={`2px solid ${COLORS.gold}40`}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-txt text-base mb-[3px]">
@@ -714,7 +726,7 @@ export default function AdminPanel({
                     onClick={() => setConfirmLeave(lv)}
                     className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
                   >
-                    <IconTrash size={16} color={C.red} stroke={2.2} />
+                    <IconTrash size={16} color={COLORS.red} stroke={2.2} />
                   </button>
                 </div>
               );
@@ -740,130 +752,147 @@ export default function AdminPanel({
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            {empDir.map((emp) => {
-              const eRN = editingRole[`${emp.id}_rN`];
-              const eRS = editingRole[`${emp.id}_rS`];
-              const eRB = editingRole[`${emp.id}_rB`];
-              const eRI = editingRole[`${emp.id}_rI`];
-              const eRT = editingRole[`${emp.id}_rT`];
-              const eRSingle = editingRole[`${emp.id}_rSingle`];
-              const eBase = editingRole[`${emp.id}_base`];
-              const eSalDis = editingRole[`${emp.id}_salDis`];
-              const ePoolExc = editingRole[`${emp.id}_poolExc`];
+            {employeeDirectory.map((employee) => {
+              const editingNormalSalePieceRate =
+                editingRole[`${employee.id}:normalSalePieceRate`];
+              const editingSpecialSalePieceRate =
+                editingRole[`${employee.id}:specialSalePieceRate`];
+              const editingBuyPieceRate =
+                editingRole[`${employee.id}:buyPieceRate`];
+              const editingInvitePieceRate =
+                editingRole[`${employee.id}:invitePieceRate`];
+              const editingTransferPieceRate =
+                editingRole[`${employee.id}:transferPieceRate`];
+              const editingSinglePieceRate =
+                editingRole[`${employee.id}:singlePieceRate`];
+              const editingBaseSalary =
+                editingRole[`${employee.id}:baseSalary`];
+              const editingSalaryDisabled =
+                editingRole[`${employee.id}:salaryDisabled`];
+              const editingPoolExclusion =
+                editingRole[`${employee.id}:poolExclusion`];
               const dirty =
-                eRN !== undefined ||
-                eRS !== undefined ||
-                eRB !== undefined ||
-                eRI !== undefined ||
-                eRT !== undefined ||
-                eRSingle !== undefined ||
-                eBase !== undefined ||
-                eSalDis !== undefined ||
-                ePoolExc !== undefined;
+                editingNormalSalePieceRate !== undefined ||
+                editingSpecialSalePieceRate !== undefined ||
+                editingBuyPieceRate !== undefined ||
+                editingInvitePieceRate !== undefined ||
+                editingTransferPieceRate !== undefined ||
+                editingSinglePieceRate !== undefined ||
+                editingBaseSalary !== undefined ||
+                editingSalaryDisabled !== undefined ||
+                editingPoolExclusion !== undefined;
               const saveAll = async () => {
-                if (eRN !== undefined)
+                if (editingNormalSalePieceRate !== undefined)
                   await onUpdateRole(
-                    emp.id,
-                    "ratePerPieceNormal",
-                    parseFloat(eRN) || 0,
+                    employee.id,
+                    "normalSalePieceRate",
+                    parseFloat(editingNormalSalePieceRate) || 0,
                   );
-                if (eRS !== undefined)
+                if (editingSpecialSalePieceRate !== undefined)
                   await onUpdateRole(
-                    emp.id,
-                    "ratePerPieceSpecial",
-                    parseFloat(eRS) || 0,
+                    employee.id,
+                    "specialSalePieceRate",
+                    parseFloat(editingSpecialSalePieceRate) || 0,
                   );
-                if (eRB !== undefined)
+                if (editingBuyPieceRate !== undefined)
                   await onUpdateRole(
-                    emp.id,
-                    "ratePerPieceBuy",
-                    parseFloat(eRB) || 0,
+                    employee.id,
+                    "buyPieceRate",
+                    parseFloat(editingBuyPieceRate) || 0,
                   );
-                if (eRI !== undefined)
+                if (editingInvitePieceRate !== undefined)
                   await onUpdateRole(
-                    emp.id,
-                    "ratePerPieceInvite",
-                    parseFloat(eRI) || 0,
+                    employee.id,
+                    "invitePieceRate",
+                    parseFloat(editingInvitePieceRate) || 0,
                   );
-                if (eRT !== undefined)
+                if (editingTransferPieceRate !== undefined)
                   await onUpdateRole(
-                    emp.id,
-                    "ratePerPieceTransfer",
-                    parseFloat(eRT) || 0,
+                    employee.id,
+                    "transferPieceRate",
+                    parseFloat(editingTransferPieceRate) || 0,
                   );
-                if (eRSingle !== undefined)
+                if (editingSinglePieceRate !== undefined)
                   await onUpdateRole(
-                    emp.id,
-                    "ratePerPiece",
-                    parseFloat(eRSingle) || 0,
+                    employee.id,
+                    "singlePieceRate",
+                    parseFloat(editingSinglePieceRate) || 0,
                   );
-                if (eBase !== undefined)
+                if (editingBaseSalary !== undefined)
                   await onUpdateRole(
-                    emp.id,
+                    employee.id,
                     "baseSalary",
-                    parseFloat(eBase) || 0,
+                    parseFloat(editingBaseSalary) || 0,
                   );
-                if (eSalDis !== undefined)
-                  await onUpdateRole(emp.id, "salaryDisabled", eSalDis);
-                if (ePoolExc !== undefined)
-                  await onUpdateRole(emp.id, "poolExclude", ePoolExc || null);
-                setEditingRole((r) => {
-                  const n = { ...r };
-                  delete n[`${emp.id}_rN`];
-                  delete n[`${emp.id}_rS`];
-                  delete n[`${emp.id}_rB`];
-                  delete n[`${emp.id}_rI`];
-                  delete n[`${emp.id}_rT`];
-                  delete n[`${emp.id}_rSingle`];
-                  delete n[`${emp.id}_base`];
-                  delete n[`${emp.id}_salDis`];
-                  delete n[`${emp.id}_poolExc`];
-                  return n;
+                if (editingSalaryDisabled !== undefined)
+                  await onUpdateRole(
+                    employee.id,
+                    "salaryDisabled",
+                    editingSalaryDisabled,
+                  );
+                if (editingPoolExclusion !== undefined)
+                  await onUpdateRole(
+                    employee.id,
+                    "poolExclusion",
+                    editingPoolExclusion || null,
+                  );
+                setEditingRole((previousEditingRole) => {
+                  const nextEditingRole = { ...previousEditingRole };
+                  delete nextEditingRole[`${employee.id}:normalSalePieceRate`];
+                  delete nextEditingRole[`${employee.id}:specialSalePieceRate`];
+                  delete nextEditingRole[`${employee.id}:buyPieceRate`];
+                  delete nextEditingRole[`${employee.id}:invitePieceRate`];
+                  delete nextEditingRole[`${employee.id}:transferPieceRate`];
+                  delete nextEditingRole[`${employee.id}:singlePieceRate`];
+                  delete nextEditingRole[`${employee.id}:baseSalary`];
+                  delete nextEditingRole[`${employee.id}:salaryDisabled`];
+                  delete nextEditingRole[`${employee.id}:poolExclusion`];
+                  return nextEditingRole;
                 });
                 setEditingEmpId(null);
               };
               const cancelAll = (closeModal = false) => {
-                setEditingRole((r) => {
-                  const n = { ...r };
-                  delete n[`${emp.id}_rN`];
-                  delete n[`${emp.id}_rS`];
-                  delete n[`${emp.id}_rB`];
-                  delete n[`${emp.id}_rI`];
-                  delete n[`${emp.id}_rT`];
-                  delete n[`${emp.id}_rSingle`];
-                  delete n[`${emp.id}_base`];
-                  delete n[`${emp.id}_salDis`];
-                  delete n[`${emp.id}_poolExc`];
-                  return n;
+                setEditingRole((previousEditingRole) => {
+                  const nextEditingRole = { ...previousEditingRole };
+                  delete nextEditingRole[`${employee.id}:normalSalePieceRate`];
+                  delete nextEditingRole[`${employee.id}:specialSalePieceRate`];
+                  delete nextEditingRole[`${employee.id}:buyPieceRate`];
+                  delete nextEditingRole[`${employee.id}:invitePieceRate`];
+                  delete nextEditingRole[`${employee.id}:transferPieceRate`];
+                  delete nextEditingRole[`${employee.id}:singlePieceRate`];
+                  delete nextEditingRole[`${employee.id}:baseSalary`];
+                  delete nextEditingRole[`${employee.id}:salaryDisabled`];
+                  delete nextEditingRole[`${employee.id}:poolExclusion`];
+                  return nextEditingRole;
                 });
                 if (closeModal) setEditingEmpId(null);
               };
-              const empR = roles?.find((r) => r.id === emp.roleId);
+              const employeeRole = roles?.find((r) => r.id === employee.roleId);
               return (
                 <div
-                  key={emp.id}
+                  key={employee.id}
                   className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(90,30,10,0.06)] border border-bdr overflow-hidden transition-all duration-200"
                 >
                   <button
                     type="button"
-                    onClick={() => setEditingEmpId(emp.id)}
+                    onClick={() => setEditingEmpId(employee.id)}
                     className="w-full flex items-center gap-3 px-3.5 py-3 cursor-pointer border-0 bg-white text-left font-[inherit] transition-colors duration-200 hover:bg-cream/70"
                   >
                     <AvatarCircle
-                      av={emp.av}
-                      avType={emp.avType}
-                      img={emp.img}
+                      avatar={employee.avatar}
+                      avatarType={employee.avatarType}
+                      avatarImageUrl={employee.avatarImageUrl}
                       size={40}
                       fontSize={13}
-                      border={`2px solid ${C.gold}40`}
+                      border={`2px solid ${COLORS.gold}40`}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-txt text-sm truncate">
-                        {emp.name}
+                        {employee.name}
                       </div>
                       <div className="text-xs text-txt-soft mt-px flex items-center gap-[5px] flex-wrap">
-                        {empR?.icon} {emp.role || "-"}
-                        {emp.poolExclude &&
+                        {employeeRole?.icon} {employee.role || "-"}
+                        {employee.poolExclusion &&
                           (() => {
                             const m = {
                               sell: "💎 ปิดขาย",
@@ -872,16 +901,16 @@ export default function AdminPanel({
                             };
                             return (
                               <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
-                                {m[emp.poolExclude]}
+                                {m[employee.poolExclusion]}
                               </span>
                             );
                           })()}
-                        {emp.salaryDisabled && (
+                        {employee.salaryDisabled && (
                           <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
                             🔒 ปิดเงินเดือน
                           </span>
                         )}
-                        {emp.lineUserId && (
+                        {employee.lineUserId && (
                           <span className="px-1.5 py-px rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs">
                             💬 LINE
                           </span>
@@ -895,32 +924,33 @@ export default function AdminPanel({
                     )}
                     <IconSettings
                       size={16}
-                      color={C.textSoft}
+                      color={COLORS.textSoft}
                       stroke={2.2}
                       className="shrink-0"
                     />
                   </button>
 
-                  {editingEmpId === emp.id && (
+                  {editingEmpId === employee.id && (
                     <BaseModal
                       onClose={() => setEditingEmpId(null)}
                       maxWidthClass="max-w-[760px]"
                     >
                       <div className="sticky top-0 z-10 bg-cream px-5 py-4 border-b border-bdr flex items-center gap-3">
                         <AvatarCircle
-                          av={emp.av}
-                          avType={emp.avType}
-                          img={emp.img}
+                          avatar={employee.avatar}
+                          avatarType={employee.avatarType}
+                          avatarImageUrl={employee.avatarImageUrl}
                           size={46}
                           fontSize={15}
-                          border={`2px solid ${C.gold}40`}
+                          border={`2px solid ${COLORS.gold}40`}
                         />
                         <div className="flex-1 min-w-0">
                           <div className="font-extrabold text-lg text-txt truncate">
-                            {emp.name}
+                            {employee.name}
                           </div>
                           <div className="text-sm text-txt-soft mt-0.5 truncate">
-                            {empR?.icon} {emp.role || "ยังไม่กำหนดตำแหน่ง"}
+                            {employeeRole?.icon}{" "}
+                            {employee.role || "ยังไม่กำหนดตำแหน่ง"}
                           </div>
                         </div>
                         <button
@@ -942,10 +972,10 @@ export default function AdminPanel({
                             </span>
                           </div>
                           <div
-                            className={`text-sm font-bold ${emp.role && emp.role !== "-" ? "text-txt" : "text-txt-soft italic"}`}
+                            className={`text-sm font-bold ${employee.role && employee.role !== "-" ? "text-txt" : "text-txt-soft italic"}`}
                           >
-                            {emp.role && emp.role !== "-"
-                              ? emp.role
+                            {employee.role && employee.role !== "-"
+                              ? employee.role
                               : "ยังไม่กำหนดตำแหน่ง"}
                           </div>
                         </div>
@@ -957,13 +987,13 @@ export default function AdminPanel({
                               พนักงานกรอกเอง
                             </span>
                           </div>
-                          {emp.bank || emp.bankAcc ? (
+                          {employee.bank || employee.bankAccountNumber ? (
                             <>
                               <div className="text-sm font-bold text-txt mb-px">
-                                {emp.bank || "-"}
+                                {employee.bank || "-"}
                               </div>
                               <div className="text-sm text-txt-mid tracking-wider">
-                                {emp.bankAcc || "-"}
+                                {employee.bankAccountNumber || "-"}
                               </div>
                             </>
                           ) : (
@@ -978,7 +1008,7 @@ export default function AdminPanel({
                           <label className="text-xs text-txt-soft font-semibold mb-1 flex items-center gap-1.5">
                             <span className="inline-flex items-center gap-1">
                               💬 LINE User ID
-                              {emp.lineUserId ? (
+                              {employee.lineUserId ? (
                                 <span className="text-xs px-1.5 py-px rounded-lg bg-[#06C75520] text-[#06A04E] font-bold">
                                   เชื่อมแล้ว
                                 </span>
@@ -992,18 +1022,20 @@ export default function AdminPanel({
                               อ่านอย่างเดียว
                             </span>
                           </label>
-                          {emp.lineUserId ? (
+                          {employee.lineUserId ? (
                             <button
-                              onClick={() => copyLineId(emp.lineUserId, emp.id)}
-                              className={`w-full px-3 py-[9px] rounded-[9px] bg-cream cursor-pointer font-[inherit] flex items-center gap-2 transition-all duration-200 border ${copiedLineId === emp.id ? "border-green" : "border-bdr"}`}
+                              onClick={() =>
+                                copyLineId(employee.lineUserId, employee.id)
+                              }
+                              className={`w-full px-3 py-[9px] rounded-[9px] bg-cream cursor-pointer font-[inherit] flex items-center gap-2 transition-all duration-200 border ${copiedLineId === employee.id ? "border-green" : "border-bdr"}`}
                             >
                               <span className="flex-1 text-left text-sm text-txt font-[Prompt,monospace] tracking-[0.02em] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
-                                {emp.lineUserId}
+                                {employee.lineUserId}
                               </span>
                               <span
-                                className={`flex items-center gap-1 px-[9px] py-1 rounded-[7px] text-xs font-bold whitespace-nowrap transition-all duration-200 ${copiedLineId === emp.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
+                                className={`flex items-center gap-1 px-[9px] py-1 rounded-[7px] text-xs font-bold whitespace-nowrap transition-all duration-200 ${copiedLineId === employee.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
                               >
-                                {copiedLineId === emp.id ? (
+                                {copiedLineId === employee.id ? (
                                   <>
                                     <IconCheck size={12} stroke={3} />
                                     คัดลอกแล้ว
@@ -1040,17 +1072,17 @@ export default function AdminPanel({
                               inputMode="decimal"
                               min="0"
                               value={
-                                eBase !== undefined
-                                  ? eBase
-                                  : emp.baseSalary || 0
+                                editingBaseSalary !== undefined
+                                  ? editingBaseSalary
+                                  : employee.baseSalary || 0
                               }
                               onChange={(e) =>
-                                setEditingRole((r) => ({
-                                  ...r,
-                                  [`${emp.id}_base`]: e.target.value,
+                                setEditingRole((previousEditingRole) => ({
+                                  ...previousEditingRole,
+                                  [`${employee.id}:baseSalary`]: e.target.value,
                                 }))
                               }
-                              className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${eBase !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                              className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingBaseSalary !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
                             />
                           </div>
                           <div className="text-xs text-txt-soft mt-[3px]">
@@ -1060,29 +1092,30 @@ export default function AdminPanel({
 
                         {/* Disable Salary toggle */}
                         {(() => {
-                          const cur =
-                            eSalDis !== undefined
-                              ? eSalDis
-                              : !!emp.salaryDisabled;
+                          const currentSalaryDisabled =
+                            editingSalaryDisabled !== undefined
+                              ? editingSalaryDisabled
+                              : !!employee.salaryDisabled;
                           return (
                             <div
-                              className={`px-3 py-2.5 rounded-[10px] mb-2.5 border-[1.5px] ${cur ? "bg-red-lt border-[#C0392B50]" : "bg-cream border-bdr"}`}
+                              className={`px-3 py-2.5 rounded-[10px] mb-2.5 border-[1.5px] ${currentSalaryDisabled ? "bg-red-lt border-[#C0392B50]" : "bg-cream border-bdr"}`}
                             >
                               <label className="flex items-center gap-2.5 cursor-pointer">
                                 <input
                                   type="checkbox"
-                                  checked={cur}
+                                  checked={currentSalaryDisabled}
                                   onChange={(e) =>
-                                    setEditingRole((r) => ({
-                                      ...r,
-                                      [`${emp.id}_salDis`]: e.target.checked,
+                                    setEditingRole((previousEditingRole) => ({
+                                      ...previousEditingRole,
+                                      [`${employee.id}:salaryDisabled`]:
+                                        e.target.checked,
                                     }))
                                   }
                                   className="w-4 h-4 cursor-pointer accent-red"
                                 />
                                 <div className="flex-1">
                                   <div
-                                    className={`text-sm font-bold ${cur ? "text-red" : "text-txt"}`}
+                                    className={`text-sm font-bold ${currentSalaryDisabled ? "text-red" : "text-txt"}`}
                                   >
                                     🔒 ปิดสิทธิ์ระบบเงินเดือน
                                   </div>
@@ -1097,10 +1130,14 @@ export default function AdminPanel({
 
                         {/* Commission rates per piece */}
                         {(() => {
-                          const empR = roles?.find((r) => r.id === emp.roleId);
-                          const isSingle = empR && !empR.poolGroup;
-                          const eRSingle = editingRole[`${emp.id}_rSingle`];
-                          if (isSingle) {
+                          const employeeRole = roles?.find(
+                            (r) => r.id === employee.roleId,
+                          );
+                          const usesSinglePieceRate =
+                            employeeRole && !employeeRole.poolGroup;
+                          const editingSinglePieceRate =
+                            editingRole[`${employee.id}:singlePieceRate`];
+                          if (usesSinglePieceRate) {
                             return (
                               <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                                 <div className="text-sm font-bold text-maroon mb-2">
@@ -1116,17 +1153,20 @@ export default function AdminPanel({
                                       inputMode="decimal"
                                       min="0"
                                       value={
-                                        eRSingle !== undefined
-                                          ? eRSingle
-                                          : emp.ratePerPiece || 0
+                                        editingSinglePieceRate !== undefined
+                                          ? editingSinglePieceRate
+                                          : employee.singlePieceRate || 0
                                       }
                                       onChange={(e) =>
-                                        setEditingRole((r) => ({
-                                          ...r,
-                                          [`${emp.id}_rSingle`]: e.target.value,
-                                        }))
+                                        setEditingRole(
+                                          (previousEditingRole) => ({
+                                            ...previousEditingRole,
+                                            [`${employee.id}:singlePieceRate`]:
+                                              e.target.value,
+                                          }),
+                                        )
                                       }
-                                      className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRSingle !== undefined ? "border-gold" : "border-bdr"}`}
+                                      className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingSinglePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
                                     />
                                   </div>
                                 </div>
@@ -1148,17 +1188,20 @@ export default function AdminPanel({
                                       inputMode="decimal"
                                       min="0"
                                       value={
-                                        eRI !== undefined
-                                          ? eRI
-                                          : emp.ratePerPieceInvite || 0
+                                        editingInvitePieceRate !== undefined
+                                          ? editingInvitePieceRate
+                                          : employee.invitePieceRate || 0
                                       }
                                       onChange={(e) =>
-                                        setEditingRole((r) => ({
-                                          ...r,
-                                          [`${emp.id}_rI`]: e.target.value,
-                                        }))
+                                        setEditingRole(
+                                          (previousEditingRole) => ({
+                                            ...previousEditingRole,
+                                            [`${employee.id}:invitePieceRate`]:
+                                              e.target.value,
+                                          }),
+                                        )
                                       }
-                                      className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRI !== undefined ? "border-gold" : "border-bdr"}`}
+                                      className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingInvitePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
                                     />
                                   </div>
                                   <div className="flex-1">
@@ -1170,17 +1213,20 @@ export default function AdminPanel({
                                       inputMode="decimal"
                                       min="0"
                                       value={
-                                        eRT !== undefined
-                                          ? eRT
-                                          : emp.ratePerPieceTransfer || 0
+                                        editingTransferPieceRate !== undefined
+                                          ? editingTransferPieceRate
+                                          : employee.transferPieceRate || 0
                                       }
                                       onChange={(e) =>
-                                        setEditingRole((r) => ({
-                                          ...r,
-                                          [`${emp.id}_rT`]: e.target.value,
-                                        }))
+                                        setEditingRole(
+                                          (previousEditingRole) => ({
+                                            ...previousEditingRole,
+                                            [`${employee.id}:transferPieceRate`]:
+                                              e.target.value,
+                                          }),
+                                        )
                                       }
-                                      className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRT !== undefined ? "border-gold" : "border-bdr"}`}
+                                      className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingTransferPieceRate !== undefined ? "border-gold" : "border-bdr"}`}
                                     />
                                   </div>
                                 </div>
@@ -1193,13 +1239,13 @@ export default function AdminPanel({
                           return (
                             <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                               {/* Exclude from Pool — 3 levels (only for pool-group roles) */}
-                              {empR?.poolGroup &&
+                              {employeeRole?.poolGroup &&
                                 (() => {
-                                  const cur =
-                                    ePoolExc !== undefined
-                                      ? ePoolExc
-                                      : emp.poolExclude || "";
-                                  const opts = [
+                                  const currentPoolExclusion =
+                                    editingPoolExclusion !== undefined
+                                      ? editingPoolExclusion
+                                      : employee.poolExclusion || "";
+                                  const poolExclusionOptions = [
                                     {
                                       id: "",
                                       label: "ไม่ปิด",
@@ -1227,47 +1273,57 @@ export default function AdminPanel({
                                   ];
                                   return (
                                     <div
-                                      className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${cur ? "bg-[#FDECEA80] border-[#C0392B50]" : "bg-cream border-bdr"}`}
+                                      className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${currentPoolExclusion ? "bg-[#FDECEA80] border-[#C0392B50]" : "bg-cream border-bdr"}`}
                                     >
                                       <div
-                                        className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${cur ? "text-red" : "text-txt"}`}
+                                        className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${currentPoolExclusion ? "text-red" : "text-txt"}`}
                                       >
                                         🚫 ปิดสิทธิ์ Pool ค่าคอม
                                       </div>
                                       <div className="flex flex-col gap-[5px]">
-                                        {opts.map((o) => {
-                                          const active = cur === o.id;
-                                          return (
-                                            <label
-                                              key={o.id}
-                                              className={`flex items-start gap-2 px-2.5 py-[7px] rounded-[7px] cursor-pointer transition-all duration-150 border ${active ? (o.id ? "bg-[#C0392B15] border-[#C0392B40]" : "bg-green-lt border-[#1A6B3A30]") : "bg-transparent border-transparent"}`}
-                                            >
-                                              <input
-                                                type="radio"
-                                                name={`poolExc_${emp.id}`}
-                                                value={o.id}
-                                                checked={active}
-                                                onChange={() =>
-                                                  setEditingRole((r) => ({
-                                                    ...r,
-                                                    [`${emp.id}_poolExc`]: o.id,
-                                                  }))
-                                                }
-                                                className={`mt-0.5 cursor-pointer ${o.id ? "accent-red" : "accent-green"}`}
-                                              />
-                                              <div className="flex-1 min-w-0">
-                                                <div
-                                                  className={`text-sm font-semibold ${active ? (o.id ? "text-red" : "text-green") : "text-txt"}`}
-                                                >
-                                                  {o.icon} {o.label}
+                                        {poolExclusionOptions.map(
+                                          (poolExclusionOption) => {
+                                            const active =
+                                              currentPoolExclusion ===
+                                              poolExclusionOption.id;
+                                            return (
+                                              <label
+                                                key={poolExclusionOption.id}
+                                                className={`flex items-start gap-2 px-2.5 py-[7px] rounded-[7px] cursor-pointer transition-all duration-150 border ${active ? (poolExclusionOption.id ? "bg-[#C0392B15] border-[#C0392B40]" : "bg-green-lt border-[#1A6B3A30]") : "bg-transparent border-transparent"}`}
+                                              >
+                                                <input
+                                                  type="radio"
+                                                  name={`poolExclusion_${employee.id}`}
+                                                  value={poolExclusionOption.id}
+                                                  checked={active}
+                                                  onChange={() =>
+                                                    setEditingRole(
+                                                      (
+                                                        previousEditingRole,
+                                                      ) => ({
+                                                        ...previousEditingRole,
+                                                        [`${employee.id}:poolExclusion`]:
+                                                          poolExclusionOption.id,
+                                                      }),
+                                                    )
+                                                  }
+                                                  className={`mt-0.5 cursor-pointer ${poolExclusionOption.id ? "accent-red" : "accent-green"}`}
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                  <div
+                                                    className={`text-sm font-semibold ${active ? (poolExclusionOption.id ? "text-red" : "text-green") : "text-txt"}`}
+                                                  >
+                                                    {poolExclusionOption.icon}{" "}
+                                                    {poolExclusionOption.label}
+                                                  </div>
+                                                  <div className="text-xs text-txt-soft mt-px leading-normal">
+                                                    {poolExclusionOption.desc}
+                                                  </div>
                                                 </div>
-                                                <div className="text-xs text-txt-soft mt-px leading-normal">
-                                                  {o.desc}
-                                                </div>
-                                              </div>
-                                            </label>
-                                          );
-                                        })}
+                                              </label>
+                                            );
+                                          },
+                                        )}
                                       </div>
                                     </div>
                                   );
@@ -1285,17 +1341,18 @@ export default function AdminPanel({
                                     inputMode="decimal"
                                     min="0"
                                     value={
-                                      eRN !== undefined
-                                        ? eRN
-                                        : emp.ratePerPieceNormal || 0
+                                      editingNormalSalePieceRate !== undefined
+                                        ? editingNormalSalePieceRate
+                                        : employee.normalSalePieceRate || 0
                                     }
                                     onChange={(e) =>
-                                      setEditingRole((r) => ({
-                                        ...r,
-                                        [`${emp.id}_rN`]: e.target.value,
+                                      setEditingRole((previousEditingRole) => ({
+                                        ...previousEditingRole,
+                                        [`${employee.id}:normalSalePieceRate`]:
+                                          e.target.value,
                                       }))
                                     }
-                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRN !== undefined ? "border-gold" : "border-bdr"}`}
+                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingNormalSalePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
                                   />
                                 </div>
                                 <div className="flex-1">
@@ -1307,17 +1364,18 @@ export default function AdminPanel({
                                     inputMode="decimal"
                                     min="0"
                                     value={
-                                      eRS !== undefined
-                                        ? eRS
-                                        : emp.ratePerPieceSpecial || 0
+                                      editingSpecialSalePieceRate !== undefined
+                                        ? editingSpecialSalePieceRate
+                                        : employee.specialSalePieceRate || 0
                                     }
                                     onChange={(e) =>
-                                      setEditingRole((r) => ({
-                                        ...r,
-                                        [`${emp.id}_rS`]: e.target.value,
+                                      setEditingRole((previousEditingRole) => ({
+                                        ...previousEditingRole,
+                                        [`${employee.id}:specialSalePieceRate`]:
+                                          e.target.value,
                                       }))
                                     }
-                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRS !== undefined ? "border-gold" : "border-bdr"}`}
+                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingSpecialSalePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
                                   />
                                 </div>
                                 <div className="flex-1">
@@ -1329,17 +1387,18 @@ export default function AdminPanel({
                                     inputMode="decimal"
                                     min="0"
                                     value={
-                                      eRB !== undefined
-                                        ? eRB
-                                        : emp.ratePerPieceBuy || 0
+                                      editingBuyPieceRate !== undefined
+                                        ? editingBuyPieceRate
+                                        : employee.buyPieceRate || 0
                                     }
                                     onChange={(e) =>
-                                      setEditingRole((r) => ({
-                                        ...r,
-                                        [`${emp.id}_rB`]: e.target.value,
+                                      setEditingRole((previousEditingRole) => ({
+                                        ...previousEditingRole,
+                                        [`${employee.id}:buyPieceRate`]:
+                                          e.target.value,
                                       }))
                                     }
-                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRB !== undefined ? "border-gold" : "border-bdr"}`}
+                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBuyPieceRate !== undefined ? "border-gold" : "border-bdr"}`}
                                   />
                                 </div>
                               </div>
@@ -1361,17 +1420,18 @@ export default function AdminPanel({
                                     inputMode="decimal"
                                     min="0"
                                     value={
-                                      eRI !== undefined
-                                        ? eRI
-                                        : emp.ratePerPieceInvite || 0
+                                      editingInvitePieceRate !== undefined
+                                        ? editingInvitePieceRate
+                                        : employee.invitePieceRate || 0
                                     }
                                     onChange={(e) =>
-                                      setEditingRole((r) => ({
-                                        ...r,
-                                        [`${emp.id}_rI`]: e.target.value,
+                                      setEditingRole((previousEditingRole) => ({
+                                        ...previousEditingRole,
+                                        [`${employee.id}:invitePieceRate`]:
+                                          e.target.value,
                                       }))
                                     }
-                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRI !== undefined ? "border-gold" : "border-bdr"}`}
+                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingInvitePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
                                   />
                                 </div>
                                 <div className="flex-1">
@@ -1383,17 +1443,18 @@ export default function AdminPanel({
                                     inputMode="decimal"
                                     min="0"
                                     value={
-                                      eRT !== undefined
-                                        ? eRT
-                                        : emp.ratePerPieceTransfer || 0
+                                      editingTransferPieceRate !== undefined
+                                        ? editingTransferPieceRate
+                                        : employee.transferPieceRate || 0
                                     }
                                     onChange={(e) =>
-                                      setEditingRole((r) => ({
-                                        ...r,
-                                        [`${emp.id}_rT`]: e.target.value,
+                                      setEditingRole((previousEditingRole) => ({
+                                        ...previousEditingRole,
+                                        [`${employee.id}:transferPieceRate`]:
+                                          e.target.value,
                                       }))
                                     }
-                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${eRT !== undefined ? "border-gold" : "border-bdr"}`}
+                                    className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingTransferPieceRate !== undefined ? "border-gold" : "border-bdr"}`}
                                   />
                                 </div>
                               </div>

@@ -46,7 +46,7 @@ export function subscribePendingAdvances(onChange, onError) {
 /* ─── Subscribe advances by status + payroll month ─────────── */
 export function subscribeAdvancesByStatusAndMonth(
   status,
-  ym,
+  yearMonth,
   onChange,
   onError,
 ) {
@@ -54,7 +54,7 @@ export function subscribeAdvancesByStatusAndMonth(
     query(
       ref,
       where("status", "==", status),
-      where("month", "==", ym),
+      where("month", "==", yearMonth),
       orderBy("submittedAt", "desc"),
     ),
     (snap) => onChange(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
@@ -63,8 +63,13 @@ export function subscribeAdvancesByStatusAndMonth(
 }
 
 /* ─── Subscribe approved advances for a payroll month ───────── */
-export function subscribeApprovedAdvancesByMonth(ym, onChange, onError) {
-  return subscribeAdvancesByStatusAndMonth("approved", ym, onChange, onError);
+export function subscribeApprovedAdvancesByMonth(yearMonth, onChange, onError) {
+  return subscribeAdvancesByStatusAndMonth(
+    "approved",
+    yearMonth,
+    onChange,
+    onError,
+  );
 }
 
 /* ─── Subscribe advances for specific employee ───────────────── */
@@ -72,7 +77,7 @@ export function subscribeAdvancesByEmployeeId(employeeId, onChange, onError) {
   return onSnapshot(
     query(
       ref,
-      where("empId", "==", employeeId),
+      where("employeeId", "==", employeeId),
       orderBy("submittedAt", "desc"),
     ),
     (snap) => onChange(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
@@ -97,12 +102,12 @@ export async function submitAdvance(request) {
 }
 
 /* ─── Approve advance ──────────────────────────────────────── */
-export async function approveAdvance(id, slipUrl = null) {
+export async function approveAdvance(id, slipImageUrl = null) {
   const fields: Record<string, unknown> = {
     status: "approved",
     approvedAt: new Date().toISOString(),
   };
-  if (slipUrl) fields.slipUrl = slipUrl;
+  if (slipImageUrl) fields.slipImageUrl = slipImageUrl;
   await updateDoc(doc(ref, id), fields);
 }
 
@@ -111,7 +116,7 @@ export async function rejectAdvance(id, reason = "") {
   await updateDoc(doc(ref, id), {
     status: "rejected",
     rejectedAt: new Date().toISOString(),
-    rejectReason: reason,
+    rejectionReason: reason,
   });
 }
 

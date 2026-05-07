@@ -2,7 +2,7 @@
  * LINE Messaging API helpers
  */
 
-import type { LineMessage } from "../types.js";
+import type { LinePushMessage } from "../types.js";
 
 /**
  * Push message(s) to a LINE user via the Messaging API.
@@ -10,7 +10,7 @@ import type { LineMessage } from "../types.js";
 export async function pushLineMessage(
 	token: string,
 	to: string,
-	messages: LineMessage | LineMessage[],
+	messages: LinePushMessage | LinePushMessage[],
 ): Promise<void> {
 	await fetch("https://api.line.me/v2/bot/message/push", {
 		method: "POST",

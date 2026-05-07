@@ -1,7 +1,7 @@
-import { C } from "../../constants";
+import { COLORS } from "../../constants";
 
 /* ─── Diamond icon ─────────────────────────────────────────────── */
-export default function Diamond({ size = 16, color = C.gold }) {
+export default function Diamond({ size = 16, color = COLORS.gold }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
       <path d="M6 3h12l4 6-10 12L2 9z" opacity=".9" />

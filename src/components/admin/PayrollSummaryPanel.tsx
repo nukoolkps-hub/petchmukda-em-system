@@ -1,17 +1,20 @@
 import { IconCheck, IconCopy, IconSearch } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
-import { C, TH_MONTHS } from "../../constants";
+import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
-import { TH_NUMBER } from "../../utils/format";
+import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
-import { calcSalary, computePoolSharesForGroup } from "../../utils/salaryUtils";
+import {
+  calculateSalary,
+  computePoolSharesForGroup,
+} from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 
 /* ─── Admin: Payroll Summary Panel ───────────────────────────────
    สรุปเงินเดือนสุทธิทุกคน + ข้อมูลธนาคาร พร้อมปุ่มคัดลอกเลขบัญชี
    ใช้ logic เดียวกับ SalaryAdminEdit เพื่อให้ตัวเลขตรงกัน           */
 export default function PayrollSummaryPanel({
-  empDir,
+  employeeDirectory,
   salaryData,
   allLeaves,
   advanceRequests,
@@ -21,12 +24,12 @@ export default function PayrollSummaryPanel({
   showToast,
 }) {
   const now = new Date();
-  const [selMonth, setSelMonth] = useState(
+  const [selectedMonth, setSelectedMonth] = useState(
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
   );
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selMonth);
+  const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selectedMonth);
   const advanceDataBlocked =
     monthlyApprovedAdvances.loading || Boolean(monthlyApprovedAdvances.error);
 
@@ -61,71 +64,73 @@ export default function PayrollSummaryPanel({
   const rows = useMemo(() => {
     // group employees by role for shared Pool
     const groupedEmpsByPool = {};
-    empDir.forEach((emp) => {
-      const r = roles.find((rl) => rl.id === emp.roleId);
+    employeeDirectory.forEach((employee) => {
+      const r = roles.find((rl) => rl.id === employee.roleId);
       if (r?.poolGroup) {
         if (!groupedEmpsByPool[r.poolGroup])
           groupedEmpsByPool[r.poolGroup] = [];
-        groupedEmpsByPool[r.poolGroup].push(emp.id);
+        groupedEmpsByPool[r.poolGroup].push(employee.id);
       }
     });
 
-    // compute each employee's net salary
-    return empDir
-      .map((emp) => {
-        const empRole = roles.find((r) => r.id === emp.roleId);
-        const data = salaryData[emp.id]?.[selMonth] || null;
+    // compute each employee's netSalary salary
+    return employeeDirectory
+      .map((employee) => {
+        const employeeRole = roles.find((r) => r.id === employee.roleId);
+        const data = salaryData[employee.id]?.[selectedMonth] || null;
         const monthLeaves = allLeaves.filter(
-          (lv) => lv.employeeName === emp.name && lv.start.startsWith(selMonth),
+          (lv) =>
+            lv.employeeName === employee.name &&
+            lv.start.startsWith(selectedMonth),
         );
         const overInfo = getOverQuotaDays(monthLeaves);
         const totalLeaveDays = countWeekdayLeaves(monthLeaves);
         const monthApprovedAdvances = (
           monthlyApprovedAdvances.data || []
-        ).filter((r) => r.empId === emp.id);
+        ).filter((r) => r.employeeId === employee.id);
         const approvedAdvanceTotal = monthApprovedAdvances.reduce(
           (s, r) => s + r.amount,
           0,
         );
 
         let poolShare = null;
-        if (empRole?.poolGroup) {
-          const groupIds = groupedEmpsByPool[empRole.poolGroup] || [];
+        if (employeeRole?.poolGroup) {
+          const groupIds = groupedEmpsByPool[employeeRole.poolGroup] || [];
           const shares = computePoolSharesForGroup({
-            groupEmpIds: groupIds,
+            groupEmployeeIds: groupIds,
             salaryData,
             allLeaves,
-            ym: selMonth,
-            empDir,
+            yearMonth: selectedMonth,
+            employeeDirectory,
           });
-          poolShare = shares[emp.id];
+          poolShare = shares[employee.id];
         }
-        const calc = data
-          ? calcSalary(
+        const salaryCalculation = data
+          ? calculateSalary(
               data,
               overInfo,
-              emp,
+              employee,
               totalLeaveDays,
               approvedAdvanceTotal,
               poolShare,
-              empRole,
+              employeeRole,
             )
           : null;
         return {
-          emp,
-          empRole,
+          employee,
+          employeeRole,
           data,
-          calc,
+          salaryCalculation,
           advanceTotal: approvedAdvanceTotal,
           poolShare,
         };
       })
-      .filter((r) => r.calc);
+      .filter((r) => r.salaryCalculation);
   }, [
-    empDir,
+    employeeDirectory,
     roles,
     salaryData,
-    selMonth,
+    selectedMonth,
     allLeaves,
     monthlyApprovedAdvances.data,
   ]);
@@ -134,12 +139,15 @@ export default function PayrollSummaryPanel({
   const filtered = search.trim()
     ? rows.filter(
         (r) =>
-          r.emp.name.includes(search.trim()) ||
-          r.emp.role?.includes(search.trim()),
+          r.employee.name.includes(search.trim()) ||
+          r.employee.role?.includes(search.trim()),
       )
     : rows;
 
-  const totalPayout = filtered.reduce((s, r) => s + r.calc.net, 0);
+  const totalPayout = filtered.reduce(
+    (s, r) => s + r.salaryCalculation.netSalary,
+    0,
+  );
   const totalAdvance = filtered.reduce((s, r) => s + r.advanceTotal, 0);
 
   // available months in salary data
@@ -150,7 +158,7 @@ export default function PayrollSummaryPanel({
     });
   });
   const months: string[] = [...monthSet].sort().reverse();
-  if (!months.includes(selMonth)) months.unshift(selMonth);
+  if (!months.includes(selectedMonth)) months.unshift(selectedMonth);
 
   return (
     <div>
@@ -165,15 +173,15 @@ export default function PayrollSummaryPanel({
           </div>
         </div>
         <select
-          value={selMonth}
-          onChange={(e) => setSelMonth(e.target.value)}
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
           className="px-2.5 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
         >
           {months.map((m) => {
             const [y, mo] = m.split("-");
             return (
               <option key={m} value={m}>
-                {TH_MONTHS[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
+                {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
               </option>
             );
           })}
@@ -199,7 +207,7 @@ export default function PayrollSummaryPanel({
           width="100"
           height="100"
           viewBox="0 0 24 24"
-          fill={C.goldLt}
+          fill={COLORS.goldLight}
         >
           <path d="M6 3h12l4 6-10 12L2 9z" />
         </svg>
@@ -208,11 +216,11 @@ export default function PayrollSummaryPanel({
             ยอดที่ต้องโอนเดือนนี้ ({filtered.length} คน)
           </div>
           <div className="text-3xl font-extrabold text-gold-lt tracking-[-0.02em] mb-2">
-            ฿{TH_NUMBER(totalPayout)}
+            ฿{formatThaiNumber(totalPayout)}
           </div>
           {totalAdvance > 0 && (
             <div className="text-sm text-gold-lt/60 pt-2 border-t border-gold-lt/15">
-              💵 หักเบิกล่วงหน้าไปแล้ว: <b>฿{TH_NUMBER(totalAdvance)}</b> (
+              💵 หักเบิกล่วงหน้าไปแล้ว: <b>฿{formatThaiNumber(totalAdvance)}</b> (
               {filtered.filter((r) => r.advanceTotal > 0).length} คน)
             </div>
           )}
@@ -221,13 +229,16 @@ export default function PayrollSummaryPanel({
 
       {/* Confirm payroll status / button */}
       {(() => {
-        const confirmed = payrollConfirms?.[selMonth];
-        const totalForMonth = rows.reduce((s, r) => s + r.calc.net, 0);
+        const confirmed = payrollConfirms?.[selectedMonth];
+        const totalForMonth = rows.reduce(
+          (s, r) => s + r.salaryCalculation.netSalary,
+          0,
+        );
         const empCountForMonth = rows.length;
 
         if (confirmed) {
-          const dt = new Date(confirmed.confirmedAt);
-          const dtStr = dt.toLocaleString("th-TH", {
+          const date = new Date(confirmed.confirmedAt);
+          const dateText = date.toLocaleString("th-TH", {
             day: "numeric",
             month: "long",
             year: "numeric",
@@ -236,7 +247,7 @@ export default function PayrollSummaryPanel({
           });
           const isStale =
             confirmed.totalAmount !== totalForMonth ||
-            confirmed.empCount !== empCountForMonth;
+            confirmed.employeeCount !== empCountForMonth;
           return (
             <div
               className={`rounded-[14px] px-4 py-3.5 mb-3.5 border-[1.5px] ${isStale ? "bg-amber-lt border-amber/40" : "bg-green-lt border-green/25"}`}
@@ -254,29 +265,31 @@ export default function PayrollSummaryPanel({
                   >
                     {isStale ? "ข้อมูลเปลี่ยนหลังยืนยัน" : "ยืนยันยอดเรียบร้อยแล้ว"}
                   </div>
-                  <div className="text-xs text-txt-soft mt-0.5">📅 {dtStr}</div>
+                  <div className="text-xs text-txt-soft mt-0.5">
+                    📅 {dateText}
+                  </div>
                 </div>
               </div>
               {isStale ? (
                 <>
                   <div className="text-sm text-txt-mid px-3 py-2 bg-white rounded-lg mb-2 border border-dashed border-amber/25 leading-normal">
                     <div>
-                      ตอนยืนยัน: <b>{confirmed.empCount} คน</b> ·{" "}
-                      <b>฿{TH_NUMBER(confirmed.totalAmount)}</b>
+                      ตอนยืนยัน: <b>{confirmed.employeeCount} คน</b> ·{" "}
+                      <b>฿{formatThaiNumber(confirmed.totalAmount)}</b>
                     </div>
                     <div>
                       ตอนนี้: <b>{empCountForMonth} คน</b> ·{" "}
-                      <b>฿{TH_NUMBER(totalForMonth)}</b>
+                      <b>฿{formatThaiNumber(totalForMonth)}</b>
                     </div>
                   </div>
                   <button
                     onClick={async () => {
                       if (advanceDataBlocked) return;
                       try {
-                        await onSetPayrollConfirm(selMonth, {
+                        await onSetPayrollConfirm(selectedMonth, {
                           confirmedAt: new Date().toISOString(),
                           totalAmount: totalForMonth,
-                          empCount: empCountForMonth,
+                          employeeCount: empCountForMonth,
                         });
                         showToast?.("ยืนยันยอดใหม่เรียบร้อย");
                       } catch (err) {
@@ -292,8 +305,8 @@ export default function PayrollSummaryPanel({
                 </>
               ) : (
                 <div className="text-sm text-txt-mid px-2.5 py-1.5 bg-white rounded-lg">
-                  ยอด <b>฿{TH_NUMBER(confirmed.totalAmount)}</b> ·{" "}
-                  {confirmed.empCount} คน
+                  ยอด <b>฿{formatThaiNumber(confirmed.totalAmount)}</b> ·{" "}
+                  {confirmed.employeeCount} คน
                 </div>
               )}
             </div>
@@ -306,15 +319,15 @@ export default function PayrollSummaryPanel({
               if (advanceDataBlocked) return;
               if (
                 !confirm(
-                  `ยืนยันการโอนเงินเดือนเดือนนี้?\n\nยอดรวม ฿${TH_NUMBER(totalForMonth)}\nจำนวน ${empCountForMonth} คน\n\nคุณยังสามารถแก้ไขข้อมูลภายหลังได้`,
+                  `ยืนยันการโอนเงินเดือนเดือนนี้?\n\nยอดรวม ฿${formatThaiNumber(totalForMonth)}\nจำนวน ${empCountForMonth} คน\n\nคุณยังสามารถแก้ไขข้อมูลภายหลังได้`,
                 )
               )
                 return;
               try {
-                await onSetPayrollConfirm(selMonth, {
+                await onSetPayrollConfirm(selectedMonth, {
                   confirmedAt: new Date().toISOString(),
                   totalAmount: totalForMonth,
-                  empCount: empCountForMonth,
+                  employeeCount: empCountForMonth,
                 });
                 showToast?.("ยืนยันยอดเรียบร้อย");
               } catch (err) {
@@ -342,7 +355,7 @@ export default function PayrollSummaryPanel({
         <IconSearch
           className="absolute left-3.5 top-1/2 -translate-y-1/2"
           size={14}
-          color={C.textSoft}
+          color={COLORS.textSoft}
           stroke={2.5}
         />
       </div>
@@ -355,103 +368,113 @@ export default function PayrollSummaryPanel({
 
       {/* employee rows */}
       <div className="flex flex-col gap-2.5">
-        {filtered.map(({ emp, empRole, calc, advanceTotal, poolShare }) => {
-          const hasBank = emp.bank && emp.bankAcc;
-          const lostBase = poolShare?.losesBaseSalary;
-          return (
-            <div
-              key={emp.id}
-              className={`bg-white rounded-[14px] p-3.5 border ${lostBase ? "border-[#C0392B40] shadow-[0_2px_10px_#C0392B15]" : "border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]"}`}
-            >
-              {/* row 1: name + role + net amount */}
+        {filtered.map(
+          ({
+            employee,
+            employeeRole,
+            salaryCalculation,
+            advanceTotal,
+            poolShare,
+          }) => {
+            const hasBank = employee.bank && employee.bankAccountNumber;
+            const lostBase = poolShare?.losesBaseSalary;
+            return (
               <div
-                className={`flex items-center gap-3 ${hasBank ? "mb-2.5" : ""}`}
+                key={employee.id}
+                className={`bg-white rounded-[14px] p-3.5 border ${lostBase ? "border-[#C0392B40] shadow-[0_2px_10px_#C0392B15]" : "border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]"}`}
               >
-                <AvatarCircle
-                  av={emp.av}
-                  avType={emp.avType}
-                  img={emp.img}
-                  size={42}
-                  fontSize={13}
-                  border={`2px solid ${C.gold}40`}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-txt text-sm whitespace-nowrap overflow-hidden text-ellipsis">
-                    {emp.name}
-                  </div>
-                  <div className="text-xs text-txt-soft flex items-center gap-1">
-                    {empRole?.icon} {emp.role || "-"}
-                    {emp.poolExclude &&
-                      (() => {
-                        const m = {
-                          sell: "💎 ปิดขาย",
-                          buy: "🛍 ปิดซื้อ",
-                          both: "🔒 ปิดทั้งคู่",
-                        };
-                        return (
-                          <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
-                            {m[emp.poolExclude]}
-                          </span>
-                        );
-                      })()}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs text-txt-soft">เงินสุทธิ</div>
-                  <div
-                    className={`text-lg font-extrabold ${lostBase ? "text-red" : "text-maroon"}`}
-                  >
-                    ฿{TH_NUMBER(calc.net)}
-                  </div>
-                  {advanceTotal > 0 && (
-                    <div className="text-xs text-txt-soft mt-px">
-                      (หักเบิก ฿{TH_NUMBER(advanceTotal)})
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* row 2: bank info with copy button */}
-              {hasBank ? (
-                <button
-                  onClick={() => copyToClipboard(emp.bankAcc, emp.id)}
-                  className={`w-full text-sm px-3 py-2.5 bg-cream rounded-[9px] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
-                    ${copiedAcc === emp.id ? "border border-green" : "border border-bdr"}`}
+                {/* row 1: name + role + netSalary amount */}
+                <div
+                  className={`flex items-center gap-3 ${hasBank ? "mb-2.5" : ""}`}
                 >
-                  <span className="text-sm">🏦</span>
-                  <div className="flex-1 text-left min-w-0">
-                    <div className="text-xs text-txt-soft mb-px">
-                      {emp.bank}
+                  <AvatarCircle
+                    avatar={employee.avatar}
+                    avatarType={employee.avatarType}
+                    avatarImageUrl={employee.avatarImageUrl}
+                    size={42}
+                    fontSize={13}
+                    border={`2px solid ${COLORS.gold}40`}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-txt text-sm whitespace-nowrap overflow-hidden text-ellipsis">
+                      {employee.name}
                     </div>
-                    <div className="text-sm font-bold text-txt tracking-[0.04em]">
-                      {emp.bankAcc}
+                    <div className="text-xs text-txt-soft flex items-center gap-1">
+                      {employeeRole?.icon} {employee.role || "-"}
+                      {employee.poolExclusion &&
+                        (() => {
+                          const m = {
+                            sell: "💎 ปิดขาย",
+                            buy: "🛍 ปิดซื้อ",
+                            both: "🔒 ปิดทั้งคู่",
+                          };
+                          return (
+                            <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
+                              {m[employee.poolExclusion]}
+                            </span>
+                          );
+                        })()}
                     </div>
                   </div>
-                  <div
-                    className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-xs font-bold whitespace-nowrap transition-all
-                    ${copiedAcc === emp.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
-                  >
-                    {copiedAcc === emp.id ? (
-                      <>
-                        <IconCheck size={13} stroke={3} />
-                        คัดลอกแล้ว
-                      </>
-                    ) : (
-                      <>
-                        <IconCopy size={13} stroke={2.2} />
-                        คัดลอก
-                      </>
+                  <div className="text-right">
+                    <div className="text-xs text-txt-soft">เงินสุทธิ</div>
+                    <div
+                      className={`text-lg font-extrabold ${lostBase ? "text-red" : "text-maroon"}`}
+                    >
+                      ฿{formatThaiNumber(salaryCalculation.netSalary)}
+                    </div>
+                    {advanceTotal > 0 && (
+                      <div className="text-xs text-txt-soft mt-px">
+                        (หักเบิก ฿{formatThaiNumber(advanceTotal)})
+                      </div>
                     )}
                   </div>
-                </button>
-              ) : (
-                <div className="px-3 py-2 bg-red-lt rounded-[9px] text-xs text-red font-semibold flex items-center gap-1.5 border border-[#C0392B30]">
-                  ⚠ พนักงานยังไม่กรอกข้อมูลธนาคาร
                 </div>
-              )}
-            </div>
-          );
-        })}
+
+                {/* row 2: bank info with copy button */}
+                {hasBank ? (
+                  <button
+                    onClick={() =>
+                      copyToClipboard(employee.bankAccountNumber, employee.id)
+                    }
+                    className={`w-full text-sm px-3 py-2.5 bg-cream rounded-[9px] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
+                    ${copiedAcc === employee.id ? "border border-green" : "border border-bdr"}`}
+                  >
+                    <span className="text-sm">🏦</span>
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="text-xs text-txt-soft mb-px">
+                        {employee.bank}
+                      </div>
+                      <div className="text-sm font-bold text-txt tracking-[0.04em]">
+                        {employee.bankAccountNumber}
+                      </div>
+                    </div>
+                    <div
+                      className={`flex items-center gap-[5px] px-2.5 py-[5px] rounded-[7px] text-xs font-bold whitespace-nowrap transition-all
+                    ${copiedAcc === employee.id ? "bg-green-lt text-green" : "bg-gold-pale text-maroon"}`}
+                    >
+                      {copiedAcc === employee.id ? (
+                        <>
+                          <IconCheck size={13} stroke={3} />
+                          คัดลอกแล้ว
+                        </>
+                      ) : (
+                        <>
+                          <IconCopy size={13} stroke={2.2} />
+                          คัดลอก
+                        </>
+                      )}
+                    </div>
+                  </button>
+                ) : (
+                  <div className="px-3 py-2 bg-red-lt rounded-[9px] text-xs text-red font-semibold flex items-center gap-1.5 border border-[#C0392B30]">
+                    ⚠ พนักงานยังไม่กรอกข้อมูลธนาคาร
+                  </div>
+                )}
+              </div>
+            );
+          },
+        )}
       </div>
     </div>
   );

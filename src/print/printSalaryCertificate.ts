@@ -6,12 +6,12 @@ import { buildCertificateDocDef } from "./pdfBuilders/salaryCertificatePDF";
    • downloadSalaryCertificatePDF() → pdfmake (PDF text-searchable)    */
 
 function buildCertificateHTML(
-  { profile, empInfo, data, startDate }: any,
+  { profile, employeeInfo, data, startDate }: any,
   opts: { includePrintControls?: boolean } = {},
 ) {
-  const empName = profile?.name || empInfo?.name || "-";
-  const empRole = profile?.role || empInfo?.role || "-";
-  const baseSalary = data?.base || 0;
+  const employeeName = profile?.name || employeeInfo?.name || "-";
+  const employeeRole = profile?.role || employeeInfo?.role || "-";
+  const baseSalary = data?.baseSalary || 0;
 
   // mode='pdf' → ไม่ต้องมีปุ่ม + auto-print
   const includePrintControls = opts.includePrintControls !== false;
@@ -26,9 +26,9 @@ function buildCertificateHTML(
   });
   const startWork = startDate || "มีนาคม พ.ศ. 2566";
 
-  const num = (n) => Number(n || 0).toLocaleString("th-TH");
+  const formatNumber = (n) => Number(n || 0).toLocaleString("th-TH");
   // แปลงตัวเลขเงินเป็นภาษาไทย (basic — รองรับ 0-9,999,999)
-  const numToThai = (n) => {
+  const formatThaiBahtText = (n) => {
     const digits = [
       "ศูนย์",
       "หนึ่ง",
@@ -63,13 +63,13 @@ function buildCertificateHTML(
     }
     return `${str}บาทถ้วน`;
   };
-  const baseInWords = numToThai(baseSalary);
+  const baseInWords = formatThaiBahtText(baseSalary);
 
   const html = `<!doctype html>
 <html lang="th">
 <head>
   <meta charset="utf-8"/>
-  <title>หนังสือรับรองเงินเดือน — ${empName}</title>
+  <title>หนังสือรับรองเงินเดือน — ${employeeName}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -173,11 +173,11 @@ function buildCertificateHTML(
 
     <div class="body">
       <p>
-        หนังสือฉบับนี้ออกให้เพื่อแสดงว่า <b>${prefix} ${empName}</b>
-        ได้ปฏิบัติหน้าที่ ในตำแหน่ง<b>${empRole}</b>
+        หนังสือฉบับนี้ออกให้เพื่อแสดงว่า <b>${prefix} ${employeeName}</b>
+        ได้ปฏิบัติหน้าที่ ในตำแหน่ง<b>${employeeRole}</b>
         ของ <b>บริษัท ห้างเพชรทองมุกดา จำกัด</b>
         และปฏิบัติงานตั้งแต่ <b>${startWork}</b>
-        มีอัตราเงินเดือน ประจำเดือนละ <b>${num(baseSalary)} บาท</b>
+        มีอัตราเงินเดือน ประจำเดือนละ <b>${formatNumber(baseSalary)} บาท</b>
         (<b>${baseInWords}</b>)
         ซึ่งอัตรานี้ยังไม่รวมค่าตอบแทนและเงินพิเศษอื่น ๆ
       </p>
@@ -188,7 +188,7 @@ function buildCertificateHTML(
     <div class="signatures">
       <div class="sig-box">
         <div class="sig-line">ลายเซ็นพนักงาน</div>
-        <div class="sig-name">(${prefix} ${empName})</div>
+        <div class="sig-name">(${prefix} ${employeeName})</div>
       </div>
       <div class="sig-box">
         <div class="sig-line">กรรมการผู้บริหาร</div>
@@ -249,14 +249,15 @@ export async function downloadSalaryCertificatePDF(args) {
   await ensureThaiFonts(pdfMake);
 
   const docDef = buildCertificateDocDef(args);
-  const empName = args.profile?.name || args.empInfo?.name || "employee";
+  const employeeName =
+    args.profile?.name || args.employeeInfo?.name || "employee";
   const today = new Date().toISOString().slice(0, 10);
   const safe = (s) =>
     String(s || "")
       .replace(/[/\\?%*:|"<>]/g, "")
       .replace(/\s+/g, "-")
       .trim();
-  const filename = `หนังสือรับรองเงินเดือน-${safe(empName)}-${today}.pdf`;
+  const filename = `หนังสือรับรองเงินเดือน-${safe(employeeName)}-${today}.pdf`;
 
   pdfMake.createPdf(docDef).download(filename);
 }

@@ -81,14 +81,14 @@ function updateWrite(path: string, data: Record<string, unknown>) {
   };
 }
 
-function employeeWithDevLogin(emp: any) {
-  if (emp.id === DEV_EMPLOYEE_ID) {
-    return { ...emp, lineUserId: DEV_EMPLOYEE_UID };
+function employeeWithDevLogin(employee: any) {
+  if (employee.id === DEV_EMPLOYEE_ID) {
+    return { ...employee, lineUserId: DEV_EMPLOYEE_UID };
   }
-  if (emp.id === DEV_ADMIN_EMPLOYEE_ID) {
-    return { ...emp, lineUserId: DEV_ADMIN_UID };
+  if (employee.id === DEV_ADMIN_EMPLOYEE_ID) {
+    return { ...employee, lineUserId: DEV_ADMIN_UID };
   }
-  return emp;
+  return employee;
 }
 
 async function commitEmulatorWrites(writes: Record<string, unknown>[]) {
@@ -127,8 +127,8 @@ export async function runSeed() {
   });
 
   // 2. Employees
-  EMP_DIR_INIT.forEach((emp) => {
-    const { id, ...data } = emp;
+  EMP_DIR_INIT.forEach((employee) => {
+    const { id, ...data } = employee;
     batch.set(doc(db, COLLECTIONS.EMPLOYEES, id), {
       ...data,
       createdAt: Date.now(),
@@ -146,14 +146,17 @@ export async function runSeed() {
     count++;
   });
 
-  // 4. Salaries (nested: /salaries/{empId}/months/{ym})
-  Object.entries(SALARY_INIT).forEach(([empId, months]) => {
+  // 4. Salaries (nested: /salaries/{employeeId}/months/{yearMonth})
+  Object.entries(SALARY_INIT).forEach(([employeeId, months]) => {
     Object.entries(months as Record<string, Record<string, unknown>>).forEach(
-      ([ym, data]) => {
-        batch.set(doc(db, COLLECTIONS.SALARIES, empId, "months", ym), {
-          ...data,
-          createdAt: Date.now(),
-        });
+      ([yearMonth, data]) => {
+        batch.set(
+          doc(db, COLLECTIONS.SALARIES, employeeId, "months", yearMonth),
+          {
+            ...data,
+            createdAt: Date.now(),
+          },
+        );
         count++;
       },
     );
@@ -200,8 +203,8 @@ export async function runDevSeed() {
     );
   });
 
-  EMP_DIR_INIT.map(employeeWithDevLogin).forEach((emp) => {
-    const { id, ...data } = emp;
+  EMP_DIR_INIT.map(employeeWithDevLogin).forEach((employee) => {
+    const { id, ...data } = employee;
     writes.push(
       updateWrite(`${COLLECTIONS.EMPLOYEES}/${id}`, {
         ...data,
@@ -219,14 +222,17 @@ export async function runDevSeed() {
     );
   });
 
-  Object.entries(SALARY_INIT).forEach(([empId, months]) => {
+  Object.entries(SALARY_INIT).forEach(([employeeId, months]) => {
     Object.entries(months as Record<string, Record<string, unknown>>).forEach(
-      ([ym, data]) => {
+      ([yearMonth, data]) => {
         writes.push(
-          updateWrite(`${COLLECTIONS.SALARIES}/${empId}/months/${ym}`, {
-            ...data,
-            createdAt: now,
-          }),
+          updateWrite(
+            `${COLLECTIONS.SALARIES}/${employeeId}/months/${yearMonth}`,
+            {
+              ...data,
+              createdAt: now,
+            },
+          ),
         );
       },
     );

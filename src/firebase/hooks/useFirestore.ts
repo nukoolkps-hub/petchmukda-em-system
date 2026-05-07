@@ -3,7 +3,7 @@
    - subscribe to real-time updates
    - return { data, loading, error }
    - cleanup on unmount                                          */
-import { useEffect, useState, type DependencyList } from "react";
+import { type DependencyList, useEffect, useState } from "react";
 import {
   subscribeAdvances,
   subscribeAdvancesByEmployeeId,
@@ -116,6 +116,7 @@ function useScopedSubscription<T>(
       },
     );
     return unsub;
+    // biome-ignore lint/correctness/useExhaustiveDependencies: this generic hook accepts the caller's scoped dependency list.
   }, deps);
 
   return { data, loading, error };
@@ -209,33 +210,33 @@ export function useAdvancesForScope({
 
 export function useAdvancesByStatusAndMonth({
   status,
-  ym,
+  yearMonth,
   enabled = true,
 }: {
   status: "pending" | "approved" | "rejected" | null;
-  ym: string;
+  yearMonth: string;
   enabled?: boolean;
 }) {
   return useScopedSubscription(
     () => {
-      if (!enabled || !status || !ym) return null;
+      if (!enabled || !status || !yearMonth) return null;
       return (onChange, onError) =>
-        subscribeAdvancesByStatusAndMonth(status, ym, onChange, onError);
+        subscribeAdvancesByStatusAndMonth(status, yearMonth, onChange, onError);
     },
     [] as any[],
-    [enabled, status, ym],
+    [enabled, status, yearMonth],
   );
 }
 
-export function useApprovedAdvancesByMonth(ym: string | null) {
+export function useApprovedAdvancesByMonth(yearMonth: string | null) {
   return useScopedSubscription(
     () => {
-      if (!ym) return null;
+      if (!yearMonth) return null;
       return (onChange, onError) =>
-        subscribeApprovedAdvancesByMonth(ym, onChange, onError);
+        subscribeApprovedAdvancesByMonth(yearMonth, onChange, onError);
     },
     [] as any[],
-    [ym],
+    [yearMonth],
   );
 }
 

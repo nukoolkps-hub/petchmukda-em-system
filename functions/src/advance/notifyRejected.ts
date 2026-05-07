@@ -3,24 +3,26 @@
  */
 
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { COLOR, getLineConfig, TH_NUM } from "../helpers/config.js";
+import { COLORS, formatThaiNumber, getLineConfig } from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
-import type { AdvanceRejectedData } from "../types.js";
+import { parseNotifyAdvanceRejectedPayload } from "../helpers/payload.js";
 
 export const notifyAdvanceRejected = onCall(async (request) => {
 	if (!request.auth) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+	if (!(request.auth.token as { admin?: boolean }).admin) {
+		throw new HttpsError("permission-denied", "Caller is not admin");
+	}
 
 	const {
-		empLineUserId,
-		empName,
+		employeeLineUserId,
+		employeeName,
 		amount,
-		reason,
+		requestReason,
+		rejectionReason,
 		month,
 		rejectedAt,
 		requestId,
-	} = request.data as AdvanceRejectedData;
-	if (!empLineUserId)
-		throw new HttpsError("invalid-argument", "missing empLineUserId");
+	} = parseNotifyAdvanceRejectedPayload(request.data);
 
 	const config = await getLineConfig();
 	if (!config.LINE_CHANNEL_ACCESS_TOKEN) {
@@ -28,22 +30,22 @@ export const notifyAdvanceRejected = onCall(async (request) => {
 		return { ok: true, skipped: true };
 	}
 
-	const dt = new Date(rejectedAt || Date.now());
-	const dtStr = dt.toLocaleString("th-TH", {
+	const date = new Date(rejectedAt || Date.now());
+	const dateText = date.toLocaleString("th-TH", {
 		dateStyle: "medium",
 		timeStyle: "short",
 	});
 
 	const flex = {
 		type: "flex" as const,
-		altText: `❌ คำขอเบิกเงินล่วงหน้าไม่ได้รับอนุมัติ — ฿${TH_NUM(amount)}`,
+		altText: `❌ คำขอเบิกเงินล่วงหน้าไม่ได้รับอนุมัติ — ฿${formatThaiNumber(amount)}`,
 		contents: {
 			type: "bubble",
 			size: "mega",
 			header: {
 				type: "box",
 				layout: "vertical",
-				backgroundColor: COLOR.red,
+				backgroundColor: COLORS.red,
 				paddingAll: "16px",
 				contents: [
 					{
@@ -69,16 +71,16 @@ export const notifyAdvanceRejected = onCall(async (request) => {
 				contents: [
 					{
 						type: "text",
-						text: `สวัสดี คุณ${empName}`,
+						text: `สวัสดี คุณ${employeeName}`,
 						size: "md",
 						weight: "bold",
-						color: COLOR.text,
+						color: COLORS.text,
 					},
 					{
 						type: "text",
 						text: "เสียใจด้วย คำขอเบิกเงินล่วงหน้าของคุณไม่ได้รับอนุมัติในครั้งนี้",
 						size: "sm",
-						color: COLOR.textMid,
+						color: COLORS.textMedium,
 						wrap: true,
 					},
 					{
@@ -93,14 +95,14 @@ export const notifyAdvanceRejected = onCall(async (request) => {
 								type: "text",
 								text: "จำนวนที่ขอ",
 								size: "xs",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 							},
 							{
 								type: "text",
-								text: `฿${TH_NUM(amount)}`,
+								text: `฿${formatThaiNumber(amount)}`,
 								size: "xl",
 								weight: "bold",
-								color: COLOR.red,
+								color: COLORS.red,
 							},
 						],
 					},
@@ -113,14 +115,14 @@ export const notifyAdvanceRejected = onCall(async (request) => {
 								type: "text",
 								text: "📅 เดือน",
 								size: "sm",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 								flex: 2,
 							},
 							{
 								type: "text",
 								text: month || "-",
 								size: "sm",
-								color: COLOR.text,
+								color: COLORS.text,
 								flex: 4,
 							},
 						],
@@ -132,16 +134,38 @@ export const notifyAdvanceRejected = onCall(async (request) => {
 						contents: [
 							{
 								type: "text",
-								text: "📝 เหตุผล",
+								text: "📝 คำขอเดิม",
 								size: "sm",
-								color: COLOR.textMid,
+								color: COLORS.textMedium,
 								flex: 2,
 							},
 							{
 								type: "text",
-								text: reason || "-",
+								text: requestReason,
 								size: "sm",
-								color: COLOR.text,
+								color: COLORS.text,
+								flex: 4,
+								wrap: true,
+							},
+						],
+					},
+					{
+						type: "box",
+						layout: "horizontal",
+						spacing: "sm",
+						contents: [
+							{
+								type: "text",
+								text: "⚠️ เหตุผลปฏิเสธ",
+								size: "sm",
+								color: COLORS.textMedium,
+								flex: 2,
+							},
+							{
+								type: "text",
+								text: rejectionReason || "-",
+								size: "sm",
+								color: COLORS.text,
 								flex: 4,
 								wrap: true,
 							},
@@ -149,7 +173,7 @@ export const notifyAdvanceRejected = onCall(async (request) => {
 					},
 					{
 						type: "text",
-						text: `⏰ ปฏิเสธเมื่อ: ${dtStr}`,
+						text: `⏰ ปฏิเสธเมื่อ: ${dateText}`,
 						size: "xs",
 						color: "#B89A72",
 						margin: "md",
@@ -159,7 +183,7 @@ export const notifyAdvanceRejected = onCall(async (request) => {
 						type: "text",
 						text: "💬 หากมีข้อสงสัย กรุณาติดต่อ Admin โดยตรง",
 						size: "xs",
-						color: COLOR.textMid,
+						color: COLORS.textMedium,
 						align: "center",
 						wrap: true,
 					},
@@ -168,6 +192,10 @@ export const notifyAdvanceRejected = onCall(async (request) => {
 		},
 	};
 
-	await pushLineMessage(config.LINE_CHANNEL_ACCESS_TOKEN, empLineUserId, flex);
+	await pushLineMessage(
+		config.LINE_CHANNEL_ACCESS_TOKEN,
+		employeeLineUserId,
+		flex,
+	);
 	return { ok: true, requestId };
 });

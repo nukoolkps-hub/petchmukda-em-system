@@ -13,8 +13,8 @@ async function uploadDataUrl(path: string, dataUrl: string) {
   return await getDownloadURL(fileRef);
 }
 
-export async function uploadAvatar(empId: string, dataUrl: string) {
-  const id = safeSegment(empId);
+export async function uploadAvatar(employeeId: string, dataUrl: string) {
+  const id = safeSegment(employeeId);
   return await uploadDataUrl(`avatars/${id}/avatar-${Date.now()}.jpg`, dataUrl);
 }
 

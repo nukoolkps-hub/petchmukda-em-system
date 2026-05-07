@@ -1,17 +1,20 @@
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useState } from "react";
 import {
-  C as colors,
+  COLORS as colors,
   LEAVE_TYPES,
   TODAY,
-  TH_MONTHS as thaiMonthNames,
-  TH_DAYS_SHORT as thaiShortDayNames,
+  THAI_MONTH_NAMES as thaiMonthNames,
+  THAI_SHORT_WEEKDAY_NAMES as thaiShortDayNames,
 } from "../../constants";
 import type { Employee, LeaveEntry } from "../../types";
 import { dateRange, toYMD as toDateKey } from "../../utils/dateUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 
-type CalendarEmployee = Pick<Employee, "id" | "name" | "av" | "avType" | "img">;
+type CalendarEmployee = Pick<
+  Employee,
+  "id" | "name" | "avatar" | "avatarType" | "avatarImageUrl"
+>;
 
 interface TeamCalendarProps {
   leaveEntries: LeaveEntry[];
@@ -93,7 +96,11 @@ export default function TeamCalendar({
               onClick={showPreviousMonth}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
             >
-              <IconChevronLeft size={12} color={colors.textMid} stroke={2.5} />
+              <IconChevronLeft
+                size={12}
+                color={colors.textMedium}
+                stroke={2.5}
+              />
             </button>
             <span className="text-sm font-semibold text-txt min-w-[108px] text-center">
               {thaiMonthNames[visibleMonth]} {visibleYear + 543}
@@ -102,7 +109,11 @@ export default function TeamCalendar({
               onClick={showNextMonth}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
             >
-              <IconChevronRight size={12} color={colors.textMid} stroke={2.5} />
+              <IconChevronRight
+                size={12}
+                color={colors.textMedium}
+                stroke={2.5}
+              />
             </button>
           </div>
         </div>
@@ -248,11 +259,12 @@ export default function TeamCalendar({
                   className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-cream border border-bdr"
                 >
                   <AvatarCircle
-                    av={
-                      employeeInfo?.av || leaveEntry.employeeName?.slice(0, 2)
+                    avatar={
+                      employeeInfo?.avatar ||
+                      leaveEntry.employeeName?.slice(0, 2)
                     }
-                    avType={employeeInfo?.avType || "text"}
-                    img={employeeInfo?.img || null}
+                    avatarType={employeeInfo?.avatarType || "text"}
+                    avatarImageUrl={employeeInfo?.avatarImageUrl || null}
                     size={38}
                     fontSize={13}
                     border={`2px solid ${colors.gold}40`}

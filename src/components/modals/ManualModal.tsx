@@ -1,6 +1,6 @@
 import { IconBook } from "@tabler/icons-react";
 import { useState } from "react";
-import { C } from "../../constants";
+import { COLORS } from "../../constants";
 import BaseModal from "../shared/BaseModal";
 import { Box, Card, Section } from "../shared/Layout";
 
@@ -30,7 +30,7 @@ export default function ManualModal({ onClose }) {
       <div className="flex bg-cream-dk rounded-[11px] p-1 mb-3.5 gap-0.5">
         {[
           { id: "leave", label: "📅 กฎการลา" },
-          { id: "comm", label: "💎 กฎค่าคอม" },
+          { id: "commission", label: "💎 กฎค่าคอม" },
         ].map((t) => (
           <button
             key={t.id}
@@ -46,14 +46,14 @@ export default function ManualModal({ onClose }) {
       {/* content */}
       {tab === "leave" && (
         <div className="text-sm text-txt-mid leading-[1.8]">
-          <Section title="📋 โควต้าการลา" color={C.maroon}>
+          <Section title="📋 โควต้าการลา" color={COLORS.maroon}>
             <p>
               พนักงานทุกคนมีโควต้า <b>ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน</b>
             </p>
           </Section>
 
-          <Section title="📅 วันลาแบ่งเป็น 2 ประเภท" color={C.maroon}>
-            <Card title="📅 วันธรรมดา (จันทร์-ศุกร์)" color={C.text}>
+          <Section title="📅 วันลาแบ่งเป็น 2 ประเภท" color={COLORS.maroon}>
+            <Card title="📅 วันธรรมดา (จันทร์-ศุกร์)" color={COLORS.text}>
               <ul>
                 <li>
                   มี <b>โควต้า 2 ครั้ง/เดือน</b>
@@ -66,7 +66,7 @@ export default function ManualModal({ onClose }) {
                 </li>
               </ul>
             </Card>
-            <Card title="🌅 วันอาทิตย์" color={C.text}>
+            <Card title="🌅 วันอาทิตย์" color={COLORS.text}>
               <ul>
                 <li>
                   <b className="text-red">หักทุกครั้ง</b> ไม่อยู่ในโควต้า
@@ -78,7 +78,7 @@ export default function ManualModal({ onClose }) {
             </Card>
           </Section>
 
-          <Section title="🌟 โบนัสแห่งความขยัน(ไม่หยุด)" color={C.green}>
+          <Section title="🌟 โบนัสแห่งความขยัน(ไม่หยุด)" color={COLORS.green}>
             <p>
               คำนวณ <b>เฉพาะวันธรรมดา</b> (วันอาทิตย์ไม่นับ)
             </p>
@@ -95,9 +95,9 @@ export default function ManualModal({ onClose }) {
             </ul>
           </Section>
 
-          <Box bg={C.goldPale} border={`${C.gold}40`}>
-            <b className="text-maroon">💡 ตัวอย่าง:</b> เงินเดือน ฿18,000
-            ลาวันธรรมดา 1 + วันอาทิตย์ 1<br />
+          <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
+            <b className="text-maroon">💡 ตัวอย่าง:</b> เงินเดือน ฿18,000 ลาวันธรรมดา
+            1 + วันอาทิตย์ 1<br />
             เรท/วัน = 18,000 ÷ 30 = <b>฿600</b>
             <br />
             <span className="text-green">✓ ได้โบนัสแห่งความขยัน</span> 1 × 600 ={" "}
@@ -109,32 +109,32 @@ export default function ManualModal({ onClose }) {
         </div>
       )}
 
-      {tab === "comm" && (
+      {tab === "commission" && (
         <div className="text-sm text-txt-mid leading-[1.8]">
-          <Section title="🤝 ระบบ Pool ค่าคอม" color={C.maroon}>
+          <Section title="🤝 ระบบ Pool ค่าคอม" color={COLORS.maroon}>
             <p>พนักงานในตำแหน่งเดียวกันที่อยู่ใน "Pool" จะแชร์ค่าคอมกันตามสูตร</p>
           </Section>
 
-          <Section title="📐 สูตรการแบ่ง Pool" color={C.maroon}>
-            <Card title="ขั้นตอน 6 ข้อ" color={C.text}>
+          <Section title="📐 สูตรการแบ่ง Pool" color={COLORS.maroon}>
+            <Card title="ขั้นตอน 6 ข้อ" color={COLORS.text}>
               <ol className="pl-[18px] m-0">
                 <li>
-                  <b>N</b> = จำนวนคนใน Pool (หลังตัดสิทธิ์)
+                  <b>จำนวนคนที่มีสิทธิ์</b> = จำนวนคนใน Pool หลังตัดสิทธิ์
                 </li>
                 <li>
-                  <b>Base</b> = 100 ÷ N (เปอร์เซ็นต์เริ่มต้น)
+                  <b>เปอร์เซ็นต์ฐาน</b> = 100 ÷ จำนวนคนที่มีสิทธิ์
                 </li>
                 <li>
-                  <b>K</b> = Base ÷ 30 (ตัวคูณการหัก)
+                  <b>ตัวคูณหักวันลา</b> = เปอร์เซ็นต์ฐาน ÷ 30
                 </li>
                 <li>
-                  <b>% หัก</b> = วันหยุดรวม × K × (N−1)
+                  <b>% หัก</b> = วันหยุดรวม × ตัวคูณหักวันลา × (จำนวนคนที่มีสิทธิ์ − 1)
                 </li>
                 <li>
-                  <b>% แบ่งเพื่อน</b> = % หัก ÷ (N−1)
+                  <b>% แบ่งเพื่อน</b> = % หัก ÷ (จำนวนคนที่มีสิทธิ์ − 1)
                 </li>
                 <li>
-                  <b>% ที่ได้</b> = Base − % หัก + Σ(% แบ่งเพื่อนของคนอื่น)
+                  <b>% ที่ได้</b> = เปอร์เซ็นต์ฐาน − % หัก + Σ(% แบ่งเพื่อนของคนอื่น)
                 </li>
               </ol>
               <p className="mt-2">
@@ -145,27 +145,27 @@ export default function ManualModal({ onClose }) {
             </Card>
           </Section>
 
-          <Section title="✨ ขายพิเศษ" color={C.gold}>
+          <Section title="✨ ขายพิเศษ" color={COLORS.gold}>
             <p>
               <b>ไม่เข้า Pool</b> — ใครขายใครได้ คูณ Rate ของตัวเอง
             </p>
           </Section>
 
-          <Section title="🛍 รับซื้อ" color={C.maroon}>
+          <Section title="🛍 รับซื้อ" color={COLORS.maroon}>
             <p>
               คำนวณแบบ Pool <b>แยกฝั่ง</b> จากการขาย (ใช้สูตรเดียวกัน)
             </p>
           </Section>
 
-          <Section title="⚠ กฎตัดสิทธิ์ Pool" color={C.red}>
-            <Card title="🔻 กฎ 80%" color={C.text}>
+          <Section title="⚠ กฎตัดสิทธิ์ Pool" color={COLORS.red}>
+            <Card title="🔻 กฎ 80%" color={COLORS.text}>
               <p>
                 คนที่ <b>ชิ้น &lt; 80% ของ Top</b> ในฝั่งนั้น →{" "}
-                <b className="text-red">ตัดออกจาก Pool</b> ฝั่งนั้น (N ลดลง → Base และ
-                K เปลี่ยนตาม)
+                <b className="text-red">ตัดออกจาก Pool</b> ฝั่งนั้น (จำนวนคนที่มีสิทธิ์ลดลง
+                → เปอร์เซ็นต์ฐานและตัวคูณหักวันลาเปลี่ยนตาม)
               </p>
             </Card>
-            <Card title="🚫 Admin ปิดสิทธิ์" color={C.text}>
+            <Card title="🚫 Admin ปิดสิทธิ์" color={COLORS.text}>
               <ul>
                 <li>
                   <b>ปิดฝั่งขาย</b> — ไม่ได้ Pool ฝั่งขาย (ฝั่งซื้อยังใช้กฎ 80%)
@@ -182,10 +182,10 @@ export default function ManualModal({ onClose }) {
             </Card>
           </Section>
 
-          <Box bg={C.goldPale} border={`${C.gold}40`}>
+          <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
             <b className="text-maroon">💡 ตัวอย่าง Pool ขาย 5 คน · 1,064 ชิ้น</b>
             <br />
-            N=5, Base=20%, K=0.667
+            จำนวนคนที่มีสิทธิ์ = 5, เปอร์เซ็นต์ฐาน = 20%, ตัวคูณหักวันลา = 0.667
             <br />
             <ul className="pl-[18px] my-1.5 mx-0">
               <li>
@@ -198,7 +198,7 @@ export default function ManualModal({ onClose }) {
             ใครหยุดน้อยได้มาก ใครหยุดมากได้น้อย
           </Box>
 
-          <Section title="🎫 บัตรสมาชิก" color={C.maroon}>
+          <Section title="🎫 บัตรสมาชิก" color={COLORS.maroon}>
             <p>
               คิดตาม <b>Rate ของตัวเอง</b> × จำนวนใบ (ไม่เข้า Pool)
             </p>

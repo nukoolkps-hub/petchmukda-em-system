@@ -3,23 +3,23 @@
 export interface Employee {
   id: string;
   name: string;
-  av: string;
-  avType: "text" | "emoji" | "image";
-  img: string | null;
+  avatar: string;
+  avatarType: "text" | "emoji" | "image";
+  avatarImageUrl: string | null;
   role: string;
   roleId: string;
   bank?: string;
-  bankAcc?: string;
+  bankAccountNumber?: string;
   lineUserId?: string;
   baseSalary?: number;
-  ratePerPiece?: number;
-  ratePerPieceNormal?: number;
-  ratePerPieceSpecial?: number;
-  ratePerPieceBuy?: number;
-  ratePerPieceInvite?: number;
-  ratePerPieceTransfer?: number;
+  singlePieceRate?: number;
+  normalSalePieceRate?: number;
+  specialSalePieceRate?: number;
+  buyPieceRate?: number;
+  invitePieceRate?: number;
+  transferPieceRate?: number;
   salaryDisabled?: boolean;
-  poolExclude?: "sell" | "buy" | "both" | "" | null;
+  poolExclusion?: "sell" | "buy" | "both" | "" | null;
 }
 
 export interface LeaveEntry {
@@ -44,13 +44,13 @@ export interface LeaveType {
 }
 
 export interface SalaryMonth {
-  base?: number;
-  pieces?: number;
-  piecesNormal?: number;
-  piecesSpecial?: number;
-  piecesBuy?: number;
-  piecesInvite?: number;
-  piecesTransfer?: number;
+  baseSalary?: number;
+  singleRatePieces?: number;
+  normalSalePieces?: number;
+  specialSalePieces?: number;
+  buyPieces?: number;
+  invitePieces?: number;
+  transferPieces?: number;
   lateDeduction?: number;
   socialSecurity?: number;
   note?: string;
@@ -60,8 +60,8 @@ export type SalaryData = Record<string, Record<string, SalaryMonth>>;
 
 export interface AdvanceRequest {
   id: string | number;
-  empId: string;
-  empName: string;
+  employeeId: string;
+  employeeName: string;
   amount: number;
   reason: string;
   month: string;
@@ -69,9 +69,9 @@ export interface AdvanceRequest {
   submittedAt: string;
   approvedAt?: string;
   rejectedAt?: string;
-  slipImg?: string | null;
-  slipUrl?: string | null;
-  rejectReason?: string;
+  slipImageDataUrl?: string | null;
+  slipImageUrl?: string | null;
+  rejectionReason?: string;
 }
 
 export interface Role {
@@ -84,71 +84,78 @@ export interface Role {
 export interface PayrollConfirmEntry {
   confirmedAt: string;
   totalAmount: number;
-  empCount: number;
+  employeeCount: number;
 }
 
 export type PayrollConfirms = Record<string, PayrollConfirmEntry>;
 
 export interface PoolShareResult {
-  piecesNormal: number;
-  piecesBuy: number;
-  sellPct: number;
-  sellDeductPct: number;
-  sellSharePct: number;
-  buyPct: number;
-  buyDeductPct: number;
-  buySharePct: number;
-  poolN: number;
-  poolB: number;
-  sellN: number;
-  sellBase: number;
-  sellK: number;
-  buyN: number;
-  buyBase: number;
-  buyK: number;
+  normalSalePieces: number;
+  buyPieces: number;
+  sellSharePercent: number;
+  sellLeaveDeductionPercent: number;
+  sellRedistributedPercent: number;
+  buySharePercent: number;
+  buyLeaveDeductionPercent: number;
+  buyRedistributedPercent: number;
+  totalSellPoolPieces: number;
+  totalBuyPoolPieces: number;
+  eligibleSellEmployeeCount: number;
+  sellBaseSharePercent: number;
+  sellLeaveDeductionFactor: number;
+  eligibleBuyEmployeeCount: number;
+  buyBaseSharePercent: number;
+  buyLeaveDeductionFactor: number;
   leaveDays: number;
-  eligibleSell: boolean;
-  eligibleBuy: boolean;
-  mySell: number;
-  myBuy: number;
-  topSell: number;
-  topBuy: number;
-  sellThreshold: number;
-  buyThreshold: number;
-  poolExclude: string | null;
+  eligibleForSellPool: boolean;
+  eligibleForBuyPool: boolean;
+  employeeSellPieces: number;
+  employeeBuyPieces: number;
+  topSellPieces: number;
+  topBuyPieces: number;
+  sellEligibilityThreshold: number;
+  buyEligibilityThreshold: number;
+  poolExclusion: string | null;
   losesBaseSalary: boolean;
+  sellShareRatio: number;
+  buyShareRatio: number;
+  workDays: number;
+  totalSellWorkDays: number;
+  totalBuyWorkDays: number;
 }
 
 export interface SalaryCalcResult {
   earnings: number;
   deductions: number;
-  net: number;
-  overQ: number;
-  dayRate: number;
-  isSingle: boolean;
-  pcsSingle: number;
-  commSingle: number;
-  rSingle: number;
-  commNormal: number;
-  commSpecial: number;
-  commBuy: number;
-  commInvite: number;
-  commTransfer: number;
+  netSalary: number;
+  overQuotaDeduction: number;
+  dailySalaryRate: number;
+  weekdayOverQuotaDays: number;
+  sundayOverQuotaDays: number;
+  usesSinglePieceRate: boolean;
+  singleRatePieces: number;
+  singleRateCommission: number;
+  singlePieceRate: number;
+  normalSaleCommission: number;
+  specialSaleCommission: number;
+  buyCommission: number;
+  inviteCommission: number;
+  transferCommission: number;
   memberBonusTotal: number;
-  pcsN: number;
-  pcsS: number;
-  pcsB: number;
-  pcsI: number;
-  pcsT: number;
-  rNormal: number;
-  rSpecial: number;
-  rBuy: number;
-  rInvite: number;
-  rTransfer: number;
-  attendBonus: number;
+  normalSalePieces: number;
+  specialSalePieces: number;
+  buyPieces: number;
+  invitePieces: number;
+  transferPieces: number;
+  normalSalePieceRate: number;
+  specialSalePieceRate: number;
+  buyPieceRate: number;
+  invitePieceRate: number;
+  transferPieceRate: number;
+  attendanceBonus: number;
   bonusDays: number;
-  lvDays: number;
-  advanceDed: number;
+  leaveDays: number;
+  advanceDeduction: number;
   baseSalary: number;
   losesBaseSalary: boolean;
 }
@@ -184,7 +191,7 @@ export interface Validation {
 /* ─── useAppData return type ──────────────────────────────────── */
 export interface AppData {
   allLeaves: LeaveEntry[];
-  empDir: Employee[];
+  employeeDirectory: Employee[];
   salaryData: SalaryData;
   advanceRequests: AdvanceRequest[];
   roles: Role[];
@@ -195,7 +202,9 @@ export interface AppData {
   setAllLeaves:
     | React.Dispatch<React.SetStateAction<LeaveEntry[]>>
     | (() => void);
-  setEmpDir: React.Dispatch<React.SetStateAction<Employee[]>> | (() => void);
+  setEmployeeDirectory:
+    | React.Dispatch<React.SetStateAction<Employee[]>>
+    | (() => void);
   setSalaryData:
     | React.Dispatch<React.SetStateAction<SalaryData>>
     | (() => void);
@@ -215,14 +224,14 @@ export interface AppData {
     id: string,
     fields: Partial<Employee>,
   ) => void | Promise<void>;
-  upsertEmployee: (emp: Employee) => string | Promise<string>;
+  upsertEmployee: (employee: Employee) => string | Promise<string>;
   updateSalary: (
-    empId: string,
-    ym: string,
+    employeeId: string,
+    yearMonth: string,
     fields: Partial<SalaryMonth>,
   ) => void | Promise<void>;
   submitAdvance: (
-    req: Omit<AdvanceRequest, "id" | "status" | "submittedAt">,
+    request: Omit<AdvanceRequest, "id" | "status" | "submittedAt">,
   ) => string | number | Promise<string>;
   updateAdvance: (
     id: string | number,
@@ -230,13 +239,13 @@ export interface AppData {
   ) => void | Promise<void>;
   approveAdvance: (
     id: string | number,
-    slipUrl?: string | null,
+    slipImageUrl?: string | null,
   ) => void | Promise<void>;
   rejectAdvance: (id: string | number, reason?: string) => void | Promise<void>;
   upsertRole: (role: Role) => void | Promise<void>;
   deleteRole: (id: string) => void | Promise<void>;
   setPayrollConfirm: (
-    ym: string,
+    yearMonth: string,
     summary: PayrollConfirmEntry,
   ) => void | Promise<void>;
 }

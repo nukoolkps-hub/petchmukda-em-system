@@ -1,6 +1,6 @@
 import { IconClock } from "@tabler/icons-react";
-import { TH_MONTHS } from "../../constants";
-import { TH_NUMBER } from "../../utils/format";
+import { THAI_MONTH_NAMES } from "../../constants";
+import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
 
 /* ─── Advance History Modal ────────────────────────────────────── */
@@ -51,7 +51,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
 
       {months.map((m) => {
         const [y, mo] = m.split("-");
-        const monthLabel = `${TH_MONTHS[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+        const monthLabel = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
         const monthList = grouped[m];
         const monthTotal = monthList
           .filter((r) => r.status === "approved")
@@ -62,15 +62,16 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
               <div className="text-sm font-bold text-maroon">{monthLabel}</div>
               {monthTotal > 0 && (
                 <div className="text-xs text-txt-soft">
-                  เบิกแล้ว <b className="text-green">฿{TH_NUMBER(monthTotal)}</b>
+                  เบิกแล้ว{" "}
+                  <b className="text-green">฿{formatThaiNumber(monthTotal)}</b>
                 </div>
               )}
             </div>
             <div className="flex flex-col gap-2">
               {monthList.map((r) => {
                 const s = sMap[r.status] || sMap.pending;
-                const dt = new Date(r.submittedAt);
-                const slipPreview = r.slipUrl || r.slipImg;
+                const date = new Date(r.submittedAt);
+                const slipPreview = r.slipImageUrl || r.slipImageDataUrl;
                 return (
                   <div
                     key={r.id}
@@ -78,7 +79,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="text-lg font-extrabold text-txt">
-                        ฿{TH_NUMBER(r.amount)}
+                        ฿{formatThaiNumber(r.amount)}
                       </div>
                       <span
                         className={`text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap ${s.cls}`}
@@ -92,7 +93,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-xs text-txt-soft">
                         📅{" "}
-                        {dt.toLocaleDateString("th-TH", {
+                        {date.toLocaleDateString("th-TH", {
                           day: "numeric",
                           month: "short",
                           hour: "2-digit",

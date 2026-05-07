@@ -2,29 +2,24 @@
    สร้าง PDF จริงที่ text ค้นหา/copy ได้
    ไม่ใช่ image-based เหมือน html2pdf                          */
 
-import { TH_MONTHS } from "../../constants";
+import { THAI_MONTH_NAMES } from "../../constants";
 
 const COLORS = {
   maroon: "#7B1C1C",
-  maroonDk: "#5C1212",
+  maroonDark: "#5C1212",
   gold: "#C9973A",
-  goldLt: "#E8C87A",
+  goldLight: "#E8C87A",
   goldPale: "#F5E6C8",
   cream: "#FDF8F0",
   text: "#2D1A0E",
-  textMid: "#7A5C3A",
+  textMedium: "#7A5C3A",
   textSoft: "#B89A72",
   border: "#E8D5B0",
   red: "#C0392B",
   green: "#1A6B3A",
 };
 
-const num = (n) =>
-  Number(n || 0).toLocaleString("th-TH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-const NUM = (n) => Number(n || 0).toLocaleString("th-TH");
+const formatNumber = (value) => Number(value || 0).toLocaleString("th-TH");
 
 /**
  * Build pdfmake document definition for salary slip
@@ -32,85 +27,86 @@ const NUM = (n) => Number(n || 0).toLocaleString("th-TH");
  */
 export function buildSalarySlipDocDef({
   profile,
-  empInfo,
-  empRole,
+  employeeInfo,
+  employeeRole,
   data,
-  calc,
+  salaryCalculation,
   poolShare,
-  selMonth,
+  selectedMonth,
   monthApprovedAdvances,
 }) {
-  if (!data || !calc) throw new Error("ไม่มีข้อมูลเงินเดือนเดือนนี้");
+  if (!data || !salaryCalculation) throw new Error("ไม่มีข้อมูลเงินเดือนเดือนนี้");
 
-  const [y, mo] = selMonth.split("-");
-  const monthLabel = `${TH_MONTHS[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+  const [y, mo] = selectedMonth.split("-");
+  const monthLabel = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
   const printDate = new Date().toLocaleDateString("th-TH", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  const empName = profile?.name || empInfo?.name || "-";
-  const empPosition = profile?.role || empInfo?.role || "-";
-  const bank = empInfo?.bank || profile?.bank || "-";
-  const bankAcc = empInfo?.bankAcc || profile?.bankAcc || "-";
+  const employeeName = profile?.name || employeeInfo?.name || "-";
+  const employeePosition = profile?.role || employeeInfo?.role || "-";
+  const bank = employeeInfo?.bank || profile?.bank || "-";
+  const bankAccountNumber =
+    employeeInfo?.bankAccountNumber || profile?.bankAccountNumber || "-";
 
   /* ─── สร้าง earnings rows ─────────────────────────────── */
   const earnRows: [string, string][] = [];
-  earnRows.push(["เงินเดือนพื้นฐาน", num(calc.baseSalary)]);
-  if (calc.isSingle) {
-    if (calc.commSingle > 0)
+  earnRows.push(["เงินเดือนพื้นฐาน", formatNumber(salaryCalculation.baseSalary)]);
+  if (salaryCalculation.usesSinglePieceRate) {
+    if (salaryCalculation.singleRateCommission > 0)
       earnRows.push([
-        `ค่าคอมตามจำนวนชิ้น (${calc.pcsSingle} ชิ้น × ฿${NUM(calc.rSingle)})`,
-        num(calc.commSingle),
+        `ค่าคอมตามจำนวนชิ้น (${salaryCalculation.singleRatePieces} ชิ้น × ฿${formatNumber(salaryCalculation.singlePieceRate)})`,
+        formatNumber(salaryCalculation.singleRateCommission),
       ]);
   } else {
-    if (calc.commNormal > 0)
+    if (salaryCalculation.normalSaleCommission > 0)
       earnRows.push([
-        `ค่าคอมขาย-ทั่วไป (${calc.pcsN.toFixed(1)} ชิ้น × ฿${NUM(calc.rNormal)})`,
-        num(calc.commNormal),
+        `ค่าคอมขาย-ทั่วไป (${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatNumber(salaryCalculation.normalSalePieceRate)})`,
+        formatNumber(salaryCalculation.normalSaleCommission),
       ]);
-    if (calc.commSpecial > 0)
+    if (salaryCalculation.specialSaleCommission > 0)
       earnRows.push([
-        `ค่าคอมขาย-พิเศษ (${calc.pcsS} ชิ้น × ฿${NUM(calc.rSpecial)})`,
-        num(calc.commSpecial),
+        `ค่าคอมขาย-พิเศษ (${salaryCalculation.specialSalePieces} ชิ้น × ฿${formatNumber(salaryCalculation.specialSalePieceRate)})`,
+        formatNumber(salaryCalculation.specialSaleCommission),
       ]);
-    if (calc.commBuy > 0)
+    if (salaryCalculation.buyCommission > 0)
       earnRows.push([
-        `ค่าคอมรับซื้อ (${calc.pcsB.toFixed(1)} ชิ้น × ฿${NUM(calc.rBuy)})`,
-        num(calc.commBuy),
+        `ค่าคอมรับซื้อ (${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatNumber(salaryCalculation.buyPieceRate)})`,
+        formatNumber(salaryCalculation.buyCommission),
       ]);
   }
-  if (calc.commInvite > 0)
+  if (salaryCalculation.inviteCommission > 0)
     earnRows.push([
-      `โบนัสเชิญชวนสมัครบัตร (${calc.pcsI} ใบ × ฿${NUM(calc.rInvite)})`,
-      num(calc.commInvite),
+      `โบนัสเชิญชวนสมัครบัตร (${salaryCalculation.invitePieces} ใบ × ฿${formatNumber(salaryCalculation.invitePieceRate)})`,
+      formatNumber(salaryCalculation.inviteCommission),
     ]);
-  if (calc.commTransfer > 0)
+  if (salaryCalculation.transferCommission > 0)
     earnRows.push([
-      `โบนัสย้ายข้อมูลบัตร (${calc.pcsT} ใบ × ฿${NUM(calc.rTransfer)})`,
-      num(calc.commTransfer),
+      `โบนัสย้ายข้อมูลบัตร (${salaryCalculation.transferPieces} ใบ × ฿${formatNumber(salaryCalculation.transferPieceRate)})`,
+      formatNumber(salaryCalculation.transferCommission),
     ]);
-  if (calc.attendBonus > 0)
+  if (salaryCalculation.attendanceBonus > 0)
     earnRows.push([
-      `โบนัสแห่งความขยัน (${calc.bonusDays} วัน × ฿${NUM(Math.round(calc.dayRate))})`,
-      num(calc.attendBonus),
+      `โบนัสแห่งความขยัน (${salaryCalculation.bonusDays} วัน × ฿${formatNumber(Math.round(salaryCalculation.dailySalaryRate))})`,
+      formatNumber(salaryCalculation.attendanceBonus),
     ]);
 
   /* ─── สร้าง deductions rows ───────────────────────────── */
   const dedRows: [string, string][] = [];
   if (data.lateDeduction > 0)
-    dedRows.push(["มาสาย / ขาดงาน", num(data.lateDeduction)]);
-  if (calc.advanceDed > 0)
+    dedRows.push(["มาสาย / ขาดงาน", formatNumber(data.lateDeduction)]);
+  if (salaryCalculation.advanceDeduction > 0)
     dedRows.push([
       `เบิกล่วงหน้า (${monthApprovedAdvances?.length || 0} รายการ)`,
-      num(calc.advanceDed),
+      formatNumber(salaryCalculation.advanceDeduction),
     ]);
   if (data.socialSecurity > 0)
-    dedRows.push(["ประกันสังคม", num(data.socialSecurity)]);
-  if (calc.overQ > 0)
+    dedRows.push(["ประกันสังคม", formatNumber(data.socialSecurity)]);
+  if (salaryCalculation.overQuotaDeduction > 0)
     dedRows.push([
-      `ลาเกินโควต้า (${calc.wd} วันธรรมดา + ${calc.sun} วันอาทิตย์)`,
-      num(calc.overQ),
+      `ลาเกินโควต้า (${salaryCalculation.weekdayOverQuotaDays} วันธรรมดา + ${salaryCalculation.sundayOverQuotaDays} วันอาทิตย์)`,
+      formatNumber(salaryCalculation.overQuotaDeduction),
     ]);
 
   /* ─── pdfmake doc definition ──────────────────────────── */
@@ -124,7 +120,7 @@ export function buildSalarySlipDocDef({
       lineHeight: 1.3,
     },
     info: {
-      title: `สลิปเงินเดือน — ${empName} ${monthLabel}`,
+      title: `สลิปเงินเดือน — ${employeeName} ${monthLabel}`,
       author: "ห้างเพชรทองมุกดา",
       subject: "Salary Slip",
     },
@@ -146,10 +142,10 @@ export function buildSalarySlipDocDef({
                   {
                     text: "Muktha Jewelry Co., Ltd.",
                     fontSize: 10,
-                    color: COLORS.goldLt,
+                    color: COLORS.goldLight,
                   },
                 ],
-                fillColor: COLORS.maroonDk,
+                fillColor: COLORS.maroonDark,
                 margin: [12, 10, 12, 10],
                 alignment: "center",
               },
@@ -190,9 +186,14 @@ export function buildSalarySlipDocDef({
             width: "*",
             stack: [
               { text: "ชื่อ-นามสกุล", fontSize: 9, color: COLORS.textSoft },
-              { text: empName, fontSize: 13, bold: true, margin: [0, 1, 0, 6] },
+              {
+                text: employeeName,
+                fontSize: 13,
+                bold: true,
+                margin: [0, 1, 0, 6],
+              },
               { text: "ตำแหน่ง", fontSize: 9, color: COLORS.textSoft },
-              { text: empPosition, fontSize: 11, margin: [0, 1, 0, 0] },
+              { text: employeePosition, fontSize: 11, margin: [0, 1, 0, 0] },
             ],
           },
           {
@@ -247,7 +248,7 @@ export function buildSalarySlipDocDef({
                 fillColor: "#E8F5EE",
               },
               {
-                text: num(calc.earnings),
+                text: formatNumber(salaryCalculation.earnings),
                 bold: true,
                 fontSize: 11,
                 color: COLORS.green,
@@ -301,7 +302,7 @@ export function buildSalarySlipDocDef({
                       fillColor: "#FDECEA",
                     },
                     {
-                      text: num(calc.deductions),
+                      text: formatNumber(salaryCalculation.deductions),
                       bold: true,
                       fontSize: 11,
                       color: COLORS.red,
@@ -328,11 +329,11 @@ export function buildSalarySlipDocDef({
                   {
                     text: "เงินเดือนสุทธิ",
                     fontSize: 12,
-                    color: COLORS.goldLt,
+                    color: COLORS.goldLight,
                     alignment: "center",
                   },
                   {
-                    text: `฿${num(calc.net)}`,
+                    text: `฿${formatNumber(salaryCalculation.netSalary)}`,
                     fontSize: 26,
                     bold: true,
                     color: "#FFFFFF",
@@ -364,7 +365,7 @@ export function buildSalarySlipDocDef({
                 margin: [10, 8, 6, 8],
               },
               {
-                text: `${bank}  ${bankAcc}`,
+                text: `${bank}  ${bankAccountNumber}`,
                 fontSize: 11,
                 bold: true,
                 fillColor: COLORS.goldPale,

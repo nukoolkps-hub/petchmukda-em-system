@@ -7,7 +7,7 @@ import { countWorkdays } from "../utils/dateUtils";
 interface UseLeaveFormOptions {
   profileName: string | null;
   allLeaves: LeaveEntry[];
-  empDir: { name: string; balance?: any; used?: any }[];
+  employeeDirectory: { name: string; balance?: any; used?: any }[];
   addLeave: (
     leave: Omit<LeaveEntry, "id">,
   ) => string | number | Promise<string>;
@@ -19,7 +19,7 @@ interface UseLeaveFormOptions {
 export default function useLeaveForm({
   profileName,
   allLeaves,
-  empDir,
+  employeeDirectory,
   addLeave,
   deleteLeave,
   authUid,
@@ -35,9 +35,11 @@ export default function useLeaveForm({
     (lv) => profileName && lv.employeeName === profileName,
   );
 
-  const empEntry = empDir.find((e) => profileName && e.name === profileName);
-  const balance = empEntry?.balance || { personal: 15, sick: 15 };
-  const used = empEntry?.used || { personal: 0, sick: 0 };
+  const employeeEntry = employeeDirectory.find(
+    (e) => profileName && e.name === profileName,
+  );
+  const balance = employeeEntry?.balance || { personal: 15, sick: 15 };
+  const used = employeeEntry?.used || { personal: 0, sick: 0 };
 
   const days = countWorkdays(form.startDate, form.endDate);
   const remain = form.type ? balance[form.type] - used[form.type] : null;
@@ -56,7 +58,11 @@ export default function useLeaveForm({
   }
 
   /* ─── Submit — writes to Firestore ─────────────────────────── */
-  async function submit(profile: { name: string; av: string; avType: string }) {
+  async function submit(profile: {
+    name: string;
+    avatar: string;
+    avatarType: string;
+  }) {
     const e = validate();
     if (Object.keys(e).length) {
       setErrors(e);
