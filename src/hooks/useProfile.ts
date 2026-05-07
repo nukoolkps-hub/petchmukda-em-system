@@ -17,6 +17,7 @@ interface ProfileData {
 interface UseProfileOptions {
   authUser: User | null;
   employeeDirectory: Employee[];
+  isAdmin?: boolean;
   updateEmployee: (
     id: string,
     fields: Partial<Employee>,
@@ -26,19 +27,20 @@ interface UseProfileOptions {
 export default function useProfile({
   authUser,
   employeeDirectory,
+  isAdmin = false,
   updateEmployee,
 }: UseProfileOptions) {
   /* ─── Auth-derived profile ─────────────────────────────────── */
   const authEmployee = useMemo(() => {
-    if (!authUser) return null;
+    if (!authUser || isAdmin) return null;
     const byLineId = employeeDirectory.find(
       (e) => e.lineUserId && e.lineUserId === authUser.uid,
     );
     return byLineId || null;
-  }, [authUser, employeeDirectory]);
+  }, [authUser, employeeDirectory, isAdmin]);
 
   const authDerivedProfile = useMemo(() => {
-    if (!authUser) return null;
+    if (!authUser || isAdmin) return null;
     if (!authEmployee) return null;
     const displayName = authEmployee.name;
     const initials = authEmployee?.avatar || displayName.slice(0, 2);
@@ -52,7 +54,7 @@ export default function useProfile({
       bank: authEmployee?.bank || "",
       bankAccountNumber: authEmployee?.bankAccountNumber || "",
     };
-  }, [authUser, authEmployee]);
+  }, [authUser, authEmployee, isAdmin]);
 
   const [profile, setProfile] = useState<ProfileData | null>(
     authDerivedProfile,
@@ -61,6 +63,11 @@ export default function useProfile({
 
   // Sync profile when auth user changes or resolves to an employee record.
   useEffect(() => {
+    if (isAdmin) {
+      setProfile(null);
+      setShowEditProfile(false);
+      return;
+    }
     if (!authDerivedProfile) return;
     if (
       !profile ||
@@ -70,10 +77,13 @@ export default function useProfile({
     ) {
       setProfile(authDerivedProfile);
     }
-  }, [authDerivedProfile, authEmployee, authUser?.displayName, profile]);
+  }, [authDerivedProfile, authEmployee, authUser?.displayName, isAdmin, profile]);
 
   /* ─── Profile save handler ─────────────────────────────────── */
   async function handleProfileSave(data: any) {
+    if (isAdmin) {
+      throw new Error("ผู้ดูแลระบบไม่มีโปรไฟล์พนักงานให้แก้ไข");
+    }
     if (!authEmployee) {
       throw new Error("ไม่พบข้อมูลพนักงานที่เชื่อมกับบัญชี LINE นี้");
     }
@@ -95,15 +105,16 @@ export default function useProfile({
 
   // keep profile.role in sync when admin updates roles
   useEffect(() => {
+    if (isAdmin) return;
     if (profile) {
       const employee = employeeDirectory.find((e) => e.name === profile.name);
       if (employee && employee.role !== profile.role)
         setProfile((p) => (p ? { ...p, role: employee.role } : p));
     }
-  }, [employeeDirectory, profile?.role, profile?.name, profile]);
+  }, [employeeDirectory, isAdmin, profile?.role, profile?.name, profile]);
 
   // salary disabled check
-  const currentEmployee = authEmployee;
+  const currentEmployee = isAdmin ? null : authEmployee;
   const salaryDisabled = !!currentEmployee?.salaryDisabled;
 
   return {

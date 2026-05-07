@@ -55,12 +55,16 @@ export interface LineAuthPayload {
 }
 
 export interface DevAuthPayload {
-	role: "employee" | "admin";
+	role: "employee" | "admin" | "setup";
 }
 
 export interface SetAdminPayload {
 	uid: string;
 	isAdmin: boolean;
+}
+
+export interface BootstrapAdminPayload {
+	setupSecret: string;
 }
 
 /* ─── LINE Message types (subset used in this project) ────────── */

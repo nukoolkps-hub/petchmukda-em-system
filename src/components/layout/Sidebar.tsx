@@ -1,6 +1,6 @@
 /* ─── Sidebar — Desktop navigation (≥768px) ─────────────────── */
 
-import { IconEdit, IconLogout } from "@tabler/icons-react";
+import { IconEdit, IconLogout, IconShield } from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -10,6 +10,7 @@ import type { NavItem } from "./navConfig";
 
 interface SidebarProps {
   profile: any;
+  isAdmin?: boolean;
   navItems: NavItem[];
   holding: boolean;
   onEditProfile: () => void;
@@ -21,6 +22,7 @@ interface SidebarProps {
 
 export default function Sidebar({
   profile,
+  isAdmin = false,
   navItems,
   holding,
   onEditProfile,
@@ -90,7 +92,21 @@ export default function Sidebar({
           </div>
         </div>
         {/* Profile */}
-        {profile && (
+        {isAdmin ? (
+          <div className="flex items-center gap-3 bg-white/8 border border-gold-lt/15 rounded-[14px] px-3.5 py-2.5 w-full font-[inherit]">
+            <div className="w-10 h-10 rounded-xl bg-gold-lt/15 flex items-center justify-center shrink-0">
+              <IconShield size={21} color={COLORS.goldLight} stroke={2.4} />
+            </div>
+            <div className="text-left flex-1 min-w-0">
+              <div className="text-white font-bold text-sm truncate">
+                ผู้ดูแลระบบ
+              </div>
+              <div className="text-gold-lt/50 text-sm mt-px">
+                จัดการข้อมูลพนักงาน
+              </div>
+            </div>
+          </div>
+        ) : profile ? (
           <button
             onClick={onEditProfile}
             className="flex items-center gap-3 bg-white/8 border border-gold-lt/15 rounded-[14px] px-3.5 py-2.5 w-full cursor-pointer font-[inherit] transition-all duration-200"
@@ -115,8 +131,7 @@ export default function Sidebar({
               <IconEdit size={20} color="#fff" stroke={2.5} />
             </div>
           </button>
-        )}
-        {!profile && (
+        ) : (
           <button
             onClick={onEditProfile}
             className="flex items-center gap-2.5 bg-white/8 border-[1.5px] border-dashed border-gold-lt/30 rounded-[14px] px-3.5 py-2.5 w-full cursor-pointer font-[inherit]"

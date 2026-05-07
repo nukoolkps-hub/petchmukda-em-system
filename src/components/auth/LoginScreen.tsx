@@ -6,8 +6,18 @@
    - Error display with retry
    - Handles LINE callback loading state                     */
 
+import {
+  IconDatabase,
+  IconShield,
+  IconUser,
+  IconUserCog,
+} from "@tabler/icons-react";
 import { useState } from "react";
-import { signInWithDevRole, startLineLogin } from "../../firebase/auth";
+import {
+  type DevRole,
+  signInWithDevRole,
+  startLineLogin,
+} from "../../firebase/auth";
 import Diamond from "../shared/Diamond";
 
 const _LINE_GREEN = "#06C755";
@@ -17,15 +27,19 @@ const USE_EMULATORS =
   import.meta.env.VITE_USE_EMULATORS === "true" ||
   (import.meta.env.VITE_USE_EMULATORS !== "false" && import.meta.env.DEV);
 
+const DEV_LOGIN_ITEMS = [
+  { role: "employee", label: "Employee", icon: IconUser },
+  { role: "admin", label: "Admin", icon: IconShield },
+  { role: "setup", label: "Setup", icon: IconUserCog },
+] as const;
+
 interface LoginScreenProps {
   loading?: boolean;
   error?: string | null;
 }
 
 export default function LoginScreen({ loading, error }: LoginScreenProps) {
-  const [devLoading, setDevLoading] = useState<"employee" | "admin" | null>(
-    null,
-  );
+  const [devLoading, setDevLoading] = useState<DevRole | null>(null);
   const [seedLoading, setSeedLoading] = useState(false);
   const [seedMessage, setSeedMessage] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -49,7 +63,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
   }
 
   /* ─── Dev Login (emulator only) ──────────────────────────── */
-  async function handleDevLogin(role: "employee" | "admin") {
+  async function handleDevLogin(role: DevRole) {
     setDevLoading(role);
     setLocalError(null);
     try {
@@ -215,29 +229,33 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
 
                 {/* Dev Login (emulator mode only) */}
                 {USE_EMULATORS && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { role: "employee" as const, label: "Employee" },
-                      { role: "admin" as const, label: "Admin" },
-                    ].map((item) => (
-                      <button
-                        key={item.role}
-                        className={`login-dev-btn w-full p-3.5 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
-                        onClick={() => handleDevLogin(item.role)}
-                        disabled={!!devLoading || seedLoading}
-                      >
-                        🔧{" "}
-                        {devLoading === item.role
-                          ? "กำลังเข้า..."
-                          : `Login as ${item.label}`}
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-3 gap-2">
+                    {DEV_LOGIN_ITEMS.map((item) => {
+                      const DevIcon = item.icon;
+                      return (
+                        <button
+                          key={item.role}
+                          className={`login-dev-btn min-w-0 w-full p-3 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-xs font-semibold font-[inherit] flex items-center justify-center gap-1.5 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                          onClick={() => handleDevLogin(item.role)}
+                          disabled={!!devLoading || !!seedLoading}
+                          title={`Login as ${item.label}`}
+                        >
+                          <DevIcon size={16} stroke={1.8} aria-hidden="true" />
+                          <span className="truncate">
+                            {devLoading === item.role
+                              ? "กำลังเข้า..."
+                              : item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
                     <button
-                      className={`login-seed-btn col-span-2 w-full p-3.5 bg-gold-lt/8 border border-dashed border-gold-lt/25 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/65 ${seedLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                      className={`login-seed-btn col-span-3 w-full p-3.5 bg-gold-lt/8 border border-dashed border-gold-lt/25 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/65 ${seedLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
                       onClick={handleSeedData}
                       disabled={!!devLoading || seedLoading}
                     >
-                      🌱 {seedLoading ? "กำลัง seed..." : "Seed Data"}
+                      <IconDatabase size={17} stroke={1.8} aria-hidden="true" />
+                      {seedLoading ? "กำลัง seed..." : "Seed Demo"}
                     </button>
                   </div>
                 )}

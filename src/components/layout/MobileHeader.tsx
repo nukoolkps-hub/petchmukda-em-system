@@ -1,6 +1,6 @@
 /* ─── MobileHeader — Mobile top header with profile strip ────── */
 
-import { IconBook2, IconEdit } from "@tabler/icons-react";
+import { IconBook2, IconEdit, IconShield } from "@tabler/icons-react";
 import { useLocation } from "react-router-dom";
 import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -10,6 +10,7 @@ import { PAGE_TITLES } from "./navConfig";
 
 interface MobileHeaderProps {
   profile: any;
+  isAdmin?: boolean;
   holding: boolean;
   onEditProfile: () => void;
   onShowManual: () => void;
@@ -20,6 +21,7 @@ interface MobileHeaderProps {
 
 export default function MobileHeader({
   profile,
+  isAdmin = false,
   holding,
   onEditProfile,
   onShowManual,
@@ -111,7 +113,7 @@ export default function MobileHeader({
       </div>
 
       {/* profile strip */}
-      {tab === "home" && (
+      {tab === "home" && !isAdmin && (
         <div className="flex items-center gap-3.5 mb-4.5 relative">
           {profile ? (
             <button
@@ -157,6 +159,22 @@ export default function MobileHeader({
               </div>
             </button>
           )}
+        </div>
+      )}
+      {tab === "home" && isAdmin && (
+        <div className="flex items-center gap-3.5 mb-4.5 relative">
+          <div className="w-12 h-12 rounded-xl bg-white/12 border border-gold-lt/20 flex items-center justify-center shrink-0">
+            <IconShield size={24} color={COLORS.goldLight} stroke={2.4} />
+          </div>
+          <div className="text-left">
+            <div className="text-gold-lt/50 text-sm">โหมดผู้ดูแล</div>
+            <div className="text-white font-bold text-xl leading-[1.15]">
+              ผู้ดูแลระบบ
+            </div>
+            <div className="text-gold-lt/55 text-sm mt-0.5">
+              จัดการข้อมูลพนักงาน
+            </div>
+          </div>
         </div>
       )}
       {tab !== "home" && <div className="h-2" />}

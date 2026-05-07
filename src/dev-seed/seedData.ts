@@ -1,7 +1,15 @@
 /* ─── Seed data — Initial values for development ───────────────── */
 /* Production: replace with API calls or database. */
 
-export const ALL_LEAVES_INIT = [
+import type {
+  AdvanceRequest,
+  Employee,
+  LeaveEntry,
+  Role,
+  SalaryData,
+} from "../types";
+
+export const ALL_LEAVES_INIT: LeaveEntry[] = [
   // ── เดือนนี้ (เม.ย. 2569) ──
   // กมลวรรณ — ลาธรรมดา 1 + อาทิตย์ 1 (ได้โบนัสหยุดน้อย แต่หักวันอาทิตย์)
   {
@@ -95,8 +103,6 @@ export const ALL_LEAVES_INIT = [
     reason: "งานครอบครัว",
     submitted: "27 เม.ย. 2569 10:00",
   },
-  // นภัส (me) — ไม่ลาเลย → ได้โบนัสหยุดน้อยเต็ม
-
   // ── เดือนที่แล้ว (มี.ค. 2569) ──
   {
     id: 201,
@@ -134,25 +140,7 @@ export const ALL_LEAVES_INIT = [
 ];
 
 // employees directory (admin manages roles)
-export const EMP_DIR_INIT = [
-  {
-    id: "me",
-    name: "นภัส สุขใจ",
-    role: "ฝ่ายบัญชี",
-    roleId: "accountant",
-    avatar: "นส",
-    avatarType: "text",
-    avatarImageUrl: null,
-    bank: "ธนาคารกรุงไทย",
-    bankAccountNumber: "456-7-89012-3",
-    lineUserId: "U9999999999999999999999999999999",
-    balance: { personal: 15, sick: 15 },
-    used: { personal: 0, sick: 0 },
-    baseSalary: 20000,
-    singlePieceRate: 35,
-    invitePieceRate: 0,
-    transferPieceRate: 0,
-  },
+export const EMP_DIR_INIT: Employee[] = [
   {
     id: "e1",
     name: "กมลวรรณ สุขใจ",
@@ -274,90 +262,7 @@ export const EMP_DIR_INIT = [
 ];
 
 /* ─── Salary data per employee per month (YYYY-MM) ──────────────── */
-export const SALARY_INIT = {
-  me: {
-    "2026-05": {
-      baseSalary: 20000,
-      singleRatePieces: 41, // 41 × 35 = 1,435
-      invitePieces: 0,
-      transferPieces: 0,
-      lateDeduction: 0,
-      socialSecurity: 750,
-      note: "Mock data for Dev Login",
-    },
-    "2026-04": {
-      baseSalary: 20000,
-      singleRatePieces: 38, // 38 × 35 = 1,330
-      invitePieces: 0,
-      transferPieces: 0,
-      lateDeduction: 0,
-      socialSecurity: 750,
-      note: "",
-    },
-    "2026-03": {
-      baseSalary: 20000,
-      singleRatePieces: 32,
-      invitePieces: 0,
-      transferPieces: 0,
-      lateDeduction: 0,
-      socialSecurity: 750,
-      note: "",
-    },
-    "2026-02": {
-      baseSalary: 20000,
-      singleRatePieces: 28,
-      invitePieces: 0,
-      transferPieces: 0,
-      lateDeduction: 0,
-      socialSecurity: 750,
-      note: "",
-    },
-    "2026-01": {
-      baseSalary: 20000,
-      singleRatePieces: 35,
-      invitePieces: 0,
-      transferPieces: 0,
-      lateDeduction: 200,
-      socialSecurity: 750,
-      note: "มาสายเช้า 4 ม.ค.",
-    },
-    "2025-12": {
-      baseSalary: 20000,
-      singleRatePieces: 42,
-      invitePieces: 0,
-      transferPieces: 0,
-      lateDeduction: 0,
-      socialSecurity: 750,
-      note: "โบนัสปีใหม่",
-    },
-    "2025-11": {
-      baseSalary: 19000,
-      singleRatePieces: 30,
-      invitePieces: 0,
-      transferPieces: 0,
-      lateDeduction: 0,
-      socialSecurity: 750,
-      note: "",
-    },
-    "2025-10": {
-      baseSalary: 19000,
-      singleRatePieces: 27,
-      invitePieces: 0,
-      transferPieces: 0,
-      lateDeduction: 0,
-      socialSecurity: 750,
-      note: "",
-    },
-    "2025-09": {
-      baseSalary: 19000,
-      singleRatePieces: 25,
-      invitePieces: 0,
-      transferPieces: 0,
-      lateDeduction: 100,
-      socialSecurity: 750,
-      note: "",
-    },
-  },
+export const SALARY_INIT: SalaryData = {
   // ─── ตัวอย่างพนักงานขาย 4 คน — แสดง 4 กรณีของกฎ 80% ──
   // กมลวรรณ = Top ทั้งขายและซื้อ ✅✅
   e1: {
@@ -444,21 +349,7 @@ export const SALARY_INIT = {
 };
 
 /* ─── Advance Requests (เบิกเงินล่วงหน้า) ────────────────────────── */
-export const ADVANCE_REQUESTS_INIT = [
-  // นภัส (me — ฝ่ายบัญชี) — เบิก 1 ครั้ง อนุมัติแล้ว
-  {
-    id: 1000,
-    employeeId: "me",
-    employeeName: "นภัส สุขใจ",
-    amount: 2500,
-    reason: "ค่ารักษาพยาบาล",
-    month: "2026-04",
-    status: "approved",
-    submittedAt: "2026-04-10T11:00:00.000Z",
-    approvedAt: "2026-04-10T13:30:00.000Z",
-    slipImageDataUrl: null,
-  },
-
+export const ADVANCE_REQUESTS_INIT: AdvanceRequest[] = [
   // กมลวรรณ — เดือนนี้ มี 2 รายการ (อนุมัติ 1, รออนุมัติ 1)
   {
     id: 1001,
@@ -544,7 +435,7 @@ export const ADVANCE_REQUESTS_INIT = [
                (รวมชิ้น แล้วแบ่งตามสัดส่วนวันทำงาน)
    ตำแหน่งที่ไม่มี poolGroup (null)
    → ใช้ Rate/ชิ้นเดียว (ค่าคอมแยก ใครขายใครได้)                       */
-export const ROLES_INIT = [
+export const ROLES_INIT: Role[] = [
   { id: "sales", name: "พนักงานขาย", poolGroup: "sales", icon: "💎" },
   { id: "manager", name: "ผู้จัดการสาขา", poolGroup: null, icon: "👔" },
   { id: "goldsmith", name: "ช่างทอง", poolGroup: null, icon: "🛠" },

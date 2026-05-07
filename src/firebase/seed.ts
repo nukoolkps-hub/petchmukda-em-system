@@ -10,13 +10,14 @@
       import('./firebase/seed.js').then(m => m.runDevSeed())
                                                                   */
 import { collection, doc, writeBatch } from "firebase/firestore";
+import type { Employee } from "../types";
 import {
   ADVANCE_REQUESTS_INIT,
   ALL_LEAVES_INIT,
   EMP_DIR_INIT,
   ROLES_INIT,
   SALARY_INIT,
-} from "../seedData";
+} from "../dev-seed/seedData";
 import { COLLECTIONS, db, FIRESTORE_DATABASE_ID } from "./config";
 
 const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID;
@@ -24,9 +25,7 @@ const USE_EMULATORS =
   import.meta.env.VITE_USE_EMULATORS === "true" ||
   (import.meta.env.VITE_USE_EMULATORS !== "false" && import.meta.env.DEV);
 const DEV_EMPLOYEE_UID = "dev_employee";
-const DEV_ADMIN_UID = "dev_admin";
 const DEV_EMPLOYEE_ID = "e3";
-const DEV_ADMIN_EMPLOYEE_ID = "me";
 
 function emulatorBaseUrl() {
   const host =
@@ -81,12 +80,9 @@ function updateWrite(path: string, data: Record<string, unknown>) {
   };
 }
 
-function employeeWithDevLogin(employee: any) {
+function employeeWithDevLogin(employee: Employee) {
   if (employee.id === DEV_EMPLOYEE_ID) {
     return { ...employee, lineUserId: DEV_EMPLOYEE_UID };
-  }
-  if (employee.id === DEV_ADMIN_EMPLOYEE_ID) {
-    return { ...employee, lineUserId: DEV_ADMIN_UID };
   }
   return employee;
 }
@@ -250,7 +246,7 @@ export async function runDevSeed() {
 
   await commitEmulatorWrites(writes);
   console.log(
-    `✅ Seeded ${writes.length} documents to Firestore emulator. Dev employee UID: ${DEV_EMPLOYEE_UID}; dev admin UID: ${DEV_ADMIN_UID}`,
+    `✅ Seeded ${writes.length} documents to Firestore emulator. Dev employee UID: ${DEV_EMPLOYEE_UID}`,
   );
   return writes.length;
 }

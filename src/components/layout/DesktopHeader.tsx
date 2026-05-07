@@ -7,11 +7,13 @@ import { PAGE_TITLES } from "./navConfig";
 
 interface DesktopHeaderProps {
   profile: any;
+  isAdmin?: boolean;
   onShowManual: () => void;
 }
 
 export default function DesktopHeader({
   profile,
+  isAdmin = false,
   onShowManual,
 }: DesktopHeaderProps) {
   const tab = useLocation().pathname.replace("/", "") || "home";
@@ -27,6 +29,11 @@ export default function DesktopHeader({
           {tab === "home" && profile && (
             <div className="text-gold-lt/55 text-sm mt-0.5">
               สวัสดีค่ะ คุณ{profile.name}
+            </div>
+          )}
+          {isAdmin && (
+            <div className="text-gold-lt/55 text-sm mt-0.5">
+              ผู้ดูแลระบบ
             </div>
           )}
         </div>

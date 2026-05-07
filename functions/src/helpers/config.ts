@@ -12,6 +12,20 @@ export function getAppFirestore() {
 	return getFirestore(FIRESTORE_DATABASE_ID);
 }
 
+function nonEmptyEnv(value: string | undefined): string | undefined {
+	const trimmed = value?.trim();
+	return trimmed || undefined;
+}
+
+function getEnvLineConfig(): LineConfig {
+	return {
+		LINE_CHANNEL_ACCESS_TOKEN: nonEmptyEnv(process.env.LINE_CHANNEL_ACCESS_TOKEN),
+		ADMIN_LINE_USER_ID: nonEmptyEnv(process.env.ADMIN_LINE_USER_ID),
+		LINE_LOGIN_CHANNEL_ID: nonEmptyEnv(process.env.LINE_LOGIN_CHANNEL_ID),
+		LINE_LOGIN_CHANNEL_SECRET: nonEmptyEnv(process.env.LINE_LOGIN_CHANNEL_SECRET),
+	};
+}
+
 /* ─── Color palette (LINE Flex Messages) ──────────────────────── */
 export const COLORS = {
 	maroon: "#7B1C1C",
@@ -32,5 +46,8 @@ export const formatThaiNumber = (n: number | string | undefined): string =>
 export async function getLineConfig(): Promise<LineConfig> {
 	const db = getAppFirestore();
 	const doc = await db.doc("config/secrets").get();
-	return (doc.data() as LineConfig) || {};
+	return {
+		...((doc.data() as LineConfig) || {}),
+		...getEnvLineConfig(),
+	};
 }

@@ -1,5 +1,8 @@
 /* ─── Domain Types ──────────────────────────────────────────── */
 
+export type LeaveKind = "personal" | "sick";
+export type LeaveBalance = Record<LeaveKind, number>;
+
 export interface Employee {
   id: string;
   name: string;
@@ -20,13 +23,15 @@ export interface Employee {
   transferPieceRate?: number;
   salaryDisabled?: boolean;
   poolExclusion?: "sell" | "buy" | "both" | "" | null;
+  balance?: LeaveBalance;
+  used?: LeaveBalance;
 }
 
 export interface LeaveEntry {
   id: string | number;
   employeeName: string;
   employeeId: string;
-  type: "personal" | "sick";
+  type: LeaveKind;
   start: string; // YYYY-MM-DD
   end: string; // YYYY-MM-DD
   days: number;
@@ -36,7 +41,7 @@ export interface LeaveEntry {
 }
 
 export interface LeaveType {
-  id: "personal" | "sick";
+  id: LeaveKind;
   label: string;
   icon: string;
   color: string;

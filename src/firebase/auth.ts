@@ -21,6 +21,8 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
 const lineAuthFn = httpsCallable(functions, "lineAuth");
 const devAuthFn = httpsCallable(functions, "devAuth");
 
+export type DevRole = "employee" | "admin" | "setup";
+
 /* ─── Google Sign-in ────────────────────────────────────────── */
 export async function signInWithGoogle() {
   try {
@@ -104,7 +106,7 @@ export async function signInWithLineToken(customToken) {
 }
 
 /* ─── Dev custom token sign-in (emulator only) ─────────────── */
-export async function signInWithDevRole(role: "employee" | "admin") {
+export async function signInWithDevRole(role: DevRole) {
   try {
     const result = await devAuthFn({ role });
     const { customToken } = result.data as { customToken: string };

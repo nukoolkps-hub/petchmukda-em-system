@@ -41,7 +41,8 @@ muktha/
 ├── src/
 │   ├── App.jsx                    ← Main app (data-mode aware)
 │   ├── constants.js               ← COLORS palette, BUSINESS_RULES
-│   ├── seedData.js                ← Initial demo data
+│   ├── dev-seed/
+│   │   └── seedData.ts            ← Initial demo employee data
 │   │
 │   ├── data/                      ← 🆕 Data abstraction
 │   │   ├── useAppData.js          ← Auto-pick: in-memory or Firebase
@@ -154,6 +155,11 @@ useEffect(() => {
 
 ## 🛠 Admin Promotion (Firebase mode)
 
+### First admin bootstrap
+Set `ADMIN_BOOTSTRAP_SECRET` in the Cloud Functions runtime. Then sign in, open the hidden first-admin setup on the unlinked account screen, and enter that secret. Bootstrap promotes the current Firebase UID with the `admin` custom claim and does not create an employee record.
+
+Local emulator tip: use the dev `Setup` login for this flow. `Employee` is reserved for the seeded employee UID and should be used after `Seed Demo`.
+
 ### ผ่าน UI
 Admin Panel → Manage Users → Set Admin
 
@@ -201,8 +207,10 @@ VITE_LINE_LOGIN_CHANNEL_ID=...
 VITE_BACKEND_URL=https://your-backend.railway.app
 ```
 
-### Backend (`backend/.env`)
+### Cloud Functions (`functions/.env` for emulator, runtime env for deploy)
 ```env
+ADMIN_BOOTSTRAP_SECRET=change-this-long-random-value
+
 LINE_CHANNEL_ACCESS_TOKEN=...
 LINE_CHANNEL_SECRET=...
 ADMIN_LINE_USER_ID=U...

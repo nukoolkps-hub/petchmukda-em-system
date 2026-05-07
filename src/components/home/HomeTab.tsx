@@ -181,7 +181,7 @@ export default function HomeTab({
           ...(profile && !employeeDirectory.find((e) => e.name === profile.name)
             ? [
                 {
-                  id: "me",
+                  id: "current",
                   name: profile.name,
                   avatar: profile.avatar,
                   avatarType: profile.avatarType,

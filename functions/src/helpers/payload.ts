@@ -4,6 +4,7 @@
 
 import { HttpsError } from "firebase-functions/v2/https";
 import type {
+	BootstrapAdminPayload,
 	DevAuthPayload,
 	LineAuthPayload,
 	NotifyAdvanceApprovedPayload,
@@ -163,7 +164,7 @@ export function parseLineAuthPayload(value: unknown): LineAuthPayload {
 export function parseDevAuthPayload(value: unknown): DevAuthPayload {
 	const data = asRecord(value);
 	const role = requiredString(data, "role");
-	if (role !== "employee" && role !== "admin") {
+	if (role !== "employee" && role !== "admin" && role !== "setup") {
 		invalid("Invalid dev role");
 	}
 	return { role };
@@ -177,5 +178,14 @@ export function parseSetAdminPayload(value: unknown): SetAdminPayload {
 	return {
 		uid: requiredString(data, "uid"),
 		isAdmin: data.isAdmin,
+	};
+}
+
+export function parseBootstrapAdminPayload(
+	value: unknown,
+): BootstrapAdminPayload {
+	const data = asRecord(value);
+	return {
+		setupSecret: requiredString(data, "setupSecret"),
 	};
 }
