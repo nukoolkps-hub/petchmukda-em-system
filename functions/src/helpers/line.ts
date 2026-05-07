@@ -24,3 +24,28 @@ export async function pushLineMessage(
 		}),
 	});
 }
+
+/**
+ * Reply to a LINE webhook event.
+ */
+export async function replyLineMessage(
+	token: string,
+	replyToken: string,
+	messages: LinePushMessage | LinePushMessage[],
+): Promise<void> {
+	const response = await fetch("https://api.line.me/v2/bot/message/reply", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${token}`,
+		},
+		body: JSON.stringify({
+			replyToken,
+			messages: Array.isArray(messages) ? messages : [messages],
+		}),
+	});
+
+	if (!response.ok) {
+		console.error("LINE reply failed:", response.status, await response.text());
+	}
+}

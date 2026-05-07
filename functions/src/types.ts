@@ -5,6 +5,7 @@
 /* ─── LINE config stored in Firestore /config/secrets ─────────── */
 export interface LineConfig {
 	LINE_CHANNEL_ACCESS_TOKEN?: string;
+	LINE_CHANNEL_SECRET?: string;
 	ADMIN_LINE_USER_ID?: string;
 	LINE_LOGIN_CHANNEL_ID?: string;
 	LINE_LOGIN_CHANNEL_SECRET?: string;

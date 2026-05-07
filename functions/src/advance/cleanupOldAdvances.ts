@@ -19,7 +19,9 @@ export const cleanupOldAdvances = onSchedule(
 			.get();
 
 		const batch = db.batch();
-		snap.docs.forEach((doc) => batch.delete(doc.ref));
+		for (const doc of snap.docs) {
+			batch.delete(doc.ref);
+		}
 		await batch.commit();
 		console.log(`[cleanupOldAdvances] Deleted ${snap.size} old advances`);
 	},

@@ -12,7 +12,7 @@ export async function saveSlipToStorage(
 	dataURL: string | undefined,
 	requestId: string | number,
 ): Promise<string | null> {
-	if (!dataURL || !dataURL.startsWith("data:image/")) return null;
+	if (!dataURL?.startsWith("data:image/")) return null;
 
 	const m = dataURL.match(/^data:(image\/\w+);base64,(.+)$/);
 	if (!m) return null;

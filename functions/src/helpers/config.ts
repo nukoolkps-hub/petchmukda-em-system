@@ -19,10 +19,15 @@ function nonEmptyEnv(value: string | undefined): string | undefined {
 
 function getEnvLineConfig(): LineConfig {
 	return {
-		LINE_CHANNEL_ACCESS_TOKEN: nonEmptyEnv(process.env.LINE_CHANNEL_ACCESS_TOKEN),
+		LINE_CHANNEL_ACCESS_TOKEN: nonEmptyEnv(
+			process.env.LINE_CHANNEL_ACCESS_TOKEN,
+		),
+		LINE_CHANNEL_SECRET: nonEmptyEnv(process.env.LINE_CHANNEL_SECRET),
 		ADMIN_LINE_USER_ID: nonEmptyEnv(process.env.ADMIN_LINE_USER_ID),
 		LINE_LOGIN_CHANNEL_ID: nonEmptyEnv(process.env.LINE_LOGIN_CHANNEL_ID),
-		LINE_LOGIN_CHANNEL_SECRET: nonEmptyEnv(process.env.LINE_LOGIN_CHANNEL_SECRET),
+		LINE_LOGIN_CHANNEL_SECRET: nonEmptyEnv(
+			process.env.LINE_LOGIN_CHANNEL_SECRET,
+		),
 	};
 }
 
