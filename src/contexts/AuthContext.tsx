@@ -11,6 +11,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [handlingCallback, setHandlingCallback] = useState(false);
+  const lineCallbackHandledRef = useRef(false);
 
   /* ─── Listen to auth state ────────────────────────────────── */
   useEffect(() => {
@@ -59,7 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const state = params.get("state");
 
     // If URL has ?code=, this is a LINE Login callback
-    if (code && state && !handlingCallback) {
+    if (code && state && !handlingCallback && !lineCallbackHandledRef.current) {
+      lineCallbackHandledRef.current = true;
       setHandlingCallback(true);
       setLoading(true);
       setError(null);
