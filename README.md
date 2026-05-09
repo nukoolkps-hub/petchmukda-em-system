@@ -187,16 +187,27 @@ employee-linking flow before they can log in.
 
 ## ⚙️ Environment Variables
 
-### Frontend (`.env.local`)
+### Frontend (`.env.development.local`, `.env.production.local`)
 ```env
-# Optional: defaults to emulators in dev
+# Local dev can set this true; production should set false or omit it.
 VITE_USE_EMULATORS=true
 VITE_LINE_LOGIN_CHANNEL_ID=...
 ```
 
+`VITE_*` values are baked into the Vite bundle at build time, so production
+Hosting deploys need `VITE_LINE_LOGIN_CHANNEL_ID` available before
+`npm run build`.
+
 Firebase web config is checked in at `src/firebase/firebaseConfig.json`.
 
-### Cloud Functions (`functions/.env` for emulator, runtime env for deploy)
+### Cloud Functions
+
+Production LINE runtime config lives in Firestore:
+
+```text
+config/secrets
+```
+
 ```env
 LINE_CHANNEL_ACCESS_TOKEN=...
 LINE_CHANNEL_SECRET=...
@@ -204,13 +215,25 @@ ADMIN_LINE_USER_ID=U...
 
 LINE_LOGIN_CHANNEL_ID=...
 LINE_LOGIN_CHANNEL_SECRET=...
-
-FIREBASE_SERVICE_ACCOUNT_PATH=./service-account.json
-
-PUBLIC_BASE_URL=https://your-backend.railway.app
-PORT=3000
-NODE_ENV=production
 ```
+
+Cloud Functions read this document with the Admin SDK. Client Firestore rules
+explicitly deny access to `/config/*`.
+
+In local emulator mode, the login screen has separate `Seed Demo` and
+`Seed LINE Config` actions. `Seed LINE Config` copies any non-empty LINE values
+from `functions/.env` into `config/secrets`. Runtime Functions still read only
+Firestore.
+
+`functions/.env` can also keep non-LINE function settings:
+
+```env
+FIRESTORE_DATABASE_ID=petchmukda-bot
+ADMIN_BOOTSTRAP_SECRET=...
+```
+
+Local emulator demo seed data does not touch `config/secrets`. Use
+`Seed LINE Config` when you want local LINE credentials from `functions/.env`.
 
 ---
 

@@ -20,8 +20,18 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
 
 const lineAuthFn = httpsCallable(functions, "lineAuth");
 const devAuthFn = httpsCallable(functions, "devAuth");
+const seedLineConfigFromEnvFn = httpsCallable(
+  functions,
+  "seedLineConfigFromEnv",
+);
 
 export type DevRole = "employee" | "admin" | "setup";
+
+export type SeedLineConfigResult = {
+  ok: boolean;
+  skipped?: boolean;
+  seededKeys: string[];
+};
 
 /* ─── Google Sign-in ────────────────────────────────────────── */
 export async function signInWithGoogle() {
@@ -116,6 +126,12 @@ export async function signInWithDevRole(role: DevRole) {
     console.error("[Auth] Dev role sign-in failed:", err);
     throw new Error("Dev Login ไม่สำเร็จ — ตรวจสอบว่า Functions Emulator เปิดอยู่");
   }
+}
+
+/* ─── Dev env → Firestore config seed (emulator only) ────────── */
+export async function seedLineConfigFromEnv() {
+  const result = await seedLineConfigFromEnvFn();
+  return result.data as SeedLineConfigResult;
 }
 
 /* ─── Email/Password (Admin) ────────────────────────────────── */

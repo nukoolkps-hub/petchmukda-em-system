@@ -1,204 +1,118 @@
-# 🔥 Firebase Setup Guide — ระบบพนักงานห้างเพชรทองมุกดา
+# Firebase Setup
 
-คู่มือการตั้งค่า Firebase สำหรับโปรเจกต์นี้ ตั้งแต่ศูนย์
+This project is already connected to Firebase. Use this file as the current
+operational checklist, not a from-scratch setup guide.
 
----
+## Current State
 
-## 📋 Checklist
+- Firebase project: `petchmukda-bot`
+- Firestore database ID: `petchmukda-bot`
+- Firebase web config: `src/firebase/firebaseConfig.json`
+- Project aliases: `.firebaserc`
+- Firestore rules/indexes: `firestore.rules`, `firestore.indexes.json`
+- Storage rules: `storage.rules`
+- Production auth path: LINE Login -> Cloud Function -> Firebase custom token
+- Local auth path: Firebase Auth emulator with dev login buttons
 
-- [ ] สร้าง Firebase Project
-- [ ] เปิดใช้ Firestore Database
-- [ ] เปิดใช้ Authentication (ใช้ Firebase Custom Token จาก LINE Login)
-- [ ] คัดลอก Config → `src/firebase/firebaseConfig.json`
-- [ ] วาง Security Rules
-- [ ] รัน Migration Script
-- [ ] เชื่อม `App.jsx` กับ Firebase hooks
+Google Sign-in is not part of the current setup. Do not enable or document it
+for this project.
 
----
+## Deploy Rules From This Repo
 
-## 1️⃣ สร้าง Firebase Project
+You do not need to copy/paste rules into the Firebase Console. `firebase.json`
+already points Firebase CLI at the local rules and index files.
 
-1. ไปที่ https://console.firebase.google.com
-2. คลิก **"Add project"** → ตั้งชื่อ (เช่น `muktha-employee-system`)
-3. ปิด Google Analytics (ถ้าไม่ต้องใช้)
-4. รอจนสร้างเสร็จ
+First check that the CLI is logged in and using the right project:
 
-## 2️⃣ เปิดใช้ Firestore
-
-1. ใน Firebase Console → **Build > Firestore Database**
-2. คลิก **"Create database"**
-3. ตั้ง **Database ID** เป็น **`petchmukda-bot`**
-4. เลือก **"Start in production mode"**
-5. เลือก location: **`asia-southeast1`** (สิงคโปร์ — เร็วที่สุดสำหรับไทย)
-
-## 3️⃣ เปิดใช้ Authentication
-
-1. **Build > Authentication > Get started**
-2. ไม่ต้องเปิด Email/Password สำหรับ admin ใน production path นี้
-3. (Optional) เพิ่ม **Authorized domains** ถ้า deploy ที่อื่น
-4. LINE Login จะเข้า Firebase Auth ผ่าน Cloud Function ที่สร้าง custom token
-
-## 4️⃣ ดึง Firebase Config
-
-1. **Project Settings (⚙️) > General > Your apps**
-2. คลิก **"</>"** เพื่อสร้าง Web app
-3. ตั้งชื่อ (เช่น `muktha-web`)
-4. คัดลอก `firebaseConfig` object
-5. วางค่าจริงใน `production.firebaseConfig` ของ `src/firebase/firebaseConfig.json`
-
-```json
-{
-  "production": {
-    "firebaseConfig": {
-      "apiKey": "AIzaSy...",
-      "authDomain": "muktha-xxx.firebaseapp.com",
-      "projectId": "muktha-xxx",
-      "storageBucket": "muktha-xxx.firebasestorage.app",
-      "messagingSenderId": "123456789",
-      "appId": "1:123:web:abc..."
-    },
-    "firestoreDatabaseId": "petchmukda-bot"
-  }
-}
+```bash
+npx -y firebase-tools@latest login
+npx -y firebase-tools@latest use
 ```
 
-ตอน `npm run dev` แอปจะใช้ `development` config ที่เป็น mock project และต่อเข้า Firebase emulators อัตโนมัติ ส่วน production build จะใช้ `production` config
+Deploy Firestore rules/indexes and Storage rules:
 
-## 5️⃣ ติดตั้ง Security Rules
-
-1. Firebase Console → **Firestore > Rules tab**
-2. คัดลอกเนื้อหาจากไฟล์ `firestore.rules` มาวาง
-3. คลิก **"Publish"**
-
-## 6️⃣ รัน Migration Script (Seed Data)
-
-> ⚠️ **ทำครั้งเดียวเท่านั้น** — ถ้ารันซ้ำจะ overwrite ข้อมูลเดิม
-
-**วิธีที่ 1: ใน Browser Console**
-
-หลัง app load แล้ว:
-```js
-// เปิด DevTools console (F12)
-import('/src/firebase/seed.js').then(m => m.runSeed());
+```bash
+npx -y firebase-tools@latest deploy --only firestore,storage --project petchmukda-bot
 ```
 
-**วิธีที่ 2: เพิ่มปุ่มชั่วคราวใน Admin Panel**
+Run a dry run first when you want validation without changing production:
 
-```jsx
-import { runSeed } from "./firebase/seed";
-
-<button onClick={async () => {
-  if(confirm("Seed data ลง Firestore?")) {
-    await runSeed();
-    alert("✅ Seeded!");
-  }
-}}>🌱 Seed</button>
+```bash
+npx -y firebase-tools@latest deploy --only firestore,storage --project petchmukda-bot --dry-run
 ```
 
-## 7️⃣ เชื่อม App.jsx กับ Firebase
+Console copy/paste should be treated as a fallback only, because it can drift
+from the repo.
 
-ดูตัวอย่างที่ `MIGRATION_GUIDE.md`
+## Deploy App And Functions
 
----
+Build the web app before deploying Hosting:
 
-## 🗂 Schema (Firestore Collections)
-
-```
-employees/{employeeId}
-├─ name, role, roleId, avatar, avatarType, avatarImageUrl
-├─ bank, bankAccountNumber, lineUserId
-├─ baseSalary, singlePieceRate*
-└─ poolExclusion, salaryDisabled
-
-leaves/{leaveId}                    ← auto ID
-├─ employeeId, employeeName, type, start, end
-└─ days, reason, submitted
-
-salaries/{employeeId}/months/{yearMonth}        ← nested
-├─ baseSalary, singleRatePieces, normalSalePieces, lateDeduction
-└─ socialSecurity, note
-
-advances/{advanceId}                ← auto ID
-├─ employeeId, employeeName, amount, reason
-├─ month, status: pending|approved|rejected
-└─ submittedAt, approvedAt, slipImageDataUrl (base64)
-
-roles/{roleId}
-├─ name, poolGroup, icon
-
-payrollConfirms/{ym_empId}          ← e.g. "2026-04_e1"
-└─ confirmed: boolean
+```bash
+npm run build
+npx -y firebase-tools@latest deploy --only hosting --project petchmukda-bot
 ```
 
----
+Deploy Cloud Functions:
 
-## 🔐 Authentication Flow
-
-### Google Sign-in (พร้อมใช้)
-```jsx
-import { signInWithGoogle } from "./firebase/auth";
-
-<button onClick={async () => {
-  try {
-    await signInWithGoogle();
-  } catch(err) {
-    alert(err.message);
-  }
-}}>เข้าสู่ระบบด้วย Google</button>
+```bash
+npx -y firebase-tools@latest deploy --only functions --project petchmukda-bot
 ```
 
-### LINE Login + Admin
+Deploy everything configured in `firebase.json`:
 
-1. ตั้งค่า LINE Login channel ใน LINE Developers Console
-2. ใส่ `VITE_LINE_LOGIN_CHANNEL_ID` ใน `.env.local`
-3. ใส่ `LINE_LOGIN_CHANNEL_ID` และ `LINE_LOGIN_CHANNEL_SECRET` ใน Functions env หรือ Firestore `/config/secrets`
-4. ให้ admin ส่ง `ไอดีฉัน` ในแชทส่วนตัวกับบอท
-5. ใส่ LINE user ID ที่ได้เป็น `ADMIN_LINE_USER_ID`
-6. Admin เข้าเว็บด้วยปุ่ม `Login ด้วย LINE`
+```bash
+npm run build
+npx -y firebase-tools@latest deploy --project petchmukda-bot
+```
 
-บัญชี admin ไม่ต้องมีเอกสารใน `employees`; พนักงานทั่วไปยังต้องถูกเชื่อมด้วย LINE webhook ก่อน login ได้
+## Local Development
 
----
+Start the Firebase emulators and Vite dev server:
 
-## 🚦 Phase Migration Plan
+```bash
+npm run dev
+```
 
-| Phase | งาน | สถานะ |
-|---|---|---|
-| 1 | Firebase config + adapter layer | ✅ พร้อม |
-| 2 | React hooks (`useEmployees`, ฯลฯ) | ✅ พร้อม |
-| 3 | Migration script (seed) | ✅ พร้อม |
-| 4 | Security rules | ✅ พร้อม |
-| 5 | เชื่อม `App.jsx` ใช้ hooks แทน in-memory | ⏳ TODO |
-| 6 | LINE Login backend integration | ⏳ TODO |
-| 7 | Image upload (avatar/slip) เป็น base64 | ⏳ TODO |
+The dev script starts Auth, Firestore, Functions, and Storage emulators, then
+runs the app with emulator connections enabled. The login screen shows dev login
+buttons only in emulator/dev mode.
 
----
+For emulator demo data, use the seed button on the dev login screen. Do not run
+the production seed helper unless you intentionally want to write the initial
+seed data into the live Firestore database.
 
-## 💡 Tips
+## Auth Notes
 
-- **ใช้ Firestore Emulator** ในการทดสอบเพื่อไม่กิน quota:
-  ```bash
-  npm install -g firebase-tools
-  firebase init emulators
-  firebase emulators:start
-  ```
-- **ตรวจ quota:** Firebase Console → Usage tab
-- **Free tier limits:** 50K reads, 20K writes, 1GB storage/day
-- **Backup:** ตั้ง scheduled export → Cloud Storage
-- **Real-time แค่ที่จำเป็น** — `getDocs()` (one-time) ถ้าไม่ต้องการ real-time
+- Production users sign in with LINE Login only.
+- `VITE_LINE_LOGIN_CHANNEL_ID` is the frontend LINE Login channel ID.
+- `lineAuth` exchanges the LINE auth code for a Firebase custom token.
+- `ADMIN_LINE_USER_ID` identifies the configured admin LINE account.
+- Employee access depends on `employees/{employeeId}.lineUserId` matching the
+  Firebase Auth `uid`.
+- Admin access depends on the Firebase custom claim `admin: true`.
 
----
+If LINE credentials or admin LINE user IDs change, update Firestore
+`config/secrets`. A Functions redeploy is only needed when you change function
+code or non-LINE runtime env.
 
-## ❓ Troubleshooting
+## Troubleshooting
 
-### "Missing or insufficient permissions"
-→ ตรวจ Security Rules ว่า publish แล้วยัง
+### Missing or insufficient permissions
 
-### "Failed to get document because the client is offline"
-→ ปกติเมื่อ refresh ตอน initial load — Firebase จะ retry ให้
+Deploy the current rules from this repo, then check the signed-in user's
+`lineUserId` link or `admin` custom claim.
 
-### "Quota exceeded"
-→ ลด `subscribe*` ที่ไม่จำเป็น → ใช้ one-time `get*` แทน
+### LINE Login says channel ID is missing
 
-### LINE Login "auth/invalid-custom-token"
-→ Custom token ที่ backend สร้างต้องมี `audience` ตรง project
+Set `VITE_LINE_LOGIN_CHANNEL_ID` in `.env.local`, then restart the dev server.
+
+### `auth/invalid-custom-token`
+
+Check that Functions are deployed to `petchmukda-bot`, LINE Login credentials
+are current, and the custom token is created by the same Firebase project.
+
+### Storage upload denied
+
+Deploy `storage.rules`, confirm the user is signed in, and confirm the uploaded
+file is an image under 8 MB.

@@ -15,6 +15,7 @@ import {
 import { useState } from "react";
 import {
   type DevRole,
+  seedLineConfigFromEnv,
   signInWithDevRole,
   startLineLogin,
 } from "../../firebase/auth";
@@ -41,6 +42,7 @@ interface LoginScreenProps {
 export default function LoginScreen({ loading, error }: LoginScreenProps) {
   const [devLoading, setDevLoading] = useState<DevRole | null>(null);
   const [seedLoading, setSeedLoading] = useState(false);
+  const [lineConfigLoading, setLineConfigLoading] = useState(false);
   const [seedMessage, setSeedMessage] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -91,6 +93,25 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
       setLocalError(`Seed data ไม่สำเร็จ: ${(err as Error).message}`);
     } finally {
       setSeedLoading(false);
+    }
+  }
+
+  async function handleSeedLineConfig() {
+    setLineConfigLoading(true);
+    setLocalError(null);
+    setSeedMessage(null);
+    try {
+      const lineConfig = await seedLineConfigFromEnv();
+      if (lineConfig.seededKeys.length === 0) {
+        setSeedMessage("ไม่พบ LINE config ใน functions/.env");
+        return;
+      }
+      setSeedMessage(`Seed LINE config สำเร็จ (${lineConfig.seededKeys.length} keys)`);
+    } catch (err: unknown) {
+      console.error("[Seed LINE Config] error:", err);
+      setLocalError(`Seed LINE config ไม่สำเร็จ: ${(err as Error).message}`);
+    } finally {
+      setLineConfigLoading(false);
     }
   }
 
@@ -237,7 +258,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
                           key={item.role}
                           className={`login-dev-btn min-w-0 w-full p-3 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-xs font-semibold font-[inherit] flex items-center justify-center gap-1.5 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
                           onClick={() => handleDevLogin(item.role)}
-                          disabled={!!devLoading || !!seedLoading}
+                          disabled={!!devLoading || seedLoading || lineConfigLoading}
                           title={`Login as ${item.label}`}
                         >
                           <DevIcon size={16} stroke={1.8} aria-hidden="true" />
@@ -252,10 +273,20 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
                     <button
                       className={`login-seed-btn col-span-3 w-full p-3.5 bg-gold-lt/8 border border-dashed border-gold-lt/25 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/65 ${seedLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
                       onClick={handleSeedData}
-                      disabled={!!devLoading || seedLoading}
+                      disabled={!!devLoading || seedLoading || lineConfigLoading}
                     >
                       <IconDatabase size={17} stroke={1.8} aria-hidden="true" />
                       {seedLoading ? "กำลัง seed..." : "Seed Demo"}
+                    </button>
+                    <button
+                      className={`login-seed-btn col-span-3 w-full p-3.5 bg-white/6 border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/60 ${lineConfigLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                      onClick={handleSeedLineConfig}
+                      disabled={!!devLoading || seedLoading || lineConfigLoading}
+                    >
+                      <IconDatabase size={17} stroke={1.8} aria-hidden="true" />
+                      {lineConfigLoading
+                        ? "กำลัง seed LINE..."
+                        : "Seed LINE Config"}
                     </button>
                   </div>
                 )}

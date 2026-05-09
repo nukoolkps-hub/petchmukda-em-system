@@ -150,6 +150,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ─── Server-side config/secrets ─────────────────────────────
+    // Cloud Functions use the Admin SDK and bypass rules. Clients should never
+    // read or write runtime secrets, even if future rules become broader.
+    match /config/{document} {
+      allow read, write: if false;
+    }
+
     // ─── Payroll Confirms ────────────────────────────────────────
     // เฉพาะ admin
     match /payrollConfirms/{key} {

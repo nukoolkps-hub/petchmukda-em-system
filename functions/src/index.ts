@@ -18,6 +18,7 @@ export { onAdvanceCreated } from "./advance/onAdvanceCreated.js";
 export { bootstrapAdmin } from "./auth/bootstrapAdmin.js";
 export { devAuth } from "./auth/devAuth.js";
 export { lineAuth } from "./auth/lineAuth.js";
+export { seedLineConfigFromEnv } from "./auth/seedLineConfigFromEnv.js";
 export { setAdmin } from "./auth/setAdmin.js";
 
 // LINE webhook
