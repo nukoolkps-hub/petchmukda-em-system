@@ -4,8 +4,11 @@
 
 import { getAuth } from "firebase-admin/auth";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { getLineConfig } from "../helpers/config.js";
+import { getAppFirestore, getLineConfig } from "../helpers/config.js";
 import { parseLineAuthPayload } from "../helpers/payload.js";
+
+const UNPROVISIONED_LINE_USER_MESSAGE =
+	"บัญชี LINE นี้ยังไม่ได้ถูกเพิ่มโดยผู้ดูแลระบบ";
 
 export const lineAuth = onCall(async (request) => {
 	const { code, redirectUri } = parseLineAuthPayload(request.data);
@@ -48,8 +51,27 @@ export const lineAuth = onCall(async (request) => {
 		throw new HttpsError("unauthenticated", "Failed to get LINE profile");
 	}
 
-	// 3. Create Firebase Custom Token
-	const customToken = await getAuth().createCustomToken(profile.userId, {
+	const auth = getAuth();
+	try {
+		await auth.getUser(profile.userId);
+	} catch (error) {
+		if ((error as { code?: string }).code === "auth/user-not-found") {
+			throw new HttpsError("permission-denied", UNPROVISIONED_LINE_USER_MESSAGE);
+		}
+		throw error;
+	}
+
+	const employeeSnapshot = await getAppFirestore()
+		.collection("employees")
+		.where("lineUserId", "==", profile.userId)
+		.limit(1)
+		.get();
+	if (employeeSnapshot.empty) {
+		throw new HttpsError("permission-denied", UNPROVISIONED_LINE_USER_MESSAGE);
+	}
+
+	// 3. Create Firebase Custom Token for a provisioned LINE user
+	const customToken = await auth.createCustomToken(profile.userId, {
 		provider: "line",
 		displayName: profile.displayName,
 		pictureUrl: profile.pictureUrl,
