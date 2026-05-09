@@ -29,8 +29,16 @@
       "collectionGroup": "advances",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "empId", "order": "ASCENDING" },
+        { "fieldPath": "employeeId", "order": "ASCENDING" },
         { "fieldPath": "submittedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "advances",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "submittedAt", "order": "ASCENDING" }
       ]
     }
   ],

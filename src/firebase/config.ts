@@ -48,7 +48,7 @@ if (missingKeys.length > 0) {
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, FIRESTORE_DATABASE_ID);
 export const auth = getAuth(app);
-export const functions = getFunctions(app);
+export const functions = getFunctions(app, "asia-southeast1");
 export const storage = getStorage(app);
 
 /* ─── Emulator connections (dev only) ──────────────────────────

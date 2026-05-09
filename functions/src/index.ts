@@ -4,15 +4,19 @@
  */
 
 import { initializeApp } from "firebase-admin/app";
+import { setGlobalOptions } from "firebase-functions/v2";
 
 initializeApp();
+setGlobalOptions({ region: "asia-southeast1" });
 
 export { cleanupOldAdvances } from "./advance/cleanupOldAdvances.js";
 export { notifyAdvanceApproved } from "./advance/notifyApproved.js";
 export { notifyAdvanceRejected } from "./advance/notifyRejected.js";
 // Advance requests
 export { notifyAdvanceRequest } from "./advance/notifyRequest.js";
-export { onAdvanceCreated } from "./advance/onAdvanceCreated.js";
+// Firestore triggers are not exported because this project's Firestore
+// database is in asia-southeast3, which is not currently supported by
+// Cloud Functions/Eventarc.
 
 // Authentication
 export { bootstrapAdmin } from "./auth/bootstrapAdmin.js";
@@ -24,5 +28,3 @@ export { setAdmin } from "./auth/setAdmin.js";
 // LINE webhook
 export { lineWebhook } from "./line/webhook.js";
 export { monthlyPayrollSummary } from "./payroll/monthlyPayrollSummary.js";
-// Payroll & leave
-export { onLeaveCreated } from "./payroll/onLeaveCreated.js";
