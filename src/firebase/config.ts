@@ -1,40 +1,47 @@
 /* ─── Firebase Configuration ────────────────────────────────────
-   อ่าน config จาก environment variables (.env file)
-   - dev: ใช้ค่าจาก .env.local ที่ไม่ commit ลง git
-   - prod: ตั้งบน hosting environment (Vercel, Netlify, ฯลฯ)
+   อ่าน config จาก JSON file
+   - dev: ใช้ mock Firebase project สำหรับ emulator
+   - prod: ใช้ Firebase project จริง
 
    วิธีใช้:
-   1. คัดลอก .env.example → .env.local
-   2. ใส่ค่า Firebase config (จาก Firebase Console > Project Settings)
-   3. รัน npm run dev                                              */
+   1. แก้ค่าที่ src/firebase/firebaseConfig.json
+   2. รัน npm run dev                                              */
 
-import { initializeApp } from "firebase/app";
+import { type FirebaseOptions, initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
+import firebaseConfigs from "./firebaseConfig.json";
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+type FirebaseRuntimeConfig = {
+  firebaseConfig: FirebaseOptions;
+  firestoreDatabaseId: string;
 };
 
-export const FIRESTORE_DATABASE_ID =
-  import.meta.env.VITE_FIRESTORE_DATABASE_ID || "petchmukda-bot";
+const firebaseRuntimeConfig: FirebaseRuntimeConfig = import.meta.env.PROD
+  ? firebaseConfigs.production
+  : firebaseConfigs.development;
 
-// Validate config — warn user ถ้าลืมตั้งค่า
-const missingKeys = Object.entries(firebaseConfig)
-  .filter(([_, v]) => !v)
-  .map(([k]) => k);
+export const firebaseConfig = firebaseRuntimeConfig.firebaseConfig;
+export const FIRESTORE_DATABASE_ID = firebaseRuntimeConfig.firestoreDatabaseId;
+export const FIREBASE_PROJECT_ID = firebaseConfig.projectId || "";
+
+// Validate config — warn user ถ้าลืมตั้งค่าใน JSON
+const requiredFirebaseKeys = [
+  "apiKey",
+  "authDomain",
+  "projectId",
+  "storageBucket",
+  "messagingSenderId",
+  "appId",
+] as const;
+const missingKeys = requiredFirebaseKeys.filter((key) => !firebaseConfig[key]);
 if (missingKeys.length > 0) {
   console.warn(
     "[Firebase] Missing config keys:",
     missingKeys,
-    "\nสร้าง .env.local จาก .env.example แล้วใส่ค่า Firebase Config",
+    "\nตรวจสอบ src/firebase/firebaseConfig.json",
   );
 }
 

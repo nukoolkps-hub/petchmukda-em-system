@@ -2,7 +2,7 @@
    อัพโหลด seed data → Firestore
 
    วิธีใช้:
-   1. ตั้งค่า .env.local ให้เรียบร้อย
+   1. ตรวจสอบ src/firebase/firebaseConfig.json ให้เรียบร้อย
    2. ใน browser console (หลัง app load) รัน:
       import('./firebase/seed.js').then(m => m.runSeed())
 
@@ -10,7 +10,6 @@
       import('./firebase/seed.js').then(m => m.runDevSeed())
                                                                   */
 import { collection, doc, writeBatch } from "firebase/firestore";
-import type { Employee } from "../types";
 import {
   ADVANCE_REQUESTS_INIT,
   ALL_LEAVES_INIT,
@@ -18,9 +17,15 @@ import {
   ROLES_INIT,
   SALARY_INIT,
 } from "../dev-seed/seedData";
-import { COLLECTIONS, db, FIRESTORE_DATABASE_ID } from "./config";
+import type { Employee } from "../types";
+import {
+  COLLECTIONS,
+  db,
+  FIREBASE_PROJECT_ID,
+  FIRESTORE_DATABASE_ID,
+} from "./config";
 
-const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+const PROJECT_ID = FIREBASE_PROJECT_ID;
 const USE_EMULATORS =
   import.meta.env.VITE_USE_EMULATORS === "true" ||
   (import.meta.env.VITE_USE_EMULATORS !== "false" && import.meta.env.DEV);
@@ -182,7 +187,7 @@ export async function runDevSeed() {
     throw new Error("Seed demo data ใช้ได้เฉพาะ emulator/dev mode");
   }
   if (!PROJECT_ID) {
-    throw new Error("Missing VITE_FIREBASE_PROJECT_ID");
+    throw new Error("Missing Firebase projectId in firebaseConfig.json");
   }
 
   const now = Date.now();

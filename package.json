@@ -5,8 +5,8 @@
   "description": "ระบบพนักงานห้างเพชรทองมุกดา - ระบบลา, เงินเดือน, ค่าคอม Pool, หนังสือรับรอง, LINE Bot",
   "type": "module",
   "scripts": {
-    "dev": "firebase emulators:start --only auth,firestore,functions,storage & vite",
-    "emulators": "firebase emulators:start --only auth,firestore,functions,storage",
+    "dev": "firebase emulators:start --project demo-petchmukda-bot --only auth,firestore,functions,storage & vite",
+    "emulators": "firebase emulators:start --project demo-petchmukda-bot --only auth,firestore,functions,storage",
     "build": "vite build",
     "build:functions": "npm --prefix functions run build",
     "preview": "vite preview",

@@ -9,7 +9,7 @@
 - [ ] สร้าง Firebase Project
 - [ ] เปิดใช้ Firestore Database
 - [ ] เปิดใช้ Authentication (ใช้ Firebase Custom Token จาก LINE Login)
-- [ ] คัดลอก Config → `.env.local`
+- [ ] คัดลอก Config → `src/firebase/firebaseConfig.json`
 - [ ] วาง Security Rules
 - [ ] รัน Migration Script
 - [ ] เชื่อม `App.jsx` กับ Firebase hooks
@@ -44,22 +44,25 @@
 2. คลิก **"</>"** เพื่อสร้าง Web app
 3. ตั้งชื่อ (เช่น `muktha-web`)
 4. คัดลอก `firebaseConfig` object
-5. สร้างไฟล์ `.env.local` ในโปรเจกต์ root:
+5. วางค่าจริงใน `production.firebaseConfig` ของ `src/firebase/firebaseConfig.json`
 
-```bash
-cp .env.example .env.local
+```json
+{
+  "production": {
+    "firebaseConfig": {
+      "apiKey": "AIzaSy...",
+      "authDomain": "muktha-xxx.firebaseapp.com",
+      "projectId": "muktha-xxx",
+      "storageBucket": "muktha-xxx.firebasestorage.app",
+      "messagingSenderId": "123456789",
+      "appId": "1:123:web:abc..."
+    },
+    "firestoreDatabaseId": "petchmukda-bot"
+  }
+}
 ```
 
-แล้วใส่ค่าจริง:
-```env
-VITE_FIREBASE_API_KEY=AIzaSy...
-VITE_FIREBASE_AUTH_DOMAIN=muktha-xxx.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=muktha-xxx
-VITE_FIREBASE_STORAGE_BUCKET=muktha-xxx.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123:web:abc...
-VITE_FIRESTORE_DATABASE_ID=petchmukda-bot
-```
+ตอน `npm run dev` แอปจะใช้ `development` config ที่เป็น mock project และต่อเข้า Firebase emulators อัตโนมัติ ส่วน production build จะใช้ `production` config
 
 ## 5️⃣ ติดตั้ง Security Rules
 

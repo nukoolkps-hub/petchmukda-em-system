@@ -17,12 +17,13 @@ npm run dev
 
 เปิด `http://localhost:5173` — ใช้ PIN `111111` เข้า admin
 
-### Mode 2: Production (Firebase)
+### Mode 2: Firebase
 
 ```bash
 # 1. ตั้ง Firebase (ดู FIREBASE_SETUP.md)
 cp .env.example .env.local
-# ใส่ Firebase config + ตั้ง VITE_USE_FIREBASE=true
+# npm run dev ใช้ mock Firebase config + emulators
+# production build ใช้ production config ใน src/firebase/firebaseConfig.json
 
 # 2. ติดตั้ง + รัน
 npm install
@@ -132,19 +133,19 @@ import { signInWithGoogle } from "./firebase/auth";
 await signInWithGoogle();
 ```
 
-### LINE Login (ต้องมี backend)
+### LINE Login (ผ่าน Cloud Functions)
 ```jsx
 import { startLineLogin, completeLineLogin } from "./firebase/auth";
 
 // Login page
 <button onClick={() => startLineLogin({
   channelId: import.meta.env.VITE_LINE_LOGIN_CHANNEL_ID,
-  redirectUri: window.location.origin + "/auth/callback",
+  redirectUri: window.location.origin + "/callback",
 })}>เข้าสู่ระบบด้วย LINE</button>
 
-// Callback page (/auth/callback)
+// Callback page (/callback)
 useEffect(() => {
-  completeLineLogin(import.meta.env.VITE_BACKEND_URL).catch(alert);
+  completeLineLogin().catch(alert);
 }, []);
 ```
 
@@ -188,17 +189,12 @@ employee-linking flow before they can log in.
 
 ### Frontend (`.env.local`)
 ```env
-VITE_USE_FIREBASE=true
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=...
-VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_STORAGE_BUCKET=...
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
-
+# Optional: defaults to emulators in dev
+VITE_USE_EMULATORS=true
 VITE_LINE_LOGIN_CHANNEL_ID=...
-VITE_BACKEND_URL=https://your-backend.railway.app
 ```
+
+Firebase web config is checked in at `src/firebase/firebaseConfig.json`.
 
 ### Cloud Functions (`functions/.env` for emulator, runtime env for deploy)
 ```env
