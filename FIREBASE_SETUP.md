@@ -8,7 +8,7 @@
 
 - [ ] สร้าง Firebase Project
 - [ ] เปิดใช้ Firestore Database
-- [ ] เปิดใช้ Authentication (Google + Email/Password)
+- [ ] เปิดใช้ Authentication (ใช้ Firebase Custom Token จาก LINE Login)
 - [ ] คัดลอก Config → `.env.local`
 - [ ] วาง Security Rules
 - [ ] รัน Migration Script
@@ -34,10 +34,9 @@
 ## 3️⃣ เปิดใช้ Authentication
 
 1. **Build > Authentication > Get started**
-2. **Sign-in method tab:**
-   - **Google** → Enable → ใส่ project support email → Save
-   - **Email/Password** → Enable → Save (สำหรับ admin)
+2. ไม่ต้องเปิด Email/Password สำหรับ admin ใน production path นี้
 3. (Optional) เพิ่ม **Authorized domains** ถ้า deploy ที่อื่น
+4. LINE Login จะเข้า Firebase Auth ผ่าน Cloud Function ที่สร้าง custom token
 
 ## 4️⃣ ดึง Firebase Config
 
@@ -145,45 +144,16 @@ import { signInWithGoogle } from "./firebase/auth";
 }}>เข้าสู่ระบบด้วย Google</button>
 ```
 
-### LINE Login (ต้องมี backend)
+### LINE Login + Admin
 
-**Frontend:**
-```jsx
-import { signInWithLineToken } from "./firebase/auth";
+1. ตั้งค่า LINE Login channel ใน LINE Developers Console
+2. ใส่ `VITE_LINE_LOGIN_CHANNEL_ID` ใน `.env.local`
+3. ใส่ `LINE_LOGIN_CHANNEL_ID` และ `LINE_LOGIN_CHANNEL_SECRET` ใน Functions env หรือ Firestore `/config/secrets`
+4. ให้ admin ส่ง `ไอดีฉัน` ในแชทส่วนตัวกับบอท
+5. ใส่ LINE user ID ที่ได้เป็น `ADMIN_LINE_USER_ID`
+6. Admin เข้าเว็บด้วยปุ่ม `Login ด้วย LINE`
 
-// 1. Redirect to LINE Login
-window.location.href = `https://access.line.me/oauth2/v2.1/authorize?...`;
-
-// 2. ในหน้า callback — ส่ง code ไป backend
-const res = await fetch("/api/line-auth", {
-  method: "POST",
-  body: JSON.stringify({ code }),
-});
-const { customToken } = await res.json();
-
-// 3. Sign in ด้วย custom token
-await signInWithLineToken(customToken);
-```
-
-**Backend** (เพิ่มใน `backend-server.js`):
-```js
-// ต้องติดตั้ง: firebase-admin
-import { getAuth } from "firebase-admin/auth";
-
-app.post("/api/line-auth", async (request, res) => {
-  const { code } = request.body;
-
-  // 1. Verify LINE code → ได้ access token
-  const lineToken = await verifyLineCode(code);
-
-  // 2. ดึง LINE profile
-  const profile = await getLineProfile(lineToken);
-
-  // 3. สร้าง Firebase Custom Token
-  const customToken = await getAuth().createCustomToken(profile.userId);
-  res.json({ customToken });
-});
-```
+บัญชี admin ไม่ต้องมีเอกสารใน `employees`; พนักงานทั่วไปยังต้องถูกเชื่อมด้วย LINE webhook ก่อน login ได้
 
 ---
 

@@ -1,11 +1,17 @@
 import { match } from "ts-pattern";
-import { fallbackCommand } from "../commands/fallback.js";
+import { helpCommand } from "../commands/help.js";
 import { idCommand } from "../commands/id.js";
+import { myIdCommand } from "../commands/myId.js";
 import { setupEmployeeCommand } from "../commands/setupEmployee.js";
 import { replyText } from "./reply.js";
 import type { LineCommand, LineCommandContext } from "./types.js";
 
-const commands: LineCommand[] = [idCommand, setupEmployeeCommand];
+const commands: LineCommand[] = [
+	myIdCommand,
+	helpCommand,
+	idCommand,
+	setupEmployeeCommand,
+];
 
 export async function dispatchLineCommand(
 	ctx: LineCommandContext,
@@ -26,6 +32,4 @@ export async function dispatchLineCommand(
 
 		if (handled) return;
 	}
-
-	await fallbackCommand(ctx);
 }

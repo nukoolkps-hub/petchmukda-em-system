@@ -2,19 +2,26 @@ import { getAuth } from "firebase-admin/auth";
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import { getAppFirestore } from "../../helpers/config.js";
 import type { LineConfig } from "../../types.js";
-import { getMentionees, isAddressedToBot } from "../core/message.js";
+import { isAuthorizedLineAdmin } from "../core/admin.js";
+import {
+	cleanMentionText,
+	getMentionees,
+	getMentionText,
+	isAddressedToBot,
+	normalizeSpaces,
+	removeMentionRanges,
+} from "../core/message.js";
 import { replyText } from "../core/reply.js";
 import {
 	invalid,
 	type LineCommand,
 	type LineEvent,
-	type LineMentionee,
 	matched,
 	notMatched,
 } from "../core/types.js";
 
 const SETUP_EMPLOYEE_USAGE =
-	"กรุณาใช้รูปแบบ @BOT setup employee @EMPLOYEE หรือ @BOT setup employee @EMPLOYEE ชื่อพนักงาน และ mention พนักงานจริงในกลุ่ม";
+	"กรุณาใช้รูปแบบ @บอท เชื่อมพนักงาน @พนักงาน หรือ @บอท เชื่อมพนักงาน @พนักงาน ชื่อพนักงาน และแท็กพนักงานจริงในกลุ่ม";
 
 interface SetupCommand {
 	targetLineUserId: string;
@@ -34,7 +41,7 @@ type EmployeeLookupResult =
 	| { status: "ambiguous"; employees: EmployeeRecord[] };
 
 export const setupEmployeeCommand: LineCommand<SetupCommand> = {
-	name: "setup-employee",
+	name: "เชื่อมพนักงาน",
 	parse({ event }) {
 		const setupCommand = parseSetupEmployeeCommand(event);
 		if (setupCommand) return matched(setupCommand);
@@ -71,7 +78,7 @@ async function handleSetupEmployeeCommand({
 		await replyText(
 			config,
 			event.replyToken,
-			"ยังไม่ได้ตั้งค่า LINE_CHANNEL_SECRET จึงไม่สามารถใช้คำสั่ง setup employee ได้",
+			"ยังไม่ได้ตั้งค่า LINE_CHANNEL_SECRET จึงไม่สามารถใช้คำสั่ง เชื่อมพนักงาน ได้",
 		);
 		return;
 	}
@@ -143,7 +150,7 @@ async function handleSetupEmployeeCommand({
 			event.replyToken,
 			`พบพนักงานใกล้เคียงหลายคน: ${employeeResult.employees
 				.map((employee) => employee.name)
-				.join(", ")}\nกรุณาพิมพ์ชื่อเต็มหรือ employee id`,
+				.join(", ")}\nกรุณาพิมพ์ชื่อเต็มหรือรหัสพนักงาน`,
 		);
 		return;
 	}
@@ -223,7 +230,7 @@ function parseSetupEmployeeCommand(event: LineEvent): SetupCommand | null {
 	if (!targetMention?.userId) return null;
 
 	const textWithoutMentions = removeMentionRanges(text, mentionees);
-	const strippedSetupMatch = /(?:^|\s)setup\s+employee(?:\s|$)/i.exec(
+	const strippedSetupMatch = /(?:^|\s)เชื่อมพนักงาน(?:\s|$)/.exec(
 		textWithoutMentions,
 	);
 	const explicitEmployeeKey = strippedSetupMatch
@@ -252,36 +259,7 @@ function hasSetupEmployeePhrase(text: string): boolean {
 }
 
 function getSetupEmployeeMatch(text: string): RegExpExecArray | null {
-	return /(?:^|\s)setup\s+employee(?:\s|$)/i.exec(text);
-}
-
-function removeMentionRanges(
-	text: string,
-	mentionees: LineMentionee[],
-): string {
-	return mentionees
-		.map((mentionee) => ({
-			start: mentionee.index,
-			end: mentionee.index + mentionee.length,
-		}))
-		.filter((range) => range.start >= 0 && range.end <= text.length)
-		.sort((a, b) => b.start - a.start)
-		.reduce(
-			(result, range) => result.slice(0, range.start) + result.slice(range.end),
-			text,
-		);
-}
-
-function getMentionText(text: string, mentionee: LineMentionee): string {
-	return text.slice(mentionee.index, mentionee.index + mentionee.length);
-}
-
-function cleanMentionText(value: string): string {
-	return normalizeSpaces(value.replace(/^@/, ""));
-}
-
-function normalizeSpaces(value: string): string {
-	return value.trim().replace(/\s+/g, " ");
+	return /(?:^|\s)เชื่อมพนักงาน(?:\s|$)/.exec(text);
 }
 
 function normalizeLookupKey(value: string): string {
@@ -373,36 +351,4 @@ async function findEmployeeByLineUserId(
 		lineUserId:
 			typeof data.lineUserId === "string" ? data.lineUserId : undefined,
 	};
-}
-
-async function isAuthorizedLineAdmin(
-	lineUserId: string,
-	config: LineConfig,
-): Promise<boolean> {
-	if (isConfiguredAdminLineUser(lineUserId, config.ADMIN_LINE_USER_ID)) {
-		return true;
-	}
-
-	try {
-		const user = await getAuth().getUser(lineUserId);
-		return user.customClaims?.admin === true;
-	} catch (error) {
-		if ((error as { code?: string }).code === "auth/user-not-found") {
-			return false;
-		}
-		throw error;
-	}
-}
-
-function isConfiguredAdminLineUser(
-	lineUserId: string,
-	configValue: string | undefined,
-): boolean {
-	return (
-		configValue
-			?.split(/[,\s]+/)
-			.map((value) => value.trim())
-			.filter(Boolean)
-			.includes(lineUserId) || false
-	);
 }

@@ -2,7 +2,7 @@
  * lineAuth — LINE Login → Firebase Custom Token
  */
 
-import { getAuth } from "firebase-admin/auth";
+import { getAuth, type Auth, type UserRecord } from "firebase-admin/auth";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { getAppFirestore, getLineConfig } from "../helpers/config.js";
 import { parseLineAuthPayload } from "../helpers/payload.js";
@@ -52,6 +52,35 @@ export const lineAuth = onCall(async (request) => {
 	}
 
 	const auth = getAuth();
+	if (isConfiguredAdminLineUser(profile.userId, config.ADMIN_LINE_USER_ID)) {
+		const user = await ensureLineAuthUser(
+			auth,
+			profile.userId,
+			profile.displayName,
+			profile.pictureUrl,
+		);
+		await auth.setCustomUserClaims(profile.userId, {
+			...(user.customClaims || {}),
+			admin: true,
+		});
+
+		const customToken = await auth.createCustomToken(profile.userId, {
+			admin: true,
+			provider: "line",
+			...(profile.displayName ? { displayName: profile.displayName } : {}),
+			...(profile.pictureUrl ? { pictureUrl: profile.pictureUrl } : {}),
+		});
+
+		return {
+			customToken,
+			profile: {
+				userId: profile.userId,
+				displayName: profile.displayName,
+				pictureUrl: profile.pictureUrl,
+			},
+		};
+	}
+
 	try {
 		await auth.getUser(profile.userId);
 	} catch (error) {
@@ -73,8 +102,8 @@ export const lineAuth = onCall(async (request) => {
 	// 3. Create Firebase Custom Token for a provisioned LINE user
 	const customToken = await auth.createCustomToken(profile.userId, {
 		provider: "line",
-		displayName: profile.displayName,
-		pictureUrl: profile.pictureUrl,
+		...(profile.displayName ? { displayName: profile.displayName } : {}),
+		...(profile.pictureUrl ? { pictureUrl: profile.pictureUrl } : {}),
 	});
 
 	return {
@@ -86,3 +115,42 @@ export const lineAuth = onCall(async (request) => {
 		},
 	};
 });
+
+function isConfiguredAdminLineUser(
+	lineUserId: string,
+	configValue: string | undefined,
+): boolean {
+	return (
+		configValue
+			?.split(/[,\s]+/)
+			.map((value) => value.trim())
+			.filter(Boolean)
+			.includes(lineUserId) || false
+	);
+}
+
+async function ensureLineAuthUser(
+	auth: Auth,
+	uid: string,
+	displayName: string | undefined,
+	photoURL: string | undefined,
+): Promise<UserRecord> {
+	const profileUpdate = {
+		...(displayName ? { displayName } : {}),
+		...(photoURL ? { photoURL } : {}),
+	};
+
+	try {
+		const user = await auth.getUser(uid);
+		if (Object.keys(profileUpdate).length > 0) {
+			await auth.updateUser(uid, profileUpdate);
+			return auth.getUser(uid);
+		}
+		return user;
+	} catch (error) {
+		if ((error as { code?: string }).code !== "auth/user-not-found") {
+			throw error;
+		}
+		return auth.createUser({ uid, ...profileUpdate });
+	}
+}

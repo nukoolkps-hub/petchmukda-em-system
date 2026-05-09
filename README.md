@@ -153,28 +153,21 @@ useEffect(() => {
 
 ---
 
-## 🛠 Admin Promotion (Firebase mode)
+## 🛠 LINE Admin Setup (Firebase mode)
 
-### First admin bootstrap
-Set `ADMIN_BOOTSTRAP_SECRET` in the Cloud Functions runtime. Then sign in, open the hidden first-admin setup on the unlinked account screen, and enter that secret. Bootstrap promotes the current Firebase UID with the `admin` custom claim and does not create an employee record.
+Admin uses the normal `Login ด้วย LINE` button, but does not need an employee
+document. The backend treats the configured `ADMIN_LINE_USER_ID` as an
+admin-only identity and writes the Firebase `admin` custom claim at login.
 
-Local emulator tip: use the dev `Setup` login for this flow. `Employee` is reserved for the seeded employee UID and should be used after `Seed Demo`.
+### First admin
+1. Add the LINE bot as a friend.
+2. Send `ไอดีฉัน` in a private chat with the bot.
+3. Put the returned user ID in Cloud Functions env or Firestore
+   `/config/secrets` as `ADMIN_LINE_USER_ID`.
+4. Deploy/restart Functions, then log in with `Login ด้วย LINE`.
 
-### ผ่าน UI
-Admin Panel → Manage Users → Set Admin
-
-### ผ่าน backend API
-```bash
-curl -X POST http://localhost:3000/api/set-admin \
-  -H "Authorization: Bearer $ID_TOKEN" \
-  -d '{"uid": "USER_UID", "isAdmin": true}'
-```
-
-### ผ่าน Firebase Functions shell
-```bash
-firebase functions:shell
-> require("firebase-admin").auth().setCustomUserClaims("USER_UID", { admin: true })
-```
+Employee LINE accounts still require provisioning through the LINE webhook
+employee-linking flow before they can log in.
 
 ---
 
@@ -209,8 +202,6 @@ VITE_BACKEND_URL=https://your-backend.railway.app
 
 ### Cloud Functions (`functions/.env` for emulator, runtime env for deploy)
 ```env
-ADMIN_BOOTSTRAP_SECRET=change-this-long-random-value
-
 LINE_CHANNEL_ACCESS_TOKEN=...
 LINE_CHANNEL_SECRET=...
 ADMIN_LINE_USER_ID=U...
