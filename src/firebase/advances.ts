@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   orderBy,
@@ -103,20 +104,37 @@ export async function submitAdvance(request) {
 
 /* ─── Approve advance ──────────────────────────────────────── */
 export async function approveAdvance(id, slipImageUrl = null) {
+  const advanceRef = doc(ref, id);
+  const existing = await getDoc(advanceRef);
+  const wasApproved = existing.data()?.status === "approved";
+  const now = new Date().toISOString();
   const fields: Record<string, unknown> = {
     status: "approved",
-    approvedAt: new Date().toISOString(),
+    approvedAt: now,
   };
   if (slipImageUrl) fields.slipImageUrl = slipImageUrl;
-  await updateDoc(doc(ref, id), fields);
+  if (!wasApproved) {
+    fields.lineNotificationStatus = "pending";
+    fields.lineNotificationType = "approved";
+    fields.lineNotificationRequestedAt = now;
+    fields.lineNotificationLastError = null;
+    fields.lineNotificationSkippedReason = null;
+  }
+  await updateDoc(advanceRef, fields);
 }
 
 /* ─── Reject advance ───────────────────────────────────────── */
 export async function rejectAdvance(id, reason = "") {
+  const now = new Date().toISOString();
   await updateDoc(doc(ref, id), {
     status: "rejected",
-    rejectedAt: new Date().toISOString(),
+    rejectedAt: now,
     rejectionReason: reason,
+    lineNotificationStatus: "pending",
+    lineNotificationType: "rejected",
+    lineNotificationRequestedAt: now,
+    lineNotificationLastError: null,
+    lineNotificationSkippedReason: null,
   });
 }
 

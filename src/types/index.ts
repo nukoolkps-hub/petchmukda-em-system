@@ -77,6 +77,17 @@ export interface AdvanceRequest {
   slipImageDataUrl?: string | null;
   slipImageUrl?: string | null;
   rejectionReason?: string;
+  lineNotificationStatus?:
+    | "pending"
+    | "processing"
+    | "sent"
+    | "skipped"
+    | "error";
+  lineNotificationType?: "approved" | "rejected";
+  lineNotificationRequestedAt?: string;
+  lineNotificationSentAt?: string;
+  lineNotificationLastError?: string | null;
+  lineNotificationSkippedReason?: string | null;
 }
 
 export interface Role {

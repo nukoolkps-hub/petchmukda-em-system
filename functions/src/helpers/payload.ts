@@ -7,8 +7,6 @@ import type {
 	BootstrapAdminPayload,
 	DevAuthPayload,
 	LineAuthPayload,
-	NotifyAdvanceApprovedPayload,
-	NotifyAdvanceRejectedPayload,
 	NotifyAdvanceRequestPayload,
 	RequestId,
 	SetAdminPayload,
@@ -71,21 +69,6 @@ function optionalDateString(
 	return value;
 }
 
-function optionalHttpsUrl(
-	data: UnknownRecord,
-	key: string,
-): string | undefined {
-	const value = optionalString(data, key);
-	if (!value) return undefined;
-	try {
-		const url = new URL(value);
-		if (url.protocol !== "https:") invalid(`Invalid ${key}`);
-	} catch {
-		invalid(`Invalid ${key}`);
-	}
-	return value;
-}
-
 function optionalRequestId(data: UnknownRecord): RequestId | undefined {
 	const value = data.requestId;
 	if (value === undefined || value === null) return undefined;
@@ -106,39 +89,6 @@ export function parseNotifyAdvanceRequestPayload(
 		bank: optionalString(data, "bank"),
 		bankAccountNumber: optionalString(data, "bankAccountNumber"),
 		submittedAt: optionalDateString(data, "submittedAt"),
-		requestId: optionalRequestId(data),
-	};
-}
-
-export function parseNotifyAdvanceApprovedPayload(
-	value: unknown,
-): NotifyAdvanceApprovedPayload {
-	const data = asRecord(value);
-	return {
-		employeeLineUserId: requiredString(data, "employeeLineUserId"),
-		employeeName: requiredString(data, "employeeName"),
-		amount: requiredAmount(data),
-		requestReason: requiredString(data, "requestReason"),
-		month: requiredPayrollMonth(data),
-		slipImageUrl: optionalHttpsUrl(data, "slipImageUrl"),
-		slipImageDataUrl: optionalString(data, "slipImageDataUrl"),
-		approvedAt: optionalDateString(data, "approvedAt"),
-		requestId: optionalRequestId(data),
-	};
-}
-
-export function parseNotifyAdvanceRejectedPayload(
-	value: unknown,
-): NotifyAdvanceRejectedPayload {
-	const data = asRecord(value);
-	return {
-		employeeLineUserId: requiredString(data, "employeeLineUserId"),
-		employeeName: requiredString(data, "employeeName"),
-		amount: requiredAmount(data),
-		requestReason: requiredString(data, "requestReason"),
-		rejectionReason: optionalString(data, "rejectionReason"),
-		month: requiredPayrollMonth(data),
-		rejectedAt: optionalDateString(data, "rejectedAt"),
 		requestId: optionalRequestId(data),
 	};
 }

@@ -12,7 +12,7 @@ export async function pushLineMessage(
 	to: string,
 	messages: LinePushMessage | LinePushMessage[],
 ): Promise<void> {
-	await fetch("https://api.line.me/v2/bot/message/push", {
+	const response = await fetch("https://api.line.me/v2/bot/message/push", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -23,6 +23,12 @@ export async function pushLineMessage(
 			messages: Array.isArray(messages) ? messages : [messages],
 		}),
 	});
+
+	if (!response.ok) {
+		const body = await response.text();
+		console.error("LINE push failed:", response.status, body);
+		throw new Error(`LINE push failed: ${response.status} ${body}`);
+	}
 }
 
 /**

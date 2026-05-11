@@ -18,6 +18,7 @@ interface UseLineNotificationsOptions {
     id: string | number,
     reason?: string,
   ) => void | Promise<void>;
+  showToast?: (message: string) => void;
 }
 
 export default function useLineNotifications({
@@ -28,40 +29,21 @@ export default function useLineNotifications({
   submitAdvanceAction,
   approveAdvanceAction,
   rejectAdvanceAction,
+  showToast,
 }: UseLineNotificationsOptions) {
   // === Cloud Function callables ===
   const notifyAdvanceRequestFn = httpsCallable(
     functions,
     "notifyAdvanceRequest",
   );
-  const notifyAdvanceApprovedFn = httpsCallable(
-    functions,
-    "notifyAdvanceApproved",
-  );
-  const notifyAdvanceRejectedFn = httpsCallable(
-    functions,
-    "notifyAdvanceRejected",
-  );
 
   async function sendAdvanceRequestToLine(payload: Record<string, unknown>) {
     try {
-      await notifyAdvanceRequestFn(payload);
+      const result = await notifyAdvanceRequestFn(payload);
+      return result.data;
     } catch (e) {
       console.warn("LINE notify failed:", e);
-    }
-  }
-  async function notifyEmployeeApproved(payload: Record<string, unknown>) {
-    try {
-      await notifyAdvanceApprovedFn(payload);
-    } catch (e) {
-      console.warn("LINE notify failed:", e);
-    }
-  }
-  async function notifyEmployeeRejected(payload: Record<string, unknown>) {
-    try {
-      await notifyAdvanceRejectedFn(payload);
-    } catch (e) {
-      console.warn("LINE notify failed:", e);
+      return null;
     }
   }
 
@@ -110,7 +92,7 @@ export default function useLineNotifications({
     updates: any,
     currentRequest?: AdvanceRequest,
   ) {
-    // หา request ปัจจุบันเพื่อใช้ส่ง LINE
+    // หา request ปัจจุบันเพื่อแสดง feedback หลังบันทึก Firestore
     const request =
       currentRequest || advanceRequests.find((r) => r.id === reqId);
     if (!request) return;
@@ -122,34 +104,30 @@ export default function useLineNotifications({
       await rejectAdvanceAction(reqId, updates.rejectionReason || "");
     }
 
-    // ส่ง LINE notification ไปหาพนักงาน
+    // LINE ถึงพนักงานถูกส่งจาก scheduled backend worker ตามสถานะใน Firestore
     const employee =
       employeeDirectory.find((e) => e.id === request.employeeId) ||
       employeeDirectory.find((e) => e.name === request.employeeName);
     const empLineId = employee?.lineUserId;
+    if (
+      (updates.status === "approved" || updates.status === "rejected") &&
+      !empLineId
+    ) {
+      console.warn(
+        "[Advance] LINE notify skipped: employee has no lineUserId",
+        {
+          requestId: reqId,
+          employeeId: request.employeeId,
+          employeeName: request.employeeName,
+        },
+      );
+      showToast?.("อัปเดตแล้ว แต่พนักงานยังไม่มี LINE User ID");
+      return;
+    }
     if (updates.status === "approved" && empLineId) {
-      notifyEmployeeApproved({
-        employeeLineUserId: empLineId,
-        employeeName: request.employeeName,
-        amount: request.amount,
-        requestReason: request.reason,
-        month: request.month,
-        slipImageUrl: updates.slipImageUrl || null,
-        slipImageDataUrl: updates.slipImageDataUrl || null,
-        approvedAt: updates.approvedAt || new Date().toISOString(),
-        requestId: reqId,
-      });
+      showToast?.("อนุมัติแล้ว ระบบจะส่ง LINE จากเซิร์ฟเวอร์");
     } else if (updates.status === "rejected" && empLineId) {
-      notifyEmployeeRejected({
-        employeeLineUserId: empLineId,
-        employeeName: request.employeeName,
-        amount: request.amount,
-        requestReason: request.reason,
-        rejectionReason: updates.rejectionReason || "",
-        month: request.month,
-        rejectedAt: updates.rejectedAt || new Date().toISOString(),
-        requestId: reqId,
-      });
+      showToast?.("ปฏิเสธแล้ว ระบบจะส่ง LINE จากเซิร์ฟเวอร์");
     }
   }
 

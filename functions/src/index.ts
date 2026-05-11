@@ -10,8 +10,7 @@ initializeApp();
 setGlobalOptions({ region: "asia-southeast1" });
 
 export { cleanupOldAdvances } from "./advance/cleanupOldAdvances.js";
-export { notifyAdvanceApproved } from "./advance/notifyApproved.js";
-export { notifyAdvanceRejected } from "./advance/notifyRejected.js";
+export { processAdvanceNotifications } from "./advance/processAdvanceNotifications.js";
 // Advance requests
 export { notifyAdvanceRequest } from "./advance/notifyRequest.js";
 // Firestore triggers are not exported because this project's Firestore

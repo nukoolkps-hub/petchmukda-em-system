@@ -27,29 +27,6 @@ export interface NotifyAdvanceRequestPayload {
 	requestId?: RequestId;
 }
 
-export interface NotifyAdvanceApprovedPayload {
-	employeeLineUserId: string;
-	employeeName: string;
-	amount: number;
-	requestReason: string;
-	month: PayrollMonth;
-	slipImageUrl?: string | null;
-	slipImageDataUrl?: string | null;
-	approvedAt?: ISODateString;
-	requestId?: RequestId;
-}
-
-export interface NotifyAdvanceRejectedPayload {
-	employeeLineUserId: string;
-	employeeName: string;
-	amount: number;
-	requestReason: string;
-	rejectionReason?: string | null;
-	month: PayrollMonth;
-	rejectedAt?: ISODateString;
-	requestId?: RequestId;
-}
-
 export interface LineAuthPayload {
 	code: string;
 	redirectUri: string;
