@@ -2,7 +2,7 @@
 
 export function Section({ title, color, children }) {
   return (
-    <div className="mb-4">
+    <div className="mt-4 mb-4">
       <div
         className="text-sm font-bold mb-2 pl-2.5"
         style={{ color, borderLeft: `3px solid ${color}` }}
