@@ -15,6 +15,18 @@ function currentYearMonth() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function generateMonthOptions(): string[] {
+  const now = new Date();
+  const months: string[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+    );
+  }
+  return months.reverse();
+}
+
 function formatMonthLabel(yearMonth) {
   const [y, mo] = String(yearMonth || "").split("-");
   const monthName = THAI_MONTH_NAMES[parseInt(mo, 10) - 1];
@@ -146,17 +158,17 @@ export default function AdminAdvancePanel({
           <span className="text-sm font-semibold text-txt-mid whitespace-nowrap">
             เดือน
           </span>
-          <input
-            type="month"
+          <select
             value={selectedMonth}
-            onChange={(e) =>
-              setSelectedMonth(e.target.value || currentYearMonth())
-            }
-            className="px-2.5 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-white font-[inherit] outline-none"
-          />
-          <span className="text-xs text-txt-soft min-w-0 truncate">
-            {formatMonthLabel(selectedMonth)}
-          </span>
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="pl-2.5 pr-8 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-white font-[inherit] outline-none"
+          >
+            {generateMonthOptions().map((m) => (
+              <option key={m} value={m}>
+                {formatMonthLabel(m)}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
