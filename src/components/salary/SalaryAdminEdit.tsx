@@ -201,7 +201,7 @@ export default function SalaryAdminEdit({
         <select
           value={selectedEmployeeId}
           onChange={(e) => tryChangeEmployee(e.target.value)}
-          className="flex-2 px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
+          className="flex-2 pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
         >
           {employeeDirectory.map((employee) => (
             <option key={employee.id} value={employee.id}>

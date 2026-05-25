@@ -332,7 +332,7 @@ export default function RolesAdminPanel({
                   const rl = roles.find((r) => r.id === ev.target.value);
                   if (rl) changeEmpRole(employee.id, rl.id, rl.name);
                 }}
-                className="px-2.5 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt cursor-pointer min-w-[130px]"
+                className="pl-2.5 pr-8 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt cursor-pointer min-w-[130px]"
               >
                 <option value="">— เลือก —</option>
                 {roles.map((r) => (
