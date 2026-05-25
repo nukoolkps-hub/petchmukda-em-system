@@ -84,5 +84,5 @@ export const PAGE_TITLES: Record<string, string | null> = {
   home: null,
   request: "ยื่นคำขอลา",
   salary: "เงินเดือนของฉัน",
-  admin: "จัดการรายการลา",
+  admin: "จัดการพนักงาน",
 };
