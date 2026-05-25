@@ -19,6 +19,8 @@ jobs:
       - run: npm ci
 
       - run: npm run build
+        env:
+          VITE_LINE_LOGIN_CHANNEL_ID: "2009833516"
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
