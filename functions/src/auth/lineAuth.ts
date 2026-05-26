@@ -5,6 +5,7 @@
 import { getAuth, type Auth, type UserRecord } from "firebase-admin/auth";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { getAppFirestore, getLineConfig } from "../helpers/config.js";
+import { isConfiguredAdminLineUser } from "../line/core/admin.js";
 import { parseLineAuthPayload } from "../helpers/payload.js";
 
 const UNPROVISIONED_LINE_USER_MESSAGE =
@@ -115,19 +116,6 @@ export const lineAuth = onCall(async (request) => {
 		},
 	};
 });
-
-function isConfiguredAdminLineUser(
-	lineUserId: string,
-	configValue: string | undefined,
-): boolean {
-	return (
-		configValue
-			?.split(/[,\s]+/)
-			.map((value) => value.trim())
-			.filter(Boolean)
-			.includes(lineUserId) || false
-	);
-}
 
 async function ensureLineAuthUser(
 	auth: Auth,

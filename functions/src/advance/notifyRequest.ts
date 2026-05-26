@@ -24,17 +24,23 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 	if (employeeSnap.empty) {
 		throw new HttpsError("permission-denied", "ไม่พบข้อมูลพนักงาน");
 	}
+	const verifiedEmployee = employeeSnap.docs[0].data() as {
+		name?: string;
+		bank?: string;
+		bankAccountNumber?: string;
+	};
 
 	const {
-		employeeName,
 		amount,
 		reason,
 		month,
-		bank,
-		bankAccountNumber,
 		submittedAt,
 		requestId,
 	} = parseNotifyAdvanceRequestPayload(request.data);
+
+	const employeeName = verifiedEmployee.name || "-";
+	const bank = verifiedEmployee.bank;
+	const bankAccountNumber = verifiedEmployee.bankAccountNumber;
 
 	const config = await getLineConfig();
 	if (!config.LINE_CHANNEL_ACCESS_TOKEN || !config.ADMIN_LINE_USER_ID) {

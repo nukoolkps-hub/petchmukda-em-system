@@ -7,7 +7,7 @@ export async function isAuthorizedLineAdmin(
 	return isConfiguredAdminLineUser(lineUserId, config.ADMIN_LINE_USER_ID);
 }
 
-function isConfiguredAdminLineUser(
+export function isConfiguredAdminLineUser(
 	lineUserId: string,
 	configValue: string | undefined,
 ): boolean {
