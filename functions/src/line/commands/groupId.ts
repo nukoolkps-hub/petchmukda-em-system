@@ -1,3 +1,4 @@
+import { isAuthorizedLineAdmin } from "../core/admin.js";
 import {
 	getMentionees,
 	isGroupOrRoom,
@@ -22,6 +23,12 @@ export const groupIdCommand: LineCommand<void> = {
 	},
 	async handle({ config, event }) {
 		if (!event.replyToken) return;
+
+		const senderLineUserId = event.source?.userId;
+		if (!senderLineUserId) return;
+
+		const admin = await isAuthorizedLineAdmin(senderLineUserId, config);
+		if (!admin) return;
 
 		const groupId = event.source?.groupId || event.source?.roomId;
 		if (!groupId) {
