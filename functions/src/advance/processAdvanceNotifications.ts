@@ -127,7 +127,7 @@ async function sendAdvanceStatusNotification(
 	let slipImagePushFailed = false;
 	let slipImageError: string | null = null;
 	const slipImageUrl = stringValue(advance.slipImageUrl);
-	if (status === "approved" && slipImageUrl?.startsWith("https://")) {
+	if (status === "approved" && slipImageUrl && isTrustedImageUrl(slipImageUrl)) {
 		try {
 			await pushLineMessage(token, employeeLineUserId, {
 				type: "image",
@@ -413,4 +413,19 @@ function numberValue(value: unknown): number {
 
 function errorMessage(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
+}
+
+const TRUSTED_IMAGE_HOSTS = [
+	"storage.googleapis.com",
+	"firebasestorage.googleapis.com",
+];
+
+function isTrustedImageUrl(url: string): boolean {
+	try {
+		const parsed = new URL(url);
+		if (parsed.protocol !== "https:") return false;
+		return TRUSTED_IMAGE_HOSTS.some((host) => parsed.hostname === host);
+	} catch {
+		return false;
+	}
 }
