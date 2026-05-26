@@ -34,3 +34,17 @@ export async function getLineConfig(): Promise<LineConfig> {
 	const doc = await db.doc("config/secrets").get();
 	return (doc.data() as LineConfig | undefined) || {};
 }
+
+/* ─── Check if LINE user ID is in admin list ─────────────────── */
+export function isConfiguredAdminLineUser(
+	lineUserId: string,
+	configValue: string | undefined,
+): boolean {
+	return (
+		configValue
+			?.split(/[,\s]+/)
+			.map((value) => value.trim())
+			.filter(Boolean)
+			.includes(lineUserId) || false
+	);
+}

@@ -4,8 +4,11 @@
 
 import { getAuth, type Auth, type UserRecord } from "firebase-admin/auth";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { getAppFirestore, getLineConfig } from "../helpers/config.js";
-import { isConfiguredAdminLineUser } from "../line/core/admin.js";
+import {
+	getAppFirestore,
+	getLineConfig,
+	isConfiguredAdminLineUser,
+} from "../helpers/config.js";
 import { parseLineAuthPayload } from "../helpers/payload.js";
 
 const UNPROVISIONED_LINE_USER_MESSAGE =
