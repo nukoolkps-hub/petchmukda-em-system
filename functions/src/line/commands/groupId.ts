@@ -1,15 +1,22 @@
+import {
+	getMentionees,
+	isGroupOrRoom,
+	removeMentionRanges,
+} from "../core/message.js";
 import { replyText } from "../core/reply.js";
 import { type LineCommand, matched, notMatched } from "../core/types.js";
 
 export const groupIdCommand: LineCommand<void> = {
 	name: "ไอดีกลุ่ม",
 	parse({ event, text }) {
-		if (
-			(event.source?.type === "group" || event.source?.type === "room") &&
-			text === "ไอดีกลุ่ม"
-		) {
-			return matched(undefined);
-		}
+		if (!isGroupOrRoom(event)) return notMatched();
+
+		const selfMentions = getMentionees(event).filter(
+			(m) => m.type === "user" && m.isSelf === true,
+		);
+		const cleaned = removeMentionRanges(text, selfMentions).trim();
+
+		if (cleaned === "ไอดีกลุ่ม") return matched(undefined);
 
 		return notMatched();
 	},
