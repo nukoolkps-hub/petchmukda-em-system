@@ -19,6 +19,18 @@ jobs:
       - run: npm ci
 
       - run: npm run build
+        env:
+          VITE_LINE_LOGIN_CHANNEL_ID: "2009943840"
+          # apiKey อ่านจาก GitHub Secret (ไม่ commit ลง repo) — ตั้งที่ Settings → Secrets → Actions
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          # ค่าด้านล่างเป็น public identifier (ไม่ใช่ secret) — hardcode ได้
+          VITE_FIREBASE_AUTH_DOMAIN: "petchmukda-bot.firebaseapp.com"
+          VITE_FIREBASE_PROJECT_ID: "petchmukda-bot"
+          VITE_FIREBASE_STORAGE_BUCKET: "petchmukda-bot.firebasestorage.app"
+          VITE_FIREBASE_MESSAGING_SENDER_ID: "103538947541"
+          VITE_FIREBASE_APP_ID: "1:103538947541:web:5a87a3421cbbf3ad69395c"
+          VITE_FIREBASE_MEASUREMENT_ID: "G-YYB26ELHDY"
+          VITE_FIRESTORE_DATABASE_ID: "petchmukda-bot"
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:

@@ -1,11 +1,10 @@
 /* ─── Firebase Configuration ────────────────────────────────────
-   อ่าน config จาก JSON file
-   - dev: ใช้ mock Firebase project สำหรับ emulator
-   - prod: ใช้ Firebase project จริง
+   - dev:  ใช้ mock Firebase project สำหรับ emulator (firebaseConfig.json)
+   - prod: อ่านจาก build-time env (VITE_FIREBASE_*) — ดู .env.example
 
-   วิธีใช้:
-   1. แก้ค่าที่ src/firebase/firebaseConfig.json
-   2. รัน npm run dev                                              */
+   ตั้งค่า production:
+   - local build : ใส่ค่าใน .env.production.local
+   - CI/CD       : GitHub Secrets + .github/workflows/deploy.yml      */
 
 import { type FirebaseOptions, initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
@@ -19,8 +18,22 @@ type FirebaseRuntimeConfig = {
   firestoreDatabaseId: string;
 };
 
+const productionRuntimeConfig: FirebaseRuntimeConfig = {
+  firebaseConfig: {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  },
+  firestoreDatabaseId:
+    import.meta.env.VITE_FIRESTORE_DATABASE_ID || "petchmukda-bot",
+};
+
 const firebaseRuntimeConfig: FirebaseRuntimeConfig = import.meta.env.PROD
-  ? firebaseConfigs.production
+  ? productionRuntimeConfig
   : firebaseConfigs.development;
 
 export const firebaseConfig = firebaseRuntimeConfig.firebaseConfig;
