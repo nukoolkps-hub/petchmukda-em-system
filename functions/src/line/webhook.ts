@@ -19,8 +19,18 @@ export const lineWebhook = onRequest(async (request, res) => {
 
 	try {
 		const config = await getLineConfig();
+		if (!config.LINE_CHANNEL_SECRET) {
+			console.error(
+				"lineWebhook: LINE_CHANNEL_SECRET is not configured — rejecting request",
+			);
+			res
+				.status(401)
+				.json({ ok: false, error: "LINE channel secret not configured" });
+			return;
+		}
+
 		const signatureOk = verifyLineRequest(request, config);
-		if (config.LINE_CHANNEL_SECRET && !signatureOk) {
+		if (!signatureOk) {
 			res.status(401).json({ ok: false, error: "invalid LINE signature" });
 			return;
 		}
