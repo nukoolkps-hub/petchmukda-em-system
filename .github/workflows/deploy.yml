@@ -47,6 +47,6 @@ jobs:
 
       - uses: w9jds/firebase-action@v13.32.0
         with:
-          args: deploy --only functions --project petchmukda-bot
+          args: deploy --only functions --project petchmukda-bot --force
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
