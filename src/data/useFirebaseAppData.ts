@@ -82,6 +82,9 @@ export default function useFirebaseAppData({
   async function upsertEmployee(employee) {
     return await employeesAPI.upsertEmployee(employee.id, employee);
   }
+  async function deleteEmployee(id) {
+    await employeesAPI.deleteEmployee(id);
+  }
 
   /* ─── Salaries ──────────────────────────────────────────── */
   async function updateSalary(employeeId, yearMonth, fields) {
@@ -155,6 +158,7 @@ export default function useFirebaseAppData({
     deleteLeave,
     updateEmployee,
     upsertEmployee,
+    deleteEmployee,
     updateSalary,
     submitAdvance,
     updateAdvance,

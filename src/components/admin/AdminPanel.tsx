@@ -109,6 +109,7 @@ export default function AdminPanel({
   onDelete,
   onLogout,
   onUpdateRole,
+  onDeleteEmployee,
   salaryData,
   setSalaryData,
   onSaveSalary,
@@ -167,6 +168,10 @@ export default function AdminPanel({
   const [filterType, setFilterType] = useState("");
   const [editingRole, setEditingRole] = useState({});
   const [editingEmpId, setEditingEmpId] = useState<string | null>(null);
+  const [confirmDeleteEmp, setConfirmDeleteEmp] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [copiedLineId, setCopiedLineId] = useState(null);
 
   function copyLineId(text, employeeId) {
@@ -1483,13 +1488,29 @@ export default function AdminPanel({
                             </button>
                           </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => setEditingEmpId(null)}
-                            className="w-full py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
-                          >
-                            ปิด
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingEmpId(null);
+                                setConfirmDeleteEmp({
+                                  id: employee.id,
+                                  name: employee.name,
+                                });
+                              }}
+                              className="py-[11px] px-4 rounded-[10px] border-[1.5px] border-red/40 bg-white text-red text-sm font-semibold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
+                            >
+                              <IconTrash size={15} stroke={2.2} />
+                              ลบ
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingEmpId(null)}
+                              className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+                            >
+                              ปิด
+                            </button>
+                          </div>
                         )}
                       </div>
                     </BaseModal>
@@ -1498,6 +1519,46 @@ export default function AdminPanel({
               );
             })}
           </div>
+          {confirmDeleteEmp && (
+            <BaseModal
+              onClose={() => setConfirmDeleteEmp(null)}
+              zIndexClass="z-1000"
+              maxWidthClass="max-w-[360px]"
+              overlayClassName="px-6 bg-[rgba(45,26,14,0.55)] backdrop-blur-xs"
+              contentClassName="rounded-[20px] px-6 py-7"
+            >
+              <div className="w-14 h-14 rounded-full bg-red-lt flex items-center justify-center mx-auto mb-4">
+                <IconTrash size={26} color="var(--color-red)" stroke={2.5} />
+              </div>
+              <div className="font-bold text-lg text-txt text-center mb-2">
+                ลบพนักงานคนนี้?
+              </div>
+              <div className="text-sm text-txt-mid text-center mb-5 leading-[1.8]">
+                <b>{confirmDeleteEmp.name}</b>
+                <br />
+                <span className="text-sm text-red">
+                  การลบจะไม่สามารถกู้คืนได้
+                </span>
+              </div>
+              <div className="flex gap-2.5">
+                <button
+                  onClick={() => setConfirmDeleteEmp(null)}
+                  className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={() => {
+                    onDeleteEmployee(confirmDeleteEmp.id);
+                    setConfirmDeleteEmp(null);
+                  }}
+                  className="flex-1 p-3.5 rounded-xl border-none bg-red text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_rgba(192,57,43,0.31)]"
+                >
+                  ลบพนักงาน
+                </button>
+              </div>
+            </BaseModal>
+          )}
         </div>
       )}
     </div>

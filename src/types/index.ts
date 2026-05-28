@@ -241,6 +241,7 @@ export interface AppData {
     fields: Partial<Employee>,
   ) => void | Promise<void>;
   upsertEmployee: (employee: Employee) => string | Promise<string>;
+  deleteEmployee: (id: string) => void | Promise<void>;
   updateSalary: (
     employeeId: string,
     yearMonth: string,
