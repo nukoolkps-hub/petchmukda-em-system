@@ -192,6 +192,12 @@ export default function SalaryAdminEdit({
   if (!salaryCalculation)
     return <div className="p-5 text-txt-soft text-center">ไม่มีข้อมูลเงินเดือน</div>;
 
+  const pieceCommissionTotal =
+    (salaryCalculation.singleRateCommission || 0) +
+    (salaryCalculation.normalSaleCommission || 0) +
+    (salaryCalculation.specialSaleCommission || 0) +
+    (salaryCalculation.buyCommission || 0);
+
   return (
     <div>
       {/* selectors */}
@@ -496,7 +502,7 @@ export default function SalaryAdminEdit({
                   <input
                     type="number"
                     inputMode="numeric"
-                    value={data.singleRatePieces || 0}
+                    value={data.singleRatePieces || ""}
                     onChange={(e) => update("singleRatePieces", e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
                   />
@@ -573,7 +579,7 @@ export default function SalaryAdminEdit({
                       <input
                         type="number"
                         inputMode="numeric"
-                        value={disabled ? 0 : data.normalSalePieces || 0}
+                        value={disabled ? "" : data.normalSalePieces || ""}
                         disabled={disabled}
                         onChange={(e) =>
                           update("normalSalePieces", e.target.value)
@@ -615,7 +621,7 @@ export default function SalaryAdminEdit({
                   <input
                     type="number"
                     inputMode="numeric"
-                    value={data.specialSalePieces || 0}
+                    value={data.specialSalePieces || ""}
                     onChange={(e) =>
                       update("specialSalePieces", e.target.value)
                     }
@@ -663,7 +669,7 @@ export default function SalaryAdminEdit({
                       <input
                         type="number"
                         inputMode="numeric"
-                        value={disabled ? 0 : data.buyPieces || 0}
+                        value={disabled ? "" : data.buyPieces || ""}
                         disabled={disabled}
                         onChange={(e) => update("buyPieces", e.target.value)}
                         className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
@@ -723,7 +729,7 @@ export default function SalaryAdminEdit({
                 <input
                   type="number"
                   inputMode="numeric"
-                  value={data.invitePieces || 0}
+                  value={data.invitePieces || ""}
                   onChange={(e) => update("invitePieces", e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
                 />
@@ -754,7 +760,7 @@ export default function SalaryAdminEdit({
                 <input
                   type="number"
                   inputMode="numeric"
-                  value={data.transferPieces || 0}
+                  value={data.transferPieces || ""}
                   onChange={(e) => update("transferPieces", e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
                 />
@@ -796,6 +802,32 @@ export default function SalaryAdminEdit({
             </div>
           </div>
 
+          {/* Commission total — สรุปจากค่าคอมด้านบน */}
+          <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
+            <span className="text-base">💎</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-txt-soft font-semibold">
+                รวมค่าคอมตามจำนวนชิ้น
+              </div>
+              <div className="text-base font-bold text-green mt-px">
+                +฿{formatThaiNumber(pieceCommissionTotal)}
+              </div>
+            </div>
+          </div>
+
+          {/* Member-card bonus total — สรุปจากโบนัสบัตรสมาชิกด้านบน */}
+          <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
+            <span className="text-base">🎫</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-txt-soft font-semibold">
+                รวมโบนัสบัตรสมาชิก
+              </div>
+              <div className="text-base font-bold text-green mt-px">
+                +฿{formatThaiNumber(salaryCalculation.memberBonusTotal)}
+              </div>
+            </div>
+          </div>
+
           {FIELDS_EARN.map((f) => (
             <div key={f.key} className="mb-2.5">
               <label className="flex text-sm text-txt-mid mb-[5px] font-medium">
@@ -809,7 +841,7 @@ export default function SalaryAdminEdit({
                   type="number"
                   inputMode="decimal"
                   min="0"
-                  value={data[f.key] || 0}
+                  value={data[f.key] || ""}
                   onChange={(e) => update(f.key, e.target.value)}
                   className="w-full py-2.5 pr-3.5 pl-[30px] rounded-[10px] border border-bdr text-base font-semibold outline-none font-[inherit] text-txt bg-cream"
                 />
@@ -881,7 +913,7 @@ export default function SalaryAdminEdit({
                   type="number"
                   inputMode="decimal"
                   min="0"
-                  value={data[f.key] || 0}
+                  value={data[f.key] || ""}
                   onChange={(e) => update(f.key, e.target.value)}
                   className="w-full py-2.5 pr-3.5 pl-[30px] rounded-[10px] border border-bdr text-base font-semibold outline-none font-[inherit] text-txt bg-cream"
                 />
