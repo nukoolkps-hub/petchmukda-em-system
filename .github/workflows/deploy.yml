@@ -1,11 +1,12 @@
-name: Deploy to Firebase Hosting
+name: Deploy to Firebase
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build-and-deploy:
+  deploy-hosting:
+    name: Deploy Hosting
     runs-on: ubuntu-latest
 
     steps:
@@ -38,6 +39,27 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
           projectId: petchmukda-bot
+
+  deploy-functions:
+    name: Deploy Functions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci --prefix functions
+
+      - run: npm run build --prefix functions
+
+      - uses: w9jds/firebase-action@v13.32.0
+        with:
+          args: deploy --only functions --project petchmukda-bot --force
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
   deploy-firestore-rules:
     name: Deploy Firestore Rules

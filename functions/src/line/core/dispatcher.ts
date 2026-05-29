@@ -1,4 +1,5 @@
 import { match } from "ts-pattern";
+import { groupIdCommand } from "../commands/groupId.js";
 import { helpCommand } from "../commands/help.js";
 import { idCommand } from "../commands/id.js";
 import { myIdCommand } from "../commands/myId.js";
@@ -8,6 +9,7 @@ import type { LineCommand, LineCommandContext } from "./types.js";
 
 const commands: LineCommand[] = [
 	myIdCommand,
+	groupIdCommand,
 	helpCommand,
 	idCommand,
 	setupEmployeeCommand,

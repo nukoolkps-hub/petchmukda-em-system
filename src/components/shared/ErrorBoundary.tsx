@@ -74,7 +74,7 @@ export default class ErrorBoundary extends Component<
           </div>
 
           {/* error details (dev only) */}
-          {this.state.error && (
+          {import.meta.env.DEV && this.state.error && (
             <details className="bg-red-lt border border-red/20 rounded-[10px] px-3.5 py-3 mb-5 text-sm">
               <summary className="cursor-pointer font-semibold text-red mb-1.5">
                 🔍 รายละเอียดข้อผิดพลาด (สำหรับ dev)

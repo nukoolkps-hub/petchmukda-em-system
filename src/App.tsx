@@ -120,6 +120,7 @@ export default function LeaveApp() {
     error,
     setSalaryData,
     updateEmployee,
+    deleteEmployee,
     updateSalary,
     addLeave: addLeaveAction,
     deleteLeave: deleteLeaveAction,
@@ -197,6 +198,17 @@ export default function LeaveApp() {
     } catch (err) {
       console.error("[Admin] update employee failed:", err);
       showToast("บันทึกข้อมูลไม่สำเร็จ");
+    }
+  }
+
+  /* ─── Delete employee handler (admin) ──────────────────────── */
+  async function handleDeleteEmployee(employeeId: string) {
+    try {
+      await deleteEmployee(employeeId);
+      showToast("ลบพนักงานแล้ว");
+    } catch (err) {
+      console.error("[Admin] delete employee failed:", err);
+      showToast("ลบพนักงานไม่สำเร็จ");
     }
   }
 
@@ -385,6 +397,7 @@ export default function LeaveApp() {
                       onDelete={leaveForm.handleDelete}
                       onLogout={authSignOut}
                       onUpdateRole={handleUpdateRole}
+                      onDeleteEmployee={handleDeleteEmployee}
                       salaryData={salaryData}
                       setSalaryData={setSalaryData}
                       onSaveSalary={updateSalary}

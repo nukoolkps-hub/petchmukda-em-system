@@ -26,4 +26,3 @@ export { setAdmin } from "./auth/setAdmin.js";
 
 // LINE webhook
 export { lineWebhook } from "./line/webhook.js";
-export { monthlyPayrollSummary } from "./payroll/monthlyPayrollSummary.js";

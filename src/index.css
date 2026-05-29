@@ -23,6 +23,11 @@
 
   /* ─── Typography ─────────────────────────────────────────── */
   --font-sans: "Prompt", "Sarabun", "Noto Sans Thai", sans-serif;
+
+  /* ─── Font weights — ลด bold ลง 100 หน่วยเพื่ออ่านง่ายขึ้น ───── */
+  --font-weight-semibold: 500;
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 700;
 }
 
 /* Google Fonts loaded via @import at top of file */

@@ -20,12 +20,8 @@ export const lineWebhook = onRequest(async (request, res) => {
 	try {
 		const config = await getLineConfig();
 		if (!config.LINE_CHANNEL_SECRET) {
-			console.error(
-				"lineWebhook: LINE_CHANNEL_SECRET is not configured — rejecting request",
-			);
-			res
-				.status(401)
-				.json({ ok: false, error: "LINE channel secret not configured" });
+			console.error("LINE_CHANNEL_SECRET is not configured");
+			res.status(503).json({ ok: false, error: "webhook not configured" });
 			return;
 		}
 

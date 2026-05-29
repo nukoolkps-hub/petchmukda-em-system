@@ -3,23 +3,44 @@
  */
 
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { COLORS, formatThaiNumber, getLineConfig } from "../helpers/config.js";
+import {
+	COLORS,
+	formatThaiNumber,
+	getAppFirestore,
+	getLineConfig,
+} from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
 import { parseNotifyAdvanceRequestPayload } from "../helpers/payload.js";
 
 export const notifyAdvanceRequest = onCall(async (request) => {
 	if (!request.auth) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
 
+	const uid = request.auth.uid;
+	const employeeSnap = await getAppFirestore()
+		.collection("employees")
+		.where("lineUserId", "==", uid)
+		.limit(1)
+		.get();
+	if (employeeSnap.empty) {
+		throw new HttpsError("permission-denied", "ไม่พบข้อมูลพนักงาน");
+	}
+	const verifiedEmployee = employeeSnap.docs[0].data() as {
+		name?: string;
+		bank?: string;
+		bankAccountNumber?: string;
+	};
+
 	const {
-		employeeName,
 		amount,
 		reason,
 		month,
-		bank,
-		bankAccountNumber,
 		submittedAt,
 		requestId,
 	} = parseNotifyAdvanceRequestPayload(request.data);
+
+	const employeeName = verifiedEmployee.name || "-";
+	const bank = verifiedEmployee.bank;
+	const bankAccountNumber = verifiedEmployee.bankAccountNumber;
 
 	const config = await getLineConfig();
 	if (!config.LINE_CHANNEL_ACCESS_TOKEN || !config.ADMIN_LINE_USER_ID) {

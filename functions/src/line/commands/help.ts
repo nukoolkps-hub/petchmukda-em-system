@@ -70,6 +70,11 @@ function makeHelpFlexMessage(): LinePushMessage {
 						scope: "แชทส่วนตัว",
 					}),
 					commandBox({
+						command: "ไอดีกลุ่ม",
+						description: "ดู Group ID ของกลุ่มนี้",
+						scope: "กลุ่ม",
+					}),
+					commandBox({
 						command: "@บอท ไอดี @ผู้ใช้ไลน์",
 						description: "ดูไอดี LINE ของผู้ใช้ที่แท็ก",
 						scope: "กลุ่ม",
