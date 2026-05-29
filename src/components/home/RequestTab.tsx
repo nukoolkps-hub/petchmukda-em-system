@@ -1,9 +1,15 @@
 /* ─── RequestTab — Leave request form + history ──────────────── */
 
-import { IconAlertCircle, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconAlertCircle,
+  IconChevronRight,
+  IconTrash,
+} from "@tabler/icons-react";
+import { useState } from "react";
 import { COLORS, LEAVE_TYPES, TODAY } from "../../constants";
 import type { LeaveEntry } from "../../types";
-import { fmtDate } from "../../utils/dateUtils";
+import { fmtDate, isFuture } from "../../utils/dateUtils";
+import ConfirmModal from "../modals/ConfirmModal";
 import CalendarPicker from "../shared/CalendarPicker";
 import Diamond from "../shared/Diamond";
 import GoldDivider from "../shared/GoldDivider";
@@ -26,6 +32,7 @@ interface RequestTabProps {
   remain: number | null;
   overLimit: boolean;
   onSubmit: () => void;
+  onDelete: (id: string | number) => void;
 }
 
 export default function RequestTab({
@@ -43,7 +50,10 @@ export default function RequestTab({
   remain,
   overLimit,
   onSubmit,
+  onDelete,
 }: RequestTabProps) {
+  const [confirmLeave, setConfirmLeave] = useState<LeaveEntry | null>(null);
+
   /* ─── Quota status for this month ──────────────────────────── */
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -220,6 +230,19 @@ export default function RequestTab({
                       </div>
                     )}
                   </div>
+                  {isFuture(h.start) && (
+                    <button
+                      type="button"
+                      aria-label="ลบใบลา"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmLeave(h);
+                      }}
+                      className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
+                    >
+                      <IconTrash size={16} color={COLORS.red} stroke={2.2} />
+                    </button>
+                  )}
                   <IconChevronRight
                     size={14}
                     color={COLORS.textSoft}
@@ -231,6 +254,15 @@ export default function RequestTab({
             })}
         </div>
       </div>
+
+      <ConfirmModal
+        leave={confirmLeave}
+        onConfirm={() => {
+          if (confirmLeave) onDelete(confirmLeave.id);
+          setConfirmLeave(null);
+        }}
+        onCancel={() => setConfirmLeave(null)}
+      />
     </div>
   );
 }
