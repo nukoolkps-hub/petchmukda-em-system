@@ -470,6 +470,8 @@ export default function SalaryAdminEdit({
         </div>
       )}
 
+      {/* Desktop: 2 คอลัมน์ — ซ้าย ค่าคอม+รายรับ / ขวา บัตรสมาชิก+รายการหัก (มือถือเรียงเดี่ยวเหมือนเดิม) */}
+      <div className="md:grid md:grid-cols-2 md:gap-x-3.5 md:items-start">
       {/* Commission section — single rate or 3 sub-sections */}
       {employeeRole && !employeeRole.poolGroup ? (
         /* Single rate (เช่น ฝ่ายบัญชี) */
@@ -984,6 +986,7 @@ export default function SalaryAdminEdit({
             </>
           )}
         </div>
+      </div>
       </div>
 
       {/* note */}
