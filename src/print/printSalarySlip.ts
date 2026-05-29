@@ -95,8 +95,11 @@ function buildSalarySlipHTML(
       value: salaryCalculation.advanceDeduction,
     });
   }
-  if (data.socialSecurity > 0)
-    dedRows.push({ label: "หักประกันสังคม", value: data.socialSecurity });
+  if (salaryCalculation.socialSecurity > 0)
+    dedRows.push({
+      label: "หักประกันสังคม",
+      value: salaryCalculation.socialSecurity,
+    });
   if (salaryCalculation.overQuotaDeduction > 0) {
     const detail: string[] = [];
     if (salaryCalculation.weekdayOverQuotaDays > 0)

@@ -15,6 +15,7 @@ export interface Employee {
   bankAccountNumber?: string;
   lineUserId?: string;
   baseSalary?: number;
+  socialSecurity?: number;
   singlePieceRate?: number;
   normalSalePieceRate?: number;
   specialSalePieceRate?: number;

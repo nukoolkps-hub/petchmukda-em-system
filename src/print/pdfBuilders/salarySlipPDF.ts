@@ -101,8 +101,8 @@ export function buildSalarySlipDocDef({
       `เบิกล่วงหน้า (${monthApprovedAdvances?.length || 0} รายการ)`,
       formatNumber(salaryCalculation.advanceDeduction),
     ]);
-  if (data.socialSecurity > 0)
-    dedRows.push(["ประกันสังคม", formatNumber(data.socialSecurity)]);
+  if (salaryCalculation.socialSecurity > 0)
+    dedRows.push(["ประกันสังคม", formatNumber(salaryCalculation.socialSecurity)]);
   if (salaryCalculation.overQuotaDeduction > 0)
     dedRows.push([
       `ลาเกินโควต้า (${salaryCalculation.weekdayOverQuotaDays} วันธรรมดา + ${salaryCalculation.sundayOverQuotaDays} วันอาทิตย์)`,

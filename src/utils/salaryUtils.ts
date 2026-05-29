@@ -239,6 +239,9 @@ export function calculateSalary(
   const sundayOverQuotaDays = overQuotaInfo?.sundays || 0;
   // เงินเดือนพื้นฐาน — ดึงจาก employeeInfo (Admin กรอกในแท็บ "ข้อมูลพนักงาน")
   const baseSalaryAmount = rates?.baseSalary ?? (salary.baseSalary || 0);
+  // ประกันสังคม — ดึงจาก employeeInfo (Admin กรอกในแท็บ "ข้อมูลพนักงาน")
+  const socialSecurityAmount =
+    rates?.socialSecurity ?? salary.socialSecurity ?? 0;
   const dailySalaryRate = baseSalaryAmount / DAYS_PER_MONTH;
   const overQuotaDeduction = Math.round(
     weekdayOverQuotaDays * dailySalaryRate +
@@ -305,7 +308,7 @@ export function calculateSalary(
   const deductions =
     (salary.lateDeduction || 0) +
     advanceDeduction +
-    (salary.socialSecurity || 0) +
+    socialSecurityAmount +
     overQuotaDeduction;
   const netSalary = earnings - deductions;
   return {
@@ -340,6 +343,7 @@ export function calculateSalary(
     bonusDays,
     leaveDays,
     advanceDeduction,
+    socialSecurity: socialSecurityAmount,
     baseSalary,
     losesBaseSalary,
   };

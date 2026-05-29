@@ -772,6 +772,8 @@ export default function AdminPanel({
                 editingRole[`${employee.id}:singlePieceRate`];
               const editingBaseSalary =
                 editingRole[`${employee.id}:baseSalary`];
+              const editingSocialSecurity =
+                editingRole[`${employee.id}:socialSecurity`];
               const editingSalaryDisabled =
                 editingRole[`${employee.id}:salaryDisabled`];
               const editingPoolExclusion =
@@ -784,6 +786,7 @@ export default function AdminPanel({
                 editingTransferPieceRate !== undefined ||
                 editingSinglePieceRate !== undefined ||
                 editingBaseSalary !== undefined ||
+                editingSocialSecurity !== undefined ||
                 editingSalaryDisabled !== undefined ||
                 editingPoolExclusion !== undefined;
               const saveAll = async () => {
@@ -829,6 +832,12 @@ export default function AdminPanel({
                     "baseSalary",
                     parseFloat(editingBaseSalary) || 0,
                   );
+                if (editingSocialSecurity !== undefined)
+                  await onUpdateRole(
+                    employee.id,
+                    "socialSecurity",
+                    parseFloat(editingSocialSecurity) || 0,
+                  );
                 if (editingSalaryDisabled !== undefined)
                   await onUpdateRole(
                     employee.id,
@@ -850,6 +859,7 @@ export default function AdminPanel({
                   delete nextEditingRole[`${employee.id}:transferPieceRate`];
                   delete nextEditingRole[`${employee.id}:singlePieceRate`];
                   delete nextEditingRole[`${employee.id}:baseSalary`];
+                  delete nextEditingRole[`${employee.id}:socialSecurity`];
                   delete nextEditingRole[`${employee.id}:salaryDisabled`];
                   delete nextEditingRole[`${employee.id}:poolExclusion`];
                   return nextEditingRole;
@@ -866,6 +876,7 @@ export default function AdminPanel({
                   delete nextEditingRole[`${employee.id}:transferPieceRate`];
                   delete nextEditingRole[`${employee.id}:singlePieceRate`];
                   delete nextEditingRole[`${employee.id}:baseSalary`];
+                  delete nextEditingRole[`${employee.id}:socialSecurity`];
                   delete nextEditingRole[`${employee.id}:salaryDisabled`];
                   delete nextEditingRole[`${employee.id}:poolExclusion`];
                   return nextEditingRole;
@@ -1092,6 +1103,39 @@ export default function AdminPanel({
                           </div>
                           <div className="text-xs text-txt-soft mt-[3px]">
                             หน่วย: บาท/เดือน
+                          </div>
+                        </div>
+
+                        {/* Social Security */}
+                        <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                          <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
+                            🏛 หักประกันสังคม
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
+                              ฿
+                            </span>
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min="0"
+                              value={
+                                editingSocialSecurity !== undefined
+                                  ? editingSocialSecurity
+                                  : employee.socialSecurity || 0
+                              }
+                              onChange={(e) =>
+                                setEditingRole((previousEditingRole) => ({
+                                  ...previousEditingRole,
+                                  [`${employee.id}:socialSecurity`]:
+                                    e.target.value,
+                                }))
+                              }
+                              className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingSocialSecurity !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                            />
+                          </div>
+                          <div className="text-xs text-txt-soft mt-[3px]">
+                            หน่วย: บาท/เดือน (หักทุกเดือนอัตโนมัติ)
                           </div>
                         </div>
 
@@ -1536,9 +1580,7 @@ export default function AdminPanel({
               <div className="text-sm text-txt-mid text-center mb-5 leading-[1.8]">
                 <b>{confirmDeleteEmp.name}</b>
                 <br />
-                <span className="text-sm text-red">
-                  การลบจะไม่สามารถกู้คืนได้
-                </span>
+                <span className="text-sm text-red">การลบจะไม่สามารถกู้คืนได้</span>
               </div>
               <div className="flex gap-2.5">
                 <button

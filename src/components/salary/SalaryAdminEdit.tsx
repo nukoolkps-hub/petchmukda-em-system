@@ -44,7 +44,6 @@ export default function SalaryAdminEdit({
     invitePieces: 0,
     transferPieces: 0,
     lateDeduction: 0,
-    socialSecurity: 0,
     note: "",
   };
   const data = useMemo(() => ({ ...savedData, ...draft }), [savedData, draft]);
@@ -188,7 +187,6 @@ export default function SalaryAdminEdit({
   const FIELDS_EARN: { key: string; label: string; icon: string }[] = [];
   const FIELDS_DED = [
     { key: "lateDeduction", label: "หักขาดงาน/มาสาย", icon: "⏰" },
-    { key: "socialSecurity", label: "หักประกันสังคม", icon: "🏛" },
   ];
 
   if (!salaryCalculation)
@@ -472,141 +470,251 @@ export default function SalaryAdminEdit({
 
       {/* Desktop: 2 คอลัมน์ — ซ้าย ค่าคอม+รายรับ / ขวา บัตรสมาชิก+รายการหัก (มือถือเรียงเดี่ยวเหมือนเดิม) */}
       <div className="md:grid md:grid-cols-2 md:gap-x-3.5 md:items-start">
-      {/* Commission section — single rate or 3 sub-sections */}
-      {employeeRole && !employeeRole.poolGroup ? (
-        /* Single rate (เช่น ฝ่ายบัญชี) */
-        <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
-          <div className="flex items-center gap-2 mb-3.5">
-            <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
-            <div className="font-bold text-sm text-txt">ค่าคอม</div>
-            <div className="ml-auto text-sm font-bold text-gold">
-              +฿{formatThaiNumber(salaryCalculation.singleRateCommission)}
-            </div>
-          </div>
-          <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-txt">📦 จำนวนชิ้น</div>
-              <div className="text-xs text-txt-soft">
-                Rate:{" "}
-                <b className="text-maroon">
-                  ฿{formatThaiNumber(employeeInfo?.singlePieceRate || 0)}/ชิ้น
-                </b>
+        {/* Commission section — single rate or 3 sub-sections */}
+        {employeeRole && !employeeRole.poolGroup ? (
+          /* Single rate (เช่น ฝ่ายบัญชี) */
+          <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+            <div className="flex items-center gap-2 mb-3.5">
+              <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
+              <div className="font-bold text-sm text-txt">ค่าคอม</div>
+              <div className="ml-auto text-sm font-bold text-gold">
+                +฿{formatThaiNumber(salaryCalculation.singleRateCommission)}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 relative">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={data.singleRatePieces || 0}
-                  onChange={(e) => update("singleRatePieces", e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                  ชิ้น
-                </span>
+            <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-bold text-txt">📦 จำนวนชิ้น</div>
+                <div className="text-xs text-txt-soft">
+                  Rate:{" "}
+                  <b className="text-maroon">
+                    ฿{formatThaiNumber(employeeInfo?.singlePieceRate || 0)}/ชิ้น
+                  </b>
+                </div>
               </div>
-              <div className="text-sm text-txt-soft font-semibold">=</div>
-              <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                ฿{formatThaiNumber(salaryCalculation.singleRateCommission)}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={data.singleRatePieces || 0}
+                    onChange={(e) => update("singleRatePieces", e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                    ชิ้น
+                  </span>
+                </div>
+                <div className="text-sm text-txt-soft font-semibold">=</div>
+                <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
+                  ฿{formatThaiNumber(salaryCalculation.singleRateCommission)}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="text-xs text-txt-soft mt-2.5 text-center">
-            💡 Rate ต่อชิ้นกำหนดในแท็บ "ข้อมูลพนักงาน"
-          </div>
-        </div>
-      ) : (
-        /* Commission ยอดขาย & รับซื้อ — pieces × rate (3 ช่อง) */
-        <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
-          <div className="flex items-center gap-2 mb-3.5">
-            <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
-            <div className="font-bold text-sm text-txt">ค่าคอมตามจำนวนชิ้น</div>
-            <div className="ml-auto text-sm font-bold text-gold">
-              +฿
-              {formatThaiNumber(
-                salaryCalculation.normalSaleCommission +
-                  salaryCalculation.specialSaleCommission +
-                  salaryCalculation.buyCommission,
-              )}
+            <div className="text-xs text-txt-soft mt-2.5 text-center">
+              💡 Rate ต่อชิ้นกำหนดในแท็บ "ข้อมูลพนักงาน"
             </div>
           </div>
+        ) : (
+          /* Commission ยอดขาย & รับซื้อ — pieces × rate (3 ช่อง) */
+          <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+            <div className="flex items-center gap-2 mb-3.5">
+              <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
+              <div className="font-bold text-sm text-txt">ค่าคอมตามจำนวนชิ้น</div>
+              <div className="ml-auto text-sm font-bold text-gold">
+                +฿
+                {formatThaiNumber(
+                  salaryCalculation.normalSaleCommission +
+                    salaryCalculation.specialSaleCommission +
+                    salaryCalculation.buyCommission,
+                )}
+              </div>
+            </div>
 
-          {/* Pre-compute disabled flags */}
-          {(() => {
-            const exc = employeeInfo?.poolExclusion;
-            const _sellDisabled = exc === "sell" || exc === "both";
-            const _buyDisabled = exc === "buy" || exc === "both";
-            return null;
-          })()}
+            {/* Pre-compute disabled flags */}
+            {(() => {
+              const exc = employeeInfo?.poolExclusion;
+              const _sellDisabled = exc === "sell" || exc === "both";
+              const _buyDisabled = exc === "buy" || exc === "both";
+              return null;
+            })()}
 
-          {/* Normal */}
-          {(() => {
-            const exc = employeeInfo?.poolExclusion;
-            const disabled = exc === "sell" || exc === "both";
-            return (
-              <div
-                className={`rounded-[10px] p-3 mb-2.5 relative border ${disabled ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div
-                    className={`text-sm font-bold flex items-center gap-1.5 ${disabled ? "text-txt-soft" : "text-txt"}`}
-                  >
-                    💎 ขาย (ทั่วไป)
-                    {disabled && (
-                      <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20]">
-                        🔒 ถูกปิด
+            {/* Normal */}
+            {(() => {
+              const exc = employeeInfo?.poolExclusion;
+              const disabled = exc === "sell" || exc === "both";
+              return (
+                <div
+                  className={`rounded-[10px] p-3 mb-2.5 relative border ${disabled ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div
+                      className={`text-sm font-bold flex items-center gap-1.5 ${disabled ? "text-txt-soft" : "text-txt"}`}
+                    >
+                      💎 ขาย (ทั่วไป)
+                      {disabled && (
+                        <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20]">
+                          🔒 ถูกปิด
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-txt-soft">
+                      Rate:{" "}
+                      <b className="text-maroon">
+                        ฿
+                        {formatThaiNumber(
+                          employeeInfo?.normalSalePieceRate || 0,
+                        )}
+                        /ชิ้น
+                      </b>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 relative">
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        value={disabled ? 0 : data.normalSalePieces || 0}
+                        disabled={disabled}
+                        onChange={(e) =>
+                          update("normalSalePieces", e.target.value)
+                        }
+                        className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                        ชิ้น
                       </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-txt-soft">
-                    Rate:{" "}
-                    <b className="text-maroon">
+                    </div>
+                    <div className="text-sm text-txt-soft font-semibold">=</div>
+                    <div
+                      className={`min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-right border border-bdr ${disabled ? "text-txt-soft" : "text-green"}`}
+                    >
                       ฿
-                      {formatThaiNumber(employeeInfo?.normalSalePieceRate || 0)}
-                      /ชิ้น
-                    </b>
+                      {formatThaiNumber(
+                        disabled ? 0 : salaryCalculation.normalSaleCommission,
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 relative">
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={disabled ? 0 : data.normalSalePieces || 0}
-                      disabled={disabled}
-                      onChange={(e) =>
-                        update("normalSalePieces", e.target.value)
-                      }
-                      className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                      ชิ้น
-                    </span>
-                  </div>
-                  <div className="text-sm text-txt-soft font-semibold">=</div>
-                  <div
-                    className={`min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-right border border-bdr ${disabled ? "text-txt-soft" : "text-green"}`}
-                  >
-                    ฿
-                    {formatThaiNumber(
-                      disabled ? 0 : salaryCalculation.normalSaleCommission,
-                    )}
-                  </div>
+              );
+            })()}
+
+            {/* Special — ใครขายใครได้ ไม่ขึ้นกับ poolExclusion */}
+            <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-bold text-txt">✨ ขาย (พิเศษ)</div>
+                <div className="text-xs text-txt-soft">
+                  Rate:{" "}
+                  <b className="text-maroon">
+                    ฿{formatThaiNumber(employeeInfo?.specialSalePieceRate || 0)}
+                    /ชิ้น
+                  </b>
                 </div>
               </div>
-            );
-          })()}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={data.specialSalePieces || 0}
+                    onChange={(e) =>
+                      update("specialSalePieces", e.target.value)
+                    }
+                    className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                    ชิ้น
+                  </span>
+                </div>
+                <div className="text-sm text-txt-soft font-semibold">=</div>
+                <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
+                  ฿{formatThaiNumber(salaryCalculation.specialSaleCommission)}
+                </div>
+              </div>
+            </div>
 
-          {/* Special — ใครขายใครได้ ไม่ขึ้นกับ poolExclusion */}
+            {/* Buy */}
+            {(() => {
+              const exc = employeeInfo?.poolExclusion;
+              const disabled = exc === "buy" || exc === "both";
+              return (
+                <div
+                  className={`rounded-[10px] p-3 relative border ${disabled ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div
+                      className={`text-sm font-bold flex items-center gap-1.5 ${disabled ? "text-txt-soft" : "text-txt"}`}
+                    >
+                      🛍 รับซื้อ
+                      {disabled && (
+                        <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20]">
+                          🔒 ถูกปิด
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-txt-soft">
+                      Rate:{" "}
+                      <b className="text-maroon">
+                        ฿{formatThaiNumber(employeeInfo?.buyPieceRate || 0)}/ชิ้น
+                      </b>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 relative">
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        value={disabled ? 0 : data.buyPieces || 0}
+                        disabled={disabled}
+                        onChange={(e) => update("buyPieces", e.target.value)}
+                        className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                        ชิ้น
+                      </span>
+                    </div>
+                    <div className="text-sm text-txt-soft font-semibold">=</div>
+                    <div
+                      className={`min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-right border border-bdr ${disabled ? "text-txt-soft" : "text-green"}`}
+                    >
+                      ฿
+                      {formatThaiNumber(
+                        disabled ? 0 : salaryCalculation.buyCommission,
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="text-xs text-txt-soft mt-2.5 text-center">
+              💡 Rate ต่อชิ้นกำหนดในแท็บ "ข้อมูลพนักงาน"
+            </div>
+            {poolShare && (
+              <div className="mt-2 text-xs text-maroon text-center px-2.5 py-1.5 rounded-lg bg-[#C9973A15]">
+                🤝 ค่าคอมจะถูกคำนวณจาก Pool หลังจากที่ Admin บันทึกชิ้นของทุกคนแล้ว
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* บัตรสมาชิก — pieces × rate */}
+        <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+          <div className="flex items-center gap-2 mb-3.5">
+            <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
+            <div className="font-bold text-sm text-txt">โบนัสบัตรสมาชิก</div>
+            <div className="ml-auto text-sm font-bold text-maroon">
+              +฿{formatThaiNumber(salaryCalculation.memberBonusTotal)}
+            </div>
+          </div>
+
+          {/* Invite */}
           <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-txt">✨ ขาย (พิเศษ)</div>
+              <div className="text-sm font-bold text-txt">🎫 เชิญชวนสมัครบัตร</div>
               <div className="text-xs text-txt-soft">
                 Rate:{" "}
                 <b className="text-maroon">
-                  ฿{formatThaiNumber(employeeInfo?.specialSalePieceRate || 0)}
-                  /ชิ้น
+                  ฿{formatThaiNumber(employeeInfo?.invitePieceRate || 0)}/ใบ
                 </b>
               </div>
             </div>
@@ -615,378 +723,289 @@ export default function SalaryAdminEdit({
                 <input
                   type="number"
                   inputMode="numeric"
-                  value={data.specialSalePieces || 0}
-                  onChange={(e) => update("specialSalePieces", e.target.value)}
+                  value={data.invitePieces || 0}
+                  onChange={(e) => update("invitePieces", e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                  ชิ้น
+                  ใบ
                 </span>
               </div>
               <div className="text-sm text-txt-soft font-semibold">=</div>
               <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                ฿{formatThaiNumber(salaryCalculation.specialSaleCommission)}
+                ฿{formatThaiNumber(salaryCalculation.inviteCommission)}
               </div>
             </div>
           </div>
 
-          {/* Buy */}
-          {(() => {
-            const exc = employeeInfo?.poolExclusion;
-            const disabled = exc === "buy" || exc === "both";
-            return (
-              <div
-                className={`rounded-[10px] p-3 relative border ${disabled ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div
-                    className={`text-sm font-bold flex items-center gap-1.5 ${disabled ? "text-txt-soft" : "text-txt"}`}
-                  >
-                    🛍 รับซื้อ
-                    {disabled && (
-                      <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20]">
-                        🔒 ถูกปิด
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-txt-soft">
-                    Rate:{" "}
-                    <b className="text-maroon">
-                      ฿{formatThaiNumber(employeeInfo?.buyPieceRate || 0)}/ชิ้น
-                    </b>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 relative">
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={disabled ? 0 : data.buyPieces || 0}
-                      disabled={disabled}
-                      onChange={(e) => update("buyPieces", e.target.value)}
-                      className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                      ชิ้น
-                    </span>
-                  </div>
-                  <div className="text-sm text-txt-soft font-semibold">=</div>
-                  <div
-                    className={`min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-right border border-bdr ${disabled ? "text-txt-soft" : "text-green"}`}
-                  >
-                    ฿
-                    {formatThaiNumber(
-                      disabled ? 0 : salaryCalculation.buyCommission,
-                    )}
-                  </div>
-                </div>
+          {/* Transfer */}
+          <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-bold text-txt">🔄 ย้ายข้อมูลบัตร</div>
+              <div className="text-xs text-txt-soft">
+                Rate:{" "}
+                <b className="text-maroon">
+                  ฿{formatThaiNumber(employeeInfo?.transferPieceRate || 0)}/ใบ
+                </b>
               </div>
-            );
-          })()}
-
-          <div className="text-xs text-txt-soft mt-2.5 text-center">
-            💡 Rate ต่อชิ้นกำหนดในแท็บ "ข้อมูลพนักงาน"
-          </div>
-          {poolShare && (
-            <div className="mt-2 text-xs text-maroon text-center px-2.5 py-1.5 rounded-lg bg-[#C9973A15]">
-              🤝 ค่าคอมจะถูกคำนวณจาก Pool หลังจากที่ Admin บันทึกชิ้นของทุกคนแล้ว
             </div>
-          )}
-        </div>
-      )}
-
-      {/* บัตรสมาชิก — pieces × rate */}
-      <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
-        <div className="flex items-center gap-2 mb-3.5">
-          <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
-          <div className="font-bold text-sm text-txt">โบนัสบัตรสมาชิก</div>
-          <div className="ml-auto text-sm font-bold text-maroon">
-            +฿{formatThaiNumber(salaryCalculation.memberBonusTotal)}
-          </div>
-        </div>
-
-        {/* Invite */}
-        <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-bold text-txt">🎫 เชิญชวนสมัครบัตร</div>
-            <div className="text-xs text-txt-soft">
-              Rate:{" "}
-              <b className="text-maroon">
-                ฿{formatThaiNumber(employeeInfo?.invitePieceRate || 0)}/ใบ
-              </b>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="number"
-                inputMode="numeric"
-                value={data.invitePieces || 0}
-                onChange={(e) => update("invitePieces", e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                ใบ
-              </span>
-            </div>
-            <div className="text-sm text-txt-soft font-semibold">=</div>
-            <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-              ฿{formatThaiNumber(salaryCalculation.inviteCommission)}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={data.transferPieces || 0}
+                  onChange={(e) => update("transferPieces", e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                  ใบ
+                </span>
+              </div>
+              <div className="text-sm text-txt-soft font-semibold">=</div>
+              <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
+                ฿{formatThaiNumber(salaryCalculation.transferCommission)}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Transfer */}
-        <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-bold text-txt">🔄 ย้ายข้อมูลบัตร</div>
-            <div className="text-xs text-txt-soft">
-              Rate:{" "}
-              <b className="text-maroon">
-                ฿{formatThaiNumber(employeeInfo?.transferPieceRate || 0)}/ใบ
-              </b>
+        {/* Earnings inputs */}
+        <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+          <div className="flex items-center gap-2 mb-3.5">
+            <div className="w-1.5 h-4.5 rounded-sm bg-green" />
+            <div className="font-bold text-sm text-txt">รายรับ</div>
+            <div className="ml-auto text-sm font-bold text-green">
+              +฿{formatThaiNumber(salaryCalculation.earnings)}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="number"
-                inputMode="numeric"
-                value={data.transferPieces || 0}
-                onChange={(e) => update("transferPieces", e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                ใบ
-              </span>
-            </div>
-            <div className="text-sm text-txt-soft font-semibold">=</div>
-            <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-              ฿{formatThaiNumber(salaryCalculation.transferCommission)}
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Earnings inputs */}
-      <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
-        <div className="flex items-center gap-2 mb-3.5">
-          <div className="w-1.5 h-4.5 rounded-sm bg-green" />
-          <div className="font-bold text-sm text-txt">รายรับ</div>
-          <div className="ml-auto text-sm font-bold text-green">
-            +฿{formatThaiNumber(salaryCalculation.earnings)}
-          </div>
-        </div>
-
-        {/* Base salary — read-only (กำหนดในข้อมูลพนักงาน) */}
-        <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
-          <span className="text-base">💼</span>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
-              <span>เงินเดือนพื้นฐาน</span>
-              <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">
-                แก้ในแท็บ "ข้อมูลพนักงาน"
-              </span>
-            </div>
-            <div className="text-base font-bold text-txt mt-px">
-              ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)}
+          {/* Base salary — read-only (กำหนดในข้อมูลพนักงาน) */}
+          <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
+            <span className="text-base">💼</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
+                <span>เงินเดือนพื้นฐาน</span>
+                <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">
+                  แก้ในแท็บ "ข้อมูลพนักงาน"
+                </span>
+              </div>
+              <div className="text-base font-bold text-txt mt-px">
+                ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)}
+              </div>
             </div>
           </div>
-        </div>
 
-        {FIELDS_EARN.map((f) => (
-          <div key={f.key} className="mb-2.5">
-            <label className="flex text-sm text-txt-mid mb-[5px] font-medium">
-              {f.icon} {f.label}
-            </label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
-                ฿
-              </span>
-              <input
-                type="number"
-                inputMode="decimal"
-                min="0"
-                value={data[f.key] || 0}
-                onChange={(e) => update(f.key, e.target.value)}
-                className="w-full py-2.5 pr-3.5 pl-[30px] rounded-[10px] border border-bdr text-base font-semibold outline-none font-[inherit] text-txt bg-cream"
-              />
+          {FIELDS_EARN.map((f) => (
+            <div key={f.key} className="mb-2.5">
+              <label className="flex text-sm text-txt-mid mb-[5px] font-medium">
+                {f.icon} {f.label}
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
+                  ฿
+                </span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  value={data[f.key] || 0}
+                  onChange={(e) => update(f.key, e.target.value)}
+                  className="w-full py-2.5 pr-3.5 pl-[30px] rounded-[10px] border border-bdr text-base font-semibold outline-none font-[inherit] text-txt bg-cream"
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* auto perfect-attendance bonus */}
-        <div
-          className={`rounded-[9px] px-3.5 py-3 mt-1.5 text-sm leading-[1.7] border ${salaryCalculation.attendanceBonus > 0 ? "bg-green-lt border-[#1A6B3A30]" : "bg-cream border-bdr"}`}
-        >
+          {/* auto perfect-attendance bonus */}
           <div
-            className={`font-bold mb-1 flex items-center gap-1.5 ${salaryCalculation.attendanceBonus > 0 ? "text-green" : "text-txt-mid"}`}
+            className={`rounded-[9px] px-3.5 py-3 mt-1.5 text-sm leading-[1.7] border ${salaryCalculation.attendanceBonus > 0 ? "bg-green-lt border-[#1A6B3A30]" : "bg-cream border-bdr"}`}
           >
-            🌟 โบนัสแห่งความขยัน(ไม่หยุด){" "}
-            <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
-              อัตโนมัติ
-            </span>
-          </div>
-          <div className="text-txt-mid">
-            เรท/วัน = ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)} ÷ 30 ={" "}
-            <b>
-              ฿
-              {formatThaiNumber(
-                Math.round(salaryCalculation.dailySalaryRate || 0),
-              )}
-            </b>
-          </div>
-          <div className="text-txt-mid">
-            เดือนนี้ลาวันธรรมดา <b>{salaryCalculation.leaveDays}</b> วัน{" "}
-            <span className="text-xs text-txt-soft">(ไม่นับวันอาทิตย์)</span>
-          </div>
-          {salaryCalculation.leaveDays <= 2 ? (
-            <div className="text-green font-bold mt-1 pt-1 border-t border-dashed border-[#1A6B3A40]">
-              ได้โบนัส (2 − {salaryCalculation.leaveDays}) × ฿
-              {formatThaiNumber(
-                Math.round(salaryCalculation.dailySalaryRate || 0),
-              )}{" "}
-              = +฿
-              {formatThaiNumber(salaryCalculation.attendanceBonus)}
-            </div>
-          ) : (
-            <div className="text-txt-soft mt-1 pt-1 border-t border-dashed border-bdr">
-              ลาวันธรรมดาเกิน 2 วัน — ไม่ได้รับโบนัส
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Deductions inputs */}
-      <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
-        <div className="flex items-center gap-2 mb-3.5">
-          <div className="w-1.5 h-4.5 rounded-sm bg-red" />
-          <div className="font-bold text-sm text-txt">รายการหัก</div>
-          <div className="ml-auto text-sm font-bold text-red">
-            −฿{formatThaiNumber(salaryCalculation.deductions)}
-          </div>
-        </div>
-        {FIELDS_DED.map((f) => (
-          <div key={f.key} className="mb-2.5">
-            <label className="flex text-sm text-txt-mid mb-[5px] font-medium">
-              {f.icon} {f.label}
-            </label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
-                ฿
+            <div
+              className={`font-bold mb-1 flex items-center gap-1.5 ${salaryCalculation.attendanceBonus > 0 ? "text-green" : "text-txt-mid"}`}
+            >
+              🌟 โบนัสแห่งความขยัน(ไม่หยุด){" "}
+              <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
+                อัตโนมัติ
               </span>
-              <input
-                type="number"
-                inputMode="decimal"
-                min="0"
-                value={data[f.key] || 0}
-                onChange={(e) => update(f.key, e.target.value)}
-                className="w-full py-2.5 pr-3.5 pl-[30px] rounded-[10px] border border-bdr text-base font-semibold outline-none font-[inherit] text-txt bg-cream"
-              />
             </div>
-          </div>
-        ))}
-        {/* over-quota auto note */}
-        <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
-          <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
-            📋 หักลาเกินโควต้า{" "}
-            <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
-              อัตโนมัติ
-            </span>
-          </div>
-          <div>
-            เรท/วัน = ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)} ÷ 30 ={" "}
-            <b>
-              ฿
-              {formatThaiNumber(
-                Math.round(salaryCalculation.dailySalaryRate || 0),
-              )}
-            </b>
-          </div>
-          {overInfo.weekdays > 0 && (
-            <div>
-              วันธรรมดา {overInfo.weekdays} วัน × ฿
-              {formatThaiNumber(
-                Math.round(salaryCalculation.dailySalaryRate || 0),
-              )}{" "}
-              ={" "}
+            <div className="text-txt-mid">
+              เรท/วัน = ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)} ÷ 30 ={" "}
               <b>
                 ฿
                 {formatThaiNumber(
-                  Math.round(
-                    overInfo.weekdays *
-                      (salaryCalculation.dailySalaryRate || 0),
-                  ),
+                  Math.round(salaryCalculation.dailySalaryRate || 0),
                 )}
               </b>
             </div>
-          )}
-          {overInfo.sundays > 0 && (
-            <div>
-              วันอาทิตย์ {overInfo.sundays} วัน × ฿
-              {formatThaiNumber(
-                Math.round(salaryCalculation.dailySalaryRate || 0),
-              )}{" "}
-              × 1.5 ={" "}
-              <b>
-                ฿
+            <div className="text-txt-mid">
+              เดือนนี้ลาวันธรรมดา <b>{salaryCalculation.leaveDays}</b> วัน{" "}
+              <span className="text-xs text-txt-soft">(ไม่นับวันอาทิตย์)</span>
+            </div>
+            {salaryCalculation.leaveDays <= 2 ? (
+              <div className="text-green font-bold mt-1 pt-1 border-t border-dashed border-[#1A6B3A40]">
+                ได้โบนัส (2 − {salaryCalculation.leaveDays}) × ฿
                 {formatThaiNumber(
-                  Math.round(
-                    overInfo.sundays *
-                      (salaryCalculation.dailySalaryRate || 0) *
-                      1.5,
-                  ),
-                )}
-              </b>
-            </div>
-          )}
-          {overTotalDays === 0 && (
-            <div className="text-txt-soft">ไม่มีการลาเกินโควต้า</div>
-          )}
-          {overTotalDays > 0 && (
-            <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-              รวมหัก: −฿{formatThaiNumber(salaryCalculation.overQuotaDeduction)}
-            </div>
-          )}
+                  Math.round(salaryCalculation.dailySalaryRate || 0),
+                )}{" "}
+                = +฿
+                {formatThaiNumber(salaryCalculation.attendanceBonus)}
+              </div>
+            ) : (
+              <div className="text-txt-soft mt-1 pt-1 border-t border-dashed border-bdr">
+                ลาวันธรรมดาเกิน 2 วัน — ไม่ได้รับโบนัส
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* auto advance deduction note */}
-        <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
-          <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
-            💵 หักเงินเบิกล่วงหน้า{" "}
-            <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
-              อัตโนมัติ
-            </span>
+        {/* Deductions inputs */}
+        <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+          <div className="flex items-center gap-2 mb-3.5">
+            <div className="w-1.5 h-4.5 rounded-sm bg-red" />
+            <div className="font-bold text-sm text-txt">รายการหัก</div>
+            <div className="ml-auto text-sm font-bold text-red">
+              −฿{formatThaiNumber(salaryCalculation.deductions)}
+            </div>
           </div>
-          {monthApprovedAdvances.length === 0 ? (
-            <div className="text-txt-soft">ไม่มีการเบิกเงินที่ได้รับอนุมัติเดือนนี้</div>
-          ) : (
-            <>
-              {monthApprovedAdvances.map((r, i) => {
-                const date = new Date(r.approvedAt || r.submittedAt);
-                return (
-                  <div
-                    key={i}
-                    className="flex justify-between items-center py-[3px]"
-                  >
-                    <span>
-                      {date.toLocaleDateString("th-TH", {
-                        day: "numeric",
-                        month: "short",
-                      })}{" "}
-                      · {r.reason || "-"}
-                    </span>
-                    <b>฿{formatThaiNumber(r.amount)}</b>
-                  </div>
-                );
-              })}
-              <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-                รวมหัก: −฿{formatThaiNumber(salaryCalculation.advanceDeduction)}
+          {FIELDS_DED.map((f) => (
+            <div key={f.key} className="mb-2.5">
+              <label className="flex text-sm text-txt-mid mb-[5px] font-medium">
+                {f.icon} {f.label}
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
+                  ฿
+                </span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  value={data[f.key] || 0}
+                  onChange={(e) => update(f.key, e.target.value)}
+                  className="w-full py-2.5 pr-3.5 pl-[30px] rounded-[10px] border border-bdr text-base font-semibold outline-none font-[inherit] text-txt bg-cream"
+                />
               </div>
-            </>
-          )}
+            </div>
+          ))}
+          {/* Social security — read-only (กำหนดในข้อมูลพนักงาน) */}
+          <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
+            <span className="text-base">🏛</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
+                <span>หักประกันสังคม</span>
+                <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">
+                  แก้ในแท็บ "ข้อมูลพนักงาน"
+                </span>
+              </div>
+              <div className="text-base font-bold text-txt mt-px">
+                −฿{formatThaiNumber(salaryCalculation.socialSecurity || 0)}
+              </div>
+            </div>
+          </div>
+          {/* over-quota auto note */}
+          <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
+            <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
+              📋 หักลาเกินโควต้า{" "}
+              <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
+                อัตโนมัติ
+              </span>
+            </div>
+            <div>
+              เรท/วัน = ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)} ÷ 30 ={" "}
+              <b>
+                ฿
+                {formatThaiNumber(
+                  Math.round(salaryCalculation.dailySalaryRate || 0),
+                )}
+              </b>
+            </div>
+            {overInfo.weekdays > 0 && (
+              <div>
+                วันธรรมดา {overInfo.weekdays} วัน × ฿
+                {formatThaiNumber(
+                  Math.round(salaryCalculation.dailySalaryRate || 0),
+                )}{" "}
+                ={" "}
+                <b>
+                  ฿
+                  {formatThaiNumber(
+                    Math.round(
+                      overInfo.weekdays *
+                        (salaryCalculation.dailySalaryRate || 0),
+                    ),
+                  )}
+                </b>
+              </div>
+            )}
+            {overInfo.sundays > 0 && (
+              <div>
+                วันอาทิตย์ {overInfo.sundays} วัน × ฿
+                {formatThaiNumber(
+                  Math.round(salaryCalculation.dailySalaryRate || 0),
+                )}{" "}
+                × 1.5 ={" "}
+                <b>
+                  ฿
+                  {formatThaiNumber(
+                    Math.round(
+                      overInfo.sundays *
+                        (salaryCalculation.dailySalaryRate || 0) *
+                        1.5,
+                    ),
+                  )}
+                </b>
+              </div>
+            )}
+            {overTotalDays === 0 && (
+              <div className="text-txt-soft">ไม่มีการลาเกินโควต้า</div>
+            )}
+            {overTotalDays > 0 && (
+              <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
+                รวมหัก: −฿
+                {formatThaiNumber(salaryCalculation.overQuotaDeduction)}
+              </div>
+            )}
+          </div>
+
+          {/* auto advance deduction note */}
+          <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
+            <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
+              💵 หักเงินเบิกล่วงหน้า{" "}
+              <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
+                อัตโนมัติ
+              </span>
+            </div>
+            {monthApprovedAdvances.length === 0 ? (
+              <div className="text-txt-soft">ไม่มีการเบิกเงินที่ได้รับอนุมัติเดือนนี้</div>
+            ) : (
+              <>
+                {monthApprovedAdvances.map((r, i) => {
+                  const date = new Date(r.approvedAt || r.submittedAt);
+                  return (
+                    <div
+                      key={i}
+                      className="flex justify-between items-center py-[3px]"
+                    >
+                      <span>
+                        {date.toLocaleDateString("th-TH", {
+                          day: "numeric",
+                          month: "short",
+                        })}{" "}
+                        · {r.reason || "-"}
+                      </span>
+                      <b>฿{formatThaiNumber(r.amount)}</b>
+                    </div>
+                  );
+                })}
+                <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
+                  รวมหัก: −฿
+                  {formatThaiNumber(salaryCalculation.advanceDeduction)}
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>
       </div>
 
       {/* note */}

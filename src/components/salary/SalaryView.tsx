@@ -565,7 +565,7 @@ export default function SalaryView({
             icon: "🏛",
             main: "หักประกันสังคม",
             sub: "",
-            value: data.socialSecurity,
+            value: salaryCalculation.socialSecurity,
           },
           {
             icon: "📋",
