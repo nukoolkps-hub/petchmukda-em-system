@@ -53,6 +53,17 @@ select:focus {
   outline: none;
 }
 
+/* ─── ซ่อนปุ่มลูกศรขึ้น-ลงของช่อง number ทั้งระบบ ──────────────── */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* ─── Keyframe Animations ──────────────────────────────────── */
 @keyframes toastIn {
   from {

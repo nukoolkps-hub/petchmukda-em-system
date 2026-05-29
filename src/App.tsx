@@ -354,6 +354,7 @@ export default function LeaveApp() {
                       remain={leaveForm.remain}
                       overLimit={leaveForm.overLimit}
                       onSubmit={() => profile && leaveForm.submit(profile)}
+                      onDelete={leaveForm.handleDelete}
                     />
                   )
                 }

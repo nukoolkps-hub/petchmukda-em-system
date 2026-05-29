@@ -10,17 +10,5 @@
       "measurementId": "G-0000000000"
     },
     "firestoreDatabaseId": "petchmukda-bot"
-  },
-  "production": {
-    "firebaseConfig": {
-      "apiKey": "AIzaSyD-OVWakz2rfJ8E96wqJ8hZY1aF0zs-4Eg",
-      "authDomain": "petchmukda-bot.firebaseapp.com",
-      "projectId": "petchmukda-bot",
-      "storageBucket": "petchmukda-bot.firebasestorage.app",
-      "messagingSenderId": "103538947541",
-      "appId": "1:103538947541:web:5a87a3421cbbf3ad69395c",
-      "measurementId": "G-YYB26ELHDY"
-    },
-    "firestoreDatabaseId": "petchmukda-bot"
   }
 }

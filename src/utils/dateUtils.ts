@@ -52,3 +52,7 @@ export function fmtShort(d: string): string {
 export function isPast(e: string): boolean {
   return e < TODAY;
 }
+
+export function isFuture(s: string): boolean {
+  return s > TODAY;
+}

@@ -25,6 +25,20 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/employees/$(employeeId)).data.lineUserId == request.auth.uid;
     }
 
+    // วันที่ปัจจุบันตามเขตเวลาไทย (UTC+7) รูปแบบ YYYY-MM-DD
+    // เทียบกับ leave.start (string YYYY-MM-DD) แบบ lexicographic ได้ตรง ๆ
+    function bangkokTime() {
+      return request.time + duration.value(7, 'h');
+    }
+    function pad2(n) {
+      return (n < 10 ? '0' : '') + string(n);
+    }
+    function bangkokToday() {
+      return string(bangkokTime().year())
+        + '-' + pad2(bangkokTime().month())
+        + '-' + pad2(bangkokTime().day());
+    }
+
     function isSelfProfileUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
         "avatar",
@@ -114,7 +128,11 @@ service cloud.firestore {
       allow read:   if isAdmin() || isEmployeeOwner(resource.data.employeeId);
       allow create: if isEmployeeOwner(request.resource.data.employeeId) && validLeaveCreate();
       allow update: if isAdmin();
-      allow delete: if isAdmin() || isEmployeeOwner(resource.data.employeeId);
+      // ลบเอง: เฉพาะใบลาที่ยังไม่เริ่ม (start > วันนี้)
+      // วันนี้และอดีต: admin เท่านั้น
+      allow delete: if isAdmin()
+        || (isEmployeeOwner(resource.data.employeeId)
+          && resource.data.start > bangkokToday());
     }
 
     // ─── Salaries ────────────────────────────────────────────────
