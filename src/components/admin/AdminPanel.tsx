@@ -119,15 +119,13 @@ export default function AdminPanel({
   );
   const [selYear, setSelYear] = useState(`${now0.getFullYear()}`);
 
-  const pastLeaves = allLeaves
-    .filter((lv) => isPast(lv.end))
+  // รายการลาทั้งหมด (รวมอนาคต) — admin ต้องเห็นทุกใบไม่ใช่แค่ที่ผ่านมาแล้ว
+  const filteredLeaves = allLeaves
     .filter((lv) => !employeeFilter || lv.employeeName.includes(employeeFilter))
     .filter((lv) => !filterType || lv.type === filterType)
-    .sort((a, b) => b.end.localeCompare(a.end));
+    .sort((a, b) => b.start.localeCompare(a.start));
   const uniqueEmployees: string[] = [
-    ...new Set(
-      allLeaves.filter((lv) => isPast(lv.end)).map((lv) => lv.employeeName),
-    ),
+    ...new Set(allLeaves.map((lv) => lv.employeeName)),
   ] as string[];
   const activeGroup = getAdminGroupForSection(section);
   const pendingAdvanceCount = (advanceRequests || []).filter(
@@ -652,13 +650,13 @@ export default function AdminPanel({
               ))}
             </select>
           </div>
-          {pastLeaves.length === 0 && (
+          {filteredLeaves.length === 0 && (
             <div className="text-center text-txt-soft py-10 text-base">
               ไม่มีรายการลาย้อนหลัง
             </div>
           )}
           <div className="flex flex-col gap-2.5">
-            {pastLeaves.map((lv) => {
+            {filteredLeaves.map((lv) => {
               const lt = LEAVE_TYPES.find((t) => t.id === lv.type);
               const employeeInfo = employeeDirectory.find(
                 (e) => e.name === lv.employeeName,
@@ -679,8 +677,13 @@ export default function AdminPanel({
                     border={`2px solid ${COLORS.gold}40`}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-txt text-base mb-[3px]">
+                    <div className="font-bold text-txt text-base mb-[3px] flex items-center gap-1.5">
                       {lv.employeeName}
+                      {!isPast(lv.end) && (
+                        <span className="text-xs font-bold px-1.5 py-px rounded-[10px] bg-gold-pale text-maroon border border-[#C9973A40]">
+                          🔜 อนาคต
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 mb-1">
                       <span
