@@ -1025,6 +1025,54 @@ export default function SalaryAdminEdit({
               </>
             )}
           </div>
+
+          {/* custom deductions — รายการหักที่เพิ่มเอง */}
+          {(Array.isArray(data.customDeductions)
+            ? data.customDeductions
+            : []
+          ).map((item, index) => (
+            <div key={index} className="flex items-center gap-2 mt-2.5">
+              <input
+                type="text"
+                value={item?.label || ""}
+                onChange={(e) =>
+                  updateCustomDeduction(index, "label", e.target.value)
+                }
+                placeholder="ชื่อรายการ"
+                className="flex-1 min-w-0 px-3 py-2.5 rounded-[10px] border border-bdr text-sm font-semibold outline-none font-[inherit] text-txt bg-cream"
+              />
+              <div className="relative w-[110px] shrink-0">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
+                  ฿
+                </span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  value={item?.amount || ""}
+                  onChange={(e) =>
+                    updateCustomDeduction(index, "amount", e.target.value)
+                  }
+                  className="w-full py-2.5 pr-2 pl-[26px] rounded-[10px] border border-bdr text-sm font-bold text-right outline-none font-[inherit] text-txt bg-cream"
+                />
+              </div>
+              <button
+                type="button"
+                aria-label="ลบรายการ"
+                onClick={() => removeCustomDeduction(index)}
+                className="w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
+              >
+                <IconTrash size={16} color={COLORS.red} stroke={2.2} />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addCustomDeduction}
+            className="w-full mt-2.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-[#C0392B40] bg-red-lt text-red text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
+          >
+            ➕ เพิ่มรายการหัก
+          </button>
         </div>
       </div>
 

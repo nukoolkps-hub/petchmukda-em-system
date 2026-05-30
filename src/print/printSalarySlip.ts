@@ -116,6 +116,10 @@ function buildSalarySlipHTML(
       value: salaryCalculation.overQuotaDeduction,
     });
   }
+  if (Array.isArray(data.customDeductions))
+    for (const d of data.customDeductions)
+      if (d?.amount > 0)
+        dedRows.push({ label: d.label || "รายการหัก", value: d.amount });
 
   const slipHTML = `<!doctype html>
 <html lang="th">
