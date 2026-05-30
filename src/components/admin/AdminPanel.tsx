@@ -507,14 +507,34 @@ export default function AdminPanel({
                           </div>
                           <div className="flex gap-1.5 flex-wrap items-center">
                             {personalDays > 0 && (
-                              <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setExpandedChip((prev) =>
+                                    prev === `${name}:personal`
+                                      ? null
+                                      : `${name}:personal`,
+                                  )
+                                }
+                                className={`bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold cursor-pointer font-[inherit] border ${expandedChip === `${name}:personal` ? "border-gold" : "border-transparent"}`}
+                              >
                                 💼 ลากิจ {personalDays} วัน
-                              </div>
+                              </button>
                             )}
                             {sickDays > 0 && (
-                              <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E]">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setExpandedChip((prev) =>
+                                    prev === `${name}:sick`
+                                      ? null
+                                      : `${name}:sick`,
+                                  )
+                                }
+                                className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E] cursor-pointer font-[inherit] border ${expandedChip === `${name}:sick` ? "border-[#0F766E]" : "border-transparent"}`}
+                              >
                                 🏥 ลาป่วย {sickDays} วัน
-                              </div>
+                              </button>
                             )}
                             {sundays > 0 && (
                               <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9]">
@@ -525,6 +545,29 @@ export default function AdminPanel({
                               </div>
                             )}
                           </div>
+                          {expandedChip?.startsWith(`${name}:`) && (
+                            <div className="mt-2 pl-2.5 text-xs text-txt-mid border-l-2 border-gold/40 flex flex-col gap-0.5">
+                              {monthLeaves
+                                .filter(
+                                  (lv) =>
+                                    lv.type === expandedChip.split(":")[1],
+                                )
+                                .sort((a, b) =>
+                                  a.start.localeCompare(b.start),
+                                )
+                                .map((lv) => (
+                                  <div key={lv.id}>
+                                    📅 {fmtDate(lv.start)}
+                                    {lv.start !== lv.end
+                                      ? ` – ${fmtDate(lv.end)}`
+                                      : ""}{" "}
+                                    <span className="text-txt-soft">
+                                      ({lv.days} วัน)
+                                    </span>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
                         </div>
                       );
                     })
