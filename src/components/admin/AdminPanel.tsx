@@ -697,8 +697,10 @@ export default function AdminPanel({
                       </span>
                     </div>
                     <div className="text-sm text-txt-mid">
-                      {fmtDate(lv.start)}
-                      {lv.start !== lv.end ? ` – ${fmtDate(lv.end)}` : ""}
+                      {fmtDateWithWeekday(lv.start)}
+                      {lv.start !== lv.end
+                        ? ` - ${fmtDateWithWeekday(lv.end)}`
+                        : ""}
                     </div>
                   </div>
                   <button
