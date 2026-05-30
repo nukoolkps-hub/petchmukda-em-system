@@ -16,40 +16,38 @@ export default function MosaicPattern({
   const g3 = `${idPrefix}3`;
 
   if (variant === "sidebar") {
+    // Abstract orbs — radial gradients ขนาดใหญ่ overlap กัน ดู organic ไม่ tile ซ้ำ
     return (
       <svg
-        className="absolute top-0 right-0 h-full w-[70%] pointer-events-none opacity-60"
-        viewBox="0 0 220 500"
-        preserveAspectRatio="xMaxYMid slice"
+        className="absolute inset-0 h-full w-full pointer-events-none"
+        viewBox="0 0 260 900"
+        preserveAspectRatio="xMidYMid slice"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id={g1} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#C9973A" stopOpacity="0.04" />
-          </linearGradient>
-          <linearGradient id={g2} x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#9B3030" stopOpacity="0.06" />
-          </linearGradient>
+          <radialGradient id={g1} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.35" />
+            <stop offset="60%" stopColor="#C9973A" stopOpacity="0.10" />
+            <stop offset="100%" stopColor="#C9973A" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id={g2} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#9B3030" stopOpacity="0.45" />
+            <stop offset="70%" stopColor="#5C1212" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#5C1212" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id={g3} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.20" />
+            <stop offset="100%" stopColor="#E8C87A" stopOpacity="0" />
+          </radialGradient>
         </defs>
-        {[0, 80, 160, 240, 320, 400].map((y) => [
-          <polygon
-            key={`a${y}`}
-            points={`80,${y} 140,${y} 110,${y + 40}`}
-            fill={`url(#${g1})`}
-          />,
-          <polygon
-            key={`b${y}`}
-            points={`140,${y} 220,${y} 220,${y + 55} 175,${y + 30}`}
-            fill={`url(#${g2})`}
-          />,
-          <polygon
-            key={`c${y}`}
-            points={`110,${y + 40} 175,${y + 30} 160,${y + 75} 95,${y + 70}`}
-            fill={`url(#${g1})`}
-          />,
-        ])}
+        {/* orb ทอง บนขวา */}
+        <ellipse cx="220" cy="80" rx="180" ry="160" fill={`url(#${g1})`} />
+        {/* orb แดงเข้ม กลางซ้าย */}
+        <ellipse cx="40" cy="350" rx="200" ry="220" fill={`url(#${g2})`} />
+        {/* orb ทองอ่อน กลางขวา */}
+        <ellipse cx="240" cy="500" rx="160" ry="180" fill={`url(#${g3})`} />
+        {/* orb ทอง ล่าง */}
+        <ellipse cx="120" cy="780" rx="190" ry="170" fill={`url(#${g1})`} />
       </svg>
     );
   }
