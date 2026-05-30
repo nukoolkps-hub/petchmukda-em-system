@@ -68,9 +68,6 @@ export default function RequestTab({
 
   return (
     <div>
-      <div className="text-center mb-0.5">
-        <Diamond size={14} />
-      </div>
       <GoldDivider />
 
       {/* quota status in form */}
@@ -173,17 +170,14 @@ export default function RequestTab({
 
       <button
         onClick={onSubmit}
-        className="w-full p-[17px] mt-1.5 border-none rounded-2xl text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-linear-to-br from-gold via-gold-lt to-gold text-maroon-dk shadow-[0_6px_20px_rgba(201,151,58,0.31)]"
+        className="w-full p-[17px] mt-1.5 border-none rounded-2xl text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-linear-135 from-maroon to-maroon-lt text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
       >
-        <Diamond size={18} color={COLORS.maroonDark} />
+        <Diamond size={18} color={COLORS.goldLight} />
         ยื่นคำขอลา
       </button>
 
       {/* ── ประวัติการลาของฉัน ── */}
       <div className="mt-8">
-        <div className="text-center mb-0.5">
-          <Diamond size={14} />
-        </div>
         <GoldDivider />
         <div className="text-base font-bold text-txt mb-3.5 flex items-center gap-2">
           📋 ประวัติการลาของฉัน
