@@ -204,8 +204,10 @@ function buildCertificateHTML(
     @media print{
       html,body{width:210mm;height:297mm;}
       body{background:#fff;padding:0;font-size:13px;line-height:1.4;}
+      /* ยืดกรอบให้เต็มหน้ากระดาษ A4 (297mm - margin 6mm x 2 = 285mm)
+         .body มี flex:1 → ดันส่วนเซ็นชื่อ + validity ลงล่างสุดของกรอบ */
       .doc{box-shadow:none !important;border:1px solid #C9973A !important;
-        min-height:auto !important;max-width:198mm !important;margin:0 auto !important;
+        min-height:285mm !important;max-width:198mm !important;margin:0 auto !important;
         page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
     }
