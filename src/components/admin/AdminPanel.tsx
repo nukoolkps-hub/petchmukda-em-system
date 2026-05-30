@@ -372,6 +372,12 @@ export default function AdminPanel({
           )
             .sort()
             .reverse();
+          // selectedMonth default = เดือนปัจจุบัน แต่ dropdown มีให้เลือกแค่
+          // เดือนที่มีใบลาจริง → ถ้า selectedMonth ไม่อยู่ใน list ก็ filter
+          // ไม่เจอ (และ <select> โชว์ option แรกแบบโกหก) → fall back มา months[0]
+          const effectiveMonth = months.includes(selectedMonth)
+            ? selectedMonth
+            : months[0] || selectedMonth;
           const years: string[] = (
             [
               ...new Set(allLeaves.map((lv) => lv.start.slice(0, 4))),
@@ -415,7 +421,7 @@ export default function AdminPanel({
                     📅 สรุปรายเดือน
                   </div>
                   <select
-                    value={selectedMonth}
+                    value={effectiveMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
                     className="pl-2.5 pr-8 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
                   >
@@ -444,7 +450,7 @@ export default function AdminPanel({
                       const monthLeaves = allLeaves.filter(
                         (lv) =>
                           lv.employeeName === name &&
-                          lv.start.startsWith(selectedMonth),
+                          lv.start.startsWith(effectiveMonth),
                       );
                       const totalTimes = monthLeaves.length;
                       if (totalTimes === 0) return null;
@@ -523,7 +529,7 @@ export default function AdminPanel({
                       allLeaves.filter(
                         (lv) =>
                           lv.employeeName === name &&
-                          lv.start.startsWith(selectedMonth),
+                          lv.start.startsWith(effectiveMonth),
                       ).length === 0,
                   ) && (
                     <div className="text-txt-soft text-sm text-center py-4">
