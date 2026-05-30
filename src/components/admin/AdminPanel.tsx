@@ -168,6 +168,8 @@ export default function AdminPanel({
   const [filterType, setFilterType] = useState("");
   const [editingRole, setEditingRole] = useState({});
   const [editingEmpId, setEditingEmpId] = useState<string | null>(null);
+  // key = `${employeeName}:${type}` — chip ลากิจ/ลาป่วย ที่ถูกกดให้แสดงรายการวัน
+  const [expandedChip, setExpandedChip] = useState<string | null>(null);
   const [confirmDeleteEmp, setConfirmDeleteEmp] = useState<{
     id: string;
     name: string;
@@ -496,9 +498,6 @@ export default function AdminPanel({
                                   ครั้ง
                                 </span>
                               </div>
-                              <div className="text-xs text-txt-soft">
-                                {totalDays} วันรวม
-                              </div>
                               {overQuota && (
                                 <div className="text-xs text-red font-bold">
                                   🚨 เกินโควต้า
@@ -616,11 +615,9 @@ export default function AdminPanel({
                             </div>
                             <div className="text-right">
                               <div className="font-extrabold text-xl text-maroon">
-                                {totalDays}
+                                {totalTimes}
                               </div>
-                              <div className="text-xs text-txt-soft">
-                                วันรวม · {totalTimes} ครั้ง
-                              </div>
+                              <div className="text-xs text-txt-soft">ครั้ง</div>
                             </div>
                           </div>
                           <div className="bg-cream-dk rounded-md h-[7px] overflow-hidden mb-2.5">
