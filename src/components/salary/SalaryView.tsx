@@ -354,7 +354,7 @@ export default function SalaryView({
           <div className="flex items-center gap-2">
             <div className="flex-1 min-w-0">
               <div className="text-sm text-txt-mid font-semibold">
-                📋 สลิปเงินเดือน
+                📋 สลิป
               </div>
             </div>
             <button
@@ -369,7 +369,7 @@ export default function SalaryView({
           </div>
           <div className="flex items-center gap-2">
             <div className="flex-1 text-sm text-txt-mid font-semibold min-w-0">
-              📄 ใบรับรองเงินเดือน
+              📄 ใบรับรอง
             </div>
             <button
               type="button"
