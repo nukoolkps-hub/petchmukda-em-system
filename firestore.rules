@@ -176,9 +176,12 @@ service cloud.firestore {
     }
 
     // ─── Payroll Confirms ────────────────────────────────────────
-    // เฉพาะ admin
+    // read: signed-in (พนักงานใช้เช็คว่า admin ยืนยันยอดแล้วหรือยัง
+    //       เพื่อปลดล็อกการพิมพ์สลิปเงินเดือน)
+    // write: admin
     match /payrollConfirms/{key} {
-      allow read, write: if isAdmin();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // ─── Cert Counters (running number ใบรับรอง) ─────────────────

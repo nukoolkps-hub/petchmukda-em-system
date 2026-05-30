@@ -261,10 +261,12 @@ export function useSalariesForScope({
   );
 }
 
-export function usePayrollConfirmsForScope({ isAdmin }: { isAdmin: boolean }) {
+export function usePayrollConfirmsForScope(_args: { isAdmin: boolean }) {
+  // ทั้ง admin และ employee ต้องเห็นสถานะ "ยืนยันยอดแล้ว/ยัง" — employee
+  // ใช้เพื่อปลดล็อกการพิมพ์สลิป (เห็นแค่ confirmedAt + totalAmount)
   return useScopedSubscription(
-    () => (isAdmin ? subscribePayrollConfirms : null),
+    () => subscribePayrollConfirms,
     {} as Record<string, any>,
-    [isAdmin],
+    [],
   );
 }
