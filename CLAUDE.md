@@ -106,8 +106,14 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 
 ## Deployment
 
-- **Hosting:** GitHub Actions auto deploy on push to `main`
-- **Functions:** Manual `firebase deploy --only functions`
+ทุกอย่าง auto deploy ผ่าน GitHub Actions (`.github/workflows/deploy.yml`) เมื่อ push เข้า `main`:
+- **Hosting** (`deploy-hosting`)
+- **Functions** (`deploy-functions`) — ไม่ต้องรัน `firebase deploy` เอง
+- **Firestore Rules** (`deploy-firestore-rules`)
+- **Storage Rules** (`deploy-storage-rules`)
+
+ผู้พัฒนาทำงานผ่าน Claude Code on the web ทั้งหมด — **ไม่มี local clone**, file ทุกอย่างอยู่บน GitHub และ container ของ session นี้เท่านั้น ดังนั้นทำ deploy ด้วยมือไม่ได้ และไม่ต้องบอก user ให้รันคำสั่งบนเครื่องตัวเอง
+
 - **LINE config:** Firestore `config/secrets` document
 - **URL:** https://petchmukda-bot.web.app
 
