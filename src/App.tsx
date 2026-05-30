@@ -152,6 +152,14 @@ export default function LeaveApp() {
     ? advanceRequests.filter((r) => r.employeeId === currentEmployeeId)
     : [];
 
+  /* ─── Bank account required — บังคับให้ตั้งค่าก่อนใช้งาน ───── */
+  const needsBankSetup =
+    !isAdmin && !!profile && !profile.bankAccountNumber;
+
+  useEffect(() => {
+    if (needsBankSetup) setShowEditProfile(true);
+  }, [needsBankSetup, setShowEditProfile]);
+
   /* ─── Toast ────────────────────────────────────────────────── */
   const [toastMsg, setToastMsg] = useState("");
 
@@ -463,7 +471,12 @@ export default function LeaveApp() {
               employeeId={currentEmployeeId}
               lockName
               onSave={handleProfileSave}
-              onClose={profile ? () => setShowEditProfile(false) : undefined}
+              // ถ้ายังไม่กรอกบัญชี ห้ามปิดจนกว่าจะกรอก (onClose = undefined)
+              onClose={
+                needsBankSetup
+                  ? undefined
+                  : () => setShowEditProfile(false)
+              }
             />
           )}
 

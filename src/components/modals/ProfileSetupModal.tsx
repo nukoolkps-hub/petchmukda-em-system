@@ -92,20 +92,17 @@ export default function ProfileSetupModal({
       ok = false;
     } else setAvErr("");
 
-    // Bank validation: optional field, but if either filled, both required + format check
-    if (
-      (bank && !bankAccountNumber.trim()) ||
-      (!bank && bankAccountNumber.trim())
-    ) {
-      setBankErr("กรุณาเลือกธนาคารและกรอกเลขบัญชีให้ครบ");
+    // Bank validation: required — ต้องเลือกธนาคารและกรอกเลขบัญชี
+    if (!bank || !bankAccountNumber.trim()) {
+      setBankErr("กรุณาเลือกธนาคารและกรอกเลขบัญชี");
       ok = false;
-    } else if (bankAccountNumber.trim()) {
+    } else {
       const accError = validateBankAccount(bankAccountNumber);
       if (accError) {
         setBankErr(accError);
         ok = false;
       } else setBankErr("");
-    } else setBankErr("");
+    }
 
     if (!ok) return;
     setSaving(true);
@@ -287,11 +284,8 @@ export default function ProfileSetupModal({
 
       {/* ── Bank info section ── */}
       <div className="mb-4 pt-4 border-t border-dashed border-bdr">
-        <label className="flex items-center gap-2 text-sm font-semibold text-txt-mid mb-2.5">
+        <label className="block text-sm font-semibold text-txt-mid mb-2.5">
           🏦 บัญชีธนาคารสำหรับรับเงินเดือน
-          <span className="text-xs font-semibold py-0.5 px-[7px] rounded-full bg-cream text-txt-soft ml-auto border border-bdr">
-            ไม่บังคับ
-          </span>
         </label>
 
         {/* bank dropdown */}
