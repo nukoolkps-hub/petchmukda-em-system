@@ -254,37 +254,55 @@ export default function SalaryAdminEdit({
         </div>
       </div>
 
-      {/* employee cards — เลือกพนักงานแบบการ์ด มองง่ายกว่า dropdown */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 mb-3.5">
+      {/* employee cards — เลือกพนักงานแบบการ์ด มองง่ายกว่า dropdown
+         จุดสถานะ: เขียว=บันทึกชิ้นเดือนนี้แล้ว, เทา=ยังไม่บันทึก */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 mb-3.5">
         {employeeDirectory.map((employee) => {
           const selected = employee.id === selectedEmployeeId;
           const role = roles?.find((r) => r.id === employee.roleId);
+          const monthData = salaryData[employee.id]?.[selectedMonth];
+          const hasData = !!(
+            monthData &&
+            ((monthData.singleRatePieces || 0) > 0 ||
+              (monthData.normalSalePieces || 0) > 0 ||
+              (monthData.specialSalePieces || 0) > 0 ||
+              (monthData.buyPieces || 0) > 0 ||
+              (monthData.invitePieces || 0) > 0 ||
+              (monthData.transferPieces || 0) > 0)
+          );
           return (
             <button
               key={employee.id}
               type="button"
               onClick={() => tryChangeEmployee(employee.id)}
-              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-[10px] border-[1.5px] text-left cursor-pointer font-[inherit] transition-colors ${
+              className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] transition-colors ${
                 selected
                   ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
                   : "border-bdr bg-white"
               }`}
             >
+              <span
+                aria-label={hasData ? "บันทึกแล้ว" : "ยังไม่บันทึก"}
+                title={hasData ? "บันทึกแล้ว" : "ยังไม่บันทึก"}
+                className={`absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full border border-white shadow-sm ${
+                  hasData ? "bg-green" : "bg-txt-soft/40"
+                }`}
+              />
               <AvatarCircle
                 avatar={employee.avatar}
                 avatarType={employee.avatarType}
                 avatarImageUrl={employee.avatarImageUrl}
-                size={28}
-                fontSize={11}
-                border={`1.5px solid ${COLORS.gold}40`}
+                size={44}
+                fontSize={14}
+                border={`2px solid ${COLORS.gold}40`}
               />
-              <div className="flex-1 min-w-0">
+              <div className="w-full min-w-0 text-center">
                 <div
-                  className={`font-bold text-xs truncate leading-tight ${selected ? "text-maroon" : "text-txt"}`}
+                  className={`font-bold text-sm truncate leading-tight ${selected ? "text-maroon" : "text-txt"}`}
                 >
                   {employee.name}
                 </div>
-                <div className="text-[10px] text-txt-soft truncate leading-tight mt-px">
+                <div className="text-xs text-txt-soft truncate leading-tight mt-0.5">
                   {role?.icon} {employee.role || "-"}
                 </div>
               </div>
