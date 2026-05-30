@@ -14,6 +14,11 @@ import AdminPanel from "./components/admin/AdminPanel";
 import HomeTab from "./components/home/HomeTab";
 import RequestTab from "./components/home/RequestTab";
 import SuccessScreen from "./components/home/SuccessScreen";
+import {
+  ADMIN_NAV_GROUPS,
+  type AdminSectionId,
+  getAdminGroupForSection,
+} from "./components/layout/adminNavConfig";
 import BottomNav from "./components/layout/BottomNav";
 import DesktopHeader from "./components/layout/DesktopHeader";
 import MobileHeader from "./components/layout/MobileHeader";
@@ -181,6 +186,21 @@ export default function LeaveApp() {
     showToast,
   });
 
+  /* ─── Admin section state (lifted up so the Sidebar can drive it on desktop) */
+  const [adminSection, setAdminSection] = useState<AdminSectionId>("summary");
+  const [adminUnsavedDirty, setAdminUnsavedDirty] = useState(false);
+  function tryChangeAdminSection(next: AdminSectionId) {
+    if (next === adminSection) return;
+    if (adminUnsavedDirty) {
+      const ok = window.confirm(
+        "⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากออกจากหน้านี้ ข้อมูลที่แก้ไขจะหายไป\n\nต้องการออกจากหน้านี้ใช่ไหม?",
+      );
+      if (!ok) return;
+      setAdminUnsavedDirty(false);
+    }
+    setAdminSection(next);
+  }
+
   /* ─── Modal state ──────────────────────────────────────────── */
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -282,6 +302,11 @@ export default function LeaveApp() {
           startHold={() => {}}
           endHold={() => {}}
           onRingComplete={() => {}}
+          adminSection={isAdmin ? adminSection : undefined}
+          onAdminSectionChange={isAdmin ? tryChangeAdminSection : undefined}
+          adminPendingAdvanceCount={
+            (advanceRequests || []).filter((r) => r.status === "pending").length
+          }
         />
 
         {/* ══ MAIN CONTENT ══ */}
@@ -392,6 +417,10 @@ export default function LeaveApp() {
                 element={
                   isAdmin ? (
                     <AdminPanel
+                      section={adminSection}
+                      onSectionChange={tryChangeAdminSection}
+                      unsavedDirty={adminUnsavedDirty}
+                      onUnsavedDirtyChange={setAdminUnsavedDirty}
                       allLeaves={allLeaves}
                       employeeDirectory={employeeDirectory}
                       onDelete={leaveForm.handleDelete}

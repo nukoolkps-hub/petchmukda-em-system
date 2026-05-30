@@ -1,23 +1,21 @@
 import {
-  IconCalendarEvent,
-  IconCashBanknote,
-  IconChartBar,
   IconCheck,
-  IconClipboardList,
-  IconCoins,
   IconCopy,
-  IconCreditCard,
-  IconDiamond,
   IconSettings,
   IconShield,
-  IconTag,
   IconTrash,
-  IconUsers,
   IconX,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { COLORS, LEAVE_TYPES, THAI_MONTH_NAMES } from "../../constants";
 import { fmtDate, isPast } from "../../utils/dateUtils";
+import {
+  ADMIN_NAV_GROUPS,
+  type AdminGroupId,
+  type AdminNavGroup,
+  type AdminSectionId,
+  getAdminGroupForSection,
+} from "../layout/adminNavConfig";
 import ConfirmModal from "../modals/ConfirmModal";
 import SalaryAdminEdit from "../salary/SalaryAdminEdit";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -25,74 +23,6 @@ import BaseModal from "../shared/BaseModal";
 import AdminAdvancePanel from "./AdminAdvancePanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
 import RolesAdminPanel from "./RolesAdminPanel";
-
-type AdminSectionId =
-  | "summary"
-  | "leaves"
-  | "salary"
-  | "advance"
-  | "payroll"
-  | "roles"
-  | "positions";
-
-type AdminGroupId = "leave" | "payroll" | "settings";
-type AdminNavIcon = typeof IconShield;
-
-interface AdminNavItem {
-  id: AdminSectionId;
-  label: string;
-  Icon: AdminNavIcon;
-}
-
-interface AdminNavGroup {
-  id: AdminGroupId;
-  label: string;
-  defaultSection: AdminSectionId;
-  Icon: AdminNavIcon;
-  items: AdminNavItem[];
-}
-
-const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
-  {
-    id: "leave",
-    label: "งานลา",
-    defaultSection: "summary",
-    Icon: IconCalendarEvent,
-    items: [
-      { id: "summary", label: "สรุปลา", Icon: IconChartBar },
-      { id: "leaves", label: "รายการลา", Icon: IconClipboardList },
-    ],
-  },
-  {
-    id: "payroll",
-    label: "เงินเดือน",
-    defaultSection: "salary",
-    Icon: IconCoins,
-    items: [
-      { id: "salary", label: "ค่าคอม", Icon: IconDiamond },
-      { id: "advance", label: "เบิกเงิน", Icon: IconCashBanknote },
-      { id: "payroll", label: "จ่ายเงิน", Icon: IconCreditCard },
-    ],
-  },
-  {
-    id: "settings",
-    label: "ตั้งค่า",
-    defaultSection: "roles",
-    Icon: IconSettings,
-    items: [
-      { id: "roles", label: "พนักงาน", Icon: IconUsers },
-      { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
-    ],
-  },
-];
-
-function getAdminGroupForSection(section: AdminSectionId): AdminNavGroup {
-  return (
-    ADMIN_NAV_GROUPS.find((group) =>
-      group.items.some((item) => item.id === section),
-    ) || ADMIN_NAV_GROUPS[0]
-  );
-}
 
 function AdminNavBadge({ count }: { count: number }) {
   return (
@@ -121,36 +51,20 @@ export default function AdminPanel({
   payrollConfirms,
   onSetPayrollConfirm,
   showToast,
+  // controlled by App so the desktop Sidebar can drive section as well
+  section,
+  onSectionChange,
+  unsavedDirty,
+  onUnsavedDirtyChange,
 }) {
-  const [section, setSection] = useState<AdminSectionId>("summary");
-  const [unsavedDirty, setUnsavedDirty] = useState(false);
-  const [lastSectionByGroup, setLastSectionByGroup] = useState<
-    Record<AdminGroupId, AdminSectionId>
-  >({
-    leave: "summary",
-    payroll: "salary",
-    settings: "roles",
-  });
-
-  // ระบบเตือนก่อนเปลี่ยน section ถ้ามีข้อมูลยังไม่บันทึก
   function tryChangeSection(newId: AdminSectionId) {
     if (newId === section) return;
-
-    if (unsavedDirty) {
-      const ok = window.confirm(
-        "⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากออกจากหน้านี้ ข้อมูลที่แก้ไขจะหายไป\n\nต้องการออกจากหน้านี้ใช่ไหม?",
-      );
-      if (!ok) return;
-      setUnsavedDirty(false);
-    }
-    setSection(newId);
-    const nextGroup = getAdminGroupForSection(newId);
-    setLastSectionByGroup((prev) => ({ ...prev, [nextGroup.id]: newId }));
+    onSectionChange(newId);
   }
-
   function tryChangeGroup(group: AdminNavGroup) {
-    tryChangeSection(lastSectionByGroup[group.id] || group.defaultSection);
+    tryChangeSection(group.defaultSection);
   }
+  const setUnsavedDirty = onUnsavedDirtyChange;
 
   // เตือนตอนปิดหน้า/refresh ถ้ามี unsaved
   useEffect(() => {
@@ -247,8 +161,8 @@ export default function AdminPanel({
         </button>
       </div>
 
-      {/* section tabs — two-level admin navigation */}
-      <div className="bg-cream-dk rounded-[14px] p-2.5 mb-[18px] flex flex-col gap-2">
+      {/* section tabs — แสดงเฉพาะ mobile; desktop ใช้ sidebar */}
+      <div className="bg-cream-dk rounded-[14px] p-2.5 mb-[18px] flex-col gap-2 flex md:hidden">
         <div className="grid grid-cols-3 gap-1.5">
           {ADMIN_NAV_GROUPS.map((group) => {
             const Icon = group.Icon;
@@ -552,9 +466,7 @@ export default function AdminPanel({
                                   (lv) =>
                                     lv.type === expandedChip.split(":")[1],
                                 )
-                                .sort((a, b) =>
-                                  a.start.localeCompare(b.start),
-                                )
+                                .sort((a, b) => a.start.localeCompare(b.start))
                                 .map((lv) => (
                                   <div key={lv.id}>
                                     📅 {fmtDate(lv.start)}

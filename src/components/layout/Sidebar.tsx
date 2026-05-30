@@ -6,6 +6,11 @@ import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
 import Diamond from "../shared/Diamond";
 import MosaicPattern from "../shared/MosaicPattern";
+import {
+  ADMIN_NAV_GROUPS,
+  type AdminSectionId,
+  getAdminGroupForSection,
+} from "./adminNavConfig";
 import type { NavItem } from "./navConfig";
 
 interface SidebarProps {
@@ -18,6 +23,10 @@ interface SidebarProps {
   startHold: () => void;
   endHold: () => void;
   onRingComplete: () => void;
+  /* Admin nav: ส่งเมื่อ isAdmin เพื่อให้ sidebar แสดง groups + sub-items แทน flat */
+  adminSection?: AdminSectionId;
+  onAdminSectionChange?: (next: AdminSectionId) => void;
+  adminPendingAdvanceCount?: number;
 }
 
 export default function Sidebar({
@@ -30,6 +39,9 @@ export default function Sidebar({
   startHold,
   endHold,
   onRingComplete,
+  adminSection,
+  onAdminSectionChange,
+  adminPendingAdvanceCount = 0,
 }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -146,22 +158,79 @@ export default function Sidebar({
 
       {/* Nav */}
       <div className="leave-sidebar-nav">
-        {navItems.map((n) => {
-          const active = currentPath === n.path;
-          return (
-            <button
-              key={n.id}
-              onClick={() => navigate(n.path)}
-              className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 relative ${active ? "bg-white/12" : "bg-transparent"} ${active ? "text-gold-lt" : "text-white/55"}`}
-            >
-              <span>{n.icon(active)}</span>
-              <span>{n.label}</span>
-              {active && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-gold" />
-              )}
-            </button>
-          );
-        })}
+        {isAdmin && adminSection && onAdminSectionChange
+          ? ADMIN_NAV_GROUPS.map((group) => {
+              const activeGroup =
+                getAdminGroupForSection(adminSection).id === group.id;
+              const GroupIcon = group.Icon;
+              return (
+                <div key={group.id} className="mb-1">
+                  <div className="flex items-center gap-2.5 px-3 pt-2 pb-1.5 text-xs font-bold uppercase tracking-wide text-gold-lt/45">
+                    <GroupIcon
+                      size={14}
+                      stroke={2.2}
+                      color={
+                        activeGroup
+                          ? COLORS.goldLight
+                          : "rgba(232,200,122,0.45)"
+                      }
+                    />
+                    <span>{group.label}</span>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    {group.items.map((item) => {
+                      const active = adminSection === item.id;
+                      const ItemIcon = item.Icon;
+                      const pending =
+                        item.id === "advance" ? adminPendingAdvanceCount : 0;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => onAdminSectionChange(item.id)}
+                          className={`flex items-center gap-3 px-3 py-2 ml-3.5 rounded-lg cursor-pointer transition-all duration-200 relative text-left ${active ? "bg-white/12 text-gold-lt" : "bg-transparent text-white/55"}`}
+                        >
+                          <ItemIcon
+                            size={16}
+                            stroke={active ? 2.5 : 2}
+                            color={
+                              active
+                                ? COLORS.goldLight
+                                : "rgba(255,255,255,0.55)"
+                            }
+                          />
+                          <span className="text-sm">{item.label}</span>
+                          {pending > 0 && (
+                            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red px-1.5 text-xs font-bold leading-none text-white">
+                              {pending}
+                            </span>
+                          )}
+                          {active && pending === 0 && (
+                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-gold" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
+          : navItems.map((n) => {
+              const active = currentPath === n.path;
+              return (
+                <button
+                  key={n.id}
+                  onClick={() => navigate(n.path)}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 relative ${active ? "bg-white/12" : "bg-transparent"} ${active ? "text-gold-lt" : "text-white/55"}`}
+                >
+                  <span>{n.icon(active)}</span>
+                  <span>{n.label}</span>
+                  {active && (
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-gold" />
+                  )}
+                </button>
+              );
+            })}
       </div>
 
       {/* Footer */}
