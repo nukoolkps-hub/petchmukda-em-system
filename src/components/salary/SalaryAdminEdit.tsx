@@ -1,4 +1,4 @@
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconTrash } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
@@ -157,6 +157,44 @@ export default function SalaryAdminEdit({
     setDraft((d) => ({ ...d, [field]: num }));
   }
 
+  /* ─── รายการหักที่เพิ่มเอง (customDeductions) ───────────────── */
+  function currentCustomDeductions(d) {
+    if (Array.isArray(d.customDeductions)) return d.customDeductions;
+    if (Array.isArray(savedData.customDeductions))
+      return savedData.customDeductions;
+    return [];
+  }
+  function addCustomDeduction() {
+    setDraft((d) => ({
+      ...d,
+      customDeductions: [
+        ...currentCustomDeductions(d),
+        { label: "", amount: 0 },
+      ],
+    }));
+  }
+  function updateCustomDeduction(index, field, value) {
+    setDraft((d) => ({
+      ...d,
+      customDeductions: currentCustomDeductions(d).map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              [field]: field === "amount" ? parseFloat(value) || 0 : value,
+            }
+          : item,
+      ),
+    }));
+  }
+  function removeCustomDeduction(index) {
+    setDraft((d) => ({
+      ...d,
+      customDeductions: currentCustomDeductions(d).filter(
+        (_, i) => i !== index,
+      ),
+    }));
+  }
+
   async function saveAll() {
     if (!dirty || saving) return;
     const nextMonthData = { ...savedData, ...draft };
@@ -185,9 +223,6 @@ export default function SalaryAdminEdit({
   }
 
   const FIELDS_EARN: { key: string; label: string; icon: string }[] = [];
-  const FIELDS_DED = [
-    { key: "lateDeduction", label: "หักขาดงาน/มาสาย", icon: "⏰" },
-  ];
 
   if (!salaryCalculation)
     return <div className="p-5 text-txt-soft text-center">ไม่มีข้อมูลเงินเดือน</div>;
@@ -873,26 +908,6 @@ export default function SalaryAdminEdit({
               −฿{formatThaiNumber(salaryCalculation.deductions)}
             </div>
           </div>
-          {FIELDS_DED.map((f) => (
-            <div key={f.key} className="mb-2.5">
-              <label className="flex text-sm text-txt-mid mb-[5px] font-medium">
-                {f.icon} {f.label}
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
-                  ฿
-                </span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  min="0"
-                  value={data[f.key] || ""}
-                  onChange={(e) => update(f.key, e.target.value)}
-                  className="w-full py-2.5 pr-3.5 pl-[30px] rounded-[10px] border border-bdr text-base font-semibold outline-none font-[inherit] text-txt bg-cream"
-                />
-              </div>
-            </div>
-          ))}
           {/* Social security — read-only (กำหนดในข้อมูลพนักงาน) */}
           <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
             <span className="text-base">🏛</span>

@@ -305,11 +305,18 @@ export function calculateSalary(
     memberBonusTotal +
     attendanceBonus;
   const advanceDeduction = approvedAdvanceTotal || 0;
+  const customDeductionsTotal = Array.isArray(salary.customDeductions)
+    ? salary.customDeductions.reduce(
+        (sum, item) => sum + (Number(item?.amount) || 0),
+        0,
+      )
+    : 0;
   const deductions =
     (salary.lateDeduction || 0) +
     advanceDeduction +
     socialSecurityAmount +
-    overQuotaDeduction;
+    overQuotaDeduction +
+    customDeductionsTotal;
   const netSalary = earnings - deductions;
   return {
     earnings,

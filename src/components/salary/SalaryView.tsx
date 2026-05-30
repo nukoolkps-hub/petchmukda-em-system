@@ -603,6 +603,14 @@ export default function SalaryView({
                 : "",
             value: salaryCalculation.overQuotaDeduction,
           },
+          ...(Array.isArray(data.customDeductions)
+            ? data.customDeductions.map((d) => ({
+                icon: "➖",
+                main: d.label || "รายการหัก",
+                sub: "",
+                value: d.amount,
+              }))
+            : []),
         ]
           .filter((x) => x.value > 0)
           .map((row, i) => (

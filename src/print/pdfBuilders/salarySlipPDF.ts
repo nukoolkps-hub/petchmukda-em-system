@@ -108,6 +108,10 @@ export function buildSalarySlipDocDef({
       `ลาเกินโควต้า (${salaryCalculation.weekdayOverQuotaDays} วันธรรมดา + ${salaryCalculation.sundayOverQuotaDays} วันอาทิตย์)`,
       formatNumber(salaryCalculation.overQuotaDeduction),
     ]);
+  if (Array.isArray(data.customDeductions))
+    for (const d of data.customDeductions)
+      if (d?.amount > 0)
+        dedRows.push([d.label || "รายการหัก", formatNumber(d.amount)]);
 
   /* ─── pdfmake doc definition ──────────────────────────── */
   return {
