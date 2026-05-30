@@ -232,10 +232,15 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 		},
 	};
 
+	// ส่ง flex ก่อน แล้วตามด้วย text เลขบัญชีล้วน ๆ ให้ admin long-press copy ใน LINE ได้
+	const messages: Parameters<typeof pushLineMessage>[2] = [flex];
+	if (bankAccountNumber) {
+		messages.push({ type: "text", text: bankAccountNumber });
+	}
 	await pushLineMessage(
 		config.LINE_CHANNEL_ACCESS_TOKEN,
 		config.ADMIN_LINE_USER_ID,
-		flex,
+		messages,
 	);
 	return { ok: true, requestId };
 });
