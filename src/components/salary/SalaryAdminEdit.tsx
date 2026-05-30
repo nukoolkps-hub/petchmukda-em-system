@@ -382,7 +382,7 @@ export default function SalaryAdminEdit({
           {/* not eligible warnings (เฉพาะคนที่ไม่ถูก Admin ปิดในฝั่งนั้น) */}
           {poolShare.poolExclusion !== "sell" &&
             poolShare.poolExclusion !== "both" &&
-            !poolShare.eligibleSell && (
+            !poolShare.eligibleForSellPool && (
               <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-1.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40]">
                 ⚠ ฝั่งขาย: ไม่ได้รับชิ้นจาก Pool
                 <div className="font-medium text-xs mt-0.5">
@@ -401,7 +401,7 @@ export default function SalaryAdminEdit({
             )}
           {poolShare.poolExclusion !== "buy" &&
             poolShare.poolExclusion !== "both" &&
-            !poolShare.eligibleBuy && (
+            !poolShare.eligibleForBuyPool && (
               <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-2.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40]">
                 ⚠ ฝั่งรับซื้อ: ไม่ได้รับชิ้นจาก Pool
                 <div className="font-medium text-xs mt-0.5">
@@ -429,7 +429,7 @@ export default function SalaryAdminEdit({
             <div className="h-px bg-bdr my-1.5" />
 
             {/* ฝั่งขาย */}
-            {poolShare.eligibleSell && (
+            {poolShare.eligibleForSellPool && (
               <div className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]">
                 <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
                   <span>
@@ -451,14 +451,14 @@ export default function SalaryAdminEdit({
                 </div>
               </div>
             )}
-            {!poolShare.eligibleSell && (
+            {!poolShare.eligibleForSellPool && (
               <div className="mb-1.5 px-2 py-1.5 bg-red-lt rounded-[7px] text-xs text-red font-semibold">
                 💎 ฝั่งขาย: ❌ ไม่ได้รับชิ้นจาก Pool
               </div>
             )}
 
             {/* ฝั่งรับซื้อ */}
-            {poolShare.eligibleBuy && (
+            {poolShare.eligibleForBuyPool && (
               <div className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]">
                 <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
                   <span>
@@ -480,7 +480,7 @@ export default function SalaryAdminEdit({
                 </div>
               </div>
             )}
-            {!poolShare.eligibleBuy && (
+            {!poolShare.eligibleForBuyPool && (
               <div className="px-2 py-1.5 bg-red-lt rounded-[7px] text-xs text-red font-semibold">
                 🛍 ฝั่งรับซื้อ: ❌ ไม่ได้รับชิ้นจาก Pool
               </div>
