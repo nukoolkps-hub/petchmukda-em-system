@@ -162,6 +162,26 @@ export default function PayrollSummaryPanel({
   const months: string[] = [...monthSet].sort().reverse();
   if (!months.includes(selectedMonth)) months.unshift(selectedMonth);
 
+  /* ─── เขียน pool snapshot ลงเอกสารเงินเดือนทุกคน ──────────────────
+     onSaveSalary (= updateSalary) จะ inject roleId / poolExclusion /
+     totalLeaveDays ให้เอง. แยกจากการ freeze สลิป เพราะการ freeze
+     อาจ fail (PDF/Storage) แต่ snapshot ต้องเขียนให้ได้เสมอ ไม่งั้น
+     พนักงานคำนวณ pool ผิด (เห็น 100%)                              */
+  async function backfillPoolSnapshots() {
+    if (!onSaveSalary || rows.length === 0) return;
+    for (const row of rows) {
+      try {
+        await onSaveSalary(row.employee.id, selectedMonth, {});
+      } catch (err) {
+        console.error(
+          "[PayrollSummary] snapshot backfill failed:",
+          row.employee.id,
+          err,
+        );
+      }
+    }
+  }
+
   /* ─── Freeze สลิปทุกคนลง Storage หลังยืนยันยอด ─────────────────
      best-effort: สร้าง PDF + อัปโหลด + เก็บ slipUrl ในเอกสารเงินเดือน
      ถ้าคนไหน fail ก็ข้าม ไม่ให้กระทบการยืนยันยอดที่ทำไปแล้ว        */
@@ -174,6 +194,7 @@ export default function PayrollSummaryPanel({
       ]);
     let ok = 0;
     let fail = 0;
+    let lastError = "";
     for (const row of rows) {
       try {
         const blob = await generateSalarySlipBlob({
@@ -201,10 +222,13 @@ export default function PayrollSummaryPanel({
           row.employee.id,
           err,
         );
+        lastError = (err as Error)?.message || String(err);
         fail++;
       }
     }
-    showToast?.(`บันทึกสลิปเข้าระบบ ${ok} คน${fail ? ` (ไม่สำเร็จ ${fail})` : ""}`);
+    showToast?.(
+      `บันทึกสลิปเข้าระบบ ${ok} คน${fail ? ` (ไม่สำเร็จ ${fail}: ${lastError})` : ""}`,
+    );
   }
 
   return (
@@ -339,6 +363,7 @@ export default function PayrollSummaryPanel({
                           employeeCount: empCountForMonth,
                         });
                         showToast?.("ยืนยันยอดใหม่เรียบร้อย");
+                        await backfillPoolSnapshots();
                         await freezeAllSlips();
                       } catch (err) {
                         console.error("[PayrollSummary] confirm failed:", err);
@@ -378,6 +403,7 @@ export default function PayrollSummaryPanel({
                   employeeCount: empCountForMonth,
                 });
                 showToast?.("ยืนยันยอดเรียบร้อย");
+                await backfillPoolSnapshots();
                 await freezeAllSlips();
               } catch (err) {
                 console.error("[PayrollSummary] confirm failed:", err);
