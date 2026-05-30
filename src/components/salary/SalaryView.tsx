@@ -249,91 +249,97 @@ export default function SalaryView({
         </div>
       </div>
 
-      {/* Advance: 2 buttons */}
+      {/* Advance (left col: stacked) + Print panel (right col) */}
       <div className="grid grid-cols-2 gap-2.5 mb-3.5">
-        <button
-          onClick={onOpenAdvance}
-          className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-3.5 py-3 border-none cursor-pointer font-[inherit] shadow-[0_3px_12px_var(--color-maroon)/0.25] text-left relative overflow-hidden"
-        >
-          <svg
-            className="absolute -top-1.5 -right-1.5 opacity-15"
-            width="50"
-            height="50"
-            viewBox="0 0 24 24"
-            fill={COLORS.goldLight}
+        {/* Left col: เบิกเงิน + ประวัติเบิกเงิน — stacked */}
+        <div className="flex flex-col gap-2.5">
+          <button
+            onClick={onOpenAdvance}
+            className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-3.5 py-3 border-none cursor-pointer font-[inherit] shadow-[0_3px_12px_var(--color-maroon)/0.25] text-left relative overflow-hidden"
           >
-            <path d="M6 3h12l4 6-10 12L2 9z" />
-          </svg>
-          <div className="flex items-center gap-2 relative">
-            <div className="w-[34px] h-[34px] rounded-[10px] bg-white/18 flex items-center justify-center shrink-0">
-              <IconCirclePlus size={17} color={COLORS.goldLight} stroke={2.4} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-gold-lt leading-tight">
-                เบิกเงิน
+            <svg
+              className="absolute -top-1.5 -right-1.5 opacity-15"
+              width="50"
+              height="50"
+              viewBox="0 0 24 24"
+              fill={COLORS.goldLight}
+            >
+              <path d="M6 3h12l4 6-10 12L2 9z" />
+            </svg>
+            <div className="flex items-center gap-2 relative">
+              <div className="w-[34px] h-[34px] rounded-[10px] bg-white/18 flex items-center justify-center shrink-0">
+                <IconCirclePlus
+                  size={17}
+                  color={COLORS.goldLight}
+                  stroke={2.4}
+                />
               </div>
-              <div className="text-xs text-gold-lt/65 mt-px">ล่วงหน้า</div>
-            </div>
-          </div>
-        </button>
-        <button
-          onClick={onOpenHistory}
-          className="bg-white rounded-[14px] px-3.5 py-3 cursor-pointer font-[inherit] shadow-[0_2px_10px_rgba(90,30,10,0.06)] text-left relative border-[1.5px] border-[#C9973A50]"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
-              <IconClock size={17} color={COLORS.maroon} stroke={2.2} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-maroon leading-tight">
-                ประวัติเบิกเงิน
-              </div>
-              <div className="text-xs text-txt-soft mt-px">
-                {advanceRequests && advanceRequests.length > 0
-                  ? `${advanceRequests.length} คำขอ`
-                  : "ยังไม่มี"}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-gold-lt leading-tight">
+                  เบิกเงิน
+                </div>
+                <div className="text-xs text-gold-lt/65 mt-px">ล่วงหน้า</div>
               </div>
             </div>
-            {advanceRequests?.some((r) => r.status === "pending") && (
-              <div className="w-2 h-2 rounded-full bg-amber shadow-[0_0_0_3px_var(--color-amber)/0.2] shrink-0" />
-            )}
-          </div>
-        </button>
-      </div>
+          </button>
+          <button
+            onClick={onOpenHistory}
+            className="bg-white rounded-[14px] px-3.5 py-3 cursor-pointer font-[inherit] shadow-[0_2px_10px_rgba(90,30,10,0.06)] text-left relative border-[1.5px] border-[#C9973A50]"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
+                <IconClock size={17} color={COLORS.maroon} stroke={2.2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-maroon leading-tight">
+                  ประวัติเบิกเงิน
+                </div>
+                <div className="text-xs text-txt-soft mt-px">
+                  {advanceRequests && advanceRequests.length > 0
+                    ? `${advanceRequests.length} คำขอ`
+                    : "ยังไม่มี"}
+                </div>
+              </div>
+              {advanceRequests?.some((r) => r.status === "pending") && (
+                <div className="w-2 h-2 rounded-full bg-amber shadow-[0_0_0_3px_var(--color-amber)/0.2] shrink-0" />
+              )}
+            </div>
+          </button>
+        </div>
 
-      {/* Document buttons — พิมพ์อย่างเดียว, A4 หน้าเดียว */}
-      <div className="flex flex-col gap-2 mb-3.5 px-3 py-2.5 rounded-[11px] bg-gold-pale/20 border border-gold/15">
-        <div className="flex items-center gap-1.5">
-          <div className="flex-[1_1_80px] text-sm text-txt-mid font-semibold min-w-0">
-            📋 สลิป
+        {/* Right col: Print panel — สลิป + รับรอง */}
+        <div className="flex flex-col gap-1.5 px-3 py-2.5 rounded-[14px] bg-gold-pale/20 border border-gold/15">
+          <div className="flex items-center gap-1.5">
+            <div className="flex-1 text-sm text-txt-mid font-semibold min-w-0">
+              📋 สลิป
+            </div>
+            <button
+              type="button"
+              onClick={handlePrintSlip}
+              title="พิมพ์ / บันทึก PDF"
+              className="px-2.5 py-1 rounded-lg bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit] flex items-center gap-1 whitespace-nowrap border-[1.5px] border-[#7B1C1C50]"
+            >
+              <PrintIcon />
+              พิมพ์
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handlePrintSlip}
-            title="พิมพ์ / บันทึก PDF"
-            className="px-3 py-1.5 rounded-lg bg-white text-maroon text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] border-[#7B1C1C50]"
-          >
-            <PrintIcon />
-            พิมพ์
-          </button>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex-[1_1_80px] text-sm text-txt-mid font-semibold min-w-0">
-            📄 รับรอง
+          <div className="flex items-center gap-1.5">
+            <div className="flex-1 text-sm text-txt-mid font-semibold min-w-0">
+              📄 รับรอง
+            </div>
+            <button
+              type="button"
+              onClick={handlePrintCert}
+              title="พิมพ์ / บันทึก PDF"
+              className="px-2.5 py-1 rounded-lg bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit] flex items-center gap-1 whitespace-nowrap border-[1.5px] border-[#7B1C1C50]"
+            >
+              <PrintIcon />
+              พิมพ์
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handlePrintCert}
-            title="พิมพ์ / บันทึก PDF"
-            className="px-3 py-1.5 rounded-lg bg-white text-maroon text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] border-[#7B1C1C50]"
-          >
-            <PrintIcon />
-            พิมพ์
-          </button>
-        </div>
-        <div className="text-xs text-txt-soft leading-normal mt-0.5">
-          💡 ในกล่องพิมพ์ เลือก <b>"Save as PDF"</b> เพื่อบันทึกเป็นไฟล์ · ปิด{" "}
-          <b>"Headers and footers"</b> เพื่อตัด URL/วันที่บนขอบกระดาษ
+          <div className="text-[11px] text-txt-soft leading-snug mt-auto pt-1">
+            💡 เลือก <b>"Save as PDF"</b> เพื่อบันทึกไฟล์
+          </div>
         </div>
       </div>
 
