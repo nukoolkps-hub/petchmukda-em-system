@@ -619,7 +619,7 @@ export default function SalaryView({
       )}
 
       <div className="text-center text-xs text-txt-soft mt-4">
-        ข้อมูลกำหนดโดย Admin · ติดต่อ HR หากมีข้อสงสัย
+        ข้อมูลกำหนดโดย Admin
       </div>
     </div>
   );

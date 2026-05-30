@@ -42,18 +42,15 @@ export default function SuccessScreen({
         <Diamond size={10} /> บันทึกเรียบร้อยแล้ว
       </div>
       <br />
-      <div className="flex gap-2.5 justify-center flex-wrap">
+      <div className="flex justify-center">
         <button
-          onClick={onReset}
+          onClick={() => {
+            onReset();
+            navigate("/home");
+          }}
           className="px-6 py-3.5 bg-linear-to-br from-gold to-gold-lt text-maroon-dk border-none rounded-[14px] text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_rgba(201,151,58,0.25)]"
         >
-          + ยื่นคำขอใหม่
-        </button>
-        <button
-          onClick={() => navigate("/request")}
-          className="px-6 py-3.5 bg-white text-maroon border-[1.5px] border-gold/37 rounded-[14px] text-base font-bold cursor-pointer font-[inherit]"
-        >
-          ดูประวัติ
+          กลับหน้าแรก
         </button>
       </div>
     </div>
