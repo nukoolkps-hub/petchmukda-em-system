@@ -212,6 +212,27 @@ export default function SalaryView({
 
   return (
     <div>
+      {/* month selector — บนสุด เพื่อให้สลับเดือนง่าย */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="text-sm font-semibold text-txt-mid">
+          📅 เดือนเงินเดือน
+        </div>
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="pl-3 pr-8 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
+        >
+          {selectMonths.map((m) => {
+            const [y, mo] = m.split("-");
+            return (
+              <option key={m} value={m}>
+                {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
+              </option>
+            );
+          })}
+        </select>
+      </div>
+
       {/* Bank info card */}
       <div className="bg-white rounded-[14px] px-4 py-3.5 mb-2.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)] flex items-center gap-3">
         <div className="w-10 h-10 rounded-[11px] bg-linear-135 from-gold to-gold-lt flex items-center justify-center shrink-0 shadow-[0_2px_8px_var(--color-gold)/0.25]">
@@ -278,25 +299,6 @@ export default function SalaryView({
             )}
           </div>
         </button>
-      </div>
-
-      {/* month selector */}
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="text-sm text-txt-soft flex-1">สลิปเงินเดือน</div>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="pl-3 pr-8 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
-        >
-          {selectMonths.map((m) => {
-            const [y, mo] = m.split("-");
-            return (
-              <option key={m} value={m}>
-                {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
-              </option>
-            );
-          })}
-        </select>
       </div>
 
       {/* Document buttons — พิมพ์อย่างเดียว, A4 หน้าเดียว */}
