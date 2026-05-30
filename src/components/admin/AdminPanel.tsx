@@ -778,6 +778,7 @@ export default function AdminPanel({
                 editingRole[`${employee.id}:salaryDisabled`];
               const editingPoolExclusion =
                 editingRole[`${employee.id}:poolExclusion`];
+              const editingName = editingRole[`${employee.id}:name`];
               const dirty =
                 editingNormalSalePieceRate !== undefined ||
                 editingSpecialSalePieceRate !== undefined ||
@@ -788,8 +789,11 @@ export default function AdminPanel({
                 editingBaseSalary !== undefined ||
                 editingSocialSecurity !== undefined ||
                 editingSalaryDisabled !== undefined ||
-                editingPoolExclusion !== undefined;
+                editingPoolExclusion !== undefined ||
+                editingName !== undefined;
               const saveAll = async () => {
+                if (editingName !== undefined && editingName.trim() !== "")
+                  await onUpdateRole(employee.id, "name", editingName.trim());
                 if (editingNormalSalePieceRate !== undefined)
                   await onUpdateRole(
                     employee.id,
@@ -860,6 +864,7 @@ export default function AdminPanel({
                   delete nextEditingRole[`${employee.id}:singlePieceRate`];
                   delete nextEditingRole[`${employee.id}:baseSalary`];
                   delete nextEditingRole[`${employee.id}:socialSecurity`];
+                  delete nextEditingRole[`${employee.id}:name`];
                   delete nextEditingRole[`${employee.id}:salaryDisabled`];
                   delete nextEditingRole[`${employee.id}:poolExclusion`];
                   return nextEditingRole;
@@ -877,6 +882,7 @@ export default function AdminPanel({
                   delete nextEditingRole[`${employee.id}:singlePieceRate`];
                   delete nextEditingRole[`${employee.id}:baseSalary`];
                   delete nextEditingRole[`${employee.id}:socialSecurity`];
+                  delete nextEditingRole[`${employee.id}:name`];
                   delete nextEditingRole[`${employee.id}:salaryDisabled`];
                   delete nextEditingRole[`${employee.id}:poolExclusion`];
                   return nextEditingRole;
@@ -979,6 +985,27 @@ export default function AdminPanel({
                         </button>
                       </div>
                       <div className="px-4 py-3.5">
+                        {/* Name — editable */}
+                        <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                          <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
+                            ✏️ ชื่อพนักงาน
+                          </label>
+                          <input
+                            type="text"
+                            value={
+                              editingName !== undefined
+                                ? editingName
+                                : employee.name
+                            }
+                            onChange={(e) =>
+                              setEditingRole((previousEditingRole) => ({
+                                ...previousEditingRole,
+                                [`${employee.id}:name`]: e.target.value,
+                              }))
+                            }
+                            className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingName !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                          />
+                        </div>
                         {/* Role — read-only (แก้จากแท็บ "ตำแหน่ง") */}
                         <div className="mb-2.5 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
                           <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
@@ -1090,7 +1117,7 @@ export default function AdminPanel({
                               value={
                                 editingBaseSalary !== undefined
                                   ? editingBaseSalary
-                                  : employee.baseSalary || 0
+                                  : employee.baseSalary || ""
                               }
                               onChange={(e) =>
                                 setEditingRole((previousEditingRole) => ({
@@ -1122,7 +1149,7 @@ export default function AdminPanel({
                               value={
                                 editingSocialSecurity !== undefined
                                   ? editingSocialSecurity
-                                  : employee.socialSecurity || 0
+                                  : employee.socialSecurity || ""
                               }
                               onChange={(e) =>
                                 setEditingRole((previousEditingRole) => ({
@@ -1204,7 +1231,7 @@ export default function AdminPanel({
                                       value={
                                         editingSinglePieceRate !== undefined
                                           ? editingSinglePieceRate
-                                          : employee.singlePieceRate || 0
+                                          : employee.singlePieceRate || ""
                                       }
                                       onChange={(e) =>
                                         setEditingRole(
@@ -1239,7 +1266,7 @@ export default function AdminPanel({
                                       value={
                                         editingInvitePieceRate !== undefined
                                           ? editingInvitePieceRate
-                                          : employee.invitePieceRate || 0
+                                          : employee.invitePieceRate || ""
                                       }
                                       onChange={(e) =>
                                         setEditingRole(
@@ -1264,7 +1291,7 @@ export default function AdminPanel({
                                       value={
                                         editingTransferPieceRate !== undefined
                                           ? editingTransferPieceRate
-                                          : employee.transferPieceRate || 0
+                                          : employee.transferPieceRate || ""
                                       }
                                       onChange={(e) =>
                                         setEditingRole(
@@ -1392,7 +1419,7 @@ export default function AdminPanel({
                                     value={
                                       editingNormalSalePieceRate !== undefined
                                         ? editingNormalSalePieceRate
-                                        : employee.normalSalePieceRate || 0
+                                        : employee.normalSalePieceRate || ""
                                     }
                                     onChange={(e) =>
                                       setEditingRole((previousEditingRole) => ({
@@ -1415,7 +1442,7 @@ export default function AdminPanel({
                                     value={
                                       editingSpecialSalePieceRate !== undefined
                                         ? editingSpecialSalePieceRate
-                                        : employee.specialSalePieceRate || 0
+                                        : employee.specialSalePieceRate || ""
                                     }
                                     onChange={(e) =>
                                       setEditingRole((previousEditingRole) => ({
@@ -1438,7 +1465,7 @@ export default function AdminPanel({
                                     value={
                                       editingBuyPieceRate !== undefined
                                         ? editingBuyPieceRate
-                                        : employee.buyPieceRate || 0
+                                        : employee.buyPieceRate || ""
                                     }
                                     onChange={(e) =>
                                       setEditingRole((previousEditingRole) => ({
@@ -1471,7 +1498,7 @@ export default function AdminPanel({
                                     value={
                                       editingInvitePieceRate !== undefined
                                         ? editingInvitePieceRate
-                                        : employee.invitePieceRate || 0
+                                        : employee.invitePieceRate || ""
                                     }
                                     onChange={(e) =>
                                       setEditingRole((previousEditingRole) => ({
@@ -1494,7 +1521,7 @@ export default function AdminPanel({
                                     value={
                                       editingTransferPieceRate !== undefined
                                         ? editingTransferPieceRate
-                                        : employee.transferPieceRate || 0
+                                        : employee.transferPieceRate || ""
                                     }
                                     onChange={(e) =>
                                       setEditingRole((previousEditingRole) => ({
