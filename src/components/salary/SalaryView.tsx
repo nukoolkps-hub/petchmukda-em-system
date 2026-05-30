@@ -309,7 +309,7 @@ export default function SalaryView({
             type="button"
             onClick={handlePrintSlip}
             title="พิมพ์ / บันทึก PDF"
-            className="px-3 py-1.5 rounded-lg bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border border-[#C9973A50]"
+            className="px-3 py-1.5 rounded-lg bg-white text-maroon text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] border-[#7B1C1C50]"
           >
             <PrintIcon />
             พิมพ์
@@ -330,7 +330,8 @@ export default function SalaryView({
           </button>
         </div>
         <div className="text-xs text-txt-soft leading-normal mt-0.5">
-          💡 ในกล่องพิมพ์ เลือก <b>"Save as PDF"</b> เพื่อบันทึกเป็นไฟล์
+          💡 ในกล่องพิมพ์ เลือก <b>"Save as PDF"</b> เพื่อบันทึกเป็นไฟล์ · ปิด{" "}
+          <b>"Headers and footers"</b> เพื่อตัด URL/วันที่บนขอบกระดาษ
         </div>
       </div>
 

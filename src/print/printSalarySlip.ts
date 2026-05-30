@@ -202,7 +202,7 @@ function buildSalarySlipHTML(
       font-size:10px;color:#B89A72;text-align:center;
     }
     .warn{color:#C0392B;font-weight:600;}
-    @page{size:A4 portrait;margin:8mm;}
+    @page{size:A4 portrait;margin:6mm;}
     @media print{
       html,body{width:210mm;height:297mm;}
       body{background:#fff;padding:0;font-size:11.5px;line-height:1.35;}

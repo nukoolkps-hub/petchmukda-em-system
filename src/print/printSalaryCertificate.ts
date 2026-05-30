@@ -84,7 +84,7 @@ function buildCertificateHTML(
       border:2px solid #C9973A;border-radius:14px;
       padding:0;overflow:hidden;
       box-shadow:0 4px 24px rgba(123,28,28,0.12);
-      min-height:1000px;display:flex;flex-direction:column;
+      display:flex;flex-direction:column;
     }
     .header{
       background:linear-gradient(135deg,#5C1212 0%,#7B1C1C 60%,#9B3030 100%);
@@ -137,16 +137,12 @@ function buildCertificateHTML(
       margin:14px auto 0;display:flex;flex-direction:column;align-items:center;justify-content:center;
       color:#7B1C1C;opacity:0.5;font-size:11px;text-align:center;line-height:1.4;
     }
-    .footer{
-      padding:14px 32px;background:#FDF8F0;border-top:1px solid #E8D5B0;
-      font-size:11px;color:#B89A72;text-align:center;
-    }
-    @page{size:A4 portrait;margin:12mm;}
+    @page{size:A4 portrait;margin:6mm;}
     @media print{
       html,body{width:210mm;height:297mm;}
       body{background:#fff;padding:0;font-size:13px;line-height:1.4;}
       .doc{box-shadow:none !important;border:1px solid #C9973A !important;
-        min-height:auto !important;max-width:186mm !important;margin:0 auto !important;
+        min-height:auto !important;max-width:198mm !important;margin:0 auto !important;
         page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
     }
@@ -203,9 +199,6 @@ function buildCertificateHTML(
       </div>
     </div>
 
-    <div class="footer">
-      เอกสารนี้สร้างโดยระบบอัตโนมัติ · พิมพ์เมื่อ ${printDate}
-    </div>
   </div>
 
   ${
