@@ -235,51 +235,51 @@ export default function SalaryAdminEdit({
 
   return (
     <div>
-      {/* selectors */}
-      <div className="flex gap-2 mb-3.5">
-        <select
-          value={selectedEmployeeId}
-          onChange={(e) => tryChangeEmployee(e.target.value)}
-          className="flex-2 pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
-        >
-          {employeeDirectory.map((employee) => (
-            <option key={employee.id} value={employee.id}>
-              {employee.name}
-            </option>
-          ))}
-        </select>
-        <div className="flex-1 px-3 py-2.5 rounded-[10px] text-sm font-semibold text-maroon bg-gold-pale font-[inherit] flex items-center justify-center gap-1.5 border-[1.5px] border-[#C9973A40]">
+      {/* month display */}
+      <div className="flex justify-end mb-2.5">
+        <div className="px-3 py-2 rounded-[10px] text-sm font-semibold text-maroon bg-gold-pale font-[inherit] flex items-center gap-1.5 border-[1.5px] border-[#C9973A40]">
           📅 {THAI_MONTH_NAMES[now.getMonth()]} {now.getFullYear() + 543}
         </div>
       </div>
 
-      {/* employee preview */}
-      {employeeInfo && (
-        <div className="bg-cream rounded-xl px-3.5 py-3 mb-3.5 flex items-center gap-3 border border-bdr">
-          <AvatarCircle
-            avatar={employeeInfo.avatar}
-            avatarType={employeeInfo.avatarType}
-            avatarImageUrl={employeeInfo.avatarImageUrl}
-            size={40}
-            fontSize={13}
-            border={`2px solid ${COLORS.gold}40`}
-          />
-          <div className="flex-1">
-            <div className="font-bold text-txt text-sm">
-              {employeeInfo.name}
-            </div>
-            <div className="text-sm text-txt-soft">
-              {employeeInfo.role || "-"}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-txt-soft">เงินสุทธิ</div>
-            <div className="text-base font-extrabold text-maroon">
-              ฿{formatThaiNumber(salaryCalculation.netSalary)}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* employee cards — เลือกพนักงานแบบการ์ด มองง่ายกว่า dropdown */}
+      <div className="grid grid-cols-2 gap-2 mb-3.5">
+        {employeeDirectory.map((employee) => {
+          const selected = employee.id === selectedEmployeeId;
+          const role = roles?.find((r) => r.id === employee.roleId);
+          return (
+            <button
+              key={employee.id}
+              type="button"
+              onClick={() => tryChangeEmployee(employee.id)}
+              className={`flex items-center gap-2.5 p-2.5 rounded-xl border-[1.5px] text-left cursor-pointer font-[inherit] transition-colors ${
+                selected
+                  ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
+                  : "border-bdr bg-white"
+              }`}
+            >
+              <AvatarCircle
+                avatar={employee.avatar}
+                avatarType={employee.avatarType}
+                avatarImageUrl={employee.avatarImageUrl}
+                size={36}
+                fontSize={12}
+                border={`2px solid ${COLORS.gold}40`}
+              />
+              <div className="flex-1 min-w-0">
+                <div
+                  className={`font-bold text-sm truncate ${selected ? "text-maroon" : "text-txt"}`}
+                >
+                  {employee.name}
+                </div>
+                <div className="text-xs text-txt-soft truncate">
+                  {role?.icon} {employee.role || "-"}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
       {/* Pool info card — แสดงตอนอยู่ใน group */}
       {poolShare && poolGroupEmployees.length > 1 && (
