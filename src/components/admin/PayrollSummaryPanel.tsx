@@ -459,9 +459,7 @@ export default function PayrollSummaryPanel({
                 className={`bg-white rounded-[14px] p-3.5 border ${lostBase ? "border-[#C0392B40] shadow-[0_2px_10px_#C0392B15]" : "border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]"}`}
               >
                 {/* row 1: name + role + netSalary amount */}
-                <div
-                  className={`flex items-center gap-3 ${hasBank ? "mb-2.5" : ""}`}
-                >
+                <div className="flex items-center gap-3 mb-2.5">
                   <AvatarCircle
                     avatar={employee.avatar}
                     avatarType={employee.avatarType}
