@@ -506,19 +506,25 @@ export default function AdminPanel({
                               )}
                             </div>
                           </div>
-                          <div className="flex gap-1.5 flex-wrap">
-                            <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold">
-                              💼 ลากิจ {personalDays} วัน
-                            </div>
-                            <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E]">
-                              🏥 ลาป่วย {sickDays} วัน
-                            </div>
-                            <div className="bg-white rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold border border-bdr">
-                              📅 วันธรรมดา {weekdays} วัน
-                            </div>
-                            <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#EDE9FE] text-[#6D28D9]">
-                              🌅 วันอาทิตย์ {sundays} วัน
-                            </div>
+                          <div className="flex gap-1.5 flex-wrap items-center">
+                            {personalDays > 0 && (
+                              <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold">
+                                💼 ลากิจ {personalDays} วัน
+                              </div>
+                            )}
+                            {sickDays > 0 && (
+                              <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E]">
+                                🏥 ลาป่วย {sickDays} วัน
+                              </div>
+                            )}
+                            {sundays > 0 && (
+                              <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9]">
+                                🌅 อาทิตย์ {sundays} วัน
+                                <span className="font-normal opacity-70 ml-0.5">
+                                  (×1.5)
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -623,19 +629,25 @@ export default function AdminPanel({
                               style={{ width: `${barPct}%` }}
                             />
                           </div>
-                          <div className="flex gap-1.5 flex-wrap">
-                            <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold">
-                              💼 ลากิจ {personalDays} วัน
-                            </div>
-                            <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E]">
-                              🏥 ลาป่วย {sickDays} วัน
-                            </div>
-                            <div className="bg-white rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold border border-bdr">
-                              📅 วันธรรมดา {weekdays} วัน
-                            </div>
-                            <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#EDE9FE] text-[#6D28D9]">
-                              🌅 วันอาทิตย์ {sundays} วัน
-                            </div>
+                          <div className="flex gap-1.5 flex-wrap items-center">
+                            {personalDays > 0 && (
+                              <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold">
+                                💼 ลากิจ {personalDays} วัน
+                              </div>
+                            )}
+                            {sickDays > 0 && (
+                              <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E]">
+                                🏥 ลาป่วย {sickDays} วัน
+                              </div>
+                            )}
+                            {sundays > 0 && (
+                              <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9]">
+                                🌅 อาทิตย์ {sundays} วัน
+                                <span className="font-normal opacity-70 ml-0.5">
+                                  (×1.5)
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
