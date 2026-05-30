@@ -56,39 +56,39 @@ export function buildSalarySlipDocDef({
   if (salaryCalculation.usesSinglePieceRate) {
     if (salaryCalculation.singleRateCommission > 0)
       earnRows.push([
-        `ค่าคอมตามจำนวนชิ้น (${salaryCalculation.singleRatePieces} ชิ้น × ฿${formatNumber(salaryCalculation.singlePieceRate)})`,
+        "ค่าคอมตามจำนวนชิ้น",
         formatNumber(salaryCalculation.singleRateCommission),
       ]);
   } else {
     if (salaryCalculation.normalSaleCommission > 0)
       earnRows.push([
-        `ค่าคอมขาย-ทั่วไป (${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatNumber(salaryCalculation.normalSalePieceRate)})`,
+        "ค่าคอมขาย-ทั่วไป",
         formatNumber(salaryCalculation.normalSaleCommission),
       ]);
     if (salaryCalculation.specialSaleCommission > 0)
       earnRows.push([
-        `ค่าคอมขาย-พิเศษ (${salaryCalculation.specialSalePieces} ชิ้น × ฿${formatNumber(salaryCalculation.specialSalePieceRate)})`,
+        "ค่าคอมขาย-พิเศษ",
         formatNumber(salaryCalculation.specialSaleCommission),
       ]);
     if (salaryCalculation.buyCommission > 0)
       earnRows.push([
-        `ค่าคอมรับซื้อ (${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatNumber(salaryCalculation.buyPieceRate)})`,
+        "ค่าคอมรับซื้อ",
         formatNumber(salaryCalculation.buyCommission),
       ]);
   }
   if (salaryCalculation.inviteCommission > 0)
     earnRows.push([
-      `โบนัสเชิญชวนสมัครบัตร (${salaryCalculation.invitePieces} ใบ × ฿${formatNumber(salaryCalculation.invitePieceRate)})`,
+      "โบนัสเชิญชวนสมัครบัตร",
       formatNumber(salaryCalculation.inviteCommission),
     ]);
   if (salaryCalculation.transferCommission > 0)
     earnRows.push([
-      `โบนัสย้ายข้อมูลบัตร (${salaryCalculation.transferPieces} ใบ × ฿${formatNumber(salaryCalculation.transferPieceRate)})`,
+      "โบนัสย้ายข้อมูลบัตร",
       formatNumber(salaryCalculation.transferCommission),
     ]);
   if (salaryCalculation.attendanceBonus > 0)
     earnRows.push([
-      `โบนัสแห่งความขยัน (${salaryCalculation.bonusDays} วัน × ฿${formatNumber(Math.round(salaryCalculation.dailySalaryRate))})`,
+      "โบนัสแห่งความขยัน(ไม่หยุด)",
       formatNumber(salaryCalculation.attendanceBonus),
     ]);
   if (Array.isArray(data.customEarnings))
@@ -102,14 +102,14 @@ export function buildSalarySlipDocDef({
     dedRows.push(["มาสาย / ขาดงาน", formatNumber(data.lateDeduction)]);
   if (salaryCalculation.advanceDeduction > 0)
     dedRows.push([
-      `เบิกล่วงหน้า (${monthApprovedAdvances?.length || 0} รายการ)`,
+      "เบิกล่วงหน้า",
       formatNumber(salaryCalculation.advanceDeduction),
     ]);
   if (salaryCalculation.socialSecurity > 0)
     dedRows.push(["ประกันสังคม", formatNumber(salaryCalculation.socialSecurity)]);
   if (salaryCalculation.overQuotaDeduction > 0)
     dedRows.push([
-      `ลาเกินโควต้า (${salaryCalculation.weekdayOverQuotaDays} วันธรรมดา + ${salaryCalculation.sundayOverQuotaDays} วันอาทิตย์)`,
+      "ลาเกินโควต้า",
       formatNumber(salaryCalculation.overQuotaDeduction),
     ]);
   if (Array.isArray(data.customDeductions))
