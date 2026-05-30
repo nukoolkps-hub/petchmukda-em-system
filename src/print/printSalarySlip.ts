@@ -202,8 +202,14 @@ function buildSalarySlipHTML(
       font-size:10px;color:#B89A72;text-align:center;
     }
     .warn{color:#C0392B;font-weight:600;}
+    @page{size:A4 portrait;margin:8mm;}
     @media print{
-      body{background:#fff;padding:0;}
+      html,body{width:210mm;height:297mm;}
+      body{background:#fff;padding:0;font-size:11.5px;line-height:1.35;}
+      .doc{box-shadow:none !important;border:1px solid #C9973A !important;
+        max-width:194mm !important;margin:0 auto !important;
+        page-break-inside:avoid;break-inside:avoid;}
+      .doc *{page-break-inside:avoid;break-inside:avoid;}
       .slip{box-shadow:none;border:1.5px solid #C9973A;}
       .no-print{display:none !important;}
       @page{size:A5;margin:10mm;}

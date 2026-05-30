@@ -141,11 +141,14 @@ function buildCertificateHTML(
       padding:14px 32px;background:#FDF8F0;border-top:1px solid #E8D5B0;
       font-size:11px;color:#B89A72;text-align:center;
     }
+    @page{size:A4 portrait;margin:12mm;}
     @media print{
-      body{background:#fff;padding:0;}
-      .doc{box-shadow:none;border:1.5px solid #C9973A;min-height:auto;}
+      html,body{width:210mm;height:297mm;}
+      body{background:#fff;padding:0;font-size:13px;line-height:1.4;}
+      .doc{box-shadow:none !important;border:1px solid #C9973A !important;
+        min-height:auto !important;max-width:186mm !important;margin:0 auto !important;
+        page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
-      @page{size:A4;margin:14mm;}
     }
     .print-btn{
       position:fixed;bottom:20px;right:20px;
