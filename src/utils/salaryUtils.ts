@@ -296,6 +296,12 @@ export function calculateSalary(
   const losesBaseSalary = !!poolShare?.losesBaseSalary;
   const baseSalary = losesBaseSalary ? 0 : baseSalaryAmount;
 
+  const customEarningsTotal = Array.isArray(salary.customEarnings)
+    ? salary.customEarnings.reduce(
+        (sum, item) => sum + (Number(item?.amount) || 0),
+        0,
+      )
+    : 0;
   const earnings =
     baseSalary +
     singleRateCommission +
@@ -303,7 +309,8 @@ export function calculateSalary(
     specialSaleCommission +
     buyCommission +
     memberBonusTotal +
-    attendanceBonus;
+    attendanceBonus +
+    customEarningsTotal;
   const advanceDeduction = approvedAdvanceTotal || 0;
   const customDeductionsTotal = Array.isArray(salary.customDeductions)
     ? salary.customDeductions.reduce(

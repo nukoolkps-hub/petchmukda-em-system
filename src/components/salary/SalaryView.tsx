@@ -537,6 +537,14 @@ export default function SalaryView({
                 : `ลาวันธรรมดา ${salaryCalculation.leaveDays} วัน — ไม่ได้รับโบนัส`,
             value: salaryCalculation.attendanceBonus,
           },
+          ...(Array.isArray(data.customEarnings)
+            ? data.customEarnings.map((e) => ({
+                icon: "➕",
+                main: e.label || "รายการรายรับ",
+                sub: "",
+                value: e.amount,
+              }))
+            : []),
         ]
           .filter((x) => x.value > 0)
           .map((row, i) => (

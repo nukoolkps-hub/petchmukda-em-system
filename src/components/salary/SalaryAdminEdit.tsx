@@ -157,26 +157,27 @@ export default function SalaryAdminEdit({
     setDraft((d) => ({ ...d, [field]: num }));
   }
 
-  /* ─── รายการหักที่เพิ่มเอง (customDeductions) ───────────────── */
-  function currentCustomDeductions(d) {
-    if (Array.isArray(d.customDeductions)) return d.customDeductions;
-    if (Array.isArray(savedData.customDeductions))
-      return savedData.customDeductions;
+  /* ─── รายการ custom (รายรับ/รายหัก) ที่ Admin เพิ่มเอง ──────── */
+  function currentCustomList(d, key: "customEarnings" | "customDeductions") {
+    if (Array.isArray(d[key])) return d[key];
+    if (Array.isArray(savedData[key])) return savedData[key];
     return [];
   }
-  function addCustomDeduction() {
+  function addCustomItem(key: "customEarnings" | "customDeductions") {
     setDraft((d) => ({
       ...d,
-      customDeductions: [
-        ...currentCustomDeductions(d),
-        { label: "", amount: 0 },
-      ],
+      [key]: [...currentCustomList(d, key), { label: "", amount: 0 }],
     }));
   }
-  function updateCustomDeduction(index, field, value) {
+  function updateCustomItem(
+    key: "customEarnings" | "customDeductions",
+    index: number,
+    field: "label" | "amount",
+    value: string,
+  ) {
     setDraft((d) => ({
       ...d,
-      customDeductions: currentCustomDeductions(d).map((item, i) =>
+      [key]: currentCustomList(d, key).map((item, i) =>
         i === index
           ? {
               ...item,
@@ -186,14 +187,25 @@ export default function SalaryAdminEdit({
       ),
     }));
   }
-  function removeCustomDeduction(index) {
+  function removeCustomItem(
+    key: "customEarnings" | "customDeductions",
+    index: number,
+  ) {
     setDraft((d) => ({
       ...d,
-      customDeductions: currentCustomDeductions(d).filter(
-        (_, i) => i !== index,
-      ),
+      [key]: currentCustomList(d, key).filter((_, i) => i !== index),
     }));
   }
+  const addCustomEarning = () => addCustomItem("customEarnings");
+  const updateCustomEarning = (i: number, f: "label" | "amount", v: string) =>
+    updateCustomItem("customEarnings", i, f, v);
+  const removeCustomEarning = (i: number) =>
+    removeCustomItem("customEarnings", i);
+  const addCustomDeduction = () => addCustomItem("customDeductions");
+  const updateCustomDeduction = (i: number, f: "label" | "amount", v: string) =>
+    updateCustomItem("customDeductions", i, f, v);
+  const removeCustomDeduction = (i: number) =>
+    removeCustomItem("customDeductions", i);
 
   async function saveAll() {
     if (!dirty || saving) return;
@@ -897,6 +909,53 @@ export default function SalaryAdminEdit({
               </div>
             )}
           </div>
+
+          {/* custom earnings — รายการรายรับที่เพิ่มเอง */}
+          {(Array.isArray(data.customEarnings) ? data.customEarnings : []).map(
+            (item, index) => (
+              <div key={index} className="flex items-center gap-2 mt-2.5">
+                <input
+                  type="text"
+                  value={item?.label || ""}
+                  onChange={(e) =>
+                    updateCustomEarning(index, "label", e.target.value)
+                  }
+                  placeholder="ชื่อรายการ"
+                  className="flex-1 min-w-0 px-3 py-2.5 rounded-[10px] border border-bdr text-sm font-semibold outline-none font-[inherit] text-txt bg-cream"
+                />
+                <div className="relative w-[110px] shrink-0">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
+                    ฿
+                  </span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    value={item?.amount || ""}
+                    onChange={(e) =>
+                      updateCustomEarning(index, "amount", e.target.value)
+                    }
+                    className="w-full py-2.5 pr-2 pl-[26px] rounded-[10px] border border-bdr text-sm font-bold text-right outline-none font-[inherit] text-txt bg-cream"
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="ลบรายการ"
+                  onClick={() => removeCustomEarning(index)}
+                  className="w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
+                >
+                  <IconTrash size={16} color={COLORS.red} stroke={2.2} />
+                </button>
+              </div>
+            ),
+          )}
+          <button
+            type="button"
+            onClick={addCustomEarning}
+            className="w-full mt-2.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-green/40 bg-green-lt text-green text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
+          >
+            ➕ เพิ่มรายการรายรับ
+          </button>
         </div>
 
         {/* Deductions inputs */}

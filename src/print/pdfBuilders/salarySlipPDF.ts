@@ -91,6 +91,10 @@ export function buildSalarySlipDocDef({
       `โบนัสแห่งความขยัน (${salaryCalculation.bonusDays} วัน × ฿${formatNumber(Math.round(salaryCalculation.dailySalaryRate))})`,
       formatNumber(salaryCalculation.attendanceBonus),
     ]);
+  if (Array.isArray(data.customEarnings))
+    for (const e of data.customEarnings)
+      if (e?.amount > 0)
+        earnRows.push([e.label || "รายการรายรับ", formatNumber(e.amount)]);
 
   /* ─── สร้าง deductions rows ───────────────────────────── */
   const dedRows: [string, string][] = [];

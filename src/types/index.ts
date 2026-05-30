@@ -60,6 +60,7 @@ export interface SalaryMonth {
   transferPieces?: number;
   lateDeduction?: number;
   socialSecurity?: number;
+  customEarnings?: { label: string; amount: number }[]; // รายการรายรับที่ Admin เพิ่มเอง
   customDeductions?: { label: string; amount: number }[]; // รายการหักที่ Admin เพิ่มเอง
   note?: string;
   slipUrl?: string; // สลิป PDF ที่ freeze ลง Storage ตอน Admin ยืนยันยอด
