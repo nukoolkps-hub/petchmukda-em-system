@@ -86,7 +86,20 @@ export const lineAuth = onCall(async (request) => {
 	}
 
 	try {
-		await auth.getUser(profile.userId);
+		const existing = await auth.getUser(profile.userId);
+		// ถ้า claim admin ค้างจากการตั้งครั้งก่อน (เช่นเคยอยู่ใน ADMIN_LINE_USER_ID
+		// หรือเคย bootstrap/setAdmin) แต่ตอนนี้ไม่ใช่ admin แล้ว → revoke ทิ้ง
+		const existingClaims = existing.customClaims || {};
+		if ((existingClaims as { admin?: boolean }).admin === true) {
+			const { admin: _droppedAdmin, ...rest } = existingClaims as {
+				admin?: boolean;
+				[key: string]: unknown;
+			};
+			await auth.setCustomUserClaims(profile.userId, rest);
+			// บังคับให้ refresh token ครั้งต่อไป → token เก่าที่ยังถือ admin: true
+			// จะใช้งาน Firestore rules แบบ admin ไม่ได้อีกหลังหมดอายุ (~1 ชม.)
+			await auth.revokeRefreshTokens(profile.userId);
+		}
 	} catch (error) {
 		if ((error as { code?: string }).code === "auth/user-not-found") {
 			throw new HttpsError("permission-denied", UNPROVISIONED_LINE_USER_MESSAGE);
