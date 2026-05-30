@@ -17,6 +17,11 @@ import {
   downloadSalarySlipPDF,
   printSalarySlip,
 } from "../../print/printSalarySlip";
+import {
+  isLineWebview,
+  openExternalPDF,
+  openInExternalBrowser,
+} from "../../print/webviewHelpers";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import {
@@ -145,8 +150,12 @@ export default function SalaryView({
     }
     // ถ้ามีสลิป official ที่ Admin freeze ลง Storage แล้ว → เปิดไฟล์นั้น
     if (data.slipUrl) {
-      const { openExternalPDF } = await import("../../print/webviewHelpers");
       openExternalPDF(data.slipUrl);
+      return;
+    }
+    // LINE in-app เปิด PDF ที่สร้างฝั่ง client ไม่ได้ → เด้งไปเบราว์เซอร์จริง
+    if (isLineWebview()) {
+      openInExternalBrowser();
       return;
     }
     setPdfLoading("slip");
@@ -174,6 +183,10 @@ export default function SalaryView({
       alert("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
       return;
     }
+    if (isLineWebview()) {
+      openInExternalBrowser();
+      return;
+    }
     setPdfLoading("cert");
     try {
       await downloadSalaryCertificatePDF({ profile, employeeInfo, data });
@@ -188,6 +201,10 @@ export default function SalaryView({
   function handlePrintSlip() {
     if (!data || !salaryCalculation) {
       alert("ไม่มีข้อมูลเงินเดือนเดือนนี้");
+      return;
+    }
+    if (isLineWebview()) {
+      openInExternalBrowser();
       return;
     }
     printSalarySlip({
@@ -205,6 +222,10 @@ export default function SalaryView({
   function handlePrintCert() {
     if (!data) {
       alert("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
+      return;
+    }
+    if (isLineWebview()) {
+      openInExternalBrowser();
       return;
     }
     printSalaryCertificate({ profile, employeeInfo, data });

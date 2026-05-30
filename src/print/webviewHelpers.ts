@@ -7,9 +7,17 @@
    • PDF  → ถ้าอยู่ใน LINE → navigate ไป blob URL (เปิดดูใน PDF viewer)
             ถ้าเบราว์เซอร์ปกติ → ใช้ a[download] save ไฟล์เหมือนเดิม      */
 
-function isLineWebview(): boolean {
+export function isLineWebview(): boolean {
   if (typeof navigator === "undefined") return false;
   return /Line\//i.test(navigator.userAgent);
+}
+
+/** เปิดแอปนี้ซ้ำในเบราว์เซอร์จริง (Chrome/Safari) ออกจาก LINE in-app
+   ใช้พารามิเตอร์ openExternalBrowser=1 ที่ LINE รองรับ — PDF/พิมพ์
+   ทำงานได้ปกติในเบราว์เซอร์จริง */
+export function openInExternalBrowser() {
+  const { origin, pathname, hash } = window.location;
+  window.location.href = `${origin}${pathname}?openExternalBrowser=1${hash}`;
 }
 
 /** พิมพ์ HTML ผ่าน iframe ซ่อน */
