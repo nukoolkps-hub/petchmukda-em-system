@@ -19,6 +19,7 @@ import * as leavesAPI from "../firebase/leaves";
 import * as payrollConfirmsAPI from "../firebase/payrollConfirms";
 import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
+import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
 
 interface FirebaseAppDataOptions {
   authUid?: string;
@@ -88,7 +89,27 @@ export default function useFirebaseAppData({
 
   /* ─── Salaries ──────────────────────────────────────────── */
   async function updateSalary(employeeId, yearMonth, fields) {
-    await salariesAPI.updateSalary(employeeId, yearMonth, fields);
+    // ใส่ snapshot ของ roleId / poolExclusion / leave days พร้อมไปด้วย
+    // เพื่อให้พนักงานคำนวณ pool ได้โดยไม่ต้องอ่าน employees/leaves ของเพื่อน
+    const employee = employeeResult.data.find((e) => e.id === employeeId);
+    const monthLeaves = employee
+      ? leavesResult.data.filter(
+          (leave) =>
+            leave.employeeName === employee.name &&
+            leave.start.startsWith(yearMonth),
+        )
+      : [];
+    const weekdayLeaves = countWeekdayLeaves(monthLeaves);
+    const overInfo = getOverQuotaDays(monthLeaves);
+    const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
+    const snapshot: Record<string, any> = { totalLeaveDays };
+    if (employee?.roleId) snapshot.roleId = employee.roleId;
+    if (employee?.poolExclusion)
+      snapshot.poolExclusion = employee.poolExclusion;
+    await salariesAPI.updateSalary(employeeId, yearMonth, {
+      ...fields,
+      ...snapshot,
+    });
   }
 
   /* ─── Advances ──────────────────────────────────────────── */

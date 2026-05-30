@@ -87,14 +87,20 @@ export default function SalaryView({
     );
     let employeePoolShare: any = null;
     if (employeeRole?.poolGroup) {
-      const groupEmployees = employeeDirectory.filter((employee) => {
-        const role = roles.find(
-          (candidateRole) => candidateRole.id === employee.roleId,
-        );
-        return role?.poolGroup === employeeRole.poolGroup;
+      // ฝั่งพนักงานมี employeeDirectory แค่ตัวเอง (rules) → ใช้ snapshot
+      // ใน salary doc ของแต่ละเดือน หาคนที่ poolGroup ตรงกัน
+      const groupIdSet = new Set<string>();
+      groupIdSet.add(employeeInfo.id);
+      Object.keys(salaryData).forEach((peerId) => {
+        const peerSalary = salaryData[peerId]?.[selectedMonth];
+        if (!peerSalary?.roleId) return;
+        const peerRole = roles.find((r) => r.id === peerSalary.roleId);
+        if (peerRole?.poolGroup === employeeRole.poolGroup) {
+          groupIdSet.add(peerId);
+        }
       });
       const shares = computePoolSharesForGroup({
-        groupEmployeeIds: groupEmployees.map((employee) => employee.id),
+        groupEmployeeIds: Array.from(groupIdSet),
         salaryData,
         allLeaves,
         yearMonth: selectedMonth,

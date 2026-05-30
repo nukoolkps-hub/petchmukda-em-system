@@ -52,18 +52,28 @@ export function computePoolSharesForGroup({
     sellPieces[employeeId] =
       (salary?.normalSalePieces || 0) + (salary?.specialSalePieces || 0);
     buyPieces[employeeId] = salary?.buyPieces || 0;
-    poolExclusion[employeeId] = employee?.poolExclusion || null;
-    const monthLeaves = employee
-      ? allLeaves.filter(
-          (leave) =>
-            leave.employeeName === employee.name &&
-            leave.start.startsWith(yearMonth),
-        )
-      : [];
-    const weekdayLeaves = countWeekdayLeaves(monthLeaves);
-    const overInfo = getOverQuotaDays(monthLeaves);
-    // วันหยุดรวมตาม Excel = ปกติ + อาทิตย์ทั้งหมด (ไม่ใช่แค่ที่เกินโควต้า)
-    totalLeave[employeeId] = weekdayLeaves + (overInfo.sundays || 0);
+    // ใช้ snapshot ที่เขียนพร้อม salary ก่อนเสมอ — admin/พนักงานจะเห็นเลข
+    // ตรงกัน. fallback มา employee directory + allLeaves เฉพาะเดือนเก่าที่
+    // ยังไม่มี snapshot field (data จากก่อน feature นี้)
+    poolExclusion[employeeId] =
+      salary?.poolExclusion !== undefined
+        ? salary.poolExclusion
+        : employee?.poolExclusion || null;
+    if (typeof salary?.totalLeaveDays === "number") {
+      totalLeave[employeeId] = salary.totalLeaveDays;
+    } else if (employee) {
+      const monthLeaves = allLeaves.filter(
+        (leave) =>
+          leave.employeeName === employee.name &&
+          leave.start.startsWith(yearMonth),
+      );
+      const weekdayLeaves = countWeekdayLeaves(monthLeaves);
+      const overInfo = getOverQuotaDays(monthLeaves);
+      // วันหยุดรวมตาม Excel = ปกติ + อาทิตย์ทั้งหมด (ไม่ใช่แค่ที่เกินโควต้า)
+      totalLeave[employeeId] = weekdayLeaves + (overInfo.sundays || 0);
+    } else {
+      totalLeave[employeeId] = 0;
+    }
   });
   const topSellPieces = Math.max(0, ...Object.values(sellPieces));
   const topBuyPieces = Math.max(0, ...Object.values(buyPieces));
