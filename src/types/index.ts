@@ -61,6 +61,8 @@ export interface SalaryMonth {
   lateDeduction?: number;
   socialSecurity?: number;
   note?: string;
+  slipUrl?: string; // สลิป PDF ที่ freeze ลง Storage ตอน Admin ยืนยันยอด
+  slipFrozenAt?: string; // ISO timestamp ตอน freeze สลิป
 }
 
 export type SalaryData = Record<string, Record<string, SalaryMonth>>;

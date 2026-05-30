@@ -346,7 +346,10 @@ export function printSalarySlip(args) {
  * ✅ ดาวน์โหลดทันที · text searchable + select ได้ · ขนาดไฟล์เล็ก
  * ⚠️  โหลด pdfmake ครั้งแรก ~400KB
  */
-export async function downloadSalarySlipPDF(args) {
+/**
+ * สร้างสลิปเป็น Blob (ไม่เปิด/ไม่ดาวน์โหลด) — ใช้ตอน freeze ลง Storage
+ */
+export async function generateSalarySlipBlob(args): Promise<Blob> {
   if (!args?.data || !args?.salaryCalculation)
     throw new Error("ไม่มีข้อมูลเงินเดือนเดือนนี้");
 
@@ -358,6 +361,17 @@ export async function downloadSalarySlipPDF(args) {
   await ensureThaiFonts(pdfMake);
 
   const docDef = buildSalarySlipDocDef(args);
+  return new Promise<Blob>((resolve, reject) => {
+    try {
+      pdfMake.createPdf(docDef).getBlob((blob: Blob) => resolve(blob));
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+export async function downloadSalarySlipPDF(args) {
+  const blob = await generateSalarySlipBlob(args);
   const employeeName =
     args.profile?.name || args.employeeInfo?.name || "employee";
   const safe = (s) =>
@@ -366,17 +380,7 @@ export async function downloadSalarySlipPDF(args) {
       .replace(/\s+/g, "-")
       .trim();
   const filename = `สลิปเงินเดือน-${safe(employeeName)}-${args.selectedMonth}.pdf`;
-
-  return new Promise<void>((resolve, reject) => {
-    try {
-      pdfMake.createPdf(docDef).getBlob((blob: Blob) => {
-        openPDFBlob(blob, filename);
-        resolve();
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
+  openPDFBlob(blob, filename);
 }
 
 /** Default export — backward compat */

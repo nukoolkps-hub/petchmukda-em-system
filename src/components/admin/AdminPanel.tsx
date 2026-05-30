@@ -328,6 +328,7 @@ export default function AdminPanel({
           roles={roles}
           payrollConfirms={payrollConfirms}
           onSetPayrollConfirm={onSetPayrollConfirm}
+          onSaveSalary={onSaveSalary}
           showToast={showToast}
         />
       )}

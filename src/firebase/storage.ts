@@ -1,6 +1,11 @@
 /* ─── Firebase Storage uploads ───────────────────────────────── */
 
-import { getDownloadURL, ref, uploadString } from "firebase/storage";
+import {
+  getDownloadURL,
+  ref,
+  uploadBytes,
+  uploadString,
+} from "firebase/storage";
 import { storage } from "./config";
 
 function safeSegment(value: string | number) {
@@ -27,4 +32,20 @@ export async function uploadAdvanceSlip(
     `advanceSlips/${id}/slip-${Date.now()}.jpg`,
     dataUrl,
   );
+}
+
+/* ─── Salary slip PDF (freeze ตอน Admin ยืนยันยอด) ──────────────
+   Path คงที่ salarySlips/{employeeId}/{YYYY-MM}.pdf
+   → ยืนยันยอดใหม่ทับไฟล์เดิม ไม่สะสมไฟล์ขยะ
+   → Cloud Function cleanupOldSlips อ่าน YYYY-MM จากชื่อไฟล์เพื่อลบเกิน 5 ปี */
+export async function uploadSalarySlip(
+  employeeId: string,
+  yearMonth: string,
+  blob: Blob,
+) {
+  const id = safeSegment(employeeId);
+  const ym = safeSegment(yearMonth);
+  const fileRef = ref(storage, `salarySlips/${id}/${ym}.pdf`);
+  await uploadBytes(fileRef, blob, { contentType: "application/pdf" });
+  return await getDownloadURL(fileRef);
 }

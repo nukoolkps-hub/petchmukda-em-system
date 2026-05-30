@@ -37,6 +37,14 @@ service firebase.storage {
       allow write: if isAdmin() && isImageUpload();
     }
 
+    match /salarySlips/{employeeId}/{fileName} {
+      allow read: if isAdmin() || isEmployeeOwner(employeeId);
+      allow write: if isAdmin()
+        && request.resource != null
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType == "application/pdf";
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

@@ -143,6 +143,12 @@ export default function SalaryView({
       alert("ไม่มีข้อมูลเงินเดือนเดือนนี้");
       return;
     }
+    // ถ้ามีสลิป official ที่ Admin freeze ลง Storage แล้ว → เปิดไฟล์นั้น
+    if (data.slipUrl) {
+      const { openExternalPDF } = await import("../../print/webviewHelpers");
+      openExternalPDF(data.slipUrl);
+      return;
+    }
     setPdfLoading("slip");
     try {
       await downloadSalarySlipPDF({

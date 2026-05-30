@@ -37,6 +37,15 @@ export function printHTMLInIframe(html: string) {
   setTimeout(() => iframe.remove(), 60_000);
 }
 
+/** เปิด PDF จาก URL (เช่นสลิป official ใน Storage) — รองรับ LINE webview */
+export function openExternalPDF(url: string) {
+  if (isLineWebview()) {
+    window.location.href = url;
+    return;
+  }
+  window.open(url, "_blank", "noopener");
+}
+
 /** เปิด/ดาวน์โหลด PDF blob — รองรับทั้ง LINE webview และเบราว์เซอร์ปกติ */
 export function openPDFBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);

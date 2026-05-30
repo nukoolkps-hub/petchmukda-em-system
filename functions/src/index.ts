@@ -26,3 +26,6 @@ export { setAdmin } from "./auth/setAdmin.js";
 
 // LINE webhook
 export { lineWebhook } from "./line/webhook.js";
+
+// Maintenance
+export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";

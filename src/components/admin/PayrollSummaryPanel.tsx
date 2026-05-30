@@ -21,6 +21,7 @@ export default function PayrollSummaryPanel({
   roles,
   payrollConfirms,
   onSetPayrollConfirm,
+  onSaveSalary,
   showToast,
 }) {
   const now = new Date();
@@ -122,6 +123,7 @@ export default function PayrollSummaryPanel({
           data,
           salaryCalculation,
           advanceTotal: approvedAdvanceTotal,
+          monthApprovedAdvances,
           poolShare,
         };
       })
@@ -159,6 +161,51 @@ export default function PayrollSummaryPanel({
   });
   const months: string[] = [...monthSet].sort().reverse();
   if (!months.includes(selectedMonth)) months.unshift(selectedMonth);
+
+  /* ─── Freeze สลิปทุกคนลง Storage หลังยืนยันยอด ─────────────────
+     best-effort: สร้าง PDF + อัปโหลด + เก็บ slipUrl ในเอกสารเงินเดือน
+     ถ้าคนไหน fail ก็ข้าม ไม่ให้กระทบการยืนยันยอดที่ทำไปแล้ว        */
+  async function freezeAllSlips() {
+    if (!onSaveSalary || rows.length === 0) return;
+    const [{ generateSalarySlipBlob }, { uploadSalarySlip }] =
+      await Promise.all([
+        import("../../print/printSalarySlip"),
+        import("../../firebase/storage"),
+      ]);
+    let ok = 0;
+    let fail = 0;
+    for (const row of rows) {
+      try {
+        const blob = await generateSalarySlipBlob({
+          employeeInfo: row.employee,
+          employeeRole: row.employeeRole,
+          data: row.data,
+          salaryCalculation: row.salaryCalculation,
+          poolShare: row.poolShare,
+          selectedMonth,
+          monthApprovedAdvances: row.monthApprovedAdvances,
+        });
+        const slipUrl = await uploadSalarySlip(
+          row.employee.id,
+          selectedMonth,
+          blob,
+        );
+        await onSaveSalary(row.employee.id, selectedMonth, {
+          slipUrl,
+          slipFrozenAt: new Date().toISOString(),
+        });
+        ok++;
+      } catch (err) {
+        console.error(
+          "[PayrollSummary] freeze slip failed:",
+          row.employee.id,
+          err,
+        );
+        fail++;
+      }
+    }
+    showToast?.(`บันทึกสลิปเข้าระบบ ${ok} คน${fail ? ` (ไม่สำเร็จ ${fail})` : ""}`);
+  }
 
   return (
     <div>
@@ -292,6 +339,7 @@ export default function PayrollSummaryPanel({
                           employeeCount: empCountForMonth,
                         });
                         showToast?.("ยืนยันยอดใหม่เรียบร้อย");
+                        await freezeAllSlips();
                       } catch (err) {
                         console.error("[PayrollSummary] confirm failed:", err);
                         showToast?.("ยืนยันยอดไม่สำเร็จ");
@@ -330,6 +378,7 @@ export default function PayrollSummaryPanel({
                   employeeCount: empCountForMonth,
                 });
                 showToast?.("ยืนยันยอดเรียบร้อย");
+                await freezeAllSlips();
               } catch (err) {
                 console.error("[PayrollSummary] confirm failed:", err);
                 showToast?.("ยืนยันยอดไม่สำเร็จ");
