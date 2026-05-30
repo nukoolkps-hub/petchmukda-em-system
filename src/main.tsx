@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import "./index.css";
@@ -24,15 +24,34 @@ window.addEventListener("load", () => {
   sessionStorage.removeItem("vite-preload-reloaded");
 });
 
-/* ─── Loading Screen (Firebase auth initializing) ────────── */
+/* ─── Loading Screen (Firebase auth initializing) ──────────
+   Firebase auth check ไม่มี progress จริง — fake asymptotic progress
+   ที่ค่อยขึ้น ใกล้ 95% ช้าลง พอ auth เสร็จ component unmount เลย    */
 function AuthLoadingScreen() {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setProgress((p) => Math.min(95, p + (95 - p) * 0.06));
+    }, 80);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-linear-160 from-maroon-dk via-maroon to-maroon-lt font-sans">
-      <div className="w-16 h-16 rounded-full bg-linear-135 from-gold to-gold-lt flex items-center justify-center shadow-[0_6px_20px_rgba(201,151,58,0.31)] animate-[pulse_1.5s_ease-in-out_infinite]">
+      <div className="w-16 h-16 rounded-full bg-linear-135 from-gold to-gold-lt flex items-center justify-center shadow-[0_6px_20px_rgba(201,151,58,0.31)]">
         <Diamond size={32} color="#5C1212" />
       </div>
       <div className="mt-4.5 text-sm font-semibold text-gold-lt">
         กำลังตรวจสอบสิทธิ์...
+      </div>
+      <div className="mt-3 w-[220px] h-2 rounded-full bg-white/10 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-linear-to-r from-gold to-gold-lt transition-[width] duration-100 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <div className="mt-1.5 text-xs font-bold text-gold-lt/80 tabular-nums">
+        {Math.round(progress)}%
       </div>
     </div>
   );
