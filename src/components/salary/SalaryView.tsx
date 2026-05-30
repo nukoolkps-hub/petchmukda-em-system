@@ -617,9 +617,13 @@ export default function SalaryView({
               📄 พิมพ์ใบรับรองเงินเดือน
             </div>
             <div className="text-sm text-txt-mid mb-3.5">
-              เลือกหรือพิมพ์วัตถุประสงค์ — ข้อความจะถูกระบุในใบรับรอง
+              ระบุวัตถุประสงค์ — ข้อความจะถูกพิมพ์ลงในใบรับรอง
             </div>
-            <div className="grid grid-cols-2 gap-2 mb-3">
+
+            <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5">
+              เลือกด่วน
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
               {CERT_PURPOSE_OPTIONS.map((p) => {
                 const active = certPurpose === p;
                 return (
@@ -638,13 +642,29 @@ export default function SalaryView({
                 );
               })}
             </div>
+            <button
+              type="button"
+              onClick={() => setCertPurpose("")}
+              className={`w-full px-3 py-2 mb-4 rounded-lg text-sm font-semibold border-[1.5px] cursor-pointer font-[inherit] ${
+                certPurpose === ""
+                  ? "bg-maroon text-white border-maroon"
+                  : "bg-white text-txt-mid border-dashed border-bdr"
+              }`}
+            >
+              — ไม่ระบุวัตถุประสงค์ —
+            </button>
+
+            <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5">
+              ✏️ พิมพ์เอง / แก้ไข
+            </div>
             <input
               type="text"
               value={certPurpose}
               onChange={(e) => setCertPurpose(e.target.value)}
-              placeholder="หรือพิมพ์วัตถุประสงค์อื่น..."
-              className="w-full px-3 py-2 mb-4 rounded-lg border border-bdr text-sm font-[inherit] bg-white outline-none focus:border-maroon"
+              placeholder="เช่น สมัครงาน, ขอเครดิตการ์ด..."
+              className="w-full px-3 py-2.5 mb-4 rounded-lg border-[1.5px] border-bdr text-sm font-[inherit] bg-white outline-none focus:border-maroon"
             />
+
             <div className="flex gap-2">
               <button
                 type="button"
