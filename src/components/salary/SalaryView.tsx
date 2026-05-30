@@ -3,23 +3,14 @@ import {
   IconBuildingBank,
   IconCirclePlus,
   IconClock,
-  IconDownload,
-  IconLoader2,
   IconPrinter,
 } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
-import {
-  downloadSalaryCertificatePDF,
-  printSalaryCertificate,
-} from "../../print/printSalaryCertificate";
-import {
-  downloadSalarySlipPDF,
-  printSalarySlip,
-} from "../../print/printSalarySlip";
+import { printSalaryCertificate } from "../../print/printSalaryCertificate";
+import { printSalarySlip } from "../../print/printSalarySlip";
 import {
   isLineWebview,
-  openExternalPDF,
   openInExternalBrowser,
 } from "../../print/webviewHelpers";
 import { formatThaiNumber } from "../../utils/format";
@@ -140,63 +131,6 @@ export default function SalaryView({
     employeeInfo,
     data,
   ]);
-
-  const [pdfLoading, setPdfLoading] = useState<string | null>(null);
-
-  async function handleDownloadSlipPDF() {
-    if (!data || !salaryCalculation) {
-      alert("ไม่มีข้อมูลเงินเดือนเดือนนี้");
-      return;
-    }
-    // ถ้ามีสลิป official ที่ Admin freeze ลง Storage แล้ว → เปิดไฟล์นั้น
-    if (data.slipUrl) {
-      openExternalPDF(data.slipUrl);
-      return;
-    }
-    // LINE in-app เปิด PDF ที่สร้างฝั่ง client ไม่ได้ → เด้งไปเบราว์เซอร์จริง
-    if (isLineWebview()) {
-      openInExternalBrowser();
-      return;
-    }
-    setPdfLoading("slip");
-    try {
-      await downloadSalarySlipPDF({
-        profile,
-        employeeInfo,
-        employeeRole,
-        data,
-        salaryCalculation,
-        poolShare,
-        selectedMonth,
-        monthApprovedAdvances,
-      });
-    } catch (err: unknown) {
-      console.error(err);
-      alert((err as Error).message || "สร้าง PDF ไม่สำเร็จ — ลองใหม่อีกครั้ง");
-    } finally {
-      setPdfLoading(null);
-    }
-  }
-
-  async function handleDownloadCertPDF() {
-    if (!data) {
-      alert("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
-      return;
-    }
-    if (isLineWebview()) {
-      openInExternalBrowser();
-      return;
-    }
-    setPdfLoading("cert");
-    try {
-      await downloadSalaryCertificatePDF({ profile, employeeInfo, data });
-    } catch (err: unknown) {
-      console.error(err);
-      alert((err as Error).message || "สร้าง PDF ไม่สำเร็จ — ลองใหม่อีกครั้ง");
-    } finally {
-      setPdfLoading(null);
-    }
-  }
 
   function handlePrintSlip() {
     if (!data || !salaryCalculation) {
@@ -331,7 +265,7 @@ export default function SalaryView({
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-maroon leading-tight">
-                ประวัติ
+                ประวัติเบิกเงิน
               </div>
               <div className="text-xs text-txt-soft mt-px">
                 {advanceRequests && advanceRequests.length > 0
@@ -365,73 +299,38 @@ export default function SalaryView({
         </select>
       </div>
 
-      {/* Document buttons */}
+      {/* Document buttons — พิมพ์อย่างเดียว, A4 หน้าเดียว */}
       <div className="flex flex-col gap-2 mb-3.5 px-3 py-2.5 rounded-[11px] bg-gold-pale/20 border border-gold/15">
         <div className="flex items-center gap-1.5">
-          <div className="flex-[1_1_80px] text-xs text-txt-mid font-semibold min-w-0">
+          <div className="flex-[1_1_80px] text-sm text-txt-mid font-semibold min-w-0">
             📋 สลิป
           </div>
           <button
-            onClick={handleDownloadSlipPDF}
-            disabled={pdfLoading !== null}
-            title="ดาวน์โหลด PDF"
-            className={`px-2.5 py-[7px] rounded-lg font-[inherit] text-xs font-bold flex items-center gap-1 whitespace-nowrap bg-linear-135 from-gold to-gold-lt text-maroon-dk shadow-[0_2px_6px_var(--color-gold)/0.2] border border-[#C9973A50] ${pdfLoading ? "cursor-wait" : "cursor-pointer"} ${pdfLoading && pdfLoading !== "slip" ? "opacity-50" : "opacity-100"}`}
-          >
-            {pdfLoading === "slip" ? (
-              <>
-                <Spinner />
-                กำลังสร้าง...
-              </>
-            ) : (
-              <>
-                <DownloadIcon />
-                PDF
-              </>
-            )}
-          </button>
-          <button
+            type="button"
             onClick={handlePrintSlip}
-            title="พิมพ์"
-            className="px-2.5 py-[7px] rounded-lg border-[1.5px] border-bdr bg-white text-txt-mid text-xs font-semibold cursor-pointer font-[inherit] flex items-center gap-1 whitespace-nowrap"
+            title="พิมพ์ / บันทึก PDF"
+            className="px-3 py-1.5 rounded-lg bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border border-[#C9973A50]"
           >
             <PrintIcon />
             พิมพ์
           </button>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="flex-[1_1_80px] text-xs text-txt-mid font-semibold min-w-0">
+          <div className="flex-[1_1_80px] text-sm text-txt-mid font-semibold min-w-0">
             📄 รับรอง
           </div>
           <button
-            onClick={handleDownloadCertPDF}
-            disabled={pdfLoading !== null}
-            title="ดาวน์โหลดหนังสือรับรอง"
-            className={`px-2.5 py-[7px] rounded-lg font-[inherit] text-xs font-bold flex items-center gap-1 whitespace-nowrap bg-white text-maroon border-[1.5px] border-[#7B1C1C50] ${pdfLoading ? "cursor-wait" : "cursor-pointer"} ${pdfLoading && pdfLoading !== "cert" ? "opacity-50" : "opacity-100"}`}
-          >
-            {pdfLoading === "cert" ? (
-              <>
-                <Spinner />
-                กำลังสร้าง...
-              </>
-            ) : (
-              <>
-                <DownloadIcon />
-                PDF
-              </>
-            )}
-          </button>
-          <button
+            type="button"
             onClick={handlePrintCert}
-            title="พิมพ์"
-            className="px-2.5 py-[7px] rounded-lg border-[1.5px] border-bdr bg-white text-txt-mid text-xs font-semibold cursor-pointer font-[inherit] flex items-center gap-1 whitespace-nowrap"
+            title="พิมพ์ / บันทึก PDF"
+            className="px-3 py-1.5 rounded-lg bg-white text-maroon text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] border-[#7B1C1C50]"
           >
             <PrintIcon />
             พิมพ์
           </button>
         </div>
         <div className="text-xs text-txt-soft leading-normal mt-0.5">
-          💡 <b>PDF</b> = ดาวน์โหลดทันที (text ค้นหาได้) · <b>พิมพ์</b> = ในกล่องพิมพ์เลือก
-          "Save as PDF"
+          💡 ในกล่องพิมพ์ เลือก <b>"Save as PDF"</b> เพื่อบันทึกเป็นไฟล์
         </div>
       </div>
 
@@ -669,14 +568,7 @@ export default function SalaryView({
 }
 
 /* ─── Icon helpers ────────────────────────────────────────────── */
-function DownloadIcon() {
-  return <IconDownload size={12} stroke={2.4} />;
-}
 
 function PrintIcon() {
   return <IconPrinter size={12} stroke={2.2} />;
-}
-
-function Spinner() {
-  return <IconLoader2 size={12} stroke={2.4} className="animate-spin" />;
 }

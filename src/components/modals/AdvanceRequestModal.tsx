@@ -117,7 +117,7 @@ export default function AdvanceRequestModal({
 
       {/* quick buttons */}
       <div className="flex gap-1.5 mb-3.5">
-        {[1000, 2000, 5000, Math.floor(remaining / 2), remaining]
+        {[500, 1000, 2000, 3000]
           .filter((v, i, a) => v > 0 && a.indexOf(v) === i)
           .slice(0, 4)
           .map((v) => (
