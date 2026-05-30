@@ -8,7 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { COLORS, LEAVE_TYPES, THAI_MONTH_NAMES } from "../../constants";
-import { fmtDate, isPast } from "../../utils/dateUtils";
+import { fmtDate, fmtDateWithWeekday, isPast } from "../../utils/dateUtils";
 import {
   ADMIN_NAV_GROUPS,
   type AdminGroupId,
@@ -467,9 +467,9 @@ export default function AdminPanel({
                                 .sort((a, b) => a.start.localeCompare(b.start))
                                 .map((lv) => (
                                   <div key={lv.id}>
-                                    📅 {fmtDate(lv.start)}
+                                    📅 {fmtDateWithWeekday(lv.start)}
                                     {lv.start !== lv.end
-                                      ? ` – ${fmtDate(lv.end)}`
+                                      ? ` - ${fmtDateWithWeekday(lv.end)}`
                                       : ""}{" "}
                                     <span className="text-txt-soft">
                                       ({lv.days} วัน)

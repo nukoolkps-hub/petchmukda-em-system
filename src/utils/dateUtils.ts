@@ -49,6 +49,15 @@ export function fmtShort(d: string): string {
   });
 }
 
+const WEEKDAYS_TH = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+
+/* "2026-06-12" → "วันศุกร์ ที่ 12 มิถุนายน 2569" */
+export function fmtDateWithWeekday(d: string): string {
+  if (!d) return "-";
+  const dt = new Date(`${d}T00:00:00`);
+  return `วัน${WEEKDAYS_TH[dt.getDay()]} ที่ ${fmtDate(d)}`;
+}
+
 export function isPast(e: string): boolean {
   return e < TODAY;
 }
