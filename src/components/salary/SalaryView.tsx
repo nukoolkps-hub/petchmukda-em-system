@@ -176,12 +176,27 @@ export default function SalaryView({
     setShowCertModal(true);
   }
 
-  function confirmPrintCert() {
-    setShowCertModal(false);
+  const [issuingCert, setIssuingCert] = useState(false);
+
+  async function confirmPrintCert() {
     if (isLineWebview()) {
+      setShowCertModal(false);
       openInExternalBrowser();
       return;
     }
+    setIssuingCert(true);
+    let refNo: string | undefined;
+    try {
+      const { getNextCertRefNumber } = await import(
+        "../../firebase/certCounter"
+      );
+      refNo = await getNextCertRefNumber();
+    } catch (err) {
+      console.error("[SalaryView] getNextCertRefNumber failed:", err);
+      // ปล่อยให้ printSalaryCertificate ใช้ fallback date-time stamp
+    }
+    setIssuingCert(false);
+    setShowCertModal(false);
     const custom = customPurpose.trim();
     const purpose = custom || selectedPreset || undefined;
     printSalaryCertificate({
@@ -189,6 +204,7 @@ export default function SalaryView({
       employeeInfo,
       data,
       purpose,
+      refNo,
     });
   }
 
@@ -690,9 +706,10 @@ export default function SalaryView({
               <button
                 type="button"
                 onClick={confirmPrintCert}
-                className="flex-1 py-2.5 rounded-lg bg-maroon text-white text-sm font-bold border-none cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25]"
+                disabled={issuingCert}
+                className={`flex-1 py-2.5 rounded-lg bg-maroon text-white text-sm font-bold border-none font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25] ${issuingCert ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
               >
-                🖨 พิมพ์
+                {issuingCert ? "⏳ กำลังออกเลขที่..." : "🖨 พิมพ์"}
               </button>
             </div>
           </div>

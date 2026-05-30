@@ -7,7 +7,7 @@ import { openPDFBlob, printHTMLInIframe } from "./webviewHelpers";
    • downloadSalaryCertificatePDF() → pdfmake (PDF text-searchable)    */
 
 function buildCertificateHTML(
-  { profile, employeeInfo, data, startDate, purpose }: any,
+  { profile, employeeInfo, data, startDate, purpose, refNo }: any,
   opts: { includePrintControls?: boolean } = {},
 ) {
   // ข้อมูล "ทางการ" ให้ใช้จาก employeeInfo (ที่ Admin ตั้งไว้) ก่อน profile (LINE)
@@ -44,9 +44,11 @@ function buildCertificateHTML(
     "ธันวาคม",
   ];
 
-  // เลขที่หนังสือ "เลขที่ มก. XXX/2569" — 3 digit จาก timestamp (วินาทีปัจจุบัน) + พ.ศ.
-  const refSeq = String(Math.floor((Date.now() / 1000) % 1000)).padStart(3, "0");
-  const refNo = `มก. ${refSeq}/${now.getFullYear() + 543}`;
+  // เลขที่หนังสือ — caller ส่งมาเป็น "พทม. NNN/พ.ศ." (Firestore running counter)
+  // fallback: ถ้าไม่มี (เช่น เน็ตล่ม) ใช้ date-time stamp กันใบไม่มีเลข
+  const certRefNo =
+    refNo ||
+    `พทม. ${String(now.getDate()).padStart(2, "0")}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}/${now.getFullYear() + 543}`;
 
   // เริ่มงาน + อายุงาน — คำนวณจาก employeeInfo.startWorkMonth ("YYYY-MM")
   const ym = employeeInfo?.startWorkMonth;
@@ -229,7 +231,7 @@ function buildCertificateHTML(
     <div class="gold-line"></div>
 
     <div class="title-section">
-      <div class="ref-no">เลขที่ ${refNo}</div>
+      <div class="ref-no">เลขที่ ${certRefNo}</div>
       <div class="title">หนังสือรับรองเงินเดือน</div>
       <div class="title-deco">CERTIFICATE OF SALARY</div>
     </div>

@@ -180,5 +180,18 @@ service cloud.firestore {
     match /payrollConfirms/{key} {
       allow read, write: if isAdmin();
     }
+
+    // ─── Cert Counters (running number ใบรับรอง) ─────────────────
+    // เก็บที่ certCounters/{พ.ศ.} — เพิ่มได้ทีละ 1 (transaction)
+    // ไม่ sensitive — เปลี่ยน count ผิดอย่างมากก็ทำให้เลขกระโดด ไม่กระทบความปลอดภัย
+    match /certCounters/{year} {
+      allow read: if isSignedIn();
+      // create เอกสารแรกของปี: count ต้อง = 1
+      allow create: if isSignedIn()
+        && request.resource.data.count == 1;
+      // update: count ต้องเพิ่มทีละ 1 (กันการรีเซ็ตหรือกระโดด)
+      allow update: if isSignedIn()
+        && request.resource.data.count == resource.data.count + 1;
+    }
   }
 }
