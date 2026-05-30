@@ -68,6 +68,12 @@ export const lineAuth = onCall(async (request) => {
 			admin: true,
 		});
 
+		// ทุกครั้งที่ admin "ของจริง" login เข้ามา ให้กวาด admin claim ที่ค้าง
+		// จากคนที่ไม่อยู่ใน ADMIN_LINE_USER_ID อีกแล้วทิ้งให้หมด (เคย bootstrap
+		// หรือเคยตั้ง setAdmin ไว้ แต่ตอนนี้ไม่ใช่ admin แล้ว) — ไม่ต้องรอให้
+		// user คนนั้น login ใหม่
+		await revokeStaleAdminClaims(auth, config.ADMIN_LINE_USER_ID);
+
 		const customToken = await auth.createCustomToken(profile.userId, {
 			admin: true,
 			provider: "line",
@@ -132,6 +138,50 @@ export const lineAuth = onCall(async (request) => {
 		},
 	};
 });
+
+/**
+ * กวาด admin custom claim จาก user ที่ไม่ได้อยู่ใน ADMIN_LINE_USER_ID
+ * รองรับสูงสุด 1000 users ต่อ batch (เพียงพอสำหรับร้านเล็ก)
+ */
+async function revokeStaleAdminClaims(
+	auth: Auth,
+	configValue: string | undefined,
+): Promise<void> {
+	const allowedAdminIds = new Set(
+		configValue
+			?.split(/[,\s]+/)
+			.map((value) => value.trim())
+			.filter(Boolean) || [],
+	);
+
+	try {
+		const { users } = await auth.listUsers(1000);
+		let revokedCount = 0;
+		for (const user of users) {
+			const claims = (user.customClaims || {}) as {
+				admin?: boolean;
+				[key: string]: unknown;
+			};
+			if (claims.admin === true && !allowedAdminIds.has(user.uid)) {
+				const { admin: _droppedAdmin, ...rest } = claims;
+				await auth.setCustomUserClaims(user.uid, rest);
+				await auth.revokeRefreshTokens(user.uid);
+				revokedCount++;
+				console.log(
+					`[revokeStaleAdminClaims] revoked admin claim from ${user.uid}`,
+				);
+			}
+		}
+		if (revokedCount > 0) {
+			console.log(
+				`[revokeStaleAdminClaims] cleaned up ${revokedCount} stale admin(s)`,
+			);
+		}
+	} catch (err) {
+		// ไม่ throw — ถ้า scan fail อย่างน้อย admin จริงยัง login ได้ปกติ
+		console.error("[revokeStaleAdminClaims] scan failed:", err);
+	}
+}
 
 async function ensureLineAuthUser(
 	auth: Auth,
