@@ -526,13 +526,8 @@ export default function SalaryAdminEdit({
             <div className="flex items-center gap-2 mb-3.5">
               <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
               <div className="font-bold text-sm text-txt">ค่าคอมตามจำนวนชิ้น</div>
-              <div className="ml-auto text-sm font-bold text-gold">
-                +฿
-                {formatThaiNumber(
-                  salaryCalculation.normalSaleCommission +
-                    salaryCalculation.specialSaleCommission +
-                    salaryCalculation.buyCommission,
-                )}
+              <div className="ml-auto text-xs font-semibold text-txt-soft">
+                🤝 คำนวณใน Pool
               </div>
             </div>
 
@@ -590,15 +585,6 @@ export default function SalaryAdminEdit({
                         ชิ้น
                       </span>
                     </div>
-                    <div className="text-sm text-txt-soft font-semibold">=</div>
-                    <div
-                      className={`min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-right border border-bdr ${disabled ? "text-txt-soft" : "text-green"}`}
-                    >
-                      ฿
-                      {formatThaiNumber(
-                        disabled ? 0 : salaryCalculation.normalSaleCommission,
-                      )}
-                    </div>
                   </div>
                 </div>
               );
@@ -630,10 +616,6 @@ export default function SalaryAdminEdit({
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
                     ชิ้น
                   </span>
-                </div>
-                <div className="text-sm text-txt-soft font-semibold">=</div>
-                <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                  ฿{formatThaiNumber(salaryCalculation.specialSaleCommission)}
                 </div>
               </div>
             </div>
@@ -677,15 +659,6 @@ export default function SalaryAdminEdit({
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
                         ชิ้น
                       </span>
-                    </div>
-                    <div className="text-sm text-txt-soft font-semibold">=</div>
-                    <div
-                      className={`min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-right border border-bdr ${disabled ? "text-txt-soft" : "text-green"}`}
-                    >
-                      ฿
-                      {formatThaiNumber(
-                        disabled ? 0 : salaryCalculation.buyCommission,
-                      )}
                     </div>
                   </div>
                 </div>
