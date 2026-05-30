@@ -378,9 +378,9 @@ export default function AdminPanel({
                               <div
                                 className={`font-extrabold text-lg ${overQuota ? "text-red" : "text-maroon"}`}
                               >
-                                {totalTimes}{" "}
+                                {totalDays}{" "}
                                 <span className="text-xs font-medium text-txt-soft">
-                                  ครั้ง
+                                  วัน
                                 </span>
                               </div>
                               {overQuota && (
@@ -541,9 +541,11 @@ export default function AdminPanel({
                             </div>
                             <div className="text-right">
                               <div className="font-extrabold text-xl text-maroon">
-                                {totalTimes}
+                                {totalDays}{" "}
+                                <span className="text-xs font-medium text-txt-soft">
+                                  วัน
+                                </span>
                               </div>
-                              <div className="text-xs text-txt-soft">ครั้ง</div>
                             </div>
                           </div>
                           <div className="bg-cream-dk rounded-md h-[7px] overflow-hidden mb-2.5">
