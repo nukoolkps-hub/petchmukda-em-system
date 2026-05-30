@@ -32,7 +32,6 @@ export default function SalaryView({
   onOpenAdvance,
   onOpenHistory,
   roles,
-  payrollConfirms,
 }) {
   const now = new Date();
   const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -134,27 +133,9 @@ export default function SalaryView({
     data,
   ]);
 
-  // slip จะปลดล็อกพิมพ์ได้ต่อเมื่อ:
-  //   1. Admin ยืนยันยอดเดือนนี้แล้ว (payrollConfirms[month] มี)
-  //   2. มี slipFrozenAt — แปลว่า freeze slip ตอน confirm สำเร็จ
-  //   3. ยังไม่มีการแก้ไข salary doc หลังจาก freeze (กันกรณี admin
-  //      ยืนยันแล้ว ค่อยมาแก้ค่าคอม โดยยังไม่ได้กดยืนยันใหม่)
-  // tolerance 5 วินาที กันความเหลื่อมเล็กน้อยตอน freeze เซ็ตทั้ง 2 field
-  const slipConfirmed = (() => {
-    if (!payrollConfirms?.[selectedMonth]) return false;
-    if (!data?.slipFrozenAt) return false;
-    const frozenTs = new Date(data.slipFrozenAt).getTime();
-    if (data?.updatedAt && data.updatedAt > frozenTs + 5000) return false;
-    return true;
-  })();
-
   function handlePrintSlip() {
     if (!data || !salaryCalculation) {
       alert("ไม่มีข้อมูลเงินเดือนเดือนนี้");
-      return;
-    }
-    if (!slipConfirmed) {
-      alert("ยังพิมพ์ไม่ได้ — รอ Admin ยืนยันยอดเงินเดือนเดือนนี้ก่อน");
       return;
     }
     if (isLineWebview()) {
@@ -369,26 +350,12 @@ export default function SalaryView({
               <div className="text-sm text-txt-mid font-semibold">
                 📋 สลิปเงินเดือน
               </div>
-              {!slipConfirmed && (
-                <div className="text-[10px] text-amber font-semibold mt-0.5">
-                  🔒 รอ Admin ยืนยันยอด
-                </div>
-              )}
             </div>
             <button
               type="button"
               onClick={handlePrintSlip}
-              disabled={!slipConfirmed}
-              title={
-                slipConfirmed
-                  ? "พิมพ์ / บันทึก PDF"
-                  : "รอ Admin ยืนยันยอดก่อน"
-              }
-              className={`px-3.5 py-2 rounded-lg text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] shrink-0 ${
-                slipConfirmed
-                  ? "bg-white text-maroon border-[#7B1C1C50]"
-                  : "bg-gray-100 text-txt-soft border-bdr cursor-not-allowed opacity-70"
-              }`}
+              title="พิมพ์ / บันทึก PDF"
+              className="px-3.5 py-2 rounded-lg bg-white text-maroon text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] border-[#7B1C1C50] shrink-0"
             >
               <PrintIcon />
               พิมพ์
