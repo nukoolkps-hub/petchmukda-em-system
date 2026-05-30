@@ -126,6 +126,7 @@ export default function AdminPanel({
     ...new Set(allLeaves.map((lv) => lv.employeeName)),
   ] as string[];
   const activeGroup = getAdminGroupForSection(section);
+  const ActiveGroupIcon = activeGroup.Icon;
   const pendingAdvanceCount = (advanceRequests || []).filter(
     (request) => request.status === "pending",
   ).length;
@@ -134,6 +135,7 @@ export default function AdminPanel({
     <div>
       {/* section tabs — แสดงเฉพาะ mobile; desktop ใช้ sidebar */}
       <div className="bg-cream-dk rounded-[14px] p-2.5 mb-[18px] flex-col gap-2 flex md:hidden">
+        {/* หมวดหลัก — segmented control, หมวดที่เลือกพื้นเลือดหมูทึบให้เด่น */}
         <div className="grid grid-cols-3 gap-1.5">
           {ADMIN_NAV_GROUPS.map((group) => {
             const Icon = group.Icon;
@@ -147,7 +149,7 @@ export default function AdminPanel({
                 type="button"
                 aria-pressed={active}
                 onClick={() => tryChangeGroup(group)}
-                className={`relative min-w-0 px-2 py-2.5 rounded-[11px] cursor-pointer font-[inherit] transition-all duration-200 flex items-center justify-center gap-1.5 border ${active ? "bg-white text-maroon border-[#C9973A60] shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft border-[#C9973A30] hover:border-[#C9973A50]"}`}
+                className={`relative min-w-0 px-2 py-2.5 rounded-[11px] cursor-pointer font-[inherit] transition-all duration-200 flex items-center justify-center gap-1.5 border ${active ? "bg-maroon text-white border-maroon shadow-[0_2px_8px_rgba(123,28,28,0.30)]" : "bg-transparent text-txt-soft border-[#C9973A30] hover:border-[#C9973A50]"}`}
               >
                 <Icon
                   size={16}
@@ -163,33 +165,38 @@ export default function AdminPanel({
           })}
         </div>
 
-        <div className="h-px bg-[#C9973A30]" />
+        {/* หัวข้อย่อย — กล่องซ้อนใน + caption บอกว่าอยู่ใต้หมวดไหน */}
+        <div className="rounded-[12px] bg-white/55 border border-[#C9973A25] p-2">
+          <div className="flex items-center gap-1 px-1 pb-1.5 text-[11px] font-bold text-txt-soft tracking-wide">
+            <ActiveGroupIcon size={12} color={COLORS.gold} stroke={2.5} />
+            <span className="truncate">{activeGroup.label}</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {activeGroup.items.map((item) => {
+              const Icon = item.Icon;
+              const active = section === item.id;
+              const pendingCount =
+                item.id === "advance" ? pendingAdvanceCount : 0;
 
-        <div className="flex flex-wrap gap-1.5">
-          {activeGroup.items.map((item) => {
-            const Icon = item.Icon;
-            const active = section === item.id;
-            const pendingCount =
-              item.id === "advance" ? pendingAdvanceCount : 0;
-
-            return (
-              <button
-                key={item.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => tryChangeSection(item.id)}
-                className={`relative min-w-[96px] flex-1 px-2.5 py-[9px] rounded-[10px] border cursor-pointer font-[inherit] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap ${active ? "bg-white text-maroon border-[#C9973A60] shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft border-[#C9973A30] hover:border-[#C9973A50]"}`}
-              >
-                <Icon
-                  size={16}
-                  color={active ? COLORS.maroon : COLORS.textSoft}
-                  stroke={active ? 2.4 : 2}
-                />
-                <span>{item.label}</span>
-                {pendingCount > 0 && <AdminNavBadge count={pendingCount} />}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => tryChangeSection(item.id)}
+                  className={`relative min-w-[88px] flex-1 px-2.5 py-[9px] rounded-[9px] border cursor-pointer font-[inherit] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap ${active ? "bg-gold-pale text-maroon border-[#C9973A80] shadow-[0_1px_5px_rgba(201,151,58,0.25)]" : "bg-transparent text-txt-soft border-transparent hover:bg-white/70"}`}
+                >
+                  <Icon
+                    size={16}
+                    color={active ? COLORS.maroon : COLORS.textSoft}
+                    stroke={active ? 2.4 : 2}
+                  />
+                  <span>{item.label}</span>
+                  {pendingCount > 0 && <AdminNavBadge count={pendingCount} />}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
