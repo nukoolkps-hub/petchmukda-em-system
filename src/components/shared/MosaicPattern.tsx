@@ -1,22 +1,159 @@
-/* ─── MosaicPattern — Reusable SVG mosaic decoration ─────────── */
+/* ─── MosaicPattern — Organic blob decoration ────────────────────
+   Each blob = filled body + offset outline (hand-drawn feel).
+   Sidebar + Header use the same palette + style so the two surfaces
+   read as one continuous L-shape.                                   */
 
 interface MosaicPatternProps {
-  /** "sidebar" = tall/repeating, "header" = compact top-bar */
+  /** "sidebar" = vertical column, "header" = wide top bar */
   variant: "sidebar" | "header";
-  /** Unique prefix for gradient IDs to avoid SVG conflicts */
+  /** Unused — kept for backwards compat */
   idPrefix?: string;
 }
 
-export default function MosaicPattern({
-  variant,
-  idPrefix = "mp",
-}: MosaicPatternProps) {
-  const g1 = `${idPrefix}1`;
-  const g2 = `${idPrefix}2`;
-  const g3 = `${idPrefix}3`;
+const C = {
+  goldFill: "#E8C87A",
+  goldStroke: "#C9973A",
+  creamFill: "#F5E6C8",
+  maroonAccent: "#9B3030",
+  maroonDeep: "#5C1212",
+};
 
+interface Blob {
+  fill: string;
+  stroke: string;
+  fillOpacity: number;
+  strokeOpacity: number;
+  body: string;
+  outline: string;
+}
+
+/* Sidebar viewBox: 0 0 260 900 (tall) */
+const SIDEBAR_BLOBS: Blob[] = [
+  // 1) top-left large gold — anchors the corner toward header
+  {
+    fill: C.goldFill,
+    stroke: C.goldStroke,
+    fillOpacity: 0.34,
+    strokeOpacity: 0.55,
+    body: "M 70 20 Q 170 5, 195 90 Q 215 175, 130 210 Q 35 220, 10 130 Q -5 50, 70 20 Z",
+    outline:
+      "M 68 14 Q 175 0, 202 92 Q 220 180, 132 218 Q 30 226, 4 132 Q -10 48, 68 14 Z",
+  },
+  // 2) top-right small cream
+  {
+    fill: C.creamFill,
+    stroke: C.goldStroke,
+    fillOpacity: 0.22,
+    strokeOpacity: 0.40,
+    body: "M 215 30 Q 260 25, 265 75 Q 268 120, 225 125 Q 190 118, 195 80 Q 200 45, 215 30 Z",
+    outline:
+      "M 213 24 Q 264 19, 270 76 Q 273 124, 226 132 Q 184 122, 190 79 Q 197 40, 213 24 Z",
+  },
+  // 3) middle large gold
+  {
+    fill: C.goldFill,
+    stroke: C.goldStroke,
+    fillOpacity: 0.28,
+    strokeOpacity: 0.45,
+    body: "M 50 310 Q 160 295, 200 380 Q 215 470, 130 490 Q 30 495, 5 410 Q -10 340, 50 310 Z",
+    outline:
+      "M 46 304 Q 165 290, 205 384 Q 220 476, 131 496 Q 26 502, 0 412 Q -16 338, 46 304 Z",
+  },
+  // 4) middle-right small maroon accent
+  {
+    fill: C.maroonAccent,
+    stroke: C.maroonDeep,
+    fillOpacity: 0.32,
+    strokeOpacity: 0.35,
+    body: "M 220 520 Q 268 515, 272 565 Q 275 615, 230 622 Q 195 615, 198 575 Q 202 535, 220 520 Z",
+    outline:
+      "M 218 514 Q 272 510, 276 564 Q 280 620, 232 628 Q 192 622, 195 575 Q 198 532, 218 514 Z",
+  },
+  // 5) bottom large cream
+  {
+    fill: C.creamFill,
+    stroke: C.goldStroke,
+    fillOpacity: 0.25,
+    strokeOpacity: 0.40,
+    body: "M 60 720 Q 175 705, 215 800 Q 230 880, 140 900 Q 40 910, 12 820 Q -5 750, 60 720 Z",
+    outline:
+      "M 56 712 Q 180 700, 220 802 Q 234 886, 142 906 Q 36 916, 8 820 Q -10 746, 56 712 Z",
+  },
+];
+
+/* Header viewBox: 0 0 1200 80 (wide).
+   Left-most blob is partial (extends off the left edge) so it visually
+   continues from the sidebar's top blob.                              */
+const HEADER_BLOBS: Blob[] = [
+  // 1) far-left large gold — continues from sidebar
+  {
+    fill: C.goldFill,
+    stroke: C.goldStroke,
+    fillOpacity: 0.30,
+    strokeOpacity: 0.50,
+    body: "M -30 -10 Q 80 -20, 130 30 Q 145 70, 80 92 Q -20 96, -50 50 Q -55 15, -30 -10 Z",
+    outline:
+      "M -34 -16 Q 84 -26, 134 30 Q 150 76, 80 98 Q -26 104, -56 50 Q -60 12, -34 -16 Z",
+  },
+  // 2) center-left medium cream
+  {
+    fill: C.creamFill,
+    stroke: C.goldStroke,
+    fillOpacity: 0.22,
+    strokeOpacity: 0.40,
+    body: "M 280 -10 Q 380 -15, 420 30 Q 430 70, 360 88 Q 280 92, 255 50 Q 250 10, 280 -10 Z",
+    outline:
+      "M 276 -16 Q 384 -22, 425 30 Q 436 74, 360 94 Q 274 98, 250 52 Q 246 8, 276 -16 Z",
+  },
+  // 3) center small gold
+  {
+    fill: C.goldFill,
+    stroke: C.goldStroke,
+    fillOpacity: 0.20,
+    strokeOpacity: 0.38,
+    body: "M 580 -8 Q 650 -10, 670 30 Q 680 70, 620 85 Q 560 80, 555 45 Q 555 12, 580 -8 Z",
+    outline:
+      "M 576 -14 Q 654 -16, 674 30 Q 684 74, 620 90 Q 552 86, 550 46 Q 550 10, 576 -14 Z",
+  },
+  // 4) right medium maroon accent
+  {
+    fill: C.maroonAccent,
+    stroke: C.maroonDeep,
+    fillOpacity: 0.22,
+    strokeOpacity: 0.30,
+    body: "M 870 -10 Q 970 -15, 1010 30 Q 1025 70, 940 88 Q 860 92, 845 50 Q 845 15, 870 -10 Z",
+    outline:
+      "M 866 -16 Q 974 -22, 1016 32 Q 1030 74, 942 94 Q 856 98, 840 50 Q 840 12, 866 -16 Z",
+  },
+  // 5) far-right cream
+  {
+    fill: C.creamFill,
+    stroke: C.goldStroke,
+    fillOpacity: 0.22,
+    strokeOpacity: 0.36,
+    body: "M 1150 0 Q 1230 -5, 1255 40 Q 1262 80, 1200 90 Q 1140 84, 1135 45 Q 1135 14, 1150 0 Z",
+    outline:
+      "M 1146 -6 Q 1234 -12, 1262 40 Q 1268 84, 1202 96 Q 1132 92, 1130 46 Q 1130 10, 1146 -6 Z",
+  },
+];
+
+function renderBlob(b: Blob, key: number) {
+  return (
+    <g key={key}>
+      <path d={b.body} fill={b.fill} fillOpacity={b.fillOpacity} />
+      <path
+        d={b.outline}
+        fill="none"
+        stroke={b.stroke}
+        strokeWidth="0.8"
+        strokeOpacity={b.strokeOpacity}
+      />
+    </g>
+  );
+}
+
+export default function MosaicPattern({ variant }: MosaicPatternProps) {
   if (variant === "sidebar") {
-    // Abstract orbs — radial gradients ขนาดใหญ่ overlap กัน ดู organic ไม่ tile ซ้ำ
     return (
       <svg
         className="absolute inset-0 h-full w-full pointer-events-none"
@@ -24,30 +161,7 @@ export default function MosaicPattern({
         preserveAspectRatio="xMidYMid slice"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <defs>
-          <radialGradient id={g1} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.35" />
-            <stop offset="60%" stopColor="#C9973A" stopOpacity="0.10" />
-            <stop offset="100%" stopColor="#C9973A" stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id={g2} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#9B3030" stopOpacity="0.45" />
-            <stop offset="70%" stopColor="#5C1212" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#5C1212" stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id={g3} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.20" />
-            <stop offset="100%" stopColor="#E8C87A" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        {/* orb ทอง บนขวา */}
-        <ellipse cx="220" cy="80" rx="180" ry="160" fill={`url(#${g1})`} />
-        {/* orb แดงเข้ม กลางซ้าย */}
-        <ellipse cx="40" cy="350" rx="200" ry="220" fill={`url(#${g2})`} />
-        {/* orb ทองอ่อน กลางขวา */}
-        <ellipse cx="240" cy="500" rx="160" ry="180" fill={`url(#${g3})`} />
-        {/* orb ทอง ล่าง */}
-        <ellipse cx="120" cy="780" rx="190" ry="170" fill={`url(#${g1})`} />
+        {SIDEBAR_BLOBS.map(renderBlob)}
       </svg>
     );
   }
@@ -55,142 +169,12 @@ export default function MosaicPattern({
   // variant === "header"
   return (
     <svg
-      className="absolute top-0 right-0 h-full w-[54%] pointer-events-none"
-      viewBox="0 0 220 160"
-      preserveAspectRatio="xMaxYMid slice"
+      className="absolute inset-0 h-full w-full pointer-events-none"
+      viewBox="0 0 1200 80"
+      preserveAspectRatio="xMidYMid slice"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <defs>
-        <linearGradient id={g1} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="#C9973A" stopOpacity="0.06" />
-        </linearGradient>
-        <linearGradient id={g2} x1="100%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#E8C87A" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="#9B3030" stopOpacity="0.08" />
-        </linearGradient>
-        <linearGradient id={g3} x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#C9973A" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#E8C87A" stopOpacity="0.35" />
-        </linearGradient>
-      </defs>
-      {/* row 0 */}
-      <polygon points="110,0 140,0 125,22" fill={`url(#${g2})`} />
-      <polygon points="140,0 175,0 175,28 155,14" fill={`url(#${g1})`} />
-      <polygon points="175,0 220,0 220,35 195,18" fill={`url(#${g3})`} />
-      <polygon
-        points="195,18 220,35 220,0"
-        fill={`url(#${g2})`}
-        opacity="0.5"
-      />
-      {/* row 1 */}
-      <polygon points="110,0 125,22 100,38 85,18" fill={`url(#${g1})`} />
-      <polygon points="125,22 155,14 160,40 130,50" fill={`url(#${g3})`} />
-      <polygon points="155,14 175,28 170,52 145,44" fill={`url(#${g2})`} />
-      <polygon points="175,28 195,18 210,48 185,58" fill={`url(#${g1})`} />
-      <polygon points="195,18 220,35 220,62 205,55" fill={`url(#${g3})`} />
-      {/* row 2 */}
-      <polygon points="85,18 100,38 80,56 65,38" fill={`url(#${g3})`} />
-      <polygon points="100,38 130,50 118,72 92,62" fill={`url(#${g2})`} />
-      <polygon points="130,50 145,44 158,68 138,78" fill={`url(#${g1})`} />
-      <polygon points="145,44 170,52 168,76 148,82" fill={`url(#${g3})`} />
-      <polygon points="170,52 185,58 188,82 168,76" fill={`url(#${g2})`} />
-      <polygon points="185,58 205,55 215,80 192,88" fill={`url(#${g1})`} />
-      <polygon points="205,55 220,62 220,90 210,84" fill={`url(#${g3})`} />
-      {/* row 3 */}
-      <polygon points="65,38 80,56 68,76 52,58" fill={`url(#${g2})`} />
-      <polygon points="80,56 92,62 88,84 72,78" fill={`url(#${g1})`} />
-      <polygon points="92,62 118,72 110,96 88,84" fill={`url(#${g3})`} />
-      <polygon points="118,72 138,78 132,102 112,96" fill={`url(#${g2})`} />
-      <polygon points="138,78 148,82 150,106 134,102" fill={`url(#${g1})`} />
-      <polygon points="148,82 168,76 172,100 150,106" fill={`url(#${g3})`} />
-      <polygon points="168,76 188,82 188,108 170,104" fill={`url(#${g2})`} />
-      <polygon
-        points="188,82 192,88 220,95 220,118 192,112"
-        fill={`url(#${g1})`}
-      />
-      {/* row 4 */}
-      <polygon points="52,58 68,76 55,98 40,78" fill={`url(#${g1})`} />
-      <polygon points="68,76 72,78 75,102 58,98" fill={`url(#${g3})`} />
-      <polygon points="72,78 88,84 88,108 70,104" fill={`url(#${g2})`} />
-      <polygon points="88,84 110,96 105,120 85,110" fill={`url(#${g1})`} />
-      <polygon points="110,96 112,96 118,120 102,124" fill={`url(#${g3})`} />
-      <polygon points="112,96 132,102 128,126 112,124" fill={`url(#${g2})`} />
-      <polygon points="132,102 150,106 148,130 130,128" fill={`url(#${g1})`} />
-      <polygon points="150,106 170,104 172,128 150,130" fill={`url(#${g3})`} />
-      <polygon points="170,104 188,108 190,132 172,128" fill={`url(#${g2})`} />
-      <polygon points="188,108 220,118 220,142 192,136" fill={`url(#${g1})`} />
-      {/* row 5 – bottom fade */}
-      <polygon
-        points="40,78 55,98 45,118 30,100"
-        fill={`url(#${g3})`}
-        opacity="0.6"
-      />
-      <polygon
-        points="55,98 58,98 60,120 45,118"
-        fill={`url(#${g2})`}
-        opacity="0.6"
-      />
-      <polygon
-        points="58,98 70,104 68,128 52,120"
-        fill={`url(#${g1})`}
-        opacity="0.6"
-      />
-      <polygon
-        points="70,104 85,110 82,134 65,128"
-        fill={`url(#${g3})`}
-        opacity="0.55"
-      />
-      <polygon
-        points="85,110 102,124 98,148 80,138"
-        fill={`url(#${g2})`}
-        opacity="0.5"
-      />
-      <polygon
-        points="102,124 128,126 122,150 100,148"
-        fill={`url(#${g1})`}
-        opacity="0.45"
-      />
-      <polygon
-        points="128,126 148,130 144,154 126,150"
-        fill={`url(#${g3})`}
-        opacity="0.4"
-      />
-      <polygon
-        points="148,130 172,128 170,155 148,158"
-        fill={`url(#${g2})`}
-        opacity="0.35"
-      />
-      <polygon
-        points="172,128 192,136 190,158 170,160"
-        fill={`url(#${g1})`}
-        opacity="0.3"
-      />
-      <polygon
-        points="192,136 220,142 220,160 192,160"
-        fill={`url(#${g3})`}
-        opacity="0.25"
-      />
-      {/* subtle edge shimmer */}
-      <polygon points="200,0 220,0 220,20" fill="#E8C87A" opacity="0.12" />
-      <line
-        x1="110"
-        y1="0"
-        x2="220"
-        y2="80"
-        stroke="#E8C87A"
-        strokeWidth="0.4"
-        opacity="0.15"
-      />
-      <line
-        x1="130"
-        y1="0"
-        x2="220"
-        y2="60"
-        stroke="#E8C87A"
-        strokeWidth="0.3"
-        opacity="0.10"
-      />
+      {HEADER_BLOBS.map(renderBlob)}
     </svg>
   );
 }
