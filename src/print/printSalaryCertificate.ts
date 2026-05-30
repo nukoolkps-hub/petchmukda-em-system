@@ -10,22 +10,46 @@ function buildCertificateHTML(
   { profile, employeeInfo, data, startDate }: any,
   opts: { includePrintControls?: boolean } = {},
 ) {
-  const employeeName = profile?.name || employeeInfo?.name || "-";
-  const employeeRole = profile?.role || employeeInfo?.role || "-";
-  const baseSalary = data?.baseSalary || 0;
+  // ข้อมูล "ทางการ" ให้ใช้จาก employeeInfo (ที่ Admin ตั้งไว้) ก่อน profile (LINE)
+  const employeeName = employeeInfo?.name || profile?.name || "-";
+  const employeeRole = employeeInfo?.role || profile?.role || "-";
+  // เงินเดือนพื้นฐาน — ดึงจากข้อมูลพนักงาน (admin ตั้งใน "ข้อมูลพนักงาน")
+  const baseSalary = employeeInfo?.baseSalary || data?.baseSalary || 0;
 
   // mode='pdf' → ไม่ต้องมีปุ่ม + auto-print
   const includePrintControls = opts.includePrintControls !== false;
 
-  // ใช้คำนำหน้า "นางสาว / นาย" — default = นางสาว ถ้าไม่ระบุ
-  const prefix = profile?.prefix || "นางสาว";
+  // คำนำหน้าชื่อ — admin ตั้งใน "ข้อมูลพนักงาน" (default = นางสาว ถ้ายังไม่ตั้ง)
+  const prefix = employeeInfo?.prefix || profile?.prefix || "นางสาว";
 
   const printDate = new Date().toLocaleDateString("th-TH", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  const startWork = startDate || "มีนาคม พ.ศ. 2566";
+  const startWork = (() => {
+    const ym = employeeInfo?.startWorkMonth;
+    const fallback = startDate || "มีนาคม พ.ศ. 2566";
+    if (!ym || !/^\d{4}-\d{2}$/.test(ym)) return fallback;
+    const months = [
+      "มกราคม",
+      "กุมภาพันธ์",
+      "มีนาคม",
+      "เมษายน",
+      "พฤษภาคม",
+      "มิถุนายน",
+      "กรกฎาคม",
+      "สิงหาคม",
+      "กันยายน",
+      "ตุลาคม",
+      "พฤศจิกายน",
+      "ธันวาคม",
+    ];
+    const [y, m] = ym.split("-");
+    const idx = parseInt(m, 10) - 1;
+    if (idx < 0 || idx > 11) return fallback;
+    return `${months[idx]} พ.ศ. ${parseInt(y, 10) + 543}`;
+  })();
 
   const formatNumber = (n) => Number(n || 0).toLocaleString("th-TH");
   // แปลงตัวเลขเงินเป็นภาษาไทย (basic — รองรับ 0-9,999,999)

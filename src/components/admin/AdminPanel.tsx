@@ -725,6 +725,7 @@ export default function AdminPanel({
                 editingRole[`${employee.id}:socialSecurity`];
               const editingStartWorkMonth =
                 editingRole[`${employee.id}:startWorkMonth`];
+              const editingPrefix = editingRole[`${employee.id}:prefix`];
               const editingSalaryDisabled =
                 editingRole[`${employee.id}:salaryDisabled`];
               const editingPoolExclusion =
@@ -740,6 +741,7 @@ export default function AdminPanel({
                 editingBaseSalary !== undefined ||
                 editingSocialSecurity !== undefined ||
                 editingStartWorkMonth !== undefined ||
+                editingPrefix !== undefined ||
                 editingSalaryDisabled !== undefined ||
                 editingPoolExclusion !== undefined ||
                 editingName !== undefined;
@@ -800,6 +802,8 @@ export default function AdminPanel({
                     "startWorkMonth",
                     editingStartWorkMonth,
                   );
+                if (editingPrefix !== undefined)
+                  await onUpdateRole(employee.id, "prefix", editingPrefix);
                 if (editingSalaryDisabled !== undefined)
                   await onUpdateRole(
                     employee.id,
@@ -823,6 +827,7 @@ export default function AdminPanel({
                   delete nextEditingRole[`${employee.id}:baseSalary`];
                   delete nextEditingRole[`${employee.id}:socialSecurity`];
                   delete nextEditingRole[`${employee.id}:startWorkMonth`];
+                  delete nextEditingRole[`${employee.id}:prefix`];
                   delete nextEditingRole[`${employee.id}:name`];
                   delete nextEditingRole[`${employee.id}:salaryDisabled`];
                   delete nextEditingRole[`${employee.id}:poolExclusion`];
@@ -842,6 +847,7 @@ export default function AdminPanel({
                   delete nextEditingRole[`${employee.id}:baseSalary`];
                   delete nextEditingRole[`${employee.id}:socialSecurity`];
                   delete nextEditingRole[`${employee.id}:startWorkMonth`];
+                  delete nextEditingRole[`${employee.id}:prefix`];
                   delete nextEditingRole[`${employee.id}:name`];
                   delete nextEditingRole[`${employee.id}:salaryDisabled`];
                   delete nextEditingRole[`${employee.id}:poolExclusion`];
@@ -945,26 +951,49 @@ export default function AdminPanel({
                         </button>
                       </div>
                       <div className="px-4 py-3.5">
-                        {/* Name — editable */}
+                        {/* Name + prefix — editable */}
                         <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
-                            ✏️ ชื่อพนักงาน
+                            ✏️ ชื่อพนักงาน (คำนำหน้า + ชื่อ)
                           </label>
-                          <input
-                            type="text"
-                            value={
-                              editingName !== undefined
-                                ? editingName
-                                : employee.name
-                            }
-                            onChange={(e) =>
-                              setEditingRole((previousEditingRole) => ({
-                                ...previousEditingRole,
-                                [`${employee.id}:name`]: e.target.value,
-                              }))
-                            }
-                            className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingName !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
-                          />
+                          <div className="flex gap-2">
+                            <select
+                              value={
+                                editingPrefix !== undefined
+                                  ? editingPrefix
+                                  : employee.prefix || "นางสาว"
+                              }
+                              onChange={(e) =>
+                                setEditingRole((previousEditingRole) => ({
+                                  ...previousEditingRole,
+                                  [`${employee.id}:prefix`]: e.target.value,
+                                }))
+                              }
+                              className={`shrink-0 w-[110px] py-[9px] px-2 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingPrefix !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                            >
+                              <option value="นางสาว">นางสาว</option>
+                              <option value="นาง">นาง</option>
+                              <option value="นาย">นาย</option>
+                            </select>
+                            <input
+                              type="text"
+                              value={
+                                editingName !== undefined
+                                  ? editingName
+                                  : employee.name
+                              }
+                              onChange={(e) =>
+                                setEditingRole((previousEditingRole) => ({
+                                  ...previousEditingRole,
+                                  [`${employee.id}:name`]: e.target.value,
+                                }))
+                              }
+                              className={`flex-1 min-w-0 py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingName !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                            />
+                          </div>
+                          <div className="text-xs text-txt-soft mt-[3px]">
+                            คำนำหน้าใช้ในหนังสือรับรองเงินเดือน
+                          </div>
                         </div>
                         {/* Role — read-only (แก้จากแท็บ "ตำแหน่ง") */}
                         <div className="mb-2.5 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">

@@ -17,6 +17,7 @@ export interface Employee {
   baseSalary?: number;
   socialSecurity?: number;
   startWorkMonth?: string; // YYYY-MM วันที่เริ่มงาน (ใช้ในหนังสือรับรองเงินเดือน)
+  prefix?: "นาย" | "นาง" | "นางสาว"; // คำนำหน้าชื่อ (ใช้ในหนังสือรับรองเงินเดือน)
   singlePieceRate?: number;
   normalSalePieceRate?: number;
   specialSalePieceRate?: number;

@@ -83,11 +83,12 @@ export function buildCertificateDocDef({
   data,
   startDate,
 }) {
-  const employeeName = profile?.name || employeeInfo?.name || "-";
-  const employeeRole = profile?.role || employeeInfo?.role || "-";
+  // ข้อมูล "ทางการ" ให้ใช้จาก employeeInfo (ที่ Admin ตั้งไว้) ก่อน profile (LINE)
+  const employeeName = employeeInfo?.name || profile?.name || "-";
+  const employeeRole = employeeInfo?.role || profile?.role || "-";
   // เงินเดือนพื้นฐานดึงจากข้อมูลพนักงาน (data.baseSalary เลิกใช้แล้ว — fallback ไว้เผื่อ)
   const baseSalary = employeeInfo?.baseSalary || data?.baseSalary || 0;
-  const prefix = profile?.prefix || "นางสาว";
+  const prefix = employeeInfo?.prefix || profile?.prefix || "นางสาว";
   const printDate = new Date().toLocaleDateString("th-TH", {
     day: "numeric",
     month: "long",
