@@ -77,18 +77,21 @@ export async function ensureThaiFonts(pdfMake: any): Promise<void> {
         fetchFontBase64("Sarabun-Bold", FONT_URLS_TTF["Sarabun-Bold"]),
       ]);
 
-      pdfMake.vfs = pdfMake.vfs || {};
-      pdfMake.vfs["Sarabun-Regular.ttf"] = regular;
-      pdfMake.vfs["Sarabun-Bold.ttf"] = bold;
-
-      pdfMake.fonts = {
+      // pdfmake 0.3.x: createPdf อ่านจาก this.virtualfs / this.fonts
+      // การ set pdfMake.vfs ตรง ๆ ไม่มีผล (ของเดิมเป็น API 0.1.x)
+      // ต้องลงทะเบียนผ่าน addVirtualFileSystem() + setFonts()
+      pdfMake.addVirtualFileSystem({
+        "Sarabun-Regular.ttf": regular,
+        "Sarabun-Bold.ttf": bold,
+      });
+      pdfMake.setFonts({
         Sarabun: {
           normal: "Sarabun-Regular.ttf",
           bold: "Sarabun-Bold.ttf",
           italics: "Sarabun-Regular.ttf",
           bolditalics: "Sarabun-Bold.ttf",
         },
-      };
+      });
 
       fontsLoaded = true;
     })().catch((err) => {
