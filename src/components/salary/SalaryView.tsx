@@ -13,6 +13,7 @@ import {
   isLineWebview,
   openInExternalBrowser,
 } from "../../print/webviewHelpers";
+import BaseModal from "../shared/BaseModal";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import {
@@ -160,16 +161,29 @@ export default function SalaryView({
     });
   }
 
+  const [showCertModal, setShowCertModal] = useState(false);
+  const [certPurpose, setCertPurpose] = useState("ยื่นกู้สินเชื่อ");
+
   function handlePrintCert() {
     if (!data) {
       alert("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
       return;
     }
+    setShowCertModal(true);
+  }
+
+  function confirmPrintCert() {
+    setShowCertModal(false);
     if (isLineWebview()) {
       openInExternalBrowser();
       return;
     }
-    printSalaryCertificate({ profile, employeeInfo, data });
+    printSalaryCertificate({
+      profile,
+      employeeInfo,
+      data,
+      purpose: certPurpose.trim() || undefined,
+    });
   }
 
   if (!data || !salaryCalculation) {
@@ -595,9 +609,71 @@ export default function SalaryView({
       <div className="text-center text-xs text-txt-soft mt-4">
         ข้อมูลกำหนดโดย Admin
       </div>
+
+      {showCertModal && (
+        <BaseModal onClose={() => setShowCertModal(false)}>
+          <div className="bg-cream rounded-2xl p-5 w-full">
+            <div className="text-lg font-bold text-maroon mb-1">
+              📄 พิมพ์ใบรับรองเงินเดือน
+            </div>
+            <div className="text-sm text-txt-mid mb-3.5">
+              เลือกหรือพิมพ์วัตถุประสงค์ — ข้อความจะถูกระบุในใบรับรอง
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {CERT_PURPOSE_OPTIONS.map((p) => {
+                const active = certPurpose === p;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setCertPurpose(p)}
+                    className={`px-3 py-2 rounded-lg text-sm font-semibold text-left border-[1.5px] cursor-pointer font-[inherit] ${
+                      active
+                        ? "bg-maroon text-white border-maroon"
+                        : "bg-white text-txt border-bdr"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+            </div>
+            <input
+              type="text"
+              value={certPurpose}
+              onChange={(e) => setCertPurpose(e.target.value)}
+              placeholder="หรือพิมพ์วัตถุประสงค์อื่น..."
+              className="w-full px-3 py-2 mb-4 rounded-lg border border-bdr text-sm font-[inherit] bg-white outline-none focus:border-maroon"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCertModal(false)}
+                className="flex-1 py-2.5 rounded-lg bg-white text-txt-mid text-sm font-bold border border-bdr cursor-pointer font-[inherit]"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={confirmPrintCert}
+                className="flex-1 py-2.5 rounded-lg bg-maroon text-white text-sm font-bold border-none cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25]"
+              >
+                🖨 พิมพ์
+              </button>
+            </div>
+          </div>
+        </BaseModal>
+      )}
     </div>
   );
 }
+
+const CERT_PURPOSE_OPTIONS = [
+  "ยื่นกู้สินเชื่อ",
+  "เปิดบัญชีธนาคาร",
+  "ติดต่อราชการ",
+  "ทำวีซ่า",
+];
 
 /* ─── Icon helpers ────────────────────────────────────────────── */
 

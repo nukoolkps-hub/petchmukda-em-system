@@ -7,7 +7,7 @@ import { openPDFBlob, printHTMLInIframe } from "./webviewHelpers";
    • downloadSalaryCertificatePDF() → pdfmake (PDF text-searchable)    */
 
 function buildCertificateHTML(
-  { profile, employeeInfo, data, startDate }: any,
+  { profile, employeeInfo, data, startDate, purpose }: any,
   opts: { includePrintControls?: boolean } = {},
 ) {
   // ข้อมูล "ทางการ" ให้ใช้จาก employeeInfo (ที่ Admin ตั้งไว้) ก่อน profile (LINE)
@@ -22,34 +22,54 @@ function buildCertificateHTML(
   // คำนำหน้าชื่อ — admin ตั้งใน "ข้อมูลพนักงาน" (default = นางสาว ถ้ายังไม่ตั้ง)
   const prefix = employeeInfo?.prefix || profile?.prefix || "นางสาว";
 
-  const printDate = new Date().toLocaleDateString("th-TH", {
+  const now = new Date();
+  const printDate = now.toLocaleDateString("th-TH", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  const startWork = (() => {
-    const ym = employeeInfo?.startWorkMonth;
-    const fallback = startDate || "มีนาคม พ.ศ. 2566";
-    if (!ym || !/^\d{4}-\d{2}$/.test(ym)) return fallback;
-    const months = [
-      "มกราคม",
-      "กุมภาพันธ์",
-      "มีนาคม",
-      "เมษายน",
-      "พฤษภาคม",
-      "มิถุนายน",
-      "กรกฎาคม",
-      "สิงหาคม",
-      "กันยายน",
-      "ตุลาคม",
-      "พฤศจิกายน",
-      "ธันวาคม",
-    ];
-    const [y, m] = ym.split("-");
-    const idx = parseInt(m, 10) - 1;
-    if (idx < 0 || idx > 11) return fallback;
-    return `${months[idx]} พ.ศ. ${parseInt(y, 10) + 543}`;
-  })();
+
+  const THAI_MONTHS = [
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
+  ];
+
+  // เลขที่หนังสือ "เลขที่ มก. XXX/2569" — 3 digit จาก timestamp (วินาทีปัจจุบัน) + พ.ศ.
+  const refSeq = String(Math.floor((Date.now() / 1000) % 1000)).padStart(3, "0");
+  const refNo = `มก. ${refSeq}/${now.getFullYear() + 543}`;
+
+  // เริ่มงาน + อายุงาน — คำนวณจาก employeeInfo.startWorkMonth ("YYYY-MM")
+  const ym = employeeInfo?.startWorkMonth;
+  let startWork = startDate || "มีนาคม พ.ศ. 2566";
+  let yearsOfService = "";
+  if (ym && /^\d{4}-\d{2}$/.test(ym)) {
+    const [y, m] = ym.split("-").map(Number);
+    const idx = m - 1;
+    if (idx >= 0 && idx <= 11) {
+      startWork = `${THAI_MONTHS[idx]} พ.ศ. ${y + 543}`;
+      // diff in years + months
+      let years = now.getFullYear() - y;
+      let months = now.getMonth() - idx;
+      if (months < 0) {
+        years -= 1;
+        months += 12;
+      }
+      if (years <= 0 && months <= 0) yearsOfService = "เพิ่งเริ่มงาน";
+      else if (years <= 0) yearsOfService = `${months} เดือน`;
+      else if (months === 0) yearsOfService = `${years} ปี`;
+      else yearsOfService = `${years} ปี ${months} เดือน`;
+    }
+  }
 
   const formatNumber = (n) => Number(n || 0).toLocaleString("th-TH");
   // แปลงตัวเลขเงินเป็นภาษาไทย (basic — รองรับ 0-9,999,999)
@@ -89,6 +109,15 @@ function buildCertificateHTML(
     return `${str}บาทถ้วน`;
   };
   const baseInWords = formatThaiBahtText(baseSalary);
+  const HTML_ENTITIES = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  };
+  const escapeHTML = (s) =>
+    String(s).replace(/[&<>"']/g, (c) => HTML_ENTITIES[c] || c);
 
   const html = `<!doctype html>
 <html lang="th">
@@ -123,8 +152,12 @@ function buildCertificateHTML(
       height:3px;background:linear-gradient(90deg,#C9973A,#E8C87A 40%,#E8C87A 60%,#C9973A);
     }
     .title-section{
-      padding:30px 32px 18px;text-align:center;
-      border-bottom:1px dashed #E8D5B0;
+      padding:24px 32px 18px;text-align:center;
+      border-bottom:1px dashed #E8D5B0;position:relative;
+    }
+    .ref-no{
+      font-size:12px;color:#7A5C3A;font-weight:500;
+      margin-bottom:10px;letter-spacing:0.02em;
     }
     .title{
       font-size:26px;font-weight:800;color:#7B1C1C;letter-spacing:0.05em;
@@ -161,6 +194,10 @@ function buildCertificateHTML(
       margin:14px auto 0;display:flex;flex-direction:column;align-items:center;justify-content:center;
       color:#7B1C1C;opacity:0.5;font-size:11px;text-align:center;line-height:1.4;
     }
+    .validity{
+      margin:18px 48px 0;padding:10px 14px;border-top:1px solid #E8D5B0;
+      font-size:12px;color:#7A5C3A;text-align:center;font-style:italic;
+    }
     @page{size:A4 portrait;margin:6mm;}
     @media print{
       html,body{width:210mm;height:297mm;}
@@ -185,12 +222,14 @@ function buildCertificateHTML(
       <div class="company">บริษัท ห้างเพชรทองมุกดา จำกัด</div>
       <div class="addr">
         100/10 หมู่ที่ 8 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐม 73160<br/>
+        โทร. <b style="letter-spacing:0.02em">02-420-6075</b> ·
         เลขที่ผู้เสียภาษี <b style="letter-spacing:0.04em">0-7355-59006-56-8</b>
       </div>
     </div>
     <div class="gold-line"></div>
 
     <div class="title-section">
+      <div class="ref-no">เลขที่ ${refNo}</div>
       <div class="title">หนังสือรับรองเงินเดือน</div>
       <div class="title-deco">CERTIFICATE OF SALARY</div>
     </div>
@@ -201,10 +240,16 @@ function buildCertificateHTML(
         ได้ปฏิบัติหน้าที่ ในตำแหน่ง<b>${employeeRole}</b>
         ของ <b>บริษัท ห้างเพชรทองมุกดา จำกัด</b>
         และปฏิบัติงานตั้งแต่ <b>${startWork}</b>
+        ${yearsOfService ? `รวมอายุงาน <b>${yearsOfService}</b>` : ""}
         มีอัตราเงินเดือน ประจำเดือนละ <b>${formatNumber(baseSalary)} บาท</b>
         (<b>${baseInWords}</b>)
         ซึ่งอัตรานี้ยังไม่รวมค่าตอบแทนและเงินพิเศษอื่น ๆ
       </p>
+      ${
+        purpose
+          ? `<p>หนังสือฉบับนี้ออกให้เพื่อใช้ประกอบการ <b>${escapeHTML(purpose)}</b></p>`
+          : ""
+      }
 
       <div class="date-line">ออกให้เมื่อวันที่ ${printDate}</div>
     </div>
@@ -223,6 +268,9 @@ function buildCertificateHTML(
       </div>
     </div>
 
+    <div class="validity">
+      ※ หนังสือฉบับนี้มีอายุ 30 วัน นับจากวันที่ออกเอกสาร
+    </div>
   </div>
 
   ${
