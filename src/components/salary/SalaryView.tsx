@@ -162,7 +162,11 @@ export default function SalaryView({
   }
 
   const [showCertModal, setShowCertModal] = useState(false);
-  const [certPurpose, setCertPurpose] = useState("ยื่นกู้สินเชื่อ");
+  // preset และ custom เก็บแยกกัน — custom (ถ้าพิมพ์) override preset
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(
+    "ยื่นกู้สินเชื่อ",
+  );
+  const [customPurpose, setCustomPurpose] = useState("");
 
   function handlePrintCert() {
     if (!data) {
@@ -178,11 +182,13 @@ export default function SalaryView({
       openInExternalBrowser();
       return;
     }
+    const custom = customPurpose.trim();
+    const purpose = custom || selectedPreset || undefined;
     printSalaryCertificate({
       profile,
       employeeInfo,
       data,
-      purpose: certPurpose.trim() || undefined,
+      purpose,
     });
   }
 
@@ -625,12 +631,17 @@ export default function SalaryView({
             </div>
             <div className="grid grid-cols-2 gap-2 mb-2">
               {CERT_PURPOSE_OPTIONS.map((p) => {
-                const active = certPurpose === p;
+                // preset ถือว่า active เฉพาะตอน user ยังไม่พิมพ์ custom
+                const active =
+                  selectedPreset === p && !customPurpose.trim();
                 return (
                   <button
                     key={p}
                     type="button"
-                    onClick={() => setCertPurpose(p)}
+                    onClick={() => {
+                      setSelectedPreset(p);
+                      setCustomPurpose("");
+                    }}
                     className={`px-3 py-2 rounded-lg text-sm font-semibold text-left border-[1.5px] cursor-pointer font-[inherit] ${
                       active
                         ? "bg-maroon text-white border-maroon"
@@ -644,9 +655,12 @@ export default function SalaryView({
             </div>
             <button
               type="button"
-              onClick={() => setCertPurpose("")}
+              onClick={() => {
+                setSelectedPreset(null);
+                setCustomPurpose("");
+              }}
               className={`w-full px-3 py-2 mb-4 rounded-lg text-sm font-semibold border-[1.5px] cursor-pointer font-[inherit] ${
-                certPurpose === ""
+                selectedPreset === null && !customPurpose.trim()
                   ? "bg-maroon text-white border-maroon"
                   : "bg-white text-txt-mid border-dashed border-bdr"
               }`}
@@ -655,13 +669,13 @@ export default function SalaryView({
             </button>
 
             <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5">
-              ✏️ พิมพ์เอง / แก้ไข
+              ✏️ กำหนดเอง
             </div>
             <input
               type="text"
-              value={certPurpose}
-              onChange={(e) => setCertPurpose(e.target.value)}
-              placeholder="เช่น สมัครงาน, ขอเครดิตการ์ด..."
+              value={customPurpose}
+              onChange={(e) => setCustomPurpose(e.target.value)}
+              placeholder="พิมพ์วัตถุประสงค์ที่ต้องการ..."
               className="w-full px-3 py-2.5 mb-4 rounded-lg border-[1.5px] border-bdr text-sm font-[inherit] bg-white outline-none focus:border-maroon"
             />
 
@@ -693,6 +707,8 @@ const CERT_PURPOSE_OPTIONS = [
   "เปิดบัญชีธนาคาร",
   "ติดต่อราชการ",
   "ทำวีซ่า",
+  "ขอเครดิตการ์ด",
+  "สมัครงาน",
 ];
 
 /* ─── Icon helpers ────────────────────────────────────────────── */
