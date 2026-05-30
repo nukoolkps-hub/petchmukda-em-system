@@ -1183,22 +1183,82 @@ export default function AdminPanel({
                           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
                             📅 วันที่เริ่มงาน
                           </label>
-                          <input
-                            type="month"
-                            value={
+                          {(() => {
+                            const curYM =
                               editingStartWorkMonth !== undefined
                                 ? editingStartWorkMonth
-                                : employee.startWorkMonth || ""
-                            }
-                            onChange={(e) =>
+                                : employee.startWorkMonth || "";
+                            const [curYear, curMonth] = curYM.includes("-")
+                              ? curYM.split("-")
+                              : ["", ""];
+                            const thaiMonths = [
+                              "มกราคม",
+                              "กุมภาพันธ์",
+                              "มีนาคม",
+                              "เมษายน",
+                              "พฤษภาคม",
+                              "มิถุนายน",
+                              "กรกฎาคม",
+                              "สิงหาคม",
+                              "กันยายน",
+                              "ตุลาคม",
+                              "พฤศจิกายน",
+                              "ธันวาคม",
+                            ];
+                            const nowYear = new Date().getFullYear();
+                            const years = Array.from(
+                              { length: 40 },
+                              (_, i) => nowYear - i,
+                            );
+                            const setYM = (y: string, m: string) =>
                               setEditingRole((previousEditingRole) => ({
                                 ...previousEditingRole,
                                 [`${employee.id}:startWorkMonth`]:
-                                  e.target.value,
-                              }))
-                            }
-                            className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingStartWorkMonth !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
-                          />
+                                  y && m ? `${y}-${m}` : "",
+                              }));
+                            const dirtyCls =
+                              editingStartWorkMonth !== undefined
+                                ? "border-gold bg-white"
+                                : "border-bdr bg-cream";
+                            return (
+                              <div className="flex gap-2">
+                                <select
+                                  value={curMonth}
+                                  onChange={(e) =>
+                                    setYM(
+                                      curYear || String(nowYear),
+                                      e.target.value,
+                                    )
+                                  }
+                                  className={`flex-1 py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
+                                >
+                                  <option value="">เดือน</option>
+                                  {thaiMonths.map((mn, i) => (
+                                    <option
+                                      key={mn}
+                                      value={String(i + 1).padStart(2, "0")}
+                                    >
+                                      {mn}
+                                    </option>
+                                  ))}
+                                </select>
+                                <select
+                                  value={curYear}
+                                  onChange={(e) =>
+                                    setYM(e.target.value, curMonth || "01")
+                                  }
+                                  className={`flex-1 py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
+                                >
+                                  <option value="">ปี (พ.ศ.)</option>
+                                  {years.map((y) => (
+                                    <option key={y} value={String(y)}>
+                                      {y + 543}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            );
+                          })()}
                           <div className="text-xs text-txt-soft mt-[3px]">
                             ใช้ในหนังสือรับรองเงินเดือน
                           </div>
