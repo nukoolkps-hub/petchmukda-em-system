@@ -1,5 +1,6 @@
 import { THAI_MONTH_NAMES } from "../constants";
 import { buildSalarySlipDocDef } from "./pdfBuilders/salarySlipPDF";
+import { openPDFBlob, printHTMLInIframe } from "./webviewHelpers";
 
 /* ─── Print Salary Slip ──────────────────────────────────────────
    2 modes:
@@ -337,11 +338,7 @@ function buildSalarySlipHTML(
 export function printSalarySlip(args) {
   const html = buildSalarySlipHTML(args, { includePrintControls: true });
   if (!html) return;
-  const w = window.open("", "_blank", "width=800,height=900");
-  if (!w) return;
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
+  printHTMLInIframe(html);
 }
 
 /**
@@ -370,7 +367,16 @@ export async function downloadSalarySlipPDF(args) {
       .trim();
   const filename = `สลิปเงินเดือน-${safe(employeeName)}-${args.selectedMonth}.pdf`;
 
-  pdfMake.createPdf(docDef).download(filename);
+  return new Promise<void>((resolve, reject) => {
+    try {
+      pdfMake.createPdf(docDef).getBlob((blob: Blob) => {
+        openPDFBlob(blob, filename);
+        resolve();
+      });
+    } catch (err) {
+      reject(err);
+    }
+  });
 }
 
 /** Default export — backward compat */

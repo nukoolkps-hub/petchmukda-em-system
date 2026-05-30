@@ -1,4 +1,5 @@
 import { buildCertificateDocDef } from "./pdfBuilders/salaryCertificatePDF";
+import { openPDFBlob, printHTMLInIframe } from "./webviewHelpers";
 
 /* ─── Print Salary Certificate (หนังสือรับรองเงินเดือน) ─────────
    2 modes:
@@ -227,11 +228,7 @@ function buildCertificateHTML(
 export function printSalaryCertificate(args) {
   const html = buildCertificateHTML(args, { includePrintControls: true });
   if (!html) return;
-  const w = window.open("", "_blank", "width=900,height=1000");
-  if (!w) return;
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
+  printHTMLInIframe(html);
 }
 
 /**
@@ -259,7 +256,16 @@ export async function downloadSalaryCertificatePDF(args) {
       .trim();
   const filename = `หนังสือรับรองเงินเดือน-${safe(employeeName)}-${today}.pdf`;
 
-  pdfMake.createPdf(docDef).download(filename);
+  return new Promise<void>((resolve, reject) => {
+    try {
+      pdfMake.createPdf(docDef).getBlob((blob: Blob) => {
+        openPDFBlob(blob, filename);
+        resolve();
+      });
+    } catch (err) {
+      reject(err);
+    }
+  });
 }
 
 /** Default export — backward compat */
