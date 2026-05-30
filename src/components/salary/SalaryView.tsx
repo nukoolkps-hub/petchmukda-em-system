@@ -134,7 +134,19 @@ export default function SalaryView({
     data,
   ]);
 
-  const slipConfirmed = !!payrollConfirms?.[selectedMonth];
+  // slip จะปลดล็อกพิมพ์ได้ต่อเมื่อ:
+  //   1. Admin ยืนยันยอดเดือนนี้แล้ว (payrollConfirms[month] มี)
+  //   2. มี slipFrozenAt — แปลว่า freeze slip ตอน confirm สำเร็จ
+  //   3. ยังไม่มีการแก้ไข salary doc หลังจาก freeze (กันกรณี admin
+  //      ยืนยันแล้ว ค่อยมาแก้ค่าคอม โดยยังไม่ได้กดยืนยันใหม่)
+  // tolerance 5 วินาที กันความเหลื่อมเล็กน้อยตอน freeze เซ็ตทั้ง 2 field
+  const slipConfirmed = (() => {
+    if (!payrollConfirms?.[selectedMonth]) return false;
+    if (!data?.slipFrozenAt) return false;
+    const frozenTs = new Date(data.slipFrozenAt).getTime();
+    if (data?.updatedAt && data.updatedAt > frozenTs + 5000) return false;
+    return true;
+  })();
 
   function handlePrintSlip() {
     if (!data || !salaryCalculation) {
