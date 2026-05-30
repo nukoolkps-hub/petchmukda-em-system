@@ -243,7 +243,7 @@ export default function SalaryAdminEdit({
       </div>
 
       {/* employee cards — เลือกพนักงานแบบการ์ด มองง่ายกว่า dropdown */}
-      <div className="grid grid-cols-2 gap-2 mb-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 mb-3.5">
         {employeeDirectory.map((employee) => {
           const selected = employee.id === selectedEmployeeId;
           const role = roles?.find((r) => r.id === employee.roleId);
@@ -252,7 +252,7 @@ export default function SalaryAdminEdit({
               key={employee.id}
               type="button"
               onClick={() => tryChangeEmployee(employee.id)}
-              className={`flex items-center gap-2.5 p-2.5 rounded-xl border-[1.5px] text-left cursor-pointer font-[inherit] transition-colors ${
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-[10px] border-[1.5px] text-left cursor-pointer font-[inherit] transition-colors ${
                 selected
                   ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
                   : "border-bdr bg-white"
@@ -262,17 +262,17 @@ export default function SalaryAdminEdit({
                 avatar={employee.avatar}
                 avatarType={employee.avatarType}
                 avatarImageUrl={employee.avatarImageUrl}
-                size={36}
-                fontSize={12}
-                border={`2px solid ${COLORS.gold}40`}
+                size={28}
+                fontSize={11}
+                border={`1.5px solid ${COLORS.gold}40`}
               />
               <div className="flex-1 min-w-0">
                 <div
-                  className={`font-bold text-sm truncate ${selected ? "text-maroon" : "text-txt"}`}
+                  className={`font-bold text-xs truncate leading-tight ${selected ? "text-maroon" : "text-txt"}`}
                 >
                   {employee.name}
                 </div>
-                <div className="text-xs text-txt-soft truncate">
+                <div className="text-[10px] text-txt-soft truncate leading-tight mt-px">
                   {role?.icon} {employee.role || "-"}
                 </div>
               </div>
