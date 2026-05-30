@@ -2,7 +2,6 @@ import {
   IconCheck,
   IconCopy,
   IconSettings,
-  IconShield,
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
@@ -37,7 +36,6 @@ export default function AdminPanel({
   allLeaves,
   employeeDirectory,
   onDelete,
-  onLogout,
   onUpdateRole,
   onDeleteEmployee,
   salaryData,
@@ -134,31 +132,6 @@ export default function AdminPanel({
 
   return (
     <div>
-      {/* admin badge */}
-      <div className="flex items-center gap-3 bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-4 py-3.5 mb-4 shadow-maroon-glow">
-        <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
-          <IconShield size={20} color={COLORS.goldLight} stroke={2} />
-        </div>
-        <div className="flex-1">
-          <div className="text-gold-lt font-bold text-base">โหมดผู้ดูแลระบบ</div>
-        </div>
-        <button
-          onClick={() => {
-            if (unsavedDirty) {
-              const ok = window.confirm(
-                "⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากออก ข้อมูลที่แก้ไขจะหายไป\n\nต้องการออกจากระบบใช่ไหม?",
-              );
-              if (!ok) return;
-              setUnsavedDirty(false);
-            }
-            onLogout();
-          }}
-          className="px-3.5 py-[7px] rounded-[10px] bg-white/12 text-gold-lt text-sm font-semibold cursor-pointer font-[inherit] border border-[#E8C87A50]"
-        >
-          ออกจากระบบ
-        </button>
-      </div>
-
       {/* section tabs — แสดงเฉพาะ mobile; desktop ใช้ sidebar */}
       <div className="bg-cream-dk rounded-[14px] p-2.5 mb-[18px] flex-col gap-2 flex md:hidden">
         <div className="grid grid-cols-3 gap-1.5">

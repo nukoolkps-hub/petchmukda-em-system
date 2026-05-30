@@ -424,7 +424,6 @@ export default function LeaveApp() {
                       allLeaves={allLeaves}
                       employeeDirectory={employeeDirectory}
                       onDelete={leaveForm.handleDelete}
-                      onLogout={authSignOut}
                       onUpdateRole={handleUpdateRole}
                       onDeleteEmployee={handleDeleteEmployee}
                       salaryData={salaryData}
