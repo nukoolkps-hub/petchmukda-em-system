@@ -83,6 +83,6 @@ export function getNavItems(options: {
 export const PAGE_TITLES: Record<string, string | null> = {
   home: null,
   request: "ยื่นคำขอลา",
-  salary: null,
+  salary: "เงินเดือน",
   admin: "จัดการข้อมูลพนักงาน",
 };
