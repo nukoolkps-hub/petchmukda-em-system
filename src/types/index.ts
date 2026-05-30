@@ -16,6 +16,7 @@ export interface Employee {
   lineUserId?: string;
   baseSalary?: number;
   socialSecurity?: number;
+  startWorkMonth?: string; // YYYY-MM วันที่เริ่มงาน (ใช้ในหนังสือรับรองเงินเดือน)
   singlePieceRate?: number;
   normalSalePieceRate?: number;
   specialSalePieceRate?: number;

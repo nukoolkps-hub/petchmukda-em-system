@@ -774,6 +774,8 @@ export default function AdminPanel({
                 editingRole[`${employee.id}:baseSalary`];
               const editingSocialSecurity =
                 editingRole[`${employee.id}:socialSecurity`];
+              const editingStartWorkMonth =
+                editingRole[`${employee.id}:startWorkMonth`];
               const editingSalaryDisabled =
                 editingRole[`${employee.id}:salaryDisabled`];
               const editingPoolExclusion =
@@ -788,6 +790,7 @@ export default function AdminPanel({
                 editingSinglePieceRate !== undefined ||
                 editingBaseSalary !== undefined ||
                 editingSocialSecurity !== undefined ||
+                editingStartWorkMonth !== undefined ||
                 editingSalaryDisabled !== undefined ||
                 editingPoolExclusion !== undefined ||
                 editingName !== undefined;
@@ -842,6 +845,12 @@ export default function AdminPanel({
                     "socialSecurity",
                     parseFloat(editingSocialSecurity) || 0,
                   );
+                if (editingStartWorkMonth !== undefined)
+                  await onUpdateRole(
+                    employee.id,
+                    "startWorkMonth",
+                    editingStartWorkMonth,
+                  );
                 if (editingSalaryDisabled !== undefined)
                   await onUpdateRole(
                     employee.id,
@@ -864,6 +873,7 @@ export default function AdminPanel({
                   delete nextEditingRole[`${employee.id}:singlePieceRate`];
                   delete nextEditingRole[`${employee.id}:baseSalary`];
                   delete nextEditingRole[`${employee.id}:socialSecurity`];
+                  delete nextEditingRole[`${employee.id}:startWorkMonth`];
                   delete nextEditingRole[`${employee.id}:name`];
                   delete nextEditingRole[`${employee.id}:salaryDisabled`];
                   delete nextEditingRole[`${employee.id}:poolExclusion`];
@@ -882,6 +892,7 @@ export default function AdminPanel({
                   delete nextEditingRole[`${employee.id}:singlePieceRate`];
                   delete nextEditingRole[`${employee.id}:baseSalary`];
                   delete nextEditingRole[`${employee.id}:socialSecurity`];
+                  delete nextEditingRole[`${employee.id}:startWorkMonth`];
                   delete nextEditingRole[`${employee.id}:name`];
                   delete nextEditingRole[`${employee.id}:salaryDisabled`];
                   delete nextEditingRole[`${employee.id}:poolExclusion`];
@@ -1163,6 +1174,32 @@ export default function AdminPanel({
                           </div>
                           <div className="text-xs text-txt-soft mt-[3px]">
                             หน่วย: บาท/เดือน (หักทุกเดือนอัตโนมัติ)
+                          </div>
+                        </div>
+
+                        {/* Start work month — ใช้ในหนังสือรับรองเงินเดือน */}
+                        <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                          <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
+                            📅 วันที่เริ่มงาน
+                          </label>
+                          <input
+                            type="month"
+                            value={
+                              editingStartWorkMonth !== undefined
+                                ? editingStartWorkMonth
+                                : employee.startWorkMonth || ""
+                            }
+                            onChange={(e) =>
+                              setEditingRole((previousEditingRole) => ({
+                                ...previousEditingRole,
+                                [`${employee.id}:startWorkMonth`]:
+                                  e.target.value,
+                              }))
+                            }
+                            className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingStartWorkMonth !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                          />
+                          <div className="text-xs text-txt-soft mt-[3px]">
+                            ใช้ในหนังสือรับรองเงินเดือน
                           </div>
                         </div>
 
