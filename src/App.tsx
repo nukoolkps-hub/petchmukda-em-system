@@ -405,6 +405,7 @@ export default function LeaveApp() {
                         onOpenAdvance={() => setShowAdvanceModal(true)}
                         onOpenHistory={() => setShowHistoryModal(true)}
                         roles={roles}
+                        payrollConfirms={payrollConfirms}
                       />
                     </div>
                   )
