@@ -206,13 +206,11 @@ function buildSalarySlipHTML(
     @media print{
       html,body{width:210mm;height:297mm;}
       body{background:#fff;padding:0;font-size:11.5px;line-height:1.35;}
-      .doc{box-shadow:none !important;border:1px solid #C9973A !important;
+      .slip{box-shadow:none !important;border:1px solid #C9973A !important;
         max-width:194mm !important;margin:0 auto !important;
         page-break-inside:avoid;break-inside:avoid;}
-      .doc *{page-break-inside:avoid;break-inside:avoid;}
-      .slip{box-shadow:none;border:1.5px solid #C9973A;}
+      .slip *{page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
-      @page{size:A5;margin:10mm;}
     }
     .print-btn{
       position:fixed;bottom:20px;right:20px;
