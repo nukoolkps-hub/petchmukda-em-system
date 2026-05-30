@@ -42,7 +42,7 @@ function AuthLoadingScreen() {
         <Diamond size={32} color="#5C1212" />
       </div>
       <div className="mt-4.5 text-sm font-semibold text-gold-lt">
-        กำลังตรวจสอบสิทธิ์...
+        กำลังเข้าสู่ระบบ...
       </div>
       <div className="mt-3 w-[220px] h-2 rounded-full bg-white/10 overflow-hidden">
         <div
