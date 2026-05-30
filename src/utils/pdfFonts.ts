@@ -3,19 +3,21 @@
    ต้องโหลด TTF + register VFS ก่อนใช้
 
    Strategy:
-   - First load: fetch จาก CDN, cache ใน localStorage
+   - First load: fetch จาก same-origin (/fonts), cache ใน localStorage
    - Subsequent loads: ใช้จาก cache (instant)
-   - Cache key: font_v1_${fontName}                              */
+   - Cache key: font_v2_${fontName}
 
-// pdfmake รองรับเฉพาะ TTF — เปลี่ยนเป็น TTF จาก CDN อื่น
+   หมายเหตุ: host font เองใน public/fonts แทนการดึงจาก CDN ภายนอก
+   เพราะ CSP connect-src อนุญาตเฉพาะ 'self' — fetch ไป cdn.jsdelivr.net
+   จะโดนบล็อก ("Refused to connect ... Content Security Policy")    */
+
+// pdfmake รองรับเฉพาะ TTF — host ไว้ที่ public/fonts (same-origin)
 const FONT_URLS_TTF: Record<string, string> = {
-  "Sarabun-Regular":
-    "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/sarabun/Sarabun-Regular.ttf",
-  "Sarabun-Bold":
-    "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/sarabun/Sarabun-Bold.ttf",
+  "Sarabun-Regular": `${import.meta.env.BASE_URL}fonts/Sarabun-Regular.ttf`,
+  "Sarabun-Bold": `${import.meta.env.BASE_URL}fonts/Sarabun-Bold.ttf`,
 };
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   // ทยอยแปลงเป็น chunks (ป้องกัน stack overflow ถ้าไฟล์ใหญ่)
@@ -89,7 +91,12 @@ export async function ensureThaiFonts(pdfMake: any): Promise<void> {
       };
 
       fontsLoaded = true;
-    })();
+    })().catch((err) => {
+      // ถ้าโหลดล้มเหลว ต้องล้าง loadPromise ไม่งั้น call ครั้งถัดไป
+      // จะได้ promise ที่ reject ค้างเดิม → พังตลอด session
+      loadPromise = null;
+      throw err;
+    });
   }
 
   return loadPromise;
