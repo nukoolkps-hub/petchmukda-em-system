@@ -229,18 +229,38 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 					},
 				],
 			},
+			// footer: ปุ่ม clipboard action ให้ admin กด copy เลขบัญชีในเฟล็กได้เลย
+			// (LINE clipboard action: v14.6+ — ก่อนหน้านี้ปุ่มจะกดไม่ทำงาน)
+			...(bankAccountNumber
+				? {
+						footer: {
+							type: "box",
+							layout: "vertical",
+							spacing: "sm",
+							paddingAll: "12px",
+							contents: [
+								{
+									type: "button",
+									style: "primary",
+									color: COLORS.maroon,
+									height: "sm",
+									action: {
+										type: "clipboard",
+										label: "📋 คัดลอกเลขบัญชี",
+										clipboardText: bankAccountNumber,
+									},
+								},
+							],
+						},
+					}
+				: {}),
 		},
 	};
 
-	// ส่ง flex ก่อน แล้วตามด้วย text เลขบัญชีล้วน ๆ ให้ admin long-press copy ใน LINE ได้
-	const messages: Parameters<typeof pushLineMessage>[2] = [flex];
-	if (bankAccountNumber) {
-		messages.push({ type: "text", text: bankAccountNumber });
-	}
 	await pushLineMessage(
 		config.LINE_CHANNEL_ACCESS_TOKEN,
 		config.ADMIN_LINE_USER_ID,
-		messages,
+		[flex],
 	);
 	return { ok: true, requestId };
 });
