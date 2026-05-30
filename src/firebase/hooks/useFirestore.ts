@@ -18,7 +18,7 @@ import {
 import { subscribeLeaves, subscribeLeavesByEmployeeId } from "../leaves";
 import { subscribePayrollConfirms } from "../payrollConfirms";
 import { subscribeRoles } from "../roles";
-import { subscribeAllSalaries, subscribeEmployeeSalaries } from "../salaries";
+import { subscribeAllSalaries } from "../salaries";
 
 interface SubscriptionResult<T> {
   data: T;
@@ -240,24 +240,16 @@ export function useApprovedAdvancesByMonth(yearMonth: string | null) {
   );
 }
 
-export function useSalariesForScope({
-  isAdmin,
-  employeeId,
-}: {
+export function useSalariesForScope(_args: {
   isAdmin: boolean;
   employeeId: string | null;
 }) {
+  // ทั้ง admin และ employee ต้อง subscribe ของทุกคน ไม่งั้น pool calculation
+  // จะอ่าน pieces ของเพื่อน = 0 → topSellPieces ผิด → ค่าคอมผิด
   return useScopedSubscription(
-    () => {
-      if (isAdmin) return subscribeAllSalaries;
-      if (employeeId) {
-        return (onChange, onError) =>
-          subscribeEmployeeSalaries(employeeId, onChange, onError);
-      }
-      return null;
-    },
+    () => subscribeAllSalaries,
     {} as Record<string, any>,
-    [isAdmin, employeeId],
+    [],
   );
 }
 

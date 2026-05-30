@@ -136,17 +136,19 @@ service cloud.firestore {
     }
 
     // ─── Salaries ────────────────────────────────────────────────
-    // อ่าน: เฉพาะเจ้าของ + admin
-    // เขียน: เฉพาะ admin
+    // read: signed-in — พนักงานต้องอ่าน pieces ของเพื่อนใน pool ด้วย
+    //       เพราะ commission pool calc ต้องดู topSellPieces ของกลุ่ม
+    //       ถ้า restrict ไว้เฉพาะของตัวเอง → คำนวณ pool ผิด → ค่าคอมผิด
+    // write: admin
     match /salaries/{employeeId}/months/{yearMonth} {
-      allow read:   if isAdmin() || isEmployeeOwner(employeeId);
+      allow read:   if isSignedIn();
       allow write:  if isAdmin();
     }
 
     // collectionGroup(db, "months") in the app needs an explicit recursive
-    // match. Without this, salary subscriptions degrade to empty data.
+    // match. ใช้ใน subscribeAllSalaries (รัน collectionGroup query)
     match /{path=**}/months/{yearMonth} {
-      allow read: if isAdmin();
+      allow read: if isSignedIn();
       allow write: if false;
     }
 
