@@ -46,8 +46,8 @@ export const LEAVE_TYPES = [
     id: "personal",
     label: "ลากิจ",
     icon: "💼",
-    color: COLORS.gold,
-    colorLt: COLORS.goldPale,
+    color: "#A8C8F0",
+    colorLt: "#DDEEFF",
   },
   {
     id: "sick",
