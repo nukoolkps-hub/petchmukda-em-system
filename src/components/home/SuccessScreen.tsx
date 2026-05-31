@@ -48,7 +48,7 @@ export default function SuccessScreen({
             onReset();
             navigate("/home");
           }}
-          className="px-6 py-3.5 bg-linear-to-br from-gold to-gold-lt text-maroon-dk border-none rounded-[14px] text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_rgba(201,151,58,0.25)]"
+          className="px-6 py-3.5 bg-maroon text-white border-none rounded-[14px] text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
         >
           กลับหน้าแรก
         </button>

@@ -394,7 +394,7 @@ export default function AdminAdvancePanel({
                       <IconX size={14} strokeWidth={2.4} />
                       ปฏิเสธ
                     </button>
-                    <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-gold)/0.25]">
+                    <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-maroon)/0.25]">
                       {uploadingSlip === request.id ? (
                         "กำลังอัปโหลด..."
                       ) : (

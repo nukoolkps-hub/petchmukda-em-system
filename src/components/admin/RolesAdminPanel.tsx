@@ -101,7 +101,7 @@ export default function RolesAdminPanel({
         </div>
         <button
           onClick={() => setShowAdd(!showAdd)}
-          className="px-3.5 py-[7px] rounded-[9px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] shadow-[0_2px_8px_var(--color-gold)/0.25] flex items-center gap-[5px]"
+          className="px-3.5 py-[7px] rounded-[9px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shadow-[0_2px_8px_var(--color-maroon)/0.25] flex items-center gap-[5px]"
         >
           {showAdd ? (
             <IconX size={14} strokeWidth={2.6} />
@@ -139,7 +139,7 @@ export default function RolesAdminPanel({
             onClick={addRole}
             disabled={!newRole.name.trim()}
             className={`w-full p-2.5 rounded-[9px] border-none text-sm font-bold font-[inherit]
-              ${newRole.name.trim() ? "bg-linear-135 from-gold to-gold-lt text-maroon-dk cursor-pointer" : "bg-bdr text-txt-soft cursor-not-allowed"}`}
+              ${newRole.name.trim() ? "bg-maroon text-white cursor-pointer" : "bg-bdr text-txt-soft cursor-not-allowed"}`}
           >
             บันทึกตำแหน่ง
           </button>
@@ -269,7 +269,7 @@ export default function RolesAdminPanel({
                         </button>
                         <button
                           onClick={() => saveEdit(rl.id)}
-                          className="flex-1 p-2 rounded-lg border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit]"
+                          className="flex-1 p-2 rounded-lg border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit]"
                         >
                           บันทึก
                         </button>

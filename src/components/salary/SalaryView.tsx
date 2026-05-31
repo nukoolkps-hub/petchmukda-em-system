@@ -276,7 +276,7 @@ export default function SalaryView({
             selectedMonth !== currentYearMonth && (
               <button
                 onClick={() => setSelectedMonth(currentYearMonth)}
-                className="px-5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-gold)/0.25] inline-flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25] inline-flex items-center gap-1.5"
               >
                 <IconArrowLeft size={14} strokeWidth={2.5} />
                 กลับไปเดือนปัจจุบัน

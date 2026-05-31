@@ -920,7 +920,7 @@ export default function EmployeeEditModal({
             </button>
             <button
               onClick={saveAll}
-              className="flex-2 py-[11px] rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
+              className="flex-2 py-[11px] rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-maroon-glow"
             >
               <IconCheck size={14} strokeWidth={2.5} />
               บันทึกการเปลี่ยนแปลง

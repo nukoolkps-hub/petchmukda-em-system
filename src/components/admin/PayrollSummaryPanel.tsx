@@ -483,7 +483,7 @@ export default function PayrollSummaryPanel({
               })
             }
             disabled={advanceDataBlocked || submitting}
-            className={`w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2 ${advanceDataBlocked || submitting ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+            className={`w-full p-3.5 mb-3.5 rounded-xl border-none bg-maroon text-white text-base font-bold font-[inherit] shadow-[0_4px_14px_var(--color-maroon)/0.25] flex items-center justify-center gap-2 ${advanceDataBlocked || submitting ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
           >
             <IconCheck size={18} strokeWidth={2.5} />
             {submitting ? "กำลังบันทึก..." : "ยืนยันยอดก่อนโอนเงิน"}
@@ -682,7 +682,7 @@ export default function PayrollSummaryPanel({
                 setPendingConfirm(null);
                 confirmPayroll(p.total, p.count, false);
               }}
-              className="flex-1 p-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_var(--color-gold)/0.3] inline-flex items-center justify-center gap-1.5"
+              className="flex-1 p-3.5 rounded-xl border-none bg-maroon text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_var(--color-maroon)/0.25] inline-flex items-center justify-center gap-1.5"
             >
               <IconCheck size={16} strokeWidth={2.6} />
               ยืนยัน

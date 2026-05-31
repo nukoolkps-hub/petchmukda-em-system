@@ -155,7 +155,7 @@ export default function ProfileSetupModal({
           size={80}
           fontSize={24}
           border={`2px solid ${COLORS.gold}40`}
-          className="mb-2.5 shadow-gold-glow"
+          className="mb-2.5 shadow-maroon-glow"
         />
         <div className="text-base font-bold text-txt">{name || "ชื่อของคุณ"}</div>
         <div className="text-sm text-txt-soft mt-0.5">ตำแหน่งกำหนดโดย Admin</div>
@@ -385,7 +385,7 @@ export default function ProfileSetupModal({
       <button
         onClick={save}
         disabled={saving || imageBusy}
-        className={`w-full p-4 mt-2 border-none rounded-[14px] text-lg font-bold font-[inherit] shadow-[0_6px_20px_rgba(201,151,58,0.25)] flex items-center justify-center gap-2 ${saving || imageBusy ? "bg-bdr text-txt-soft cursor-not-allowed" : "bg-linear-135 from-gold to-gold-lt text-maroon-dk cursor-pointer"}`}
+        className={`w-full p-4 mt-2 border-none rounded-[14px] text-lg font-bold font-[inherit] shadow-[0_6px_20px_rgba(201,151,58,0.25)] flex items-center justify-center gap-2 ${saving || imageBusy ? "bg-bdr text-txt-soft cursor-not-allowed" : "bg-maroon text-white cursor-pointer"}`}
       >
         <Diamond size={16} color={COLORS.maroonDark} />
         {saving ? "กำลังบันทึก..." : initial ? "บันทึกการเปลี่ยนแปลง" : "เริ่มใช้งาน"}

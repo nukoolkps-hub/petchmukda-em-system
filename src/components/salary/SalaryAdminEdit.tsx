@@ -1383,7 +1383,7 @@ export default function SalaryAdminEdit({
           <button
             onClick={saveAll}
             disabled={saving}
-            className={`flex-2 py-3 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow ${saving ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+            className={`flex-2 py-3 rounded-[10px] border-none bg-maroon text-white text-base font-bold font-[inherit] flex items-center justify-center gap-1.5 shadow-maroon-glow ${saving ? "cursor-wait opacity-70" : "cursor-pointer"}`}
           >
             <IconCheck size={14} strokeWidth={2.5} />
             {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}

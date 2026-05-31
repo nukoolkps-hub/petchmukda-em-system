@@ -183,7 +183,7 @@ export default function AdvanceRequestModal({
             ${
               remaining <= 0
                 ? "bg-bdr text-txt-soft cursor-not-allowed shadow-none"
-                : "bg-linear-135 from-gold to-gold-lt text-maroon-dk shadow-[0_4px_14px_rgba(201,151,58,0.31)]"
+                : "bg-maroon text-white shadow-[0_4px_14px_rgba(201,151,58,0.31)]"
             }`}
         >
           <Diamond
