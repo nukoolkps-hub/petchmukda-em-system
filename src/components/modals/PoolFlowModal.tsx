@@ -182,7 +182,7 @@ export default function PoolFlowModal({
         <div className="flex-1 min-w-0">
           <div className="font-extrabold text-lg text-txt">แผนผังเงินเดือน</div>
           <div className="text-sm text-txt-soft mt-0.5">
-            การแบ่งค่าคอม Pool · {monthLabel}
+            การแบ่งค่าคอมกองกลาง · {monthLabel}
           </div>
         </div>
       </div>
@@ -220,7 +220,7 @@ export default function PoolFlowModal({
 
       {/* body */}
       {!activeGroup ? (
-        <EmptyState text="ตำแหน่งของคุณไม่ได้ใช้ระบบ Pool — ค่าคอมคิดตามจำนวนชิ้นของตัวเองโดยตรง" />
+        <EmptyState text="ตำแหน่งของคุณไม่ได้ใช้ระบบกองกลาง — ค่าคอมคิดตามจำนวนชิ้นของตัวเองโดยตรง" />
       ) : groupEmployeeIds.length === 0 ? (
         <EmptyState text={`ยังไม่มีข้อมูลค่าคอมของทีมนี้ในเดือน ${monthLabel}`} />
       ) : !hasSell && !hasBuy ? (
@@ -363,13 +363,13 @@ function PoolSideFlow({
 
       {/* Step 2: รวม Pool + ฐาน% */}
       <div className="rounded-[10px] bg-linear-135 from-maroon to-maroon-lt text-white px-3.5 py-2.5 text-center">
-        <div className="text-xs text-gold-lt/70">Pool รวมทั้งทีม</div>
+        <div className="text-xs text-gold-lt/70">กองกลางรวมทั้งทีม</div>
         <div className="text-xl font-extrabold text-gold-lt">
           {formatThaiNumber(totalPool)}{" "}
           <span className="text-sm font-semibold">ชิ้น</span>
         </div>
         <div className="text-[11px] text-gold-lt/60 mt-0.5">
-          เกณฑ์เข้า Pool: ≥ 80% ของสูงสุด ({formatThaiNumber(topPieces)} ชิ้น) ={" "}
+          เกณฑ์เข้ากองกลาง: ≥ 80% ของสูงสุด ({formatThaiNumber(topPieces)} ชิ้น) ={" "}
           {formatThaiNumber(threshold)} ชิ้น
         </div>
       </div>

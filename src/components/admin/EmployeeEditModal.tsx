@@ -669,19 +669,19 @@ export default function EmployeeEditModal({
                       id: "sell",
                       label: "ปิดฝั่งขาย",
                       Icon: IconDiamond,
-                      desc: "ไม่ได้ Pool ขาย · รับซื้อยังใช้กฎ 80%",
+                      desc: "ไม่ได้กองกลางขาย · รับซื้อยังใช้กฎ 80%",
                     },
                     {
                       id: "buy",
                       label: "ปิดฝั่งรับซื้อ",
                       Icon: IconShoppingBag,
-                      desc: "ไม่ได้ Pool รับซื้อ · ขายยังใช้กฎ 80%",
+                      desc: "ไม่ได้กองกลางรับซื้อ · ขายยังใช้กฎ 80%",
                     },
                     {
                       id: "both",
                       label: "ปิดทั้งคู่",
                       Icon: IconLock,
-                      desc: "ไม่ได้ Pool ทั้งหมด · ถ้าขาย < 50% ไม่ได้เงินเดือนพื้นฐาน",
+                      desc: "ไม่ได้กองกลางทั้งหมด · ถ้าขาย < 50% ไม่ได้เงินเดือนพื้นฐาน",
                     },
                   ];
                   return (
@@ -696,7 +696,7 @@ export default function EmployeeEditModal({
                           strokeWidth={2.4}
                           className="inline mr-1 -mt-px"
                         />
-                        ปิดสิทธิ์ Pool ค่าคอม
+                        ปิดสิทธิ์ค่าคอมกองกลาง
                       </div>
                       <div className="flex flex-col gap-[5px]">
                         {poolExclusionOptions.map((poolExclusionOption) => {

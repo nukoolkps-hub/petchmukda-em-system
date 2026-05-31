@@ -342,7 +342,7 @@ export default function SalaryAdminEdit({
           <div className="flex items-center gap-2 mb-2.5">
             <IconHandshake size={18} strokeWidth={2.2} color={COLORS.gold} />
             <div className="text-sm font-bold text-maroon">
-              Pool ค่าคอม "{employeeRole?.name}"
+              ค่าคอมกองกลาง "{employeeRole?.name}"
             </div>
             <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
               {poolGroupEmployees.length} คน
@@ -351,7 +351,7 @@ export default function SalaryAdminEdit({
           <div className="text-xs text-txt-mid mb-2 leading-relaxed">
             ตัดสิทธิ์ฝั่งขาย/รับซื้อ แยกกัน · &lt; 80% ของ Top = ตัดออก
             <br />
-            แบ่ง Pool ตามสูตร: % ได้ = Base − % หัก + Σ% แบ่งเพื่อน
+            แบ่งกองกลางตามสูตร: % ได้ = Base − % หัก + Σ% แบ่งเพื่อน
           </div>
 
           {/* Admin-locked: ปิดสิทธิ์ Pool */}
@@ -362,17 +362,17 @@ export default function SalaryAdminEdit({
                 sell: {
                   Icon: IconDiamond,
                   title: "ปิดฝั่งขายโดย Admin",
-                  desc: "ไม่ได้ Pool ฝั่งขาย · ฝั่งรับซื้อยังใช้กฎ 80% ปกติ",
+                  desc: "ไม่ได้กองกลางฝั่งขาย · ฝั่งรับซื้อยังใช้กฎ 80% ปกติ",
                 },
                 buy: {
                   Icon: IconShoppingBag,
                   title: "ปิดฝั่งรับซื้อโดย Admin",
-                  desc: "ไม่ได้ Pool ฝั่งรับซื้อ · ฝั่งขายยังใช้กฎ 80% ปกติ",
+                  desc: "ไม่ได้กองกลางฝั่งรับซื้อ · ฝั่งขายยังใช้กฎ 80% ปกติ",
                 },
                 both: {
                   Icon: IconLock,
                   title: "ปิดทั้งคู่โดย Admin",
-                  desc: "ไม่ได้ Pool ทั้ง 2 ฝั่ง · ได้แค่ขาย-พิเศษ",
+                  desc: "ไม่ได้กองกลางทั้ง 2 ฝั่ง · ได้แค่ขาย-พิเศษ",
                 },
               };
               const info = labels[exc] || labels.both;
@@ -424,7 +424,7 @@ export default function SalaryAdminEdit({
                   className="shrink-0 mt-0.5"
                 />
                 <div className="flex-1">
-                  ฝั่งขาย: ไม่ได้รับชิ้นจาก Pool
+                  ฝั่งขาย: ไม่ได้รับชิ้นจากกองกลาง
                   <div className="font-medium text-xs mt-0.5">
                     ขาย {poolShare.employeeSellPieces} ชิ้น ·{" "}
                     {poolShare.topSellPieces > 0
@@ -450,7 +450,7 @@ export default function SalaryAdminEdit({
                   className="shrink-0 mt-0.5"
                 />
                 <div className="flex-1">
-                  ฝั่งรับซื้อ: ไม่ได้รับชิ้นจาก Pool
+                  ฝั่งรับซื้อ: ไม่ได้รับชิ้นจากกองกลาง
                   <div className="font-medium text-xs mt-0.5">
                     รับซื้อ {poolShare.employeeBuyPieces} ชิ้น ·{" "}
                     {poolShare.topBuyPieces > 0
@@ -506,7 +506,7 @@ export default function SalaryAdminEdit({
                 <IconDiamond size={12} strokeWidth={2.4} />
                 ฝั่งขาย:
                 <IconX size={12} strokeWidth={3} />
-                ไม่ได้รับชิ้นจาก Pool
+                ไม่ได้รับชิ้นจากกองกลาง
               </div>
             )}
 
@@ -539,7 +539,7 @@ export default function SalaryAdminEdit({
                 <IconShoppingBag size={12} strokeWidth={2.4} />
                 ฝั่งรับซื้อ:
                 <IconX size={12} strokeWidth={3} />
-                ไม่ได้รับชิ้นจาก Pool
+                ไม่ได้รับชิ้นจากกองกลาง
               </div>
             )}
 
@@ -548,7 +548,7 @@ export default function SalaryAdminEdit({
               <br />
               <span className="inline-flex items-center gap-1">
                 <IconSparkles size={11} strokeWidth={2.4} />
-                ขาย-พิเศษไม่เข้า Pool — ใครขายใครได้
+                ขาย-พิเศษไม่เข้ากองกลาง — ใครขายใครได้
               </span>
             </div>
           </div>
@@ -682,7 +682,7 @@ export default function SalaryAdminEdit({
                   strokeWidth={2.4}
                   color={COLORS.gold}
                 />
-                คำนวณใน Pool
+                คำนวณในกองกลาง
               </div>
             </div>
 
@@ -838,7 +838,7 @@ export default function SalaryAdminEdit({
             {poolShare && (
               <div className="mt-2 text-xs text-maroon text-center px-2.5 py-1.5 rounded-lg bg-[#C9973A15] inline-flex items-center justify-center gap-1 w-full">
                 <IconHandshake size={12} strokeWidth={2.4} />
-                ค่าคอมจะถูกคำนวณจาก Pool หลังจากที่ Admin บันทึกชิ้นของทุกคนแล้ว
+                ค่าคอมจะถูกคำนวณจากกองกลาง หลังจากที่ Admin บันทึกชิ้นของทุกคนแล้ว
               </div>
             )}
           </div>

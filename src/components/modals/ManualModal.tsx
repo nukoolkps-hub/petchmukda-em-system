@@ -199,19 +199,19 @@ export default function ManualModal({ onClose }) {
             title={
               <span className="inline-flex items-center gap-1.5">
                 <IconHandshake size={16} strokeWidth={2.4} />
-                ระบบ Pool ค่าคอม
+                ระบบค่าคอมกองกลาง
               </span>
             }
             color={COLORS.maroon}
           >
-            <p>พนักงานในตำแหน่งเดียวกันที่อยู่ใน "Pool" จะแชร์ค่าคอมกันตามสูตร</p>
+            <p>พนักงานในตำแหน่งเดียวกันที่อยู่ใน "กองกลาง" จะแชร์ค่าคอมกันตามสูตร</p>
           </Section>
 
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
                 <IconRuler size={16} strokeWidth={2.4} />
-                สูตรการแบ่ง Pool
+                สูตรการแบ่งกองกลาง
               </span>
             }
             color={COLORS.maroon}
@@ -219,7 +219,7 @@ export default function ManualModal({ onClose }) {
             <Card title="ขั้นตอน 6 ข้อ" color={COLORS.text}>
               <ol className="pl-[18px] m-0">
                 <li>
-                  <b>จำนวนคนที่มีสิทธิ์</b> = จำนวนคนใน Pool หลังตัดสิทธิ์
+                  <b>จำนวนคนที่มีสิทธิ์</b> = จำนวนคนในกองกลางหลังตัดสิทธิ์
                 </li>
                 <li>
                   <b>เปอร์เซ็นต์ฐาน</b> = 100 ÷ จำนวนคนที่มีสิทธิ์
@@ -238,7 +238,7 @@ export default function ManualModal({ onClose }) {
                 </li>
               </ol>
               <p className="mt-2">
-                <b>ชิ้นที่ได้</b> = (% ที่ได้ ÷ 100) × Pool รวม
+                <b>ชิ้นที่ได้</b> = (% ที่ได้ ÷ 100) × กองกลางรวม
                 <br />
                 <b>เงิน</b> = ชิ้น × Rate ของแต่ละคน
               </p>
@@ -255,7 +255,7 @@ export default function ManualModal({ onClose }) {
             color={COLORS.gold}
           >
             <p>
-              <b>ไม่เข้า Pool</b> — ใครขายใครได้ คูณ Rate ของตัวเอง
+              <b>ไม่เข้ากองกลาง</b> — ใครขายใครได้ คูณ Rate ของตัวเอง
             </p>
           </Section>
 
@@ -269,7 +269,7 @@ export default function ManualModal({ onClose }) {
             color={COLORS.maroon}
           >
             <p>
-              คำนวณแบบ Pool <b>แยกฝั่ง</b> จากการขาย (ใช้สูตรเดียวกัน)
+              คำนวณแบบกองกลาง <b>แยกฝั่ง</b> จากการขาย (ใช้สูตรเดียวกัน)
             </p>
           </Section>
 
@@ -277,7 +277,7 @@ export default function ManualModal({ onClose }) {
             title={
               <span className="inline-flex items-center gap-1.5">
                 <IconAlertTriangle size={16} strokeWidth={2.4} />
-                กฎตัดสิทธิ์ Pool
+                กฎตัดสิทธิ์กองกลาง
               </span>
             }
             color={COLORS.red}
@@ -293,8 +293,8 @@ export default function ManualModal({ onClose }) {
             >
               <p>
                 คนที่ <b>ชิ้น &lt; 80% ของ Top</b> ในฝั่งนั้น →{" "}
-                <b className="text-red">ตัดออกจาก Pool</b> ฝั่งนั้น (จำนวนคนที่มีสิทธิ์ลดลง
-                → เปอร์เซ็นต์ฐานและตัวคูณหักวันลาเปลี่ยนตาม)
+                <b className="text-red">ตัดออกจากกองกลาง</b> ฝั่งนั้น
+                (จำนวนคนที่มีสิทธิ์ลดลง → เปอร์เซ็นต์ฐานและตัวคูณหักวันลาเปลี่ยนตาม)
               </p>
             </Card>
             <Card
@@ -308,13 +308,13 @@ export default function ManualModal({ onClose }) {
             >
               <ul>
                 <li>
-                  <b>ปิดฝั่งขาย</b> — ไม่ได้ Pool ฝั่งขาย (ฝั่งซื้อยังใช้กฎ 80%)
+                  <b>ปิดฝั่งขาย</b> — ไม่ได้กองกลางฝั่งขาย (ฝั่งซื้อยังใช้กฎ 80%)
                 </li>
                 <li>
-                  <b>ปิดฝั่งรับซื้อ</b> — ไม่ได้ Pool ฝั่งรับซื้อ (ฝั่งขายยังใช้กฎ 80%)
+                  <b>ปิดฝั่งรับซื้อ</b> — ไม่ได้กองกลางฝั่งรับซื้อ (ฝั่งขายยังใช้กฎ 80%)
                 </li>
                 <li>
-                  <b>ปิดทั้งคู่</b> — ไม่ได้ Pool ทั้ง 2 ฝั่ง
+                  <b>ปิดทั้งคู่</b> — ไม่ได้กองกลางทั้ง 2 ฝั่ง
                   <br />+ ถ้าขาย &lt; 50% ของ Top →{" "}
                   <b className="text-red">ไม่ได้เงินเดือนพื้นฐาน</b>
                 </li>
@@ -325,7 +325,7 @@ export default function ManualModal({ onClose }) {
           <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
             <b className="text-maroon inline-flex items-center gap-1">
               <IconLightbulb size={14} strokeWidth={2.4} />
-              ตัวอย่าง Pool ขาย 5 คน · 1,064 ชิ้น
+              ตัวอย่างกองกลางขาย 5 คน · 1,064 ชิ้น
             </b>
             <br />
             จำนวนคนที่มีสิทธิ์ = 5, เปอร์เซ็นต์ฐาน = 20%, ตัวคูณหักวันลา = 0.667
@@ -351,7 +351,7 @@ export default function ManualModal({ onClose }) {
             color={COLORS.maroon}
           >
             <p>
-              คิดตาม <b>Rate ของตัวเอง</b> × จำนวนใบ (ไม่เข้า Pool)
+              คิดตาม <b>Rate ของตัวเอง</b> × จำนวนใบ (ไม่เข้ากองกลาง)
             </p>
             <ul>
               <li className="inline-flex items-center gap-1.5">

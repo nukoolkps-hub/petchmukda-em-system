@@ -97,7 +97,7 @@ export default function RolesAdminPanel({
     <div>
       <div className="flex items-center justify-between mb-3.5">
         <div className="text-sm text-txt-soft">
-          กำหนดตำแหน่งและกลุ่ม Pool ค่าคอม
+          กำหนดตำแหน่งและกลุ่มค่าคอมกองกลาง
         </div>
         <button
           onClick={() => setShowAdd(!showAdd)}
@@ -132,7 +132,7 @@ export default function RolesAdminPanel({
             onChange={(e) =>
               setNewRole({ ...newRole, poolGroup: e.target.value })
             }
-            placeholder='Pool Group (ทิ้งว่างถ้าไม่แชร์ค่าคอม) เช่น "sales"'
+            placeholder='กลุ่มกองกลาง (ทิ้งว่างถ้าไม่แชร์ค่าคอม) เช่น "sales"'
             className="w-full px-3 py-[9px] rounded-[9px] border border-bdr text-sm outline-none font-[Prompt,monospace] box-border mb-2.5"
           />
           <button
@@ -161,7 +161,7 @@ export default function RolesAdminPanel({
                     color={COLORS.gold}
                   />
                   <span className="text-sm font-bold text-maroon">
-                    Pool:{" "}
+                    กองกลาง:{" "}
                     <code className="bg-gold-pale px-2 py-px rounded-md text-sm">
                       {groupKey}
                     </code>
@@ -231,7 +231,7 @@ export default function RolesAdminPanel({
                     {dirty && (
                       <div className="mb-2.5">
                         <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                          Pool Group (ทิ้งว่างถ้าไม่แชร์)
+                          กลุ่มกองกลาง (ทิ้งว่างถ้าไม่แชร์)
                         </label>
                         <input
                           value={
