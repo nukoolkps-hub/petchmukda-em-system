@@ -21,7 +21,6 @@ import DesktopHeader from "./components/layout/DesktopHeader";
 import MobileHeader from "./components/layout/MobileHeader";
 import { getNavItems } from "./components/layout/navConfig";
 import Sidebar from "./components/layout/Sidebar";
-import AdvanceHistoryModal from "./components/modals/AdvanceHistoryModal";
 import AdvanceRequestModal from "./components/modals/AdvanceRequestModal";
 import ManualModal from "./components/modals/ManualModal";
 import ProfileSetupModal from "./components/modals/ProfileSetupModal";
@@ -215,7 +214,6 @@ export default function LeaveApp() {
 
   /* ─── Modal state ──────────────────────────────────────────── */
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showManual, setShowManual] = useState(false);
 
   /* ─── Role update handler (admin) ──────────────────────────── */
@@ -415,7 +413,6 @@ export default function LeaveApp() {
                         employeeDirectory={employeeDirectory}
                         advanceRequests={myAdvanceRequests}
                         onOpenAdvance={() => setShowAdvanceModal(true)}
-                        onOpenHistory={() => setShowHistoryModal(true)}
                         roles={roles}
                         showToast={showToast}
                       />
@@ -491,13 +488,6 @@ export default function LeaveApp() {
               advanceRequests={myAdvanceRequests}
               onSubmit={handleSubmitAdvance}
               onClose={() => setShowAdvanceModal(false)}
-            />
-          )}
-
-          {showHistoryModal && (
-            <AdvanceHistoryModal
-              advanceRequests={myAdvanceRequests}
-              onClose={() => setShowHistoryModal(false)}
             />
           )}
 

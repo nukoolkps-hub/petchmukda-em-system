@@ -37,6 +37,7 @@ import {
   calculateSalary,
   computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
+import AdvanceHistoryModal from "../modals/AdvanceHistoryModal";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
@@ -50,7 +51,6 @@ export default function SalaryView({
   employeeDirectory,
   advanceRequests,
   onOpenAdvance,
-  onOpenHistory,
   roles,
   showToast,
 }) {
@@ -192,6 +192,7 @@ export default function SalaryView({
 
   const [showCertModal, setShowCertModal] = useState(false);
   const [showPoolFlow, setShowPoolFlow] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   // preset และ custom เก็บแยกกัน — custom (ถ้าพิมพ์) override preset
   const [selectedPreset, setSelectedPreset] = useState<string | null>(
     "ยื่นกู้สินเชื่อ",
@@ -377,7 +378,7 @@ export default function SalaryView({
             </div>
           </button>
           <button
-            onClick={onOpenHistory}
+            onClick={() => setShowHistory(true)}
             className="bg-white rounded-[14px] px-3.5 py-3 cursor-pointer font-[inherit] shadow-[0_2px_10px_rgba(90,30,10,0.06)] text-left relative border-[1.5px] border-[#C9973A50]"
           >
             <div className="flex items-center gap-2">
@@ -830,6 +831,19 @@ export default function SalaryView({
           </div>
         </BaseModal>
       )}
+
+      {showHistory &&
+        (() => {
+          const [y, mo] = selectedMonth.split("-");
+          const label = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+          return (
+            <AdvanceHistoryModal
+              advanceRequests={monthAdvances}
+              monthLabel={label}
+              onClose={() => setShowHistory(false)}
+            />
+          );
+        })()}
 
       {showPoolFlow && (
         <PoolFlowModal

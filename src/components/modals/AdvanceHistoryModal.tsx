@@ -11,13 +11,21 @@ import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
 
 /* ─── Advance History Modal ────────────────────────────────────── */
-export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
+export default function AdvanceHistoryModal({
+  advanceRequests,
+  monthLabel,
+  onClose,
+}: {
+  advanceRequests: any[];
+  monthLabel?: string;
+  onClose: () => void;
+}) {
   const list = [...(advanceRequests || [])].sort(
     (a, b) =>
       new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime(),
   );
   // group by month
-  const grouped = {};
+  const grouped: Record<string, any[]> = {};
   list.forEach((r) => {
     const key = r.month || r.submittedAt.slice(0, 7);
     if (!grouped[key]) grouped[key] = [];
@@ -52,7 +60,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
         <div className="flex-1">
           <div className="font-extrabold text-lg text-txt">ประวัติการเบิก</div>
           <div className="text-sm text-txt-soft mt-0.5">
-            คำขอเบิกเงินล่วงหน้าทั้งหมด
+            {monthLabel ? `เดือน ${monthLabel}` : "คำขอเบิกเงินล่วงหน้าทั้งหมด"}
           </div>
         </div>
       </div>
@@ -62,7 +70,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
           <div className="flex justify-center mb-3 text-txt-soft">
             <IconInbox size={48} strokeWidth={1.8} />
           </div>
-          ยังไม่มีประวัติการเบิก
+          {monthLabel ? "ไม่มีคำขอเบิกเงินในเดือนนี้" : "ยังไม่มีประวัติการเบิก"}
         </div>
       )}
 
