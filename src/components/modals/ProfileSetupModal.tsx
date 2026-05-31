@@ -2,16 +2,16 @@ import {
   AlertTriangle as IconAlertTriangle,
   Camera as IconCamera,
   Check as IconCheck,
-  ChevronDown as IconChevronDown,
   Landmark as IconLandmark,
   Type as IconType,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { COLORS, EMOJI_LIST, THAI_BANKS } from "../../constants";
+import { COLORS, EMOJI_LIST } from "../../constants";
 import { uploadAvatar } from "../../firebase/storage";
 import { resizeAvatar } from "../../utils/imageUtils";
 import { validateBankAccount, validateRequired } from "../../utils/validators";
 import AvatarCircle from "../shared/AvatarCircle";
+import BankPicker from "../shared/BankPicker";
 import BaseModal from "../shared/BaseModal";
 import Diamond from "../shared/Diamond";
 
@@ -345,27 +345,11 @@ export default function ProfileSetupModal({
         <label className="block text-sm text-txt-soft font-semibold mb-1">
           ธนาคาร
         </label>
-        <div className="relative mb-2.5">
-          <select
+        <div className="mb-2.5">
+          <BankPicker
             value={bank}
-            onChange={(e) => setBank(e.target.value)}
-            className={`w-full py-3 pr-10 pl-4 rounded-xl text-base outline-none font-[inherit] box-border appearance-none cursor-pointer border-[1.5px]
-              ${bankErr ? "border-red" : "border-bdr"}
-              ${bank ? "text-txt bg-gold-pale/30 font-semibold" : "text-txt-soft bg-white font-normal"}`}
-          >
-            <option value="">— เลือกธนาคาร —</option>
-            {THAI_BANKS.map((b) => (
-              <option key={b.name} value={b.name}>
-                {b.name}
-                {b.short ? `  (${b.short})` : ""}
-              </option>
-            ))}
-          </select>
-          <IconChevronDown
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-            size={14}
-            color="var(--color-txt-soft)"
-            strokeWidth={2.5}
+            onChange={(name) => setBank(name)}
+            error={!!bankErr}
           />
         </div>
 
