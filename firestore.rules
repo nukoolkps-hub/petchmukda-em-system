@@ -136,20 +136,27 @@ service cloud.firestore {
     }
 
     // ─── Salaries ────────────────────────────────────────────────
-    // read: signed-in — พนักงานต้องอ่าน pieces ของเพื่อนใน pool ด้วย
-    //       เพราะ commission pool calc ต้องดู topSellPieces ของกลุ่ม
-    //       ถ้า restrict ไว้เฉพาะของตัวเอง → คำนวณ pool ผิด → ค่าคอมผิด
+    // read: admin หรือเจ้าของ — salary doc มี note, customDeductions,
+    //       lateDeduction, socialSecurity ฯลฯ ที่ sensitive
+    //       (peer data ที่ pool calc ต้องใช้แยกออกไปที่ poolSnapshots)
     // write: admin
     match /salaries/{employeeId}/months/{yearMonth} {
-      allow read:   if isSignedIn();
+      allow read:   if isAdmin() || isEmployeeOwner(employeeId);
       allow write:  if isAdmin();
     }
 
-    // collectionGroup(db, "months") in the app needs an explicit recursive
-    // match. ใช้ใน subscribeAllSalaries (รัน collectionGroup query)
+    // collectionGroup(db, "months") — admin only (subscribeAllSalaries)
     match /{path=**}/months/{yearMonth} {
-      allow read: if isSignedIn();
+      allow read: if isAdmin();
       allow write: if false;
+    }
+
+    // ─── Pool Snapshots (public, non-sensitive copy ของ pool fields) ───
+    // 1 doc/เดือน, shape: { [empId]: { pieces, roleId, poolExclusion,
+    // totalLeaveDays } } — ทุกคนอ่านได้เพื่อคำนวณ pool ของกลุ่ม
+    match /poolSnapshots/{yearMonth} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // ─── Advances ────────────────────────────────────────────────

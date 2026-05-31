@@ -17,8 +17,12 @@ import {
 } from "../employees";
 import { subscribeLeaves, subscribeLeavesByEmployeeId } from "../leaves";
 import { subscribePayrollConfirms } from "../payrollConfirms";
+import {
+  type PoolSnapshotsByMonth,
+  subscribeAllPoolSnapshots,
+} from "../poolSnapshots";
 import { subscribeRoles } from "../roles";
-import { subscribeAllSalaries } from "../salaries";
+import { subscribeAllSalaries, subscribeEmployeeSalaries } from "../salaries";
 
 interface SubscriptionResult<T> {
   data: T;
@@ -240,15 +244,34 @@ export function useApprovedAdvancesByMonth(yearMonth: string | null) {
   );
 }
 
-export function useSalariesForScope(_args: {
+export function useSalariesForScope({
+  isAdmin,
+  employeeId,
+}: {
   isAdmin: boolean;
   employeeId: string | null;
 }) {
-  // ทั้ง admin และ employee ต้อง subscribe ของทุกคน ไม่งั้น pool calculation
-  // จะอ่าน pieces ของเพื่อน = 0 → topSellPieces ผิด → ค่าคอมผิด
+  // admin: subscribe ทุกคน (ใช้ collectionGroup) — admin จัดการเงินเดือนทุกคน
+  // employee: subscribe เฉพาะของตัวเอง — peer data ที่ pool calc ต้องใช้
+  //   มาจาก poolSnapshots collection (public, non-sensitive) แทน
   return useScopedSubscription(
-    () => subscribeAllSalaries,
+    () => {
+      if (isAdmin) return subscribeAllSalaries;
+      if (employeeId) {
+        return (onChange, onError) =>
+          subscribeEmployeeSalaries(employeeId, onChange, onError);
+      }
+      return null;
+    },
     {} as Record<string, any>,
+    [isAdmin, employeeId],
+  );
+}
+
+export function usePoolSnapshots() {
+  return useScopedSubscription(
+    () => subscribeAllPoolSnapshots,
+    {} as PoolSnapshotsByMonth,
     [],
   );
 }

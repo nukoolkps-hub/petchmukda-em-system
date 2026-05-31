@@ -4,6 +4,7 @@
    - State มาจาก Firestore (real-time sync)
    - Actions เป็น async + เรียก Firestore                          */
 
+import { useMemo } from "react";
 import * as advancesAPI from "../firebase/advances";
 
 import * as employeesAPI from "../firebase/employees";
@@ -12,11 +13,13 @@ import {
   useEmployeesForScope,
   useLeavesForScope,
   usePayrollConfirmsForScope,
+  usePoolSnapshots,
   useRoles,
   useSalariesForScope,
 } from "../firebase/hooks/useFirestore";
 import * as leavesAPI from "../firebase/leaves";
 import * as payrollConfirmsAPI from "../firebase/payrollConfirms";
+import * as poolSnapshotsAPI from "../firebase/poolSnapshots";
 import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
 import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
@@ -51,6 +54,30 @@ export default function useFirebaseAppData({
   });
   const rolesResult = useRoles();
   const pcResult = usePayrollConfirmsForScope({ isAdmin });
+  // poolSnapshots: doc per month มี pieces + roleId + poolExclusion + leaveDays
+  // ของทุกคน — เป็น public source สำหรับ pool calc ฝั่งพนักงาน (ที่ไม่ได้
+  // อ่าน salaries ของเพื่อน). admin ไม่ต้องใช้ก็ได้ — แต่ subscribe ทิ้งไว้
+  // ค่า read น้อย (1 doc/เดือน) ไม่กระทบ performance.
+  const poolSnapResult = usePoolSnapshots();
+
+  // employee เห็น salaries ของตัวเองคนเดียว — เติม peer-data จาก
+  // poolSnapshots ลงไปใน salaryData ก่อนส่งต่อให้ component (SalaryView,
+  // computePoolSharesForGroup) ใช้แบบ shape เดิม. admin ส่งผ่านตรงๆ —
+  // collectionGroup ดึงทุกคนอยู่แล้ว.
+  const salaryData = useMemo(() => {
+    if (isAdmin) return salResult.data;
+    const merged: Record<string, any> = { ...salResult.data };
+    for (const [yearMonth, byEmployee] of Object.entries(poolSnapResult.data)) {
+      for (const [peerId, snapshot] of Object.entries(byEmployee)) {
+        if (!merged[peerId]) merged[peerId] = {};
+        // own salary doc มี field ครบกว่า — อย่าให้ snapshot ทับ
+        if (!merged[peerId][yearMonth]) {
+          merged[peerId][yearMonth] = snapshot;
+        }
+      }
+    }
+    return merged;
+  }, [isAdmin, salResult.data, poolSnapResult.data]);
 
   // Aggregate loading/error states
   const loading =
@@ -59,14 +86,16 @@ export default function useFirebaseAppData({
     salResult.loading ||
     advResult.loading ||
     rolesResult.loading ||
-    pcResult.loading;
+    pcResult.loading ||
+    poolSnapResult.loading;
   const error =
     employeeResult.error ||
     leavesResult.error ||
     salResult.error ||
     advResult.error ||
     rolesResult.error ||
-    pcResult.error;
+    pcResult.error ||
+    poolSnapResult.error;
 
   /* ─── Leaves (real-time → no local setState needed) ────── */
   async function addLeave(leave) {
@@ -121,6 +150,26 @@ export default function useFirebaseAppData({
       poolExclusion: employee.poolExclusion ?? null,
       totalLeaveDays,
     });
+    // mirror non-sensitive pool fields ลง poolSnapshots/{ym} เพื่อให้
+    // พนักงานอ่าน pool ของเพื่อนได้โดยไม่ต้องเปิดสิทธิ์อ่าน salary ทั้งใบ
+    // (salary ใบเต็มมี note, customDeductions, lateDeduction, ฯลฯ — sensitive).
+    // อ่าน salary doc สดหลัง write เพื่อให้ pieces ตรงกับใน salary เสมอ —
+    // backfill case (callerFields = {}) ก็ได้ pieces เดิมจาก doc ที่มีอยู่
+    try {
+      const currentSalary = await salariesAPI.getSalary(employeeId, yearMonth);
+      await poolSnapshotsAPI.upsertPoolSnapshot(yearMonth, employeeId, {
+        normalSalePieces: currentSalary?.normalSalePieces ?? 0,
+        specialSalePieces: currentSalary?.specialSalePieces ?? 0,
+        buyPieces: currentSalary?.buyPieces ?? 0,
+        roleId: employee.roleId ?? null,
+        poolExclusion: employee.poolExclusion ?? null,
+        totalLeaveDays,
+      });
+    } catch (err) {
+      // poolSnapshot write fail ไม่ block การ save salary หลัก — แต่ log
+      // ไว้ ผลลัพธ์: ฝั่งพนักงานอาจเห็น pool ผิดจน save รอบหน้า
+      console.error("[Salaries] poolSnapshot write failed:", err);
+    }
   }
 
   /* ─── Advances ──────────────────────────────────────────── */
@@ -168,7 +217,7 @@ export default function useFirebaseAppData({
     // State (real-time from Firestore)
     allLeaves: leavesResult.data,
     employeeDirectory: employeeResult.data,
-    salaryData: salResult.data,
+    salaryData,
     advanceRequests: advResult.data,
     roles: rolesResult.data,
     payrollConfirms: pcResult.data,
