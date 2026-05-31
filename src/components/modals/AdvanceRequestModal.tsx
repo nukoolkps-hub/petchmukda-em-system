@@ -183,12 +183,12 @@ export default function AdvanceRequestModal({
             ${
               remaining <= 0
                 ? "bg-bdr text-txt-soft cursor-not-allowed shadow-none"
-                : "bg-maroon text-white shadow-[0_4px_14px_rgba(201,151,58,0.31)]"
+                : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
             }`}
         >
           <Diamond
             size={14}
-            color={remaining <= 0 ? COLORS.textSoft : COLORS.maroonDark}
+            color={remaining <= 0 ? COLORS.textSoft : COLORS.goldLight}
           />
           {remaining <= 0 ? "เต็มวงเงินแล้ว" : "ส่งคำขอผ่าน LINE"}
         </button>
