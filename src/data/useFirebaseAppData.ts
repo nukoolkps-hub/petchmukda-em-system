@@ -106,10 +106,17 @@ export default function useFirebaseAppData({
     const weekdayLeaves = countWeekdayLeaves(monthLeaves);
     const overInfo = getOverQuotaDays(monthLeaves);
     const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
-    // เขียน snapshot เสมอ (ใช้ ?? null) — ปลด poolExclusion/roleId ต้องล้าง
-    // ของเดิมใน salary doc ด้วย ไม่งั้น pool calc ใช้ค่าเก่าค้าง
+    // snapshot 3 field นี้เป็น "server-managed" — ดึงออกจาก fields ที่ caller
+    // ส่งมา (กันส่งค่าเก่าทับ) แล้วเขียนค่าสดเสมอ (?? null เพื่อให้ "ปลด"
+    // poolExclusion/roleId ล้างค่าเดิมใน salary doc ได้ ไม่งั้น pool calc ค้าง)
+    const {
+      roleId: _ignoredRoleId,
+      poolExclusion: _ignoredPoolExclusion,
+      totalLeaveDays: _ignoredTotalLeaveDays,
+      ...callerFields
+    } = fields || {};
     await salariesAPI.updateSalary(employeeId, yearMonth, {
-      ...fields,
+      ...callerFields,
       roleId: employee.roleId ?? null,
       poolExclusion: employee.poolExclusion ?? null,
       totalLeaveDays,

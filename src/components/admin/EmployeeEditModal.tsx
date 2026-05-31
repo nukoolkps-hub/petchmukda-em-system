@@ -26,6 +26,7 @@ import type { Employee, Role } from "../../types";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
+import { clearEmployeeDraft } from "./employeeEditFields";
 
 type EditingRole = Record<string, any>;
 
@@ -85,23 +86,7 @@ export default function EmployeeEditModal({
     editingName !== undefined;
 
   const clearDraft = () =>
-    setEditingRole((prev) => {
-      const next = { ...prev };
-      delete next[`${employee.id}:normalSalePieceRate`];
-      delete next[`${employee.id}:specialSalePieceRate`];
-      delete next[`${employee.id}:buyPieceRate`];
-      delete next[`${employee.id}:invitePieceRate`];
-      delete next[`${employee.id}:transferPieceRate`];
-      delete next[`${employee.id}:singlePieceRate`];
-      delete next[`${employee.id}:baseSalary`];
-      delete next[`${employee.id}:socialSecurity`];
-      delete next[`${employee.id}:startWorkMonth`];
-      delete next[`${employee.id}:prefix`];
-      delete next[`${employee.id}:name`];
-      delete next[`${employee.id}:salaryDisabled`];
-      delete next[`${employee.id}:poolExclusion`];
-      return next;
-    });
+    setEditingRole((prev) => clearEmployeeDraft(prev, employee.id));
 
   const saveAll = async () => {
     if (editingName !== undefined && editingName.trim() !== "")
@@ -378,7 +363,7 @@ export default function EmployeeEditModal({
               value={
                 editingBaseSalary !== undefined
                   ? editingBaseSalary
-                  : employee.baseSalary || ""
+                  : (employee.baseSalary ?? "")
               }
               onChange={(e) =>
                 setEditingRole((previousEditingRole) => ({
@@ -413,7 +398,7 @@ export default function EmployeeEditModal({
               value={
                 editingSocialSecurity !== undefined
                   ? editingSocialSecurity
-                  : employee.socialSecurity || ""
+                  : (employee.socialSecurity ?? "")
               }
               onChange={(e) =>
                 setEditingRole((previousEditingRole) => ({
@@ -577,7 +562,7 @@ export default function EmployeeEditModal({
                       value={
                         editingSinglePieceRate !== undefined
                           ? editingSinglePieceRate
-                          : employee.singlePieceRate || ""
+                          : (employee.singlePieceRate ?? "")
                       }
                       onChange={(e) =>
                         setEditingRole((previousEditingRole) => ({
@@ -619,7 +604,7 @@ export default function EmployeeEditModal({
                       value={
                         editingInvitePieceRate !== undefined
                           ? editingInvitePieceRate
-                          : employee.invitePieceRate || ""
+                          : (employee.invitePieceRate ?? "")
                       }
                       onChange={(e) =>
                         setEditingRole((previousEditingRole) => ({
@@ -646,7 +631,7 @@ export default function EmployeeEditModal({
                       value={
                         editingTransferPieceRate !== undefined
                           ? editingTransferPieceRate
-                          : employee.transferPieceRate || ""
+                          : (employee.transferPieceRate ?? "")
                       }
                       onChange={(e) =>
                         setEditingRole((previousEditingRole) => ({
@@ -782,7 +767,7 @@ export default function EmployeeEditModal({
                     value={
                       editingNormalSalePieceRate !== undefined
                         ? editingNormalSalePieceRate
-                        : employee.normalSalePieceRate || ""
+                        : (employee.normalSalePieceRate ?? "")
                     }
                     onChange={(e) =>
                       setEditingRole((previousEditingRole) => ({
@@ -809,7 +794,7 @@ export default function EmployeeEditModal({
                     value={
                       editingSpecialSalePieceRate !== undefined
                         ? editingSpecialSalePieceRate
-                        : employee.specialSalePieceRate || ""
+                        : (employee.specialSalePieceRate ?? "")
                     }
                     onChange={(e) =>
                       setEditingRole((previousEditingRole) => ({
@@ -836,7 +821,7 @@ export default function EmployeeEditModal({
                     value={
                       editingBuyPieceRate !== undefined
                         ? editingBuyPieceRate
-                        : employee.buyPieceRate || ""
+                        : (employee.buyPieceRate ?? "")
                     }
                     onChange={(e) =>
                       setEditingRole((previousEditingRole) => ({
@@ -878,7 +863,7 @@ export default function EmployeeEditModal({
                     value={
                       editingInvitePieceRate !== undefined
                         ? editingInvitePieceRate
-                        : employee.invitePieceRate || ""
+                        : (employee.invitePieceRate ?? "")
                     }
                     onChange={(e) =>
                       setEditingRole((previousEditingRole) => ({
@@ -905,7 +890,7 @@ export default function EmployeeEditModal({
                     value={
                       editingTransferPieceRate !== undefined
                         ? editingTransferPieceRate
-                        : employee.transferPieceRate || ""
+                        : (employee.transferPieceRate ?? "")
                     }
                     onChange={(e) =>
                       setEditingRole((previousEditingRole) => ({

@@ -28,7 +28,7 @@ import {
   User as IconUser,
   X as IconX,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { COLORS } from "../../constants";
 import {
   ADMIN_NAV_GROUPS,
@@ -84,6 +84,15 @@ export default function AdminPanel({
     tryChangeSection(group.defaultSection);
   }
   const setUnsavedDirty = onUnsavedDirtyChange;
+
+  // draft แก้ไขพนักงาน + modal ที่เปิดอยู่ — ถือไว้ที่ AdminPanel (parent ร่วม)
+  // เพื่อให้รอดเมื่อสลับ section แล้วกลับมา (EmployeeAdminPanel ถูก unmount)
+  const [employeeEditingRole, setEmployeeEditingRole] = useState<
+    Record<string, any>
+  >({});
+  const [employeeEditingId, setEmployeeEditingId] = useState<string | null>(
+    null,
+  );
 
   // เตือนตอนปิดหน้า/refresh ถ้ามี unsaved
   useEffect(() => {
@@ -246,6 +255,10 @@ export default function AdminPanel({
           roles={roles}
           onUpdateRole={onUpdateRole}
           onDeleteEmployee={onDeleteEmployee}
+          editingRole={employeeEditingRole}
+          setEditingRole={setEmployeeEditingRole}
+          editingEmpId={employeeEditingId}
+          setEditingEmpId={setEmployeeEditingId}
         />
       )}
     </div>

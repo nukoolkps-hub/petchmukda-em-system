@@ -13,32 +13,19 @@ import type { Employee, Role } from "../../types";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import EmployeeEditModal from "./EmployeeEditModal";
-
-/* ฟิลด์ที่แก้ได้ใน edit modal — ใช้เช็คว่าแถวไหนมี draft ค้าง (badge "มีการแก้ไข") */
-const EDIT_FIELDS = [
-  "normalSalePieceRate",
-  "specialSalePieceRate",
-  "buyPieceRate",
-  "invitePieceRate",
-  "transferPieceRate",
-  "singlePieceRate",
-  "baseSalary",
-  "socialSecurity",
-  "startWorkMonth",
-  "prefix",
-  "salaryDisabled",
-  "poolExclusion",
-  "name",
-];
-function hasDraft(editingRole: Record<string, any>, id: string) {
-  return EDIT_FIELDS.some((f) => editingRole[`${id}:${f}`] !== undefined);
-}
+import { clearEmployeeDraft, hasEmployeeDraft } from "./employeeEditFields";
 
 interface EmployeeAdminPanelProps {
   employeeDirectory: Employee[];
   roles: Role[];
   onUpdateRole: (employeeId: string, field: string, value: unknown) => void;
   onDeleteEmployee: (employeeId: string) => void;
+  // draft + employee ที่เปิดอยู่ ถูกยกขึ้นไป AdminPanel — เพื่อให้ draft ที่ยัง
+  // ไม่บันทึก (และ modal ที่เปิดค้าง) รอดเมื่อ admin สลับ section แล้วกลับมา
+  editingRole: Record<string, any>;
+  setEditingRole: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  editingEmpId: string | null;
+  setEditingEmpId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 /* ─── Admin: Employee management (list + edit modal) ───────────── */
@@ -47,10 +34,11 @@ export default function EmployeeAdminPanel({
   roles,
   onUpdateRole,
   onDeleteEmployee,
+  editingRole,
+  setEditingRole,
+  editingEmpId,
+  setEditingEmpId,
 }: EmployeeAdminPanelProps) {
-  // draft แก้ไข เก็บที่ระดับ panel — ปิด modal ด้วย X แล้ว draft ไม่หาย
-  const [editingRole, setEditingRole] = useState<Record<string, any>>({});
-  const [editingEmpId, setEditingEmpId] = useState<string | null>(null);
   const [confirmDeleteEmp, setConfirmDeleteEmp] = useState<{
     id: string;
     name: string;
@@ -93,7 +81,7 @@ export default function EmployeeAdminPanel({
       </div>
       <div className="flex flex-col gap-2">
         {employeeDirectory.map((employee) => {
-          const dirty = hasDraft(editingRole, employee.id);
+          const dirty = hasEmployeeDraft(editingRole, employee.id);
           return (
             <button
               key={employee.id}
@@ -223,6 +211,10 @@ export default function EmployeeAdminPanel({
             <button
               onClick={() => {
                 onDeleteEmployee(confirmDeleteEmp.id);
+                // เก็บกวาด draft ของคนที่ถูกลบ ไม่ให้ค้างใน editingRole
+                setEditingRole((prev) =>
+                  clearEmployeeDraft(prev, confirmDeleteEmp.id),
+                );
                 setConfirmDeleteEmp(null);
               }}
               className="flex-1 p-3.5 rounded-xl border-none bg-red text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_rgba(192,57,43,0.31)]"
