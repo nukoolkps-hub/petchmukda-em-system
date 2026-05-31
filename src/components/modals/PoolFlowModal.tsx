@@ -1,7 +1,6 @@
 import {
   ArrowDown as IconArrowDown,
   Ban as IconBan,
-  CalendarDays as IconCalendar,
   ChevronDown as IconChevronDown,
   Diamond as IconDiamond,
   Layers as IconLayers,
@@ -62,12 +61,12 @@ export default function PoolFlowModal({
     return arr;
   }, [salaryData, currentYearMonth]);
 
-  // ค่าเริ่ม: ใช้ initialMonth ถ้า caller ระบุ (เช่น เปิดจาก SalaryView ตาม
-  // dropdown เดือนที่พนักงานกำลังดูอยู่) — fallback มาเดือนปัจจุบัน
-  const [selectedMonth, setSelectedMonth] = useState(
+  // เดือนคงที่ตลอดอายุของ modal: ใช้ initialMonth ที่ caller ส่งมา
+  // (เช่น SalaryView ส่ง selectedMonth ของ dropdown) — fallback เป็นเดือน
+  // ปัจจุบัน. ไม่มี dropdown ให้เปลี่ยนในตัว modal เพราะ caller คุมไว้แล้ว
+  const selectedMonth =
     initialMonth ||
-      (months.includes(currentYearMonth) ? currentYearMonth : months[0]),
-  );
+    (months.includes(currentYearMonth) ? currentYearMonth : months[0]);
 
   // pool groups ที่มีอยู่ (เฉพาะ role ที่ poolGroup ไม่ว่าง)
   const poolGroups = useMemo(() => {
@@ -192,36 +191,27 @@ export default function PoolFlowModal({
         </div>
       </div>
 
-      {/* controls */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Dropdown
-          icon={<IconCalendar size={13} strokeWidth={2.4} />}
-          value={selectedMonth}
-          onChange={setSelectedMonth}
-          options={months.map((m) => {
-            const [y, mo] = m.split("-");
-            return {
-              value: m,
-              label: `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`,
-            };
-          })}
-        />
-        {isAdmin ? (
-          poolGroups.length > 0 && (
-            <Dropdown
-              icon={<IconUsers size={13} strokeWidth={2.4} />}
-              value={selectedGroup || ""}
-              onChange={setSelectedGroup}
-              options={poolGroups.map((g) => ({ value: g.id, label: g.label }))}
-            />
-          )
-        ) : (
+      {/* controls — เดือนไม่มี dropdown แล้ว (โชว์อยู่ใน subtitle header แล้ว
+          + เปิดมาตาม dropdown เดือนของหน้าที่เรียก) เหลือเฉพาะ pool group
+          สำหรับ admin ที่อาจมีหลายกลุ่ม */}
+      {isAdmin && poolGroups.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Dropdown
+            icon={<IconUsers size={13} strokeWidth={2.4} />}
+            value={selectedGroup || ""}
+            onChange={setSelectedGroup}
+            options={poolGroups.map((g) => ({ value: g.id, label: g.label }))}
+          />
+        </div>
+      )}
+      {!isAdmin && (
+        <div className="flex flex-wrap gap-2 mb-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-[9px] bg-gold-pale border border-gold/30 text-sm font-semibold text-maroon">
             <IconUsers size={13} strokeWidth={2.4} />
             {poolGroups.find((g) => g.id === ownPoolGroup)?.label || "ทีมของคุณ"}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* body */}
       {!activeGroup ? (
