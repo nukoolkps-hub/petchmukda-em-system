@@ -12,6 +12,7 @@ import {
   FileText as IconFileText,
   Lightbulb as IconLightbulb,
   Minus as IconMinus,
+  Network as IconNetwork,
   StickyNote as IconNote,
   Package as IconPackage,
   Pencil as IconPencil,
@@ -37,6 +38,7 @@ import {
   calculateSalary,
   computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
+import PoolFlowModal from "../modals/PoolFlowModal";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
 
@@ -181,6 +183,7 @@ export default function SalaryView({
   }
 
   const [showCertModal, setShowCertModal] = useState(false);
+  const [showPoolFlow, setShowPoolFlow] = useState(false);
   // preset และ custom เก็บแยกกัน — custom (ถ้าพิมพ์) override preset
   const [selectedPreset, setSelectedPreset] = useState<string | null>(
     "ยื่นกู้สินเชื่อ",
@@ -289,27 +292,38 @@ export default function SalaryView({
           <IconCalendar size={14} strokeWidth={2.4} />
           เดือนเงินเดือน
         </div>
-        <div className="relative">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="appearance-none cursor-pointer pl-3 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setShowPoolFlow(true)}
+            title="แผนผังเงินเดือน"
+            aria-label="แผนผังเงินเดือน"
+            className="w-8 h-8 rounded-[9px] border border-bdr bg-cream cursor-pointer flex items-center justify-center text-maroon"
           >
-            {selectMonths.map((m) => {
-              const [y, mo] = m.split("-");
-              return (
-                <option key={m} value={m}>
-                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                  {parseInt(y, 10) + 543}
-                </option>
-              );
-            })}
-          </select>
-          <IconChevronDown
-            size={12}
-            strokeWidth={2.4}
-            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-          />
+            <IconNetwork size={14} strokeWidth={2.4} />
+          </button>
+          <div className="relative">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="appearance-none cursor-pointer pl-3 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
+            >
+              {selectMonths.map((m) => {
+                const [y, mo] = m.split("-");
+                return (
+                  <option key={m} value={m}>
+                    {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
+                    {parseInt(y, 10) + 543}
+                  </option>
+                );
+              })}
+            </select>
+            <IconChevronDown
+              size={12}
+              strokeWidth={2.4}
+              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+            />
+          </div>
         </div>
       </div>
 
@@ -813,6 +827,19 @@ export default function SalaryView({
             </div>
           </div>
         </BaseModal>
+      )}
+
+      {showPoolFlow && (
+        <PoolFlowModal
+          onClose={() => setShowPoolFlow(false)}
+          isAdmin={false}
+          currentEmployee={employeeInfo}
+          employeeDirectory={employeeDirectory}
+          salaryData={salaryData}
+          allLeaves={allLeaves}
+          roles={roles}
+          initialMonth={selectedMonth}
+        />
       )}
     </div>
   );

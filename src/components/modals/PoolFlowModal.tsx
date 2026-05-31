@@ -25,6 +25,7 @@ interface PoolFlowModalProps {
   salaryData?: Record<string, Record<string, any>>;
   allLeaves?: any[];
   roles?: Role[];
+  initialMonth?: string;
 }
 
 /* ─── Pool Flow Modal — แผนผังการแบ่งค่าคอม Pool ─────────────────
@@ -43,6 +44,7 @@ export default function PoolFlowModal({
   salaryData = {},
   allLeaves = [],
   roles = [],
+  initialMonth,
 }: PoolFlowModalProps) {
   const now = new Date();
   const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -60,8 +62,11 @@ export default function PoolFlowModal({
     return arr;
   }, [salaryData, currentYearMonth]);
 
+  // ค่าเริ่ม: ใช้ initialMonth ถ้า caller ระบุ (เช่น เปิดจาก SalaryView ตาม
+  // dropdown เดือนที่พนักงานกำลังดูอยู่) — fallback มาเดือนปัจจุบัน
   const [selectedMonth, setSelectedMonth] = useState(
-    months.includes(currentYearMonth) ? currentYearMonth : months[0],
+    initialMonth ||
+      (months.includes(currentYearMonth) ? currentYearMonth : months[0]),
   );
 
   // pool groups ที่มีอยู่ (เฉพาะ role ที่ poolGroup ไม่ว่าง)
@@ -390,10 +395,7 @@ function PoolSideFlow({
       <Arrow />
 
       {/* Step 3 + 4: % สุทธิ + ชิ้นที่ได้จริง */}
-      <StepLabel
-        n={3}
-        text="หักวันลาที่เกิน 2 (2 วันแรกฟรี) → เกลี่ยให้เพื่อน → ได้ชิ้นจริง"
-      />
+      <StepLabel n={3} text="หักวันลาที่เกิน 2 (2 วันแรกฟรี) → เกลี่ยให้เพื่อน → ได้ชิ้นจริง" />
       <div className="flex flex-col gap-1.5">
         {members
           .filter((m) => m.eligible)
