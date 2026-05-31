@@ -36,6 +36,30 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
                                        └── /admin    → AdminPanel (admin-only)
 ```
 
+### AdminPanel — section components
+
+`AdminPanel.tsx` เป็น **router บางๆ** (~250 บรรทัด) — render section ตาม `section` prop
+แต่ละ section แยกเป็น component ของตัวเอง (state เป็น local ของแต่ละตัว):
+
+| section | component | state ภายใน |
+|---|---|---|
+| summary | `LeaveSummaryPanel` | เดือน/ปีที่เลือก, chip ที่กางอยู่ |
+| leaves | `LeaveListPanel` | filter พนักงาน/ประเภท, ยืนยันลบ |
+| roles (พนักงาน) | `EmployeeAdminPanel` → `EmployeeEditModal` | draft แก้ไข (`editingRole`), employee ที่เปิด, ยืนยันลบ |
+| salary | `SalaryAdminEdit` | draft ค่าคอม |
+| advance | `AdminAdvancePanel` | filter เดือน/สถานะ |
+| payroll | `PayrollSummaryPanel` | เดือนที่เลือก |
+| positions | `RolesAdminPanel` | draft role |
+
+**กฎ:** component ไม่ควรเกิน ~300-400 บรรทัด — ถ้าโตเกินให้แยก (เช่น `EmployeeEditModal` แยกจาก `EmployeeAdminPanel`)
+
+**แชร์ state ข้าม section — ต้อง "ยก state ขึ้น" (lift state up):**
+ตอนนี้แต่ละ section ถือ state ของตัวเอง ถ้าอยากให้ section คุยกัน (เช่น เลือกเดือนใน "สรุปลา" แล้ว "รายการลา" กรองตาม) ทำแบบนี้:
+1. ย้าย `useState` ของค่าที่จะแชร์ขึ้นไปไว้ใน `AdminPanel` (parent ร่วม)
+2. ส่งลงเป็น props ทั้ง 2 ทาง: `value={x}` + `onChange={setX}` ให้ทุก section ที่ใช้
+3. section อ่าน/เขียนผ่าน props แทน local state เดิม
+> หลักการ: state ควรอยู่ที่ "บรรพบุรุษร่วมที่ใกล้ที่สุด" ของ component ที่ต้องใช้ร่วมกัน — อย่า duplicate state ไว้หลายที่ (จะ sync ไม่ตรง)
+
 ### Data Flow
 
 ```
@@ -74,6 +98,9 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 | Path | Description |
 |---|---|
 | `src/App.tsx` | Main orchestrator — routes, hooks, modals |
+| `src/components/admin/AdminPanel.tsx` | Admin router — render section components (ดู "AdminPanel — section components") |
+| `src/components/admin/EmployeeAdminPanel.tsx` + `EmployeeEditModal.tsx` | จัดการพนักงาน: list + ฟอร์มแก้ไข |
+| `src/components/admin/LeaveSummaryPanel.tsx` / `LeaveListPanel.tsx` | สรุปลา / รายการลา |
 | `src/types/index.ts` | Domain types ทั้งหมด |
 | `src/constants.ts` | Colors, business rules, validation patterns |
 | `src/data/useFirebaseAppData.ts` | Firestore real-time subscriptions + CRUD — `updateSalary` inject pool snapshot |
