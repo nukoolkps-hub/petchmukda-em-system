@@ -118,8 +118,10 @@ export default function useFirebaseAppData({
 
   /* ─── Salaries ──────────────────────────────────────────── */
   async function updateSalary(employeeId, yearMonth, fields) {
-    // ใส่ snapshot ของ roleId / poolExclusion / leave days พร้อมไปด้วย
-    // เพื่อให้พนักงานคำนวณ pool ได้โดยไม่ต้องอ่าน employees/leaves ของเพื่อน
+    // snapshot roleId / poolExclusion / เรท / leave days ลง salary doc ของเดือน
+    // นั้น เพื่อให้ (1) พนักงานคำนวณ pool ได้โดยไม่ต้องอ่าน employees/leaves ของ
+    // เพื่อน และ (2) ข้อมูลเงินเดือนในอดีต "ล็อก" ไม่ขยับเมื่อเปลี่ยนตำแหน่ง/เรท
+    // ในอนาคต
     const employee = employeeResult.data.find((e) => e.id === employeeId);
     if (!employee) {
       // ไม่เจอ employee (ถูกลบ / data ยังโหลดไม่เสร็จ) → เขียนเฉพาะ fields
@@ -135,35 +137,67 @@ export default function useFirebaseAppData({
     const weekdayLeaves = countWeekdayLeaves(monthLeaves);
     const overInfo = getOverQuotaDays(monthLeaves);
     const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
-    // snapshot 3 field นี้เป็น "server-managed" — ดึงออกจาก fields ที่ caller
-    // ส่งมา (กันส่งค่าเก่าทับ) แล้วเขียนค่าสดเสมอ (?? null เพื่อให้ "ปลด"
-    // poolExclusion/roleId ล้างค่าเดิมใน salary doc ได้ ไม่งั้น pool calc ค้าง)
+
+    // กฎ "ล็อกเมื่อยืนยันยอดแล้ว": ถ้าเดือนนี้ถูกยืนยันยอดแล้ว + มี snapshot เรท
+    // อยู่แล้ว → ห้าม re-stamp เรท/ตำแหน่ง (เก็บค่าเดิมที่ frozen ไว้) เพื่อกัน
+    // การเผลอแก้เดือนเก่าหลังเปลี่ยนตำแหน่งแล้วตัวเลขอดีตเพี้ยน. งวดที่ยังไม่
+    // ยืนยัน (เปิดอยู่) ยัง stamp ค่าสดตามปกติ (แก้ข้อมูลพนักงานแล้ว re-save ได้)
+    const existingSalary = salResult.data?.[employeeId]?.[yearMonth];
+    const isMonthConfirmed = !!pcResult.data?.[yearMonth];
+    const hasRateSnapshot =
+      existingSalary != null && existingSalary.baseSalary != null;
+    const freezeSnapshot = isMonthConfirmed && hasRateSnapshot;
+
+    // ดึง field ที่ระบบจัดการเองออกจาก fields ที่ caller ส่งมา (กันส่งค่าเก่าทับ)
     const {
       roleId: _ignoredRoleId,
       poolExclusion: _ignoredPoolExclusion,
       totalLeaveDays: _ignoredTotalLeaveDays,
+      baseSalary: _ignoredBaseSalary,
+      singlePieceRate: _ignoredSinglePieceRate,
+      normalSalePieceRate: _ignoredNormalRate,
+      specialSalePieceRate: _ignoredSpecialRate,
+      buyPieceRate: _ignoredBuyRate,
+      invitePieceRate: _ignoredInviteRate,
+      transferPieceRate: _ignoredTransferRate,
+      socialSecurity: _ignoredSocialSecurity,
       ...callerFields
     } = fields || {};
+
+    // snapshot เรท/ตำแหน่งจากข้อมูลพนักงานปัจจุบัน — เขียนเฉพาะตอน "ไม่ freeze"
+    const rateSnapshot = freezeSnapshot
+      ? {}
+      : {
+          roleId: employee.roleId ?? null,
+          poolExclusion: employee.poolExclusion ?? null,
+          baseSalary: employee.baseSalary ?? 0,
+          singlePieceRate: employee.singlePieceRate ?? 0,
+          normalSalePieceRate: employee.normalSalePieceRate ?? 0,
+          specialSalePieceRate: employee.specialSalePieceRate ?? 0,
+          buyPieceRate: employee.buyPieceRate ?? 0,
+          invitePieceRate: employee.invitePieceRate ?? 0,
+          transferPieceRate: employee.transferPieceRate ?? 0,
+          socialSecurity: employee.socialSecurity ?? 0,
+        };
+
     await salariesAPI.updateSalary(employeeId, yearMonth, {
       ...callerFields,
-      roleId: employee.roleId ?? null,
-      poolExclusion: employee.poolExclusion ?? null,
+      ...rateSnapshot,
       totalLeaveDays,
     });
-    // mirror non-sensitive pool fields ลง poolSnapshots/{ym} เพื่อให้
-    // พนักงานอ่าน pool ของเพื่อนได้โดยไม่ต้องเปิดสิทธิ์อ่าน salary ทั้งใบ
-    // (salary ใบเต็มมี note, customDeductions, lateDeduction, ฯลฯ — sensitive).
-    // อ่าน salary doc สดหลัง write เพื่อให้ pieces ตรงกับใน salary เสมอ —
-    // backfill case (callerFields = {}) ก็ได้ pieces เดิมจาก doc ที่มีอยู่
+    // mirror non-sensitive pool fields ลง poolSnapshots/{ym} เพื่อให้พนักงานอ่าน
+    // pool ของเพื่อนได้โดยไม่ต้องเปิดสิทธิ์อ่าน salary ทั้งใบ. อ่าน doc สดหลัง
+    // write แล้ว mirror "ค่าที่อยู่ใน doc จริง" (frozen หรือสด) — ไม่ใช่ค่า live
+    // ของ employee เพื่อให้ poolSnapshots ตรงกับ salary doc ที่ frozen ไว้
     try {
-      const currentSalary = await salariesAPI.getSalary(employeeId, yearMonth);
+      const saved = await salariesAPI.getSalary(employeeId, yearMonth);
       await poolSnapshotsAPI.upsertPoolSnapshot(yearMonth, employeeId, {
-        normalSalePieces: currentSalary?.normalSalePieces ?? 0,
-        specialSalePieces: currentSalary?.specialSalePieces ?? 0,
-        buyPieces: currentSalary?.buyPieces ?? 0,
-        roleId: employee.roleId ?? null,
-        poolExclusion: employee.poolExclusion ?? null,
-        totalLeaveDays,
+        normalSalePieces: saved?.normalSalePieces ?? 0,
+        specialSalePieces: saved?.specialSalePieces ?? 0,
+        buyPieces: saved?.buyPieces ?? 0,
+        roleId: saved?.roleId ?? employee.roleId ?? null,
+        poolExclusion: saved?.poolExclusion ?? employee.poolExclusion ?? null,
+        totalLeaveDays: saved?.totalLeaveDays ?? totalLeaveDays,
       });
     } catch (err) {
       // poolSnapshot write fail ไม่ block การ save salary หลัก — แต่ log

@@ -251,11 +251,14 @@ export function calculateSalary(
   if (!salary) return null;
   const weekdayOverQuotaDays = overQuotaInfo?.weekdays || 0;
   const sundayOverQuotaDays = overQuotaInfo?.sundays || 0;
-  // เงินเดือนพื้นฐาน — ดึงจาก employeeInfo (Admin กรอกในแท็บ "ข้อมูลพนักงาน")
-  const baseSalaryAmount = rates?.baseSalary ?? (salary.baseSalary || 0);
-  // ประกันสังคม — ดึงจาก employeeInfo (Admin กรอกในแท็บ "ข้อมูลพนักงาน")
+  // เงินเดือนพื้นฐาน + เรท + ประกันสังคม:
+  // อ่าน snapshot ใน salary doc ก่อนเสมอ (ค่าที่ถูก freeze ของเดือนนั้น) →
+  // ถ้าเปลี่ยนตำแหน่ง/เรทในอนาคต อดีตไม่ขยับ. fallback เป็นค่าปัจจุบันจาก
+  // employeeInfo (rates) เฉพาะเดือนที่ยังไม่มี snapshot (งวดเปิด / data เก่า
+  // ก่อนมี feature นี้)
+  const baseSalaryAmount = salary.baseSalary ?? rates?.baseSalary ?? 0;
   const socialSecurityAmount =
-    rates?.socialSecurity ?? salary.socialSecurity ?? 0;
+    salary.socialSecurity ?? rates?.socialSecurity ?? 0;
   const dailySalaryRate = baseSalaryAmount / DAYS_PER_MONTH;
   const overQuotaDeduction = Math.round(
     weekdayOverQuotaDays * dailySalaryRate +
@@ -263,12 +266,15 @@ export function calculateSalary(
   );
 
   const usesSinglePieceRate = roleConfig && !roleConfig.poolGroup;
-  const singlePieceRate = rates?.singlePieceRate || 0;
-  const normalSalePieceRate = rates?.normalSalePieceRate || 0;
-  const specialSalePieceRate = rates?.specialSalePieceRate || 0;
-  const buyPieceRate = rates?.buyPieceRate || 0;
-  const invitePieceRate = rates?.invitePieceRate || 0;
-  const transferPieceRate = rates?.transferPieceRate || 0;
+  const singlePieceRate = salary.singlePieceRate ?? rates?.singlePieceRate ?? 0;
+  const normalSalePieceRate =
+    salary.normalSalePieceRate ?? rates?.normalSalePieceRate ?? 0;
+  const specialSalePieceRate =
+    salary.specialSalePieceRate ?? rates?.specialSalePieceRate ?? 0;
+  const buyPieceRate = salary.buyPieceRate ?? rates?.buyPieceRate ?? 0;
+  const invitePieceRate = salary.invitePieceRate ?? rates?.invitePieceRate ?? 0;
+  const transferPieceRate =
+    salary.transferPieceRate ?? rates?.transferPieceRate ?? 0;
 
   let singleRatePieces = 0,
     normalSalePieces = 0,

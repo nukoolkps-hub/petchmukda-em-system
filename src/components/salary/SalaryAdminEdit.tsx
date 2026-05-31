@@ -79,9 +79,17 @@ export default function SalaryAdminEdit({
   const employeeInfo = employeeDirectory.find(
     (e) => e.id === selectedEmployeeId,
   );
-  const employeeRole = roles?.find((r) => r.id === employeeInfo?.roleId);
+  // ตำแหน่ง "ณ เดือนที่เลือก" — ใช้ roleId จาก snapshot ใน salary doc ก่อน
+  // (frozen) fallback เป็น roleId ปัจจุบัน → เปลี่ยนตำแหน่งในอนาคตไม่กระทบอดีต
+  const employeeRole = roles?.find(
+    (r) =>
+      r.id ===
+      (salaryData[selectedEmployeeId]?.[selectedMonth]?.roleId ??
+        employeeInfo?.roleId),
+  );
+  // เดือนที่ยังไม่เคย save: ไม่ใส่ baseSalary/เรท ในนี้ — ปล่อยให้ calculateSalary
+  // fallback ไปเรทปัจจุบันของพนักงาน (ถ้าใส่ baseSalary:0 จะทำให้คำนวณด้วย 0)
   const savedData = salaryData[selectedEmployeeId]?.[selectedMonth] || {
-    baseSalary: 0,
     normalSalePieces: 0,
     specialSalePieces: 0,
     buyPieces: 0,
@@ -159,8 +167,10 @@ export default function SalaryAdminEdit({
     let poolGroupEmployeesDraft: any[] = [];
     if (employeeRole?.poolGroup) {
       poolGroupEmployeesDraft = employeeDirectory.filter((employee) => {
+        const roleIdForMonth =
+          salaryData[employee.id]?.[selectedMonth]?.roleId ?? employee.roleId;
         const role = roles.find(
-          (candidateRole) => candidateRole.id === employee.roleId,
+          (candidateRole) => candidateRole.id === roleIdForMonth,
         );
         return role?.poolGroup === employeeRole.poolGroup;
       });
@@ -194,6 +204,7 @@ export default function SalaryAdminEdit({
     employeeDirectory,
     roles,
     liveSalaryData,
+    salaryData,
     allLeaves,
     selectedMonth,
     selectedEmployeeId,

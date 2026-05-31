@@ -3,7 +3,6 @@ import {
   Banknote as IconBanknote,
   Briefcase as IconBriefcase,
   Landmark as IconBuildingBank,
-  CalendarDays as IconCalendar,
   ChevronDown as IconChevronDown,
   CirclePlus as IconCirclePlus,
   ClipboardList as IconClipboardList,
@@ -80,7 +79,11 @@ export default function SalaryView({
   }, [months, selectedMonth]);
 
   const data = salaryData[salaryEmployeeId]?.[selectedMonth];
-  const employeeRole = roles?.find((role) => role.id === employeeInfo?.roleId);
+  // ตำแหน่ง "ณ เดือนที่ดู" — ใช้ roleId จาก snapshot ใน salary doc ก่อน (frozen)
+  // fallback เป็น roleId ปัจจุบัน → อดีตไม่ขยับเมื่อเปลี่ยนตำแหน่ง
+  const employeeRole = roles?.find(
+    (role) => role.id === (data?.roleId ?? employeeInfo?.roleId),
+  );
 
   const {
     overInfo,

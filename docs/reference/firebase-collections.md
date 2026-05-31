@@ -58,10 +58,19 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | customEarnings | `{label,amount}[]` | รายรับที่ admin เพิ่มเอง |
 | customDeductions | `{label,amount}[]` | รายหักที่ admin เพิ่มเอง |
 | note | string | หมายเหตุ |
-| **Snapshot fields** | | *เขียนอัตโนมัติตอน save salary — ใช้คำนวณ Pool ฝั่ง employee* |
+| **Snapshot fields** | | *เขียนอัตโนมัติตอน save salary — ใช้คำนวณ Pool ฝั่ง employee + ล็อกอดีต* |
 | roleId | string | snapshot ของ `employees.roleId` ตอน save |
 | poolExclusion | string\|null | snapshot ของ `employees.poolExclusion` ตอน save |
 | totalLeaveDays | number | `weekdayLeaves + sundayLeaves` ของเดือนนั้น |
+| baseSalary | number | snapshot เงินเดือนพื้นฐาน ตอน save |
+| singlePieceRate / normalSalePieceRate / specialSalePieceRate / buyPieceRate / invitePieceRate / transferPieceRate | number | snapshot เรทค่าคอม ตอน save |
+| socialSecurity | number | snapshot ประกันสังคม ตอน save |
+
+> **ความไม่เปลี่ยนของอดีต (immutability):** ตั้งแต่มี snapshot เรท/ตำแหน่ง ข้อมูลเงินเดือนในอดีตจะ
+> ไม่ขยับเมื่อเปลี่ยนตำแหน่ง/เรทพนักงานในอนาคต — `calculateSalary` อ่าน snapshot ก่อนเสมอ (fallback
+> เรทปัจจุบันเฉพาะเดือนที่ยังไม่มี snapshot). กฎ "ล็อกเมื่อยืนยันยอด": เดือนที่ `payrollConfirms[ym]`
+> มีแล้ว + มี snapshot อยู่ → `updateSalary` จะไม่ re-stamp เรท/ตำแหน่ง (กันเผลอแก้เดือนเก่าหลัง
+> เปลี่ยนตำแหน่งแล้วเพี้ยน) · งวดที่ยังไม่ยืนยันยัง stamp ค่าสด
 | **Slip freeze fields** | | *เขียนตอน "ยืนยันยอด" → freeze PDF ลง Storage* |
 | slipUrl | string | URL ของสลิป PDF ใน Storage |
 | slipFrozenAt | string (ISO) | เวลา freeze สลิป |

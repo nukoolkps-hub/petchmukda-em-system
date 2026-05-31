@@ -82,9 +82,13 @@ export default function PoolFlowModal({
   // pool group ของพนักงานเอง (ใช้ล็อกฝั่ง employee)
   const ownPoolGroup = useMemo(() => {
     if (isAdmin || !currentEmployee) return null;
-    const ownRole = roles.find((r) => r.id === currentEmployee.roleId);
+    // ตำแหน่ง "ณ เดือนที่ดู" — snapshot roleId ก่อน fallback ปัจจุบัน
+    const ownRoleId =
+      salaryData[currentEmployee.id]?.[selectedMonth]?.roleId ??
+      currentEmployee.roleId;
+    const ownRole = roles.find((r) => r.id === ownRoleId);
     return ownRole?.poolGroup || null;
-  }, [isAdmin, currentEmployee, roles]);
+  }, [isAdmin, currentEmployee, roles, salaryData, selectedMonth]);
 
   const [selectedGroup, setSelectedGroup] = useState<string | null>(
     isAdmin ? poolGroups[0]?.id || null : ownPoolGroup,
@@ -100,7 +104,9 @@ export default function PoolFlowModal({
     if (isAdmin) {
       return employeeDirectory
         .filter((e) => {
-          const r = roles.find((rl) => rl.id === e.roleId);
+          const roleIdForMonth =
+            salaryData[e.id]?.[selectedMonth]?.roleId ?? e.roleId;
+          const r = roles.find((rl) => rl.id === roleIdForMonth);
           return r?.poolGroup === activeGroup;
         })
         .map((e) => e.id);

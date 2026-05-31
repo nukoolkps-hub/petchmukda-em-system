@@ -86,10 +86,16 @@ export default function PayrollSummaryPanel({
      คำนวณเงินเดือนทุกคนใหม่ เฉพาะตอน salaryData/leaves/advances/roles เปลี่ยน
      สำคัญมาก — ก่อน memo: re-run ทุกครั้งที่กด/พิมพ์ในหน้านี้                */
   const rows = useMemo(() => {
+    // ตำแหน่งของแต่ละคน "ณ เดือนนั้น" — อ่าน roleId จาก snapshot ใน salary doc
+    // ก่อน (frozen) fallback เป็น roleId ปัจจุบัน → เปลี่ยนตำแหน่งในอนาคตไม่
+    // ทำให้การจัดกลุ่ม pool ของเดือนเก่าเปลี่ยน
+    const roleIdForMonth = (employee) =>
+      salaryData[employee.id]?.[selectedMonth]?.roleId ?? employee.roleId;
+
     // group employees by role for shared Pool
     const groupedEmpsByPool = {};
     employeeDirectory.forEach((employee) => {
-      const r = roles.find((rl) => rl.id === employee.roleId);
+      const r = roles.find((rl) => rl.id === roleIdForMonth(employee));
       if (r?.poolGroup) {
         if (!groupedEmpsByPool[r.poolGroup])
           groupedEmpsByPool[r.poolGroup] = [];
@@ -100,7 +106,9 @@ export default function PayrollSummaryPanel({
     // compute each employee's netSalary salary
     return employeeDirectory
       .map((employee) => {
-        const employeeRole = roles.find((r) => r.id === employee.roleId);
+        const employeeRole = roles.find(
+          (r) => r.id === roleIdForMonth(employee),
+        );
         const data = salaryData[employee.id]?.[selectedMonth] || null;
         const monthLeaves = allLeaves.filter(
           (lv) =>
