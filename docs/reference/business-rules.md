@@ -60,11 +60,16 @@ Source: `src/utils/salaryUtils.ts` → `calculateSalary()`
 4. นับ `eligibleEmployeeCount` (n) = จำนวนคนที่ยังเหลือใน pool
 5. **เปอร์เซ็นต์ฐาน:** `baseSharePercent = 100 ÷ n`
 6. **ตัวคูณหักวันลา:** `leaveDeductionFactor = baseSharePercent ÷ DAYS_PER_MONTH (= 30)`
-7. **% หัก** ของแต่ละคน: `leaveDeductionPercent[i] = totalLeave[i] × leaveDeductionFactor × (n − 1)`
-8. **% แบ่งเพื่อน** (กระจายให้คนอื่นๆ): `redistributedPercent[i] = leaveDeductionPercent[i] ÷ (n − 1)`
-9. **% สุทธิ** ของแต่ละคน: `finalSharePercent[i] = baseSharePercent − leaveDeductionPercent[i] + Σ(redistributedPercent ของคนอื่น)`
-10. **Pool รวม:** `totalPoolPieces = Σ pieces ของทุกคน` (รวมคนที่ถูกตัดด้วย — ชิ้นเขายังเข้า pool, แต่เขาไม่ได้รับส่วนแบ่ง)
-11. **ชิ้นที่ได้:** `allocatedPieces[i] = (finalSharePercent[i] ÷ 100) × totalPoolPieces`
+7. **วันลาที่ใช้คำนวณ:** `effectiveLeave[i] = max(0, totalLeave[i] − LEAVE_DEDUCTION_FREE_DAYS (= 2))` — 2 วันแรกฟรี ไม่ถูกหัก
+8. **% หัก** ของแต่ละคน: `leaveDeductionPercent[i] = effectiveLeave[i] × leaveDeductionFactor × (n − 1)`
+9. **% แบ่งเพื่อน** (กระจายให้คนอื่นๆ): `redistributedPercent[i] = leaveDeductionPercent[i] ÷ (n − 1)`
+10. **% สุทธิ** ของแต่ละคน: `finalSharePercent[i] = baseSharePercent − leaveDeductionPercent[i] + Σ(redistributedPercent ของคนอื่น)`
+11. **Pool รวม:** `totalPoolPieces = Σ pieces ของทุกคน` (รวมคนที่ถูกตัดด้วย — ชิ้นเขายังเข้า pool, แต่เขาไม่ได้รับส่วนแบ่ง)
+12. **ชิ้นที่ได้:** `allocatedPieces[i] = (finalSharePercent[i] ÷ 100) × totalPoolPieces`
+
+#### ทำไม 2 วันแรกฟรี
+ลา 0-2 วัน → ไม่ถูกหัก ไม่ถูกเอามาเกลี่ยให้เพื่อน (แต่ยังรับจากเพื่อนที่ลาเกิน 2 วันได้ปกติ)
++ ยังได้ **โบนัสหยุดน้อย** ของตัวเองตามเดิม (`WEEKDAY_LEAVE_QUOTA`) — 2 ตัวแยกกัน
 
 ### ขาย-พิเศษ (specialSalePieces)
 

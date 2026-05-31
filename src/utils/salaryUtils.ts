@@ -9,6 +9,7 @@ const {
   BASE_SALARY_THRESHOLD,
   SUNDAY_LEAVE_MULTIPLIER,
   WEEKDAY_LEAVE_QUOTA,
+  LEAVE_DEDUCTION_FREE_DAYS,
 } = BUSINESS_RULES;
 
 /* ─── Pool Share Helper (สูตรตาม Excel) ──────────────────────────
@@ -16,9 +17,11 @@ const {
    ฝั่ง "รับซื้อ" = รับซื้อ ของแต่ละคน         → รวมเป็น Pool รับซื้อ
 
    สูตรการแบ่งทำแยกฝั่งขายและฝั่งรับซื้อ:
+   - effectiveLeave = max(0, totalLeave − LEAVE_DEDUCTION_FREE_DAYS)
+     (2 วันแรกฟรี ไม่ถูกหัก ไม่ถูกเอามาเกลี่ย — โบนัสหยุดน้อยไม่เกี่ยว)
    - เปอร์เซ็นต์ฐาน = 100 / จำนวนคนที่มีสิทธิ์ใน Pool
    - ตัวคูณหักวันลา = เปอร์เซ็นต์ฐาน / จำนวนวันทำงานต่อเดือน
-   - เปอร์เซ็นต์หัก = วันลารวม × ตัวคูณหักวันลา × (จำนวนคนที่มีสิทธิ์ - 1)
+   - เปอร์เซ็นต์หัก = effectiveLeave × ตัวคูณหักวันลา × (จำนวนคนที่มีสิทธิ์ - 1)
    - เปอร์เซ็นต์แบ่งเพื่อน = เปอร์เซ็นต์หัก / (จำนวนคนที่มีสิทธิ์ - 1)
    - เปอร์เซ็นต์สุทธิ = เปอร์เซ็นต์ฐาน - เปอร์เซ็นต์หัก + ผลรวมเปอร์เซ็นต์แบ่งจากคนอื่น
    - ชิ้นที่ได้ = เปอร์เซ็นต์สุทธิ × จำนวนชิ้นรวมใน Pool
@@ -131,14 +134,16 @@ export function computePoolSharesForGroup({
     const baseSharePercent = 100 / eligibleEmployeeCount;
     const leaveDeductionFactor = baseSharePercent / DAYS_PER_MONTH;
 
-    // % การหัก ของแต่ละคน
+    // % การหัก ของแต่ละคน — 2 วันแรก (LEAVE_DEDUCTION_FREE_DAYS) ฟรี ไม่ถูกหัก
     const leaveDeductionPercent = {};
     const redistributedPercent = {};
     eligibleEmployeeIds.forEach((employeeId) => {
+      const effectiveLeave = Math.max(
+        0,
+        totalLeave[employeeId] - LEAVE_DEDUCTION_FREE_DAYS,
+      );
       leaveDeductionPercent[employeeId] =
-        totalLeave[employeeId] *
-        leaveDeductionFactor *
-        (eligibleEmployeeCount - 1);
+        effectiveLeave * leaveDeductionFactor * (eligibleEmployeeCount - 1);
       redistributedPercent[employeeId] =
         eligibleEmployeeCount > 1
           ? leaveDeductionPercent[employeeId] / (eligibleEmployeeCount - 1)

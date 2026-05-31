@@ -128,6 +128,7 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 | ตัวคูณวันอาทิตย์ | 1.5× ของ dailyRate |
 | เกณฑ์เข้า Pool (sell/buy แยกกัน) | ≥ 80% ของ top |
 | เกณฑ์ได้เงินเดือนพื้นฐาน | ≥ 50% ของ top (poolExclusion=both) |
+| วันลา "ฟรี" ก่อนเริ่มหัก % ใน Pool | 2 วันแรก (ไม่กระทบ) |
 | เพดานเบิกล่วงหน้า | 50% ของ baseSalary |
 | โบนัสแห่งความขยัน (0 วันลา) | 2 × dailyRate |
 | โบนัสแห่งความขยัน (1 วันลา) | 1 × dailyRate |

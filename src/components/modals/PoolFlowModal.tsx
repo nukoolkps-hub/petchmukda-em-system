@@ -339,6 +339,12 @@ function PoolSideFlow({
             </div>
             <div className="text-[11px] text-txt-soft mt-0.5">
               ลา {m.leaveDays} วัน
+              {m.leaveDays > 2 && (
+                <span className="text-red font-semibold">
+                  {" "}
+                  (หัก {m.leaveDays - 2})
+                </span>
+              )}
             </div>
             {!m.eligible && (
               <div className="text-[10px] font-bold text-red mt-0.5 inline-flex items-center gap-0.5">
@@ -384,7 +390,10 @@ function PoolSideFlow({
       <Arrow />
 
       {/* Step 3 + 4: % สุทธิ + ชิ้นที่ได้จริง */}
-      <StepLabel n={3} text="หักวันลา → เกลี่ยให้เพื่อน → ได้ชิ้นจริง" />
+      <StepLabel
+        n={3}
+        text="หักวันลาที่เกิน 2 (2 วันแรกฟรี) → เกลี่ยให้เพื่อน → ได้ชิ้นจริง"
+      />
       <div className="flex flex-col gap-1.5">
         {members
           .filter((m) => m.eligible)
