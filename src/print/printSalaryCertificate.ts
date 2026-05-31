@@ -141,33 +141,34 @@ function buildCertificateHTML(
     }
     .letterhead{text-align:center;padding-bottom:14px;
       border-bottom:3px double #7B1C1C;margin-bottom:8px;}
-    .company{font-size:22px;font-weight:700;color:#7B1C1C;margin-bottom:6px;letter-spacing:0.01em;}
-    .addr{font-size:12.5px;color:#444;line-height:1.7;}
-    .ref-no{font-size:13px;color:#1A1A1A;font-weight:600;margin-top:18px;}
+    /* ขนาดตัวอักษรอิงมาตรฐานหนังสือราชการ: เนื้อความ 16pt (Sarabun) */
+    .company{font-size:20pt;font-weight:700;color:#7B1C1C;margin-bottom:6px;letter-spacing:0.01em;}
+    .addr{font-size:12pt;color:#444;line-height:1.55;}
+    .ref-no{font-size:16pt;color:#1A1A1A;font-weight:600;margin-top:18px;}
     .title{
-      text-align:center;font-size:22px;font-weight:700;color:#1A1A1A;
+      text-align:center;font-size:20pt;font-weight:700;color:#1A1A1A;
       letter-spacing:0.08em;margin:22px 0 4px;
     }
-    .title-en{text-align:center;font-size:12px;color:#777;letter-spacing:0.12em;
+    .title-en{text-align:center;font-size:11pt;color:#777;letter-spacing:0.12em;
       margin-bottom:26px;text-transform:uppercase;}
-    .body{font-size:16px;line-height:2.15;color:#1A1A1A;flex:1;}
-    .body p{margin-bottom:14px;text-indent:56px;text-align:justify;}
+    .body{font-size:16pt;line-height:1.9;color:#1A1A1A;flex:1;}
+    .body p{margin-bottom:14px;text-indent:2.5em;text-align:justify;}
     .body b{font-weight:700;color:#1A1A1A;}
-    .date-line{margin-top:34px;text-align:right;font-size:15px;color:#1A1A1A;padding-right:60px;}
-    .signatures{margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:36px;}
+    .date-line{margin-top:34px;text-align:right;font-size:16pt;color:#1A1A1A;padding-right:60px;}
+    .signatures{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:36px;}
     .sig-box{text-align:center;}
     .sig-line{border-top:1px solid #1A1A1A;padding-top:8px;margin-top:80px;
-      font-size:13px;color:#1A1A1A;font-weight:600;}
-    .sig-name{font-size:11.5px;color:#666;margin-top:3px;}
+      font-size:16pt;color:#1A1A1A;font-weight:600;}
+    .sig-name{font-size:13pt;color:#666;margin-top:3px;}
     .stamp{width:104px;height:104px;border:1.5px solid #999;border-radius:50%;
       margin:16px auto 0;display:flex;align-items:center;justify-content:center;
-      color:#999;opacity:0.7;font-size:11px;text-align:center;line-height:1.4;}
+      color:#999;opacity:0.7;font-size:11pt;text-align:center;line-height:1.4;}
     .validity{margin-top:26px;padding-top:12px;border-top:1px solid #E0E0E0;
-      font-size:11.5px;color:#777;text-align:center;}
+      font-size:11pt;color:#777;text-align:center;}
     @page{size:A4 portrait;margin:8mm;}
     @media print{
       html,body{width:210mm;height:297mm;}
-      body{background:#fff;padding:0;font-size:13px;line-height:1.4;}
+      body{background:#fff;padding:0;line-height:1.4;}
       .doc{border:1px solid #333 !important;
         min-height:281mm !important;max-width:194mm !important;margin:0 auto !important;
         page-break-inside:avoid;break-inside:avoid;}

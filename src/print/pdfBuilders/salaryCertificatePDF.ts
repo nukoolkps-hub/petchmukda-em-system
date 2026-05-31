@@ -105,10 +105,11 @@ export function buildCertificateDocDef({
     pageSize: "A4",
     pageMargins: [60, 50, 60, 50],
     defaultStyle: {
+      // เนื้อความ 16pt ตามมาตรฐานหนังสือราชการ (ระเบียบงานสารบรรณ + Sarabun)
       font: "Sarabun",
-      fontSize: 14,
+      fontSize: 16,
       color: COLORS.text,
-      lineHeight: 1.5,
+      lineHeight: 1.4,
     },
     info: {
       title: `หนังสือรับรองเงินเดือน — ${employeeName}`,
@@ -121,21 +122,21 @@ export function buildCertificateDocDef({
         stack: [
           {
             text: "บริษัท ห้างเพชรทองมุกดา จำกัด",
-            fontSize: 19,
+            fontSize: 20,
             bold: true,
             color: COLORS.maroon,
             alignment: "center",
           },
           {
             text: "100/10 หมู่ที่ 8 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐม 73160",
-            fontSize: 10,
+            fontSize: 11,
             color: COLORS.textMedium,
             alignment: "center",
             margin: [0, 6, 0, 0],
           },
           {
             text: "โทร. 02-420-6075   เลขประจำตัวผู้เสียภาษี 0-7355-59006-56-8",
-            fontSize: 10,
+            fontSize: 11,
             color: COLORS.textMedium,
             alignment: "center",
             margin: [0, 1, 0, 0],
@@ -172,7 +173,7 @@ export function buildCertificateDocDef({
       /* ─── Reference number ─── */
       {
         text: `เลขที่ ${refNo}`,
-        fontSize: 12,
+        fontSize: 16,
         bold: true,
         color: COLORS.text,
         margin: [0, 0, 0, 0],
@@ -181,7 +182,7 @@ export function buildCertificateDocDef({
       /* ─── Title ─── */
       {
         text: "หนังสือรับรองเงินเดือน",
-        fontSize: 19,
+        fontSize: 20,
         bold: true,
         color: COLORS.text,
         alignment: "center",
@@ -189,7 +190,7 @@ export function buildCertificateDocDef({
       },
       {
         text: "Certificate of Salary",
-        fontSize: 10,
+        fontSize: 11,
         color: COLORS.textSoft,
         alignment: "center",
         margin: [0, 0, 0, 26],
@@ -227,7 +228,7 @@ export function buildCertificateDocDef({
       {
         text: `ออกให้ ณ วันที่ ${printDate}`,
         alignment: "right",
-        fontSize: 13,
+        fontSize: 16,
         margin: [0, 0, 40, 0],
       },
 
@@ -254,14 +255,14 @@ export function buildCertificateDocDef({
               },
               {
                 text: "ลงชื่อผู้มีอำนาจลงนาม",
-                fontSize: 12,
+                fontSize: 16,
                 bold: true,
                 alignment: "center",
                 margin: [0, 6, 0, 0],
               },
               {
                 text: "บริษัท ห้างเพชรทองมุกดา จำกัด",
-                fontSize: 10,
+                fontSize: 13,
                 color: COLORS.textMedium,
                 alignment: "center",
                 margin: [0, 2, 0, 0],
@@ -289,7 +290,7 @@ export function buildCertificateDocDef({
       },
       {
         text: "หนังสือฉบับนี้มีอายุ 30 วัน นับจากวันที่ออกเอกสาร",
-        fontSize: 9,
+        fontSize: 11,
         color: COLORS.textSoft,
         alignment: "center",
       },

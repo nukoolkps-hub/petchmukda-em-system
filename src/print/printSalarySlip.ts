@@ -127,48 +127,49 @@ function buildSalarySlipHTML(
     }
     .letterhead{text-align:center;padding-bottom:12px;margin-bottom:18px;
       border-bottom:3px double #7B1C1C;}
-    .company{font-size:20px;font-weight:700;color:#7B1C1C;margin-bottom:5px;letter-spacing:0.01em;}
-    .addr{font-size:12px;color:#444;line-height:1.65;}
-    .doc-title{text-align:center;font-size:17px;font-weight:700;color:#1A1A1A;
+    /* ขนาดอิงหน่วย pt ให้คุมตอนพิมพ์ได้แน่นอน — เนื้อความสลิป 12pt (อ่านง่าย พอดี A4) */
+    .company{font-size:18pt;font-weight:700;color:#7B1C1C;margin-bottom:5px;letter-spacing:0.01em;}
+    .addr{font-size:11pt;color:#444;line-height:1.6;}
+    .doc-title{text-align:center;font-size:16pt;font-weight:700;color:#1A1A1A;
       letter-spacing:0.06em;margin-bottom:3px;}
-    .doc-period{text-align:center;font-size:13px;color:#555;margin-bottom:20px;}
+    .doc-period{text-align:center;font-size:12pt;color:#555;margin-bottom:20px;}
     .meta{
       display:grid;grid-template-columns:1fr 1fr;gap:7px 28px;
-      margin-bottom:18px;font-size:13px;
+      margin-bottom:18px;font-size:12pt;
       border:1px solid #DADADA;padding:13px 16px;background:#FAFAFA;
     }
     .meta .label{color:#666;}
     .meta .value{color:#1A1A1A;font-weight:600;}
-    .sec-label{font-size:13px;font-weight:700;color:#1A1A1A;
+    .sec-label{font-size:12pt;font-weight:700;color:#1A1A1A;
       margin:16px 0 0;padding-bottom:5px;border-bottom:1.5px solid #1A1A1A;
       display:flex;justify-content:space-between;letter-spacing:0.02em;}
-    table{width:100%;border-collapse:collapse;font-size:13px;}
-    table td{padding:7px 2px;border-bottom:1px solid #ECECEC;color:#1A1A1A;}
+    table{width:100%;border-collapse:collapse;font-size:12pt;}
+    table td{padding:6px 2px;border-bottom:1px solid #ECECEC;color:#1A1A1A;}
     table tr:last-child td{border-bottom:none;}
     table td.amt{text-align:right;font-weight:600;white-space:nowrap;}
     .subtotal{display:flex;justify-content:space-between;align-items:center;
-      padding:8px 2px;font-weight:700;font-size:13.5px;border-top:1.5px solid #999;}
+      padding:7px 2px;font-weight:700;font-size:12pt;border-top:1.5px solid #999;}
     .net{
       margin-top:20px;border:2px solid #7B1C1C;padding:14px 20px;
       display:flex;justify-content:space-between;align-items:center;background:#FBF4F4;
     }
-    .net .lbl{font-size:14px;font-weight:700;color:#7B1C1C;}
-    .net .amt{font-size:26px;font-weight:700;color:#7B1C1C;letter-spacing:-0.01em;}
+    .net .lbl{font-size:13pt;font-weight:700;color:#7B1C1C;}
+    .net .amt{font-size:22pt;font-weight:700;color:#7B1C1C;letter-spacing:-0.01em;}
     .warn{background:#FBF4F4;border:1px solid #7B1C1C;padding:9px 14px;
-      margin-bottom:14px;font-size:12px;color:#7B1C1C;font-weight:600;}
+      margin-bottom:14px;font-size:11pt;color:#7B1C1C;font-weight:600;}
     .signatures{
-      margin-top:46px;display:grid;grid-template-columns:1fr 1fr;gap:40px;
+      margin-top:44px;display:grid;grid-template-columns:1fr 1fr;gap:40px;
     }
     .sig-box{text-align:center;}
     .sig-line{border-top:1px solid #1A1A1A;padding-top:6px;margin-top:54px;
-      font-size:12.5px;color:#1A1A1A;font-weight:600;}
-    .sig-name{font-size:11px;color:#666;margin-top:2px;}
+      font-size:12pt;color:#1A1A1A;font-weight:600;}
+    .sig-name{font-size:10.5pt;color:#666;margin-top:2px;}
     .footer{margin-top:24px;padding-top:10px;border-top:1px solid #E0E0E0;
-      font-size:10px;color:#999;text-align:center;}
+      font-size:9pt;color:#999;text-align:center;}
     @page{size:A4 portrait;margin:8mm;}
     @media print{
       html,body{width:210mm;height:297mm;}
-      body{background:#fff;padding:0;font-size:11.5px;line-height:1.35;}
+      body{background:#fff;padding:0;line-height:1.3;}
       .slip{border:1px solid #333 !important;max-width:194mm !important;
         margin:0 auto !important;page-break-inside:avoid;break-inside:avoid;}
       .slip *{page-break-inside:avoid;break-inside:avoid;}

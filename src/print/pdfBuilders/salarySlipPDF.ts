@@ -119,7 +119,7 @@ export function buildSalarySlipDocDef({
     pageMargins: [40, 40, 40, 44],
     defaultStyle: {
       font: "Sarabun",
-      fontSize: 11,
+      fontSize: 12,
       color: COLORS.text,
       lineHeight: 1.3,
     },
@@ -163,7 +163,7 @@ export function buildSalarySlipDocDef({
       },
       {
         text: `ประจำงวดเดือน ${monthLabel}`,
-        fontSize: 11,
+        fontSize: 12,
         color: COLORS.textSoft,
         alignment: "center",
         margin: [0, 0, 0, 16],
@@ -175,22 +175,22 @@ export function buildSalarySlipDocDef({
           widths: ["auto", "*", "auto", "*"],
           body: [
             [
-              { text: "ชื่อ-นามสกุล:", fontSize: 11, color: COLORS.textSoft },
-              { text: employeeName, fontSize: 11, bold: true },
-              { text: "ตำแหน่ง:", fontSize: 11, color: COLORS.textSoft },
-              { text: employeePosition, fontSize: 11, bold: true },
+              { text: "ชื่อ-นามสกุล:", fontSize: 12, color: COLORS.textSoft },
+              { text: employeeName, fontSize: 12, bold: true },
+              { text: "ตำแหน่ง:", fontSize: 12, color: COLORS.textSoft },
+              { text: employeePosition, fontSize: 12, bold: true },
             ],
             [
-              { text: "ธนาคาร:", fontSize: 11, color: COLORS.textSoft },
-              { text: bank, fontSize: 11, bold: true },
-              { text: "เลขที่บัญชี:", fontSize: 11, color: COLORS.textSoft },
-              { text: bankAccountNumber, fontSize: 11, bold: true },
+              { text: "ธนาคาร:", fontSize: 12, color: COLORS.textSoft },
+              { text: bank, fontSize: 12, bold: true },
+              { text: "เลขที่บัญชี:", fontSize: 12, color: COLORS.textSoft },
+              { text: bankAccountNumber, fontSize: 12, bold: true },
             ],
             [
-              { text: "วันที่ออกสลิป:", fontSize: 11, color: COLORS.textSoft },
-              { text: printDate, fontSize: 11, bold: true },
-              { text: "รอบเงินเดือน:", fontSize: 11, color: COLORS.textSoft },
-              { text: monthLabel, fontSize: 11, bold: true },
+              { text: "วันที่ออกสลิป:", fontSize: 12, color: COLORS.textSoft },
+              { text: printDate, fontSize: 12, bold: true },
+              { text: "รอบเงินเดือน:", fontSize: 12, color: COLORS.textSoft },
+              { text: monthLabel, fontSize: 12, bold: true },
             ],
           ],
         },
@@ -205,15 +205,15 @@ export function buildSalarySlipDocDef({
           widths: ["*", 120],
           body: [
             ...earnRows.map(([label, value]) => [
-              { text: label, fontSize: 11 },
-              { text: value, fontSize: 11, alignment: "right" },
+              { text: label, fontSize: 12 },
+              { text: value, fontSize: 12, alignment: "right" },
             ]),
             [
-              { text: "รวมรายรับ", bold: true, fontSize: 11 },
+              { text: "รวมรายรับ", bold: true, fontSize: 12 },
               {
                 text: formatNumber(salaryCalculation.earnings),
                 bold: true,
-                fontSize: 11,
+                fontSize: 12,
                 alignment: "right",
               },
             ],
@@ -232,15 +232,15 @@ export function buildSalarySlipDocDef({
                 widths: ["*", 120],
                 body: [
                   ...dedRows.map(([label, value]) => [
-                    { text: label, fontSize: 11 },
-                    { text: value, fontSize: 11, alignment: "right" },
+                    { text: label, fontSize: 12 },
+                    { text: value, fontSize: 12, alignment: "right" },
                   ]),
                   [
-                    { text: "รวมรายการหัก", bold: true, fontSize: 11 },
+                    { text: "รวมรายการหัก", bold: true, fontSize: 12 },
                     {
                       text: formatNumber(salaryCalculation.deductions),
                       bold: true,
-                      fontSize: 11,
+                      fontSize: 12,
                       alignment: "right",
                     },
                   ],
@@ -253,7 +253,7 @@ export function buildSalarySlipDocDef({
         : [
             {
               text: "— ไม่มีรายการหัก —",
-              fontSize: 11,
+              fontSize: 12,
               color: COLORS.textSoft,
               alignment: "center",
               margin: [0, 4, 0, 14],
@@ -350,10 +350,10 @@ function sectionHeader(label: string) {
       widths: ["*", 120],
       body: [
         [
-          { text: label, fontSize: 11, bold: true },
+          { text: label, fontSize: 12, bold: true },
           {
             text: "จำนวนเงิน (บาท)",
-            fontSize: 11,
+            fontSize: 12,
             bold: true,
             alignment: "right",
           },
@@ -394,7 +394,7 @@ function signatureCol(line: string, name: string) {
       },
       {
         text: line,
-        fontSize: 11,
+        fontSize: 12,
         bold: true,
         alignment: "center",
         margin: [0, 6, 0, 0],
