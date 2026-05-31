@@ -5,11 +5,13 @@ import {
   Landmark as IconBuildingBank,
   CalendarDays as IconCalendar,
   Check as IconCheck,
+  ChevronDown as IconChevronDown,
   ClipboardList as IconClipboardList,
   Diamond as IconDiamond,
   Handshake as IconHandshake,
   Lightbulb as IconLightbulb,
   Lock as IconLock,
+  Network as IconNetwork,
   Package as IconPackage,
   Plus as IconPlus,
   RefreshCw as IconRefresh,
@@ -30,6 +32,7 @@ import {
   calculateSalary,
   computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
+import PoolFlowModal from "../modals/PoolFlowModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 
@@ -46,19 +49,33 @@ export default function SalaryAdminEdit({
   showToast,
 }) {
   const now = new Date();
+  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(
     employeeDirectory[0]?.id || "",
   );
-  const [selectedMonth] = useState(
-    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
-  );
+  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth);
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
-  // กล่องเตือนในแอป (แทน window.confirm ที่เพี้ยนใน mobile webview)
-  const [pendingEmployeeId, setPendingEmployeeId] = useState<string | null>(
-    null,
-  );
+  const [showPoolFlow, setShowPoolFlow] = useState(false);
+  // กล่องเตือน "draft จะหาย" ในแอป (แทน window.confirm ที่เพี้ยนใน mobile webview)
+  // รองรับทั้งเปลี่ยนพนักงานและเปลี่ยนเดือน
+  const [pendingNav, setPendingNav] = useState<{
+    kind: "employee" | "month";
+    value: string;
+  } | null>(null);
   const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selectedMonth);
+
+  // เดือนที่เลือกได้: ทุกเดือนที่มีข้อมูลเงินเดือน + เดือนปัจจุบัน
+  const monthOptions = useMemo(() => {
+    const set = new Set<string>();
+    Object.values(salaryData).forEach((byMonth) => {
+      Object.keys((byMonth as Record<string, unknown>) || {}).forEach((m) => {
+        set.add(m);
+      });
+    });
+    set.add(currentYearMonth);
+    return [...set].sort().reverse();
+  }, [salaryData, currentYearMonth]);
 
   const employeeInfo = employeeDirectory.find(
     (e) => e.id === selectedEmployeeId,
@@ -83,14 +100,24 @@ export default function SalaryAdminEdit({
   }, [dirty, setUnsavedDirty]);
   useEffect(() => () => setUnsavedDirty?.(false), [setUnsavedDirty]); // unmount → clear
 
-  // ถ้าเปลี่ยน employee ภายในหน้านี้ — ถ้ามี draft ให้เตือนก่อน
+  // ถ้าเปลี่ยน employee/เดือน ภายในหน้านี้ — ถ้ามี draft ให้เตือนก่อน
   function tryChangeEmployee(newId) {
+    if (newId === selectedEmployeeId) return;
     if (dirty) {
-      setPendingEmployeeId(newId);
+      setPendingNav({ kind: "employee", value: newId });
       return;
     }
     setDraft({});
     setSelectedEmployeeId(newId);
+  }
+  function tryChangeMonth(newMonth: string) {
+    if (newMonth === selectedMonth) return;
+    if (dirty) {
+      setPendingNav({ kind: "month", value: newMonth });
+      return;
+    }
+    setDraft({});
+    setSelectedMonth(newMonth);
   }
 
   useEffect(() => {
@@ -274,11 +301,43 @@ export default function SalaryAdminEdit({
 
   return (
     <div>
-      {/* month display */}
-      <div className="flex justify-end mb-2.5">
-        <div className="px-3 py-2 rounded-[10px] text-sm font-semibold text-maroon bg-gold-pale font-[inherit] flex items-center gap-1.5 border-[1.5px] border-[#C9973A40]">
-          <IconCalendar size={14} strokeWidth={2.4} />
-          {THAI_MONTH_NAMES[now.getMonth()]} {now.getFullYear() + 543}
+      {/* ปุ่มแผนผังเงินเดือน + dropdown เลือกเดือน (เลือกย้อนหลังเพื่อแก้ไขได้) */}
+      <div className="flex items-center justify-between gap-2 mb-2.5">
+        <button
+          type="button"
+          onClick={() => setShowPoolFlow(true)}
+          title="แผนผังเงินเดือน"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
+        >
+          <IconNetwork size={14} strokeWidth={2.4} />
+          แผนผังเงินเดือน
+        </button>
+        <div className="relative">
+          <select
+            value={selectedMonth}
+            onChange={(e) => tryChangeMonth(e.target.value)}
+            className="appearance-none cursor-pointer pl-8 pr-7 py-2 rounded-[10px] border-[1.5px] border-[#C9973A40] text-sm font-semibold text-maroon bg-gold-pale font-[inherit] outline-none"
+          >
+            {monthOptions.map((m) => {
+              const [y, mo] = m.split("-");
+              return (
+                <option key={m} value={m}>
+                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
+                  {parseInt(y, 10) + 543}
+                </option>
+              );
+            })}
+          </select>
+          <IconCalendar
+            size={14}
+            strokeWidth={2.4}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-maroon"
+          />
+          <IconChevronDown
+            size={12}
+            strokeWidth={2.4}
+            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-maroon"
+          />
         </div>
       </div>
 
@@ -1327,10 +1386,10 @@ export default function SalaryAdminEdit({
         </div>
       )}
 
-      {/* กล่องเตือนก่อนสลับพนักงานทั้งที่ยังมี draft ค้าง (in-app — แทน native confirm) */}
-      {pendingEmployeeId && (
+      {/* กล่องเตือนก่อนสลับพนักงาน/เดือน ทั้งที่ยังมี draft ค้าง (in-app) */}
+      {pendingNav && (
         <BaseModal
-          onClose={() => setPendingEmployeeId(null)}
+          onClose={() => setPendingNav(null)}
           zIndexClass="z-1000"
           maxWidthClass="max-w-[360px]"
           overlayClassName="px-6 bg-[rgba(45,26,14,0.55)] backdrop-blur-xs"
@@ -1347,30 +1406,45 @@ export default function SalaryAdminEdit({
             ยังไม่ได้บันทึกการเปลี่ยนแปลง
           </div>
           <div className="text-sm text-txt-mid text-center mb-5 leading-[1.8]">
-            หากเปลี่ยนพนักงาน ข้อมูลที่แก้ไขจะหายไป
+            หากเปลี่ยน{pendingNav.kind === "month" ? "เดือน" : "พนักงาน"}{" "}
+            ข้อมูลที่แก้ไขจะหายไป
             <br />
-            ต้องการเปลี่ยนพนักงานใช่ไหม?
+            ต้องการเปลี่ยนใช่ไหม?
           </div>
           <div className="flex gap-2.5">
             <button
-              onClick={() => setPendingEmployeeId(null)}
+              onClick={() => setPendingNav(null)}
               className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
             >
               อยู่ต่อ
             </button>
             <button
               onClick={() => {
-                const next = pendingEmployeeId;
-                setPendingEmployeeId(null);
+                const nav = pendingNav;
+                setPendingNav(null);
                 setDraft({});
-                setSelectedEmployeeId(next);
+                if (nav.kind === "employee") setSelectedEmployeeId(nav.value);
+                else setSelectedMonth(nav.value);
               }}
               className="flex-1 p-3.5 rounded-xl border-none bg-amber text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_#D9770640]"
             >
-              เปลี่ยนพนักงาน
+              ยืนยัน
             </button>
           </div>
         </BaseModal>
+      )}
+
+      {showPoolFlow && (
+        <PoolFlowModal
+          onClose={() => setShowPoolFlow(false)}
+          isAdmin={true}
+          currentEmployee={null}
+          employeeDirectory={employeeDirectory}
+          salaryData={salaryData}
+          allLeaves={allLeaves}
+          roles={roles}
+          initialMonth={selectedMonth}
+        />
       )}
     </div>
   );
