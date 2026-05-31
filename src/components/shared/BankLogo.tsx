@@ -36,11 +36,18 @@ export default function BankLogo({
       </div>
     );
   }
-  const inner = Math.round(size * 0.72);
+  // โลโก้บางแบงก์เป็นภาพสีเต็มในตัว (เช่น TTB น้ำเงิน+ส้ม) — วางบน
+  // พื้นสีแบรนด์แล้วจะกลืน/ตีกัน → ใส่บนพื้นขาวแทน
+  const solid = "solid" in entry && (entry as { solid?: boolean }).solid;
+  const inner = Math.round(size * (solid ? 0.84 : 0.72));
   return (
     <div
-      style={{ width: size, height: size, background: entry.color }}
-      className={`rounded-[7px] inline-flex items-center justify-center shrink-0 overflow-hidden ${className}`}
+      style={{
+        width: size,
+        height: size,
+        background: solid ? "#fff" : entry.color,
+      }}
+      className={`rounded-[7px] inline-flex items-center justify-center shrink-0 overflow-hidden ${solid ? "border border-bdr" : ""} ${className}`}
       title={entry.name}
     >
       <img
