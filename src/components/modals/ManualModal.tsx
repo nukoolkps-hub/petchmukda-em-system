@@ -56,7 +56,7 @@ export default function ManualModal({ onClose }) {
         <div className="text-sm text-txt-mid leading-[1.8]">
           <Section title="📋 โควต้าการลา" color={COLORS.maroon}>
             <p>
-              พนักงานทุกคนมีโควต้า <b>ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน</b>
+              พนักงานทุกคนมีโควต้า <b>ลากิจ + ลาป่วย รวม 2 วัน/เดือน</b>
             </p>
           </Section>
 
@@ -80,7 +80,7 @@ export default function ManualModal({ onClose }) {
             >
               <ul>
                 <li>
-                  มี <b>โควต้า 2 ครั้ง/เดือน</b>
+                  มี <b>โควต้า 2 วัน/เดือน</b>
                 </li>
                 <li>
                   ลาเกินโควต้า → <b className="text-red">หักจากเงินเดือน</b>
@@ -93,7 +93,7 @@ export default function ManualModal({ onClose }) {
             <Card title="🌅 วันอาทิตย์" color={COLORS.text}>
               <ul>
                 <li>
-                  <b className="text-red">หักทุกครั้ง</b> ไม่อยู่ในโควต้า
+                  <b className="text-red">หักทุกวัน</b> ไม่อยู่ในโควต้า
                 </li>
                 <li>
                   หัก = <b>(เงินเดือน ÷ 30) × 1.5 × จำนวนวันที่ลา</b>

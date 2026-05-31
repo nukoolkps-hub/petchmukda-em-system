@@ -81,11 +81,11 @@ export default function RequestTab({
             className={`font-bold text-sm ${overQuota ? "text-red" : "text-maroon"}`}
           >
             {overQuota
-              ? "หมดโควต้าแล้ว - การลาครั้งต่อไปจะกระทบต่อเงินเดือน"
-              : `โควต้าเดือนนี้เหลือ ${rem} ครั้ง`}
+              ? "หมดโควต้าแล้ว - การลาวันต่อไปจะกระทบต่อเงินเดือน"
+              : `โควต้าเดือนนี้เหลือ ${rem} วัน`}
           </div>
           <div className="text-sm text-txt-soft mt-0.5">
-            ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน
+            ลากิจ + ลาป่วย รวม 2 วัน/เดือน
           </div>
         </div>
         <div className="text-right shrink-0">
@@ -94,7 +94,7 @@ export default function RequestTab({
           >
             {usedThisMonth}
           </div>
-          <div className="text-xs text-txt-soft">/ 2 ครั้ง</div>
+          <div className="text-xs text-txt-soft">/ 2 วัน</div>
         </div>
       </div>
 

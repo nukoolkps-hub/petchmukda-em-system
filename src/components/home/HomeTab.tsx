@@ -55,7 +55,7 @@ export default function HomeTab({
             >
               {usedThisMonth}
               <span className="text-sm text-txt-soft font-medium">
-                /{quota} ครั้ง
+                /{quota} วัน
               </span>
             </div>
           </div>
@@ -93,7 +93,7 @@ export default function HomeTab({
             <div className="bg-green-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
               <span className="text-sm">✅</span>
               <span className="text-sm font-semibold text-green">
-                ลาได้อีก {remaining} ครั้ง
+                ลาได้อีก {remaining} วัน
               </span>
             </div>
           )}
@@ -109,14 +109,14 @@ export default function HomeTab({
             <div className="bg-red-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
               <span className="text-sm">🚨</span>
               <span className="text-sm font-semibold text-red">
-                เกินโควต้า {usedThisMonth - quota} ครั้ง
+                เกินโควต้า {usedThisMonth - quota} วัน
               </span>
             </div>
           )}
           <div className="bg-cream rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5 border border-bdr">
             <span className="text-sm">📋</span>
             <span className="text-sm text-txt-mid">
-              ลากิจ + ลาป่วย รวม 2 ครั้ง/เดือน
+              ลากิจ + ลาป่วย รวม 2 วัน/เดือน
             </span>
           </div>
         </div>
@@ -159,7 +159,7 @@ export default function HomeTab({
               <div>
                 <div className="text-sm font-semibold text-txt">{lt.label}</div>
                 <div className="text-sm text-txt-soft mt-px">
-                  เดือนนี้ <b style={{ color: lt.color }}>{usedType}</b> ครั้ง
+                  เดือนนี้ <b style={{ color: lt.color }}>{usedType}</b> วัน
                 </div>
               </div>
             </div>
