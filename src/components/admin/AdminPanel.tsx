@@ -928,7 +928,8 @@ export default function AdminPanel({
                         {employee.name}
                       </div>
                       <div className="text-xs text-txt-soft mt-px flex items-center gap-[5px] flex-wrap">
-                        {employeeRole?.icon} {employee.role || "-"}
+                        <IconBriefcase size={11} strokeWidth={2.4} />
+                        {employee.role || "-"}
                         {employee.poolExclusion &&
                           (() => {
                             const m = {
@@ -1005,8 +1006,8 @@ export default function AdminPanel({
                           <div className="font-extrabold text-lg text-txt truncate">
                             {employee.name}
                           </div>
-                          <div className="text-sm text-txt-soft mt-0.5 truncate">
-                            {employeeRole?.icon}{" "}
+                          <div className="text-sm text-txt-soft mt-0.5 truncate inline-flex items-center gap-1.5">
+                            <IconBriefcase size={13} strokeWidth={2.4} />
                             {employee.role || "ยังไม่กำหนดตำแหน่ง"}
                           </div>
                         </div>

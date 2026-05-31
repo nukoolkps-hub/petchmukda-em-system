@@ -317,11 +317,7 @@ export default function AdminAdvancePanel({
                       className={`w-full text-sm mb-2.5 px-3 py-2.5 bg-cream rounded-lg cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
                     ${copiedAcc === request.id ? "border border-green" : "border border-bdr"}`}
                     >
-                      <BankLogo
-                        bank={employeeInfo.bank}
-                        size={20}
-                        className="shrink-0"
-                      />
+                      <BankLogo bank={employeeInfo.bank} size={24} />
                       <div className="flex-1 text-left min-w-0">
                         <div className="text-xs text-txt-soft mb-px">
                           {employeeInfo.bank || "-"}

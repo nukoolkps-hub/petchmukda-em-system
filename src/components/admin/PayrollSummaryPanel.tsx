@@ -1,13 +1,13 @@
 import {
   AlertTriangle as IconAlertTriangle,
   Banknote as IconBanknote,
+  Briefcase as IconBriefcase,
   CalendarDays as IconCalendar,
   Check as IconCheck,
   CircleCheck as IconCircleCheck,
   Copy as IconCopy,
   CreditCard as IconCreditCard,
   Diamond as IconDiamond,
-  Landmark as IconLandmark,
   Lock as IconLock,
   RefreshCw as IconRefresh,
   Search as IconSearch,
@@ -506,7 +506,12 @@ export default function PayrollSummaryPanel({
                       {employee.name}
                     </div>
                     <div className="text-xs text-txt-soft flex items-center gap-1">
-                      {employeeRole?.icon} {employee.role || "-"}
+                      <IconBriefcase
+                        size={11}
+                        strokeWidth={2.4}
+                        className="shrink-0"
+                      />
+                      {employee.role || "-"}
                       {employee.poolExclusion &&
                         (() => {
                           const m = {
@@ -561,11 +566,7 @@ export default function PayrollSummaryPanel({
                     className={`w-full text-sm px-3 py-2.5 bg-cream rounded-[9px] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
                     ${copiedAcc === employee.id ? "border border-green" : "border border-bdr"}`}
                   >
-                    <BankLogo
-                      bank={employee.bank}
-                      size={22}
-                      className="shrink-0"
-                    />
+                    <BankLogo bank={employee.bank} size={28} />
                     <div className="flex-1 text-left min-w-0">
                       <div className="text-xs text-txt-soft mb-px">
                         {employee.bank}

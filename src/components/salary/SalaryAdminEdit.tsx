@@ -326,8 +326,9 @@ export default function SalaryAdminEdit({
                 >
                   {employee.name}
                 </div>
-                <div className="text-xs text-txt-soft truncate leading-tight mt-0.5">
-                  {role?.icon} {employee.role || "-"}
+                <div className="text-xs text-txt-soft truncate leading-tight mt-0.5 inline-flex items-center gap-1">
+                  <IconBriefcase size={11} strokeWidth={2.4} />
+                  {employee.role || "-"}
                 </div>
               </div>
             </button>

@@ -1,3 +1,14 @@
+import {
+  Briefcase as IconBriefcase,
+  Handshake as IconHandshake,
+  Pencil as IconPencil,
+  Plus as IconPlus,
+  Sparkles as IconSparkles,
+  Target as IconTarget,
+  Trash2 as IconTrash,
+  User as IconUser,
+  X as IconX,
+} from "lucide-react";
 import { useState } from "react";
 import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -11,8 +22,8 @@ export default function RolesAdminPanel({
   onDeleteRole,
   showToast,
 }) {
-  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, icon}}
-  const [newRole, setNewRole] = useState({ name: "", poolGroup: "", icon: "" });
+  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup}}
+  const [newRole, setNewRole] = useState({ name: "", poolGroup: "" });
   const [showAdd, setShowAdd] = useState(false);
   const [confirmDel, setConfirmDel] = useState<any>(null);
 
@@ -26,7 +37,6 @@ export default function RolesAdminPanel({
         ...current,
         name: e.name || current.name,
         poolGroup: e.poolGroup || null,
-        icon: e.icon || current.icon,
       });
       setEditing((prev) => {
         const n = { ...prev };
@@ -48,9 +58,8 @@ export default function RolesAdminPanel({
         id,
         name: newRole.name.trim(),
         poolGroup: newRole.poolGroup.trim() || null,
-        icon: newRole.icon || "💼",
       });
-      setNewRole({ name: "", poolGroup: "", icon: "" });
+      setNewRole({ name: "", poolGroup: "" });
       setShowAdd(false);
       showToast?.("เพิ่มตำแหน่งแล้ว");
     } catch (err) {
@@ -93,26 +102,23 @@ export default function RolesAdminPanel({
           onClick={() => setShowAdd(!showAdd)}
           className="px-3.5 py-[7px] rounded-[9px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] shadow-[0_2px_8px_var(--color-gold)/0.25] flex items-center gap-[5px]"
         >
-          {showAdd ? "✕" : "+"} เพิ่มตำแหน่ง
+          {showAdd ? (
+            <IconX size={14} strokeWidth={2.6} />
+          ) : (
+            <IconPlus size={14} strokeWidth={2.6} />
+          )}
+          เพิ่มตำแหน่ง
         </button>
       </div>
 
       {/* Add new role form */}
       {showAdd && (
         <div className="bg-gold-pale rounded-xl p-3.5 mb-3.5 border-[1.5px] border-dashed border-gold/40">
-          <div className="text-sm font-bold text-maroon mb-2.5">
-            🆕 ตำแหน่งใหม่
+          <div className="text-sm font-bold text-maroon mb-2.5 flex items-center gap-1.5">
+            <IconSparkles size={14} strokeWidth={2.4} />
+            ตำแหน่งใหม่
           </div>
           <div className="flex gap-2 mb-2">
-            <input
-              value={newRole.icon}
-              onChange={(e) =>
-                setNewRole({ ...newRole, icon: e.target.value.slice(0, 2) })
-              }
-              placeholder="🎯"
-              maxLength={2}
-              className="w-[50px] p-[9px] rounded-[9px] border border-bdr text-lg outline-none font-[inherit] text-center box-border"
-            />
             <input
               value={newRole.name}
               onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
@@ -148,7 +154,11 @@ export default function RolesAdminPanel({
             <div className="flex items-center gap-2 mb-2">
               {isPool ? (
                 <>
-                  <span className="text-sm">🤝</span>
+                  <IconHandshake
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.gold}
+                  />
                   <span className="text-sm font-bold text-maroon">
                     Pool:{" "}
                     <code className="bg-gold-pale px-2 py-px rounded-md text-sm">
@@ -161,7 +171,11 @@ export default function RolesAdminPanel({
                 </>
               ) : (
                 <>
-                  <span className="text-sm">👤</span>
+                  <IconUser
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.textSoft}
+                  />
                   <span className="text-sm font-bold text-txt">
                     ค่าคอมแยก (Rate ต่อชิ้นเดียว)
                   </span>
@@ -179,6 +193,7 @@ export default function RolesAdminPanel({
                 const employeeCount = employeeDirectory.filter(
                   (employee) => employee.roleId === rl.id,
                 ).length;
+                const canDelete = employeeCount === 0;
                 return (
                   <div
                     key={rl.id}
@@ -187,21 +202,13 @@ export default function RolesAdminPanel({
                     <div
                       className={`flex items-center gap-2.5 ${dirty ? "mb-2.5" : ""}`}
                     >
-                      <input
-                        value={e?.icon !== undefined ? e.icon : rl.icon}
-                        onChange={(ev) =>
-                          setEditing((p) => ({
-                            ...p,
-                            [rl.id]: {
-                              ...(p[rl.id] || rl),
-                              icon: ev.target.value.slice(0, 2),
-                            },
-                          }))
-                        }
-                        maxLength={2}
-                        className={`w-[42px] p-2 rounded-lg text-lg outline-none font-[inherit] text-center box-border
-                          ${dirty ? "border border-gold bg-gold-pale/30" : "border border-bdr bg-cream"}`}
-                      />
+                      <div className="w-9 h-9 rounded-lg bg-cream border border-bdr flex items-center justify-center shrink-0">
+                        <IconBriefcase
+                          size={18}
+                          strokeWidth={2.2}
+                          color={COLORS.maroon}
+                        />
+                      </div>
                       <input
                         value={e?.name !== undefined ? e.name : rl.name}
                         onChange={(ev) =>
@@ -245,7 +252,7 @@ export default function RolesAdminPanel({
                         />
                       </div>
                     )}
-                    {dirty && (
+                    {dirty ? (
                       <div className="flex gap-1.5">
                         <button
                           onClick={() =>
@@ -266,8 +273,7 @@ export default function RolesAdminPanel({
                           บันทึก
                         </button>
                       </div>
-                    )}
-                    {!dirty && (
+                    ) : (
                       <div className="flex gap-1.5 mt-2">
                         <button
                           onClick={() =>
@@ -276,21 +282,25 @@ export default function RolesAdminPanel({
                               [rl.id]: {
                                 name: rl.name,
                                 poolGroup: rl.poolGroup || "",
-                                icon: rl.icon,
                               },
                             }))
                           }
-                          className="flex-1 py-[7px] rounded-lg border border-bdr bg-cream text-maroon text-sm font-semibold cursor-pointer font-[inherit]"
+                          className="flex-1 py-[7px] rounded-lg border border-bdr bg-cream text-maroon text-sm font-semibold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
                         >
-                          ✎ แก้ไข
+                          <IconPencil size={13} strokeWidth={2.4} />
+                          แก้ไข
                         </button>
                         <button
-                          onClick={() => setConfirmDel(rl)}
-                          disabled={employeeCount > 0}
-                          className={`px-3 py-[7px] rounded-lg text-sm font-semibold font-[inherit]
-                            ${employeeCount > 0 ? "border border-bdr bg-cream text-txt-soft cursor-not-allowed" : "border border-red/25 bg-red-lt text-red cursor-pointer"}`}
+                          onClick={() => canDelete && setConfirmDel(rl)}
+                          disabled={!canDelete}
+                          title={
+                            canDelete
+                              ? "ลบตำแหน่ง"
+                              : "มีพนักงานอยู่ในตำแหน่งนี้ — ย้ายออกก่อนถึงลบได้"
+                          }
+                          className={`px-3 py-[7px] rounded-lg text-sm font-semibold font-[inherit] border border-red/25 bg-red-lt text-red inline-flex items-center justify-center ${canDelete ? "cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
                         >
-                          🗑
+                          <IconTrash size={14} strokeWidth={2.2} />
                         </button>
                       </div>
                     )}
@@ -305,7 +315,8 @@ export default function RolesAdminPanel({
       {/* Assign roles to employees */}
       <div className="mt-6 pt-4 border-t border-dashed border-bdr">
         <div className="text-sm font-bold text-maroon mb-2.5 flex items-center gap-2">
-          🎯 กำหนดตำแหน่งให้พนักงาน
+          <IconTarget size={16} strokeWidth={2.2} />
+          กำหนดตำแหน่งให้พนักงาน
         </div>
         <div className="flex flex-col gap-2">
           {employeeDirectory.map((employee) => (
@@ -337,7 +348,7 @@ export default function RolesAdminPanel({
                 <option value="">— เลือก —</option>
                 {roles.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.icon} {r.name}
+                    {r.name}
                   </option>
                 ))}
               </select>
@@ -350,12 +361,14 @@ export default function RolesAdminPanel({
       {confirmDel && (
         <div className="fixed inset-0 z-1000 flex items-center justify-center bg-[rgba(45,26,14,0.55)] backdrop-blur-xs px-6">
           <div className="bg-white rounded-[20px] px-6 py-7 w-full max-w-[340px]">
-            <div className="text-center text-4xl mb-2">🗑</div>
+            <div className="flex justify-center mb-2 text-red">
+              <IconTrash size={36} strokeWidth={2} />
+            </div>
             <div className="font-bold text-lg text-txt text-center mb-2">
               ลบตำแหน่งนี้?
             </div>
             <div className="text-sm text-txt-mid text-center mb-5">
-              {confirmDel.icon} {confirmDel.name}
+              {confirmDel.name}
             </div>
             <div className="flex gap-2.5">
               <button

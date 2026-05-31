@@ -103,25 +103,42 @@ export const EMOJI_LIST = [
 
 /* ─── ธนาคารหลักในประเทศไทย ─────────────────────────────────────
    `slug` ตรงกับชื่อไฟล์ SVG ใน public/banks/{slug}.svg
+   `color` คือสีพื้นแบรนด์ — SVG ของ banks-logo ออกแบบเป็นโลโก้ขาว
+   วางบนพื้นสีแบรนด์ (เลข hex จาก banks-logo metadata)
    โลโก้มาจาก banks-logo (casperstack) — host เองที่ public/banks/   */
 export const THAI_BANKS = [
-  { name: "ธนาคารกสิกรไทย", short: "KBank", slug: "kbank" },
-  { name: "ธนาคารกรุงเทพ", short: "BBL", slug: "bbl" },
-  { name: "ธนาคารกรุงไทย", short: "KTB", slug: "ktb" },
-  { name: "ธนาคารไทยพาณิชย์", short: "SCB", slug: "scb" },
-  { name: "ธนาคารกรุงศรีอยุธยา", short: "BAY", slug: "bay" },
-  { name: "ธนาคารทหารไทยธนชาต", short: "TTB", slug: "ttb" },
-  { name: "ธนาคารออมสิน", short: "GSB", slug: "gsb" },
-  { name: "ธนาคาร ธ.ก.ส.", short: "BAAC", slug: "baac" },
-  { name: "ธนาคารอาคารสงเคราะห์", short: "GHB", slug: "ghb" },
-  { name: "ธนาคารยูโอบี", short: "UOB", slug: "uob" },
-  { name: "ธนาคารซีไอเอ็มบี", short: "CIMB", slug: "cimb" },
-  { name: "ธนาคารแลนด์ แอนด์ เฮ้าส์", short: "LH Bank", slug: "lhb" },
-  { name: "ธนาคารไอซีบีซี", short: "ICBC", slug: "icbc" },
-  { name: "ธนาคารสแตนดาร์ดชาร์เตอร์ด", short: "SCBT", slug: "sc" },
-  { name: "ธนาคารทิสโก้", short: "TISCO", slug: "tisco" },
-  { name: "ธนาคารเกียรตินาคินภัทร", short: "KKP", slug: "kkp" },
-  { name: "ธนาคารอิสลามแห่งประเทศไทย", short: "IBANK", slug: "ibank" },
+  { name: "ธนาคารกสิกรไทย", short: "KBank", slug: "kbank", color: "#138f2d" },
+  { name: "ธนาคารกรุงเทพ", short: "BBL", slug: "bbl", color: "#1e4598" },
+  { name: "ธนาคารกรุงไทย", short: "KTB", slug: "ktb", color: "#1ba5e1" },
+  { name: "ธนาคารไทยพาณิชย์", short: "SCB", slug: "scb", color: "#4e2e7f" },
+  { name: "ธนาคารกรุงศรีอยุธยา", short: "BAY", slug: "bay", color: "#fec43b" },
+  { name: "ธนาคารทหารไทยธนชาต", short: "TTB", slug: "ttb", color: "#ee871e" },
+  { name: "ธนาคารออมสิน", short: "GSB", slug: "gsb", color: "#eb198d" },
+  { name: "ธนาคาร ธ.ก.ส.", short: "BAAC", slug: "baac", color: "#4b9b1d" },
+  { name: "ธนาคารอาคารสงเคราะห์", short: "GHB", slug: "ghb", color: "#f7941e" },
+  { name: "ธนาคารยูโอบี", short: "UOB", slug: "uob", color: "#0b3979" },
+  { name: "ธนาคารซีไอเอ็มบี", short: "CIMB", slug: "cimb", color: "#7e2f36" },
+  {
+    name: "ธนาคารแลนด์ แอนด์ เฮ้าส์",
+    short: "LH Bank",
+    slug: "lhb",
+    color: "#6d6e71",
+  },
+  { name: "ธนาคารไอซีบีซี", short: "ICBC", slug: "icbc", color: "#c50f1c" },
+  {
+    name: "ธนาคารสแตนดาร์ดชาร์เตอร์ด",
+    short: "SCBT",
+    slug: "sc",
+    color: "#0473EA",
+  },
+  { name: "ธนาคารทิสโก้", short: "TISCO", slug: "tisco", color: "#003F87" },
+  { name: "ธนาคารเกียรตินาคินภัทร", short: "KKP", slug: "kkp", color: "#199cc5" },
+  {
+    name: "ธนาคารอิสลามแห่งประเทศไทย",
+    short: "IBANK",
+    slug: "ibank",
+    color: "#008C44",
+  },
 ];
 
 export const TODAY = (() => {
