@@ -46,6 +46,7 @@ export default function PayrollSummaryPanel({
   );
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selectedMonth);
   const advanceDataBlocked =
     monthlyApprovedAdvances.loading || Boolean(monthlyApprovedAdvances.error);
@@ -183,17 +184,23 @@ export default function PayrollSummaryPanel({
      อาจ fail (PDF/Storage) แต่ snapshot ต้องเขียนให้ได้เสมอ ไม่งั้น
      พนักงานคำนวณ pool ผิด (เห็น 100%)                              */
   async function backfillPoolSnapshots() {
-    if (!onSaveSalary || rows.length === 0) return;
-    for (const row of rows) {
-      try {
-        await onSaveSalary(row.employee.id, selectedMonth, {});
-      } catch (err) {
-        console.error(
-          "[PayrollSummary] snapshot backfill failed:",
-          row.employee.id,
-          err,
-        );
-      }
+    if (!onSaveSalary) return;
+    // เขียน snapshot ให้ทุกคนที่มีค่าคอมเดือนนี้ + ทุกคนที่อยู่ใน pool group
+    // (แม้ยังไม่กรอกค่าคอม) — เพื่อให้เพื่อนใน pool เห็นครบทุกคน ไม่งั้น
+    // ฝั่งพนักงานจะนับสมาชิก pool ไม่ครบ → ส่วนแบ่งเพี้ยน
+    const ids = new Set<string>();
+    for (const row of rows) ids.add(row.employee.id);
+    for (const emp of employeeDirectory) {
+      const r = roles.find((rl) => rl.id === emp.roleId);
+      if (r?.poolGroup) ids.add(emp.id);
+    }
+    // เขียนขนานกัน (เอกสารแต่ละคนแยกกัน) เก็บ error ไว้รายงานรวม
+    const results = await Promise.allSettled(
+      [...ids].map((id) => onSaveSalary(id, selectedMonth, {})),
+    );
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed > 0) {
+      console.error(`[PayrollSummary] snapshot backfill failed: ${failed} คน`);
     }
   }
 
@@ -207,43 +214,86 @@ export default function PayrollSummaryPanel({
         import("../../print/printSalarySlip"),
         import("../../firebase/storage"),
       ]);
-    let ok = 0;
-    let fail = 0;
-    let lastError = "";
-    for (const row of rows) {
-      try {
-        const blob = await generateSalarySlipBlob({
-          employeeInfo: row.employee,
-          employeeRole: row.employeeRole,
-          data: row.data,
-          salaryCalculation: row.salaryCalculation,
-          poolShare: row.poolShare,
-          selectedMonth,
-          monthApprovedAdvances: row.monthApprovedAdvances,
-        });
-        const slipUrl = await uploadSalarySlip(
-          row.employee.id,
-          selectedMonth,
-          blob,
-        );
-        await onSaveSalary(row.employee.id, selectedMonth, {
-          slipUrl,
-          slipFrozenAt: new Date().toISOString(),
-        });
-        ok++;
-      } catch (err) {
+    // freeze แต่ละคนขนานกัน (เอกสาร/ไฟล์แยกกัน) — เร็วขึ้นมากเมื่อคนเยอะ
+    const freezeOne = async (row: (typeof rows)[number]) => {
+      const blob = await generateSalarySlipBlob({
+        employeeInfo: row.employee,
+        employeeRole: row.employeeRole,
+        data: row.data,
+        salaryCalculation: row.salaryCalculation,
+        poolShare: row.poolShare,
+        selectedMonth,
+        monthApprovedAdvances: row.monthApprovedAdvances,
+      });
+      const slipUrl = await uploadSalarySlip(
+        row.employee.id,
+        selectedMonth,
+        blob,
+      );
+      await onSaveSalary(row.employee.id, selectedMonth, {
+        slipUrl,
+        slipFrozenAt: new Date().toISOString(),
+      });
+    };
+    const results = await Promise.allSettled(rows.map(freezeOne));
+    const ok = results.filter((r) => r.status === "fulfilled").length;
+    // เก็บ error แบบไม่ซ้ำ — ไม่ใช่แค่ตัวสุดท้าย
+    const errMsgs = new Set<string>();
+    results.forEach((r, i) => {
+      if (r.status === "rejected") {
+        const msg = (r.reason as Error)?.message || String(r.reason);
         console.error(
           "[PayrollSummary] freeze slip failed:",
-          row.employee.id,
-          err,
+          rows[i].employee.name,
+          r.reason,
         );
-        lastError = (err as Error)?.message || String(err);
-        fail++;
+        errMsgs.add(msg);
       }
-    }
+    });
+    const fail = results.length - ok;
     showToast?.(
-      `บันทึกสลิปเข้าระบบ ${ok} คน${fail ? ` (ไม่สำเร็จ ${fail}: ${lastError})` : ""}`,
+      `บันทึกสลิปเข้าระบบ ${ok} คน${fail ? ` (ไม่สำเร็จ ${fail}: ${[...errMsgs].join(" / ")})` : ""}`,
     );
+  }
+
+  // ลายเซ็นยอดต่อคน — ใช้เทียบว่า "ข้อมูลเปลี่ยนหลังยืนยัน" แม้ยอดรวม/จำนวนคน
+  // เท่าเดิมแต่มีการเกลี่ย pool ระหว่างคน (sort by id กันลำดับสลับ)
+  const breakdownSig = rows
+    .map((r) => `${r.employee.id}:${Math.round(r.salaryCalculation.netSalary)}`)
+    .sort()
+    .join("|");
+
+  // ยืนยันยอด (ใช้ร่วมทั้งปุ่มยืนยันครั้งแรกและยืนยันใหม่) — กันกดซ้ำด้วย submitting
+  async function confirmPayroll(
+    totalForMonth: number,
+    empCountForMonth: number,
+    isRenew: boolean,
+  ) {
+    if (advanceDataBlocked || submitting) return;
+    if (
+      !isRenew &&
+      !confirm(
+        `ยืนยันการโอนเงินเดือนเดือนนี้?\n\nยอดรวม ฿${formatThaiNumber(totalForMonth)}\nจำนวน ${empCountForMonth} คน\n\nคุณยังสามารถแก้ไขข้อมูลภายหลังได้`,
+      )
+    )
+      return;
+    setSubmitting(true);
+    try {
+      await onSetPayrollConfirm(selectedMonth, {
+        confirmedAt: new Date().toISOString(),
+        totalAmount: totalForMonth,
+        employeeCount: empCountForMonth,
+        breakdownSig,
+      });
+      showToast?.(isRenew ? "ยืนยันยอดใหม่เรียบร้อย" : "ยืนยันยอดเรียบร้อย");
+      await backfillPoolSnapshots();
+      await freezeAllSlips();
+    } catch (err) {
+      console.error("[PayrollSummary] confirm failed:", err);
+      showToast?.("ยืนยันยอดไม่สำเร็จ");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -345,7 +395,9 @@ export default function PayrollSummaryPanel({
           });
           const isStale =
             confirmed.totalAmount !== totalForMonth ||
-            confirmed.employeeCount !== empCountForMonth;
+            confirmed.employeeCount !== empCountForMonth ||
+            (typeof confirmed.breakdownSig === "string" &&
+              confirmed.breakdownSig !== breakdownSig);
           return (
             <div
               className={`rounded-[14px] px-4 py-3.5 mb-3.5 border-[1.5px] ${isStale ? "bg-amber-lt border-amber/40" : "bg-green-lt border-green/25"}`}
@@ -394,27 +446,14 @@ export default function PayrollSummaryPanel({
                     </div>
                   </div>
                   <button
-                    onClick={async () => {
-                      if (advanceDataBlocked) return;
-                      try {
-                        await onSetPayrollConfirm(selectedMonth, {
-                          confirmedAt: new Date().toISOString(),
-                          totalAmount: totalForMonth,
-                          employeeCount: empCountForMonth,
-                        });
-                        showToast?.("ยืนยันยอดใหม่เรียบร้อย");
-                        await backfillPoolSnapshots();
-                        await freezeAllSlips();
-                      } catch (err) {
-                        console.error("[PayrollSummary] confirm failed:", err);
-                        showToast?.("ยืนยันยอดไม่สำเร็จ");
-                      }
-                    }}
-                    disabled={advanceDataBlocked}
-                    className={`w-full py-[11px] rounded-[10px] border-none text-sm font-bold font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640] inline-flex items-center justify-center gap-1.5 ${advanceDataBlocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+                    onClick={() =>
+                      confirmPayroll(totalForMonth, empCountForMonth, true)
+                    }
+                    disabled={advanceDataBlocked || submitting}
+                    className={`w-full py-[11px] rounded-[10px] border-none text-sm font-bold font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640] inline-flex items-center justify-center gap-1.5 ${advanceDataBlocked || submitting ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <IconRefresh size={14} strokeWidth={2.4} />
-                    ยืนยันยอดใหม่
+                    {submitting ? "กำลังบันทึก..." : "ยืนยันยอดใหม่"}
                   </button>
                 </>
               ) : (
@@ -429,33 +468,14 @@ export default function PayrollSummaryPanel({
 
         return (
           <button
-            onClick={async () => {
-              if (advanceDataBlocked) return;
-              if (
-                !confirm(
-                  `ยืนยันการโอนเงินเดือนเดือนนี้?\n\nยอดรวม ฿${formatThaiNumber(totalForMonth)}\nจำนวน ${empCountForMonth} คน\n\nคุณยังสามารถแก้ไขข้อมูลภายหลังได้`,
-                )
-              )
-                return;
-              try {
-                await onSetPayrollConfirm(selectedMonth, {
-                  confirmedAt: new Date().toISOString(),
-                  totalAmount: totalForMonth,
-                  employeeCount: empCountForMonth,
-                });
-                showToast?.("ยืนยันยอดเรียบร้อย");
-                await backfillPoolSnapshots();
-                await freezeAllSlips();
-              } catch (err) {
-                console.error("[PayrollSummary] confirm failed:", err);
-                showToast?.("ยืนยันยอดไม่สำเร็จ");
-              }
-            }}
-            disabled={advanceDataBlocked}
-            className={`w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2 ${advanceDataBlocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+            onClick={() =>
+              confirmPayroll(totalForMonth, empCountForMonth, false)
+            }
+            disabled={advanceDataBlocked || submitting}
+            className={`w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2 ${advanceDataBlocked || submitting ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
           >
             <IconCheck size={18} strokeWidth={2.5} />
-            ยืนยันยอดก่อนโอนเงิน
+            {submitting ? "กำลังบันทึก..." : "ยืนยันยอดก่อนโอนเงิน"}
           </button>
         );
       })()}
