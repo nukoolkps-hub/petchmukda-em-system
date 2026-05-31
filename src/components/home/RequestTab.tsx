@@ -2,6 +2,7 @@
 
 import {
   AlertCircle as IconAlertCircle,
+  CalendarDays as IconCalendar,
   ChevronRight as IconChevronRight,
   Trash2 as IconTrash,
 } from "lucide-react";
@@ -219,8 +220,9 @@ export default function RequestTab({
                       {h.days} วันทำการ)
                     </div>
                     {histDetail === h.id && (
-                      <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr">
-                        📅 วันที่ยื่น: {h.submitted}
+                      <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex items-center gap-1.5">
+                        <IconCalendar size={12} strokeWidth={2.4} />
+                        วันที่ยื่น: {h.submitted}
                       </div>
                     )}
                   </div>

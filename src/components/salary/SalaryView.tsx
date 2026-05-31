@@ -1,6 +1,7 @@
 import {
   ArrowLeft as IconArrowLeft,
   Landmark as IconBuildingBank,
+  CalendarDays as IconCalendar,
   CirclePlus as IconCirclePlus,
   Clock as IconClock,
   Printer as IconPrinter,
@@ -256,7 +257,10 @@ export default function SalaryView({
     <div>
       {/* month selector — บนสุด เพื่อให้สลับเดือนง่าย */}
       <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="text-sm font-semibold text-txt-mid">📅 เดือนเงินเดือน</div>
+        <div className="text-sm font-semibold text-txt-mid flex items-center gap-1.5">
+          <IconCalendar size={14} strokeWidth={2.4} />
+          เดือนเงินเดือน
+        </div>
         <select
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}

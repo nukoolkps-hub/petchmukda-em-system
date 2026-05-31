@@ -1,4 +1,5 @@
 import {
+  CalendarDays as IconCalendar,
   Check as IconCheck,
   Copy as IconCopy,
   Settings as IconSettings,
@@ -311,8 +312,9 @@ export default function AdminPanel({
               {/* Monthly summary */}
               <div className="bg-white rounded-2xl p-4 mb-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr">
                 <div className="flex items-center justify-between mb-3.5">
-                  <div className="font-bold text-maroon text-base">
-                    📅 สรุปรายเดือน
+                  <div className="font-bold text-maroon text-base flex items-center gap-1.5">
+                    <IconCalendar size={16} strokeWidth={2.4} />
+                    สรุปรายเดือน
                   </div>
                   <select
                     value={effectiveMonth}
@@ -446,8 +448,12 @@ export default function AdminPanel({
                                 )
                                 .sort((a, b) => a.start.localeCompare(b.start))
                                 .map((lv) => (
-                                  <div key={lv.id}>
-                                    📅 {fmtDateWithWeekday(lv.start)}
+                                  <div
+                                    key={lv.id}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <IconCalendar size={11} strokeWidth={2.4} />
+                                    {fmtDateWithWeekday(lv.start)}
                                     {lv.start !== lv.end
                                       ? ` - ${fmtDateWithWeekday(lv.end)}`
                                       : ""}{" "}
@@ -480,8 +486,9 @@ export default function AdminPanel({
               {/* Yearly summary */}
               <div className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr">
                 <div className="flex items-center justify-between mb-3.5">
-                  <div className="font-bold text-maroon text-base">
-                    📆 สรุปรายปี
+                  <div className="font-bold text-maroon text-base flex items-center gap-1.5">
+                    <IconCalendar size={16} strokeWidth={2.4} />
+                    สรุปรายปี
                   </div>
                   <select
                     value={selYear}
@@ -1167,7 +1174,8 @@ export default function AdminPanel({
                         {/* Start work month — ใช้ในหนังสือรับรองเงินเดือน */}
                         <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
-                            📅 วันที่เริ่มงาน
+                            <IconCalendar size={12} strokeWidth={2.4} />
+                            วันที่เริ่มงาน
                           </label>
                           {(() => {
                             const curYM =

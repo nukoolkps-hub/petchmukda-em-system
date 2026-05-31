@@ -1,4 +1,8 @@
-import { Check as IconCheck, Trash2 as IconTrash } from "lucide-react";
+import {
+  CalendarDays as IconCalendar,
+  Check as IconCheck,
+  Trash2 as IconTrash,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
@@ -250,7 +254,8 @@ export default function SalaryAdminEdit({
       {/* month display */}
       <div className="flex justify-end mb-2.5">
         <div className="px-3 py-2 rounded-[10px] text-sm font-semibold text-maroon bg-gold-pale font-[inherit] flex items-center gap-1.5 border-[1.5px] border-[#C9973A40]">
-          📅 {THAI_MONTH_NAMES[now.getMonth()]} {now.getFullYear() + 543}
+          <IconCalendar size={14} strokeWidth={2.4} />
+          {THAI_MONTH_NAMES[now.getMonth()]} {now.getFullYear() + 543}
         </div>
       </div>
 

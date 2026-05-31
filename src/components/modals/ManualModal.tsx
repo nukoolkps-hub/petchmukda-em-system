@@ -1,4 +1,4 @@
-import { Book as IconBook } from "lucide-react";
+import { Book as IconBook, CalendarDays as IconCalendar } from "lucide-react";
 import { useState } from "react";
 import { COLORS } from "../../constants";
 import BaseModal from "../shared/BaseModal";
@@ -29,7 +29,15 @@ export default function ManualModal({ onClose }) {
       {/* tabs */}
       <div className="flex bg-cream-dk rounded-[11px] p-1 mb-3.5 gap-0.5">
         {[
-          { id: "leave", label: "📅 กฎการลา" },
+          {
+            id: "leave",
+            label: (
+              <span className="inline-flex items-center gap-1.5">
+                <IconCalendar size={14} strokeWidth={2.4} />
+                กฎการลา
+              </span>
+            ),
+          },
           { id: "commission", label: "💎 กฎค่าคอม" },
         ].map((t) => (
           <button
@@ -52,8 +60,24 @@ export default function ManualModal({ onClose }) {
             </p>
           </Section>
 
-          <Section title="📅 วันลาแบ่งเป็น 2 ประเภท" color={COLORS.maroon}>
-            <Card title="📅 วันธรรมดา (จันทร์-ศุกร์)" color={COLORS.text}>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconCalendar size={16} strokeWidth={2.4} />
+                วันลาแบ่งเป็น 2 ประเภท
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconCalendar size={14} strokeWidth={2.4} />
+                  วันธรรมดา (จันทร์-ศุกร์)
+                </span>
+              }
+              color={COLORS.text}
+            >
               <ul>
                 <li>
                   มี <b>โควต้า 2 ครั้ง/เดือน</b>

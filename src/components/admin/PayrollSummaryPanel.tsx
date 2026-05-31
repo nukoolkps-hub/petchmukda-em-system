@@ -1,4 +1,5 @@
 import {
+  CalendarDays as IconCalendar,
   Check as IconCheck,
   Copy as IconCopy,
   Search as IconSearch,
@@ -340,8 +341,9 @@ export default function PayrollSummaryPanel({
                   >
                     {isStale ? "ข้อมูลเปลี่ยนหลังยืนยัน" : "ยืนยันยอดเรียบร้อยแล้ว"}
                   </div>
-                  <div className="text-xs text-txt-soft mt-0.5">
-                    📅 {dateText}
+                  <div className="text-xs text-txt-soft mt-0.5 flex items-center gap-1">
+                    <IconCalendar size={11} strokeWidth={2.4} />
+                    {dateText}
                   </div>
                 </div>
               </div>

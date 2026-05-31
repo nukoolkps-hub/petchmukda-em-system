@@ -1,4 +1,4 @@
-import { Clock as IconClock } from "lucide-react";
+import { CalendarDays as IconCalendar, Clock as IconClock } from "lucide-react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
@@ -91,8 +91,8 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                       {r.reason}
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <div className="text-xs text-txt-soft">
-                        📅{" "}
+                      <div className="text-xs text-txt-soft flex items-center gap-1">
+                        <IconCalendar size={11} strokeWidth={2.4} />
                         {date.toLocaleDateString("th-TH", {
                           day: "numeric",
                           month: "short",
