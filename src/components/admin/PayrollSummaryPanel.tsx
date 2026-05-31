@@ -97,8 +97,7 @@ export default function PayrollSummaryPanel({
         const data = salaryData[employee.id]?.[selectedMonth] || null;
         const monthLeaves = allLeaves.filter(
           (lv) =>
-            lv.employeeName === employee.name &&
-            lv.start.startsWith(selectedMonth),
+            lv.employeeId === employee.id && lv.start.startsWith(selectedMonth),
         );
         const overInfo = getOverQuotaDays(monthLeaves);
         const totalLeaveDays = countWeekdayLeaves(monthLeaves);

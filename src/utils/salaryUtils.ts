@@ -64,8 +64,7 @@ export function computePoolSharesForGroup({
     } else if (employee) {
       const monthLeaves = allLeaves.filter(
         (leave) =>
-          leave.employeeName === employee.name &&
-          leave.start.startsWith(yearMonth),
+          leave.employeeId === employeeId && leave.start.startsWith(yearMonth),
       );
       const weekdayLeaves = countWeekdayLeaves(monthLeaves);
       const overInfo = getOverQuotaDays(monthLeaves);

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Employee } from "../types";
 
 interface ProfileData {
+  id: string;
   name: string;
   avatar: string;
   avatarType: string;
@@ -45,6 +46,7 @@ export default function useProfile({
     const displayName = authEmployee.name;
     const initials = authEmployee?.avatar || displayName.slice(0, 2);
     return {
+      id: authEmployee.id,
       name: displayName,
       avatar: initials,
       avatarType:
@@ -102,6 +104,7 @@ export default function useProfile({
     };
     await updateEmployee(authEmployee.id, fields);
     setProfile({
+      id: authEmployee.id,
       name: authEmployee.name,
       role: authEmployee.role || "-",
       ...fields,
@@ -113,9 +116,15 @@ export default function useProfile({
   useEffect(() => {
     if (isAdmin) return;
     if (profile) {
-      const employee = employeeDirectory.find((e) => e.name === profile.name);
-      if (employee && employee.role !== profile.role)
-        setProfile((p) => (p ? { ...p, role: employee.role } : p));
+      const employee = employeeDirectory.find((e) => e.id === profile.id);
+      // sync ทั้งชื่อและตำแหน่งเมื่อ admin แก้ (join ด้วย id กันเปลี่ยนชื่อ)
+      if (
+        employee &&
+        (employee.role !== profile.role || employee.name !== profile.name)
+      )
+        setProfile((p) =>
+          p ? { ...p, role: employee.role, name: employee.name } : p,
+        );
     }
   }, [employeeDirectory, isAdmin, profile?.role, profile?.name, profile]);
 

@@ -92,23 +92,27 @@ export default function useFirebaseAppData({
     // ใส่ snapshot ของ roleId / poolExclusion / leave days พร้อมไปด้วย
     // เพื่อให้พนักงานคำนวณ pool ได้โดยไม่ต้องอ่าน employees/leaves ของเพื่อน
     const employee = employeeResult.data.find((e) => e.id === employeeId);
-    const monthLeaves = employee
-      ? leavesResult.data.filter(
-          (leave) =>
-            leave.employeeName === employee.name &&
-            leave.start.startsWith(yearMonth),
-        )
-      : [];
+    if (!employee) {
+      // ไม่เจอ employee (ถูกลบ / data ยังโหลดไม่เสร็จ) → เขียนเฉพาะ fields
+      // ที่ caller ส่งมา อย่าแตะ snapshot ไม่งั้นจะ stomp totalLeaveDays เป็น 0
+      await salariesAPI.updateSalary(employeeId, yearMonth, fields);
+      return;
+    }
+    // join ลาด้วย employeeId (ไม่ใช่ชื่อ) — ทนต่อการเปลี่ยนชื่อ/ชื่อซ้ำ
+    const monthLeaves = leavesResult.data.filter(
+      (leave) =>
+        leave.employeeId === employeeId && leave.start.startsWith(yearMonth),
+    );
     const weekdayLeaves = countWeekdayLeaves(monthLeaves);
     const overInfo = getOverQuotaDays(monthLeaves);
     const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
-    const snapshot: Record<string, any> = { totalLeaveDays };
-    if (employee?.roleId) snapshot.roleId = employee.roleId;
-    if (employee?.poolExclusion)
-      snapshot.poolExclusion = employee.poolExclusion;
+    // เขียน snapshot เสมอ (ใช้ ?? null) — ปลด poolExclusion/roleId ต้องล้าง
+    // ของเดิมใน salary doc ด้วย ไม่งั้น pool calc ใช้ค่าเก่าค้าง
     await salariesAPI.updateSalary(employeeId, yearMonth, {
       ...fields,
-      ...snapshot,
+      roleId: employee.roleId ?? null,
+      poolExclusion: employee.poolExclusion ?? null,
+      totalLeaveDays,
     });
   }
 

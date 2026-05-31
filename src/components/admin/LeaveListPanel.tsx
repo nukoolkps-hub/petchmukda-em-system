@@ -27,13 +27,11 @@ export default function LeaveListPanel({
   const [confirmLeave, setConfirmLeave] = useState<any>(null);
 
   // รายการลาทั้งหมด (รวมอนาคต) — admin ต้องเห็นทุกใบไม่ใช่แค่ที่ผ่านมาแล้ว
+  // filter ด้วย employeeId (ไม่ใช่ชื่อ) — กันชื่อซ้ำ/เปลี่ยนชื่อ
   const filteredLeaves = allLeaves
-    .filter((lv) => !employeeFilter || lv.employeeName.includes(employeeFilter))
+    .filter((lv) => !employeeFilter || lv.employeeId === employeeFilter)
     .filter((lv) => !filterType || lv.type === filterType)
     .sort((a, b) => b.start.localeCompare(a.start));
-  const uniqueEmployees: string[] = [
-    ...new Set(allLeaves.map((lv) => lv.employeeName)),
-  ] as string[];
 
   return (
     <div>
@@ -45,9 +43,9 @@ export default function LeaveListPanel({
             className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
           >
             <option value="">พนักงานทั้งหมด</option>
-            {uniqueEmployees.map((e) => (
-              <option key={e} value={e}>
-                {e}
+            {employeeDirectory.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.name}
               </option>
             ))}
           </select>
@@ -86,7 +84,7 @@ export default function LeaveListPanel({
         {filteredLeaves.map((lv) => {
           const lt = LEAVE_TYPES.find((t) => t.id === lv.type);
           const employeeInfo = employeeDirectory.find(
-            (e) => e.name === lv.employeeName,
+            (e) => e.id === lv.employeeId,
           );
           return (
             <div
@@ -94,7 +92,10 @@ export default function LeaveListPanel({
               className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3"
             >
               <AvatarCircle
-                avatar={employeeInfo?.avatar || lv.employeeName?.slice(0, 2)}
+                avatar={
+                  employeeInfo?.avatar ||
+                  (employeeInfo?.name || lv.employeeName)?.slice(0, 2)
+                }
                 avatarType={employeeInfo?.avatarType || "text"}
                 avatarImageUrl={employeeInfo?.avatarImageUrl || null}
                 size={42}
@@ -103,7 +104,7 @@ export default function LeaveListPanel({
               />
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-txt text-base mb-[3px] flex items-center gap-1.5">
-                  {lv.employeeName}
+                  {employeeInfo?.name || lv.employeeName}
                   {!isPast(lv.end) && (
                     <span className="text-xs font-bold px-1.5 py-px rounded-[10px] bg-gold-pale text-maroon border border-[#C9973A40] inline-flex items-center gap-0.5">
                       <IconFastForward size={10} strokeWidth={2.4} />

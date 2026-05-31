@@ -28,8 +28,7 @@ export default function HomeTab({
   /* ─── Monthly quota ────────────────────────────────────────── */
   const usedThisMonth = profile
     ? allLeaves.filter(
-        (lv) =>
-          lv.employeeName === profile.name && lv.start.startsWith(yearMonth),
+        (lv) => lv.employeeId === profile.id && lv.start.startsWith(yearMonth),
       ).length
     : 0;
   const quota = 2;
@@ -167,7 +166,7 @@ export default function HomeTab({
           const usedType = profile
             ? allLeaves.filter(
                 (lv) =>
-                  lv.employeeName === profile.name &&
+                  lv.employeeId === profile.id &&
                   lv.type === lt.id &&
                   lv.start.startsWith(yearMonth),
               ).length
@@ -205,7 +204,7 @@ export default function HomeTab({
         leaveEntries={allLeaves}
         employeeDirectory={[
           ...employeeDirectory,
-          ...(profile && !employeeDirectory.find((e) => e.name === profile.name)
+          ...(profile && !employeeDirectory.find((e) => e.id === profile.id)
             ? [
                 {
                   id: "current",

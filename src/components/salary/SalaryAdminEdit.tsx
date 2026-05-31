@@ -97,7 +97,7 @@ export default function SalaryAdminEdit({
   const monthLeaves = employeeInfo
     ? allLeaves.filter(
         (lv) =>
-          lv.employeeName === employeeInfo.name &&
+          lv.employeeId === employeeInfo.id &&
           lv.start.startsWith(selectedMonth),
       )
     : [];

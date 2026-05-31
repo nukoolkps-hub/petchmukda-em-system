@@ -86,10 +86,10 @@ export default function SalaryView({
     poolShare,
     salaryCalculation,
   } = useMemo(() => {
-    const monthLeaves = profile
+    const monthLeaves = salaryEmployeeId
       ? allLeaves.filter(
           (leave) =>
-            leave.employeeName === profile.name &&
+            leave.employeeId === salaryEmployeeId &&
             leave.start.startsWith(selectedMonth),
         )
       : [];

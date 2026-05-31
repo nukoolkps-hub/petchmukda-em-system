@@ -63,7 +63,7 @@ export default function RequestTab({
   const usedThisMonth = profile
     ? allLeaves.filter(
         (lv: LeaveEntry) =>
-          lv.employeeName === profile.name && lv.start.startsWith(yearMonth),
+          lv.employeeId === profile.id && lv.start.startsWith(yearMonth),
       ).length
     : 0;
   const rem = 2 - usedThisMonth;

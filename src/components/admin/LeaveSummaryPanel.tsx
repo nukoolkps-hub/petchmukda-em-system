@@ -85,9 +85,6 @@ export default function LeaveSummaryPanel({
   // key = `${employeeName}:${type}` — chip ที่ถูกกดให้แสดงรายการวัน
   const [expandedChip, setExpandedChip] = useState<string | null>(null);
 
-  const empNames: string[] = [
-    ...new Set(allLeaves.map((lv) => lv.employeeName)),
-  ] as string[];
   const months: string[] = (
     [...new Set(allLeaves.map((lv) => lv.start.slice(0, 7)))] as string[]
   )
@@ -136,18 +133,17 @@ export default function LeaveSummaryPanel({
             />
           </div>
         </div>
-        {empNames.length === 0 && (
+        {employeeDirectory.length === 0 && (
           <div className="text-txt-soft text-sm text-center py-4">ไม่มีข้อมูล</div>
         )}
         <div className="flex flex-col gap-2">
-          {empNames
-            .map((name) => {
-              const employeeInfo = employeeDirectory.find(
-                (e) => e.name === name,
-              );
+          {employeeDirectory
+            .map((employeeInfo) => {
+              const empId = employeeInfo.id;
+              const name = employeeInfo.name;
               const monthLeaves = allLeaves.filter(
                 (lv) =>
-                  lv.employeeName === name &&
+                  lv.employeeId === empId &&
                   lv.start.startsWith(effectiveMonth),
               );
               const totalTimes = monthLeaves.length;
@@ -163,7 +159,7 @@ export default function LeaveSummaryPanel({
               const overQuota = totalTimes > 2;
               return (
                 <div
-                  key={name}
+                  key={empId}
                   className={`px-3.5 py-3 rounded-xl border ${overQuota ? "bg-red-lt border-[#C0392B30]" : "bg-cream border-bdr"}`}
                 >
                   <div className="flex items-center gap-3 mb-2">
@@ -208,12 +204,12 @@ export default function LeaveSummaryPanel({
                         type="button"
                         onClick={() =>
                           setExpandedChip((prev) =>
-                            prev === `${name}:personal`
+                            prev === `${empId}:personal`
                               ? null
-                              : `${name}:personal`,
+                              : `${empId}:personal`,
                           )
                         }
-                        className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#DDEEFF] text-[#1E40AF] cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${name}:personal` ? "border-[#A8C8F0]" : "border-transparent"}`}
+                        className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#DDEEFF] text-[#1E40AF] cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${empId}:personal` ? "border-[#A8C8F0]" : "border-transparent"}`}
                       >
                         <IconBriefcase size={12} strokeWidth={2.4} />
                         ลากิจ {personalDays} วัน
@@ -224,17 +220,17 @@ export default function LeaveSummaryPanel({
                         type="button"
                         onClick={() =>
                           setExpandedChip((prev) =>
-                            prev === `${name}:sick` ? null : `${name}:sick`,
+                            prev === `${empId}:sick` ? null : `${empId}:sick`,
                           )
                         }
-                        className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E] cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${name}:sick` ? "border-[#0F766E]" : "border-transparent"}`}
+                        className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E] cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${empId}:sick` ? "border-[#0F766E]" : "border-transparent"}`}
                       >
                         <IconCross size={12} strokeWidth={2.4} />
                         ลาป่วย {sickDays} วัน
                       </button>
                     )}
                   </div>
-                  {expandedChip?.startsWith(`${name}:`) && (
+                  {expandedChip?.startsWith(`${empId}:`) && (
                     <div className="mt-2 pl-2.5 text-xs text-txt-mid border-l-2 border-gold/40 flex flex-col gap-0.5">
                       {monthLeaves
                         .filter((lv) => lv.type === expandedChip.split(":")[1])
@@ -257,11 +253,11 @@ export default function LeaveSummaryPanel({
               );
             })
             .filter(Boolean)}
-          {empNames.every(
-            (name) =>
+          {employeeDirectory.every(
+            (emp) =>
               allLeaves.filter(
                 (lv) =>
-                  lv.employeeName === name &&
+                  lv.employeeId === emp.id &&
                   lv.start.startsWith(effectiveMonth),
               ).length === 0,
           ) && (
@@ -298,18 +294,16 @@ export default function LeaveSummaryPanel({
             />
           </div>
         </div>
-        {empNames.length === 0 && (
+        {employeeDirectory.length === 0 && (
           <div className="text-txt-soft text-sm text-center py-4">ไม่มีข้อมูล</div>
         )}
         <div className="flex flex-col gap-2">
-          {empNames
-            .map((name) => {
-              const employeeInfo = employeeDirectory.find(
-                (e) => e.name === name,
-              );
+          {employeeDirectory
+            .map((employeeInfo) => {
+              const empId = employeeInfo.id;
+              const name = employeeInfo.name;
               const yearLeaves = allLeaves.filter(
-                (lv) =>
-                  lv.employeeName === name && lv.start.startsWith(selYear),
+                (lv) => lv.employeeId === empId && lv.start.startsWith(selYear),
               );
               const totalTimes = yearLeaves.length;
               if (totalTimes === 0) return null;
@@ -324,7 +318,7 @@ export default function LeaveSummaryPanel({
               const barPct = Math.min(100, (totalDays / 30) * 100);
               return (
                 <div
-                  key={name}
+                  key={empId}
                   className="p-3.5 rounded-xl bg-cream border border-bdr"
                 >
                   <div className="flex items-center gap-3 mb-2.5">
@@ -379,11 +373,11 @@ export default function LeaveSummaryPanel({
               );
             })
             .filter(Boolean)}
-          {empNames.every(
-            (name) =>
+          {employeeDirectory.every(
+            (emp) =>
               allLeaves.filter(
                 (lv) =>
-                  lv.employeeName === name && lv.start.startsWith(selYear),
+                  lv.employeeId === emp.id && lv.start.startsWith(selYear),
               ).length === 0,
           ) && (
             <div className="text-txt-soft text-sm text-center py-4">
