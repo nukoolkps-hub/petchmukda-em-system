@@ -3,7 +3,6 @@ import {
   Banknote as IconBanknote,
   Briefcase as IconBriefcase,
   Landmark as IconBuildingBank,
-  CalendarDays as IconCalendar,
   Check as IconCheck,
   ChevronDown as IconChevronDown,
   ClipboardList as IconClipboardList,
@@ -316,7 +315,7 @@ export default function SalaryAdminEdit({
           <select
             value={selectedMonth}
             onChange={(e) => tryChangeMonth(e.target.value)}
-            className="appearance-none cursor-pointer pl-8 pr-7 py-2 rounded-[10px] border-[1.5px] border-[#C9973A40] text-sm font-semibold text-maroon bg-gold-pale font-[inherit] outline-none"
+            className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
           >
             {monthOptions.map((m) => {
               const [y, mo] = m.split("-");
@@ -328,15 +327,10 @@ export default function SalaryAdminEdit({
               );
             })}
           </select>
-          <IconCalendar
-            size={14}
-            strokeWidth={2.4}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-maroon"
-          />
           <IconChevronDown
             size={12}
             strokeWidth={2.4}
-            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-maroon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
           />
         </div>
       </div>
