@@ -3,15 +3,13 @@
 
 const COLORS = {
   maroon: "#7B1C1C",
-  maroonDark: "#5C1212",
-  gold: "#C9973A",
-  goldLight: "#E8C87A",
-  goldPale: "#F5E6C8",
-  text: "#2D1A0E",
-  textMedium: "#7A5C3A",
-  textSoft: "#B89A72",
-  border: "#E8D5B0",
+  text: "#1A1A1A",
+  textMedium: "#666666",
+  textSoft: "#999999",
+  border: "#E0E0E0",
 };
+
+const CONTENT_WIDTH = 475; // A4 (595.28) − pageMargins 60×2 (≈475)
 
 /* ─── Number → Thai text (basic, รองรับ 0 - 9,999,999) ───── */
 const DIGITS = [
@@ -122,28 +120,21 @@ export function buildCertificateDocDef({
       {
         stack: [
           {
-            text: "ห้างเพชรทองมุกดา",
-            fontSize: 22,
+            text: "บริษัท ห้างเพชรทองมุกดา จำกัด",
+            fontSize: 19,
             bold: true,
             color: COLORS.maroon,
             alignment: "center",
           },
           {
-            text: "Muktha Jewelry Co., Ltd.",
-            fontSize: 11,
-            color: COLORS.gold,
-            alignment: "center",
-            margin: [0, 2, 0, 0],
-          },
-          {
-            text: "เลขที่ 123/45 ถนนเยาวราช แขวงสัมพันธวงศ์ เขตสัมพันธวงศ์ กรุงเทพมหานคร 10100",
+            text: "100/10 หมู่ที่ 8 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐม 73160",
             fontSize: 10,
             color: COLORS.textMedium,
             alignment: "center",
             margin: [0, 6, 0, 0],
           },
           {
-            text: "โทรศัพท์: 02-123-4567   อีเมล: contact@muktha.co.th",
+            text: "โทร. 02-420-6075   เลขประจำตัวผู้เสียภาษี 0-7355-59006-56-8",
             fontSize: 10,
             color: COLORS.textMedium,
             alignment: "center",
@@ -153,91 +144,91 @@ export function buildCertificateDocDef({
         margin: [0, 0, 0, 8],
       },
 
-      /* ─── Gold divider ─── */
+      /* ─── เส้นคู่ใต้ letterhead (สไตล์เอกสารทางการ) ─── */
       {
         canvas: [
           {
             type: "line",
             x1: 0,
             y1: 0,
-            x2: 475,
+            x2: CONTENT_WIDTH,
             y2: 0,
             lineWidth: 1.5,
-            lineColor: COLORS.gold,
+            lineColor: COLORS.maroon,
+          },
+          {
+            type: "line",
+            x1: 0,
+            y1: 2.5,
+            x2: CONTENT_WIDTH,
+            y2: 2.5,
+            lineWidth: 0.5,
+            lineColor: COLORS.maroon,
           },
         ],
-        margin: [0, 0, 0, 16],
+        margin: [0, 0, 0, 20],
       },
 
-      /* ─── Reference number + date ─── */
+      /* ─── Reference number ─── */
       {
-        columns: [
-          { text: `เลขที่ ${refNo}`, fontSize: 11, color: COLORS.textMedium },
-          {
-            text: `วันที่ ${printDate}`,
-            fontSize: 11,
-            color: COLORS.textMedium,
-            alignment: "right",
-          },
-        ],
-        margin: [0, 0, 0, 24],
+        text: `เลขที่ ${refNo}`,
+        fontSize: 12,
+        bold: true,
+        color: COLORS.text,
+        margin: [0, 0, 0, 0],
       },
 
       /* ─── Title ─── */
       {
         text: "หนังสือรับรองเงินเดือน",
-        fontSize: 20,
+        fontSize: 19,
         bold: true,
-        color: COLORS.maroon,
+        color: COLORS.text,
         alignment: "center",
-        margin: [0, 0, 0, 4],
+        margin: [0, 18, 0, 2],
       },
       {
-        text: "Certificate of Employment & Salary",
-        fontSize: 11,
-        color: COLORS.textMedium,
+        text: "Certificate of Salary",
+        fontSize: 10,
+        color: COLORS.textSoft,
         alignment: "center",
-        italics: true,
-        margin: [0, 0, 0, 28],
+        margin: [0, 0, 0, 26],
       },
 
       /* ─── Body paragraph ─── */
       {
         text: [
-          { text: "         ขอรับรองว่า " },
-          {
-            text: `${prefix}${employeeName} `,
-            bold: true,
-            color: COLORS.maroon,
-          },
-          { text: "เป็นพนักงานประจำของ " },
-          { text: "ห้างเพชรทองมุกดา ", bold: true },
-          { text: "ตำแหน่ง " },
+          { text: "          หนังสือฉบับนี้ออกให้เพื่อแสดงว่า " },
+          { text: `${prefix} ${employeeName} `, bold: true },
+          { text: "ได้ปฏิบัติหน้าที่ในตำแหน่ง " },
           { text: `${employeeRole} `, bold: true },
-          { text: "เริ่มปฏิบัติงานตั้งแต่เดือน " },
+          { text: "ของ " },
+          { text: "บริษัท ห้างเพชรทองมุกดา จำกัด ", bold: true },
+          { text: "โดยปฏิบัติงานตั้งแต่ " },
           { text: `${startWork} `, bold: true },
-          { text: "จนถึงปัจจุบัน โดยได้รับเงินเดือน เดือนละ " },
-          {
-            text: `${formatNumber(baseSalary)} บาท `,
-            bold: true,
-            color: COLORS.maroon,
-          },
-          {
-            text: `(${formatThaiBahtText(baseSalary)})`,
-            italics: true,
-            color: COLORS.textMedium,
-          },
+          { text: "มีอัตราเงินเดือนประจำเดือนละ " },
+          { text: `${formatNumber(baseSalary)} บาท `, bold: true },
+          { text: `(${formatThaiBahtText(baseSalary)}) ` },
+          { text: "ซึ่งอัตรานี้ยังไม่รวมค่าตอบแทนและเงินพิเศษอื่น ๆ" },
         ],
         alignment: "justify",
-        lineHeight: 1.8,
-        margin: [0, 0, 0, 20],
+        lineHeight: 1.9,
+        margin: [0, 0, 0, 18],
       },
 
       {
-        text: "         ออกหนังสือรับรองฉบับนี้ให้ไว้เพื่อแสดงต่อหน่วยงานหรือองค์กรที่เกี่ยวข้อง และยืนยันว่าข้อความข้างต้นเป็นความจริงทุกประการ",
+        text: "          ออกหนังสือรับรองฉบับนี้ให้ไว้เพื่อแสดงต่อหน่วยงานหรือองค์กรที่เกี่ยวข้อง และยืนยันว่าข้อความข้างต้นเป็นความจริงทุกประการ",
         alignment: "justify",
-        lineHeight: 1.8,
-        margin: [0, 0, 0, 40],
+        lineHeight: 1.9,
+        margin: [0, 0, 0, 30],
+      },
+
+      /* ─── Date line ─── */
+      {
+        text: `ออกให้ ณ วันที่ ${printDate}`,
+        alignment: "right",
+        fontSize: 13,
+        margin: [0, 0, 40, 0],
       },
 
       /* ─── Signature block ─── */
@@ -245,49 +236,40 @@ export function buildCertificateDocDef({
         columns: [
           { width: "*", text: "" },
           {
-            width: 200,
+            width: 220,
             stack: [
-              {
-                text: "ขอแสดงความนับถือ",
-                alignment: "center",
-                margin: [0, 0, 0, 50],
-              },
               {
                 canvas: [
                   {
                     type: "line",
-                    x1: 0,
+                    x1: 10,
                     y1: 0,
-                    x2: 200,
+                    x2: 210,
                     y2: 0,
                     lineWidth: 0.8,
                     lineColor: COLORS.text,
                   },
                 ],
+                margin: [0, 64, 0, 0],
               },
               {
-                text: "( ____________________ )",
-                fontSize: 11,
+                text: "ลงชื่อผู้มีอำนาจลงนาม",
+                fontSize: 12,
+                bold: true,
                 alignment: "center",
-                margin: [0, 6, 0, 2],
+                margin: [0, 6, 0, 0],
               },
               {
-                text: "ผู้จัดการฝ่ายบุคคล",
-                fontSize: 11,
+                text: "บริษัท ห้างเพชรทองมุกดา จำกัด",
+                fontSize: 10,
                 color: COLORS.textMedium,
                 alignment: "center",
-              },
-              {
-                text: "ห้างเพชรทองมุกดา",
-                fontSize: 10,
-                color: COLORS.textSoft,
-                alignment: "center",
-                margin: [0, 1, 0, 0],
+                margin: [0, 2, 0, 0],
               },
             ],
           },
         ],
-        margin: [0, 0, 0, 24],
+        margin: [0, 6, 0, 30],
       },
 
       /* ─── Footer note ─── */
@@ -297,7 +279,7 @@ export function buildCertificateDocDef({
             type: "line",
             x1: 0,
             y1: 0,
-            x2: 475,
+            x2: CONTENT_WIDTH,
             y2: 0,
             lineWidth: 0.5,
             lineColor: COLORS.border,
@@ -306,9 +288,8 @@ export function buildCertificateDocDef({
         margin: [0, 0, 0, 8],
       },
       {
-        text: "หนังสือรับรองนี้มีอายุ 30 วันนับจากวันที่ออกเอกสาร",
+        text: "หนังสือฉบับนี้มีอายุ 30 วัน นับจากวันที่ออกเอกสาร",
         fontSize: 9,
-        italics: true,
         color: COLORS.textSoft,
         alignment: "center",
       },

@@ -6,18 +6,14 @@ import { THAI_MONTH_NAMES } from "../../constants";
 
 const COLORS = {
   maroon: "#7B1C1C",
-  maroonDark: "#5C1212",
-  gold: "#C9973A",
-  goldLight: "#E8C87A",
-  goldPale: "#F5E6C8",
-  cream: "#FDF8F0",
-  text: "#2D1A0E",
-  textMedium: "#7A5C3A",
-  textSoft: "#B89A72",
-  border: "#E8D5B0",
-  red: "#C0392B",
-  green: "#1A6B3A",
+  text: "#1A1A1A",
+  textSoft: "#666666",
+  border: "#CCCCCC",
+  borderLight: "#ECECEC",
+  netFill: "#FBF4F4",
 };
+
+const CONTENT_WIDTH = 515; // A4 (595.28) − pageMargins 40×2
 
 const formatNumber = (value) => Number(value || 0).toLocaleString("th-TH");
 
@@ -120,7 +116,7 @@ export function buildSalarySlipDocDef({
   /* ─── pdfmake doc definition ──────────────────────────── */
   return {
     pageSize: "A4",
-    pageMargins: [40, 40, 40, 40],
+    pageMargins: [40, 40, 40, 44],
     defaultStyle: {
       font: "Sarabun",
       fontSize: 11,
@@ -133,295 +129,315 @@ export function buildSalarySlipDocDef({
       subject: "Salary Slip",
     },
     content: [
-      /* ─── Header ─── */
+      /* ─── Letterhead ─── */
       {
-        table: {
-          widths: ["*"],
-          body: [
-            [
-              {
-                text: [
-                  {
-                    text: "ห้างเพชรทองมุกดา\n",
-                    fontSize: 16,
-                    bold: true,
-                    color: "#FFFFFF",
-                  },
-                  {
-                    text: "Muktha Jewelry Co., Ltd.",
-                    fontSize: 10,
-                    color: COLORS.goldLight,
-                  },
-                ],
-                fillColor: COLORS.maroonDark,
-                margin: [12, 10, 12, 10],
-                alignment: "center",
-              },
-            ],
-          ],
-        },
-        layout: "noBorders",
-        margin: [0, 0, 0, 0],
+        text: "บริษัท ห้างเพชรทองมุกดา จำกัด",
+        fontSize: 17,
+        bold: true,
+        color: COLORS.maroon,
+        alignment: "center",
       },
+      {
+        text: "100/10 หมู่ที่ 8 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐม 73160",
+        fontSize: 10,
+        color: COLORS.textSoft,
+        alignment: "center",
+        margin: [0, 4, 0, 0],
+      },
+      {
+        text: "เลขประจำตัวผู้เสียภาษี 0-7355-59006-56-8",
+        fontSize: 10,
+        color: COLORS.textSoft,
+        alignment: "center",
+        margin: [0, 1, 0, 8],
+      },
+      doubleRule(),
 
       /* ─── Title ─── */
       {
-        table: {
-          widths: ["*"],
-          body: [
-            [
-              {
-                text: "สลิปเงินเดือน",
-                fontSize: 18,
-                bold: true,
-                color: COLORS.maroon,
-                alignment: "center",
-                fillColor: COLORS.goldPale,
-                margin: [0, 8, 0, 8],
-              },
-            ],
-          ],
-        },
-        layout: "noBorders",
+        text: "สลิปเงินเดือน",
+        fontSize: 16,
+        bold: true,
+        alignment: "center",
+        margin: [0, 14, 0, 2],
       },
-
-      { text: " ", margin: [0, 0, 0, 4] },
+      {
+        text: `ประจำงวดเดือน ${monthLabel}`,
+        fontSize: 11,
+        color: COLORS.textSoft,
+        alignment: "center",
+        margin: [0, 0, 0, 16],
+      },
 
       /* ─── Employee info ─── */
       {
-        columns: [
-          {
-            width: "*",
-            stack: [
-              { text: "ชื่อ-นามสกุล", fontSize: 9, color: COLORS.textSoft },
-              {
-                text: employeeName,
-                fontSize: 13,
-                bold: true,
-                margin: [0, 1, 0, 6],
-              },
-              { text: "ตำแหน่ง", fontSize: 9, color: COLORS.textSoft },
-              { text: employeePosition, fontSize: 11, margin: [0, 1, 0, 0] },
+        table: {
+          widths: ["auto", "*", "auto", "*"],
+          body: [
+            [
+              { text: "ชื่อ-นามสกุล:", fontSize: 11, color: COLORS.textSoft },
+              { text: employeeName, fontSize: 11, bold: true },
+              { text: "ตำแหน่ง:", fontSize: 11, color: COLORS.textSoft },
+              { text: employeePosition, fontSize: 11, bold: true },
             ],
-          },
-          {
-            width: "*",
-            stack: [
-              { text: "ประจำเดือน", fontSize: 9, color: COLORS.textSoft },
-              {
-                text: monthLabel,
-                fontSize: 13,
-                bold: true,
-                color: COLORS.maroon,
-                margin: [0, 1, 0, 6],
-              },
-              { text: "วันที่ออกเอกสาร", fontSize: 9, color: COLORS.textSoft },
-              { text: printDate, fontSize: 11, margin: [0, 1, 0, 0] },
+            [
+              { text: "ธนาคาร:", fontSize: 11, color: COLORS.textSoft },
+              { text: bank, fontSize: 11, bold: true },
+              { text: "เลขที่บัญชี:", fontSize: 11, color: COLORS.textSoft },
+              { text: bankAccountNumber, fontSize: 11, bold: true },
             ],
-          },
-        ],
+            [
+              { text: "วันที่ออกสลิป:", fontSize: 11, color: COLORS.textSoft },
+              { text: printDate, fontSize: 11, bold: true },
+              { text: "รอบเงินเดือน:", fontSize: 11, color: COLORS.textSoft },
+              { text: monthLabel, fontSize: 11, bold: true },
+            ],
+          ],
+        },
+        layout: metaLayout(),
         margin: [0, 0, 0, 16],
       },
 
       /* ─── Earnings table ─── */
-      {
-        text: "▸ รายรับ",
-        fontSize: 12,
-        bold: true,
-        color: COLORS.green,
-        margin: [0, 0, 0, 6],
-      },
+      sectionHeader("รายการรายรับ"),
       {
         table: {
-          headerRows: 1,
-          widths: ["*", 110],
+          widths: ["*", 120],
           body: [
-            [
-              { text: "รายการ", style: "tableHeader" },
-              {
-                text: "จำนวนเงิน (฿)",
-                style: "tableHeader",
-                alignment: "right",
-              },
-            ],
             ...earnRows.map(([label, value]) => [
-              { text: label, fontSize: 10 },
-              { text: value, fontSize: 10, alignment: "right" },
+              { text: label, fontSize: 11 },
+              { text: value, fontSize: 11, alignment: "right" },
             ]),
             [
-              {
-                text: "รวมรายรับ",
-                bold: true,
-                fontSize: 11,
-                fillColor: "#E8F5EE",
-              },
+              { text: "รวมรายรับ", bold: true, fontSize: 11 },
               {
                 text: formatNumber(salaryCalculation.earnings),
                 bold: true,
                 fontSize: 11,
-                color: COLORS.green,
                 alignment: "right",
-                fillColor: "#E8F5EE",
               },
             ],
           ],
         },
-        layout: tableLayout(COLORS.green),
+        layout: rowLayout(earnRows.length),
         margin: [0, 0, 0, 14],
       },
 
       /* ─── Deductions table ─── */
+      sectionHeader("รายการหัก"),
       ...(dedRows.length > 0
         ? [
             {
-              text: "▸ รายการหัก",
-              fontSize: 12,
-              bold: true,
-              color: COLORS.red,
-              margin: [0, 0, 0, 6],
-            },
-            {
               table: {
-                headerRows: 1,
-                widths: ["*", 110],
+                widths: ["*", 120],
                 body: [
-                  [
-                    { text: "รายการ", style: "tableHeader" },
-                    {
-                      text: "จำนวนเงิน (฿)",
-                      style: "tableHeader",
-                      alignment: "right",
-                    },
-                  ],
                   ...dedRows.map(([label, value]) => [
-                    { text: label, fontSize: 10 },
-                    {
-                      text: value,
-                      fontSize: 10,
-                      alignment: "right",
-                      color: COLORS.red,
-                    },
+                    { text: label, fontSize: 11 },
+                    { text: value, fontSize: 11, alignment: "right" },
                   ]),
                   [
-                    {
-                      text: "รวมรายการหัก",
-                      bold: true,
-                      fontSize: 11,
-                      fillColor: "#FDECEA",
-                    },
+                    { text: "รวมรายการหัก", bold: true, fontSize: 11 },
                     {
                       text: formatNumber(salaryCalculation.deductions),
                       bold: true,
                       fontSize: 11,
-                      color: COLORS.red,
                       alignment: "right",
-                      fillColor: "#FDECEA",
                     },
                   ],
                 ],
               },
-              layout: tableLayout(COLORS.red),
+              layout: rowLayout(dedRows.length),
               margin: [0, 0, 0, 14],
             },
           ]
-        : []),
+        : [
+            {
+              text: "— ไม่มีรายการหัก —",
+              fontSize: 11,
+              color: COLORS.textSoft,
+              alignment: "center",
+              margin: [0, 4, 0, 14],
+            },
+          ]),
 
       /* ─── Net salary box ─── */
       {
         table: {
-          widths: ["*"],
+          widths: ["*", "auto"],
           body: [
             [
               {
-                stack: [
-                  {
-                    text: "เงินเดือนสุทธิ",
-                    fontSize: 12,
-                    color: COLORS.goldLight,
-                    alignment: "center",
-                  },
-                  {
-                    text: `฿${formatNumber(salaryCalculation.netSalary)}`,
-                    fontSize: 26,
-                    bold: true,
-                    color: "#FFFFFF",
-                    alignment: "center",
-                    margin: [0, 4, 0, 0],
-                  },
-                ],
-                fillColor: COLORS.maroon,
-                margin: [12, 12, 12, 12],
+                text: "เงินสุทธิที่ได้รับ",
+                fontSize: 13,
+                bold: true,
+                color: COLORS.maroon,
+                margin: [6, 6, 0, 6],
+              },
+              {
+                text: `฿${formatNumber(salaryCalculation.netSalary)}`,
+                fontSize: 20,
+                bold: true,
+                color: COLORS.maroon,
+                alignment: "right",
+                margin: [0, 4, 6, 4],
               },
             ],
           ],
         },
-        layout: "noBorders",
-        margin: [0, 0, 0, 14],
+        layout: {
+          hLineWidth: () => 1.5,
+          vLineWidth: () => 1.5,
+          hLineColor: () => COLORS.maroon,
+          vLineColor: () => COLORS.maroon,
+          fillColor: () => COLORS.netFill,
+        },
+        margin: [0, 0, 0, 36],
       },
 
-      /* ─── Bank info ─── */
+      /* ─── Signatures ─── */
       {
-        table: {
-          widths: ["auto", "*"],
-          body: [
-            [
-              {
-                text: "🏦 โอนเข้าบัญชี",
-                fontSize: 10,
-                color: COLORS.maroon,
-                fillColor: COLORS.goldPale,
-                margin: [10, 8, 6, 8],
-              },
-              {
-                text: `${bank}  ${bankAccountNumber}`,
-                fontSize: 11,
-                bold: true,
-                fillColor: COLORS.goldPale,
-                margin: [6, 8, 10, 8],
-              },
-            ],
-          ],
-        },
-        layout: "noBorders",
-        margin: [0, 0, 0, 14],
+        columns: [
+          signatureCol("ลงชื่อพนักงานผู้รับเงิน", `(${employeeName})`),
+          signatureCol("ลงชื่อผู้มีอำนาจลงนาม", "บริษัท ห้างเพชรทองมุกดา จำกัด"),
+        ],
+        columnGap: 40,
       },
 
       /* ─── Footer ─── */
       {
-        text: "เอกสารนี้สร้างจากระบบอัตโนมัติ — กรุณาเก็บไว้เพื่อเป็นหลักฐาน",
+        text: `เอกสารนี้จัดทำโดยระบบอัตโนมัติ · ออกเอกสารเมื่อ ${printDate}`,
         fontSize: 9,
-        italics: true,
         color: COLORS.textSoft,
         alignment: "center",
-        margin: [0, 12, 0, 0],
+        margin: [0, 24, 0, 0],
       },
     ],
-    styles: {
-      tableHeader: {
-        fontSize: 10,
-        bold: true,
-        color: "#FFFFFF",
-        fillColor: COLORS.maroon,
-      },
-    },
   };
 }
 
-/**
- * Custom table layout with colored top border
- */
-function tableLayout(headerColor) {
+/* ─── Reusable building blocks ──────────────────────────── */
+
+// เส้นคู่ใต้หัวกระดาษ (letterhead) — สไตล์เอกสารทางการ
+function doubleRule() {
   return {
-    hLineWidth: (i, node) =>
-      i === 0 || i === node.table.body.length ? 1 : 0.5,
-    vLineWidth: () => 0,
-    hLineColor: (i, node) => {
-      if (i === 0) return headerColor;
-      if (i === node.table.body.length) return headerColor;
-      return COLORS.border;
+    canvas: [
+      {
+        type: "line",
+        x1: 0,
+        y1: 0,
+        x2: CONTENT_WIDTH,
+        y2: 0,
+        lineWidth: 1.5,
+        lineColor: COLORS.maroon,
+      },
+      {
+        type: "line",
+        x1: 0,
+        y1: 2.5,
+        x2: CONTENT_WIDTH,
+        y2: 2.5,
+        lineWidth: 0.5,
+        lineColor: COLORS.maroon,
+      },
+    ],
+  };
+}
+
+// หัวข้อ section — มีเส้นขีดเส้นใต้
+function sectionHeader(label: string) {
+  return {
+    table: {
+      widths: ["*", 120],
+      body: [
+        [
+          { text: label, fontSize: 11, bold: true },
+          {
+            text: "จำนวนเงิน (บาท)",
+            fontSize: 11,
+            bold: true,
+            alignment: "right",
+          },
+        ],
+      ],
     },
+    layout: {
+      hLineWidth: (i: number) => (i === 1 ? 1.5 : 0),
+      vLineWidth: () => 0,
+      hLineColor: () => COLORS.text,
+      paddingLeft: () => 2,
+      paddingRight: () => 2,
+      paddingTop: () => 2,
+      paddingBottom: () => 5,
+    },
+    margin: [0, 0, 0, 0],
+  };
+}
+
+// คอลัมน์ลายเซ็น — เส้นบรรทัด + ชื่อกำกับ
+function signatureCol(line: string, name: string) {
+  return {
+    width: "*",
+    stack: [
+      {
+        canvas: [
+          {
+            type: "line",
+            x1: 30,
+            y1: 0,
+            x2: 207,
+            y2: 0,
+            lineWidth: 0.8,
+            lineColor: COLORS.text,
+          },
+        ],
+        margin: [0, 50, 0, 0],
+      },
+      {
+        text: line,
+        fontSize: 11,
+        bold: true,
+        alignment: "center",
+        margin: [0, 6, 0, 0],
+      },
+      {
+        text: name,
+        fontSize: 10,
+        color: COLORS.textSoft,
+        alignment: "center",
+        margin: [0, 2, 0, 0],
+      },
+    ],
+  };
+}
+
+// แถวข้อมูลพนักงาน — เส้นกรอบบางๆ พื้นเทาอ่อน
+function metaLayout() {
+  return {
+    hLineWidth: (i: number, node) =>
+      i === 0 || i === node.table.body.length ? 0.5 : 0,
+    vLineWidth: () => 0,
+    hLineColor: () => COLORS.border,
+    fillColor: () => "#FAFAFA",
     paddingLeft: () => 8,
     paddingRight: () => 8,
+    paddingTop: () => 4,
+    paddingBottom: () => 4,
+  };
+}
+
+// ตารางรายการ — เส้นคั่นบางๆ + เส้นหนาเหนือแถวรวม
+function rowLayout(itemCount: number) {
+  return {
+    hLineWidth: (i: number, node) => {
+      if (i === node.table.body.length) return 0; // ไม่มีเส้นล่างสุด
+      if (i === itemCount) return 1; // เหนือแถว "รวม"
+      return 0.5;
+    },
+    vLineWidth: () => 0,
+    hLineColor: (i: number) =>
+      i === itemCount ? "#999999" : COLORS.borderLight,
+    paddingLeft: () => 2,
+    paddingRight: () => 2,
     paddingTop: () => 5,
     paddingBottom: () => 5,
   };

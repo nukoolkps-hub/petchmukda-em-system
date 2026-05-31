@@ -113,206 +113,170 @@ function buildSalarySlipHTML(
 <head>
   <meta charset="utf-8"/>
   <title>สลิปเงินเดือน — ${employeeName} ${monthLabel}</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{
-      font-family:'Prompt','Sarabun',sans-serif;
-      background:#FDF8F0;color:#2D1A0E;padding:24px 16px;
+      font-family:'Sarabun',sans-serif;
+      background:#ECECEC;color:#1A1A1A;padding:24px 16px;
       -webkit-print-color-adjust:exact;print-color-adjust:exact;
     }
     .slip{
       max-width:680px;margin:0 auto;background:#fff;
-      border:2px solid #C9973A;border-radius:14px;
-      padding:0;overflow:hidden;
-      box-shadow:0 4px 20px rgba(123,28,28,0.12);
+      border:1px solid #333;padding:34px 40px 28px;
     }
-    .header{
-      background:linear-gradient(135deg,#5C1212 0%,#7B1C1C 60%,#9B3030 100%);
-      color:#E8C87A;padding:18px 24px;position:relative;
+    .letterhead{text-align:center;padding-bottom:12px;margin-bottom:18px;
+      border-bottom:3px double #7B1C1C;}
+    .company{font-size:20px;font-weight:700;color:#7B1C1C;margin-bottom:5px;letter-spacing:0.01em;}
+    .addr{font-size:12px;color:#444;line-height:1.65;}
+    .doc-title{text-align:center;font-size:17px;font-weight:700;color:#1A1A1A;
+      letter-spacing:0.06em;margin-bottom:3px;}
+    .doc-period{text-align:center;font-size:13px;color:#555;margin-bottom:20px;}
+    .meta{
+      display:grid;grid-template-columns:1fr 1fr;gap:7px 28px;
+      margin-bottom:18px;font-size:13px;
+      border:1px solid #DADADA;padding:13px 16px;background:#FAFAFA;
     }
-    .company{
-      font-size:18px;font-weight:800;letter-spacing:0.02em;color:#fff;margin-bottom:4px;
-    }
-    .company-th{font-size:13px;color:#E8C87A;font-weight:500;line-height:1.6;}
-    .gold-line{
-      height:2px;background:linear-gradient(90deg,transparent,#E8C87A,transparent);margin:0;
-    }
-    .title-row{
-      padding:14px 24px;display:flex;justify-content:space-between;align-items:center;
-      border-bottom:1px solid #E8D5B0;background:#F5E6C8;
-    }
-    .title{font-size:17px;font-weight:800;color:#7B1C1C;}
-    .month{font-size:14px;font-weight:700;color:#7A5C3A;}
-    .body{padding:18px 24px;}
-    .info-grid{
-      display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;
-      margin-bottom:16px;font-size:13px;
-    }
-    .info-grid .label{color:#7A5C3A;}
-    .info-grid .value{color:#2D1A0E;font-weight:600;}
-    .section-title{
-      font-size:13px;font-weight:700;color:#7B1C1C;margin:14px 0 8px;
-      padding:6px 10px;background:#F5E6C8;border-left:4px solid #C9973A;border-radius:4px;
-    }
+    .meta .label{color:#666;}
+    .meta .value{color:#1A1A1A;font-weight:600;}
+    .sec-label{font-size:13px;font-weight:700;color:#1A1A1A;
+      margin:16px 0 0;padding-bottom:5px;border-bottom:1.5px solid #1A1A1A;
+      display:flex;justify-content:space-between;letter-spacing:0.02em;}
     table{width:100%;border-collapse:collapse;font-size:13px;}
-    table td{padding:8px 4px;border-bottom:1px dashed #E8D5B0;color:#2D1A0E;}
-    table td.amountValue{text-align:right;font-weight:600;font-family:'Prompt';white-space:nowrap;}
-    table td.green{color:#1A6B3A;}
-    table td.red{color:#C0392B;}
-    .row-total{
-      display:flex;justify-content:space-between;align-items:center;
-      padding:8px 4px;font-weight:700;border-top:2px solid #C9973A;margin-top:4px;
+    table td{padding:7px 2px;border-bottom:1px solid #ECECEC;color:#1A1A1A;}
+    table tr:last-child td{border-bottom:none;}
+    table td.amt{text-align:right;font-weight:600;white-space:nowrap;}
+    .subtotal{display:flex;justify-content:space-between;align-items:center;
+      padding:8px 2px;font-weight:700;font-size:13.5px;border-top:1.5px solid #999;}
+    .net{
+      margin-top:20px;border:2px solid #7B1C1C;padding:14px 20px;
+      display:flex;justify-content:space-between;align-items:center;background:#FBF4F4;
     }
-    .row-total .label{font-size:13px;color:#2D1A0E;}
-    .row-total .amountValue{font-size:15px;}
-    .netSalary-pay{
-      margin-top:18px;background:linear-gradient(135deg,#5C1212,#7B1C1C);
-      color:#E8C87A;padding:18px 22px;border-radius:10px;
-      display:flex;justify-content:space-between;align-items:center;
-    }
-    .netSalary-pay .lbl{font-size:13px;color:#F5E6C8;font-weight:500;}
-    .netSalary-pay .lbl-big{font-size:16px;color:#fff;font-weight:700;margin-top:2px;}
-    .netSalary-pay .amountValue{font-size:28px;font-weight:800;color:#E8C87A;letter-spacing:-0.01em;}
+    .net .lbl{font-size:14px;font-weight:700;color:#7B1C1C;}
+    .net .amt{font-size:26px;font-weight:700;color:#7B1C1C;letter-spacing:-0.01em;}
+    .warn{background:#FBF4F4;border:1px solid #7B1C1C;padding:9px 14px;
+      margin-bottom:14px;font-size:12px;color:#7B1C1C;font-weight:600;}
     .signatures{
-      margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:30px;
-      padding:24px;
+      margin-top:46px;display:grid;grid-template-columns:1fr 1fr;gap:40px;
     }
     .sig-box{text-align:center;}
-    .sig-line{
-      border-top:1.5px dotted #7A5C3A;padding-top:6px;margin-top:50px;
-      font-size:12px;color:#2D1A0E;font-weight:600;
-    }
-    .sig-name{font-size:11px;color:#7A5C3A;margin-top:2px;}
-    .footer{
-      padding:12px 24px;background:#FDF8F0;border-top:1px solid #E8D5B0;
-      font-size:10px;color:#B89A72;text-align:center;
-    }
-    .warn{color:#C0392B;font-weight:600;}
-    @page{size:A4 portrait;margin:6mm;}
+    .sig-line{border-top:1px solid #1A1A1A;padding-top:6px;margin-top:54px;
+      font-size:12.5px;color:#1A1A1A;font-weight:600;}
+    .sig-name{font-size:11px;color:#666;margin-top:2px;}
+    .footer{margin-top:24px;padding-top:10px;border-top:1px solid #E0E0E0;
+      font-size:10px;color:#999;text-align:center;}
+    @page{size:A4 portrait;margin:8mm;}
     @media print{
       html,body{width:210mm;height:297mm;}
       body{background:#fff;padding:0;font-size:11.5px;line-height:1.35;}
-      .slip{box-shadow:none !important;border:1px solid #C9973A !important;
-        max-width:194mm !important;margin:0 auto !important;
-        page-break-inside:avoid;break-inside:avoid;}
+      .slip{border:1px solid #333 !important;max-width:194mm !important;
+        margin:0 auto !important;page-break-inside:avoid;break-inside:avoid;}
       .slip *{page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
     }
     .print-btn{
       position:fixed;bottom:20px;right:20px;
-      background:linear-gradient(135deg,#C9973A,#E8C87A);color:#5C1212;
-      border:none;padding:12px 24px;border-radius:14px;font-size:15px;
-      font-weight:700;cursor:pointer;font-family:inherit;
-      box-shadow:0 6px 20px rgba(201,151,58,0.5);z-index:999;
+      background:#7B1C1C;color:#fff;
+      border:none;padding:11px 22px;border-radius:6px;font-size:14px;
+      font-weight:600;cursor:pointer;font-family:inherit;
+      box-shadow:0 4px 14px rgba(0,0,0,0.25);z-index:999;
     }
   </style>
 </head>
 <body>
   <div class="slip">
-    <div class="header">
+    <div class="letterhead">
       <div class="company">บริษัท ห้างเพชรทองมุกดา จำกัด</div>
-      <div class="company-th">
+      <div class="addr">
         100/10 หมู่ที่ 8 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐม 73160<br/>
-        เลขที่ผู้เสียภาษี <b style="letter-spacing:0.04em">0-7355-59006-56-8</b>
+        เลขประจำตัวผู้เสียภาษี 0-7355-59006-56-8
       </div>
     </div>
-    <div class="gold-line"></div>
 
-    <div class="title-row">
-      <div class="title">💎 สลิปเงินเดือน</div>
-      <div class="month">${monthLabel}</div>
+    <div class="doc-title">สลิปเงินเดือน</div>
+    <div class="doc-period">ประจำงวดเดือน ${monthLabel}</div>
+
+    <div class="meta">
+      <div><span class="label">ชื่อ-นามสกุล:</span> <span class="value">${employeeName}</span></div>
+      <div><span class="label">ตำแหน่ง:</span> <span class="value">${employeePosition}</span></div>
+      <div><span class="label">ธนาคาร:</span> <span class="value">${bank}</span></div>
+      <div><span class="label">เลขที่บัญชี:</span> <span class="value" style="letter-spacing:0.05em">${bankAccountNumber}</span></div>
+      <div><span class="label">วันที่ออกสลิป:</span> <span class="value">${printDate}</span></div>
+      <div><span class="label">รอบเงินเดือน:</span> <span class="value">${monthLabel}</span></div>
     </div>
 
-    <div class="body">
-      <div class="info-grid">
-        <div><span class="label">ชื่อ-นามสกุล:</span> <span class="value">${employeeName}</span></div>
-        <div><span class="label">ตำแหน่ง:</span> <span class="value">${employeePosition}</span></div>
-        <div><span class="label">ธนาคาร:</span> <span class="value">${bank}</span></div>
-        <div><span class="label">เลขที่บัญชี:</span> <span class="value" style="letter-spacing:0.05em">${bankAccountNumber}</span></div>
-        <div><span class="label">วันที่ออกสลิป:</span> <span class="value">${printDate}</span></div>
-        <div><span class="label">รอบเงินเดือน:</span> <span class="value">${monthLabel}</span></div>
-      </div>
+    ${
+      salaryCalculation.losesBaseSalary
+        ? `
+    <div class="warn">ไม่ได้รับเงินเดือนพื้นฐาน — ยอดขายต่ำกว่าเกณฑ์ขั้นต่ำ</div>`
+        : ""
+    }
 
-      ${
-        salaryCalculation.losesBaseSalary
-          ? `
-      <div style="background:#FDECEA;border:1.5px solid #C0392B40;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#C0392B;font-weight:600;">
-        ⚠ ไม่ได้รับเงินเดือนพื้นฐาน — ยอดขายต่ำกว่าเกณฑ์ขั้นต่ำ
-      </div>`
-          : ""
-      }
+    <div class="sec-label"><span>รายการรายรับ</span><span>จำนวนเงิน (บาท)</span></div>
+    <table>
+      ${earnRows
+        .map(
+          (r) => `
+        <tr>
+          <td>${r.label}</td>
+          <td class="amt">${formatNumber(r.value)}</td>
+        </tr>`,
+        )
+        .join("")}
+    </table>
+    <div class="subtotal">
+      <span>รวมรายรับ</span>
+      <span>${formatNumber(salaryCalculation.earnings)}</span>
+    </div>
 
-      <div class="section-title">รายรับ</div>
-      <table>
-        ${earnRows
-          .map(
-            (r) => `
-          <tr>
-            <td>${r.label}</td>
-            <td class="amountValue green">+ ฿${formatNumber(r.value)}</td>
-          </tr>`,
-          )
-          .join("")}
-      </table>
-      <div class="row-total">
-        <span class="label">รวมรายรับ</span>
-        <span class="amountValue green" style="color:#1A6B3A">฿${formatNumber(salaryCalculation.earnings)}</span>
-      </div>
+    <div class="sec-label"><span>รายการหัก</span><span>จำนวนเงิน (บาท)</span></div>
+    ${
+      dedRows.length > 0
+        ? `
+    <table>
+      ${dedRows
+        .map(
+          (r) => `
+        <tr>
+          <td>${r.label}</td>
+          <td class="amt">${formatNumber(r.value)}</td>
+        </tr>`,
+        )
+        .join("")}
+    </table>
+    <div class="subtotal">
+      <span>รวมรายการหัก</span>
+      <span>${formatNumber(salaryCalculation.deductions)}</span>
+    </div>`
+        : `
+    <div style="text-align:center;padding:12px;color:#777;font-size:13px;">— ไม่มีรายการหัก —</div>`
+    }
 
-      <div class="section-title">รายการหัก</div>
-      ${
-        dedRows.length > 0
-          ? `
-      <table>
-        ${dedRows
-          .map(
-            (r) => `
-          <tr>
-            <td>${r.label}</td>
-            <td class="amountValue red">− ฿${formatNumber(r.value)}</td>
-          </tr>`,
-          )
-          .join("")}
-      </table>
-      <div class="row-total">
-        <span class="label">รวมรายการหัก</span>
-        <span class="amountValue red" style="color:#C0392B">฿${formatNumber(salaryCalculation.deductions)}</span>
-      </div>`
-          : `
-      <div style="text-align:center;padding:14px;color:#7A5C3A;font-size:13px;">— ไม่มีรายการหัก —</div>`
-      }
-
-      <div class="netSalary-pay">
-        <div>
-          <div class="lbl">เงินสุทธิที่ได้รับ</div>
-          <div class="lbl-big">Net Pay</div>
-        </div>
-        <div class="amountValue">฿${formatNumber(salaryCalculation.netSalary)}</div>
-      </div>
+    <div class="net">
+      <span class="lbl">เงินสุทธิที่ได้รับ</span>
+      <span class="amt">฿${formatNumber(salaryCalculation.netSalary)}</span>
     </div>
 
     <div class="signatures">
       <div class="sig-box">
-        <div class="sig-line">ลายเซ็นพนักงาน</div>
+        <div class="sig-line">ลงชื่อพนักงานผู้รับเงิน</div>
         <div class="sig-name">(${employeeName})</div>
       </div>
       <div class="sig-box">
-        <div class="sig-line">กรรมการผู้บริหาร</div>
+        <div class="sig-line">ลงชื่อผู้มีอำนาจลงนาม</div>
         <div class="sig-name">บริษัท ห้างเพชรทองมุกดา จำกัด</div>
       </div>
     </div>
 
     <div class="footer">
-      สลิปนี้สร้างโดยระบบอัตโนมัติ · พิมพ์เมื่อ ${printDate}
+      เอกสารนี้จัดทำโดยระบบอัตโนมัติ · ออกเอกสารเมื่อ ${printDate}
     </div>
   </div>
 
   ${
     includePrintControls
-      ? `<button class="print-btn no-print" onclick="window.print()">🖨 พิมพ์ / บันทึก PDF</button>
+      ? `<button class="print-btn no-print" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
   <script>
-    // auto-trigger print dialog หลังโหลดเสร็จ
     window.addEventListener('load',()=>setTimeout(()=>window.print(),800));
   </script>`
       : ""

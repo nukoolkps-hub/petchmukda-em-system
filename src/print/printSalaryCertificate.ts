@@ -126,126 +126,84 @@ function buildCertificateHTML(
 <head>
   <meta charset="utf-8"/>
   <title>หนังสือรับรองเงินเดือน — ${employeeName}</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{
-      font-family:'Prompt','Sarabun',sans-serif;
-      background:#FDF8F0;color:#2D1A0E;padding:20px 16px;
+      font-family:'Sarabun',sans-serif;
+      background:#ECECEC;color:#1A1A1A;padding:20px 16px;
       -webkit-print-color-adjust:exact;print-color-adjust:exact;
     }
     .doc{
       max-width:760px;margin:0 auto;background:#fff;
-      border:2px solid #C9973A;border-radius:14px;
-      padding:0;overflow:hidden;
-      box-shadow:0 4px 24px rgba(123,28,28,0.12);
+      border:1px solid #333;padding:40px 56px 36px;
       display:flex;flex-direction:column;
     }
-    .header{
-      background:linear-gradient(135deg,#5C1212 0%,#7B1C1C 60%,#9B3030 100%);
-      color:#E8C87A;padding:22px 32px;position:relative;
-      text-align:center;
-    }
-    .company{
-      font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:0.01em;
-    }
-    .addr{font-size:13px;color:#E8C87A;line-height:1.7;font-weight:500;}
-    .gold-line{
-      height:3px;background:linear-gradient(90deg,#C9973A,#E8C87A 40%,#E8C87A 60%,#C9973A);
-    }
-    .title-section{
-      padding:24px 32px 18px;text-align:center;
-      border-bottom:1px dashed #E8D5B0;position:relative;
-    }
-    .ref-no{
-      font-size:12px;color:#7A5C3A;font-weight:500;
-      margin-bottom:10px;letter-spacing:0.02em;
-    }
+    .letterhead{text-align:center;padding-bottom:14px;
+      border-bottom:3px double #7B1C1C;margin-bottom:8px;}
+    .company{font-size:22px;font-weight:700;color:#7B1C1C;margin-bottom:6px;letter-spacing:0.01em;}
+    .addr{font-size:12.5px;color:#444;line-height:1.7;}
+    .ref-no{font-size:13px;color:#1A1A1A;font-weight:600;margin-top:18px;}
     .title{
-      font-size:26px;font-weight:800;color:#7B1C1C;letter-spacing:0.05em;
-      margin-bottom:8px;
+      text-align:center;font-size:22px;font-weight:700;color:#1A1A1A;
+      letter-spacing:0.08em;margin:22px 0 4px;
     }
-    .title-deco{
-      display:inline-flex;align-items:center;gap:14px;color:#C9973A;font-size:13px;margin-top:4px;
-    }
-    .title-deco::before, .title-deco::after{
-      content:"";width:60px;height:1px;background:linear-gradient(to right,transparent,#C9973A);
-    }
-    .title-deco::after{background:linear-gradient(to left,transparent,#C9973A);}
-    .body{
-      padding:30px 48px 20px;font-size:16px;line-height:2.1;color:#2D1A0E;flex:1;
-    }
-    .body p{margin-bottom:12px;text-indent:60px;}
-    .body p.no-indent{text-indent:0;}
-    .body b{font-weight:700;color:#7B1C1C;}
-    .date-line{
-      margin-top:30px;text-align:right;font-size:15px;color:#2D1A0E;padding-right:80px;
-    }
-    .signatures{
-      margin-top:50px;display:grid;grid-template-columns:1fr 1fr;gap:30px;
-      padding:0 48px 30px;
-    }
+    .title-en{text-align:center;font-size:12px;color:#777;letter-spacing:0.12em;
+      margin-bottom:26px;text-transform:uppercase;}
+    .body{font-size:16px;line-height:2.15;color:#1A1A1A;flex:1;}
+    .body p{margin-bottom:14px;text-indent:56px;text-align:justify;}
+    .body b{font-weight:700;color:#1A1A1A;}
+    .date-line{margin-top:34px;text-align:right;font-size:15px;color:#1A1A1A;padding-right:60px;}
+    .signatures{margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:36px;}
     .sig-box{text-align:center;}
-    .sig-line{
-      border-top:1.5px dotted #7A5C3A;padding-top:8px;margin-top:80px;
-      font-size:13px;color:#2D1A0E;font-weight:600;
-    }
-    .sig-name{font-size:11px;color:#7A5C3A;margin-top:3px;}
-    .stamp{
-      width:120px;height:120px;border:3px solid #C9973A;border-radius:50%;
-      margin:14px auto 0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      color:#7B1C1C;opacity:0.5;font-size:11px;text-align:center;line-height:1.4;
-    }
-    .validity{
-      margin:18px 48px 0;padding:10px 14px;border-top:1px solid #E8D5B0;
-      font-size:12px;color:#7A5C3A;text-align:center;font-style:italic;
-    }
-    @page{size:A4 portrait;margin:6mm;}
+    .sig-line{border-top:1px solid #1A1A1A;padding-top:8px;margin-top:80px;
+      font-size:13px;color:#1A1A1A;font-weight:600;}
+    .sig-name{font-size:11.5px;color:#666;margin-top:3px;}
+    .stamp{width:104px;height:104px;border:1.5px solid #999;border-radius:50%;
+      margin:16px auto 0;display:flex;align-items:center;justify-content:center;
+      color:#999;opacity:0.7;font-size:11px;text-align:center;line-height:1.4;}
+    .validity{margin-top:26px;padding-top:12px;border-top:1px solid #E0E0E0;
+      font-size:11.5px;color:#777;text-align:center;}
+    @page{size:A4 portrait;margin:8mm;}
     @media print{
       html,body{width:210mm;height:297mm;}
       body{background:#fff;padding:0;font-size:13px;line-height:1.4;}
-      /* ยืดกรอบให้เต็มหน้ากระดาษ A4 (297mm - margin 6mm x 2 = 285mm)
-         .body มี flex:1 → ดันส่วนเซ็นชื่อ + validity ลงล่างสุดของกรอบ */
-      .doc{box-shadow:none !important;border:1px solid #C9973A !important;
-        min-height:285mm !important;max-width:198mm !important;margin:0 auto !important;
+      .doc{border:1px solid #333 !important;
+        min-height:281mm !important;max-width:194mm !important;margin:0 auto !important;
         page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
     }
     .print-btn{
       position:fixed;bottom:20px;right:20px;
-      background:linear-gradient(135deg,#C9973A,#E8C87A);color:#5C1212;
-      border:none;padding:12px 24px;border-radius:14px;font-size:15px;
-      font-weight:700;cursor:pointer;font-family:inherit;
-      box-shadow:0 6px 20px rgba(201,151,58,0.5);z-index:999;
+      background:#7B1C1C;color:#fff;
+      border:none;padding:11px 22px;border-radius:6px;font-size:14px;
+      font-weight:600;cursor:pointer;font-family:inherit;
+      box-shadow:0 4px 14px rgba(0,0,0,0.25);z-index:999;
     }
   </style>
 </head>
 <body>
   <div class="doc">
-    <div class="header">
+    <div class="letterhead">
       <div class="company">บริษัท ห้างเพชรทองมุกดา จำกัด</div>
       <div class="addr">
         100/10 หมู่ที่ 8 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐม 73160<br/>
-        โทร. <b style="letter-spacing:0.02em">02-420-6075</b> ·
-        เลขที่ผู้เสียภาษี <b style="letter-spacing:0.04em">0-7355-59006-56-8</b>
+        โทร. 02-420-6075 · เลขประจำตัวผู้เสียภาษี 0-7355-59006-56-8
       </div>
     </div>
-    <div class="gold-line"></div>
 
-    <div class="title-section">
-      <div class="ref-no">เลขที่ ${certRefNo}</div>
-      <div class="title">หนังสือรับรองเงินเดือน</div>
-      <div class="title-deco">CERTIFICATE OF SALARY</div>
-    </div>
+    <div class="ref-no">เลขที่ ${certRefNo}</div>
+    <div class="title">หนังสือรับรองเงินเดือน</div>
+    <div class="title-en">Certificate of Salary</div>
 
     <div class="body">
       <p>
         หนังสือฉบับนี้ออกให้เพื่อแสดงว่า <b>${prefix} ${employeeName}</b>
-        ได้ปฏิบัติหน้าที่ ในตำแหน่ง<b>${employeeRole}</b>
+        ได้ปฏิบัติหน้าที่ในตำแหน่ง <b>${employeeRole}</b>
         ของ <b>บริษัท ห้างเพชรทองมุกดา จำกัด</b>
-        และปฏิบัติงานตั้งแต่ <b>${startWork}</b>
+        โดยปฏิบัติงานตั้งแต่ <b>${startWork}</b>
         ${yearsOfService ? `รวมอายุงาน <b>${yearsOfService}</b>` : ""}
-        มีอัตราเงินเดือน ประจำเดือนละ <b>${formatNumber(baseSalary)} บาท</b>
+        มีอัตราเงินเดือนประจำเดือนละ <b>${formatNumber(baseSalary)} บาท</b>
         (<b>${baseInWords}</b>)
         ซึ่งอัตรานี้ยังไม่รวมค่าตอบแทนและเงินพิเศษอื่น ๆ
       </p>
@@ -255,31 +213,29 @@ function buildCertificateHTML(
           : ""
       }
 
-      <div class="date-line">ออกให้เมื่อวันที่ ${printDate}</div>
+      <div class="date-line">ออกให้ ณ วันที่ ${printDate}</div>
     </div>
 
     <div class="signatures">
       <div class="sig-box">
-        <div class="sig-line">ลายเซ็นพนักงาน</div>
+        <div class="sig-line">ลงชื่อพนักงาน</div>
         <div class="sig-name">(${prefix} ${employeeName})</div>
       </div>
       <div class="sig-box">
-        <div class="sig-line">กรรมการผู้บริหาร</div>
+        <div class="sig-line">ลงชื่อผู้มีอำนาจลงนาม</div>
         <div class="sig-name">บริษัท ห้างเพชรทองมุกดา จำกัด</div>
-        <div class="stamp">
-          ตราประทับ<br/>บริษัท
-        </div>
+        <div class="stamp">ตราประทับบริษัท</div>
       </div>
     </div>
 
     <div class="validity">
-      ※ หนังสือฉบับนี้มีอายุ 30 วัน นับจากวันที่ออกเอกสาร
+      หนังสือฉบับนี้มีอายุ 30 วัน นับจากวันที่ออกเอกสาร
     </div>
   </div>
 
   ${
     includePrintControls
-      ? `<button class="print-btn no-print" onclick="window.print()">🖨 พิมพ์ / บันทึก PDF</button>
+      ? `<button class="print-btn no-print" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
   <script>
     window.addEventListener('load',()=>setTimeout(()=>window.print(),800));
   </script>`
