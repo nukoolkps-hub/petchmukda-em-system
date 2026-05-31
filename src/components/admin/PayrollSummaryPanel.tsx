@@ -25,6 +25,7 @@ import {
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
+import BaseModal from "../shared/BaseModal";
 
 /* ─── Admin: Payroll Summary Panel ───────────────────────────────
    สรุปเงินเดือนสุทธิทุกคน + ข้อมูลธนาคาร พร้อมปุ่มคัดลอกเลขบัญชี
@@ -47,6 +48,11 @@ export default function PayrollSummaryPanel({
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // กล่องยืนยันในแอป (แทน native confirm ที่เพี้ยน/ถูกบล็อกใน mobile webview)
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    total: number;
+    count: number;
+  } | null>(null);
   const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selectedMonth);
   const advanceDataBlocked =
     monthlyApprovedAdvances.loading || Boolean(monthlyApprovedAdvances.error);
@@ -264,19 +270,13 @@ export default function PayrollSummaryPanel({
     .join("|");
 
   // ยืนยันยอด (ใช้ร่วมทั้งปุ่มยืนยันครั้งแรกและยืนยันใหม่) — กันกดซ้ำด้วย submitting
+  // การยืนยันครั้งแรกถามผ่าน pendingConfirm modal ก่อน (ไม่ใช่ native confirm)
   async function confirmPayroll(
     totalForMonth: number,
     empCountForMonth: number,
     isRenew: boolean,
   ) {
     if (advanceDataBlocked || submitting) return;
-    if (
-      !isRenew &&
-      !confirm(
-        `ยืนยันการโอนเงินเดือนเดือนนี้?\n\nยอดรวม ฿${formatThaiNumber(totalForMonth)}\nจำนวน ${empCountForMonth} คน\n\nคุณยังสามารถแก้ไขข้อมูลภายหลังได้`,
-      )
-    )
-      return;
     setSubmitting(true);
     try {
       await onSetPayrollConfirm(selectedMonth, {
@@ -469,7 +469,10 @@ export default function PayrollSummaryPanel({
         return (
           <button
             onClick={() =>
-              confirmPayroll(totalForMonth, empCountForMonth, false)
+              setPendingConfirm({
+                total: totalForMonth,
+                count: empCountForMonth,
+              })
             }
             disabled={advanceDataBlocked || submitting}
             className={`w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2 ${advanceDataBlocked || submitting ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
@@ -631,6 +634,54 @@ export default function PayrollSummaryPanel({
           },
         )}
       </div>
+
+      {/* กล่องยืนยันยอด (in-app — แทน native confirm) */}
+      {pendingConfirm && (
+        <BaseModal
+          onClose={() => setPendingConfirm(null)}
+          zIndexClass="z-1000"
+          maxWidthClass="max-w-[360px]"
+          overlayClassName="px-6 bg-[rgba(45,26,14,0.55)] backdrop-blur-xs"
+          contentClassName="rounded-[20px] px-6 py-7"
+        >
+          <div className="w-14 h-14 rounded-full bg-gold-pale flex items-center justify-center mx-auto mb-4">
+            <IconCreditCard size={26} color={COLORS.maroon} strokeWidth={2.4} />
+          </div>
+          <div className="font-bold text-lg text-txt text-center mb-2">
+            ยืนยันการโอนเงินเดือนเดือนนี้?
+          </div>
+          <div className="text-sm text-txt-mid text-center mb-2 leading-[1.9]">
+            ยอดรวม{" "}
+            <b className="text-maroon">
+              ฿{formatThaiNumber(pendingConfirm.total)}
+            </b>
+            <br />
+            จำนวน <b>{pendingConfirm.count} คน</b>
+          </div>
+          <div className="text-xs text-txt-soft text-center mb-5">
+            คุณยังสามารถแก้ไขข้อมูลภายหลังได้
+          </div>
+          <div className="flex gap-2.5">
+            <button
+              onClick={() => setPendingConfirm(null)}
+              className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={() => {
+                const p = pendingConfirm;
+                setPendingConfirm(null);
+                confirmPayroll(p.total, p.count, false);
+              }}
+              className="flex-1 p-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_var(--color-gold)/0.3] inline-flex items-center justify-center gap-1.5"
+            >
+              <IconCheck size={16} strokeWidth={2.6} />
+              ยืนยัน
+            </button>
+          </div>
+        </BaseModal>
+      )}
     </div>
   );
 }
