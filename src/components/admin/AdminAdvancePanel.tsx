@@ -5,7 +5,6 @@ import {
   CircleDollarSign as IconCircleDollarSign,
   Copy as IconCopy,
   FileText as IconFileText,
-  Landmark as IconLandmark,
   Upload as IconUpload,
   X as IconX,
   XCircle as IconXCircle,
@@ -51,6 +50,7 @@ export default function AdminAdvancePanel({
   advanceRequests,
   employeeDirectory,
   onUpdate,
+  showToast,
 }) {
   const [filter, setFilter] = useState<AdvanceFilter>("pending");
   const [selectedMonth, setSelectedMonth] = useState(currentYearMonth);
@@ -118,24 +118,32 @@ export default function AdminAdvancePanel({
         },
         request,
       );
+      showToast?.("อนุมัติและส่งสลิปแล้ว");
     } catch (err) {
       console.error("[AdminAdvancePanel] upload slip failed:", err);
-      alert((err as Error).message || "อัปโหลดสลิปไม่สำเร็จ");
+      showToast?.((err as Error).message || "อัปโหลดสลิปไม่สำเร็จ");
     } finally {
       setUploadingSlip(null);
     }
   }
 
-  function handleReject(request) {
-    onUpdate(
-      request.id,
-      {
-        status: "rejected",
-        rejectedAt: new Date().toISOString(),
-      },
-      request,
-    );
-    setConfirmReject(null);
+  async function handleReject(request) {
+    try {
+      await onUpdate(
+        request.id,
+        {
+          status: "rejected",
+          rejectedAt: new Date().toISOString(),
+        },
+        request,
+      );
+      showToast?.("ปฏิเสธคำขอแล้ว");
+    } catch (err) {
+      console.error("[AdminAdvancePanel] reject failed:", err);
+      showToast?.("ปฏิเสธไม่สำเร็จ");
+    } finally {
+      setConfirmReject(null);
+    }
   }
 
   return (

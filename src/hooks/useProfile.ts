@@ -23,6 +23,7 @@ interface UseProfileOptions {
     id: string,
     fields: Partial<Employee>,
   ) => void | Promise<void>;
+  showToast?: (msg: string) => void;
 }
 
 export default function useProfile({
@@ -30,6 +31,7 @@ export default function useProfile({
   employeeDirectory,
   isAdmin = false,
   updateEmployee,
+  showToast,
 }: UseProfileOptions) {
   /* ─── Auth-derived profile ─────────────────────────────────── */
   const authEmployee = useMemo(() => {
@@ -110,6 +112,7 @@ export default function useProfile({
       ...fields,
     });
     setShowEditProfile(false);
+    showToast?.("บันทึกโปรไฟล์แล้ว");
   }
 
   // keep profile.role in sync when admin updates roles

@@ -1,33 +1,3 @@
-import {
-  AlertOctagon as IconAlertOctagon,
-  Ban as IconBan,
-  Banknote as IconBanknote,
-  Briefcase as IconBriefcase,
-  Landmark as IconBuildingBank,
-  CalendarDays as IconCalendar,
-  Check as IconCheck,
-  ChevronDown as IconChevronDown,
-  CircleCheck as IconCircleCheck,
-  CircleDollarSign as IconCircleDollarSign,
-  Copy as IconCopy,
-  Cross as IconCross,
-  Diamond as IconDiamond,
-  FastForward as IconFastForward,
-  Lightbulb as IconLightbulb,
-  Lock as IconLock,
-  MessageCircle as IconMessageCircle,
-  Package as IconPackage,
-  Pencil as IconPencil,
-  RefreshCw as IconRefresh,
-  Settings as IconSettings,
-  ShoppingBag as IconShoppingBag,
-  Sparkles as IconSparkles,
-  Sun as IconSun,
-  Ticket as IconTicket,
-  Trash2 as IconTrash,
-  User as IconUser,
-  X as IconX,
-} from "lucide-react";
 import { useEffect, useState } from "react";
 import { COLORS } from "../../constants";
 import {
@@ -214,6 +184,7 @@ export default function AdminPanel({
           advanceRequests={advanceRequests || []}
           employeeDirectory={employeeDirectory}
           onUpdate={onUpdateAdvance}
+          showToast={showToast}
         />
       )}
 

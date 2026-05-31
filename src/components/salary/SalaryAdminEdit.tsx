@@ -10,7 +10,6 @@ import {
   Handshake as IconHandshake,
   Lightbulb as IconLightbulb,
   Lock as IconLock,
-  Minus as IconMinus,
   Package as IconPackage,
   Plus as IconPlus,
   RefreshCw as IconRefresh,
@@ -32,6 +31,7 @@ import {
   computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
+import BaseModal from "../shared/BaseModal";
 
 /* ─── Salary Admin Edit ────────────────────────────────────────── */
 export default function SalaryAdminEdit({
@@ -54,6 +54,10 @@ export default function SalaryAdminEdit({
   );
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
+  // กล่องเตือนในแอป (แทน window.confirm ที่เพี้ยนใน mobile webview)
+  const [pendingEmployeeId, setPendingEmployeeId] = useState<string | null>(
+    null,
+  );
   const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selectedMonth);
 
   const employeeInfo = employeeDirectory.find(
@@ -82,10 +86,8 @@ export default function SalaryAdminEdit({
   // ถ้าเปลี่ยน employee ภายในหน้านี้ — ถ้ามี draft ให้เตือนก่อน
   function tryChangeEmployee(newId) {
     if (dirty) {
-      const ok = window.confirm(
-        "⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากเปลี่ยนพนักงาน ข้อมูลที่แก้ไขจะหายไป\n\nต้องการเปลี่ยนพนักงานใช่ไหม?",
-      );
-      if (!ok) return;
+      setPendingEmployeeId(newId);
+      return;
     }
     setDraft({});
     setSelectedEmployeeId(newId);
@@ -285,7 +287,7 @@ export default function SalaryAdminEdit({
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 mb-3.5">
         {employeeDirectory.map((employee) => {
           const selected = employee.id === selectedEmployeeId;
-          const role = roles?.find((r) => r.id === employee.roleId);
+          const _role = roles?.find((r) => r.id === employee.roleId);
           const monthData = salaryData[employee.id]?.[selectedMonth];
           const hasData = !!(
             monthData &&
@@ -1323,6 +1325,52 @@ export default function SalaryAdminEdit({
             {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
           </button>
         </div>
+      )}
+
+      {/* กล่องเตือนก่อนสลับพนักงานทั้งที่ยังมี draft ค้าง (in-app — แทน native confirm) */}
+      {pendingEmployeeId && (
+        <BaseModal
+          onClose={() => setPendingEmployeeId(null)}
+          zIndexClass="z-1000"
+          maxWidthClass="max-w-[360px]"
+          overlayClassName="px-6 bg-[rgba(45,26,14,0.55)] backdrop-blur-xs"
+          contentClassName="rounded-[20px] px-6 py-7"
+        >
+          <div className="w-14 h-14 rounded-full bg-amber-lt flex items-center justify-center mx-auto mb-4">
+            <IconAlertTriangle
+              size={26}
+              className="text-amber"
+              strokeWidth={2.5}
+            />
+          </div>
+          <div className="font-bold text-lg text-txt text-center mb-2">
+            ยังไม่ได้บันทึกการเปลี่ยนแปลง
+          </div>
+          <div className="text-sm text-txt-mid text-center mb-5 leading-[1.8]">
+            หากเปลี่ยนพนักงาน ข้อมูลที่แก้ไขจะหายไป
+            <br />
+            ต้องการเปลี่ยนพนักงานใช่ไหม?
+          </div>
+          <div className="flex gap-2.5">
+            <button
+              onClick={() => setPendingEmployeeId(null)}
+              className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
+            >
+              อยู่ต่อ
+            </button>
+            <button
+              onClick={() => {
+                const next = pendingEmployeeId;
+                setPendingEmployeeId(null);
+                setDraft({});
+                setSelectedEmployeeId(next);
+              }}
+              className="flex-1 p-3.5 rounded-xl border-none bg-amber text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_#D9770640]"
+            >
+              เปลี่ยนพนักงาน
+            </button>
+          </div>
+        </BaseModal>
       )}
     </div>
   );

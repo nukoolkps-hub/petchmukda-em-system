@@ -51,6 +51,7 @@ export default function SalaryView({
   onOpenAdvance,
   onOpenHistory,
   roles,
+  showToast,
 }) {
   const now = new Date();
   const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -146,7 +147,6 @@ export default function SalaryView({
       salaryCalculation: computedSalary,
     };
   }, [
-    profile,
     allLeaves,
     selectedMonth,
     advanceRequests,
@@ -156,11 +156,12 @@ export default function SalaryView({
     salaryData,
     employeeInfo,
     data,
+    salaryEmployeeId,
   ]);
 
   function handlePrintSlip() {
     if (!data || !salaryCalculation) {
-      alert("ไม่มีข้อมูลเงินเดือนเดือนนี้");
+      showToast?.("ไม่มีข้อมูลเงินเดือนเดือนนี้");
       return;
     }
     if (isLineWebview()) {
@@ -188,7 +189,7 @@ export default function SalaryView({
 
   function handlePrintCert() {
     if (!data) {
-      alert("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
+      showToast?.("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
       return;
     }
     setShowCertModal(true);

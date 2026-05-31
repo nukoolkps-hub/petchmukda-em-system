@@ -2,6 +2,7 @@
    All business logic lives in hooks; all UI in focused components.
    This file wires everything together.                            */
 
+import { AlertTriangle as IconAlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Navigate,
@@ -14,11 +15,7 @@ import AdminPanel from "./components/admin/AdminPanel";
 import HomeTab from "./components/home/HomeTab";
 import RequestTab from "./components/home/RequestTab";
 import SuccessScreen from "./components/home/SuccessScreen";
-import {
-  ADMIN_NAV_GROUPS,
-  type AdminSectionId,
-  getAdminGroupForSection,
-} from "./components/layout/adminNavConfig";
+import type { AdminSectionId } from "./components/layout/adminNavConfig";
 import BottomNav from "./components/layout/BottomNav";
 import DesktopHeader from "./components/layout/DesktopHeader";
 import MobileHeader from "./components/layout/MobileHeader";
@@ -30,6 +27,7 @@ import ManualModal from "./components/modals/ManualModal";
 import PoolFlowModal from "./components/modals/PoolFlowModal";
 import ProfileSetupModal from "./components/modals/ProfileSetupModal";
 import SalaryView from "./components/salary/SalaryView";
+import BaseModal from "./components/shared/BaseModal";
 import Diamond from "./components/shared/Diamond";
 import { COLORS } from "./constants";
 import { useAuth } from "./contexts/AuthContext";
@@ -147,7 +145,13 @@ export default function LeaveApp() {
     currentEmployee,
     employeeId,
     salaryDisabled,
-  } = useProfile({ authUser, employeeDirectory, isAdmin, updateEmployee });
+  } = useProfile({
+    authUser,
+    employeeDirectory,
+    isAdmin,
+    updateEmployee,
+    showToast,
+  });
   const currentEmployeeId = employeeId || "";
   const myAdvanceRequests = currentEmployeeId
     ? advanceRequests.filter((r) => r.employeeId === currentEmployeeId)
@@ -197,14 +201,15 @@ export default function LeaveApp() {
   /* ─── Admin section state (lifted up so the Sidebar can drive it on desktop) */
   const [adminSection, setAdminSection] = useState<AdminSectionId>("summary");
   const [adminUnsavedDirty, setAdminUnsavedDirty] = useState(false);
+  // กล่องเตือนในแอป (แทน window.confirm ที่เพี้ยนใน mobile webview)
+  const [pendingSection, setPendingSection] = useState<AdminSectionId | null>(
+    null,
+  );
   function tryChangeAdminSection(next: AdminSectionId) {
     if (next === adminSection) return;
     if (adminUnsavedDirty) {
-      const ok = window.confirm(
-        "⚠️ คุณยังไม่ได้บันทึกการเปลี่ยนแปลง\n\nหากออกจากหน้านี้ ข้อมูลที่แก้ไขจะหายไป\n\nต้องการออกจากหน้านี้ใช่ไหม?",
-      );
-      if (!ok) return;
-      setAdminUnsavedDirty(false);
+      setPendingSection(next);
+      return;
     }
     setAdminSection(next);
   }
@@ -416,6 +421,7 @@ export default function LeaveApp() {
                         onOpenAdvance={() => setShowAdvanceModal(true)}
                         onOpenHistory={() => setShowHistoryModal(true)}
                         roles={roles}
+                        showToast={showToast}
                       />
                     </div>
                   )
@@ -511,6 +517,51 @@ export default function LeaveApp() {
               allLeaves={allLeaves}
               roles={roles}
             />
+          )}
+
+          {pendingSection && (
+            <BaseModal
+              onClose={() => setPendingSection(null)}
+              zIndexClass="z-1000"
+              maxWidthClass="max-w-[360px]"
+              overlayClassName="px-6 bg-[rgba(45,26,14,0.55)] backdrop-blur-xs"
+              contentClassName="rounded-[20px] px-6 py-7"
+            >
+              <div className="w-14 h-14 rounded-full bg-amber-lt flex items-center justify-center mx-auto mb-4">
+                <IconAlertTriangle
+                  size={26}
+                  className="text-amber"
+                  strokeWidth={2.5}
+                />
+              </div>
+              <div className="font-bold text-lg text-txt text-center mb-2">
+                ยังไม่ได้บันทึกการเปลี่ยนแปลง
+              </div>
+              <div className="text-sm text-txt-mid text-center mb-5 leading-[1.8]">
+                หากออกจากหน้านี้ ข้อมูลที่แก้ไขจะหายไป
+                <br />
+                ต้องการออกจากหน้านี้ใช่ไหม?
+              </div>
+              <div className="flex gap-2.5">
+                <button
+                  onClick={() => setPendingSection(null)}
+                  className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
+                >
+                  อยู่ต่อ
+                </button>
+                <button
+                  onClick={() => {
+                    const next = pendingSection;
+                    setPendingSection(null);
+                    setAdminUnsavedDirty(false);
+                    setAdminSection(next);
+                  }}
+                  className="flex-1 p-3.5 rounded-xl border-none bg-amber text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_#D9770640]"
+                >
+                  ออกจากหน้านี้
+                </button>
+              </div>
+            </BaseModal>
           )}
 
           {/* Toast */}
