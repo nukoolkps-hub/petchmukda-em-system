@@ -6,6 +6,7 @@ import {
   Landmark as IconBuildingBank,
   CalendarDays as IconCalendar,
   Check as IconCheck,
+  ChevronDown as IconChevronDown,
   CircleCheck as IconCircleCheck,
   CircleDollarSign as IconCircleDollarSign,
   Copy as IconCopy,
@@ -338,21 +339,28 @@ export default function AdminPanel({
                     <IconCalendar size={16} strokeWidth={2.4} />
                     สรุปรายเดือน
                   </div>
-                  <select
-                    value={effectiveMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="pl-2.5 pr-6 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
-                  >
-                    {months.map((m) => {
-                      const [y, mo] = m.split("-");
-                      return (
-                        <option key={m} value={m}>
-                          {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                          {parseInt(y, 10) + 543}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  <div className="relative inline-block">
+                    <select
+                      value={effectiveMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      className="appearance-none cursor-pointer pl-2.5 pr-7 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
+                    >
+                      {months.map((m) => {
+                        const [y, mo] = m.split("-");
+                        return (
+                          <option key={m} value={m}>
+                            {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
+                            {parseInt(y, 10) + 543}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <IconChevronDown
+                      size={12}
+                      strokeWidth={2.4}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                    />
+                  </div>
                 </div>
                 {empNames.length === 0 && (
                   <div className="text-txt-soft text-sm text-center py-4">
@@ -519,17 +527,24 @@ export default function AdminPanel({
                     <IconCalendar size={16} strokeWidth={2.4} />
                     สรุปรายปี
                   </div>
-                  <select
-                    value={selYear}
-                    onChange={(e) => setSelYear(e.target.value)}
-                    className="pl-2.5 pr-6 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
-                  >
-                    {years.map((y) => (
-                      <option key={y} value={y}>
-                        ปี {parseInt(y, 10) + 543}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative inline-block">
+                    <select
+                      value={selYear}
+                      onChange={(e) => setSelYear(e.target.value)}
+                      className="appearance-none cursor-pointer pl-2.5 pr-7 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
+                    >
+                      {years.map((y) => (
+                        <option key={y} value={y}>
+                          ปี {parseInt(y, 10) + 543}
+                        </option>
+                      ))}
+                    </select>
+                    <IconChevronDown
+                      size={12}
+                      strokeWidth={2.4}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                    />
+                  </div>
                 </div>
                 {empNames.length === 0 && (
                   <div className="text-txt-soft text-sm text-center py-4">
@@ -646,30 +661,44 @@ export default function AdminPanel({
       {section === "leaves" && (
         <div>
           <div className="flex gap-2 mb-3.5">
-            <select
-              value={employeeFilter}
-              onChange={(e) => setFilterEmp(e.target.value)}
-              className="flex-1 pl-3 pr-6 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
-            >
-              <option value="">พนักงานทั้งหมด</option>
-              {uniqueEmployees.map((e) => (
-                <option key={e} value={e}>
-                  {e}
-                </option>
-              ))}
-            </select>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="flex-1 pl-3 pr-6 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
-            >
-              <option value="">ประเภททั้งหมด</option>
-              {LEAVE_TYPES.map((lt) => (
-                <option key={lt.id} value={lt.id}>
-                  {lt.label}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex-1">
+              <select
+                value={employeeFilter}
+                onChange={(e) => setFilterEmp(e.target.value)}
+                className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
+              >
+                <option value="">พนักงานทั้งหมด</option>
+                {uniqueEmployees.map((e) => (
+                  <option key={e} value={e}>
+                    {e}
+                  </option>
+                ))}
+              </select>
+              <IconChevronDown
+                size={14}
+                strokeWidth={2.4}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+              />
+            </div>
+            <div className="relative flex-1">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
+              >
+                <option value="">ประเภททั้งหมด</option>
+                {LEAVE_TYPES.map((lt) => (
+                  <option key={lt.id} value={lt.id}>
+                    {lt.label}
+                  </option>
+                ))}
+              </select>
+              <IconChevronDown
+                size={14}
+                strokeWidth={2.4}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+              />
+            </div>
           </div>
           {filteredLeaves.length === 0 && (
             <div className="text-center text-txt-soft py-10 text-base">

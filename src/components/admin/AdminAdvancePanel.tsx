@@ -1,5 +1,6 @@
 import {
   Check as IconCheck,
+  ChevronDown as IconChevronDown,
   CircleCheck as IconCircleCheck,
   CircleDollarSign as IconCircleDollarSign,
   Copy as IconCopy,
@@ -190,17 +191,24 @@ export default function AdminAdvancePanel({
           <span className="text-sm font-semibold text-txt-mid whitespace-nowrap">
             เดือน
           </span>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="pl-2.5 pr-6 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-white font-[inherit] outline-none"
-          >
-            {generateMonthOptions().map((m) => (
-              <option key={m} value={m}>
-                {formatMonthLabel(m)}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-white font-[inherit] outline-none"
+            >
+              {generateMonthOptions().map((m) => (
+                <option key={m} value={m}>
+                  {formatMonthLabel(m)}
+                </option>
+              ))}
+            </select>
+            <IconChevronDown
+              size={12}
+              strokeWidth={2.4}
+              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+            />
+          </div>
         </div>
       )}
 

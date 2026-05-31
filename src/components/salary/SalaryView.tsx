@@ -4,6 +4,7 @@ import {
   Briefcase as IconBriefcase,
   Landmark as IconBuildingBank,
   CalendarDays as IconCalendar,
+  ChevronDown as IconChevronDown,
   CirclePlus as IconCirclePlus,
   ClipboardList as IconClipboardList,
   Clock as IconClock,
@@ -230,21 +231,28 @@ export default function SalaryView({
       <div>
         <div className="flex items-center justify-between gap-2 mb-3.5">
           <div className="text-sm text-txt-soft flex-1">สลิปเงินเดือน</div>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="pl-3 pr-6 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
-          >
-            {selectMonths.map((m) => {
-              const [y, mo] = m.split("-");
-              return (
-                <option key={m} value={m}>
-                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                  {parseInt(y, 10) + 543}
-                </option>
-              );
-            })}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="appearance-none cursor-pointer pl-3 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
+            >
+              {selectMonths.map((m) => {
+                const [y, mo] = m.split("-");
+                return (
+                  <option key={m} value={m}>
+                    {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
+                    {parseInt(y, 10) + 543}
+                  </option>
+                );
+              })}
+            </select>
+            <IconChevronDown
+              size={12}
+              strokeWidth={2.4}
+              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+            />
+          </div>
         </div>
         <div className="text-center text-txt-soft py-[50px] px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr">
           <div className="flex justify-center mb-3 text-gold">
@@ -280,20 +288,28 @@ export default function SalaryView({
           <IconCalendar size={14} strokeWidth={2.4} />
           เดือนเงินเดือน
         </div>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="pl-3 pr-6 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
-        >
-          {selectMonths.map((m) => {
-            const [y, mo] = m.split("-");
-            return (
-              <option key={m} value={m}>
-                {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
-              </option>
-            );
-          })}
-        </select>
+        <div className="relative">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="appearance-none cursor-pointer pl-3 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
+          >
+            {selectMonths.map((m) => {
+              const [y, mo] = m.split("-");
+              return (
+                <option key={m} value={m}>
+                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
+                  {parseInt(y, 10) + 543}
+                </option>
+              );
+            })}
+          </select>
+          <IconChevronDown
+            size={12}
+            strokeWidth={2.4}
+            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+          />
+        </div>
       </div>
 
       {/* Bank info card */}

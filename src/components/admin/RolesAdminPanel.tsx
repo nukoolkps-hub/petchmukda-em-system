@@ -1,5 +1,6 @@
 import {
   Briefcase as IconBriefcase,
+  ChevronDown as IconChevronDown,
   Handshake as IconHandshake,
   Pencil as IconPencil,
   Plus as IconPlus,
@@ -337,21 +338,28 @@ export default function RolesAdminPanel({
                   {employee.name}
                 </div>
               </div>
-              <select
-                value={employee.roleId || ""}
-                onChange={(ev) => {
-                  const rl = roles.find((r) => r.id === ev.target.value);
-                  if (rl) changeEmpRole(employee.id, rl.id, rl.name);
-                }}
-                className="pl-2.5 pr-6 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt cursor-pointer"
-              >
-                <option value="">— เลือก —</option>
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={employee.roleId || ""}
+                  onChange={(ev) => {
+                    const rl = roles.find((r) => r.id === ev.target.value);
+                    if (rl) changeEmpRole(employee.id, rl.id, rl.name);
+                  }}
+                  className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt"
+                >
+                  <option value="">— เลือก —</option>
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+                <IconChevronDown
+                  size={12}
+                  strokeWidth={2.4}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                />
+              </div>
             </div>
           ))}
         </div>
