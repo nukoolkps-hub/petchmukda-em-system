@@ -36,6 +36,7 @@ import {
   calculateSalary,
   computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
+import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
 
 /* ─── Salary View (employee — read only) ───────────────────────── */
@@ -297,8 +298,8 @@ export default function SalaryView({
 
       {/* Bank info card */}
       <div className="bg-white rounded-[14px] px-4 py-3.5 mb-2.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)] flex items-center gap-3">
-        <div className="w-10 h-10 rounded-[11px] bg-linear-135 from-gold to-gold-lt flex items-center justify-center shrink-0 shadow-[0_2px_8px_var(--color-gold)/0.25]">
-          <IconBuildingBank size={19} color="#fff" strokeWidth={2.2} />
+        <div className="w-10 h-10 rounded-[11px] bg-white border border-bdr flex items-center justify-center shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-1">
+          <BankLogo bank={employeeInfo?.bank} size={28} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-xs text-txt-soft mb-0.5">โอนเข้าบัญชี</div>

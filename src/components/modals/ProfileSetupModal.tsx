@@ -356,7 +356,7 @@ export default function ProfileSetupModal({
             <option value="">— เลือกธนาคาร —</option>
             {THAI_BANKS.map((b) => (
               <option key={b.name} value={b.name}>
-                {b.emoji} {b.name}
+                {b.name}
                 {b.short ? `  (${b.short})` : ""}
               </option>
             ))}

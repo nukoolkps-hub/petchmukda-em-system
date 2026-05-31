@@ -101,25 +101,27 @@ export const EMOJI_LIST = [
   "🔥",
 ];
 
-/* ─── ธนาคารหลักในประเทศไทย ───────────────────────────────────── */
+/* ─── ธนาคารหลักในประเทศไทย ─────────────────────────────────────
+   `slug` ตรงกับชื่อไฟล์ SVG ใน public/banks/{slug}.svg
+   โลโก้มาจาก banks-logo (casperstack) — host เองที่ public/banks/   */
 export const THAI_BANKS = [
-  { name: "ธนาคารกสิกรไทย", short: "KBank", emoji: "🟢" },
-  { name: "ธนาคารกรุงเทพ", short: "BBL", emoji: "🔵" },
-  { name: "ธนาคารกรุงไทย", short: "KTB", emoji: "🟦" },
-  { name: "ธนาคารไทยพาณิชย์", short: "SCB", emoji: "🟣" },
-  { name: "ธนาคารกรุงศรีอยุธยา", short: "BAY", emoji: "🟡" },
-  { name: "ธนาคารทหารไทยธนชาต", short: "TTB", emoji: "🟠" },
-  { name: "ธนาคารออมสิน", short: "GSB", emoji: "🩷" },
-  { name: "ธนาคาร ธ.ก.ส.", short: "BAAC", emoji: "🌾" },
-  { name: "ธนาคารอาคารสงเคราะห์", short: "GHB", emoji: "🏠" },
-  { name: "ธนาคารยูโอบี", short: "UOB", emoji: "🟦" },
-  { name: "ธนาคารซีไอเอ็มบี", short: "CIMB", emoji: "🔴" },
-  { name: "ธนาคารแลนด์ แอนด์ เฮ้าส์", short: "LH Bank", emoji: "🟧" },
-  { name: "ธนาคารไอซีบีซี", short: "ICBC", emoji: "🇨🇳" },
-  { name: "ธนาคารสแตนดาร์ดชาร์เตอร์ด", short: "SCBT", emoji: "🌐" },
-  { name: "ธนาคารทิสโก้", short: "TISCO", emoji: "💼" },
-  { name: "ธนาคารเกียรตินาคินภัทร", short: "KKP", emoji: "💎" },
-  { name: "ธนาคารอิสลามแห่งประเทศไทย", short: "IBANK", emoji: "🕌" },
+  { name: "ธนาคารกสิกรไทย", short: "KBank", slug: "kbank" },
+  { name: "ธนาคารกรุงเทพ", short: "BBL", slug: "bbl" },
+  { name: "ธนาคารกรุงไทย", short: "KTB", slug: "ktb" },
+  { name: "ธนาคารไทยพาณิชย์", short: "SCB", slug: "scb" },
+  { name: "ธนาคารกรุงศรีอยุธยา", short: "BAY", slug: "bay" },
+  { name: "ธนาคารทหารไทยธนชาต", short: "TTB", slug: "ttb" },
+  { name: "ธนาคารออมสิน", short: "GSB", slug: "gsb" },
+  { name: "ธนาคาร ธ.ก.ส.", short: "BAAC", slug: "baac" },
+  { name: "ธนาคารอาคารสงเคราะห์", short: "GHB", slug: "ghb" },
+  { name: "ธนาคารยูโอบี", short: "UOB", slug: "uob" },
+  { name: "ธนาคารซีไอเอ็มบี", short: "CIMB", slug: "cimb" },
+  { name: "ธนาคารแลนด์ แอนด์ เฮ้าส์", short: "LH Bank", slug: "lhb" },
+  { name: "ธนาคารไอซีบีซี", short: "ICBC", slug: "icbc" },
+  { name: "ธนาคารสแตนดาร์ดชาร์เตอร์ด", short: "SCBT", slug: "sc" },
+  { name: "ธนาคารทิสโก้", short: "TISCO", slug: "tisco" },
+  { name: "ธนาคารเกียรตินาคินภัทร", short: "KKP", slug: "kkp" },
+  { name: "ธนาคารอิสลามแห่งประเทศไทย", short: "IBANK", slug: "ibank" },
 ];
 
 export const TODAY = (() => {

@@ -16,6 +16,7 @@ import { uploadAdvanceSlip } from "../../firebase/storage";
 import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
+import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
 
 type AdvanceFilter = "pending" | "approved" | "rejected";
@@ -316,10 +317,9 @@ export default function AdminAdvancePanel({
                       className={`w-full text-sm mb-2.5 px-3 py-2.5 bg-cream rounded-lg cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
                     ${copiedAcc === request.id ? "border border-green" : "border border-bdr"}`}
                     >
-                      <IconLandmark
-                        size={14}
-                        strokeWidth={2.2}
-                        color={COLORS.maroon}
+                      <BankLogo
+                        bank={employeeInfo.bank}
+                        size={20}
                         className="shrink-0"
                       />
                       <div className="flex-1 text-left min-w-0">

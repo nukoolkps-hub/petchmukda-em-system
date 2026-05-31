@@ -23,6 +23,7 @@ import {
   computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
+import BankLogo from "../shared/BankLogo";
 
 /* ─── Admin: Payroll Summary Panel ───────────────────────────────
    สรุปเงินเดือนสุทธิทุกคน + ข้อมูลธนาคาร พร้อมปุ่มคัดลอกเลขบัญชี
@@ -560,10 +561,9 @@ export default function PayrollSummaryPanel({
                     className={`w-full text-sm px-3 py-2.5 bg-cream rounded-[9px] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
                     ${copiedAcc === employee.id ? "border border-green" : "border border-bdr"}`}
                   >
-                    <IconLandmark
-                      size={16}
-                      strokeWidth={2.2}
-                      color={COLORS.maroon}
+                    <BankLogo
+                      bank={employee.bank}
+                      size={22}
                       className="shrink-0"
                     />
                     <div className="flex-1 text-left min-w-0">

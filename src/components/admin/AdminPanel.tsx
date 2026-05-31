@@ -40,6 +40,7 @@ import {
 import ConfirmModal from "../modals/ConfirmModal";
 import SalaryAdminEdit from "../salary/SalaryAdminEdit";
 import AvatarCircle from "../shared/AvatarCircle";
+import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
 import AdminAdvancePanel from "./AdminAdvancePanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
@@ -1100,7 +1101,8 @@ export default function AdminPanel({
                           </div>
                           {employee.bank || employee.bankAccountNumber ? (
                             <>
-                              <div className="text-sm font-bold text-txt mb-px">
+                              <div className="text-sm font-bold text-txt mb-px flex items-center gap-1.5">
+                                <BankLogo bank={employee.bank} size={18} />
                                 {employee.bank || "-"}
                               </div>
                               <div className="text-sm text-txt-mid tracking-wider">
