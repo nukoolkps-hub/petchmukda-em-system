@@ -8,7 +8,7 @@ import {
 import { useState } from "react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { Employee, LeaveEntry } from "../../types";
-import { fmtDateWithWeekday, isPast } from "../../utils/dateUtils";
+import { fmtDateWithWeekday, isFuture } from "../../utils/dateUtils";
 import ConfirmModal from "../modals/ConfirmModal";
 import AvatarCircle from "../shared/AvatarCircle";
 
@@ -107,7 +107,7 @@ export default function LeaveListPanel({
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-txt text-base mb-[3px] flex items-center gap-1.5">
                   {employeeInfo?.name || lv.employeeName}
-                  {!isPast(lv.end) && (
+                  {isFuture(lv.start) && (
                     <span className="text-xs font-bold px-1.5 py-px rounded-[10px] bg-gold-pale text-maroon border border-[#C9973A40] inline-flex items-center gap-0.5">
                       <IconFastForward size={10} strokeWidth={2.4} />
                       อนาคต
