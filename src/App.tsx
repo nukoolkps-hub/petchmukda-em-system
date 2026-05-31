@@ -515,8 +515,13 @@ export default function LeaveApp() {
 
           {/* Toast */}
           {toastMsg && (
-            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] z-500 animate-[toastIn_0.25s_ease] whitespace-nowrap">
-              ✓ {toastMsg}
+            // wrapper จัดกลาง (transform: translateX(-50%)) · inner ทำ animation
+            // (translateY) — แยกชั้นกันเพื่อกัน iOS Safari render เพี้ยน
+            // (translate ของ Tailwind ถูก keyframe override พริบ ๆ → toast ขยับซ้ายแล้วกลับมาตรง)
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-500">
+              <div className="bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] animate-[toastIn_0.25s_ease] whitespace-nowrap">
+                ✓ {toastMsg}
+              </div>
             </div>
           )}
         </div>
