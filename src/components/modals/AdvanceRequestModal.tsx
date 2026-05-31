@@ -216,19 +216,27 @@ export default function AdvanceRequestModal({
         </button>
         <button
           onClick={submit}
-          disabled={remaining <= 0}
+          disabled={payrollLocked || remaining <= 0}
           className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5
             ${
-              remaining <= 0
+              payrollLocked || remaining <= 0
                 ? "bg-bdr text-txt-soft cursor-not-allowed shadow-none"
                 : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
             }`}
         >
           <Diamond
             size={14}
-            color={remaining <= 0 ? COLORS.textSoft : COLORS.goldLight}
+            color={
+              payrollLocked || remaining <= 0
+                ? COLORS.textSoft
+                : COLORS.goldLight
+            }
           />
-          {remaining <= 0 ? "เต็มวงเงินแล้ว" : "ส่งคำขอผ่าน LINE"}
+          {payrollLocked
+            ? "อยู่ระหว่างทำเงินเดือน"
+            : remaining <= 0
+              ? "เต็มวงเงินแล้ว"
+              : "ส่งคำขอผ่าน LINE"}
         </button>
       </div>
     </BaseModal>
