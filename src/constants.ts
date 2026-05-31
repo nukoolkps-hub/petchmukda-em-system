@@ -53,8 +53,8 @@ export const LEAVE_TYPES = [
     id: "sick",
     label: "ลาป่วย",
     icon: "🏥",
-    color: COLORS.red,
-    colorLt: COLORS.redLight,
+    color: "#0F766E",
+    colorLt: "#CCFBF1",
   },
 ];
 

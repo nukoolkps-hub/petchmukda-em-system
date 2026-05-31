@@ -223,14 +223,15 @@ export default function TeamCalendar({
           })}
         </div>
         <div className="flex gap-3.5 mt-3.5 pt-3 border-t border-cream-dk">
-          <div className="flex items-center gap-[5px]">
-            <div className="w-2.5 h-2.5 rounded-full bg-gold" />
-            <span className="text-sm text-txt-soft">ลากิจ</span>
-          </div>
-          <div className="flex items-center gap-[5px]">
-            <div className="w-2.5 h-2.5 rounded-full bg-red" />
-            <span className="text-sm text-txt-soft">ลาป่วย</span>
-          </div>
+          {LEAVE_TYPES.map((lt) => (
+            <div key={lt.id} className="flex items-center gap-[5px]">
+              <div
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ background: lt.color }}
+              />
+              <span className="text-sm text-txt-soft">{lt.label}</span>
+            </div>
+          ))}
         </div>
       </div>
       <div className="bg-white rounded-[18px] p-4 mb-3.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] border border-bdr">
