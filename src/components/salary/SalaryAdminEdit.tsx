@@ -43,6 +43,7 @@ export default function SalaryAdminEdit({
   advanceRequests,
   roles,
   setUnsavedDirty,
+  showToast,
 }) {
   const now = new Date();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(
@@ -246,9 +247,10 @@ export default function SalaryAdminEdit({
         });
       }
       setDraft({});
+      showToast?.("บันทึกเรียบร้อยแล้ว");
     } catch (err) {
       console.error("[SalaryAdminEdit] save salary failed:", err);
-      alert("บันทึกเงินเดือนไม่สำเร็จ");
+      showToast?.("บันทึกเงินเดือนไม่สำเร็จ");
     } finally {
       setSaving(false);
     }

@@ -228,6 +228,7 @@ export default function AdminPanel({
           advanceRequests={advanceRequests}
           roles={roles}
           setUnsavedDirty={setUnsavedDirty}
+          showToast={showToast}
         />
       )}
 
