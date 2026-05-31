@@ -36,6 +36,27 @@ export default function BankLogo({
       </div>
     );
   }
+  // บางแบงก์โลโก้ทางการรายละเอียดสูง (เช่น ออมสิน ตราครุฑ) — ย่อเล็กแล้ว
+  // กลายเป็นก้อนสีอ่านไม่ออก → เรนเดอร์เป็น wordmark ตัวอักษรขาวบนพื้นแบรนด์แทน
+  const textLogo =
+    "textLogo" in entry && (entry as { textLogo?: boolean }).textLogo;
+  if (textLogo) {
+    return (
+      <div
+        style={{
+          width: size,
+          height: size,
+          background: entry.color,
+          fontSize: Math.round(size * (entry.short.length > 3 ? 0.3 : 0.36)),
+        }}
+        className={`rounded-[7px] inline-flex items-center justify-center shrink-0 text-white font-extrabold tracking-tight leading-none ${className}`}
+        title={entry.name}
+        aria-label={entry.name}
+      >
+        {entry.short}
+      </div>
+    );
+  }
   // โลโก้บางแบงก์เป็นภาพสีเต็มในตัว (เช่น TTB น้ำเงิน+ส้ม) — วางบน
   // พื้นสีแบรนด์แล้วจะกลืน/ตีกัน → ใส่บนพื้นขาวแทน
   const solid = "solid" in entry && (entry as { solid?: boolean }).solid;

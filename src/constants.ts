@@ -119,7 +119,15 @@ export const THAI_BANKS = [
     color: "#ee871e",
     solid: true,
   },
-  { name: "ธนาคารออมสิน", short: "GSB", slug: "gsb", color: "#eb198d" },
+  {
+    name: "ธนาคารออมสิน",
+    short: "GSB",
+    slug: "gsb",
+    color: "#eb198d",
+    // โลโก้ทางการเป็นตราครุฑรายละเอียดสูง — ย่อเล็กแล้วอ่านไม่ออก
+    // ใช้ wordmark ตัวอักษรแทน (คมชัดทุกขนาด)
+    textLogo: true,
+  },
   { name: "ธนาคาร ธ.ก.ส.", short: "BAAC", slug: "baac", color: "#4b9b1d" },
   { name: "ธนาคารอาคารสงเคราะห์", short: "GHB", slug: "ghb", color: "#f7941e" },
   { name: "ธนาคารยูโอบี", short: "UOB", slug: "uob", color: "#0b3979" },
