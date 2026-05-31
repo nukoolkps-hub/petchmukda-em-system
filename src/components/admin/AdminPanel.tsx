@@ -341,7 +341,7 @@ export default function AdminPanel({
                   <select
                     value={effectiveMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="pl-2.5 pr-8 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
+                    className="pl-2.5 pr-6 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
                   >
                     {months.map((m) => {
                       const [y, mo] = m.split("-");
@@ -522,7 +522,7 @@ export default function AdminPanel({
                   <select
                     value={selYear}
                     onChange={(e) => setSelYear(e.target.value)}
-                    className="pl-2.5 pr-8 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
+                    className="pl-2.5 pr-6 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
                   >
                     {years.map((y) => (
                       <option key={y} value={y}>
@@ -649,7 +649,7 @@ export default function AdminPanel({
             <select
               value={employeeFilter}
               onChange={(e) => setFilterEmp(e.target.value)}
-              className="flex-1 pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
+              className="flex-1 pl-3 pr-6 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
             >
               <option value="">พนักงานทั้งหมด</option>
               {uniqueEmployees.map((e) => (
@@ -661,7 +661,7 @@ export default function AdminPanel({
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="flex-1 pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
+              className="flex-1 pl-3 pr-6 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
             >
               <option value="">ประเภททั้งหมด</option>
               {LEAVE_TYPES.map((lt) => (

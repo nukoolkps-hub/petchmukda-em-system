@@ -262,7 +262,7 @@ export default function PayrollSummaryPanel({
         <select
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
-          className="pl-2.5 pr-8 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
+          className="pl-2.5 pr-6 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
         >
           {months.map((m) => {
             const [y, mo] = m.split("-");

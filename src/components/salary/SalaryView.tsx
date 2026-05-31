@@ -233,7 +233,7 @@ export default function SalaryView({
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="pl-3 pr-8 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
+            className="pl-3 pr-6 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
           >
             {selectMonths.map((m) => {
               const [y, mo] = m.split("-");
@@ -283,7 +283,7 @@ export default function SalaryView({
         <select
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
-          className="pl-3 pr-8 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
+          className="pl-3 pr-6 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
         >
           {selectMonths.map((m) => {
             const [y, mo] = m.split("-");
