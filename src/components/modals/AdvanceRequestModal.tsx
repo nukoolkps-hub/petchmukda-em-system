@@ -51,14 +51,14 @@ export default function AdvanceRequestModal({
     .reduce((s, r) => s + r.amount, 0);
   const remaining = Math.max(0, maxAdvance - alreadyRequested);
 
-  // บล็อกเบิก 3 วันสุดท้ายของเดือน (เป็นช่วงทำเงินเดือน) — กันสับสนในรอบจ่าย
-  // เช่น เดือน 30 วัน → บล็อกวันที่ 28,29,30 · เดือน 31 วัน → 29,30,31
+  // บล็อกเบิกเฉพาะวันสุดท้ายของเดือน (เป็นวันทำเงินเดือน) — กันสับสนในรอบจ่าย
+  // เช่น เดือน 30 วัน → บล็อกวันที่ 30 · เดือน 31 วัน → บล็อกวันที่ 31
   const daysInMonth = new Date(
     now.getFullYear(),
     now.getMonth() + 1,
     0,
   ).getDate();
-  const payrollLocked = now.getDate() > daysInMonth - 3;
+  const payrollLocked = now.getDate() === daysInMonth;
 
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
@@ -66,7 +66,7 @@ export default function AdvanceRequestModal({
 
   function submit() {
     if (payrollLocked) {
-      setErr("ช่วง 3 วันสุดท้ายของเดือนเป็นช่วงทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
+      setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
       return;
     }
     const amountValue = parseFloat(amount) || 0;
@@ -115,8 +115,8 @@ export default function AdvanceRequestModal({
             strokeWidth={2.4}
           />
           <div className="text-sm text-txt-mid leading-normal">
-            <b className="text-amber">ช่วง 3 วันสุดท้ายของเดือน</b> เป็นช่วงทำ
-            เงินเดือน — เบิกล่วงหน้าไม่ได้ชั่วคราว เพื่อกันความสับสนในรอบจ่ายเงิน
+            <b className="text-amber">วันสุดท้ายของเดือน</b> เป็นวันทำเงินเดือน —
+            เบิกล่วงหน้าไม่ได้ในวันนี้ เพื่อกันความสับสนในรอบจ่ายเงิน
           </div>
         </div>
       )}
@@ -237,7 +237,7 @@ export default function AdvanceRequestModal({
             }
           />
           {payrollLocked
-            ? "อยู่ระหว่างทำเงินเดือน"
+            ? "วันทำเงินเดือน — เบิกไม่ได้"
             : remaining <= 0
               ? "เต็มวงเงินแล้ว"
               : "ส่งคำขอผ่าน LINE"}
