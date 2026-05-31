@@ -1,5 +1,7 @@
 import {
+  Briefcase as IconBriefcase,
   ChevronDown as IconChevronDown,
+  Cross as IconCross,
   FastForward as IconFastForward,
   Trash2 as IconTrash,
 } from "lucide-react";
@@ -114,10 +116,15 @@ export default function LeaveListPanel({
                 </div>
                 <div className="flex items-center gap-1.5 mb-1">
                   <span
-                    className="text-sm font-semibold"
+                    className="text-sm font-semibold inline-flex items-center gap-1"
                     style={{ color: lt?.color }}
                   >
-                    {lt?.icon} {lt?.label}
+                    {lv.type === "personal" ? (
+                      <IconBriefcase size={13} strokeWidth={2.4} />
+                    ) : (
+                      <IconCross size={13} strokeWidth={2.4} />
+                    )}
+                    {lt?.label}
                   </span>
                   <span className="text-sm text-txt-soft">
                     · {lv.days} วันทำการ
