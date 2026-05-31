@@ -88,10 +88,13 @@ function useScopedSubscription<T>(
 
   useEffect(() => {
     const subscribeFn = getSubscribeFn();
+    // reset ทุกครั้งที่ scope/เดือนเปลี่ยน — กันข้อมูล "ชุดเก่า" ค้างแสดงต่อ
+    // (เช่น เปลี่ยนเดือนในประวัติเบิกเงิน แล้ว query ใหม่ยังไม่มา/ error →
+    //  เดิมจะยังโชว์เดือนก่อน)
+    setData(defaultValue);
+    setError(null);
     if (!subscribeFn) {
-      setData(defaultValue);
       setLoading(false);
-      setError(null);
       return;
     }
 
@@ -107,11 +110,12 @@ function useScopedSubscription<T>(
           "[Firestore] scoped subscription error (degrading gracefully):",
           err.message,
         );
+        // ทุกกรณี error → ล้างข้อมูลเป็นค่าเริ่มต้น ไม่ค้างข้อมูล scope เก่า
+        setData(defaultValue);
         if (
           err.message?.includes("permission") ||
           err.message?.includes("allow")
         ) {
-          setData(defaultValue);
           setLoading(false);
         } else {
           setError(err);
