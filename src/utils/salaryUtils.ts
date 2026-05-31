@@ -256,7 +256,10 @@ export function calculateSalary(
   // ถ้าเปลี่ยนตำแหน่ง/เรทในอนาคต อดีตไม่ขยับ. fallback เป็นค่าปัจจุบันจาก
   // employeeInfo (rates) เฉพาะเดือนที่ยังไม่มี snapshot (งวดเปิด / data เก่า
   // ก่อนมี feature นี้)
-  const baseSalaryAmount = salary.baseSalary ?? rates?.baseSalary ?? 0;
+  // baseSalary ใช้ || (ไม่ใช่ ??) — ค่า 0 ถือว่า "ยังไม่ได้ตั้ง" (เงินเดือน
+  // พื้นฐานไม่มีทางเป็น 0 จริง) จึง fallback ไปเรทปัจจุบัน กัน data เก่าที่เผลอ
+  // เก็บ baseSalary:0 ไว้ทำให้แถวเงินเดือนพื้นฐานหาย
+  const baseSalaryAmount = salary.baseSalary || rates?.baseSalary || 0;
   const socialSecurityAmount =
     salary.socialSecurity ?? rates?.socialSecurity ?? 0;
   const dailySalaryRate = baseSalaryAmount / DAYS_PER_MONTH;
