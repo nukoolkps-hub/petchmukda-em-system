@@ -1,6 +1,6 @@
 /* ─── DesktopHeader — Top bar for desktop layout ─────────────── */
 
-import { BookOpen as IconBook2 } from "lucide-react";
+import { BookOpen as IconBook2, Network as IconNetwork } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import MosaicPattern from "../shared/MosaicPattern";
 import { PAGE_TITLES } from "./navConfig";
@@ -9,12 +9,14 @@ interface DesktopHeaderProps {
   profile: any;
   isAdmin?: boolean;
   onShowManual: () => void;
+  onShowPoolFlow: () => void;
 }
 
 export default function DesktopHeader({
   profile,
   isAdmin = false,
   onShowManual,
+  onShowPoolFlow,
 }: DesktopHeaderProps) {
   const tab = useLocation().pathname.replace("/", "") || "home";
 
@@ -36,6 +38,14 @@ export default function DesktopHeader({
           )}
         </div>
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={onShowPoolFlow}
+            title="แผนผังเงินเดือน"
+            className="flex items-center gap-2 px-3 py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-sm font-semibold shrink-0 whitespace-nowrap"
+          >
+            <IconNetwork size={18} color="#fff" strokeWidth={2.2} />
+            แผนผังเงินเดือน
+          </button>
           <button
             onClick={onShowManual}
             title="กฏการคำนวณต่างๆ"

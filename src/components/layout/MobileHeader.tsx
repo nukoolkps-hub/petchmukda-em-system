@@ -3,6 +3,7 @@
 import {
   BookOpen as IconBook2,
   Pencil as IconEdit,
+  Network as IconNetwork,
   Shield as IconShield,
   User as IconUser,
 } from "lucide-react";
@@ -19,6 +20,7 @@ interface MobileHeaderProps {
   holding: boolean;
   onEditProfile: () => void;
   onShowManual: () => void;
+  onShowPoolFlow: () => void;
   startHold: () => void;
   endHold: () => void;
   onRingComplete: () => void;
@@ -30,6 +32,7 @@ export default function MobileHeader({
   holding,
   onEditProfile,
   onShowManual,
+  onShowPoolFlow,
   startHold,
   endHold,
   onRingComplete,
@@ -105,14 +108,23 @@ export default function MobileHeader({
           )}
         </div>
         {tab === "home" && (
-          <button
-            onClick={onShowManual}
-            title="กฏการคำนวณต่างๆ"
-            className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-xs font-semibold shrink-0 whitespace-nowrap"
-          >
-            <IconBook2 size={16} color="#fff" strokeWidth={2.2} />
-            กฏการคำนวณ
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={onShowPoolFlow}
+              title="แผนผังเงินเดือน"
+              className="flex items-center justify-center w-9 h-9 rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white"
+            >
+              <IconNetwork size={16} color="#fff" strokeWidth={2.2} />
+            </button>
+            <button
+              onClick={onShowManual}
+              title="กฏการคำนวณต่างๆ"
+              className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-xs font-semibold whitespace-nowrap"
+            >
+              <IconBook2 size={16} color="#fff" strokeWidth={2.2} />
+              กฏการคำนวณ
+            </button>
+          </div>
         )}
         {tab !== "home" && <div className="w-9 h-9" />}
       </div>

@@ -27,6 +27,7 @@ import Sidebar from "./components/layout/Sidebar";
 import AdvanceHistoryModal from "./components/modals/AdvanceHistoryModal";
 import AdvanceRequestModal from "./components/modals/AdvanceRequestModal";
 import ManualModal from "./components/modals/ManualModal";
+import PoolFlowModal from "./components/modals/PoolFlowModal";
 import ProfileSetupModal from "./components/modals/ProfileSetupModal";
 import SalaryView from "./components/salary/SalaryView";
 import Diamond from "./components/shared/Diamond";
@@ -212,6 +213,7 @@ export default function LeaveApp() {
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showManual, setShowManual] = useState(false);
+  const [showPoolFlow, setShowPoolFlow] = useState(false);
 
   /* ─── Role update handler (admin) ──────────────────────────── */
   async function handleUpdateRole(
@@ -323,6 +325,7 @@ export default function LeaveApp() {
             profile={profile}
             isAdmin={isAdmin}
             onShowManual={() => setShowManual(true)}
+            onShowPoolFlow={() => setShowPoolFlow(true)}
           />
 
           {/* Mobile Header */}
@@ -334,6 +337,7 @@ export default function LeaveApp() {
               if (!isAdmin) setShowEditProfile(true);
             }}
             onShowManual={() => setShowManual(true)}
+            onShowPoolFlow={() => setShowPoolFlow(true)}
             startHold={() => {}}
             endHold={() => {}}
             onRingComplete={() => {}}
@@ -496,6 +500,18 @@ export default function LeaveApp() {
           )}
 
           {showManual && <ManualModal onClose={() => setShowManual(false)} />}
+
+          {showPoolFlow && (
+            <PoolFlowModal
+              onClose={() => setShowPoolFlow(false)}
+              isAdmin={isAdmin}
+              currentEmployee={currentEmployee}
+              employeeDirectory={employeeDirectory}
+              salaryData={salaryData}
+              allLeaves={allLeaves}
+              roles={roles}
+            />
+          )}
 
           {/* Toast */}
           {toastMsg && (
