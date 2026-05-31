@@ -22,7 +22,7 @@ import {
   subscribeAllPoolSnapshots,
 } from "../poolSnapshots";
 import { subscribeRoles } from "../roles";
-import { subscribeAllSalaries } from "../salaries";
+import { subscribeAllSalaries, subscribeEmployeeSalaries } from "../salaries";
 
 interface SubscriptionResult<T> {
   data: T;
@@ -251,18 +251,17 @@ export function useSalariesForScope({
   isAdmin: boolean;
   employeeId: string | null;
 }) {
-  // PHASE 1 (rules ยังเปิดอ่าน salaries ให้ทุก signed-in): ทั้ง admin และ
-  // พนักงาน subscribe ทุกคนผ่าน collectionGroup — pool calc ฝั่งพนักงานจึง
-  // ได้ peer pieces ครบทุกเดือน ไม่ต้องรอ backfill snapshot → ตัวเลขตรงกับ
-  // admin เสมอ ไม่เพี้ยน. poolSnapshots ถูกเขียน/subscribe ขนานไว้แล้ว
-  // (ดู usePoolSnapshots) เพื่อ verify + เตรียม phase 2.
-  //
-  // PHASE 2 (หลัง backfill ครบ + verify): เปลี่ยน employee branch เป็น
-  //   subscribeEmployeeSalaries(employeeId) แล้วล็อก firestore.rules ให้
-  //   salaries อ่านได้แค่ admin/เจ้าของ — peer data มาจาก poolSnapshots แทน.
+  // PHASE 2: admin subscribe ทุกคนผ่าน collectionGroup เหมือนเดิม
+  // พนักงาน subscribe เฉพาะของตัวเอง (rules ล็อก salaries แล้ว) — peer data
+  // ที่ pool calc ต้องใช้ดึงจาก poolSnapshots ผ่าน usePoolSnapshots แล้ว
+  // merge เข้า salaryData ใน useFirebaseAppData
   return useScopedSubscription(
     () => {
-      if (isAdmin || employeeId) return subscribeAllSalaries;
+      if (isAdmin) return subscribeAllSalaries;
+      if (employeeId) {
+        return (onChange, onError) =>
+          subscribeEmployeeSalaries(employeeId, onChange, onError);
+      }
       return null;
     },
     {} as Record<string, any>,

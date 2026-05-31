@@ -66,7 +66,7 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
                                        ├── employees     (admin: all · employee: own only)
                                        ├── leaves        (admin: all · employee: own only)
-                                       ├── salaries      (admin + employee: all — collectionGroup)
+                                       ├── salaries      (admin: all via collectionGroup · employee: own only)
                                        ├── advances      (admin: all · employee: own only)
                                        ├── roles         (all signed-in)
                                        ├── payrollConfirms (all signed-in)
@@ -74,15 +74,14 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 ```
 
 **Scope ของ subscription แตกต่างกัน:**
-- `employees`, `leaves`, `advances` → employee เห็นเฉพาะของตัวเอง (filter by `lineUserId == auth.uid`)
-- `salaries` → ทุกคนเห็นทุกคน (จำเป็นต่อ Pool calc เพื่อรู้ยอดเพื่อน) — ดู "Pool calc + snapshot" ด้านล่าง
+- `employees`, `leaves`, `advances`, `salaries` → employee เห็นเฉพาะของตัวเอง (filter by `lineUserId == auth.uid` / scoped query)
+- `poolSnapshots` → ทุกคน signed-in อ่านได้ (public, non-sensitive — peer data สำหรับ pool calc)
 - `roles`, `payrollConfirms` → ทุกคน signed-in อ่านได้
 
 **กองกลาง (Pool) calc + snapshot:** — รายละเอียดเต็ม → `docs/reference.md`
 - ทุกหน้าที่โชว์ค่าคอมเรียก `computePoolSharesForGroup` ตัวเดียวกัน (single source of truth) → SalaryView, PayrollSummaryPanel, SalaryAdminEdit, PoolFlowModal เลขตรงกันเสมอ
 - ตอน admin save salary, `updateSalary` เขียน snapshot `{ roleId, poolExclusion, totalLeaveDays }` ลง salary doc + mirror ลง collection `poolSnapshots/{ym}` (public, non-sensitive)
-- **phase 1 (ปัจจุบัน):** ทั้ง admin/พนักงาน subscribe salaries ทุกคน (collectionGroup) → กองกลางคำนวณถูกทุกเดือน · rules ยังเปิด salaries อ่านได้ทุก signed-in
-- **phase 2 (รอ backfill ครบ):** ล็อก salaries เป็น admin/เจ้าของ + พนักงานอ่าน peer จาก poolSnapshots แทน — ดู `docs/reference.md` → "Privacy: salaries vs poolSnapshots"
+- **Privacy (phase 2 — ปัจจุบัน):** salaries อ่านได้แค่ admin/เจ้าของ (`firestore.rules`) · พนักงาน subscribe เฉพาะของตัวเอง · peer data ที่ pool calc ต้องใช้ดึงจาก `poolSnapshots` แล้ว merge ใน `useFirebaseAppData.salaryData` — ดู `docs/reference.md` → "Privacy: salaries vs poolSnapshots"
 - ปุ่ม "ยืนยันยอด" ใน PayrollSummaryPanel เรียก `backfillPoolSnapshots()` ก่อน freeze สลิป — รับประกันว่า snapshot ถูกเขียนเสมอ (แม้สลิป freeze จะ fail)
 
 ### Auth Flow

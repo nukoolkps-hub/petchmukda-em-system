@@ -135,7 +135,8 @@ poolSnapshots/2026-05 = {
 |---|---|---|
 | employees | admin / owner | admin (full), owner (profile + bank fields only) |
 | leaves | admin / owner | owner (create), owner (delete future-only), admin (update/delete any) |
-| salaries (+ collectionGroup `months`) | **all signed-in** (phase 1) | admin only |
+| salaries/{empId}/months/{ym} | admin / owner | admin only |
+| collectionGroup `months` | admin only | blocked |
 | poolSnapshots/{YYYY-MM} | all signed-in | admin only |
 | advances | admin / owner | owner (create), admin (update/delete) |
 | roles | all signed-in | admin only |
@@ -143,14 +144,12 @@ poolSnapshots/2026-05 = {
 | certCounters/{พ.ศ.} | all signed-in | all signed-in (count ต้อง +1 เท่านั้น) |
 | config/* | blocked | blocked (Functions ใช้ Admin SDK) |
 
-**เหตุที่ salaries / payrollConfirms อ่านได้โดย all signed-in:**
-- พนักงานต้องใช้ pieces ของเพื่อนในการคำนวณกองกลาง (Pool)
-- พนักงานต้องรู้ว่า admin "ยืนยันยอด" แล้วหรือยัง (ปลดล็อกการพิมพ์สลิป)
-- `baseSalary` และข้อมูลส่วนตัวอื่นยังอยู่ใน `employees` ที่ถูกปิดสิทธิ์ไว้
-
-> **salaries read = `all signed-in` เป็นสถานะ phase 1** (safety net ระหว่าง roll out
-> poolSnapshots). phase 2 จะล็อกเป็น `admin / owner` แล้วให้พนักงานอ่าน peer data
-> จาก `poolSnapshots` แทน — ดู [`../reference.md`](../reference.md) → "Privacy: salaries vs poolSnapshots"
+**Peer data สำหรับกองกลาง (Pool):**
+salary doc มี field อ่อนไหว (`note`, `customDeductions`, `lateDeduction`,
+`socialSecurity`, `slipUrl`) — ปิดไม่ให้พนักงานอ่านของเพื่อน แต่ pool calc
+ต้องรู้ pieces + roleId + poolExclusion + วันลา ของเพื่อนทั้งกลุ่ม → ย้ายไปไว้ใน
+`poolSnapshots/{ym}` ที่อ่านได้ทุก signed-in (mirror ทุกครั้งที่ admin save salary)
+ดู [`../reference.md`](../reference.md) → "Privacy: salaries vs poolSnapshots"
 
 ## Storage Rules
 
