@@ -1445,7 +1445,7 @@ export default function SalaryAdminEdit({
           isAdmin={true}
           currentEmployee={null}
           employeeDirectory={employeeDirectory}
-          salaryData={salaryData}
+          salaryData={liveSalaryData}
           allLeaves={allLeaves}
           roles={roles}
           initialMonth={selectedMonth}
