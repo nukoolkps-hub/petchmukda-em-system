@@ -223,7 +223,7 @@ export default function LeaveSummaryPanel({
                             prev === `${empId}:sick` ? null : `${empId}:sick`,
                           )
                         }
-                        className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E] cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${empId}:sick` ? "border-[#0F766E]" : "border-transparent"}`}
+                        className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#FDECEA] text-[#C0392B] cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${empId}:sick` ? "border-[#C0392B]" : "border-transparent"}`}
                       >
                         <IconCross size={12} strokeWidth={2.4} />
                         ลาป่วย {sickDays} วัน
@@ -363,7 +363,7 @@ export default function LeaveSummaryPanel({
                       </div>
                     )}
                     {sickDays > 0 && (
-                      <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E] inline-flex items-center gap-1">
+                      <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#FDECEA] text-[#C0392B] inline-flex items-center gap-1">
                         <IconCross size={12} strokeWidth={2.4} />
                         ลาป่วย {sickDays} วัน
                       </div>
