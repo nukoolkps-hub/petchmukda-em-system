@@ -102,6 +102,23 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | totalAmount | number | ยอดรวม |
 | employeeCount | number | จำนวนพนักงาน |
 
+### poolSnapshots/{YYYY-MM}
+
+สำเนา field ที่ **ไม่อ่อนไหว** ของทุกคนในเดือนนั้น สำหรับคำนวณกองกลาง (Pool) ฝั่งพนักงาน
+โดยไม่ต้องเปิดสิทธิ์อ่าน salary doc เต็มใบ (1 doc/เดือน, map `empId → fields`)
+
+```
+poolSnapshots/2026-05 = {
+  "<empId>": { normalSalePieces, specialSalePieces, buyPieces,
+               roleId, poolExclusion, totalLeaveDays },
+  ...,
+  updatedAt: <number>
+}
+```
+
+เขียนโดย `updateSalary` (mirror ทุกครั้งที่ save) + `backfillPoolSnapshots()` ตอน "ยืนยันยอด"
+ดูสถาปัตยกรรม phase 1/2 ที่ [`../reference.md`](../reference.md) → "Privacy: salaries vs poolSnapshots"
+
 ### config/secrets (Cloud Functions only)
 
 | Field | Description |
@@ -118,7 +135,8 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 |---|---|---|
 | employees | admin / owner | admin (full), owner (profile + bank fields only) |
 | leaves | admin / owner | owner (create), owner (delete future-only), admin (update/delete any) |
-| salaries (+ collectionGroup `months`) | **all signed-in** | admin only |
+| salaries (+ collectionGroup `months`) | **all signed-in** (phase 1) | admin only |
+| poolSnapshots/{YYYY-MM} | all signed-in | admin only |
 | advances | admin / owner | owner (create), admin (update/delete) |
 | roles | all signed-in | admin only |
 | payrollConfirms | all signed-in | admin only |
@@ -126,9 +144,13 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | config/* | blocked | blocked (Functions ใช้ Admin SDK) |
 
 **เหตุที่ salaries / payrollConfirms อ่านได้โดย all signed-in:**
-- พนักงานต้องใช้ pieces ของเพื่อนในการคำนวณ Pool (ดู Pool snapshot)
+- พนักงานต้องใช้ pieces ของเพื่อนในการคำนวณกองกลาง (Pool)
 - พนักงานต้องรู้ว่า admin "ยืนยันยอด" แล้วหรือยัง (ปลดล็อกการพิมพ์สลิป)
 - `baseSalary` และข้อมูลส่วนตัวอื่นยังอยู่ใน `employees` ที่ถูกปิดสิทธิ์ไว้
+
+> **salaries read = `all signed-in` เป็นสถานะ phase 1** (safety net ระหว่าง roll out
+> poolSnapshots). phase 2 จะล็อกเป็น `admin / owner` แล้วให้พนักงานอ่าน peer data
+> จาก `poolSnapshots` แทน — ดู [`../reference.md`](../reference.md) → "Privacy: salaries vs poolSnapshots"
 
 ## Storage Rules
 

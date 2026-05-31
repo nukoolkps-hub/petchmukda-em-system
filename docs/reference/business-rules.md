@@ -46,7 +46,9 @@ attendanceBonus = bonusDays × dailyRate                        // dailyRate = b
 
 Source: `src/utils/salaryUtils.ts` → `calculateSalary()`
 
-## Pool Commission System
+## Pool Commission System ("กองกลาง")
+
+> UI ภาษาไทยเรียกระบบนี้ว่า **"กองกลาง"** · code/เอกสารเรียก `pool`
 
 แบ่ง commission ร่วมกันตาม pool group ที่กำหนดใน Role · sell pool และ buy pool คำนวณ**แยกกัน**ด้วยสูตรเดียวกัน
 
@@ -93,7 +95,11 @@ Source: `src/utils/salaryUtils.ts` → `calculateSalary()`
 
 `computePoolSharesForGroup` ใช้ snapshot ก่อนเสมอ (fallback ไป live data เฉพาะ admin ที่อ่านได้เต็ม) — ทำให้ admin/employee เห็นเลขตรงกัน
 
-Source: `src/utils/salaryUtils.ts` → `computePoolSharesForGroup()` · snapshot inject ใน `src/data/useFirebaseAppData.ts` → `updateSalary()`
+นอกจาก snapshot ใน salary doc แล้ว field ชุดเดียวกันยังถูก mirror ลง collection
+`poolSnapshots/{ym}` (public, ไม่มี field อ่อนไหว) — เป็น infra สำหรับ phase 2 ที่จะ
+ล็อกสิทธิ์อ่าน salaries ดู [`../reference.md`](../reference.md) → "Privacy: salaries vs poolSnapshots"
+
+Source: `src/utils/salaryUtils.ts` → `computePoolSharesForGroup()` · snapshot inject ใน `src/data/useFirebaseAppData.ts` → `updateSalary()` · `src/firebase/poolSnapshots.ts`
 
 ## ระบบลา
 

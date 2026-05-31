@@ -1,6 +1,6 @@
 # Petchmukda EM System
 
-ระบบจัดการพนักงานห้างเพชรทองมุกดา — การลา, เงินเดือน, ค่าคอม Pool, เบิกเงินล่วงหน้า, LINE Bot
+ระบบจัดการพนักงานห้างเพชรทองมุกดา — การลา, เงินเดือน, ค่าคอมกองกลาง (Pool), เบิกเงินล่วงหน้า, LINE Bot
 
 ## Tech Stack
 
@@ -69,7 +69,8 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
                                        ├── salaries      (admin + employee: all — collectionGroup)
                                        ├── advances      (admin: all · employee: own only)
                                        ├── roles         (all signed-in)
-                                       └── payrollConfirms (all signed-in)
+                                       ├── payrollConfirms (all signed-in)
+                                       └── poolSnapshots  (all signed-in — peer pool fields)
 ```
 
 **Scope ของ subscription แตกต่างกัน:**
@@ -77,9 +78,11 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 - `salaries` → ทุกคนเห็นทุกคน (จำเป็นต่อ Pool calc เพื่อรู้ยอดเพื่อน) — ดู "Pool calc + snapshot" ด้านล่าง
 - `roles`, `payrollConfirms` → ทุกคน signed-in อ่านได้
 
-**Pool calc + snapshot:**
-- ตอน admin save salary, `updateSalary` (ใน `useFirebaseAppData`) เขียน snapshot `{ roleId, poolExclusion, totalLeaveDays }` ลง salary doc ด้วย
-- พนักงานคำนวณ Pool จาก snapshot เหล่านี้ (ผ่าน salaries + roles ที่อ่านได้) โดยไม่ต้องเปิดสิทธิ์อ่าน employees/leaves ของเพื่อน
+**กองกลาง (Pool) calc + snapshot:** — รายละเอียดเต็ม → `docs/reference.md`
+- ทุกหน้าที่โชว์ค่าคอมเรียก `computePoolSharesForGroup` ตัวเดียวกัน (single source of truth) → SalaryView, PayrollSummaryPanel, SalaryAdminEdit, PoolFlowModal เลขตรงกันเสมอ
+- ตอน admin save salary, `updateSalary` เขียน snapshot `{ roleId, poolExclusion, totalLeaveDays }` ลง salary doc + mirror ลง collection `poolSnapshots/{ym}` (public, non-sensitive)
+- **phase 1 (ปัจจุบัน):** ทั้ง admin/พนักงาน subscribe salaries ทุกคน (collectionGroup) → กองกลางคำนวณถูกทุกเดือน · rules ยังเปิด salaries อ่านได้ทุก signed-in
+- **phase 2 (รอ backfill ครบ):** ล็อก salaries เป็น admin/เจ้าของ + พนักงานอ่าน peer จาก poolSnapshots แทน — ดู `docs/reference.md` → "Privacy: salaries vs poolSnapshots"
 - ปุ่ม "ยืนยันยอด" ใน PayrollSummaryPanel เรียก `backfillPoolSnapshots()` ก่อน freeze สลิป — รับประกันว่า snapshot ถูกเขียนเสมอ (แม้สลิป freeze จะ fail)
 
 ### Auth Flow
@@ -103,8 +106,10 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 | `src/components/admin/LeaveSummaryPanel.tsx` / `LeaveListPanel.tsx` | สรุปลา / รายการลา |
 | `src/types/index.ts` | Domain types ทั้งหมด |
 | `src/constants.ts` | Colors, business rules, validation patterns |
-| `src/data/useFirebaseAppData.ts` | Firestore real-time subscriptions + CRUD — `updateSalary` inject pool snapshot |
+| `src/data/useFirebaseAppData.ts` | Firestore real-time subscriptions + CRUD — `updateSalary` inject pool snapshot + mirror `poolSnapshots` |
 | `src/firebase/hooks/useFirestore.ts` | Subscription hooks per collection (scope: admin vs employee) |
+| `src/firebase/poolSnapshots.ts` | Public, non-sensitive copy ของ pool fields (privacy phase 2 infra) |
+| `src/components/modals/PoolFlowModal.tsx` | แผนผังเงินเดือน (📊) — flow การแบ่งค่าคอมกองกลาง |
 | `src/utils/salaryUtils.ts` | สูตรเงินเดือน + `computePoolSharesForGroup` (ใช้ snapshot ก่อนเสมอ) |
 | `src/utils/leaveUtils.ts` | นับวันลา, คำนวณ over-quota |
 | `src/utils/pdfFonts.ts` | Lazy-load + register Sarabun font กับ pdfmake (`addVirtualFileSystem`) |
@@ -135,6 +140,7 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 ## Conventions
 
 - ภาษาไทยใน UI, ภาษาอังกฤษใน code
+- **Terminology:** UI ใช้คำว่า "กองกลาง" — code ใช้ `pool` (`poolGroup`, `computePoolSharesForGroup`, ฯลฯ) อย่าเปลี่ยน identifier เป็นไทย
 - Named Firestore database: `petchmukda-bot` (ไม่ใช่ default)
 - Cloud Functions region: `asia-southeast1`
 - Emulator detect จาก hostname (`localhost` / `127.0.0.1`)
@@ -157,7 +163,8 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 
 ## Reference Docs
 
-- `docs/reference/business-rules.md` — สูตรเงินเดือน, Pool, วันลา
+- **`docs/reference.md`** — สารบัญ + สถาปัตยกรรมกองกลาง (Pool): single source of truth, privacy phase 1/2 (เริ่มที่นี่)
+- `docs/reference/business-rules.md` — สูตรเงินเดือน, กองกลาง (Pool), วันลา
 - `docs/reference/firebase-collections.md` — Firestore schema + security rules
 - `docs/reference/line-integration.md` — LINE Bot commands, webhook, auth
 - `docs/reference/ui-components.md` — Component tree + shared components
