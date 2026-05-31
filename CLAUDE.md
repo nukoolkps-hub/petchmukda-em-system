@@ -10,22 +10,21 @@
 - **Auth:** Firebase Auth (LINE Login + Dev mode)
 - **Storage:** Firebase Storage
 - **Linting:** Biome
-- **PDF:** pdfmake (Thai font: Sarabun)
+- **Icons:** `lucide-react` (อันเดียวทั้งระบบ — ไม่ผสมชุดอื่น)
+- **PDF:** pdfmake 0.3.x — Thai font Sarabun self-host ที่ `public/fonts/`
+  - register ผ่าน `pdfMake.addVirtualFileSystem()` + `setFonts()` (ไม่ใช่ `.vfs` แบบ 0.1.x)
 - **Routing:** react-router-dom v7 (HashRouter)
 
 ## Commands
 
 ```bash
 npm run dev          # Frontend + Firebase Emulators
-npm run build        # Production build (output: dist/)
+npm run build        # Production build (output: dist/) — copy public/fonts ด้วย
 npm run typecheck    # TypeScript check
 npm run check        # Biome lint + format
-
-# Functions
-cd functions && npm run build    # Build Cloud Functions
-firebase deploy --only functions # Deploy Functions
-firebase deploy --only hosting   # Deploy Hosting
 ```
+
+Deploy เกิดอัตโนมัติบน push เข้า `main` — ไม่มีการรัน `firebase deploy` ด้วยมือ (ดู Deployment ด้านล่าง)
 
 ## Architecture
 
@@ -41,16 +40,23 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 
 ```
 useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
-                                       ├── employees
-                                       ├── leaves
-                                       ├── salaries/{employeeId}/months/{YYYY-MM}
-                                       ├── advances
-                                       ├── roles
-                                       └── payrollConfirms
+                                       ├── employees     (admin: all · employee: own only)
+                                       ├── leaves        (admin: all · employee: own only)
+                                       ├── salaries      (admin + employee: all — collectionGroup)
+                                       ├── advances      (admin: all · employee: own only)
+                                       ├── roles         (all signed-in)
+                                       └── payrollConfirms (all signed-in)
 ```
 
-- Admin เห็นทุก document
-- Employee เห็นเฉพาะของตัวเอง (filter by `lineUserId == auth.uid`)
+**Scope ของ subscription แตกต่างกัน:**
+- `employees`, `leaves`, `advances` → employee เห็นเฉพาะของตัวเอง (filter by `lineUserId == auth.uid`)
+- `salaries` → ทุกคนเห็นทุกคน (จำเป็นต่อ Pool calc เพื่อรู้ยอดเพื่อน) — ดู "Pool calc + snapshot" ด้านล่าง
+- `roles`, `payrollConfirms` → ทุกคน signed-in อ่านได้
+
+**Pool calc + snapshot:**
+- ตอน admin save salary, `updateSalary` (ใน `useFirebaseAppData`) เขียน snapshot `{ roleId, poolExclusion, totalLeaveDays }` ลง salary doc ด้วย
+- พนักงานคำนวณ Pool จาก snapshot เหล่านี้ (ผ่าน salaries + roles ที่อ่านได้) โดยไม่ต้องเปิดสิทธิ์อ่าน employees/leaves ของเพื่อน
+- ปุ่ม "ยืนยันยอด" ใน PayrollSummaryPanel เรียก `backfillPoolSnapshots()` ก่อน freeze สลิป — รับประกันว่า snapshot ถูกเขียนเสมอ (แม้สลิป freeze จะ fail)
 
 ### Auth Flow
 
@@ -70,11 +76,14 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 | `src/App.tsx` | Main orchestrator — routes, hooks, modals |
 | `src/types/index.ts` | Domain types ทั้งหมด |
 | `src/constants.ts` | Colors, business rules, validation patterns |
-| `src/data/useFirebaseAppData.ts` | Firestore real-time subscriptions + CRUD |
-| `src/utils/salaryUtils.ts` | สูตรเงินเดือน + Pool commission |
+| `src/data/useFirebaseAppData.ts` | Firestore real-time subscriptions + CRUD — `updateSalary` inject pool snapshot |
+| `src/firebase/hooks/useFirestore.ts` | Subscription hooks per collection (scope: admin vs employee) |
+| `src/utils/salaryUtils.ts` | สูตรเงินเดือน + `computePoolSharesForGroup` (ใช้ snapshot ก่อนเสมอ) |
 | `src/utils/leaveUtils.ts` | นับวันลา, คำนวณ over-quota |
+| `src/utils/pdfFonts.ts` | Lazy-load + register Sarabun font กับ pdfmake (`addVirtualFileSystem`) |
 | `src/firebase/auth.ts` | LINE Login + auth helpers |
 | `src/contexts/AuthContext.tsx` | Auth state provider |
+| `public/fonts/Sarabun-*.ttf` | Self-host Thai font (CSP block CDN ภายนอก) |
 | `functions/src/index.ts` | Cloud Functions barrel exports |
 | `functions/src/line/` | LINE Bot webhook + commands |
 | `firestore.rules` | Firestore security rules |
@@ -85,14 +94,16 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 | Rule | Value |
 |---|---|
 | โควต้าวันลา/เดือน (weekday) | 2 วัน |
-| ตัวคูณวันอาทิตย์ | 1.5x |
-| เกณฑ์เข้า Pool | >= 80% ของ top |
-| เกณฑ์ได้เงินเดือนพื้นฐาน | >= 50% ของ top (poolExclusion=both) |
+| ตัวคูณวันอาทิตย์ | 1.5× ของ dailyRate |
+| เกณฑ์เข้า Pool (sell/buy แยกกัน) | ≥ 80% ของ top |
+| เกณฑ์ได้เงินเดือนพื้นฐาน | ≥ 50% ของ top (poolExclusion=both) |
 | เพดานเบิกล่วงหน้า | 50% ของ baseSalary |
-| โบนัสมาครบ 0 วันลา | 500 บาท |
-| โบนัสมาครบ 1 วันลา | 300 บาท |
+| โบนัสแห่งความขยัน (0 วันลา) | 2 × dailyRate |
+| โบนัสแห่งความขยัน (1 วันลา) | 1 × dailyRate |
+| โบนัสแห่งความขยัน (≥ 2 วันลา) | 0 |
+| `dailyRate` | baseSalary ÷ 30 |
 
-สูตรเต็ม → `docs/reference/business-rules.md`
+ค่าทั้งหมดอยู่ใน `src/constants.ts` → `BUSINESS_RULES` · สูตรเต็ม → `docs/reference/business-rules.md`
 
 ## Conventions
 

@@ -26,6 +26,9 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | transferPieceRate | number | rate โอน |
 | salaryDisabled | boolean | ซ่อน tab เงินเดือน |
 | poolExclusion | "sell" / "buy" / "both" / null | ยกเว้น pool |
+| socialSecurity | number | ประกันสังคมรายเดือน (snapshot ลง salary doc ตอนคำนวณ) |
+| startWorkMonth | string (YYYY-MM) | วันที่เริ่มงาน — ใช้ในหนังสือรับรองเงินเดือน |
+| prefix | "นาย" / "นาง" / "นางสาว" | คำนำหน้าชื่อ — ใช้ในหนังสือรับรอง |
 
 ### leaves
 
@@ -44,16 +47,27 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 
 | Field | Type | Description |
 |---|---|---|
-| baseSalary | number | เงินเดือนพื้นฐาน (override) |
-| singleRatePieces | number | ชิ้นเดี่ยว |
+| singleRatePieces | number | ชิ้นเดี่ยว (ตำแหน่งที่ไม่แยก sell/buy) |
 | normalSalePieces | number | ชิ้นขายปกติ |
-| specialSalePieces | number | ชิ้นขายพิเศษ |
-| buyPieces | number | ชิ้นซื้อ |
-| invitePieces | number | ชิ้นชวน |
-| transferPieces | number | ชิ้นโอน |
-| lateDeduction | number | หักสาย |
+| specialSalePieces | number | ชิ้นขายพิเศษ (ใครขายใครได้) |
+| buyPieces | number | ชิ้นรับซื้อ |
+| invitePieces | number | ชิ้นเชิญสมัครบัตร |
+| transferPieces | number | ชิ้นย้ายข้อมูลบัตร |
+| lateDeduction | number | หักมาสาย/ขาดงาน |
 | socialSecurity | number | ประกันสังคม |
+| customEarnings | `{label,amount}[]` | รายรับที่ admin เพิ่มเอง |
+| customDeductions | `{label,amount}[]` | รายหักที่ admin เพิ่มเอง |
 | note | string | หมายเหตุ |
+| **Snapshot fields** | | *เขียนอัตโนมัติตอน save salary — ใช้คำนวณ Pool ฝั่ง employee* |
+| roleId | string | snapshot ของ `employees.roleId` ตอน save |
+| poolExclusion | string\|null | snapshot ของ `employees.poolExclusion` ตอน save |
+| totalLeaveDays | number | `weekdayLeaves + sundayLeaves` ของเดือนนั้น |
+| **Slip freeze fields** | | *เขียนตอน "ยืนยันยอด" → freeze PDF ลง Storage* |
+| slipUrl | string | URL ของสลิป PDF ใน Storage |
+| slipFrozenAt | string (ISO) | เวลา freeze สลิป |
+| updatedAt | number | timestamp ล่าสุด |
+
+หมายเหตุ: `baseSalary` ไม่อยู่ใน salary doc — เก็บใน `employees.baseSalary` (ป้องกัน leak ผ่าน salaries ที่อ่านได้ทุกคน)
 
 ### advances
 
@@ -102,13 +116,19 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 
 | Collection | Read | Write |
 |---|---|---|
-| employees | admin / owner | admin (full), owner (profile fields only) |
-| leaves | admin / owner | admin (all), owner (create/delete) |
-| salaries | admin / owner | admin only |
+| employees | admin / owner | admin (full), owner (profile + bank fields only) |
+| leaves | admin / owner | owner (create), owner (delete future-only), admin (update/delete any) |
+| salaries (+ collectionGroup `months`) | **all signed-in** | admin only |
 | advances | admin / owner | owner (create), admin (update/delete) |
 | roles | all signed-in | admin only |
-| payrollConfirms | admin | admin |
-| config | blocked | blocked (Functions use Admin SDK) |
+| payrollConfirms | all signed-in | admin only |
+| certCounters/{พ.ศ.} | all signed-in | all signed-in (count ต้อง +1 เท่านั้น) |
+| config/* | blocked | blocked (Functions ใช้ Admin SDK) |
+
+**เหตุที่ salaries / payrollConfirms อ่านได้โดย all signed-in:**
+- พนักงานต้องใช้ pieces ของเพื่อนในการคำนวณ Pool (ดู Pool snapshot)
+- พนักงานต้องรู้ว่า admin "ยืนยันยอด" แล้วหรือยัง (ปลดล็อกการพิมพ์สลิป)
+- `baseSalary` และข้อมูลส่วนตัวอื่นยังอยู่ใน `employees` ที่ถูกปิดสิทธิ์ไว้
 
 ## Storage Rules
 
@@ -116,3 +136,4 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 |---|---|---|
 | avatars/{employeeId}/ | all signed-in | admin / owner (image < 8MB) |
 | advanceSlips/{advanceId}/ | admin / owner | admin only (image < 8MB) |
+| salarySlips/{employeeId}/{YYYY-MM}.pdf | admin / owner | admin only (PDF < 8MB) — freeze ตอนยืนยันยอด |

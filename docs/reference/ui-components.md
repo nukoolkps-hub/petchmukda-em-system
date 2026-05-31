@@ -5,7 +5,24 @@
 - Mobile: max 430px, bottom nav, mobile header
 - Desktop: sidebar 260px + content area (>= 768px)
 - Color theme: Maroon (#7B1C1C) + Gold (#C9973A) + Cream (#FDF8F0)
-- Font: Prompt (Thai)
+- Font (web): Prompt (Thai) — โหลดจาก Google Fonts (อยู่ใน `font-src` ของ CSP)
+- Font (PDF): Sarabun — self-host ที่ `public/fonts/Sarabun-{Regular,Bold}.ttf`
+
+## Icons
+
+ใช้ **`lucide-react`** อันเดียวทั้งระบบ — import แบบ `{ Name as IconName }`:
+
+```tsx
+import { CalendarDays as IconCalendar, Check as IconCheck } from "lucide-react";
+
+<IconCalendar size={16} strokeWidth={2.4} />
+```
+
+หมายเหตุ Lucide ↔ Tabler:
+- `strokeWidth={N}` (Lucide) ≠ `stroke={N}` (Tabler) — Lucide ใช้ `stroke` สำหรับ **สี**
+- ใน SVG element จริงๆ (`<circle>`, `<path>`) `stroke="..."` ยังเป็นสีตามมาตรฐาน
+
+ห้ามใช้ emoji ปฏิทิน (`📅`/`📆`/`🗓️`) — iOS render เลข "17" ติดกลาง glyph ทำให้สับสน → ใช้ `<CalendarDays />` แทน
 
 ## Component Tree
 
@@ -79,7 +96,27 @@ Layout
 
 | File | Description |
 |---|---|
-| `print/printSalarySlip.ts` | Salary slip (HTML print + PDF) |
-| `print/printSalaryCertificate.ts` | Salary certificate (HTML print + PDF) |
-| `print/pdfBuilders/salarySlipPDF.ts` | pdfmake document definition for slip |
-| `print/pdfBuilders/salaryCertificatePDF.ts` | pdfmake document definition for certificate |
+| `print/printSalarySlip.ts` | สลิป — HTML print (popup) + `generateSalarySlipBlob()` สำหรับ freeze |
+| `print/printSalaryCertificate.ts` | ใบรับรองเงินเดือน — HTML print + PDF blob |
+| `print/pdfBuilders/salarySlipPDF.ts` | pdfmake docDef ของสลิป (ใช้ตอน freeze ขึ้น Storage) |
+| `print/pdfBuilders/salaryCertificatePDF.ts` | pdfmake docDef ของใบรับรอง |
+| `utils/pdfFonts.ts` | Lazy-load Sarabun TTF จาก `/fonts/` → register ผ่าน `pdfMake.addVirtualFileSystem()` + `setFonts()` (pdfmake 0.3.x API) |
+
+### Important: pdfmake 0.3.x API
+
+```ts
+pdfMake.addVirtualFileSystem({ "Sarabun-Regular.ttf": base64, ... });
+pdfMake.setFonts({ Sarabun: { normal: "Sarabun-Regular.ttf", ... } });
+```
+
+อย่าใช้ `pdfMake.vfs = {}` แบบ 0.1.x — ไม่มีผล ( internal property จริงคือ `virtualfs`)
+
+### Why self-host font
+
+CSP มี `connect-src 'self' ...` (ไม่อนุญาต CDN ภายนอก) — ถ้าโหลด TTF จาก `cdn.jsdelivr.net` จะโดน block `"Refused to connect"`. Self-host ที่ `public/fonts/` เป็น same-origin → CSP ผ่าน, ไม่พึ่ง CDN
+
+### Slip Freeze Flow (ตอน admin "ยืนยันยอด")
+
+1. `backfillPoolSnapshots()` — write snapshot ลง salary doc ของทุกคน (ไม่ขึ้นกับการสร้าง PDF)
+2. `freezeAllSlips()` — per employee: สร้าง PDF blob → upload `salarySlips/{empId}/{YYYY-MM}.pdf` → save `{slipUrl, slipFrozenAt}` ลง salary doc
+3. ถ้า PDF/Storage fail → ขึ้น toast บอก error จริง แต่ snapshot จากขั้น 1 ถูกเขียนแล้ว
