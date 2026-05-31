@@ -522,17 +522,17 @@ export default function SalaryAdminEdit({
                     className={`flex items-center gap-1.5 px-2.5 py-[5px] rounded-[9px] text-xs text-txt-mid border ${isMe ? "bg-gold-pale border-gold" : "bg-white border-bdr"}`}
                   >
                     <span
-                      className={`min-w-8 ${isMe ? "font-bold" : "font-medium"}`}
+                      className={`flex-1 min-w-0 truncate ${isMe ? "font-bold text-maroon" : "font-medium"}`}
                     >
-                      {g.avatar}
+                      {g.name}
                     </span>
                     <span
-                      className={`px-1.5 py-px rounded-md text-xs font-semibold ${gES ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                      className={`shrink-0 px-1.5 py-px rounded-md text-xs font-semibold ${gES ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
                     >
                       ขาย {gSell} {gES ? "✓" : "✗"}
                     </span>
                     <span
-                      className={`px-1.5 py-px rounded-md text-xs font-semibold ${gEB ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                      className={`shrink-0 px-1.5 py-px rounded-md text-xs font-semibold ${gEB ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
                     >
                       ซื้อ {gBuy} {gEB ? "✓" : "✗"}
                     </span>
