@@ -16,7 +16,6 @@ export default function AdvanceRequestModal({
   employeeId,
   salaryData,
   advanceRequests,
-  payrollConfirms,
   onSubmit,
   onClose,
 }) {
@@ -52,9 +51,14 @@ export default function AdvanceRequestModal({
     .reduce((s, r) => s + r.amount, 0);
   const remaining = Math.max(0, maxAdvance - alreadyRequested);
 
-  // เดือนนี้ admin ยืนยันยอด/กำลังทำเงินเดือนแล้ว → ห้ามเบิกเพิ่ม กันสับสน
-  // (คำขอใหม่อาจไม่ถูกรวมในรอบที่กำลังจ่าย)
-  const payrollLocked = !!payrollConfirms?.[yearMonth];
+  // บล็อกเบิก 3 วันสุดท้ายของเดือน (เป็นช่วงทำเงินเดือน) — กันสับสนในรอบจ่าย
+  // เช่น เดือน 30 วัน → บล็อกวันที่ 28,29,30 · เดือน 31 วัน → 29,30,31
+  const daysInMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+  ).getDate();
+  const payrollLocked = now.getDate() > daysInMonth - 3;
 
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
@@ -62,7 +66,7 @@ export default function AdvanceRequestModal({
 
   function submit() {
     if (payrollLocked) {
-      setErr("เดือนนี้อยู่ระหว่างทำเงินเดือนแล้ว — เบิกล่วงหน้าไม่ได้");
+      setErr("ช่วง 3 วันสุดท้ายของเดือนเป็นช่วงทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
       return;
     }
     const amountValue = parseFloat(amount) || 0;
@@ -111,8 +115,8 @@ export default function AdvanceRequestModal({
             strokeWidth={2.4}
           />
           <div className="text-sm text-txt-mid leading-normal">
-            เดือนนี้ <b className="text-amber">อยู่ระหว่างทำเงินเดือน</b> แล้ว —
-            เบิกล่วงหน้าไม่ได้ชั่วคราว เพื่อกันความสับสนในรอบจ่ายเงิน
+            <b className="text-amber">ช่วง 3 วันสุดท้ายของเดือน</b> เป็นช่วงทำ
+            เงินเดือน — เบิกล่วงหน้าไม่ได้ชั่วคราว เพื่อกันความสับสนในรอบจ่ายเงิน
           </div>
         </div>
       )}
