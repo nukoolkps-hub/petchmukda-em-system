@@ -1,4 +1,5 @@
 import {
+  AlertTriangle as IconAlertTriangle,
   Calendar as IconCalendar,
   ChevronDown as IconChevronDown,
   ChevronLeft as IconChevronLeft,
@@ -100,7 +101,12 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
           className={`transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
         />
       </button>
-      {error && <div className="text-red text-sm mt-1.5">⚠ {error}</div>}
+      {error && (
+        <div className="text-red text-sm mt-1.5 inline-flex items-center gap-1">
+          <IconAlertTriangle size={14} strokeWidth={2.4} />
+          {error}
+        </div>
+      )}
       {open && (
         <div className="absolute top-[salaryCalculation(100%+6px)] left-0 right-0 z-400 bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]">
           <div className="flex items-center justify-between mb-3.5">

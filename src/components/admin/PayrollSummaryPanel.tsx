@@ -1,8 +1,17 @@
 import {
+  AlertTriangle as IconAlertTriangle,
+  Banknote as IconBanknote,
   CalendarDays as IconCalendar,
   Check as IconCheck,
+  CircleCheck as IconCircleCheck,
   Copy as IconCopy,
+  CreditCard as IconCreditCard,
+  Diamond as IconDiamond,
+  Landmark as IconLandmark,
+  Lock as IconLock,
+  RefreshCw as IconRefresh,
   Search as IconSearch,
+  ShoppingBag as IconShoppingBag,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
@@ -241,8 +250,9 @@ export default function PayrollSummaryPanel({
       {/* header bar */}
       <div className="flex items-center gap-2 mb-3.5">
         <div className="flex-1">
-          <div className="text-sm font-bold text-maroon">
-            💳 สรุปการจ่ายเงินเดือน
+          <div className="text-sm font-bold text-maroon flex items-center gap-1.5">
+            <IconCreditCard size={16} strokeWidth={2.4} />
+            สรุปการจ่ายเงินเดือน
           </div>
           <div className="text-xs text-txt-soft mt-0.5">
             คัดลอกเลขบัญชีไปวางในแอปธนาคารได้
@@ -295,9 +305,12 @@ export default function PayrollSummaryPanel({
             ฿{formatThaiNumber(totalPayout)}
           </div>
           {totalAdvance > 0 && (
-            <div className="text-sm text-gold-lt/60 pt-2 border-t border-gold-lt/15">
-              💵 หักเบิกล่วงหน้าไปแล้ว: <b>฿{formatThaiNumber(totalAdvance)}</b> (
-              {filtered.filter((r) => r.advanceTotal > 0).length} คน)
+            <div className="text-sm text-gold-lt/60 pt-2 border-t border-gold-lt/15 flex items-center gap-1.5">
+              <IconBanknote size={14} strokeWidth={2.4} className="shrink-0" />
+              <span>
+                หักเบิกล่วงหน้าไปแล้ว: <b>฿{formatThaiNumber(totalAdvance)}</b> (
+                {filtered.filter((r) => r.advanceTotal > 0).length} คน)
+              </span>
             </div>
           )}
         </div>
@@ -333,7 +346,19 @@ export default function PayrollSummaryPanel({
                   className={`w-9 h-9 rounded-[10px] flex items-center justify-center border-[1.5px]
                   ${isStale ? "bg-amber-lt border-amber" : "bg-white border-green"}`}
                 >
-                  {isStale ? "⚠️" : "✅"}
+                  {isStale ? (
+                    <IconAlertTriangle
+                      size={18}
+                      strokeWidth={2.4}
+                      className="text-amber"
+                    />
+                  ) : (
+                    <IconCircleCheck
+                      size={20}
+                      strokeWidth={2.4}
+                      className="text-green"
+                    />
+                  )}
                 </div>
                 <div className="flex-1">
                   <div
@@ -377,9 +402,10 @@ export default function PayrollSummaryPanel({
                       }
                     }}
                     disabled={advanceDataBlocked}
-                    className={`w-full py-[11px] rounded-[10px] border-none text-sm font-bold font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640] ${advanceDataBlocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`w-full py-[11px] rounded-[10px] border-none text-sm font-bold font-[inherit] bg-linear-135 from-amber to-gold text-white shadow-[0_3px_10px_#D9770640] inline-flex items-center justify-center gap-1.5 ${advanceDataBlocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                   >
-                    🔄 ยืนยันยอดใหม่
+                    <IconRefresh size={14} strokeWidth={2.4} />
+                    ยืนยันยอดใหม่
                   </button>
                 </>
               ) : (
@@ -483,9 +509,24 @@ export default function PayrollSummaryPanel({
                       {employee.poolExclusion &&
                         (() => {
                           const m = {
-                            sell: "💎 ปิดขาย",
-                            buy: "🛍 ปิดซื้อ",
-                            both: "🔒 ปิดทั้งคู่",
+                            sell: (
+                              <span className="inline-flex items-center gap-0.5">
+                                <IconDiamond size={11} strokeWidth={2.4} />
+                                ปิดขาย
+                              </span>
+                            ),
+                            buy: (
+                              <span className="inline-flex items-center gap-0.5">
+                                <IconShoppingBag size={11} strokeWidth={2.4} />
+                                ปิดซื้อ
+                              </span>
+                            ),
+                            both: (
+                              <span className="inline-flex items-center gap-0.5">
+                                <IconLock size={11} strokeWidth={2.4} />
+                                ปิดทั้งคู่
+                              </span>
+                            ),
                           };
                           return (
                             <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
@@ -519,7 +560,12 @@ export default function PayrollSummaryPanel({
                     className={`w-full text-sm px-3 py-2.5 bg-cream rounded-[9px] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
                     ${copiedAcc === employee.id ? "border border-green" : "border border-bdr"}`}
                   >
-                    <span className="text-sm">🏦</span>
+                    <IconLandmark
+                      size={16}
+                      strokeWidth={2.2}
+                      color={COLORS.maroon}
+                      className="shrink-0"
+                    />
                     <div className="flex-1 text-left min-w-0">
                       <div className="text-xs text-txt-soft mb-px">
                         {employee.bank}
@@ -547,7 +593,8 @@ export default function PayrollSummaryPanel({
                   </button>
                 ) : (
                   <div className="px-3 py-2 bg-red-lt rounded-[9px] text-xs text-red font-semibold flex items-center gap-1.5 border border-[#C0392B30]">
-                    ⚠ พนักงานยังไม่กรอกข้อมูลธนาคาร
+                    <IconAlertTriangle size={12} strokeWidth={2.4} />
+                    พนักงานยังไม่กรอกข้อมูลธนาคาร
                   </div>
                 )}
               </div>

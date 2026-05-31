@@ -1,7 +1,26 @@
 import {
+  AlertTriangle as IconAlertTriangle,
+  Banknote as IconBanknote,
+  Briefcase as IconBriefcase,
+  Landmark as IconBuildingBank,
   CalendarDays as IconCalendar,
   Check as IconCheck,
+  ClipboardList as IconClipboardList,
+  Diamond as IconDiamond,
+  Handshake as IconHandshake,
+  Lightbulb as IconLightbulb,
+  Lock as IconLock,
+  Minus as IconMinus,
+  Package as IconPackage,
+  Plus as IconPlus,
+  RefreshCw as IconRefresh,
+  ShoppingBag as IconShoppingBag,
+  Sparkles as IconSparkles,
+  Star as IconStar,
+  Ticket as IconTicket,
   Trash2 as IconTrash,
+  TrendingDown as IconTrendingDown,
+  X as IconX,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
@@ -320,7 +339,7 @@ export default function SalaryAdminEdit({
       {poolShare && poolGroupEmployees.length > 1 && (
         <div className="rounded-xl p-3.5 mb-3.5 bg-[linear-gradient(135deg,#7B1C1C08,#C9973A10)] border border-[#C9973A40]">
           <div className="flex items-center gap-2 mb-2.5">
-            <div className="text-lg">🤝</div>
+            <IconHandshake size={18} strokeWidth={2.2} color={COLORS.gold} />
             <div className="text-sm font-bold text-maroon">
               Pool ค่าคอม "{employeeRole?.name}"
             </div>
@@ -340,25 +359,26 @@ export default function SalaryAdminEdit({
               const exc = poolShare.poolExclusion;
               const labels = {
                 sell: {
-                  icon: "💎",
+                  Icon: IconDiamond,
                   title: "ปิดฝั่งขายโดย Admin",
                   desc: "ไม่ได้ Pool ฝั่งขาย · ฝั่งรับซื้อยังใช้กฎ 80% ปกติ",
                 },
                 buy: {
-                  icon: "🛍",
+                  Icon: IconShoppingBag,
                   title: "ปิดฝั่งรับซื้อโดย Admin",
                   desc: "ไม่ได้ Pool ฝั่งรับซื้อ · ฝั่งขายยังใช้กฎ 80% ปกติ",
                 },
                 both: {
-                  icon: "🔒",
+                  Icon: IconLock,
                   title: "ปิดทั้งคู่โดย Admin",
                   desc: "ไม่ได้ Pool ทั้ง 2 ฝั่ง · ได้แค่ขาย-พิเศษ",
                 },
               };
               const info = labels[exc] || labels.both;
+              const ExclusionIcon = info.Icon;
               return (
                 <div className="rounded-[9px] px-3 py-2.5 mb-1.5 text-sm text-red font-bold leading-relaxed flex items-center gap-2 bg-[linear-gradient(135deg,#C0392B15,#C0392B25)] border-[1.5px] border-[#C0392B50]">
-                  <span className="text-lg">{info.icon}</span>
+                  <ExclusionIcon size={18} strokeWidth={2.4} />
                   <div className="flex-1">
                     <div>{info.title}</div>
                     <div className="font-medium text-[10.5px] mt-0.5 text-[#C0392BCC]">
@@ -369,28 +389,15 @@ export default function SalaryAdminEdit({
               );
             })()}
           {poolShare.losesBaseSalary && (
-            <div className="bg-red rounded-[9px] px-3 py-2.5 mb-1.5 text-sm text-white font-bold leading-relaxed shadow-red-glow">
-              💸 ไม่ได้รับเงินเดือนพื้นฐาน
-              <div className="font-medium text-xs mt-[3px] text-[#FFE0E0]">
-                ขาย {poolShare.employeeSellPieces} ชิ้น ·{" "}
-                {poolShare.topSellPieces > 0
-                  ? (
-                      (poolShare.employeeSellPieces / poolShare.topSellPieces) *
-                      100
-                    ).toFixed(1)
-                  : "0"}
-                % ของ Top {poolShare.topSellPieces} (ต่ำกว่า 50%)
-              </div>
-            </div>
-          )}
-
-          {/* not eligible warnings (เฉพาะคนที่ไม่ถูก Admin ปิดในฝั่งนั้น) */}
-          {poolShare.poolExclusion !== "sell" &&
-            poolShare.poolExclusion !== "both" &&
-            !poolShare.eligibleForSellPool && (
-              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-1.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40]">
-                ⚠ ฝั่งขาย: ไม่ได้รับชิ้นจาก Pool
-                <div className="font-medium text-xs mt-0.5">
+            <div className="bg-red rounded-[9px] px-3 py-2.5 mb-1.5 text-sm text-white font-bold leading-relaxed shadow-red-glow flex items-start gap-1.5">
+              <IconTrendingDown
+                size={16}
+                strokeWidth={2.4}
+                className="shrink-0 mt-0.5"
+              />
+              <div className="flex-1">
+                ไม่ได้รับเงินเดือนพื้นฐาน
+                <div className="font-medium text-xs mt-[3px] text-[#FFE0E0]">
                   ขาย {poolShare.employeeSellPieces} ชิ้น ·{" "}
                   {poolShare.topSellPieces > 0
                     ? (
@@ -399,26 +406,62 @@ export default function SalaryAdminEdit({
                         100
                       ).toFixed(1)
                     : "0"}
-                  % ของ Top {poolShare.topSellPieces} (ขั้นต่ำ{" "}
-                  {poolShare.sellEligibilityThreshold.toFixed(1)})
+                  % ของ Top {poolShare.topSellPieces} (ต่ำกว่า 50%)
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* not eligible warnings (เฉพาะคนที่ไม่ถูก Admin ปิดในฝั่งนั้น) */}
+          {poolShare.poolExclusion !== "sell" &&
+            poolShare.poolExclusion !== "both" &&
+            !poolShare.eligibleForSellPool && (
+              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-1.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40] flex items-start gap-1.5">
+                <IconAlertTriangle
+                  size={14}
+                  strokeWidth={2.4}
+                  className="shrink-0 mt-0.5"
+                />
+                <div className="flex-1">
+                  ฝั่งขาย: ไม่ได้รับชิ้นจาก Pool
+                  <div className="font-medium text-xs mt-0.5">
+                    ขาย {poolShare.employeeSellPieces} ชิ้น ·{" "}
+                    {poolShare.topSellPieces > 0
+                      ? (
+                          (poolShare.employeeSellPieces /
+                            poolShare.topSellPieces) *
+                          100
+                        ).toFixed(1)
+                      : "0"}
+                    % ของ Top {poolShare.topSellPieces} (ขั้นต่ำ{" "}
+                    {poolShare.sellEligibilityThreshold.toFixed(1)})
+                  </div>
                 </div>
               </div>
             )}
           {poolShare.poolExclusion !== "buy" &&
             poolShare.poolExclusion !== "both" &&
             !poolShare.eligibleForBuyPool && (
-              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-2.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40]">
-                ⚠ ฝั่งรับซื้อ: ไม่ได้รับชิ้นจาก Pool
-                <div className="font-medium text-xs mt-0.5">
-                  รับซื้อ {poolShare.employeeBuyPieces} ชิ้น ·{" "}
-                  {poolShare.topBuyPieces > 0
-                    ? (
-                        (poolShare.employeeBuyPieces / poolShare.topBuyPieces) *
-                        100
-                      ).toFixed(1)
-                    : "0"}
-                  % ของ Top {poolShare.topBuyPieces} (ขั้นต่ำ{" "}
-                  {poolShare.buyEligibilityThreshold.toFixed(1)})
+              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-2.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40] flex items-start gap-1.5">
+                <IconAlertTriangle
+                  size={14}
+                  strokeWidth={2.4}
+                  className="shrink-0 mt-0.5"
+                />
+                <div className="flex-1">
+                  ฝั่งรับซื้อ: ไม่ได้รับชิ้นจาก Pool
+                  <div className="font-medium text-xs mt-0.5">
+                    รับซื้อ {poolShare.employeeBuyPieces} ชิ้น ·{" "}
+                    {poolShare.topBuyPieces > 0
+                      ? (
+                          (poolShare.employeeBuyPieces /
+                            poolShare.topBuyPieces) *
+                          100
+                        ).toFixed(1)
+                      : "0"}
+                    % ของ Top {poolShare.topBuyPieces} (ขั้นต่ำ{" "}
+                    {poolShare.buyEligibilityThreshold.toFixed(1)})
+                  </div>
                 </div>
               </div>
             )}
@@ -437,8 +480,9 @@ export default function SalaryAdminEdit({
             {poolShare.eligibleForSellPool && (
               <div className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]">
                 <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
-                  <span>
-                    💎 ฝั่งขาย ({poolShare.eligibleSellEmployeeCount} คน · Base{" "}
+                  <span className="inline-flex items-center gap-1">
+                    <IconDiamond size={12} strokeWidth={2.4} />
+                    ฝั่งขาย ({poolShare.eligibleSellEmployeeCount} คน · Base{" "}
                     {poolShare.sellBaseSharePercent.toFixed(1)}%)
                   </span>
                   <span>{poolShare.sellSharePercent.toFixed(2)}%</span>
@@ -457,8 +501,11 @@ export default function SalaryAdminEdit({
               </div>
             )}
             {!poolShare.eligibleForSellPool && (
-              <div className="mb-1.5 px-2 py-1.5 bg-red-lt rounded-[7px] text-xs text-red font-semibold">
-                💎 ฝั่งขาย: ❌ ไม่ได้รับชิ้นจาก Pool
+              <div className="mb-1.5 px-2 py-1.5 bg-red-lt rounded-[7px] text-xs text-red font-semibold flex items-center gap-1">
+                <IconDiamond size={12} strokeWidth={2.4} />
+                ฝั่งขาย:
+                <IconX size={12} strokeWidth={3} />
+                ไม่ได้รับชิ้นจาก Pool
               </div>
             )}
 
@@ -466,8 +513,9 @@ export default function SalaryAdminEdit({
             {poolShare.eligibleForBuyPool && (
               <div className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]">
                 <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
-                  <span>
-                    🛍 ฝั่งรับซื้อ ({poolShare.eligibleBuyEmployeeCount} คน · Base{" "}
+                  <span className="inline-flex items-center gap-1">
+                    <IconShoppingBag size={12} strokeWidth={2.4} />
+                    ฝั่งรับซื้อ ({poolShare.eligibleBuyEmployeeCount} คน · Base{" "}
                     {poolShare.buyBaseSharePercent.toFixed(1)}%)
                   </span>
                   <span>{poolShare.buySharePercent.toFixed(2)}%</span>
@@ -486,14 +534,21 @@ export default function SalaryAdminEdit({
               </div>
             )}
             {!poolShare.eligibleForBuyPool && (
-              <div className="px-2 py-1.5 bg-red-lt rounded-[7px] text-xs text-red font-semibold">
-                🛍 ฝั่งรับซื้อ: ❌ ไม่ได้รับชิ้นจาก Pool
+              <div className="px-2 py-1.5 bg-red-lt rounded-[7px] text-xs text-red font-semibold flex items-center gap-1">
+                <IconShoppingBag size={12} strokeWidth={2.4} />
+                ฝั่งรับซื้อ:
+                <IconX size={12} strokeWidth={3} />
+                ไม่ได้รับชิ้นจาก Pool
               </div>
             )}
 
             <div className="mt-1.5 px-2 py-1.5 rounded-md text-xs text-maroon text-center font-semibold leading-relaxed bg-[#C9973A15]">
               สูตร: % ที่ได้ = Base − % การหัก + Σ(% แบ่งเพื่อน)
-              <br />✨ ขาย-พิเศษไม่เข้า Pool — ใครขายใครได้
+              <br />
+              <span className="inline-flex items-center gap-1">
+                <IconSparkles size={11} strokeWidth={2.4} />
+                ขาย-พิเศษไม่เข้า Pool — ใครขายใครได้
+              </span>
             </div>
           </div>
 
@@ -527,14 +582,24 @@ export default function SalaryAdminEdit({
                       {g.name}
                     </span>
                     <span
-                      className={`shrink-0 px-1.5 py-px rounded-md text-xs font-semibold ${gES ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                      className={`shrink-0 px-1.5 py-px rounded-md text-xs font-semibold inline-flex items-center gap-0.5 ${gES ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
                     >
-                      ขาย {gSell} {gES ? "✓" : "✗"}
+                      ขาย {gSell}
+                      {gES ? (
+                        <IconCheck size={11} strokeWidth={3} />
+                      ) : (
+                        <IconX size={11} strokeWidth={3} />
+                      )}
                     </span>
                     <span
-                      className={`shrink-0 px-1.5 py-px rounded-md text-xs font-semibold ${gEB ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                      className={`shrink-0 px-1.5 py-px rounded-md text-xs font-semibold inline-flex items-center gap-0.5 ${gEB ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
                     >
-                      ซื้อ {gBuy} {gEB ? "✓" : "✗"}
+                      ซื้อ {gBuy}
+                      {gEB ? (
+                        <IconCheck size={11} strokeWidth={3} />
+                      ) : (
+                        <IconX size={11} strokeWidth={3} />
+                      )}
                     </span>
                   </div>
                 );
@@ -559,7 +624,10 @@ export default function SalaryAdminEdit({
             </div>
             <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-bold text-txt">📦 จำนวนชิ้น</div>
+                <div className="text-sm font-bold text-txt flex items-center gap-1.5">
+                  <IconPackage size={16} strokeWidth={2.2} />
+                  จำนวนชิ้น
+                </div>
                 <div className="text-xs text-txt-soft">
                   Rate:{" "}
                   <b className="text-maroon">
@@ -586,8 +654,13 @@ export default function SalaryAdminEdit({
                 </div>
               </div>
             </div>
-            <div className="text-xs text-txt-soft mt-2.5 text-center">
-              💡 Rate ต่อชิ้นกำหนดในแท็บ "ข้อมูลพนักงาน"
+            <div className="text-xs text-txt-soft mt-2.5 text-center inline-flex items-center justify-center gap-1 w-full">
+              <IconLightbulb
+                size={12}
+                strokeWidth={2.4}
+                className="text-gold"
+              />
+              Rate ต่อชิ้นกำหนดในแท็บ "ข้อมูลพนักงาน"
             </div>
           </div>
         ) : (
@@ -596,8 +669,13 @@ export default function SalaryAdminEdit({
             <div className="flex items-center gap-2 mb-3.5">
               <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
               <div className="font-bold text-sm text-txt">ค่าคอมตามจำนวนชิ้น</div>
-              <div className="ml-auto text-xs font-semibold text-txt-soft">
-                🤝 คำนวณใน Pool
+              <div className="ml-auto text-xs font-semibold text-txt-soft inline-flex items-center gap-1">
+                <IconHandshake
+                  size={12}
+                  strokeWidth={2.4}
+                  color={COLORS.gold}
+                />
+                คำนวณใน Pool
               </div>
             </div>
 
@@ -621,10 +699,12 @@ export default function SalaryAdminEdit({
                     <div
                       className={`text-sm font-bold flex items-center gap-1.5 ${disabled ? "text-txt-soft" : "text-txt"}`}
                     >
-                      💎 ขาย (ทั่วไป)
+                      <IconDiamond size={14} strokeWidth={2.4} />
+                      ขาย (ทั่วไป)
                       {disabled && (
-                        <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20]">
-                          🔒 ถูกปิด
+                        <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20] inline-flex items-center gap-0.5">
+                          <IconLock size={11} strokeWidth={2.4} />
+                          ถูกปิด
                         </span>
                       )}
                     </div>
@@ -663,7 +743,10 @@ export default function SalaryAdminEdit({
             {/* Special — ใครขายใครได้ ไม่ขึ้นกับ poolExclusion */}
             <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-bold text-txt">✨ ขาย (พิเศษ)</div>
+                <div className="text-sm font-bold text-txt flex items-center gap-1.5">
+                  <IconSparkles size={16} strokeWidth={2.2} />
+                  ขาย (พิเศษ)
+                </div>
                 <div className="text-xs text-txt-soft">
                   Rate:{" "}
                   <b className="text-maroon">
@@ -702,10 +785,12 @@ export default function SalaryAdminEdit({
                     <div
                       className={`text-sm font-bold flex items-center gap-1.5 ${disabled ? "text-txt-soft" : "text-txt"}`}
                     >
-                      🛍 รับซื้อ
+                      <IconShoppingBag size={14} strokeWidth={2.4} />
+                      รับซื้อ
                       {disabled && (
-                        <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20]">
-                          🔒 ถูกปิด
+                        <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20] inline-flex items-center gap-0.5">
+                          <IconLock size={11} strokeWidth={2.4} />
+                          ถูกปิด
                         </span>
                       )}
                     </div>
@@ -735,12 +820,18 @@ export default function SalaryAdminEdit({
               );
             })()}
 
-            <div className="text-xs text-txt-soft mt-2.5 text-center">
-              💡 Rate ต่อชิ้นกำหนดในแท็บ "ข้อมูลพนักงาน"
+            <div className="text-xs text-txt-soft mt-2.5 text-center inline-flex items-center justify-center gap-1 w-full">
+              <IconLightbulb
+                size={12}
+                strokeWidth={2.4}
+                className="text-gold"
+              />
+              Rate ต่อชิ้นกำหนดในแท็บ "ข้อมูลพนักงาน"
             </div>
             {poolShare && (
-              <div className="mt-2 text-xs text-maroon text-center px-2.5 py-1.5 rounded-lg bg-[#C9973A15]">
-                🤝 ค่าคอมจะถูกคำนวณจาก Pool หลังจากที่ Admin บันทึกชิ้นของทุกคนแล้ว
+              <div className="mt-2 text-xs text-maroon text-center px-2.5 py-1.5 rounded-lg bg-[#C9973A15] inline-flex items-center justify-center gap-1 w-full">
+                <IconHandshake size={12} strokeWidth={2.4} />
+                ค่าคอมจะถูกคำนวณจาก Pool หลังจากที่ Admin บันทึกชิ้นของทุกคนแล้ว
               </div>
             )}
           </div>
@@ -759,7 +850,10 @@ export default function SalaryAdminEdit({
           {/* Invite */}
           <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-txt">🎫 เชิญชวนสมัครบัตร</div>
+              <div className="text-sm font-bold text-txt flex items-center gap-1.5">
+                <IconTicket size={16} strokeWidth={2.2} />
+                เชิญชวนสมัครบัตร
+              </div>
               <div className="text-xs text-txt-soft">
                 Rate:{" "}
                 <b className="text-maroon">
@@ -790,7 +884,10 @@ export default function SalaryAdminEdit({
           {/* Transfer */}
           <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-txt">🔄 ย้ายข้อมูลบัตร</div>
+              <div className="text-sm font-bold text-txt flex items-center gap-1.5">
+                <IconRefresh size={16} strokeWidth={2.2} />
+                ย้ายข้อมูลบัตร
+              </div>
               <div className="text-xs text-txt-soft">
                 Rate:{" "}
                 <b className="text-maroon">
@@ -831,7 +928,7 @@ export default function SalaryAdminEdit({
 
           {/* Base salary — read-only (กำหนดในข้อมูลพนักงาน) */}
           <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
-            <span className="text-base">💼</span>
+            <IconBriefcase size={16} strokeWidth={2.2} color={COLORS.maroon} />
             <div className="flex-1 min-w-0">
               <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
                 <span>เงินเดือนพื้นฐาน</span>
@@ -847,7 +944,7 @@ export default function SalaryAdminEdit({
 
           {/* Commission total — สรุปจากค่าคอมด้านบน */}
           <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
-            <span className="text-base">💎</span>
+            <IconDiamond size={16} strokeWidth={2.2} color={COLORS.gold} />
             <div className="flex-1 min-w-0">
               <div className="text-xs text-txt-soft font-semibold">
                 รวมค่าคอมตามจำนวนชิ้น
@@ -860,7 +957,7 @@ export default function SalaryAdminEdit({
 
           {/* Member-card bonus total — สรุปจากโบนัสบัตรสมาชิกด้านบน */}
           <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
-            <span className="text-base">🎫</span>
+            <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
             <div className="flex-1 min-w-0">
               <div className="text-xs text-txt-soft font-semibold">
                 รวมโบนัสบัตรสมาชิก
@@ -899,7 +996,8 @@ export default function SalaryAdminEdit({
             <div
               className={`font-bold mb-1 flex items-center gap-1.5 ${salaryCalculation.attendanceBonus > 0 ? "text-green" : "text-txt-mid"}`}
             >
-              🌟 โบนัสแห่งความขยัน(ไม่หยุด){" "}
+              <IconStar size={14} strokeWidth={2.4} />
+              โบนัสแห่งความขยัน(ไม่หยุด){" "}
               <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                 อัตโนมัติ
               </span>
@@ -977,7 +1075,8 @@ export default function SalaryAdminEdit({
             onClick={addCustomEarning}
             className="w-full mt-2.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-green/40 bg-green-lt text-green text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
           >
-            ➕ เพิ่มรายการรายรับ
+            <IconPlus size={14} strokeWidth={2.4} />
+            เพิ่มรายการรายรับ
           </button>
         </div>
 
@@ -992,7 +1091,7 @@ export default function SalaryAdminEdit({
           </div>
           {/* Social security — read-only (กำหนดในข้อมูลพนักงาน) */}
           <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
-            <span className="text-base">🏛</span>
+            <IconBuildingBank size={16} strokeWidth={2.2} color={COLORS.red} />
             <div className="flex-1 min-w-0">
               <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
                 <span>หักประกันสังคม</span>
@@ -1008,7 +1107,8 @@ export default function SalaryAdminEdit({
           {/* over-quota auto note */}
           <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
             <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
-              📋 หักลาเกินโควต้า{" "}
+              <IconClipboardList size={14} strokeWidth={2.4} />
+              หักลาเกินโควต้า{" "}
               <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                 อัตโนมัติ
               </span>
@@ -1073,7 +1173,8 @@ export default function SalaryAdminEdit({
           {/* auto advance deduction note */}
           <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
             <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
-              💵 หักเงินเบิกล่วงหน้า{" "}
+              <IconBanknote size={14} strokeWidth={2.4} />
+              หักเงินเบิกล่วงหน้า{" "}
               <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                 อัตโนมัติ
               </span>
@@ -1153,7 +1254,8 @@ export default function SalaryAdminEdit({
             onClick={addCustomDeduction}
             className="w-full mt-2.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-[#C0392B40] bg-red-lt text-red text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
           >
-            ➕ เพิ่มรายการหัก
+            <IconPlus size={14} strokeWidth={2.4} />
+            เพิ่มรายการหัก
           </button>
         </div>
       </div>

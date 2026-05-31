@@ -1,4 +1,14 @@
-import { Check as IconCheck, Copy as IconCopy } from "lucide-react";
+import {
+  Check as IconCheck,
+  CircleCheck as IconCircleCheck,
+  CircleDollarSign as IconCircleDollarSign,
+  Copy as IconCopy,
+  FileText as IconFileText,
+  Landmark as IconLandmark,
+  Upload as IconUpload,
+  X as IconX,
+  XCircle as IconXCircle,
+} from "lucide-react";
 import { useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useAdvancesByStatusAndMonth } from "../../firebase/hooks/useFirestore";
@@ -133,10 +143,31 @@ export default function AdminAdvancePanel({
         {[
           {
             id: "pending",
-            label: "⏳ รออนุมัติ",
+            label: (
+              <span className="inline-flex items-center gap-1">
+                <IconCircleDollarSign size={13} strokeWidth={2.4} />
+                รออนุมัติ
+              </span>
+            ),
           },
-          { id: "approved", label: "✅ อนุมัติแล้ว" },
-          { id: "rejected", label: "❌ ไม่อนุมัติ" },
+          {
+            id: "approved",
+            label: (
+              <span className="inline-flex items-center gap-1">
+                <IconCircleCheck size={13} strokeWidth={2.4} />
+                อนุมัติแล้ว
+              </span>
+            ),
+          },
+          {
+            id: "rejected",
+            label: (
+              <span className="inline-flex items-center gap-1">
+                <IconXCircle size={13} strokeWidth={2.4} />
+                ไม่อนุมัติ
+              </span>
+            ),
+          },
         ].map((f) => {
           const count = f.id === "pending" ? pendingRequests.length : 0;
           return (
@@ -186,7 +217,9 @@ export default function AdminAdvancePanel({
 
       {!loading && !error && filtered.length === 0 && (
         <div className="text-center text-txt-soft py-[50px] text-base">
-          <div className="text-5xl mb-3">💸</div>
+          <div className="flex justify-center mb-3 text-txt-soft">
+            <IconCircleDollarSign size={48} strokeWidth={1.8} />
+          </div>
           ไม่มีคำขอเบิก
         </div>
       )}
@@ -283,7 +316,12 @@ export default function AdminAdvancePanel({
                       className={`w-full text-sm mb-2.5 px-3 py-2.5 bg-cream rounded-lg cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all
                     ${copiedAcc === request.id ? "border border-green" : "border border-bdr"}`}
                     >
-                      <span className="text-sm">🏦</span>
+                      <IconLandmark
+                        size={14}
+                        strokeWidth={2.2}
+                        color={COLORS.maroon}
+                        className="shrink-0"
+                      />
                       <div className="flex-1 text-left min-w-0">
                         <div className="text-xs text-txt-soft mb-px">
                           {employeeInfo.bank || "-"}
@@ -314,8 +352,9 @@ export default function AdminAdvancePanel({
                 {/* slip preview */}
                 {slipPreview && (
                   <div className="mb-2.5">
-                    <div className="text-xs text-txt-soft mb-[5px] font-semibold">
-                      📄 สลิปการโอน
+                    <div className="text-xs text-txt-soft mb-[5px] font-semibold inline-flex items-center gap-1">
+                      <IconFileText size={12} strokeWidth={2.4} />
+                      สลิปการโอน
                     </div>
                     <img
                       src={slipPreview}
@@ -338,14 +377,20 @@ export default function AdminAdvancePanel({
                   <div className="flex gap-2 mt-2.5">
                     <button
                       onClick={() => setConfirmReject(request)}
-                      className="px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-red/25 bg-red-lt text-red text-sm font-semibold cursor-pointer font-[inherit]"
+                      className="px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-red/25 bg-red-lt text-red text-sm font-semibold cursor-pointer font-[inherit] inline-flex items-center gap-1"
                     >
-                      ❌ ปฏิเสธ
+                      <IconX size={14} strokeWidth={2.4} />
+                      ปฏิเสธ
                     </button>
                     <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-gold)/0.25]">
-                      {uploadingSlip === request.id
-                        ? "กำลังอัปโหลด..."
-                        : "📤 อัปโหลดสลิป (อนุมัติ)"}
+                      {uploadingSlip === request.id ? (
+                        "กำลังอัปโหลด..."
+                      ) : (
+                        <>
+                          <IconUpload size={14} strokeWidth={2.4} />
+                          อัปโหลดสลิป (อนุมัติ)
+                        </>
+                      )}
                       <input
                         type="file"
                         accept="image/*"
@@ -362,9 +407,14 @@ export default function AdminAdvancePanel({
 
                 {request.status === "approved" && !slipPreview && (
                   <label className="block px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-gold/40 bg-gold-pale text-maroon text-sm font-semibold cursor-pointer font-[inherit] text-center">
-                    {uploadingSlip === request.id
-                      ? "กำลังอัปโหลด..."
-                      : "📤 อัปโหลดสลิปย้อนหลัง"}
+                    {uploadingSlip === request.id ? (
+                      "กำลังอัปโหลด..."
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
+                        <IconUpload size={14} strokeWidth={2.4} />
+                        อัปโหลดสลิปย้อนหลัง
+                      </span>
+                    )}
                     <input
                       type="file"
                       accept="image/*"
@@ -389,7 +439,9 @@ export default function AdminAdvancePanel({
           maxWidthClass="max-w-[340px]"
           contentClassName="px-6 py-7"
         >
-          <div className="text-center text-4xl mb-2">❌</div>
+          <div className="flex justify-center mb-2 text-red">
+            <IconXCircle size={40} strokeWidth={2} />
+          </div>
           <div className="font-bold text-lg text-txt text-center mb-1.5">
             ปฏิเสธคำขอนี้?
           </div>

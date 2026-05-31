@@ -1,4 +1,23 @@
-import { Book as IconBook, CalendarDays as IconCalendar } from "lucide-react";
+import {
+  AlertTriangle as IconAlertTriangle,
+  Ban as IconBan,
+  Book as IconBook,
+  CalendarDays as IconCalendar,
+  Check as IconCheck,
+  ClipboardList as IconClipboardList,
+  Diamond as IconDiamond,
+  Handshake as IconHandshake,
+  Lightbulb as IconLightbulb,
+  RefreshCw as IconRefresh,
+  Ruler as IconRuler,
+  ShoppingBag as IconShoppingBag,
+  Sparkles as IconSparkles,
+  Star as IconStar,
+  Sun as IconSun,
+  Ticket as IconTicket,
+  TrendingDown as IconTrendingDown,
+  X as IconX,
+} from "lucide-react";
 import { useState } from "react";
 import { COLORS } from "../../constants";
 import BaseModal from "../shared/BaseModal";
@@ -38,7 +57,15 @@ export default function ManualModal({ onClose }) {
               </span>
             ),
           },
-          { id: "commission", label: "💎 กฎค่าคอม" },
+          {
+            id: "commission",
+            label: (
+              <span className="inline-flex items-center gap-1.5">
+                <IconDiamond size={14} strokeWidth={2.4} />
+                กฎค่าคอม
+              </span>
+            ),
+          },
         ].map((t) => (
           <button
             key={t.id}
@@ -54,7 +81,15 @@ export default function ManualModal({ onClose }) {
       {/* content */}
       {tab === "leave" && (
         <div className="text-sm text-txt-mid leading-[1.8]">
-          <Section title="📋 โควต้าการลา" color={COLORS.maroon}>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconClipboardList size={16} strokeWidth={2.4} />
+                โควต้าการลา
+              </span>
+            }
+            color={COLORS.maroon}
+          >
             <p>
               พนักงานทุกคนมีโควต้า <b>ลากิจ + ลาป่วย รวม 2 วัน/เดือน</b>
             </p>
@@ -90,7 +125,15 @@ export default function ManualModal({ onClose }) {
                 </li>
               </ul>
             </Card>
-            <Card title="🌅 วันอาทิตย์" color={COLORS.text}>
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconSun size={14} strokeWidth={2.4} />
+                  วันอาทิตย์
+                </span>
+              }
+              color={COLORS.text}
+            >
               <ul>
                 <li>
                   <b className="text-red">หักทุกวัน</b> ไม่อยู่ในโควต้า
@@ -102,7 +145,15 @@ export default function ManualModal({ onClose }) {
             </Card>
           </Section>
 
-          <Section title="🌟 โบนัสแห่งความขยัน(ไม่หยุด)" color={COLORS.green}>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconStar size={16} strokeWidth={2.4} />
+                โบนัสแห่งความขยัน(ไม่หยุด)
+              </span>
+            }
+            color={COLORS.green}
+          >
             <p>
               คำนวณ <b>เฉพาะวันธรรมดา</b> (วันอาทิตย์ไม่นับ)
             </p>
@@ -120,26 +171,51 @@ export default function ManualModal({ onClose }) {
           </Section>
 
           <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
-            <b className="text-maroon">💡 ตัวอย่าง:</b> เงินเดือน ฿18,000 ลาวันธรรมดา
-            1 + วันอาทิตย์ 1<br />
+            <b className="text-maroon inline-flex items-center gap-1">
+              <IconLightbulb size={14} strokeWidth={2.4} />
+              ตัวอย่าง:
+            </b>{" "}
+            เงินเดือน ฿18,000 ลาวันธรรมดา 1 + วันอาทิตย์ 1<br />
             เรท/วัน = 18,000 ÷ 30 = <b>฿600</b>
             <br />
-            <span className="text-green">✓ ได้โบนัสแห่งความขยัน</span> 1 × 600 ={" "}
-            <b>฿600</b>
+            <span className="text-green inline-flex items-center gap-1">
+              <IconCheck size={14} strokeWidth={3} />
+              ได้โบนัสแห่งความขยัน
+            </span>{" "}
+            1 × 600 = <b>฿600</b>
             <br />
-            <span className="text-red">✗ หักวันอาทิตย์</span> 600 × 1.5 ={" "}
-            <b>฿900</b>
+            <span className="text-red inline-flex items-center gap-1">
+              <IconX size={14} strokeWidth={3} />
+              หักวันอาทิตย์
+            </span>{" "}
+            600 × 1.5 = <b>฿900</b>
           </Box>
         </div>
       )}
 
       {tab === "commission" && (
         <div className="text-sm text-txt-mid leading-[1.8]">
-          <Section title="🤝 ระบบ Pool ค่าคอม" color={COLORS.maroon}>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconHandshake size={16} strokeWidth={2.4} />
+                ระบบ Pool ค่าคอม
+              </span>
+            }
+            color={COLORS.maroon}
+          >
             <p>พนักงานในตำแหน่งเดียวกันที่อยู่ใน "Pool" จะแชร์ค่าคอมกันตามสูตร</p>
           </Section>
 
-          <Section title="📐 สูตรการแบ่ง Pool" color={COLORS.maroon}>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconRuler size={16} strokeWidth={2.4} />
+                สูตรการแบ่ง Pool
+              </span>
+            }
+            color={COLORS.maroon}
+          >
             <Card title="ขั้นตอน 6 ข้อ" color={COLORS.text}>
               <ol className="pl-[18px] m-0">
                 <li>
@@ -169,27 +245,67 @@ export default function ManualModal({ onClose }) {
             </Card>
           </Section>
 
-          <Section title="✨ ขายพิเศษ" color={COLORS.gold}>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconSparkles size={16} strokeWidth={2.4} />
+                ขายพิเศษ
+              </span>
+            }
+            color={COLORS.gold}
+          >
             <p>
               <b>ไม่เข้า Pool</b> — ใครขายใครได้ คูณ Rate ของตัวเอง
             </p>
           </Section>
 
-          <Section title="🛍 รับซื้อ" color={COLORS.maroon}>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconShoppingBag size={16} strokeWidth={2.4} />
+                รับซื้อ
+              </span>
+            }
+            color={COLORS.maroon}
+          >
             <p>
               คำนวณแบบ Pool <b>แยกฝั่ง</b> จากการขาย (ใช้สูตรเดียวกัน)
             </p>
           </Section>
 
-          <Section title="⚠ กฎตัดสิทธิ์ Pool" color={COLORS.red}>
-            <Card title="🔻 กฎ 80%" color={COLORS.text}>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconAlertTriangle size={16} strokeWidth={2.4} />
+                กฎตัดสิทธิ์ Pool
+              </span>
+            }
+            color={COLORS.red}
+          >
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconTrendingDown size={14} strokeWidth={2.4} />
+                  กฎ 80%
+                </span>
+              }
+              color={COLORS.text}
+            >
               <p>
                 คนที่ <b>ชิ้น &lt; 80% ของ Top</b> ในฝั่งนั้น →{" "}
                 <b className="text-red">ตัดออกจาก Pool</b> ฝั่งนั้น (จำนวนคนที่มีสิทธิ์ลดลง
                 → เปอร์เซ็นต์ฐานและตัวคูณหักวันลาเปลี่ยนตาม)
               </p>
             </Card>
-            <Card title="🚫 Admin ปิดสิทธิ์" color={COLORS.text}>
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconBan size={14} strokeWidth={2.4} />
+                  Admin ปิดสิทธิ์
+                </span>
+              }
+              color={COLORS.text}
+            >
               <ul>
                 <li>
                   <b>ปิดฝั่งขาย</b> — ไม่ได้ Pool ฝั่งขาย (ฝั่งซื้อยังใช้กฎ 80%)
@@ -207,7 +323,10 @@ export default function ManualModal({ onClose }) {
           </Section>
 
           <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
-            <b className="text-maroon">💡 ตัวอย่าง Pool ขาย 5 คน · 1,064 ชิ้น</b>
+            <b className="text-maroon inline-flex items-center gap-1">
+              <IconLightbulb size={14} strokeWidth={2.4} />
+              ตัวอย่าง Pool ขาย 5 คน · 1,064 ชิ้น
+            </b>
             <br />
             จำนวนคนที่มีสิทธิ์ = 5, เปอร์เซ็นต์ฐาน = 20%, ตัวคูณหักวันลา = 0.667
             <br />
@@ -222,13 +341,28 @@ export default function ManualModal({ onClose }) {
             ใครหยุดน้อยได้มาก ใครหยุดมากได้น้อย
           </Box>
 
-          <Section title="🎫 บัตรสมาชิก" color={COLORS.maroon}>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconTicket size={16} strokeWidth={2.4} />
+                บัตรสมาชิก
+              </span>
+            }
+            color={COLORS.maroon}
+          >
             <p>
               คิดตาม <b>Rate ของตัวเอง</b> × จำนวนใบ (ไม่เข้า Pool)
             </p>
             <ul>
-              <li>🎫 เชิญชวนสมัครบัตร — ใบละ X บาท</li>
-              <li>🔄 ย้ายข้อมูลบัตร — ใบละ Y บาท</li>
+              <li className="inline-flex items-center gap-1.5">
+                <IconTicket size={14} strokeWidth={2.4} />
+                เชิญชวนสมัครบัตร — ใบละ X บาท
+              </li>
+              <br />
+              <li className="inline-flex items-center gap-1.5">
+                <IconRefresh size={14} strokeWidth={2.4} />
+                ย้ายข้อมูลบัตร — ใบละ Y บาท
+              </li>
             </ul>
           </Section>
         </div>

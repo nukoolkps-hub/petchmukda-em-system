@@ -1,9 +1,30 @@
 import {
+  AlertOctagon as IconAlertOctagon,
+  Ban as IconBan,
+  Banknote as IconBanknote,
+  Briefcase as IconBriefcase,
+  Landmark as IconBuildingBank,
   CalendarDays as IconCalendar,
   Check as IconCheck,
+  CircleCheck as IconCircleCheck,
+  CircleDollarSign as IconCircleDollarSign,
   Copy as IconCopy,
+  Cross as IconCross,
+  Diamond as IconDiamond,
+  FastForward as IconFastForward,
+  Lightbulb as IconLightbulb,
+  Lock as IconLock,
+  MessageCircle as IconMessageCircle,
+  Package as IconPackage,
+  Pencil as IconPencil,
+  RefreshCw as IconRefresh,
   Settings as IconSettings,
+  ShoppingBag as IconShoppingBag,
+  Sparkles as IconSparkles,
+  Sun as IconSun,
+  Ticket as IconTicket,
   Trash2 as IconTrash,
+  User as IconUser,
   X as IconX,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -393,8 +414,12 @@ export default function AdminPanel({
                                 </span>
                               </div>
                               {overQuota && (
-                                <div className="text-xs text-red font-bold">
-                                  🚨 เกินโควต้า
+                                <div className="text-xs text-red font-bold inline-flex items-center gap-1">
+                                  <IconAlertOctagon
+                                    size={11}
+                                    strokeWidth={2.4}
+                                  />
+                                  เกินโควต้า
                                 </div>
                               )}
                             </div>
@@ -410,9 +435,10 @@ export default function AdminPanel({
                                       : `${name}:personal`,
                                   )
                                 }
-                                className={`bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold cursor-pointer font-[inherit] border ${expandedChip === `${name}:personal` ? "border-gold" : "border-transparent"}`}
+                                className={`bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${name}:personal` ? "border-gold" : "border-transparent"}`}
                               >
-                                💼 ลากิจ {personalDays} วัน
+                                <IconBriefcase size={12} strokeWidth={2.4} />
+                                ลากิจ {personalDays} วัน
                               </button>
                             )}
                             {sickDays > 0 && (
@@ -425,14 +451,16 @@ export default function AdminPanel({
                                       : `${name}:sick`,
                                   )
                                 }
-                                className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E] cursor-pointer font-[inherit] border ${expandedChip === `${name}:sick` ? "border-[#0F766E]" : "border-transparent"}`}
+                                className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E] cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${name}:sick` ? "border-[#0F766E]" : "border-transparent"}`}
                               >
-                                🏥 ลาป่วย {sickDays} วัน
+                                <IconCross size={12} strokeWidth={2.4} />
+                                ลาป่วย {sickDays} วัน
                               </button>
                             )}
                             {sundays > 0 && (
-                              <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9]">
-                                🌅 อาทิตย์ {sundays} วัน
+                              <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9] inline-flex items-center gap-1">
+                                <IconSun size={12} strokeWidth={2.4} />
+                                อาทิตย์ {sundays} วัน
                                 <span className="font-normal opacity-70 ml-0.5">
                                   (×1.5)
                                 </span>
@@ -570,18 +598,21 @@ export default function AdminPanel({
                           </div>
                           <div className="flex gap-1.5 flex-wrap items-center">
                             {personalDays > 0 && (
-                              <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold">
-                                💼 ลากิจ {personalDays} วัน
+                              <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold inline-flex items-center gap-1">
+                                <IconBriefcase size={12} strokeWidth={2.4} />
+                                ลากิจ {personalDays} วัน
                               </div>
                             )}
                             {sickDays > 0 && (
-                              <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E]">
-                                🏥 ลาป่วย {sickDays} วัน
+                              <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E] inline-flex items-center gap-1">
+                                <IconCross size={12} strokeWidth={2.4} />
+                                ลาป่วย {sickDays} วัน
                               </div>
                             )}
                             {sundays > 0 && (
-                              <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9]">
-                                🌅 อาทิตย์ {sundays} วัน
+                              <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9] inline-flex items-center gap-1">
+                                <IconSun size={12} strokeWidth={2.4} />
+                                อาทิตย์ {sundays} วัน
                                 <span className="font-normal opacity-70 ml-0.5">
                                   (×1.5)
                                 </span>
@@ -669,8 +700,9 @@ export default function AdminPanel({
                     <div className="font-bold text-txt text-base mb-[3px] flex items-center gap-1.5">
                       {lv.employeeName}
                       {!isPast(lv.end) && (
-                        <span className="text-xs font-bold px-1.5 py-px rounded-[10px] bg-gold-pale text-maroon border border-[#C9973A40]">
-                          🔜 อนาคต
+                        <span className="text-xs font-bold px-1.5 py-px rounded-[10px] bg-gold-pale text-maroon border border-[#C9973A40] inline-flex items-center gap-0.5">
+                          <IconFastForward size={10} strokeWidth={2.4} />
+                          อนาคต
                         </span>
                       )}
                     </div>
@@ -899,9 +931,27 @@ export default function AdminPanel({
                         {employee.poolExclusion &&
                           (() => {
                             const m = {
-                              sell: "💎 ปิดขาย",
-                              buy: "🛍 ปิดซื้อ",
-                              both: "🔒 ปิดทั้งคู่",
+                              sell: (
+                                <span className="inline-flex items-center gap-0.5">
+                                  <IconDiamond size={10} strokeWidth={2.4} />
+                                  ปิดขาย
+                                </span>
+                              ),
+                              buy: (
+                                <span className="inline-flex items-center gap-0.5">
+                                  <IconShoppingBag
+                                    size={10}
+                                    strokeWidth={2.4}
+                                  />
+                                  ปิดซื้อ
+                                </span>
+                              ),
+                              both: (
+                                <span className="inline-flex items-center gap-0.5">
+                                  <IconLock size={10} strokeWidth={2.4} />
+                                  ปิดทั้งคู่
+                                </span>
+                              ),
                             };
                             return (
                               <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
@@ -910,13 +960,15 @@ export default function AdminPanel({
                             );
                           })()}
                         {employee.salaryDisabled && (
-                          <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
-                            🔒 ปิดเงินเดือน
+                          <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
+                            <IconLock size={10} strokeWidth={2.4} />
+                            ปิดเงินเดือน
                           </span>
                         )}
                         {employee.lineUserId && (
-                          <span className="px-1.5 py-px rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs">
-                            💬 LINE
+                          <span className="px-1.5 py-px rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs inline-flex items-center gap-0.5">
+                            <IconMessageCircle size={10} strokeWidth={2.4} />
+                            LINE
                           </span>
                         )}
                       </div>
@@ -970,7 +1022,12 @@ export default function AdminPanel({
                         {/* Name + prefix — editable */}
                         <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
-                            ✏️ ชื่อพนักงาน (คำนำหน้า + ชื่อ)
+                            <IconPencil
+                              size={12}
+                              strokeWidth={2.4}
+                              className="inline mr-1 -mt-px"
+                            />
+                            ชื่อพนักงาน (คำนำหน้า + ชื่อ)
                           </label>
                           <div className="flex gap-2">
                             <select
@@ -1014,7 +1071,10 @@ export default function AdminPanel({
                         {/* Role — read-only (แก้จากแท็บ "ตำแหน่ง") */}
                         <div className="mb-2.5 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
                           <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
-                            <span>👤 ตำแหน่ง</span>
+                            <span className="inline-flex items-center gap-1">
+                              <IconUser size={12} strokeWidth={2.4} />
+                              ตำแหน่ง
+                            </span>
                             <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
                               แก้ในแท็บ "ตำแหน่ง"
                             </span>
@@ -1030,7 +1090,10 @@ export default function AdminPanel({
                         {/* Bank info — read-only (พนักงานเป็นคนกรอกเอง) */}
                         <div className="mb-3 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
                           <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
-                            <span>🏦 บัญชีรับเงินเดือน</span>
+                            <span className="inline-flex items-center gap-1">
+                              <IconBuildingBank size={12} strokeWidth={2.4} />
+                              บัญชีรับเงินเดือน
+                            </span>
                             <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
                               พนักงานกรอกเอง
                             </span>
@@ -1055,7 +1118,12 @@ export default function AdminPanel({
                         <div className="mb-3">
                           <label className="text-xs text-txt-soft font-semibold mb-1 flex items-center gap-1.5">
                             <span className="inline-flex items-center gap-1">
-                              💬 LINE User ID
+                              <IconMessageCircle
+                                size={12}
+                                strokeWidth={2.4}
+                                className="inline mr-1 -mt-px"
+                              />
+                              LINE User ID
                               {employee.lineUserId ? (
                                 <span className="text-xs px-1.5 py-px rounded-lg bg-[#06C75520] text-[#06A04E] font-bold">
                                   เชื่อมแล้ว
@@ -1102,14 +1170,24 @@ export default function AdminPanel({
                             </div>
                           )}
                           <div className="text-xs text-txt-soft mt-[3px] leading-normal">
-                            💡 ID จะถูกเก็บอัตโนมัติเมื่อพนักงานเข้าสู่ระบบผ่าน LINE
+                            <IconLightbulb
+                              size={12}
+                              strokeWidth={2.4}
+                              className="inline mr-1 -mt-px"
+                            />
+                            ID จะถูกเก็บอัตโนมัติเมื่อพนักงานเข้าสู่ระบบผ่าน LINE
                           </div>
                         </div>
 
                         {/* Base Salary */}
                         <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
-                            💼 เงินเดือนพื้นฐาน
+                            <IconBriefcase
+                              size={12}
+                              strokeWidth={2.4}
+                              className="inline mr-1 -mt-px"
+                            />
+                            เงินเดือนพื้นฐาน
                           </label>
                           <div className="relative">
                             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
@@ -1141,7 +1219,12 @@ export default function AdminPanel({
                         {/* Social Security */}
                         <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
-                            🏛 หักประกันสังคม
+                            <IconBuildingBank
+                              size={12}
+                              strokeWidth={2.4}
+                              className="inline mr-1 -mt-px"
+                            />
+                            หักประกันสังคม
                           </label>
                           <div className="relative">
                             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
@@ -1285,7 +1368,12 @@ export default function AdminPanel({
                                   <div
                                     className={`text-sm font-bold ${currentSalaryDisabled ? "text-red" : "text-txt"}`}
                                   >
-                                    🔒 ปิดสิทธิ์ระบบเงินเดือน
+                                    <IconLock
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="inline mr-1 -mt-px"
+                                    />
+                                    ปิดสิทธิ์ระบบเงินเดือน
                                   </div>
                                   <div className="text-xs text-txt-soft mt-0.5 leading-normal">
                                     ซ่อนแท็บ "เงินเดือน" จากพนักงาน · ใช้ได้แค่ระบบลา
@@ -1309,12 +1397,22 @@ export default function AdminPanel({
                             return (
                               <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                                 <div className="text-sm font-bold text-maroon mb-2">
-                                  💰 Rate ค่าคอมต่อชิ้น
+                                  <IconCircleDollarSign
+                                    size={12}
+                                    strokeWidth={2.4}
+                                    className="inline mr-1 -mt-px"
+                                  />
+                                  Rate ค่าคอมต่อชิ้น
                                 </div>
                                 <div className="flex gap-2">
                                   <div className="flex-1">
                                     <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                      📦 ค่าคอมต่อชิ้น
+                                      <IconPackage
+                                        size={12}
+                                        strokeWidth={2.4}
+                                        className="inline mr-1 -mt-px"
+                                      />
+                                      ค่าคอมต่อชิ้น
                                     </label>
                                     <input
                                       type="number"
@@ -1344,12 +1442,22 @@ export default function AdminPanel({
 
                                 <div className="h-px my-2.5 bg-[#C9973A30]" />
                                 <div className="text-xs font-bold text-maroon mb-2">
-                                  🎫 Rate บัตรสมาชิกต่อใบ
+                                  <IconTicket
+                                    size={12}
+                                    strokeWidth={2.4}
+                                    className="inline mr-1 -mt-px"
+                                  />
+                                  Rate บัตรสมาชิกต่อใบ
                                 </div>
                                 <div className="flex gap-2">
                                   <div className="flex-1">
                                     <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                      🎫 เชิญชวนสมัคร
+                                      <IconTicket
+                                        size={12}
+                                        strokeWidth={2.4}
+                                        className="inline mr-1 -mt-px"
+                                      />
+                                      เชิญชวนสมัคร
                                     </label>
                                     <input
                                       type="number"
@@ -1374,7 +1482,12 @@ export default function AdminPanel({
                                   </div>
                                   <div className="flex-1">
                                     <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                      🔄 ย้ายข้อมูล
+                                      <IconRefresh
+                                        size={12}
+                                        strokeWidth={2.4}
+                                        className="inline mr-1 -mt-px"
+                                      />
+                                      ย้ายข้อมูล
                                     </label>
                                     <input
                                       type="number"
@@ -1417,25 +1530,25 @@ export default function AdminPanel({
                                     {
                                       id: "",
                                       label: "ไม่ปิด",
-                                      icon: "✅",
+                                      Icon: IconCircleCheck,
                                       desc: "ใช้กฎ 80% ปกติทั้ง 2 ฝั่ง",
                                     },
                                     {
                                       id: "sell",
                                       label: "ปิดฝั่งขาย",
-                                      icon: "💎",
+                                      Icon: IconDiamond,
                                       desc: "ไม่ได้ Pool ขาย · รับซื้อยังใช้กฎ 80%",
                                     },
                                     {
                                       id: "buy",
                                       label: "ปิดฝั่งรับซื้อ",
-                                      icon: "🛍",
+                                      Icon: IconShoppingBag,
                                       desc: "ไม่ได้ Pool รับซื้อ · ขายยังใช้กฎ 80%",
                                     },
                                     {
                                       id: "both",
                                       label: "ปิดทั้งคู่",
-                                      icon: "🔒",
+                                      Icon: IconLock,
                                       desc: "ไม่ได้ Pool ทั้งหมด · ถ้าขาย < 50% ไม่ได้เงินเดือนพื้นฐาน",
                                     },
                                   ];
@@ -1446,7 +1559,12 @@ export default function AdminPanel({
                                       <div
                                         className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${currentPoolExclusion ? "text-red" : "text-txt"}`}
                                       >
-                                        🚫 ปิดสิทธิ์ Pool ค่าคอม
+                                        <IconBan
+                                          size={14}
+                                          strokeWidth={2.4}
+                                          className="inline mr-1 -mt-px"
+                                        />
+                                        ปิดสิทธิ์ Pool ค่าคอม
                                       </div>
                                       <div className="flex flex-col gap-[5px]">
                                         {poolExclusionOptions.map(
@@ -1479,9 +1597,12 @@ export default function AdminPanel({
                                                 />
                                                 <div className="flex-1 min-w-0">
                                                   <div
-                                                    className={`text-sm font-semibold ${active ? (poolExclusionOption.id ? "text-red" : "text-green") : "text-txt"}`}
+                                                    className={`text-sm font-semibold flex items-center gap-1.5 ${active ? (poolExclusionOption.id ? "text-red" : "text-green") : "text-txt"}`}
                                                   >
-                                                    {poolExclusionOption.icon}{" "}
+                                                    <poolExclusionOption.Icon
+                                                      size={13}
+                                                      strokeWidth={2.4}
+                                                    />
                                                     {poolExclusionOption.label}
                                                   </div>
                                                   <div className="text-xs text-txt-soft mt-px leading-normal">
@@ -1497,12 +1618,22 @@ export default function AdminPanel({
                                   );
                                 })()}
                               <div className="text-sm font-bold text-maroon mb-2">
-                                💰 Rate ค่าคอมต่อชิ้น
+                                <IconCircleDollarSign
+                                  size={12}
+                                  strokeWidth={2.4}
+                                  className="inline mr-1 -mt-px"
+                                />
+                                Rate ค่าคอมต่อชิ้น
                               </div>
                               <div className="flex gap-2 mb-2">
                                 <div className="flex-1">
                                   <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                    💎 ขาย-ทั่วไป
+                                    <IconDiamond
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="inline mr-1 -mt-px"
+                                    />
+                                    ขาย-ทั่วไป
                                   </label>
                                   <input
                                     type="number"
@@ -1525,7 +1656,12 @@ export default function AdminPanel({
                                 </div>
                                 <div className="flex-1">
                                   <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                    ✨ ขาย-พิเศษ
+                                    <IconSparkles
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="inline mr-1 -mt-px"
+                                    />
+                                    ขาย-พิเศษ
                                   </label>
                                   <input
                                     type="number"
@@ -1548,7 +1684,12 @@ export default function AdminPanel({
                                 </div>
                                 <div className="flex-1">
                                   <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                    🛍 รับซื้อ
+                                    <IconShoppingBag
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="inline mr-1 -mt-px"
+                                    />
+                                    รับซื้อ
                                   </label>
                                   <input
                                     type="number"
@@ -1576,12 +1717,22 @@ export default function AdminPanel({
 
                               <div className="h-px my-2.5 bg-[#C9973A30]" />
                               <div className="text-xs font-bold text-maroon mb-2">
-                                🎫 Rate บัตรสมาชิกต่อใบ
+                                <IconTicket
+                                  size={12}
+                                  strokeWidth={2.4}
+                                  className="inline mr-1 -mt-px"
+                                />
+                                Rate บัตรสมาชิกต่อใบ
                               </div>
                               <div className="flex gap-2">
                                 <div className="flex-1">
                                   <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                    🎫 เชิญชวนสมัคร
+                                    <IconTicket
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="inline mr-1 -mt-px"
+                                    />
+                                    เชิญชวนสมัคร
                                   </label>
                                   <input
                                     type="number"
@@ -1604,7 +1755,12 @@ export default function AdminPanel({
                                 </div>
                                 <div className="flex-1">
                                   <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                    🔄 ย้ายข้อมูล
+                                    <IconRefresh
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="inline mr-1 -mt-px"
+                                    />
+                                    ย้ายข้อมูล
                                   </label>
                                   <input
                                     type="number"

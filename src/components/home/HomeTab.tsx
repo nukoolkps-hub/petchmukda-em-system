@@ -1,5 +1,12 @@
 /* ─── HomeTab — Home dashboard content ───────────────────────── */
 
+import {
+  AlertOctagon as IconAlertOctagon,
+  AlertTriangle as IconAlertTriangle,
+  CircleCheck as IconCircleCheck,
+  ClipboardList as IconClipboardList,
+  Wallet as IconWallet,
+} from "lucide-react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { Employee, LeaveEntry } from "../../types";
 import TeamCalendar from "./TeamCalendar";
@@ -91,7 +98,11 @@ export default function HomeTab({
         <div className="flex gap-2 flex-wrap">
           {remaining > 0 && (
             <div className="bg-green-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
-              <span className="text-sm">✅</span>
+              <IconCircleCheck
+                size={14}
+                strokeWidth={2.4}
+                className="text-green"
+              />
               <span className="text-sm font-semibold text-green">
                 ลาได้อีก {remaining} วัน
               </span>
@@ -99,7 +110,11 @@ export default function HomeTab({
           )}
           {usedThisMonth === quota && (
             <div className="bg-amber-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
-              <span className="text-sm">⚠️</span>
+              <IconAlertTriangle
+                size={14}
+                strokeWidth={2.4}
+                className="text-amber"
+              />
               <span className="text-sm font-semibold text-amber">
                 ใช้ครบโควต้าแล้ว
               </span>
@@ -107,14 +122,22 @@ export default function HomeTab({
           )}
           {usedThisMonth > quota && (
             <div className="bg-red-lt rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5">
-              <span className="text-sm">🚨</span>
+              <IconAlertOctagon
+                size={14}
+                strokeWidth={2.4}
+                className="text-red"
+              />
               <span className="text-sm font-semibold text-red">
                 เกินโควต้า {usedThisMonth - quota} วัน
               </span>
             </div>
           )}
           <div className="bg-cream rounded-[20px] px-3.5 py-[5px] flex items-center gap-1.5 border border-bdr">
-            <span className="text-sm">📋</span>
+            <IconClipboardList
+              size={14}
+              strokeWidth={2.4}
+              className="text-txt-mid"
+            />
             <span className="text-sm text-txt-mid">
               ลากิจ + ลาป่วย รวม 2 วัน/เดือน
             </span>
@@ -124,9 +147,13 @@ export default function HomeTab({
         {/* banner – แสดงตั้งแต่ครั้งที่ 2 เป็นต้นไป */}
         {usedThisMonth >= quota && (
           <div className="mt-3 bg-linear-to-br from-red/6 to-red/9 rounded-xl px-3.5 py-2.5 border border-red/19 flex items-center gap-2.5">
-            <div className="text-xl shrink-0">💰</div>
+            <IconWallet
+              size={22}
+              strokeWidth={2.2}
+              className="text-red shrink-0"
+            />
             <div className="text-sm text-red font-semibold leading-relaxed">
-              การลาต่อจากนี้ไป ‼️
+              การลาต่อจากนี้ไป
               <br />
               <span className="font-bold">จะกระทบต่อเงินเดือน</span>
             </div>

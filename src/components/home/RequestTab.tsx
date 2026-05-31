@@ -2,8 +2,10 @@
 
 import {
   AlertCircle as IconAlertCircle,
+  AlertTriangle as IconAlertTriangle,
   CalendarDays as IconCalendar,
   ChevronRight as IconChevronRight,
+  ClipboardList as IconClipboardList,
   Trash2 as IconTrash,
 } from "lucide-react";
 import { useState } from "react";
@@ -75,7 +77,13 @@ export default function RequestTab({
       <div
         className={`rounded-xl px-4 py-3 mb-5 flex items-center gap-3 border-[1.5px] ${overQuota ? "bg-[#FEF2F2] border-[#C0392B50]" : "bg-gold-pale border-[#C9973A50]"}`}
       >
-        <div className="text-2xl">{overQuota ? "⚠️" : "📋"}</div>
+        <div className={`shrink-0 ${overQuota ? "text-red" : "text-maroon"}`}>
+          {overQuota ? (
+            <IconAlertTriangle size={26} strokeWidth={2.2} />
+          ) : (
+            <IconClipboardList size={26} strokeWidth={2.2} />
+          )}
+        </div>
         <div className="flex-1">
           <div
             className={`font-bold text-sm ${overQuota ? "text-red" : "text-maroon"}`}
@@ -113,7 +121,10 @@ export default function RequestTab({
           ))}
         </div>
         {errors.type && (
-          <div className="text-red text-sm mt-2">⚠ {errors.type}</div>
+          <div className="text-red text-sm mt-2 inline-flex items-center gap-1">
+            <IconAlertTriangle size={14} strokeWidth={2.4} />
+            {errors.type}
+          </div>
         )}
       </div>
       <div className="text-base font-bold text-txt mb-2">วันที่เริ่มลา</div>
@@ -160,13 +171,23 @@ export default function RequestTab({
             <div
               className={`text-sm mt-0.5 ${overLimit ? "text-red" : "text-txt-soft"}`}
             >
-              {overLimit ? `⚠ เกินสิทธิ์! คงเหลือ ${remain} วัน` : "(ไม่รวมวันเสาร์)"}
+              {overLimit ? (
+                <span className="inline-flex items-center gap-1">
+                  <IconAlertTriangle size={14} strokeWidth={2.4} />
+                  เกินสิทธิ์! คงเหลือ {remain} วัน
+                </span>
+              ) : (
+                "(ไม่รวมวันเสาร์)"
+              )}
             </div>
           </div>
         </div>
       )}
       {errors.over && (
-        <div className="text-red text-sm mx-0 mt-1 mb-2.5">⚠ {errors.over}</div>
+        <div className="text-red text-sm mx-0 mt-1 mb-2.5 inline-flex items-center gap-1">
+          <IconAlertTriangle size={14} strokeWidth={2.4} />
+          {errors.over}
+        </div>
       )}
 
       <button
@@ -181,7 +202,12 @@ export default function RequestTab({
       <div className="mt-8">
         <GoldDivider />
         <div className="text-base font-bold text-txt mb-3.5 flex items-center gap-2">
-          📋 ประวัติการลาของฉัน
+          <IconClipboardList
+            size={16}
+            strokeWidth={2.4}
+            className="text-maroon"
+          />
+          ประวัติการลาของฉัน
           <span className="text-sm text-txt-soft font-medium ml-auto">
             {myLeaves.length} รายการ
           </span>

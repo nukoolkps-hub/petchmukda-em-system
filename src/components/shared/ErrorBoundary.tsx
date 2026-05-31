@@ -1,4 +1,7 @@
-import { AlertCircle as IconAlertCircle } from "lucide-react";
+import {
+  AlertCircle as IconAlertCircle,
+  Search as IconSearch,
+} from "lucide-react";
 import type React from "react";
 import { Component } from "react";
 
@@ -76,8 +79,9 @@ export default class ErrorBoundary extends Component<
           {/* error details (dev only) */}
           {import.meta.env.DEV && this.state.error && (
             <details className="bg-red-lt border border-red/20 rounded-[10px] px-3.5 py-3 mb-5 text-sm">
-              <summary className="cursor-pointer font-semibold text-red mb-1.5">
-                🔍 รายละเอียดข้อผิดพลาด (สำหรับ dev)
+              <summary className="cursor-pointer font-semibold text-red mb-1.5 inline-flex items-center gap-1">
+                <IconSearch size={14} strokeWidth={2.4} />
+                รายละเอียดข้อผิดพลาด (สำหรับ dev)
               </summary>
               <div className="mt-2 font-mono text-maroon-dk whitespace-pre-wrap wrap-break-word leading-normal">
                 <b>{this.state.error.toString()}</b>

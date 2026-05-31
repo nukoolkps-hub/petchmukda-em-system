@@ -1,6 +1,7 @@
 import {
   ChevronLeft as IconChevronLeft,
   ChevronRight as IconChevronRight,
+  Sparkles as IconSparkles,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -245,7 +246,10 @@ export default function TeamCalendar({
         </div>
         {selectedDateLeaves.length === 0 ? (
           <div className="text-txt-soft text-sm mt-2 text-center">
-            ✨ ไม่มีพนักงานลาในวันนี้
+            <span className="inline-flex items-center gap-1">
+              <IconSparkles size={14} strokeWidth={2.4} />
+              ไม่มีพนักงานลาในวันนี้
+            </span>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">

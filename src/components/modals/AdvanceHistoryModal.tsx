@@ -1,4 +1,11 @@
-import { CalendarDays as IconCalendar, Clock as IconClock } from "lucide-react";
+import {
+  CalendarDays as IconCalendar,
+  CircleCheck as IconCircleCheck,
+  Clock as IconClock,
+  FileText as IconFileText,
+  Inbox as IconInbox,
+  XCircle as IconXCircle,
+} from "lucide-react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
@@ -19,13 +26,21 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
   const months = Object.keys(grouped).sort().reverse();
 
   const sMap = {
-    pending: { cls: "bg-amber-lt text-amber", label: "รออนุมัติ", icon: "⏳" },
+    pending: {
+      cls: "bg-amber-lt text-amber",
+      label: "รออนุมัติ",
+      Icon: IconClock,
+    },
     approved: {
       cls: "bg-green-lt text-green",
       label: "อนุมัติ • โอนแล้ว",
-      icon: "✅",
+      Icon: IconCircleCheck,
     },
-    rejected: { cls: "bg-red-lt text-red", label: "ไม่อนุมัติ", icon: "❌" },
+    rejected: {
+      cls: "bg-red-lt text-red",
+      label: "ไม่อนุมัติ",
+      Icon: IconXCircle,
+    },
   };
 
   return (
@@ -44,7 +59,9 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
 
       {list.length === 0 && (
         <div className="text-center text-txt-soft py-10 text-base">
-          <div className="text-5xl mb-3">📭</div>
+          <div className="flex justify-center mb-3 text-txt-soft">
+            <IconInbox size={48} strokeWidth={1.8} />
+          </div>
           ยังไม่มีประวัติการเบิก
         </div>
       )}
@@ -70,6 +87,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
             <div className="flex flex-col gap-2">
               {monthList.map((r) => {
                 const s = sMap[r.status] || sMap.pending;
+                const StatusIcon = s.Icon;
                 const date = new Date(r.submittedAt);
                 const slipPreview = r.slipImageUrl || r.slipImageDataUrl;
                 return (
@@ -82,9 +100,10 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                         ฿{formatThaiNumber(r.amount)}
                       </div>
                       <span
-                        className={`text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap ${s.cls}`}
+                        className={`text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1 ${s.cls}`}
                       >
-                        {s.icon} {s.label}
+                        <StatusIcon size={12} strokeWidth={2.4} />
+                        {s.label}
                       </span>
                     </div>
                     <div className="text-sm text-txt-mid mb-1 leading-normal">
@@ -110,9 +129,10 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
                               );
                             }
                           }}
-                          className="px-3 py-1 rounded-lg border border-gold/40 bg-gold-pale text-maroon text-xs font-semibold cursor-pointer font-[inherit]"
+                          className="px-3 py-1 rounded-lg border border-gold/40 bg-gold-pale text-maroon text-xs font-semibold cursor-pointer font-[inherit] inline-flex items-center gap-1"
                         >
-                          📄 ดูสลิป
+                          <IconFileText size={12} strokeWidth={2.4} />
+                          ดูสลิป
                         </button>
                       )}
                     </div>

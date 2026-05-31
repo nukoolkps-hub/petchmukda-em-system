@@ -1,10 +1,26 @@
 import {
   ArrowLeft as IconArrowLeft,
+  Banknote as IconBanknote,
+  Briefcase as IconBriefcase,
   Landmark as IconBuildingBank,
   CalendarDays as IconCalendar,
   CirclePlus as IconCirclePlus,
+  ClipboardList as IconClipboardList,
   Clock as IconClock,
+  Diamond as IconDiamond,
+  FileText as IconFileText,
+  Lightbulb as IconLightbulb,
+  Minus as IconMinus,
+  StickyNote as IconNote,
+  Package as IconPackage,
+  Pencil as IconPencil,
+  Plus as IconPlus,
   Printer as IconPrinter,
+  RefreshCw as IconRefresh,
+  ShoppingBag as IconShoppingBag,
+  Sparkles as IconSparkles,
+  Star as IconStar,
+  Ticket as IconTicket,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
@@ -230,7 +246,9 @@ export default function SalaryView({
           </select>
         </div>
         <div className="text-center text-txt-soft py-[50px] px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr">
-          <div className="text-5xl mb-3">💰</div>
+          <div className="flex justify-center mb-3 text-gold">
+            <IconBanknote size={48} strokeWidth={1.8} />
+          </div>
           <div className="font-bold text-txt mb-1">ยังไม่มีข้อมูลเงินเดือน</div>
           <div className="text-sm text-txt-soft mb-5">
             เดือน {(() => {
@@ -355,7 +373,10 @@ export default function SalaryView({
         <div className="flex flex-col gap-2 px-3 py-2.5 rounded-[14px] bg-gold-pale/20 border border-gold/15">
           <div className="flex items-center gap-2">
             <div className="flex-1 min-w-0">
-              <div className="text-sm text-txt-mid font-semibold">📋 สลิป</div>
+              <div className="text-sm text-txt-mid font-semibold flex items-center gap-1.5">
+                <IconClipboardList size={14} strokeWidth={2.4} />
+                สลิป
+              </div>
             </div>
             <button
               type="button"
@@ -368,8 +389,9 @@ export default function SalaryView({
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex-1 text-sm text-txt-mid font-semibold min-w-0">
-              📄 ใบรับรอง
+            <div className="flex-1 text-sm text-txt-mid font-semibold min-w-0 flex items-center gap-1.5">
+              <IconFileText size={14} strokeWidth={2.4} />
+              ใบรับรอง
             </div>
             <button
               type="button"
@@ -381,8 +403,15 @@ export default function SalaryView({
               พิมพ์
             </button>
           </div>
-          <div className="text-[11px] text-txt-soft leading-snug mt-auto pt-1">
-            💡 เลือก <b>"Save as PDF"</b> เพื่อบันทึกไฟล์
+          <div className="text-[11px] text-txt-soft leading-snug mt-auto pt-1 flex items-start gap-1">
+            <IconLightbulb
+              size={12}
+              strokeWidth={2.4}
+              className="mt-0.5 shrink-0 text-gold"
+            />
+            <span>
+              เลือก <b>"Save as PDF"</b> เพื่อบันทึกไฟล์
+            </span>
           </div>
         </div>
       </div>
@@ -430,7 +459,13 @@ export default function SalaryView({
         </div>
         {[
           {
-            icon: "💼",
+            icon: (
+              <IconBriefcase
+                size={16}
+                strokeWidth={2.2}
+                color={COLORS.maroon}
+              />
+            ),
             main: "เงินเดือนพื้นฐาน",
             sub: "",
             value: salaryCalculation.baseSalary,
@@ -438,7 +473,13 @@ export default function SalaryView({
           ...(salaryCalculation.usesSinglePieceRate
             ? [
                 {
-                  icon: "📦",
+                  icon: (
+                    <IconPackage
+                      size={16}
+                      strokeWidth={2.2}
+                      color={COLORS.gold}
+                    />
+                  ),
                   main: "ค่าคอม",
                   sub: `${salaryCalculation.singleRatePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.singlePieceRate)}`,
                   value: salaryCalculation.singleRateCommission,
@@ -446,7 +487,13 @@ export default function SalaryView({
               ]
             : [
                 {
-                  icon: "💎",
+                  icon: (
+                    <IconDiamond
+                      size={16}
+                      strokeWidth={2.2}
+                      color={COLORS.gold}
+                    />
+                  ),
                   main: "ค่าคอมขาย (ทั่วไป)",
                   sub: poolShare
                     ? `Pool ${poolShare.totalSellPoolPieces} ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`
@@ -454,13 +501,25 @@ export default function SalaryView({
                   value: salaryCalculation.normalSaleCommission,
                 },
                 {
-                  icon: "✨",
+                  icon: (
+                    <IconSparkles
+                      size={16}
+                      strokeWidth={2.2}
+                      color={COLORS.gold}
+                    />
+                  ),
                   main: "ค่าคอมขาย (พิเศษ)",
                   sub: `${salaryCalculation.specialSalePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.specialSalePieceRate)}`,
                   value: salaryCalculation.specialSaleCommission,
                 },
                 {
-                  icon: "🛍",
+                  icon: (
+                    <IconShoppingBag
+                      size={16}
+                      strokeWidth={2.2}
+                      color={COLORS.maroon}
+                    />
+                  ),
                   main: "ค่าคอมรับซื้อ",
                   sub: poolShare
                     ? `Pool ${poolShare.totalBuyPoolPieces} ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`
@@ -469,19 +528,23 @@ export default function SalaryView({
                 },
               ]),
           {
-            icon: "🎫",
+            icon: (
+              <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
+            ),
             main: "โบนัสเชิญชวนสมัครบัตร",
             sub: `${salaryCalculation.invitePieces} ใบ × ฿${formatThaiNumber(salaryCalculation.invitePieceRate)}`,
             value: salaryCalculation.inviteCommission,
           },
           {
-            icon: "🔄",
+            icon: (
+              <IconRefresh size={16} strokeWidth={2.2} color={COLORS.gold} />
+            ),
             main: "โบนัสย้ายข้อมูลบัตร",
             sub: `${salaryCalculation.transferPieces} ใบ × ฿${formatThaiNumber(salaryCalculation.transferPieceRate)}`,
             value: salaryCalculation.transferCommission,
           },
           {
-            icon: "🌟",
+            icon: <IconStar size={16} strokeWidth={2.2} color={COLORS.gold} />,
             main: "โบนัสแห่งความขยัน(ไม่หยุด)",
             sub:
               salaryCalculation.leaveDays <= 2
@@ -491,7 +554,9 @@ export default function SalaryView({
           },
           ...(Array.isArray(data.customEarnings)
             ? data.customEarnings.map((e) => ({
-                icon: "➕",
+                icon: (
+                  <IconPlus size={16} strokeWidth={2.2} color={COLORS.gold} />
+                ),
                 main: e.label || "รายการรายรับ",
                 sub: "",
                 value: e.amount,
@@ -540,7 +605,9 @@ export default function SalaryView({
             value: data.lateDeduction,
           },
           {
-            icon: "💵",
+            icon: (
+              <IconBanknote size={16} strokeWidth={2.2} color={COLORS.red} />
+            ),
             main: "หักเงินเบิกล่วงหน้า",
             sub:
               monthApprovedAdvances.length > 0
@@ -549,13 +616,25 @@ export default function SalaryView({
             value: salaryCalculation.advanceDeduction,
           },
           {
-            icon: "🏛",
+            icon: (
+              <IconBuildingBank
+                size={16}
+                strokeWidth={2.2}
+                color={COLORS.red}
+              />
+            ),
             main: "หักประกันสังคม",
             sub: "",
             value: salaryCalculation.socialSecurity,
           },
           {
-            icon: "📋",
+            icon: (
+              <IconClipboardList
+                size={16}
+                strokeWidth={2.2}
+                color={COLORS.red}
+              />
+            ),
             main: "หักลาเกินโควต้า",
             sub:
               overTotalDays > 0
@@ -565,7 +644,9 @@ export default function SalaryView({
           },
           ...(Array.isArray(data.customDeductions)
             ? data.customDeductions.map((d) => ({
-                icon: "➖",
+                icon: (
+                  <IconMinus size={16} strokeWidth={2.2} color={COLORS.red} />
+                ),
                 main: d.label || "รายการหัก",
                 sub: "",
                 value: d.amount,
@@ -593,8 +674,9 @@ export default function SalaryView({
             </div>
           ))}
         {salaryCalculation.deductions === 0 && (
-          <div className="text-center text-txt-soft text-sm py-2">
-            ไม่มีรายการหัก ✨
+          <div className="text-center text-txt-soft text-sm py-2 flex items-center justify-center gap-1.5">
+            ไม่มีรายการหัก
+            <IconSparkles size={14} strokeWidth={2} className="text-gold" />
           </div>
         )}
         {salaryCalculation.deductions > 0 && (
@@ -609,7 +691,10 @@ export default function SalaryView({
 
       {data.note && (
         <div className="bg-gold-pale rounded-xl px-3.5 py-3 text-sm text-txt-mid border border-[#C9973A40]">
-          📝 หมายเหตุ: {data.note}
+          <span className="inline-flex items-center gap-1">
+            <IconNote size={14} strokeWidth={2.2} />
+            หมายเหตุ: {data.note}
+          </span>
         </div>
       )}
 
@@ -620,8 +705,9 @@ export default function SalaryView({
       {showCertModal && (
         <BaseModal onClose={() => setShowCertModal(false)}>
           <div className="bg-cream rounded-2xl p-5 w-full">
-            <div className="text-lg font-bold text-maroon mb-1">
-              📄 พิมพ์ใบรับรองเงินเดือน
+            <div className="text-lg font-bold text-maroon mb-1 flex items-center gap-1.5">
+              <IconFileText size={18} strokeWidth={2.4} />
+              พิมพ์ใบรับรองเงินเดือน
             </div>
             <div className="text-sm text-txt-mid mb-3.5">
               ระบุวัตถุประสงค์ — ข้อความจะถูกพิมพ์ลงในใบรับรอง
@@ -668,8 +754,9 @@ export default function SalaryView({
               — ไม่ระบุวัตถุประสงค์ —
             </button>
 
-            <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5">
-              ✏️ กำหนดเอง
+            <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5 flex items-center gap-1">
+              <IconPencil size={12} strokeWidth={2.4} />
+              กำหนดเอง
             </div>
             <input
               type="text"
@@ -693,7 +780,19 @@ export default function SalaryView({
                 disabled={issuingCert}
                 className={`flex-1 py-2.5 rounded-lg bg-maroon text-white text-sm font-bold border-none font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25] ${issuingCert ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
               >
-                {issuingCert ? "⏳ กำลังออกเลขที่..." : "🖨 พิมพ์"}
+                <span className="inline-flex items-center gap-1.5">
+                  {issuingCert ? (
+                    <>
+                      <IconClock size={14} strokeWidth={2.4} />
+                      กำลังออกเลขที่...
+                    </>
+                  ) : (
+                    <>
+                      <IconPrinter size={14} strokeWidth={2.4} />
+                      พิมพ์
+                    </>
+                  )}
+                </span>
               </button>
             </div>
           </div>

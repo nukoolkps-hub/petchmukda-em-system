@@ -1,4 +1,11 @@
-import { ChevronDown as IconChevronDown } from "lucide-react";
+import {
+  AlertTriangle as IconAlertTriangle,
+  Camera as IconCamera,
+  Check as IconCheck,
+  ChevronDown as IconChevronDown,
+  Landmark as IconLandmark,
+  Type as IconType,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { COLORS, EMOJI_LIST, THAI_BANKS } from "../../constants";
 import { uploadAvatar } from "../../firebase/storage";
@@ -168,7 +175,14 @@ export default function ProfileSetupModal({
           placeholder="กรอกชื่อ-นามสกุล"
           className={`w-full px-4 py-3.5 rounded-xl text-base outline-none font-[inherit] box-border text-txt border-[1.5px] ${lockName ? "bg-cream text-txt-mid cursor-not-allowed" : "bg-white"} ${nameErr ? "border-red" : "border-bdr"}`}
         />
-        {nameErr && <div className="text-red text-sm mt-1.5">⚠ {nameErr}</div>}
+        {nameErr && (
+          <div className="text-red text-sm mt-1.5">
+            <span className="inline-flex items-center gap-1">
+              <IconAlertTriangle size={14} strokeWidth={2.4} />
+              {nameErr}
+            </span>
+          </div>
+        )}
         {lockName && (
           <div className="text-xs text-txt-soft mt-1.5">
             ชื่อถูกกำหนดโดยผู้ดูแลระบบ
@@ -183,9 +197,25 @@ export default function ProfileSetupModal({
         </label>
         <div className="flex bg-cream-dk rounded-xl p-1 gap-0.5 mb-4">
           {[
-            { id: "text", label: "✏️ ตัวอักษร" },
+            {
+              id: "text",
+              label: (
+                <span className="inline-flex items-center gap-1">
+                  <IconType size={13} strokeWidth={2.4} />
+                  ตัวอักษร
+                </span>
+              ),
+            },
             { id: "emoji", label: "😊 Emoji" },
-            { id: "image", label: "📷 รูปภาพ" },
+            {
+              id: "image",
+              label: (
+                <span className="inline-flex items-center gap-1">
+                  <IconCamera size={13} strokeWidth={2.4} />
+                  รูปภาพ
+                </span>
+              ),
+            },
           ].map((t) => (
             <button
               key={t.id}
@@ -255,7 +285,14 @@ export default function ProfileSetupModal({
                 />
                 <div className="flex-1">
                   <div className="text-sm text-green font-semibold mb-1.5">
-                    {imageBusy ? "กำลังเตรียมรูป..." : "✓ เลือกรูปแล้ว"}
+                    {imageBusy ? (
+                      "กำลังเตรียมรูป..."
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
+                        <IconCheck size={14} strokeWidth={3} />
+                        เลือกรูปแล้ว
+                      </span>
+                    )}
                   </div>
                   <button
                     onClick={() => fileRef.current?.click()}
@@ -270,7 +307,11 @@ export default function ProfileSetupModal({
                 onClick={() => fileRef.current?.click()}
                 className="w-full p-5 rounded-[14px] border-2 border-dashed border-bdr bg-cream cursor-pointer font-[inherit] flex flex-col items-center gap-2"
               >
-                <span className="text-3xl">📷</span>
+                <IconCamera
+                  size={30}
+                  strokeWidth={1.8}
+                  className="text-txt-soft"
+                />
                 <span className="text-sm font-semibold text-txt-mid">
                   แตะเพื่ออัปโหลดรูปภาพ
                 </span>
@@ -279,13 +320,25 @@ export default function ProfileSetupModal({
             )}
           </div>
         )}
-        {avErr && <div className="text-red text-sm mt-2">⚠ {avErr}</div>}
+        {avErr && (
+          <div className="text-red text-sm mt-2">
+            <span className="inline-flex items-center gap-1">
+              <IconAlertTriangle size={14} strokeWidth={2.4} />
+              {avErr}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Bank info section ── */}
       <div className="mb-4 pt-4 border-t border-dashed border-bdr">
         <label className="block text-sm font-semibold text-txt-mid mb-2.5">
-          🏦 บัญชีธนาคารสำหรับรับเงินเดือน
+          <IconLandmark
+            size={14}
+            strokeWidth={2.4}
+            className="inline mr-1 -mt-px"
+          />
+          บัญชีธนาคารสำหรับรับเงินเดือน
         </label>
 
         {/* bank dropdown */}
@@ -327,10 +380,24 @@ export default function ProfileSetupModal({
           className={`w-full px-4 py-3 rounded-xl text-base outline-none font-[inherit] box-border text-txt bg-white tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"}`}
         />
 
-        {bankErr && <div className="text-red text-sm mt-1.5">⚠ {bankErr}</div>}
+        {bankErr && (
+          <div className="text-red text-sm mt-1.5">
+            <span className="inline-flex items-center gap-1">
+              <IconAlertTriangle size={14} strokeWidth={2.4} />
+              {bankErr}
+            </span>
+          </div>
+        )}
       </div>
 
-      {saveErr && <div className="text-red text-sm mb-3">⚠ {saveErr}</div>}
+      {saveErr && (
+        <div className="text-red text-sm mb-3">
+          <span className="inline-flex items-center gap-1">
+            <IconAlertTriangle size={14} strokeWidth={2.4} />
+            {saveErr}
+          </span>
+        </div>
+      )}
       <button
         onClick={save}
         disabled={saving || imageBusy}

@@ -1,4 +1,8 @@
-import { CirclePlus as IconCirclePlus } from "lucide-react";
+import {
+  AlertTriangle as IconAlertTriangle,
+  CirclePlus as IconCirclePlus,
+  MessageCircle as IconMessageCircle,
+} from "lucide-react";
 import { useState } from "react";
 import { BUSINESS_RULES, COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { formatThaiNumber } from "../../utils/format";
@@ -148,11 +152,16 @@ export default function AdvanceRequestModal({
         className={`w-full px-3.5 py-3 rounded-xl text-sm resize-none outline-none font-[inherit] box-border text-txt bg-white leading-relaxed border-[1.5px] ${err.includes("เหตุผล") ? "border-red" : "border-bdr"} ${err ? "mb-1.5" : "mb-3.5"}`}
       />
 
-      {err && <div className="text-red text-sm mb-3.5">⚠ {err}</div>}
+      {err && (
+        <div className="text-red text-sm mb-3.5 inline-flex items-center gap-1">
+          <IconAlertTriangle size={14} strokeWidth={2.4} />
+          {err}
+        </div>
+      )}
 
       {/* LINE notice */}
       <div className="bg-[#06C75510] rounded-[10px] px-3.5 py-2.5 mb-4 border border-[#06C75530] flex gap-2.5 items-center">
-        <div className="text-lg">💬</div>
+        <IconMessageCircle size={18} strokeWidth={2.2} color={COLORS.maroon} />
         <div className="text-xs text-txt-mid leading-normal">
           คำขอจะถูกส่งไปยัง Admin ผ่าน <b className="text-[#06C755]">LINE</b> ทันที
           <br />

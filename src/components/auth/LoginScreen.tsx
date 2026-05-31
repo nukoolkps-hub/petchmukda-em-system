@@ -7,6 +7,8 @@
    - Handles LINE callback loading state                     */
 
 import {
+  AlertTriangle as IconAlertTriangle,
+  Check as IconCheck,
   Database as IconDatabase,
   Shield as IconShield,
   User as IconUser,
@@ -196,7 +198,11 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
             {/* Error display */}
             {displayError && (
               <div className="bg-red/12 border border-red/25 rounded-xl px-4 py-3 mb-5 flex items-start gap-2.5">
-                <span className="text-lg shrink-0">⚠️</span>
+                <IconAlertTriangle
+                  size={18}
+                  strokeWidth={2.4}
+                  className="shrink-0 mt-px text-[#ffaaaa]"
+                />
                 <div>
                   <div className="text-[#ffaaaa] font-semibold text-sm">
                     เข้าสู่ระบบไม่สำเร็จ
@@ -210,7 +216,11 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
 
             {seedMessage && !displayError && (
               <div className="bg-[#1A6B3A20] border border-[#1A6B3A40] rounded-xl px-4 py-3 mb-5 flex items-start gap-2.5">
-                <span className="text-lg shrink-0">✓</span>
+                <IconCheck
+                  size={18}
+                  strokeWidth={3}
+                  className="shrink-0 mt-px text-[#7EE8B5]"
+                />
                 <div>
                   <div className="text-[#7EE8B5] font-semibold text-sm">
                     พร้อมใช้งานใน Emulator

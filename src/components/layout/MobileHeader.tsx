@@ -4,6 +4,7 @@ import {
   BookOpen as IconBook2,
   Pencil as IconEdit,
   Shield as IconShield,
+  User as IconUser,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { COLORS } from "../../constants";
@@ -150,8 +151,8 @@ export default function MobileHeader({
               onClick={onEditProfile}
               className="flex items-center gap-3 bg-white/12 border-[1.5px] border-dashed border-gold-lt/37 rounded-[14px] px-4 py-3 cursor-pointer flex-1 font-[inherit]"
             >
-              <div className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center text-2xl">
-                👤
+              <div className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center text-gold-lt">
+                <IconUser size={24} strokeWidth={2} />
               </div>
               <div className="text-left">
                 <div className="text-gold-lt font-bold text-base">

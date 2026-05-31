@@ -4,6 +4,7 @@ import {
   Pencil as IconEdit,
   LogOut as IconLogout,
   Shield as IconShield,
+  User as IconUser,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { COLORS } from "../../constants";
@@ -156,7 +157,7 @@ export default function Sidebar({
             onClick={onEditProfile}
             className="flex items-center gap-2.5 bg-white/8 border-[1.5px] border-dashed border-gold-lt/30 rounded-[14px] px-3.5 py-2.5 w-full cursor-pointer font-[inherit]"
           >
-            <span className="text-2xl">👤</span>
+            <IconUser size={24} strokeWidth={2} className="text-gold-lt" />
             <span className="text-gold-lt text-sm font-semibold">
               ตั้งค่าโปรไฟล์
             </span>
