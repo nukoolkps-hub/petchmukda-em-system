@@ -489,6 +489,7 @@ export default function LeaveApp() {
               employeeId={currentEmployeeId}
               salaryData={salaryData}
               advanceRequests={myAdvanceRequests}
+              payrollConfirms={payrollConfirms}
               onSubmit={handleSubmitAdvance}
               onClose={() => setShowAdvanceModal(false)}
             />

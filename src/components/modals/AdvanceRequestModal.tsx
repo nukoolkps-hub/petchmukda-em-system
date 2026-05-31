@@ -16,6 +16,7 @@ export default function AdvanceRequestModal({
   employeeId,
   salaryData,
   advanceRequests,
+  payrollConfirms,
   onSubmit,
   onClose,
 }) {
@@ -24,7 +25,22 @@ export default function AdvanceRequestModal({
   const employeeSalary = employeeId
     ? salaryData[employeeId]?.[yearMonth]
     : null;
-  const baseSalary = employee?.baseSalary ?? employeeSalary?.baseSalary ?? 0;
+  // วงเงินคิดจากเงินเดือนพื้นฐาน: เอาจากข้อมูลพนักงานปัจจุบันก่อน → ถ้าไม่มี
+  // ใช้ snapshot เดือนนี้ → ถ้าเดือนนี้ยังไม่ตั้งค่า (เช่นต้น/สิ้นเดือน) ใช้
+  // baseSalary จากเดือนล่าสุดที่มีข้อมูล. ใช้ || (ไม่ใช่ ??) — ค่า 0 ถือว่า
+  // "ยังไม่ได้ตั้ง" ให้ข้ามไป fallback กันวงเงินเป็น 0 จนปุ่มเทากดไม่ได้
+  const latestSalary = employeeId
+    ? salaryData[employeeId]?.[
+        Object.keys(salaryData[employeeId] || {})
+          .sort()
+          .reverse()[0]
+      ]
+    : null;
+  const baseSalary =
+    employee?.baseSalary ||
+    employeeSalary?.baseSalary ||
+    latestSalary?.baseSalary ||
+    0;
   const maxAdvance = Math.floor(
     baseSalary * BUSINESS_RULES.ADVANCE_LIMIT_PERCENT,
   );
@@ -36,11 +52,19 @@ export default function AdvanceRequestModal({
     .reduce((s, r) => s + r.amount, 0);
   const remaining = Math.max(0, maxAdvance - alreadyRequested);
 
+  // เดือนนี้ admin ยืนยันยอด/กำลังทำเงินเดือนแล้ว → ห้ามเบิกเพิ่ม กันสับสน
+  // (คำขอใหม่อาจไม่ถูกรวมในรอบที่กำลังจ่าย)
+  const payrollLocked = !!payrollConfirms?.[yearMonth];
+
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [err, setErr] = useState("");
 
   function submit() {
+    if (payrollLocked) {
+      setErr("เดือนนี้อยู่ระหว่างทำเงินเดือนแล้ว — เบิกล่วงหน้าไม่ได้");
+      return;
+    }
     const amountValue = parseFloat(amount) || 0;
     if (amountValue <= 0) {
       setErr("กรุณาระบุจำนวนเงิน");
@@ -78,6 +102,20 @@ export default function AdvanceRequestModal({
           </div>
         </div>
       </div>
+
+      {payrollLocked && (
+        <div className="bg-amber-lt rounded-xl px-3.5 py-3 mb-3.5 border border-amber/30 flex items-start gap-2">
+          <IconAlertTriangle
+            size={16}
+            className="text-amber mt-0.5 shrink-0"
+            strokeWidth={2.4}
+          />
+          <div className="text-sm text-txt-mid leading-normal">
+            เดือนนี้ <b className="text-amber">อยู่ระหว่างทำเงินเดือน</b> แล้ว —
+            เบิกล่วงหน้าไม่ได้ชั่วคราว เพื่อกันความสับสนในรอบจ่ายเงิน
+          </div>
+        </div>
+      )}
 
       {/* limit info */}
       <div className="bg-gold-pale rounded-xl px-3.5 py-3 mb-3.5 border border-gold/25">
