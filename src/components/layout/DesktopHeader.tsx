@@ -38,14 +38,16 @@ export default function DesktopHeader({
           )}
         </div>
         <div className="flex items-center gap-2.5">
-          <button
-            onClick={onShowPoolFlow}
-            title="แผนผังเงินเดือน"
-            className="flex items-center gap-2 px-3 py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-sm font-semibold shrink-0 whitespace-nowrap"
-          >
-            <IconNetwork size={18} color="#fff" strokeWidth={2.2} />
-            แผนผังเงินเดือน
-          </button>
+          {isAdmin && (
+            <button
+              onClick={onShowPoolFlow}
+              title="แผนผังเงินเดือน"
+              className="flex items-center gap-2 px-3 py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-sm font-semibold shrink-0 whitespace-nowrap"
+            >
+              <IconNetwork size={18} color="#fff" strokeWidth={2.2} />
+              แผนผังเงินเดือน
+            </button>
+          )}
           <button
             onClick={onShowManual}
             title="กฏการคำนวณต่างๆ"

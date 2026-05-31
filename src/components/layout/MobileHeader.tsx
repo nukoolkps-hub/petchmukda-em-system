@@ -109,13 +109,15 @@ export default function MobileHeader({
         </div>
         {tab === "home" && (
           <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={onShowPoolFlow}
-              title="แผนผังเงินเดือน"
-              className="flex items-center justify-center w-9 h-9 rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white"
-            >
-              <IconNetwork size={16} color="#fff" strokeWidth={2.2} />
-            </button>
+            {isAdmin && (
+              <button
+                onClick={onShowPoolFlow}
+                title="แผนผังเงินเดือน"
+                className="flex items-center justify-center w-9 h-9 rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white"
+              >
+                <IconNetwork size={16} color="#fff" strokeWidth={2.2} />
+              </button>
+            )}
             <button
               onClick={onShowManual}
               title="กฏการคำนวณต่างๆ"
