@@ -82,12 +82,11 @@ function LeaveDayBreakdown({
     });
   }
   return (
-    <div className="text-[11px] text-txt-soft font-medium mt-0.5 leading-snug whitespace-nowrap">
+    <div className="text-[11px] text-txt-soft font-medium mt-0.5 leading-snug whitespace-nowrap inline-flex items-center gap-1.5">
       {parts.map((p, i) => (
-        <span key={p.key} className="block">
-          {i === 0 ? "(" : null}
+        <span key={p.key} className="inline-flex items-center gap-1.5">
+          {i > 0 ? <span className="opacity-50">·</span> : null}
           {p.node}
-          {i === parts.length - 1 ? ")" : null}
         </span>
       ))}
     </div>
