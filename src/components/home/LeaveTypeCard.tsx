@@ -1,6 +1,9 @@
 import { Check as IconCheck } from "lucide-react";
 
-/* ─── Leave Type Selection Card ────────────────────────────────── */
+/* ─── Leave Type Selection Card ──────────────────────────────────
+   พื้นหลัง = lt.colorLt (สีอ่อนของแต่ละประเภท จาก LEAVE_TYPES) เสมอ
+   ตัวอักษร = lt.color (สีเข้มของประเภท) เสมอ
+   ตอนเลือก: เพิ่ม border 2px + checkmark มุมขวาบน + shadow                */
 export default function LeaveTypeCard({
   lt,
   selected,
@@ -8,14 +11,20 @@ export default function LeaveTypeCard({
   balance,
   used,
 }) {
-  const sel = selected === lt.id,
-    _left = balance - used;
+  const sel = selected === lt.id;
+  const _left = balance - used;
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`rounded-2xl cursor-pointer font-[inherit] transition-all relative px-3 pt-5 pb-4 border-2
-        ${sel ? `shadow-[0_4px_18px_var(--color-${lt.id === "personal" ? "gold" : "red"})/0.19]` : "shadow-[0_1px_4px_rgba(90,30,10,0.06)]"}
-        ${sel ? (lt.id === "personal" ? "border-gold bg-gold-pale" : "border-red bg-red-lt") : "border-bdr bg-white"}`}
+      style={{
+        background: lt.colorLt,
+        borderColor: sel ? lt.color : "transparent",
+        boxShadow: sel
+          ? `0 4px 18px ${lt.color}30`
+          : "0 1px 4px rgba(90,30,10,0.06)",
+      }}
+      className="rounded-2xl cursor-pointer font-[inherit] relative px-3 pt-5 pb-4 border-2"
     >
       {sel && (
         <div
@@ -26,9 +35,7 @@ export default function LeaveTypeCard({
         </div>
       )}
       <div className="text-3xl mb-2.5">{lt.icon}</div>
-      <div
-        className={`font-bold text-lg ${sel ? (lt.id === "personal" ? "text-gold" : "text-red") : "text-txt"}`}
-      >
+      <div className="font-bold text-lg" style={{ color: lt.color }}>
         {lt.label}
       </div>
     </button>
