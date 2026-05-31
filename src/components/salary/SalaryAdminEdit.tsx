@@ -575,33 +575,39 @@ export default function SalaryAdminEdit({
                 return (
                   <div
                     key={g.id}
-                    className={`flex items-center gap-1.5 px-2.5 py-[5px] rounded-[9px] text-xs text-txt-mid border ${isMe ? "bg-gold-pale border-gold" : "bg-white border-bdr"}`}
+                    className={`flex items-center gap-2 px-2.5 py-2 rounded-[9px] text-xs text-txt-mid border ${isMe ? "bg-gold-pale border-gold" : "bg-white border-bdr"}`}
                   >
                     <span
                       className={`flex-1 min-w-0 truncate ${isMe ? "font-bold text-maroon" : "font-medium"}`}
                     >
                       {g.name}
                     </span>
-                    <span
-                      className={`shrink-0 px-1.5 py-px rounded-md text-xs font-semibold inline-flex items-center gap-0.5 ${gES ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                    <div
+                      className={`shrink-0 min-w-[54px] px-2 py-1 rounded-md flex flex-col items-center justify-center leading-tight ${gES ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
                     >
-                      ขาย {gSell}
-                      {gES ? (
-                        <IconCheck size={11} strokeWidth={3} />
-                      ) : (
-                        <IconX size={11} strokeWidth={3} />
-                      )}
-                    </span>
-                    <span
-                      className={`shrink-0 px-1.5 py-px rounded-md text-xs font-semibold inline-flex items-center gap-0.5 ${gEB ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                      <span className="text-[10px] font-semibold opacity-80 inline-flex items-center gap-0.5">
+                        ขาย
+                        {gES ? (
+                          <IconCheck size={9} strokeWidth={3} />
+                        ) : (
+                          <IconX size={9} strokeWidth={3} />
+                        )}
+                      </span>
+                      <span className="text-sm font-extrabold">{gSell}</span>
+                    </div>
+                    <div
+                      className={`shrink-0 min-w-[54px] px-2 py-1 rounded-md flex flex-col items-center justify-center leading-tight ${gEB ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
                     >
-                      ซื้อ {gBuy}
-                      {gEB ? (
-                        <IconCheck size={11} strokeWidth={3} />
-                      ) : (
-                        <IconX size={11} strokeWidth={3} />
-                      )}
-                    </span>
+                      <span className="text-[10px] font-semibold opacity-80 inline-flex items-center gap-0.5">
+                        ซื้อ
+                        {gEB ? (
+                          <IconCheck size={9} strokeWidth={3} />
+                        ) : (
+                          <IconX size={9} strokeWidth={3} />
+                        )}
+                      </span>
+                      <span className="text-sm font-extrabold">{gBuy}</span>
+                    </div>
                   </div>
                 );
               })}
