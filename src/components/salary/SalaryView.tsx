@@ -84,6 +84,11 @@ export default function SalaryView({
   const employeeRole = roles?.find(
     (role) => role.id === (data?.roleId ?? employeeInfo?.roleId),
   );
+  // คำขอเบิกเงิน "ของเดือนที่เลือก" — ให้ปุ่มประวัติเบิกเงินสอดคล้องกับ dropdown
+  // เดือน (เหมือนสลิป/ค่าคอม) ไม่ใช่นับรวมทุกเดือน
+  const monthAdvances = (advanceRequests || []).filter(
+    (r) => r.month === selectedMonth,
+  );
 
   const {
     overInfo,
@@ -384,12 +389,12 @@ export default function SalaryView({
                   ประวัติเบิกเงิน
                 </div>
                 <div className="text-xs text-txt-soft mt-px">
-                  {advanceRequests && advanceRequests.length > 0
-                    ? `${advanceRequests.length} คำขอ`
-                    : "ยังไม่มี"}
+                  {monthAdvances.length > 0
+                    ? `${monthAdvances.length} คำขอเดือนนี้`
+                    : "ไม่มีเดือนนี้"}
                 </div>
               </div>
-              {advanceRequests?.some((r) => r.status === "pending") && (
+              {monthAdvances.some((r) => r.status === "pending") && (
                 <div className="w-2 h-2 rounded-full bg-amber shadow-[0_0_0_3px_var(--color-amber)/0.2] shrink-0" />
               )}
             </div>
