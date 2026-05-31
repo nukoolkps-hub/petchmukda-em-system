@@ -305,6 +305,7 @@ function PoolSideFlow({
         sharePercent: isSell ? s.sellSharePercent : s.buySharePercent,
         allocated: isSell ? s.normalSalePieces : s.buyPieces,
         excluded,
+        exclusion,
       };
     })
     .sort((a, b) => b.pieces - a.pieces);
@@ -334,6 +335,12 @@ function PoolSideFlow({
             }`}
           >
             <div className="text-xs font-bold text-txt truncate">{m.name}</div>
+            {m.exclusion && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-red bg-red-lt rounded px-1 py-px mt-0.5">
+                <IconBan size={9} strokeWidth={2.6} />
+                {exclusionLabel(m.exclusion)}
+              </span>
+            )}
             <div className="text-base font-extrabold text-maroon leading-tight">
               {formatThaiNumber(m.pieces)}
               <span className="text-xs font-semibold text-txt-soft"> ชิ้น</span>
@@ -347,19 +354,10 @@ function PoolSideFlow({
                 </span>
               )}
             </div>
-            {!m.eligible && (
+            {!m.eligible && !m.excluded && (
               <div className="text-[10px] font-bold text-red mt-0.5 inline-flex items-center gap-0.5">
-                {m.excluded ? (
-                  <>
-                    <IconBan size={10} strokeWidth={2.6} />
-                    ปิดสิทธิ์
-                  </>
-                ) : (
-                  <>
-                    <IconTrendingDown size={10} strokeWidth={2.6} />
-                    ต่ำกว่า 80%
-                  </>
-                )}
+                <IconTrendingDown size={10} strokeWidth={2.6} />
+                ต่ำกว่า 80%
               </div>
             )}
           </div>
@@ -436,6 +434,13 @@ function PoolSideFlow({
 }
 
 /* ─── bits ──────────────────────────────────────────────────────── */
+function exclusionLabel(ex: string | null | undefined): string {
+  if (ex === "both") return "ปิดทั้งคู่";
+  if (ex === "sell") return "ปิดฝั่งขาย";
+  if (ex === "buy") return "ปิดฝั่งรับซื้อ";
+  return "";
+}
+
 function StepLabel({ n, text }: { n: number; text: string }) {
   return (
     <div className="flex items-center gap-2 mb-2 mt-0.5">
