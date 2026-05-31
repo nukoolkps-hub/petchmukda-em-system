@@ -136,18 +136,19 @@ service cloud.firestore {
     }
 
     // ─── Salaries ────────────────────────────────────────────────
-    // read: admin หรือเจ้าของ — salary doc มี note, customDeductions,
-    //       lateDeduction, socialSecurity ฯลฯ ที่ sensitive
-    //       (peer data ที่ pool calc ต้องใช้แยกออกไปที่ poolSnapshots)
-    // write: admin
+    // ROLLOUT NOTE (phase 1): เปิดอ่านให้ทุก signed-in เหมือนเดิม —
+    // เป็น safety net ระหว่าง roll out poolSnapshots. หลัง admin
+    // กด "ยืนยันยอด" ครบทุกเดือน + verify ว่า /salary ฝั่งพนักงาน
+    // ยังโชว์ pool % ถูก จึงค่อย lock เป็น `isAdmin() || isEmployeeOwner()`
+    // ใน phase 2 (peer reads ใหม่ผ่าน poolSnapshots collection แทน)
     match /salaries/{employeeId}/months/{yearMonth} {
-      allow read:   if isAdmin() || isEmployeeOwner(employeeId);
+      allow read:   if isSignedIn();
       allow write:  if isAdmin();
     }
 
-    // collectionGroup(db, "months") — admin only (subscribeAllSalaries)
+    // collectionGroup(db, "months") — ใช้ใน subscribeAllSalaries
     match /{path=**}/months/{yearMonth} {
-      allow read: if isAdmin();
+      allow read: if isSignedIn();
       allow write: if false;
     }
 
