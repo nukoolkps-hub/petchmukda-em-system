@@ -1,4 +1,8 @@
-import { IconCheck, IconCopy, IconSearch } from "@tabler/icons-react";
+import {
+  Check as IconCheck,
+  Copy as IconCopy,
+  Search as IconSearch,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
@@ -413,7 +417,7 @@ export default function PayrollSummaryPanel({
             disabled={advanceDataBlocked}
             className={`w-full p-3.5 mb-3.5 rounded-xl border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold font-[inherit] shadow-[0_4px_14px_var(--color-gold)/0.3] flex items-center justify-center gap-2 ${advanceDataBlocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
           >
-            <IconCheck size={18} stroke={2.5} />
+            <IconCheck size={18} strokeWidth={2.5} />
             ยืนยันยอดก่อนโอนเงิน
           </button>
         );
@@ -431,7 +435,7 @@ export default function PayrollSummaryPanel({
           className="absolute left-3.5 top-1/2 -translate-y-1/2"
           size={14}
           color={COLORS.textSoft}
-          stroke={2.5}
+          strokeWidth={2.5}
         />
       </div>
 
@@ -528,12 +532,12 @@ export default function PayrollSummaryPanel({
                     >
                       {copiedAcc === employee.id ? (
                         <>
-                          <IconCheck size={13} stroke={3} />
+                          <IconCheck size={13} strokeWidth={3} />
                           คัดลอกแล้ว
                         </>
                       ) : (
                         <>
-                          <IconCopy size={13} stroke={2.2} />
+                          <IconCopy size={13} strokeWidth={2.2} />
                           คัดลอก
                         </>
                       )}

@@ -1,4 +1,4 @@
-import { IconBook } from "@tabler/icons-react";
+import { Book as IconBook } from "lucide-react";
 import { useState } from "react";
 import { COLORS } from "../../constants";
 import BaseModal from "../shared/BaseModal";
@@ -16,7 +16,7 @@ export default function ManualModal({ onClose }) {
       {/* header */}
       <div className="flex items-center gap-3 mb-4.5">
         <div className="w-[46px] h-[46px] rounded-xl bg-linear-135 from-gold to-gold-lt flex items-center justify-center shadow-[0_4px_14px_rgba(201,151,58,0.25)]">
-          <IconBook size={22} color="#fff" stroke={2.2} />
+          <IconBook size={22} color="#fff" strokeWidth={2.2} />
         </div>
         <div className="flex-1">
           <div className="font-extrabold text-lg text-txt">คู่มือการใช้งาน</div>

@@ -1,11 +1,11 @@
 /* ─── Navigation Configuration ───────────────────────────────── */
 
 import {
-  IconCash,
-  IconFilePlus,
-  IconHome,
-  IconShield,
-} from "@tabler/icons-react";
+  Banknote as IconCash,
+  FilePlus as IconFilePlus,
+  Home as IconHome,
+  Shield as IconShield,
+} from "lucide-react";
 import { COLORS } from "../../constants";
 
 export interface NavItem {
@@ -28,7 +28,7 @@ export function getNavItems(options: {
         icon: (a: boolean) => (
           <IconShield
             size={22}
-            stroke={a ? 2.5 : 2}
+            strokeWidth={a ? 2.5 : 2}
             fill={a ? `${COLORS.maroon}40` : "none"}
           />
         ),
@@ -44,7 +44,7 @@ export function getNavItems(options: {
       icon: (a) => (
         <IconHome
           size={22}
-          stroke={a ? 2.5 : 2}
+          strokeWidth={a ? 2.5 : 2}
           fill={a ? `${COLORS.gold}30` : "none"}
         />
       ),
@@ -56,7 +56,7 @@ export function getNavItems(options: {
       icon: (a) => (
         <IconFilePlus
           size={22}
-          stroke={a ? 2.5 : 2}
+          strokeWidth={a ? 2.5 : 2}
           fill={a ? `${COLORS.gold}30` : "none"}
         />
       ),
@@ -71,7 +71,7 @@ export function getNavItems(options: {
             icon: (a: boolean) => (
               <IconCash
                 size={22}
-                stroke={a ? 2.5 : 2}
+                strokeWidth={a ? 2.5 : 2}
                 fill={a ? `${COLORS.gold}30` : "none"}
               />
             ),

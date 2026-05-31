@@ -1,4 +1,4 @@
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { Check as IconCheck, Copy as IconCopy } from "lucide-react";
 import { useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useAdvancesByStatusAndMonth } from "../../firebase/hooks/useFirestore";
@@ -298,12 +298,12 @@ export default function AdminAdvancePanel({
                       >
                         {copiedAcc === request.id ? (
                           <>
-                            <IconCheck size={13} stroke={3} />
+                            <IconCheck size={13} strokeWidth={3} />
                             คัดลอกแล้ว
                           </>
                         ) : (
                           <>
-                            <IconCopy size={13} stroke={2.2} />
+                            <IconCopy size={13} strokeWidth={2.2} />
                             คัดลอก
                           </>
                         )}

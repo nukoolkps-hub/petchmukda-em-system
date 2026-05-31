@@ -153,8 +153,7 @@ export default function LeaveApp() {
     : [];
 
   /* ─── Bank account required — บังคับให้ตั้งค่าก่อนใช้งาน ───── */
-  const needsBankSetup =
-    !isAdmin && !!profile && !profile.bankAccountNumber;
+  const needsBankSetup = !isAdmin && !!profile && !profile.bankAccountNumber;
 
   useEffect(() => {
     if (needsBankSetup) setShowEditProfile(true);
@@ -472,9 +471,7 @@ export default function LeaveApp() {
               onSave={handleProfileSave}
               // ถ้ายังไม่กรอกบัญชี ห้ามปิดจนกว่าจะกรอก (onClose = undefined)
               onClose={
-                needsBankSetup
-                  ? undefined
-                  : () => setShowEditProfile(false)
+                needsBankSetup ? undefined : () => setShowEditProfile(false)
               }
             />
           )}

@@ -1,10 +1,10 @@
 import {
-  IconCheck,
-  IconCopy,
-  IconSettings,
-  IconTrash,
-  IconX,
-} from "@tabler/icons-react";
+  Check as IconCheck,
+  Copy as IconCopy,
+  Settings as IconSettings,
+  Trash2 as IconTrash,
+  X as IconX,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { COLORS, LEAVE_TYPES, THAI_MONTH_NAMES } from "../../constants";
 import { fmtDate, fmtDateWithWeekday, isPast } from "../../utils/dateUtils";
@@ -154,7 +154,7 @@ export default function AdminPanel({
                 <Icon
                   size={16}
                   color={active ? COLORS.gold : COLORS.textSoft}
-                  stroke={active ? 2.5 : 2}
+                  strokeWidth={active ? 2.5 : 2}
                 />
                 <span className="min-w-0 truncate text-sm font-bold">
                   {group.label}
@@ -168,7 +168,7 @@ export default function AdminPanel({
         {/* หัวข้อย่อย — กล่องซ้อนใน + caption บอกว่าอยู่ใต้หมวดไหน */}
         <div className="rounded-[12px] bg-white/55 border border-[#C9973A25] p-2">
           <div className="flex items-center gap-1 px-1 pb-1.5 text-[11px] font-bold text-txt-soft tracking-wide">
-            <ActiveGroupIcon size={12} color={COLORS.gold} stroke={2.5} />
+            <ActiveGroupIcon size={12} color={COLORS.gold} strokeWidth={2.5} />
             <span className="truncate">{activeGroup.label}</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -189,7 +189,7 @@ export default function AdminPanel({
                   <Icon
                     size={16}
                     color={active ? COLORS.maroon : COLORS.textSoft}
-                    stroke={active ? 2.4 : 2}
+                    strokeWidth={active ? 2.4 : 2}
                   />
                   <span>{item.label}</span>
                   {pendingCount > 0 && <AdminNavBadge count={pendingCount} />}
@@ -689,7 +689,7 @@ export default function AdminPanel({
                     onClick={() => setConfirmLeave(lv)}
                     className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
                   >
-                    <IconTrash size={16} color={COLORS.red} stroke={2.2} />
+                    <IconTrash size={16} color={COLORS.red} strokeWidth={2.2} />
                   </button>
                 </div>
               );
@@ -922,7 +922,7 @@ export default function AdminPanel({
                     <IconSettings
                       size={16}
                       color={COLORS.textSoft}
-                      stroke={2.2}
+                      strokeWidth={2.2}
                       className="shrink-0"
                     />
                   </button>
@@ -956,7 +956,7 @@ export default function AdminPanel({
                           onClick={() => setEditingEmpId(null)}
                           className="w-9 h-9 rounded-[10px] border border-bdr bg-white text-txt-mid cursor-pointer flex items-center justify-center"
                         >
-                          <IconX size={18} stroke={2.3} />
+                          <IconX size={18} strokeWidth={2.3} />
                         </button>
                       </div>
                       <div className="px-4 py-3.5">
@@ -1078,12 +1078,12 @@ export default function AdminPanel({
                               >
                                 {copiedLineId === employee.id ? (
                                   <>
-                                    <IconCheck size={12} stroke={3} />
+                                    <IconCheck size={12} strokeWidth={3} />
                                     คัดลอกแล้ว
                                   </>
                                 ) : (
                                   <>
-                                    <IconCopy size={12} stroke={2.2} />
+                                    <IconCopy size={12} strokeWidth={2.2} />
                                     คัดลอก
                                   </>
                                 )}
@@ -1638,7 +1638,7 @@ export default function AdminPanel({
                               onClick={saveAll}
                               className="flex-2 py-[11px] rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow"
                             >
-                              <IconCheck size={14} stroke={2.5} />
+                              <IconCheck size={14} strokeWidth={2.5} />
                               บันทึกการเปลี่ยนแปลง
                             </button>
                           </div>
@@ -1655,7 +1655,7 @@ export default function AdminPanel({
                               }}
                               className="py-[11px] px-4 rounded-[10px] border-[1.5px] border-red/40 bg-white text-red text-sm font-semibold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
                             >
-                              <IconTrash size={15} stroke={2.2} />
+                              <IconTrash size={15} strokeWidth={2.2} />
                               ลบ
                             </button>
                             <button
@@ -1683,7 +1683,11 @@ export default function AdminPanel({
               contentClassName="rounded-[20px] px-6 py-7"
             >
               <div className="w-14 h-14 rounded-full bg-red-lt flex items-center justify-center mx-auto mb-4">
-                <IconTrash size={26} color="var(--color-red)" stroke={2.5} />
+                <IconTrash
+                  size={26}
+                  color="var(--color-red)"
+                  strokeWidth={2.5}
+                />
               </div>
               <div className="font-bold text-lg text-txt text-center mb-2">
                 ลบพนักงานคนนี้?

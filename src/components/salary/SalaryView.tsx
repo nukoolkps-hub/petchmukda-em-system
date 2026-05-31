@@ -1,10 +1,10 @@
 import {
-  IconArrowLeft,
-  IconBuildingBank,
-  IconCirclePlus,
-  IconClock,
-  IconPrinter,
-} from "@tabler/icons-react";
+  ArrowLeft as IconArrowLeft,
+  Landmark as IconBuildingBank,
+  CirclePlus as IconCirclePlus,
+  Clock as IconClock,
+  Printer as IconPrinter,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { printSalaryCertificate } from "../../print/printSalaryCertificate";
@@ -13,13 +13,13 @@ import {
   isLineWebview,
   openInExternalBrowser,
 } from "../../print/webviewHelpers";
-import BaseModal from "../shared/BaseModal";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import {
   calculateSalary,
   computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
+import BaseModal from "../shared/BaseModal";
 
 /* ─── Salary View (employee — read only) ───────────────────────── */
 export default function SalaryView({
@@ -243,7 +243,7 @@ export default function SalaryView({
                 onClick={() => setSelectedMonth(currentYearMonth)}
                 className="px-5 py-2.5 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-gold)/0.25] inline-flex items-center gap-1.5"
               >
-                <IconArrowLeft size={14} stroke={2.5} />
+                <IconArrowLeft size={14} strokeWidth={2.5} />
                 กลับไปเดือนปัจจุบัน
               </button>
             )}
@@ -256,9 +256,7 @@ export default function SalaryView({
     <div>
       {/* month selector — บนสุด เพื่อให้สลับเดือนง่าย */}
       <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="text-sm font-semibold text-txt-mid">
-          📅 เดือนเงินเดือน
-        </div>
+        <div className="text-sm font-semibold text-txt-mid">📅 เดือนเงินเดือน</div>
         <select
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
@@ -278,7 +276,7 @@ export default function SalaryView({
       {/* Bank info card */}
       <div className="bg-white rounded-[14px] px-4 py-3.5 mb-2.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)] flex items-center gap-3">
         <div className="w-10 h-10 rounded-[11px] bg-linear-135 from-gold to-gold-lt flex items-center justify-center shrink-0 shadow-[0_2px_8px_var(--color-gold)/0.25]">
-          <IconBuildingBank size={19} color="#fff" stroke={2.2} />
+          <IconBuildingBank size={19} color="#fff" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-xs text-txt-soft mb-0.5">โอนเข้าบัญชี</div>
@@ -313,7 +311,7 @@ export default function SalaryView({
                 <IconCirclePlus
                   size={17}
                   color={COLORS.goldLight}
-                  stroke={2.4}
+                  strokeWidth={2.4}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -330,7 +328,7 @@ export default function SalaryView({
           >
             <div className="flex items-center gap-2">
               <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
-                <IconClock size={17} color={COLORS.maroon} stroke={2.2} />
+                <IconClock size={17} color={COLORS.maroon} strokeWidth={2.2} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-maroon leading-tight">
@@ -353,9 +351,7 @@ export default function SalaryView({
         <div className="flex flex-col gap-2 px-3 py-2.5 rounded-[14px] bg-gold-pale/20 border border-gold/15">
           <div className="flex items-center gap-2">
             <div className="flex-1 min-w-0">
-              <div className="text-sm text-txt-mid font-semibold">
-                📋 สลิป
-              </div>
+              <div className="text-sm text-txt-mid font-semibold">📋 สลิป</div>
             </div>
             <button
               type="button"
@@ -633,8 +629,7 @@ export default function SalaryView({
             <div className="grid grid-cols-2 gap-2 mb-2">
               {CERT_PURPOSE_OPTIONS.map((p) => {
                 // preset ถือว่า active เฉพาะตอน user ยังไม่พิมพ์ custom
-                const active =
-                  selectedPreset === p && !customPurpose.trim();
+                const active = selectedPreset === p && !customPurpose.trim();
                 return (
                   <button
                     key={p}
@@ -716,5 +711,5 @@ const CERT_PURPOSE_OPTIONS = [
 /* ─── Icon helpers ────────────────────────────────────────────── */
 
 function PrintIcon() {
-  return <IconPrinter size={12} stroke={2.2} />;
+  return <IconPrinter size={12} strokeWidth={2.2} />;
 }

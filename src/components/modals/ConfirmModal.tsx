@@ -1,4 +1,4 @@
-import { IconTrash } from "@tabler/icons-react";
+import { Trash2 as IconTrash } from "lucide-react";
 import { LEAVE_TYPES } from "../../constants";
 import { fmtDate } from "../../utils/dateUtils";
 import BaseModal from "../shared/BaseModal";
@@ -16,7 +16,7 @@ export default function ConfirmModal({ leave, onConfirm, onCancel }) {
       contentClassName="rounded-[20px] px-6 py-7"
     >
       <div className="w-14 h-14 rounded-full bg-red-lt flex items-center justify-center mx-auto mb-4">
-        <IconTrash size={26} color="var(--color-red)" stroke={2.5} />
+        <IconTrash size={26} color="var(--color-red)" strokeWidth={2.5} />
       </div>
       <div className="font-bold text-lg text-txt text-center mb-2">
         ลบรายการลานี้?

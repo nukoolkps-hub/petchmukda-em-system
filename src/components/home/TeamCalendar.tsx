@@ -1,4 +1,7 @@
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
+} from "lucide-react";
 import { useState } from "react";
 import {
   COLORS as colors,
@@ -99,7 +102,7 @@ export default function TeamCalendar({
               <IconChevronLeft
                 size={12}
                 color={colors.textMedium}
-                stroke={2.5}
+                strokeWidth={2.5}
               />
             </button>
             <span className="text-sm font-semibold text-txt min-w-[108px] text-center">
@@ -112,7 +115,7 @@ export default function TeamCalendar({
               <IconChevronRight
                 size={12}
                 color={colors.textMedium}
-                stroke={2.5}
+                strokeWidth={2.5}
               />
             </button>
           </div>

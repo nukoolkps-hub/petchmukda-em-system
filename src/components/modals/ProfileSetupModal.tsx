@@ -1,4 +1,4 @@
-import { IconChevronDown } from "@tabler/icons-react";
+import { ChevronDown as IconChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { COLORS, EMOJI_LIST, THAI_BANKS } from "../../constants";
 import { uploadAvatar } from "../../firebase/storage";
@@ -312,7 +312,7 @@ export default function ProfileSetupModal({
             className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
             size={14}
             color="var(--color-txt-soft)"
-            stroke={2.5}
+            strokeWidth={2.5}
           />
         </div>
 

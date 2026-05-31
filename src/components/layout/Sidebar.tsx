@@ -1,6 +1,10 @@
 /* ─── Sidebar — Desktop navigation (≥768px) ─────────────────── */
 
-import { IconEdit, IconLogout, IconShield } from "@tabler/icons-react";
+import {
+  Pencil as IconEdit,
+  LogOut as IconLogout,
+  Shield as IconShield,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -107,7 +111,11 @@ export default function Sidebar({
         {isAdmin ? (
           <div className="flex items-center gap-3 bg-white/8 border border-gold-lt/15 rounded-[14px] px-3.5 py-2.5 w-full font-[inherit]">
             <div className="w-10 h-10 rounded-xl bg-gold-lt/15 flex items-center justify-center shrink-0">
-              <IconShield size={21} color={COLORS.goldLight} stroke={2.4} />
+              <IconShield
+                size={21}
+                color={COLORS.goldLight}
+                strokeWidth={2.4}
+              />
             </div>
             <div className="text-left flex-1 min-w-0">
               <div className="text-white font-bold text-sm truncate">
@@ -140,7 +148,7 @@ export default function Sidebar({
               </div>
             </div>
             <div className="shrink-0 w-9 h-9 rounded-[9px] bg-gold-lt/15 flex items-center justify-center">
-              <IconEdit size={20} color="#fff" stroke={2.5} />
+              <IconEdit size={20} color="#fff" strokeWidth={2.5} />
             </div>
           </button>
         ) : (
@@ -168,7 +176,7 @@ export default function Sidebar({
                   <div className="flex items-center gap-2.5 px-3 pt-2 pb-1.5 text-xs font-bold uppercase tracking-wide text-gold-lt/45">
                     <GroupIcon
                       size={14}
-                      stroke={2.2}
+                      strokeWidth={2.2}
                       color={
                         activeGroup
                           ? COLORS.goldLight
@@ -192,7 +200,7 @@ export default function Sidebar({
                         >
                           <ItemIcon
                             size={16}
-                            stroke={active ? 2.5 : 2}
+                            strokeWidth={active ? 2.5 : 2}
                             color={
                               active
                                 ? COLORS.goldLight
@@ -239,7 +247,7 @@ export default function Sidebar({
           onClick={onSignOut}
           className="w-full px-4 py-2.5 rounded-[10px] border border-white/15 bg-white/6 text-white/50 cursor-pointer font-[inherit] text-sm font-medium flex items-center justify-center gap-2 transition-all duration-200 mb-3 hover:bg-white/12 hover:text-white/80"
         >
-          <IconLogout size={16} stroke={2} />
+          <IconLogout size={16} strokeWidth={2} />
           ออกจากระบบ
         </button>
         <div className="text-xs text-white/25 text-center">

@@ -1,4 +1,4 @@
-import { IconClock } from "@tabler/icons-react";
+import { Clock as IconClock } from "lucide-react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
@@ -32,7 +32,7 @@ export default function AdvanceHistoryModal({ advanceRequests, onClose }) {
     <BaseModal onClose={onClose} contentClassName="px-5.5 pt-6 pb-7">
       <div className="flex items-center gap-3 mb-4.5">
         <div className="w-[46px] h-[46px] rounded-xl bg-gold-pale flex items-center justify-center border border-gold/25">
-          <IconClock size={22} color="var(--color-maroon)" stroke={2.2} />
+          <IconClock size={22} color="var(--color-maroon)" strokeWidth={2.2} />
         </div>
         <div className="flex-1">
           <div className="font-extrabold text-lg text-txt">ประวัติการเบิก</div>

@@ -77,7 +77,13 @@ export default function useProfile({
     ) {
       setProfile(authDerivedProfile);
     }
-  }, [authDerivedProfile, authEmployee, authUser?.displayName, isAdmin, profile]);
+  }, [
+    authDerivedProfile,
+    authEmployee,
+    authUser?.displayName,
+    isAdmin,
+    profile,
+  ]);
 
   /* ─── Profile save handler ─────────────────────────────────── */
   async function handleProfileSave(data: any) {

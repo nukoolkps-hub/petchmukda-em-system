@@ -1,4 +1,4 @@
-import { IconCheck, IconTrash } from "@tabler/icons-react";
+import { Check as IconCheck, Trash2 as IconTrash } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
@@ -962,7 +962,7 @@ export default function SalaryAdminEdit({
                   onClick={() => removeCustomEarning(index)}
                   className="w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
                 >
-                  <IconTrash size={16} color={COLORS.red} stroke={2.2} />
+                  <IconTrash size={16} color={COLORS.red} strokeWidth={2.2} />
                 </button>
               </div>
             ),
@@ -1139,7 +1139,7 @@ export default function SalaryAdminEdit({
                 onClick={() => removeCustomDeduction(index)}
                 className="w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
               >
-                <IconTrash size={16} color={COLORS.red} stroke={2.2} />
+                <IconTrash size={16} color={COLORS.red} strokeWidth={2.2} />
               </button>
             </div>
           ))}
@@ -1203,7 +1203,7 @@ export default function SalaryAdminEdit({
             disabled={saving}
             className={`flex-2 py-3 rounded-[10px] border-none bg-linear-135 from-gold to-gold-lt text-maroon-dk text-base font-bold font-[inherit] flex items-center justify-center gap-1.5 shadow-gold-glow ${saving ? "cursor-wait opacity-70" : "cursor-pointer"}`}
           >
-            <IconCheck size={14} stroke={2.5} />
+            <IconCheck size={14} strokeWidth={2.5} />
             {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
           </button>
         </div>

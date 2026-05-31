@@ -1,4 +1,4 @@
-import { IconCheck } from "@tabler/icons-react";
+import { Check as IconCheck } from "lucide-react";
 
 /* ─── Leave Type Selection Card ────────────────────────────────── */
 export default function LeaveTypeCard({
@@ -22,7 +22,7 @@ export default function LeaveTypeCard({
           className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center"
           style={{ background: lt.color }}
         >
-          <IconCheck size={11} color="#fff" stroke={3} />
+          <IconCheck size={11} color="#fff" strokeWidth={3} />
         </div>
       )}
       <div className="text-3xl mb-2.5">{lt.icon}</div>

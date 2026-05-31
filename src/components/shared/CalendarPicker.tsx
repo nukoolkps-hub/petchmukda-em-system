@@ -1,9 +1,9 @@
 import {
-  IconCalendar,
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-} from "@tabler/icons-react";
+  Calendar as IconCalendar,
+  ChevronDown as IconChevronDown,
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   COLORS,
@@ -83,7 +83,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
           <IconCalendar
             size={18}
             color={has ? "#fff" : COLORS.textSoft}
-            stroke={2}
+            strokeWidth={2}
           />
         </div>
         <div className="flex-1 text-left">
@@ -96,7 +96,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
         <IconChevronDown
           size={16}
           color={COLORS.textSoft}
-          stroke={2.5}
+          strokeWidth={2.5}
           className={`transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
         />
       </button>
@@ -111,7 +111,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
               <IconChevronLeft
                 size={14}
                 color={COLORS.textMedium}
-                stroke={2.5}
+                strokeWidth={2.5}
               />
             </button>
             <div className="font-bold text-base text-maroon">
@@ -124,7 +124,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
               <IconChevronRight
                 size={14}
                 color={COLORS.textMedium}
-                stroke={2.5}
+                strokeWidth={2.5}
               />
             </button>
           </div>

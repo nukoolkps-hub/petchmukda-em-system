@@ -2,17 +2,17 @@
    แยกออกมาจาก AdminPanel เพื่อให้ Sidebar ใช้ render nav บน Desktop ได้   */
 
 import {
-  IconCalendarEvent,
-  IconCashBanknote,
-  IconChartBar,
-  IconClipboardList,
-  IconCoins,
-  IconCreditCard,
-  IconDiamond,
-  IconSettings,
-  IconTag,
-  IconUsers,
-} from "@tabler/icons-react";
+  CalendarDays as IconCalendarEvent,
+  Banknote as IconCashBanknote,
+  BarChart3 as IconChartBar,
+  ClipboardList as IconClipboardList,
+  Coins as IconCoins,
+  CreditCard as IconCreditCard,
+  Diamond as IconDiamond,
+  Settings as IconSettings,
+  Tag as IconTag,
+  Users as IconUsers,
+} from "lucide-react";
 
 export type AdminSectionId =
   | "summary"

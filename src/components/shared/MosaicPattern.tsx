@@ -44,7 +44,7 @@ const SIDEBAR_BLOBS: Blob[] = [
     fill: C.creamFill,
     stroke: C.goldStroke,
     fillOpacity: 0.22,
-    strokeOpacity: 0.40,
+    strokeOpacity: 0.4,
     body: "M 215 30 Q 260 25, 265 75 Q 268 120, 225 125 Q 190 118, 195 80 Q 200 45, 215 30 Z",
     outline:
       "M 213 24 Q 264 19, 270 76 Q 273 124, 226 132 Q 184 122, 190 79 Q 197 40, 213 24 Z",
@@ -74,7 +74,7 @@ const SIDEBAR_BLOBS: Blob[] = [
     fill: C.creamFill,
     stroke: C.goldStroke,
     fillOpacity: 0.25,
-    strokeOpacity: 0.40,
+    strokeOpacity: 0.4,
     body: "M 60 720 Q 175 705, 215 800 Q 230 880, 140 900 Q 40 910, 12 820 Q -5 750, 60 720 Z",
     outline:
       "M 56 712 Q 180 700, 220 802 Q 234 886, 142 906 Q 36 916, 8 820 Q -10 746, 56 712 Z",
@@ -89,8 +89,8 @@ const HEADER_BLOBS: Blob[] = [
   {
     fill: C.goldFill,
     stroke: C.goldStroke,
-    fillOpacity: 0.30,
-    strokeOpacity: 0.50,
+    fillOpacity: 0.3,
+    strokeOpacity: 0.5,
     body: "M -30 -10 Q 80 -20, 130 30 Q 145 70, 80 92 Q -20 96, -50 50 Q -55 15, -30 -10 Z",
     outline:
       "M -34 -16 Q 84 -26, 134 30 Q 150 76, 80 98 Q -26 104, -56 50 Q -60 12, -34 -16 Z",
@@ -100,7 +100,7 @@ const HEADER_BLOBS: Blob[] = [
     fill: C.creamFill,
     stroke: C.goldStroke,
     fillOpacity: 0.22,
-    strokeOpacity: 0.40,
+    strokeOpacity: 0.4,
     body: "M 280 -10 Q 380 -15, 420 30 Q 430 70, 360 88 Q 280 92, 255 50 Q 250 10, 280 -10 Z",
     outline:
       "M 276 -16 Q 384 -22, 425 30 Q 436 74, 360 94 Q 274 98, 250 52 Q 246 8, 276 -16 Z",
@@ -109,7 +109,7 @@ const HEADER_BLOBS: Blob[] = [
   {
     fill: C.goldFill,
     stroke: C.goldStroke,
-    fillOpacity: 0.20,
+    fillOpacity: 0.2,
     strokeOpacity: 0.38,
     body: "M 580 -8 Q 650 -10, 670 30 Q 680 70, 620 85 Q 560 80, 555 45 Q 555 12, 580 -8 Z",
     outline:
@@ -120,7 +120,7 @@ const HEADER_BLOBS: Blob[] = [
     fill: C.maroonAccent,
     stroke: C.maroonDeep,
     fillOpacity: 0.22,
-    strokeOpacity: 0.30,
+    strokeOpacity: 0.3,
     body: "M 870 -10 Q 970 -15, 1010 30 Q 1025 70, 940 88 Q 860 92, 845 50 Q 845 15, 870 -10 Z",
     outline:
       "M 866 -16 Q 974 -22, 1016 32 Q 1030 74, 942 94 Q 856 98, 840 50 Q 840 12, 866 -16 Z",

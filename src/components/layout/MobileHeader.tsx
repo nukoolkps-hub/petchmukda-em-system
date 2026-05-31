@@ -1,6 +1,10 @@
 /* ─── MobileHeader — Mobile top header with profile strip ────── */
 
-import { IconBook2, IconEdit, IconShield } from "@tabler/icons-react";
+import {
+  BookOpen as IconBook2,
+  Pencil as IconEdit,
+  Shield as IconShield,
+} from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -105,7 +109,7 @@ export default function MobileHeader({
             title="กฏการคำนวณต่างๆ"
             className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-xs font-semibold shrink-0 whitespace-nowrap"
           >
-            <IconBook2 size={16} color="#fff" stroke={2.2} />
+            <IconBook2 size={16} color="#fff" strokeWidth={2.2} />
             กฏการคำนวณ
           </button>
         )}
@@ -138,7 +142,7 @@ export default function MobileHeader({
                 </div>
               </div>
               <div className="ml-auto w-10 h-10 rounded-[10px] bg-gold-lt/13 flex items-center justify-center shrink-0">
-                <IconEdit size={22} color="#fff" stroke={2.5} />
+                <IconEdit size={22} color="#fff" strokeWidth={2.5} />
               </div>
             </button>
           ) : (
@@ -164,7 +168,7 @@ export default function MobileHeader({
       {tab === "home" && isAdmin && (
         <div className="flex items-center gap-3.5 mb-4.5 relative">
           <div className="w-12 h-12 rounded-xl bg-white/12 border border-gold-lt/20 flex items-center justify-center shrink-0">
-            <IconShield size={24} color={COLORS.goldLight} stroke={2.4} />
+            <IconShield size={24} color={COLORS.goldLight} strokeWidth={2.4} />
           </div>
           <div className="text-left">
             <div className="text-gold-lt/50 text-sm">โหมดผู้ดูแล</div>

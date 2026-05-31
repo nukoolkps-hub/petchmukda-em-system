@@ -1,10 +1,10 @@
 /* ─── RequestTab — Leave request form + history ──────────────── */
 
 import {
-  IconAlertCircle,
-  IconChevronRight,
-  IconTrash,
-} from "@tabler/icons-react";
+  AlertCircle as IconAlertCircle,
+  ChevronRight as IconChevronRight,
+  Trash2 as IconTrash,
+} from "lucide-react";
 import { useState } from "react";
 import { COLORS, LEAVE_TYPES, TODAY } from "../../constants";
 import type { LeaveEntry } from "../../types";
@@ -143,7 +143,7 @@ export default function RequestTab({
             className={`w-[50px] h-[50px] rounded-[14px] shrink-0 flex items-center justify-center ${overLimit ? "bg-[#C0392B18]" : "bg-linear-135 from-gold to-gold-lt"}`}
           >
             {overLimit ? (
-              <IconAlertCircle size={22} color={COLORS.red} stroke={2.5} />
+              <IconAlertCircle size={22} color={COLORS.red} strokeWidth={2.5} />
             ) : (
               <Diamond size={22} color="#fff" />
             )}
@@ -234,13 +234,17 @@ export default function RequestTab({
                       }}
                       className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
                     >
-                      <IconTrash size={16} color={COLORS.red} stroke={2.2} />
+                      <IconTrash
+                        size={16}
+                        color={COLORS.red}
+                        strokeWidth={2.2}
+                      />
                     </button>
                   )}
                   <IconChevronRight
                     size={14}
                     color={COLORS.textSoft}
-                    stroke={2}
+                    strokeWidth={2}
                     className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail === h.id ? "rotate-90" : "rotate-0"}`}
                   />
                 </div>
