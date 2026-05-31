@@ -28,6 +28,7 @@ import {
   User as IconUser,
   X as IconX,
 } from "lucide-react";
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { COLORS, LEAVE_TYPES, THAI_MONTH_NAMES } from "../../constants";
 import { fmtDate, fmtDateWithWeekday, isPast } from "../../utils/dateUtils";
@@ -52,6 +53,44 @@ function AdminNavBadge({ count }: { count: number }) {
     <span className="absolute top-[3px] right-[3px] flex h-5 min-w-5 items-center justify-center rounded-full bg-red px-1.5 text-xs font-bold leading-none text-white shadow-red-glow">
       {count}
     </span>
+  );
+}
+
+/* ─── แสดง breakdown วันธรรมดา/อาทิตย์ ในวงเล็บ ใต้ยอดรวมวันลา ──── */
+function LeaveDayBreakdown({
+  weekdays,
+  sundays,
+}: {
+  weekdays: number;
+  sundays: number;
+}) {
+  if (weekdays <= 0 && sundays <= 0) return null;
+  const parts: { key: string; node: ReactNode }[] = [];
+  if (weekdays > 0) {
+    parts.push({ key: "wd", node: <>วันธรรมดา × {weekdays}</> });
+  }
+  if (sundays > 0) {
+    parts.push({
+      key: "sun",
+      node: (
+        <span className="inline-flex items-center gap-0.5">
+          <IconSun size={10} strokeWidth={2.4} />
+          วันอาทิตย์ × {sundays}
+          <span className="opacity-70">(×1.5)</span>
+        </span>
+      ),
+    });
+  }
+  return (
+    <div className="text-[11px] text-txt-soft font-medium mt-0.5 leading-snug whitespace-nowrap">
+      {parts.map((p, i) => (
+        <span key={p.key} className="block">
+          {i === 0 ? "(" : null}
+          {p.node}
+          {i === parts.length - 1 ? ")" : null}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -422,8 +461,12 @@ export default function AdminPanel({
                                   วัน
                                 </span>
                               </div>
+                              <LeaveDayBreakdown
+                                weekdays={weekdays}
+                                sundays={sundays}
+                              />
                               {overQuota && (
-                                <div className="text-xs text-red font-bold inline-flex items-center gap-1">
+                                <div className="text-xs text-red font-bold inline-flex items-center gap-1 mt-0.5">
                                   <IconAlertOctagon
                                     size={11}
                                     strokeWidth={2.4}
@@ -444,7 +487,7 @@ export default function AdminPanel({
                                       : `${name}:personal`,
                                   )
                                 }
-                                className={`bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${name}:personal` ? "border-gold" : "border-transparent"}`}
+                                className={`rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#FFE7C2] text-[#B45309] cursor-pointer font-[inherit] border inline-flex items-center gap-1 ${expandedChip === `${name}:personal` ? "border-[#B45309]" : "border-transparent"}`}
                               >
                                 <IconBriefcase size={12} strokeWidth={2.4} />
                                 ลากิจ {personalDays} วัน
@@ -465,15 +508,6 @@ export default function AdminPanel({
                                 <IconCross size={12} strokeWidth={2.4} />
                                 ลาป่วย {sickDays} วัน
                               </button>
-                            )}
-                            {sundays > 0 && (
-                              <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9] inline-flex items-center gap-1">
-                                <IconSun size={12} strokeWidth={2.4} />
-                                อาทิตย์ {sundays} วัน
-                                <span className="font-normal opacity-70 ml-0.5">
-                                  (×1.5)
-                                </span>
-                              </div>
                             )}
                           </div>
                           {expandedChip?.startsWith(`${name}:`) && (
@@ -604,6 +638,10 @@ export default function AdminPanel({
                                   วัน
                                 </span>
                               </div>
+                              <LeaveDayBreakdown
+                                weekdays={weekdays}
+                                sundays={sundays}
+                              />
                             </div>
                           </div>
                           <div className="bg-cream-dk rounded-md h-[7px] overflow-hidden mb-2.5">
@@ -614,7 +652,7 @@ export default function AdminPanel({
                           </div>
                           <div className="flex gap-1.5 flex-wrap items-center">
                             {personalDays > 0 && (
-                              <div className="bg-gold-pale rounded-[20px] px-2.5 py-[3px] text-sm text-txt-mid font-semibold inline-flex items-center gap-1">
+                              <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#FFE7C2] text-[#B45309] inline-flex items-center gap-1">
                                 <IconBriefcase size={12} strokeWidth={2.4} />
                                 ลากิจ {personalDays} วัน
                               </div>
@@ -623,15 +661,6 @@ export default function AdminPanel({
                               <div className="rounded-[20px] px-2.5 py-[3px] text-sm font-semibold bg-[#CCFBF1] text-[#0F766E] inline-flex items-center gap-1">
                                 <IconCross size={12} strokeWidth={2.4} />
                                 ลาป่วย {sickDays} วัน
-                              </div>
-                            )}
-                            {sundays > 0 && (
-                              <div className="rounded-[20px] px-2.5 py-[3px] text-xs font-semibold bg-[#EDE9FE] text-[#6D28D9] inline-flex items-center gap-1">
-                                <IconSun size={12} strokeWidth={2.4} />
-                                อาทิตย์ {sundays} วัน
-                                <span className="font-normal opacity-70 ml-0.5">
-                                  (×1.5)
-                                </span>
                               </div>
                             )}
                           </div>
