@@ -9,6 +9,7 @@ import {
   Clock as IconClock,
   Diamond as IconDiamond,
   FileText as IconFileText,
+  HandCoins as IconHandCoins,
   Lightbulb as IconLightbulb,
   Minus as IconMinus,
   Network as IconNetwork,
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { buildLoanContext } from "../../firebase/employeeLoans";
 import { printSalaryCertificate } from "../../print/printSalaryCertificate";
 import { printSalarySlip } from "../../print/printSalarySlip";
 import {
@@ -54,6 +56,7 @@ export default function SalaryView({
   roles,
   payrollConfirms,
   poolAdjustments,
+  employeeLoans,
   showToast,
 }) {
   const now = new Date();
@@ -150,6 +153,7 @@ export default function SalaryView({
       approvedAdvanceAmountTotal,
       employeePoolShare,
       employeeRole,
+      buildLoanContext(employeeLoans, salaryEmployeeId, selectedMonth),
     );
     return {
       overInfo: overQuotaInfo,
@@ -172,6 +176,7 @@ export default function SalaryView({
     data,
     salaryEmployeeId,
     poolAdjustments,
+    employeeLoans,
   ]);
 
   function handlePrintSlip() {
@@ -670,6 +675,21 @@ export default function SalaryView({
                 ? `เบิกแล้ว ${monthApprovedAdvances.length} ครั้งในเดือนนี้`
                 : "",
             value: salaryCalculation.advanceDeduction,
+          },
+          {
+            icon: (
+              <IconHandCoins size={16} strokeWidth={2.2} color={COLORS.red} />
+            ),
+            main: "หักผ่อนเงินกู้",
+            sub: (() => {
+              const notes = (salaryCalculation.loanBreakdown || [])
+                .map(
+                  (b) => (employeeLoans || []).find((l) => l.id === b.id)?.note,
+                )
+                .filter(Boolean);
+              return notes.length > 0 ? notes.join(", ") : "";
+            })(),
+            value: salaryCalculation.loanDeduction,
           },
           {
             icon: (

@@ -87,6 +87,24 @@ export async function deleteEmployeeLoan(id: string) {
   await deleteDoc(doc(ref, id));
 }
 
+/* สร้าง loanContext ให้ calculateSalary — เงินกู้ของพนักงานคนนี้ที่ยังไม่ยกเลิก */
+export function buildLoanContext(
+  allLoans: EmployeeLoan[] | undefined,
+  employeeId: string,
+  yearMonth: string,
+) {
+  const loans = (allLoans || [])
+    .filter((l) => l.employeeId === employeeId && l.status !== "cancelled")
+    .map((l) => ({
+      id: l.id,
+      monthlyDeduction: l.monthlyDeduction,
+      principal: l.principal,
+      startMonth: l.startMonth,
+      repayments: l.repayments,
+    }));
+  return { yearMonth, loans };
+}
+
 /* คงเหลือ = เงินต้น − ผลรวมที่ผ่อนแล้ว */
 export function loanRemaining(loan: EmployeeLoan): number {
   const paid = Object.values(loan.repayments || {}).reduce(

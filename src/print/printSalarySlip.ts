@@ -117,6 +117,12 @@ function buildSalarySlipHTML(
       value: salaryCalculation.advanceDeduction,
     });
   }
+  if (salaryCalculation.loanDeduction > 0) {
+    dedRows.push({
+      label: "หักผ่อนเงินกู้",
+      value: salaryCalculation.loanDeduction,
+    });
+  }
   if (salaryCalculation.socialSecurity > 0)
     dedRows.push({
       label: "หักประกันสังคม",

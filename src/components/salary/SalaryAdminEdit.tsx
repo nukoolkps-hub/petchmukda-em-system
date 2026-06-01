@@ -7,6 +7,7 @@ import {
   ChevronDown as IconChevronDown,
   ClipboardList as IconClipboardList,
   Diamond as IconDiamond,
+  HandCoins as IconHandCoins,
   Handshake as IconHandshake,
   Lightbulb as IconLightbulb,
   Lock as IconLock,
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { buildLoanContext } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
@@ -50,6 +52,7 @@ export default function SalaryAdminEdit({
   payrollConfirms,
   poolAdjustments,
   onSetPoolAdjustment,
+  employeeLoans,
   setUnsavedDirty,
   showToast,
 }) {
@@ -237,6 +240,7 @@ export default function SalaryAdminEdit({
       approvedAdvanceTotal,
       employeePoolShare,
       employeeRole,
+      buildLoanContext(employeeLoans, selectedEmployeeId, selectedMonth),
     );
     return {
       poolShare: employeePoolShare,
@@ -258,6 +262,7 @@ export default function SalaryAdminEdit({
     totalLeaveDays,
     approvedAdvanceTotal,
     poolAdjustments,
+    employeeLoans,
   ]);
 
   function update(field, value) {
@@ -1475,6 +1480,34 @@ export default function SalaryAdminEdit({
               </>
             )}
           </div>
+
+          {/* auto loan repayment note */}
+          {salaryCalculation.loanDeduction > 0 && (
+            <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
+              <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
+                <IconHandCoins size={14} strokeWidth={2.4} />
+                หักผ่อนเงินกู้{" "}
+                <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
+                  อัตโนมัติ
+                </span>
+              </div>
+              {salaryCalculation.loanBreakdown.map((b) => {
+                const loan = (employeeLoans || []).find((l) => l.id === b.id);
+                return (
+                  <div
+                    key={b.id}
+                    className="flex justify-between items-center py-[3px]"
+                  >
+                    <span>{loan?.note || "เงินกู้"}</span>
+                    <b>฿{formatThaiNumber(b.amount)}</b>
+                  </div>
+                );
+              })}
+              <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
+                รวมหัก: −฿{formatThaiNumber(salaryCalculation.loanDeduction)}
+              </div>
+            </div>
+          )}
 
           {/* custom deductions — รายการหักที่เพิ่มเอง */}
           {(Array.isArray(data.customDeductions)

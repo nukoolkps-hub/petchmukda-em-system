@@ -181,6 +181,8 @@ export default function AdminPanel({
           payrollConfirms={payrollConfirms}
           onSetPayrollConfirm={onSetPayrollConfirm}
           poolAdjustments={poolAdjustments}
+          employeeLoans={employeeLoans}
+          onUpdateLoan={onUpdateLoan}
           onSaveSalary={onSaveSalary}
           showToast={showToast}
         />
@@ -221,6 +223,7 @@ export default function AdminPanel({
           payrollConfirms={payrollConfirms}
           poolAdjustments={poolAdjustments}
           onSetPoolAdjustment={onSetPoolAdjustment}
+          employeeLoans={employeeLoans}
           setUnsavedDirty={setUnsavedDirty}
           showToast={showToast}
         />

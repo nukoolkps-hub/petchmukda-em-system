@@ -427,6 +427,7 @@ export default function LeaveApp() {
                         roles={roles}
                         payrollConfirms={payrollConfirms}
                         poolAdjustments={poolAdjustments}
+                        employeeLoans={employeeLoans}
                         showToast={showToast}
                       />
                     </div>

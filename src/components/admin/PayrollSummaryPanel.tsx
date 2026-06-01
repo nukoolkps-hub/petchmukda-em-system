@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { buildLoanContext, loanRemaining } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
@@ -39,8 +40,10 @@ export default function PayrollSummaryPanel({
   roles,
   payrollConfirms,
   poolAdjustments,
+  employeeLoans,
   onSetPayrollConfirm,
   onSaveSalary,
+  onUpdateLoan,
   showToast,
 }) {
   const now = new Date();
@@ -149,6 +152,7 @@ export default function PayrollSummaryPanel({
               approvedAdvanceTotal,
               poolShare,
               employeeRole,
+              buildLoanContext(employeeLoans, employee.id, selectedMonth),
             )
           : null;
         return {
@@ -170,6 +174,7 @@ export default function PayrollSummaryPanel({
     allLeaves,
     monthlyApprovedAdvances.data,
     poolAdjustments,
+    employeeLoans,
   ]);
 
   // filter by search
@@ -287,6 +292,39 @@ export default function PayrollSummaryPanel({
   // ขั้นที่ผู้ใช้รอ: onSetPayrollConfirm เดี่ยว (เขียน 1 doc — เร็ว) เสร็จแล้ว
   // ปลดล็อกปุ่ม ส่วน backfill snapshots + freeze สลิปทำเบื้องหลัง best-effort
   // กันบล็อก UI / แย่ network กับการบันทึกเดือนอื่นที่ admin อาจทำพร้อมกัน
+  /* ─── บันทึก ledger การผ่อนเงินกู้ของเดือนนี้ ────────────────────
+     เขียน repayments[selectedMonth] = ยอดหักจริง (จาก salaryCalculation)
+     + อัพเดต status เป็น paid_off เมื่อผ่อนครบ · idempotent: re-confirm
+     เดือนเดิม overwrite ค่าเดิม (ข้ามถ้าไม่เปลี่ยน)                       */
+  async function recordLoanRepayments() {
+    if (!onUpdateLoan) return;
+    const ym = selectedMonth;
+    const updates: Promise<unknown>[] = [];
+    for (const row of rows) {
+      const reps = row.salaryCalculation.loanRepayments || {};
+      const empLoans = (employeeLoans || []).filter(
+        (l) => l.employeeId === row.employee.id && l.status !== "cancelled",
+      );
+      for (const loan of empLoans) {
+        const amt = reps[loan.id] || 0;
+        const prev = loan.repayments?.[ym] || 0;
+        if (amt === prev) continue; // ไม่เปลี่ยน → ไม่ต้องเขียน
+        const newRepayments = { ...(loan.repayments || {}), [ym]: amt };
+        const paid = Object.values(newRepayments).reduce<number>(
+          (s, v) => s + (Number(v) || 0),
+          0,
+        );
+        updates.push(
+          onUpdateLoan(loan.id, {
+            repayments: newRepayments,
+            status: paid >= (loan.principal || 0) ? "paid_off" : "active",
+          }),
+        );
+      }
+    }
+    if (updates.length) await Promise.allSettled(updates);
+  }
+
   async function confirmPayroll(
     totalForMonth: number,
     empCountForMonth: number,
@@ -312,6 +350,11 @@ export default function PayrollSummaryPanel({
 
     // งานเบื้องหลัง — ไม่ await ให้ปุ่มกลับมาใช้ได้ทันที
     (async () => {
+      try {
+        await recordLoanRepayments();
+      } catch (err) {
+        console.error("[PayrollSummary] record loan repayments failed:", err);
+      }
       try {
         await backfillPoolSnapshots();
       } catch (err) {

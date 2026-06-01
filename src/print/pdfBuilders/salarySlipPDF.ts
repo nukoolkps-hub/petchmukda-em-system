@@ -126,6 +126,8 @@ export function buildSalarySlipDocDef({
       "เบิกล่วงหน้า",
       formatNumber(salaryCalculation.advanceDeduction),
     ]);
+  if (salaryCalculation.loanDeduction > 0)
+    dedRows.push(["ผ่อนเงินกู้", formatNumber(salaryCalculation.loanDeduction)]);
   if (salaryCalculation.socialSecurity > 0)
     dedRows.push(["ประกันสังคม", formatNumber(salaryCalculation.socialSecurity)]);
   if (salaryCalculation.overQuotaDeduction > 0)

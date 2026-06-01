@@ -184,6 +184,9 @@ export interface SalaryCalcResult {
   bonusDays: number;
   leaveDays: number;
   advanceDeduction: number;
+  loanDeduction: number;
+  loanRepayments: Record<string, number>;
+  loanBreakdown: { id: string; amount: number }[];
   baseSalary: number;
   losesBaseSalary: boolean;
 }

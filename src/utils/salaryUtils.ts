@@ -297,6 +297,18 @@ export function calculateSalary(
   approvedAdvanceTotal,
   poolShare,
   roleConfig,
+  // เงินกู้ผ่อนคืน (Stage B): { yearMonth, loans: [{id, monthlyDeduction,
+  // principal, startMonth, repayments}] } ของพนักงานคนนี้ (ไม่รวม cancelled)
+  loanContext?: {
+    yearMonth: string;
+    loans: {
+      id: string;
+      monthlyDeduction: number;
+      principal: number;
+      startMonth: string;
+      repayments?: Record<string, number>;
+    }[];
+  } | null,
 ) {
   if (!salary) return null;
   const weekdayOverQuotaDays = overQuotaInfo?.weekdays || 0;
@@ -391,16 +403,55 @@ export function calculateSalary(
         0,
       )
     : 0;
-  const deductions =
+  // ─── หักเงินกู้ผ่อนคืน (หักเท่าที่มี: cap ที่เงินสุทธิก่อนหักกู้) ───
+  // FIFO: เรียงตามเดือนเริ่ม → id · ต่อก้อน หัก = min(ผ่อนเดือนละ, คงเหลือ)
+  // คงเหลือคิดจาก principal − Σ(repayments ที่ไม่ใช่เดือนนี้) → re-confirm
+  // เดือนเดิมได้ผลเท่าเดิม (idempotent)
+  const deductionsBeforeLoan =
     advanceDeduction +
     socialSecurityAmount +
     overQuotaDeduction +
     customDeductionsTotal;
+  let loanDeduction = 0;
+  const loanRepayments: Record<string, number> = {}; // {loanId: ยอดหักเดือนนี้}
+  const loanBreakdown: { id: string; amount: number }[] = [];
+  if (loanContext?.loans?.length) {
+    const ym = loanContext.yearMonth;
+    let avail = Math.max(0, earnings - deductionsBeforeLoan);
+    const sorted = [...loanContext.loans].sort((a, b) => {
+      const m = (a.startMonth || "").localeCompare(b.startMonth || "");
+      return m !== 0 ? m : String(a.id).localeCompare(String(b.id));
+    });
+    for (const loan of sorted) {
+      if ((loan.startMonth || "") > ym) continue; // ยังไม่ถึงเดือนเริ่มหัก
+      const paidExcludingThis = Object.entries(loan.repayments || {}).reduce(
+        (s, [k, v]) => (k === ym ? s : s + (Number(v) || 0)),
+        0,
+      );
+      const remaining = Math.max(
+        0,
+        (Number(loan.principal) || 0) - paidExcludingThis,
+      );
+      const due = Math.min(Number(loan.monthlyDeduction) || 0, remaining);
+      const take = Math.min(due, avail);
+      if (take > 0) {
+        avail -= take;
+        loanDeduction += take;
+        loanRepayments[loan.id] = take;
+        loanBreakdown.push({ id: loan.id, amount: take });
+      }
+    }
+  }
+
+  const deductions = deductionsBeforeLoan + loanDeduction;
   const netSalary = earnings - deductions;
   return {
     earnings,
     deductions,
     netSalary,
+    loanDeduction,
+    loanRepayments, // {loanId: ยอดหักเดือนนี้} — ใช้บันทึก ledger ตอนยืนยันยอด
+    loanBreakdown, // [{id, amount}] — เรียงตามที่หัก (สำหรับแสดงผล)
     overQuotaDeduction,
     dailySalaryRate,
     weekdayOverQuotaDays,
