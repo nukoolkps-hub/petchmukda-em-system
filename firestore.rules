@@ -39,6 +39,17 @@ service cloud.firestore {
         + '-' + pad2(bangkokTime().day());
     }
 
+    // ─── Payroll month lock ──────────────────────────────────────
+    // เดือน (YYYY-MM) ถูก "ปิดรอบถาวร" เมื่อพ้น lockAtMs (= ยืนยันยอดครั้งแรก
+    // + 7 วัน) ที่เก็บไว้ใน payrollConfirms/{ym}. ใช้ร่วมกับฝั่ง UI
+    // (src/utils/payrollLock.ts) — กันแก้ค่าคอม/ลา/เบิก ของเดือนที่ปิดรอบแล้ว
+    // doc เก่าที่ไม่มี lockAtMs → ถือว่ายังไม่ล็อก (UI fallback จัดการต่อ)
+    function monthLocked(ym) {
+      return exists(/databases/$(database)/documents/payrollConfirms/$(ym))
+        && get(/databases/$(database)/documents/payrollConfirms/$(ym)).data.lockAtMs is number
+        && request.time.toMillis() > get(/databases/$(database)/documents/payrollConfirms/$(ym)).data.lockAtMs;
+    }
+
     function isSelfProfileUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
         "avatar",
@@ -126,23 +137,28 @@ service cloud.firestore {
     // แก้ไข: admin only
     match /leaves/{leaveId} {
       allow read:   if isAdmin() || isEmployeeOwner(resource.data.employeeId);
-      allow create: if isEmployeeOwner(request.resource.data.employeeId) && validLeaveCreate();
-      allow update: if isAdmin();
+      // สร้าง/แก้/ลบ ของเดือนที่ปิดรอบแล้ว (locked) ไม่ได้ — แม้แต่ admin
+      allow create: if isEmployeeOwner(request.resource.data.employeeId)
+        && validLeaveCreate()
+        && !monthLocked(request.resource.data.start[0:7]);
+      allow update: if isAdmin() && !monthLocked(resource.data.start[0:7]);
       // ลบเอง: เฉพาะใบลาที่ยังไม่เริ่ม (start > วันนี้)
-      // วันนี้และอดีต: admin เท่านั้น
-      allow delete: if isAdmin()
-        || (isEmployeeOwner(resource.data.employeeId)
-          && resource.data.start > bangkokToday());
+      // วันนี้และอดีต: admin เท่านั้น · เดือนปิดรอบแล้วลบไม่ได้
+      allow delete: if !monthLocked(resource.data.start[0:7])
+        && (isAdmin()
+          || (isEmployeeOwner(resource.data.employeeId)
+            && resource.data.start > bangkokToday()));
     }
 
     // ─── Salaries ────────────────────────────────────────────────
     // PHASE 2: ล็อกอ่านเฉพาะ admin หรือเจ้าของ salary doc — sensitive fields
-    // (note, customDeductions, lateDeduction, socialSecurity, slipUrl) จึงไม่
-    // หลุดข้ามคน. peer data ที่ pool calc ต้องใช้ถูกย้ายไปอ่านจาก collection
+    // (note, customDeductions, socialSecurity, slipUrl) จึงไม่หลุดข้ามคน.
+    // peer data ที่ pool calc ต้องใช้ถูกย้ายไปอ่านจาก collection
     // public `poolSnapshots/{ym}` แทน (mirror ทุกครั้งที่ admin save salary)
+    // เขียนไม่ได้ถ้าเดือนนั้นปิดรอบแล้ว (พ้น 7 วันหลังยืนยันยอด)
     match /salaries/{employeeId}/months/{yearMonth} {
       allow read:   if isAdmin() || isEmployeeOwner(employeeId);
-      allow write:  if isAdmin();
+      allow write:  if isAdmin() && !monthLocked(yearMonth);
     }
 
     // collectionGroup(db, "months") — ใช้ใน subscribeAllSalaries (admin เท่านั้น)
@@ -166,9 +182,11 @@ service cloud.firestore {
     // อนุมัติ/ปฏิเสธ: admin
     match /advances/{advanceId} {
       allow read:   if isAdmin() || isEmployeeOwner(resource.data.employeeId);
-      allow create: if isEmployeeOwner(request.resource.data.employeeId) && validAdvanceCreate();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow create: if isEmployeeOwner(request.resource.data.employeeId)
+        && validAdvanceCreate()
+        && !monthLocked(request.resource.data.month);
+      allow update: if isAdmin() && !monthLocked(resource.data.month);
+      allow delete: if isAdmin() && !monthLocked(resource.data.month);
     }
 
     // ─── Roles ───────────────────────────────────────────────────
@@ -189,9 +207,10 @@ service cloud.firestore {
     // read: signed-in (พนักงานใช้เช็คว่า admin ยืนยันยอดแล้วหรือยัง
     //       เพื่อปลดล็อกการพิมพ์สลิปเงินเดือน)
     // write: admin
+    // write: admin · แต่เมื่อปิดรอบถาวรแล้ว (พ้น lockAtMs) ยืนยันใหม่ไม่ได้
     match /payrollConfirms/{key} {
       allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow write: if isAdmin() && !monthLocked(key);
     }
 
     // ─── Cert Counters (running number ใบรับรอง) ─────────────────

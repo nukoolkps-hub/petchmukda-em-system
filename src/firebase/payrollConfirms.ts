@@ -44,6 +44,12 @@ export async function setPayrollConfirm(yearMonth, summary) {
     confirmedAt: summary.confirmedAt,
     totalAmount: summary.totalAmount,
     employeeCount: summary.employeeCount,
+    breakdownSig: summary.breakdownSig ?? null,
+    // ล็อกถาวร: firstConfirmedAt = ยืนยันครั้งแรก (ไม่รีเซ็ต) ·
+    // lockAtMs = เวลาที่เดือนนี้จะแก้ไม่ได้ (firstConfirmedAt + 7 วัน)
+    // ใช้ทั้ง UI และ firestore.rules (เทียบ request.time.toMillis())
+    firstConfirmedAt: summary.firstConfirmedAt ?? summary.confirmedAt,
+    lockAtMs: summary.lockAtMs ?? null,
     updatedAt: Date.now(),
   });
 }

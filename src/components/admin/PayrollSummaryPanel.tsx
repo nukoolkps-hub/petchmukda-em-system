@@ -19,6 +19,7 @@ import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
+import { getPayrollLock } from "../../utils/payrollLock";
 import {
   calculateSalary,
   computePoolSharesForGroup,
@@ -418,6 +419,32 @@ export default function PayrollSummaryPanel({
             hour: "2-digit",
             minute: "2-digit",
           });
+          const lock = getPayrollLock(confirmed);
+
+          // ปิดรอบถาวรแล้ว (พ้น 7 วันหลังยืนยันครั้งแรก) — แก้ไขไม่ได้
+          if (lock.locked) {
+            return (
+              <div className="rounded-[14px] px-4 py-3.5 mb-3.5 border-[1.5px] bg-cream border-bdr">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-[10px] flex items-center justify-center border-[1.5px] bg-white border-txt-soft/40">
+                    <IconLock
+                      size={18}
+                      strokeWidth={2.4}
+                      className="text-txt-mid"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-sm text-txt">ปิดรอบแล้ว</div>
+                    <div className="text-xs text-txt-soft mt-0.5">
+                      ยอด ฿{formatThaiNumber(confirmed.totalAmount)} ·{" "}
+                      {confirmed.employeeCount} คน · แก้ไขไม่ได้แล้ว
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           const isStale =
             confirmed.totalAmount !== totalForMonth ||
             confirmed.employeeCount !== empCountForMonth ||
@@ -485,6 +512,10 @@ export default function PayrollSummaryPanel({
                 <div className="text-sm text-txt-mid px-2.5 py-1.5 bg-white rounded-lg">
                   ยอด <b>฿{formatThaiNumber(confirmed.totalAmount)}</b> ·{" "}
                   {confirmed.employeeCount} คน
+                  <div className="text-xs text-txt-soft mt-1 inline-flex items-center gap-1">
+                    <IconLock size={10} strokeWidth={2.4} />
+                    แก้ไขได้อีก {lock.daysLeft} วัน แล้วปิดรอบถาวร
+                  </div>
                 </div>
               )}
             </div>

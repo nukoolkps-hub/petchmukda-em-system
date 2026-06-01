@@ -90,7 +90,11 @@ export default function useLeaveForm({
       setSubmitted(true);
     } catch (err) {
       console.error("[useLeaveForm] submit error:", err);
-      showToast("เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่");
+      showToast(
+        err instanceof Error && err.message
+          ? err.message
+          : "เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่",
+      );
     }
   }
 
@@ -108,7 +112,11 @@ export default function useLeaveForm({
       showToast("ลบรายการลาเรียบร้อยแล้ว");
     } catch (err) {
       console.error("[useLeaveForm] delete error:", err);
-      showToast("ลบรายการไม่สำเร็จ กรุณาลองใหม่");
+      showToast(
+        err instanceof Error && err.message
+          ? err.message
+          : "ลบรายการไม่สำเร็จ กรุณาลองใหม่",
+      );
     }
   }
 

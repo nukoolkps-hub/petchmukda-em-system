@@ -27,6 +27,7 @@ import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
+import { getPayrollLock } from "../../utils/payrollLock";
 import {
   calculateSalary,
   computePoolSharesForGroup,
@@ -309,6 +310,10 @@ export default function SalaryAdminEdit({
     (salaryCalculation.specialSaleCommission || 0) +
     (salaryCalculation.buyCommission || 0);
 
+  // ปิดรอบถาวรแล้ว (พ้น 7 วันหลังยืนยันยอดครั้งแรก) → ห้ามแก้เดือนนี้
+  const monthLock = getPayrollLock(payrollConfirms?.[selectedMonth]);
+  const locked = monthLock.locked;
+
   return (
     <div>
       {/* ปุ่มแผนผังเงินเดือน + dropdown เลือกเดือน (เลือกย้อนหลังเพื่อแก้ไขได้) */}
@@ -345,6 +350,20 @@ export default function SalaryAdminEdit({
           />
         </div>
       </div>
+
+      {locked && (
+        <div className="flex items-start gap-2 px-3.5 py-3 mb-3 rounded-[12px] bg-cream border-[1.5px] border-bdr">
+          <IconLock
+            size={16}
+            strokeWidth={2.4}
+            className="text-txt-mid mt-0.5 shrink-0"
+          />
+          <div className="text-sm text-txt-mid leading-normal">
+            <b className="text-txt">ปิดรอบแล้ว</b> — เดือนนี้พ้น 7 วันหลังยืนยันยอด
+            จึงแก้ไขค่าคอม/เงินเดือนไม่ได้แล้ว
+          </div>
+        </div>
+      )}
 
       {/* employee cards — เลือกพนักงานแบบการ์ด มองง่ายกว่า dropdown
          จุดสถานะ: เขียว=บันทึกชิ้นเดือนนี้แล้ว, เทา=ยังไม่บันทึก */}
@@ -1382,11 +1401,15 @@ export default function SalaryAdminEdit({
           </button>
           <button
             onClick={saveAll}
-            disabled={saving}
-            className={`flex-2 py-3 rounded-[10px] border-none bg-maroon text-white text-base font-bold font-[inherit] flex items-center justify-center gap-1.5 shadow-maroon-glow ${saving ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+            disabled={saving || locked}
+            className={`flex-2 py-3 rounded-[10px] border-none bg-maroon text-white text-base font-bold font-[inherit] flex items-center justify-center gap-1.5 shadow-maroon-glow ${saving || locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
           >
-            <IconCheck size={14} strokeWidth={2.5} />
-            {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
+            {locked ? (
+              <IconLock size={14} strokeWidth={2.5} />
+            ) : (
+              <IconCheck size={14} strokeWidth={2.5} />
+            )}
+            {locked ? "ปิดรอบแล้ว" : saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
           </button>
         </div>
       )}

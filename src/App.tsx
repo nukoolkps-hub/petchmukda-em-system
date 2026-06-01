@@ -252,7 +252,12 @@ export default function LeaveApp() {
     reason: string;
     month: string;
   }) {
-    await submitAdvanceRequest({ amount, reason, month });
+    try {
+      await submitAdvanceRequest({ amount, reason, month });
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "ส่งคำขอไม่สำเร็จ");
+      return;
+    }
     setShowAdvanceModal(false);
     showToast("ส่งคำขอผ่าน LINE แล้ว — รอ Admin โอนเงิน");
   }

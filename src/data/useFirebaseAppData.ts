@@ -23,6 +23,11 @@ import * as poolSnapshotsAPI from "../firebase/poolSnapshots";
 import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
 import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
+import {
+  isMonthLocked,
+  monthOf,
+  PAYROLL_EDIT_GRACE_MS,
+} from "../utils/payrollLock";
 
 interface FirebaseAppDataOptions {
   authUid?: string;
@@ -97,11 +102,20 @@ export default function useFirebaseAppData({
     pcResult.error ||
     poolSnapResult.error;
 
+  // เดือน (YYYY-MM) นี้ถูกล็อกถาวรแล้วหรือยัง (พ้น 7 วันหลังยืนยันยอดครั้งแรก)
+  function monthLocked(yearMonth: string) {
+    return isMonthLocked(pcResult.data?.[yearMonth]);
+  }
+  const LOCK_MSG = "เดือนนี้ปิดรอบแล้ว (พ้น 7 วันหลังยืนยันยอด) — แก้ไขไม่ได้";
+
   /* ─── Leaves (real-time → no local setState needed) ────── */
   async function addLeave(leave) {
+    if (monthLocked(monthOf(leave?.start))) throw new Error(LOCK_MSG);
     return await leavesAPI.addLeave(leave);
   }
   async function deleteLeave(id) {
+    const target = leavesResult.data.find((l) => l.id === id);
+    if (target && monthLocked(monthOf(target.start))) throw new Error(LOCK_MSG);
     await leavesAPI.deleteLeave(id);
   }
 
@@ -118,6 +132,8 @@ export default function useFirebaseAppData({
 
   /* ─── Salaries ──────────────────────────────────────────── */
   async function updateSalary(employeeId, yearMonth, fields) {
+    // ปิดรอบแล้ว (พ้น 7 วันหลังยืนยันยอด) → ห้ามแก้ค่าคอม/เงินเดือนเดือนนั้น
+    if (monthLocked(yearMonth)) throw new Error(LOCK_MSG);
     // snapshot roleId / poolExclusion / เรท / leave days ลง salary doc ของเดือน
     // นั้น เพื่อให้ (1) พนักงานคำนวณ pool ได้โดยไม่ต้องอ่าน employees/leaves ของ
     // เพื่อน และ (2) ข้อมูลเงินเดือนในอดีต "ล็อก" ไม่ขยับเมื่อเปลี่ยนตำแหน่ง/เรท
@@ -208,9 +224,12 @@ export default function useFirebaseAppData({
 
   /* ─── Advances ──────────────────────────────────────────── */
   async function submitAdvance(request) {
+    if (monthLocked(request?.month)) throw new Error(LOCK_MSG);
     return await advancesAPI.submitAdvance(request);
   }
   async function updateAdvance(id, fields) {
+    const target = advResult.data.find((a) => a.id === id);
+    if (target && monthLocked(target.month)) throw new Error(LOCK_MSG);
     // Firestore: ไม่มี method generic update — ใช้ approve/reject แทน
     if (fields.status === "approved") {
       await advancesAPI.approveAdvance(
@@ -222,9 +241,13 @@ export default function useFirebaseAppData({
     }
   }
   async function approveAdvance(id, slipImageUrl = null) {
+    const target = advResult.data.find((a) => a.id === id);
+    if (target && monthLocked(target.month)) throw new Error(LOCK_MSG);
     await advancesAPI.approveAdvance(id, slipImageUrl);
   }
   async function rejectAdvance(id, reason = "") {
+    const target = advResult.data.find((a) => a.id === id);
+    if (target && monthLocked(target.month)) throw new Error(LOCK_MSG);
     await advancesAPI.rejectAdvance(id, reason);
   }
 
@@ -238,7 +261,21 @@ export default function useFirebaseAppData({
 
   /* ─── Payroll Confirms ──────────────────────────────────── */
   async function setPayrollConfirm(yearMonth, summary) {
-    await payrollConfirmsAPI.setPayrollConfirm(yearMonth, summary);
+    const existing = pcResult.data?.[yearMonth];
+    // ปิดรอบถาวรแล้ว → ห้ามยืนยันใหม่ (ยอดถูก freeze ไปแล้ว)
+    if (isMonthLocked(existing)) throw new Error(LOCK_MSG);
+    // firstConfirmedAt + lockAtMs เขียนครั้งเดียวตอนยืนยัน "ครั้งแรก" — ยืนยัน
+    // ใหม่ภายหลังไม่รีเซ็ตเวลา (เดดไลน์ล็อกอิงครั้งแรกเสมอ)
+    const firstConfirmedAt = existing?.firstConfirmedAt || summary.confirmedAt;
+    const lockAtMs =
+      typeof existing?.lockAtMs === "number"
+        ? existing.lockAtMs
+        : new Date(firstConfirmedAt).getTime() + PAYROLL_EDIT_GRACE_MS;
+    await payrollConfirmsAPI.setPayrollConfirm(yearMonth, {
+      ...summary,
+      firstConfirmedAt,
+      lockAtMs,
+    });
   }
 
   /* ─── Legacy setters (deprecated — แต่ component เก่าใช้) ───
