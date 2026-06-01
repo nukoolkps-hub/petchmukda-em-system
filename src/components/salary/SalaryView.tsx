@@ -530,7 +530,7 @@ export default function SalaryView({
                   ),
                   main: "ค่าคอมขาย (ทั่วไป)",
                   sub: poolShare
-                    ? `Pool ${poolShare.totalSellPoolPieces} ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`
+                    ? `กองกลาง ${poolShare.totalSellPoolPieces} ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`
                     : `${salaryCalculation.normalSalePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`,
                   value: salaryCalculation.normalSaleCommission,
                 },
@@ -556,7 +556,7 @@ export default function SalaryView({
                   ),
                   main: "ค่าคอมรับซื้อ",
                   sub: poolShare
-                    ? `Pool ${poolShare.totalBuyPoolPieces} ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`
+                    ? `กองกลาง ${poolShare.totalBuyPoolPieces} ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`
                     : `${salaryCalculation.buyPieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`,
                   value: salaryCalculation.buyCommission,
                 },
