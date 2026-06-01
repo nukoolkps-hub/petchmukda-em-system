@@ -281,19 +281,25 @@ export interface AppData {
   setPoolAdjustment: (
     yearMonth: string,
     fields: {
-      excludedNormalPieces?: number;
-      excludedBuyPieces?: number;
-      excludedNormalNote?: string;
-      excludedBuyNote?: string;
+      items?: {
+        id: string;
+        side: "normal" | "buy";
+        pieces: number;
+        label: string;
+      }[];
     },
   ) => Promise<void>;
 }
 
+export interface PoolAdjustmentItem {
+  id: string;
+  side: "normal" | "buy";
+  pieces: number;
+  label: string;
+}
+
 export interface PoolAdjustmentEntry {
-  excludedNormalPieces?: number;
-  excludedBuyPieces?: number;
-  excludedNormalNote?: string;
-  excludedBuyNote?: string;
+  items?: PoolAdjustmentItem[];
   updatedAt?: number;
 }
 

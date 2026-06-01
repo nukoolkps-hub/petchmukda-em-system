@@ -28,7 +28,7 @@ interface PoolFlowModalProps {
   initialMonth?: string;
   poolAdjustments?: Record<
     string,
-    { excludedNormalPieces?: number; excludedBuyPieces?: number }
+    { items?: { side: string; pieces: number; label: string }[] }
   >;
   // เดือนนี้ admin "ยืนยันยอด" แล้วหรือยัง — ถ้ายัง ตัวเลขในแผนผังยังเปลี่ยนได้
   // (admin ยังแก้/พนักงานยื่นลาเพิ่มได้) → ล็อกแผนผังกันสับสน เปิดดูได้หลัง
@@ -300,6 +300,15 @@ function PoolSideFlow({
   const totalPool = isSell
     ? sample.totalSellPoolPieces
     : sample.totalBuyPoolPieces;
+  const grossPool = isSell
+    ? (sample.grossSellPoolPieces ?? sample.totalSellPoolPieces)
+    : (sample.grossBuyPoolPieces ?? sample.totalBuyPoolPieces);
+  const excludedItems = isSell
+    ? (sample.excludedNormalItems ?? [])
+    : (sample.excludedBuyItems ?? []);
+  const excludedTotal = isSell
+    ? (sample.excludedNormalPieces ?? 0)
+    : (sample.excludedBuyPieces ?? 0);
   const eligibleCount = isSell
     ? sample.eligibleSellEmployeeCount
     : sample.eligibleBuyEmployeeCount;
@@ -387,13 +396,26 @@ function PoolSideFlow({
 
       <Arrow />
 
-      {/* Step 2: รวม Pool + ฐาน% */}
+      {/* Step 2: รวม Pool + หักรายการที่ admin ตั้งไว้ + ฐาน% */}
       <div className="rounded-[10px] bg-linear-135 from-maroon to-maroon-lt text-white px-3.5 py-2.5 text-center">
         <div className="text-xs text-gold-lt/70">กองกลางรวมทั้งทีม</div>
         <div className="text-xl font-extrabold text-gold-lt">
           {formatThaiNumber(totalPool)}{" "}
           <span className="text-sm font-semibold">ชิ้น</span>
         </div>
+        {excludedTotal > 0 && (
+          <div className="text-[11px] text-gold-lt/80 mt-1 text-left bg-white/10 rounded px-2 py-1.5">
+            <div className="font-semibold mb-0.5">
+              หักจากกอง {formatThaiNumber(grossPool)} −{" "}
+              {formatThaiNumber(excludedTotal)} ชิ้น
+            </div>
+            {excludedItems.map((it, idx) => (
+              <div key={idx} className="opacity-90">
+                · {it.label || "(ไม่ระบุเหตุผล)"}: {formatThaiNumber(it.pieces)} ชิ้น
+              </div>
+            ))}
+          </div>
+        )}
         <div className="text-[11px] text-gold-lt/60 mt-0.5">
           เกณฑ์เข้ากองกลาง: ≥ 80% ของสูงสุด ({formatThaiNumber(topPieces)} ชิ้น) ={" "}
           {formatThaiNumber(threshold)} ชิ้น

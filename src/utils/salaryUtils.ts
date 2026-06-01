@@ -43,7 +43,7 @@ export function computePoolSharesForGroup({
   allLeaves,
   yearMonth,
   employeeDirectory,
-  poolAdjustment, // { excludedNormalPieces, excludedBuyPieces } — ระดับเดือน
+  poolAdjustment, // { items: [{side, pieces, label}] } — ระดับเดือน
 }: {
   groupEmployeeIds: string[];
   salaryData: any;
@@ -51,8 +51,7 @@ export function computePoolSharesForGroup({
   yearMonth: string;
   employeeDirectory: any[];
   poolAdjustment?: {
-    excludedNormalPieces?: number;
-    excludedBuyPieces?: number;
+    items?: { side: string; pieces: number; label: string }[];
   } | null;
 }) {
   if (!groupEmployeeIds || groupEmployeeIds.length === 0) return {};
@@ -134,16 +133,19 @@ export function computePoolSharesForGroup({
     }
   });
   // หัก adjustment ระดับเดือน (admin ใส่แยก — เช่น สินค้าโปรโมชั่น / ทองแท่ง MD)
-  // clamp ขั้นต่ำที่ 0 กันค่าหักเผลอเกินกองกลาง · เก็บ gross ไว้แสดงในแผนผัง
+  // รวมจาก items แยกตามฝั่ง · clamp ≥ 0 · เก็บ gross + รายการไว้สำหรับแสดงผล
   const grossSellPoolPieces = totalSellPoolPieces;
   const grossBuyPoolPieces = totalBuyPoolPieces;
-  const excludedNormal = Math.max(
+  const adjItems = poolAdjustment?.items || [];
+  const excludedNormalItems = adjItems.filter((it) => it.side === "normal");
+  const excludedBuyItems = adjItems.filter((it) => it.side === "buy");
+  const excludedNormal = excludedNormalItems.reduce(
+    (s, it) => s + Math.max(0, Number(it.pieces) || 0),
     0,
-    Number(poolAdjustment?.excludedNormalPieces) || 0,
   );
-  const excludedBuy = Math.max(
+  const excludedBuy = excludedBuyItems.reduce(
+    (s, it) => s + Math.max(0, Number(it.pieces) || 0),
     0,
-    Number(poolAdjustment?.excludedBuyPieces) || 0,
   );
   totalSellPoolPieces = Math.max(0, totalSellPoolPieces - excludedNormal);
   totalBuyPoolPieces = Math.max(0, totalBuyPoolPieces - excludedBuy);
@@ -245,6 +247,8 @@ export function computePoolSharesForGroup({
       grossBuyPoolPieces,
       excludedNormalPieces: excludedNormal,
       excludedBuyPieces: excludedBuy,
+      excludedNormalItems,
+      excludedBuyItems,
       eligibleSellEmployeeCount: sellResult.eligibleEmployeeCount,
       sellBaseSharePercent: sellResult.baseSharePercent,
       sellLeaveDeductionFactor: sellResult.leaveDeductionFactor,

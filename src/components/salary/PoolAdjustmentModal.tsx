@@ -1,40 +1,47 @@
 /* ─── Pool Adjustment Modal ────────────────────────────────────────
-   admin ใส่ "จำนวนที่ไม่นับค่าคอม" ระดับเดือน — หักจากกองกลางที่หารแบ่ง
-   (โปรโมชั่น / ทองแท่ง MD ฯลฯ) · เกณฑ์ 80% ยังใช้ gross เหมือนเดิม
-   แยกเป็น modal (เปิดจากปุ่มแถวแผนผังเงินเดือน) ไม่ปนกับฟอร์มรายคน         */
+   admin ใส่ "รายการหักจากกองกลาง" ระดับเดือน — โปรโมชั่น / ทองแท่ง MD ฯลฯ
+   เป็น array ของ items {side, pieces, label} เพิ่ม/ลบได้อิสระ. เกณฑ์ 80%
+   ยังใช้ gross เหมือนเดิม (พนักงานยัง credit อยู่)                       */
 import {
-  Diamond as IconDiamond,
   Lock as IconLock,
   Minus as IconMinus,
-  ShoppingBag as IconShoppingBag,
+  Plus as IconPlus,
+  Trash2 as IconTrash,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
 
+interface Item {
+  id: string;
+  side: "normal" | "buy";
+  pieces: number;
+  label: string;
+}
+
 interface Props {
   yearMonth: string;
   locked: boolean;
-  adjustment?: {
-    excludedNormalPieces?: number;
-    excludedBuyPieces?: number;
-    excludedNormalNote?: string;
-    excludedBuyNote?: string;
-  };
+  adjustment?: { items?: Item[] };
   grossNormal: number;
   grossBuy: number;
-  onSave: (
-    yearMonth: string,
-    fields: {
-      excludedNormalPieces: number;
-      excludedBuyPieces: number;
-      excludedNormalNote: string;
-      excludedBuyNote: string;
-    },
-  ) => Promise<void>;
+  onSave: (yearMonth: string, fields: { items: Item[] }) => Promise<void>;
   onClose: () => void;
   showToast?: (msg: string) => void;
+}
+
+function randomId() {
+  return Math.random().toString(36).slice(2, 11);
+}
+
+function normalizeItems(items?: Item[]): Item[] {
+  return (items || []).map((it) => ({
+    id: it.id || randomId(),
+    side: it.side === "buy" ? "buy" : "normal",
+    pieces: Number(it.pieces) || 0,
+    label: it.label || "",
+  }));
 }
 
 export default function PoolAdjustmentModal({
@@ -47,65 +54,71 @@ export default function PoolAdjustmentModal({
   onClose,
   showToast,
 }: Props) {
-  // init จาก server doc ครั้งเดียวตอน mount + re-init เมื่อเปลี่ยนเดือน
-  // (เดิม useEffect deps มี adjustment → ทุกครั้ง parent re-render reference
-  // ใหม่ จะ reset state ทับสิ่งที่ user พิมพ์)
-  const [normalExc, setNormalExc] = useState<string>(() =>
-    adjustment?.excludedNormalPieces
-      ? String(adjustment.excludedNormalPieces)
-      : "",
-  );
-  const [buyExc, setBuyExc] = useState<string>(() =>
-    adjustment?.excludedBuyPieces ? String(adjustment.excludedBuyPieces) : "",
-  );
-  const [normalNote, setNormalNote] = useState<string>(
-    () => adjustment?.excludedNormalNote ?? "",
-  );
-  const [buyNote, setBuyNote] = useState<string>(
-    () => adjustment?.excludedBuyNote ?? "",
+  // init จาก server doc — re-init เฉพาะเมื่อเปลี่ยนเดือน (ไม่ผูกกับ adjustment
+  // reference เพราะ parent re-render สร้าง object ใหม่ทุกครั้ง จะ reset state ทับ)
+  const [items, setItems] = useState<Item[]>(() =>
+    normalizeItems(adjustment?.items),
   );
   const [saving, setSaving] = useState(false);
 
-  // re-init เฉพาะเมื่อเปลี่ยนเดือน (yearMonth) — ไม่ผูกกับ adjustment ref
-  // เพื่อกัน parent re-render ทับ state ที่ user พิมพ์อยู่
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-sync ตามเดือนเท่านั้น
   useEffect(() => {
-    setNormalExc(
-      adjustment?.excludedNormalPieces
-        ? String(adjustment.excludedNormalPieces)
-        : "",
-    );
-    setBuyExc(
-      adjustment?.excludedBuyPieces ? String(adjustment.excludedBuyPieces) : "",
-    );
-    setNormalNote(adjustment?.excludedNormalNote ?? "");
-    setBuyNote(adjustment?.excludedBuyNote ?? "");
+    setItems(normalizeItems(adjustment?.items));
   }, [yearMonth]);
 
-  const normalNum = Math.max(0, Number(normalExc) || 0);
-  const buyNum = Math.max(0, Number(buyExc) || 0);
-  const netNormal = Math.max(0, grossNormal - normalNum);
-  const netBuy = Math.max(0, grossBuy - buyNum);
+  const totalNormal = items
+    .filter((i) => i.side === "normal")
+    .reduce((s, i) => s + Math.max(0, Number(i.pieces) || 0), 0);
+  const totalBuy = items
+    .filter((i) => i.side === "buy")
+    .reduce((s, i) => s + Math.max(0, Number(i.pieces) || 0), 0);
+  const netNormal = Math.max(0, grossNormal - totalNormal);
+  const netBuy = Math.max(0, grossBuy - totalBuy);
 
-  const dirty =
-    normalNum !== (adjustment?.excludedNormalPieces ?? 0) ||
-    buyNum !== (adjustment?.excludedBuyPieces ?? 0) ||
-    normalNote !== (adjustment?.excludedNormalNote ?? "") ||
-    buyNote !== (adjustment?.excludedBuyNote ?? "");
+  // dirty = items ของ user ต่างจาก server (เทียบ field สำคัญ ไม่สน id)
+  const compareKey = (arr: Item[]) =>
+    arr
+      .map((i) => `${i.side}:${Number(i.pieces) || 0}:${i.label.trim()}`)
+      .sort()
+      .join("|");
+  const serverItems = normalizeItems(adjustment?.items);
+  const dirty = compareKey(items) !== compareKey(serverItems);
 
   const [y, mo] = yearMonth.split("-");
   const monthLabel = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+
+  function addItem(side: "normal" | "buy") {
+    setItems((prev) => [
+      ...prev,
+      { id: randomId(), side, pieces: 0, label: "" },
+    ]);
+  }
+  function removeItem(id: string) {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  }
+  function updateItem(id: string, field: keyof Item, value: string) {
+    setItems((prev) =>
+      prev.map((i) => {
+        if (i.id !== id) return i;
+        if (field === "pieces") {
+          return { ...i, pieces: Number(value) || 0 };
+        }
+        if (field === "side") {
+          return { ...i, side: value === "buy" ? "buy" : "normal" };
+        }
+        if (field === "label") {
+          return { ...i, label: value };
+        }
+        return i;
+      }),
+    );
+  }
 
   async function save() {
     if (locked || saving || !dirty) return;
     setSaving(true);
     try {
-      await onSave(yearMonth, {
-        excludedNormalPieces: normalNum,
-        excludedBuyPieces: buyNum,
-        excludedNormalNote: normalNote.trim(),
-        excludedBuyNote: buyNote.trim(),
-      });
+      await onSave(yearMonth, { items });
       showToast?.("บันทึกการหักกองกลางแล้ว");
       onClose();
     } catch (err) {
@@ -146,39 +159,71 @@ export default function PoolAdjustmentModal({
         </div>
       )}
 
-      <div className="text-xs text-txt-soft mb-3 leading-relaxed">
-        ยอดที่หักออก จะไม่ถูกนำไปแบ่งในกองกลาง แต่
+      <div className="text-xs text-txt-soft mb-3.5 leading-relaxed">
+        ยอดที่หักออก จะไม่ถูกนำไปแบ่งในกองกลาง แต่{" "}
         <b className="text-txt-mid">ยังนับเป็นยอดของพนักงาน</b> (ไม่กระทบเกณฑ์ 80%)
       </div>
 
-      <div className="flex flex-col gap-3">
-        <Row
-          icon={<IconDiamond size={15} strokeWidth={2.4} />}
-          label="ขายทั่วไป"
-          gross={grossNormal}
-          net={netNormal}
-          value={normalExc}
-          note={normalNote}
-          placeholder="เช่น สินค้าโปรโมชั่น"
-          locked={locked}
-          onChange={setNormalExc}
-          onNoteChange={setNormalNote}
-        />
-        <Row
-          icon={<IconShoppingBag size={15} strokeWidth={2.4} />}
-          label="รับซื้อ"
-          gross={grossBuy}
-          net={netBuy}
-          value={buyExc}
-          note={buyNote}
-          placeholder="เช่น ทองแท่ง (MD)"
-          locked={locked}
-          onChange={setBuyExc}
-          onNoteChange={setBuyNote}
-        />
+      {/* รายการหัก */}
+      {items.length === 0 ? (
+        <div className="text-center text-sm text-txt-soft py-6 px-4 bg-cream/60 rounded-[12px] border border-dashed border-bdr mb-3">
+          ยังไม่มีรายการหัก
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 mb-3">
+          {items.map((item) => (
+            <ItemRow
+              key={item.id}
+              item={item}
+              locked={locked}
+              onUpdate={(f, v) => updateItem(item.id, f, v)}
+              onRemove={() => removeItem(item.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ปุ่มเพิ่ม — แยก 2 ฝั่ง ให้กดง่าย (เลือก side ตั้งแต่เพิ่ม) */}
+      {!locked && (
+        <div className="grid grid-cols-2 gap-2 mb-3.5">
+          <button
+            type="button"
+            onClick={() => addItem("normal")}
+            className="py-2.5 rounded-[10px] border-[1.5px] border-dashed border-maroon/30 bg-cream text-maroon text-sm font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
+          >
+            <IconPlus size={14} strokeWidth={2.4} />
+            หักจากขายทั่วไป
+          </button>
+          <button
+            type="button"
+            onClick={() => addItem("buy")}
+            className="py-2.5 rounded-[10px] border-[1.5px] border-dashed border-maroon/30 bg-cream text-maroon text-sm font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
+          >
+            <IconPlus size={14} strokeWidth={2.4} />
+            หักจากรับซื้อ
+          </button>
+        </div>
+      )}
+
+      {/* สรุปยอดสุทธิ */}
+      <div className="bg-gold-pale/60 rounded-[12px] p-3 mb-3.5 border border-gold/25 text-sm">
+        <div className="flex justify-between mb-1">
+          <span className="text-txt-mid">ขายทั่วไป (เข้ากองกลาง)</span>
+          <span className="font-bold text-maroon">
+            {formatThaiNumber(grossNormal)} − {formatThaiNumber(totalNormal)} ={" "}
+            {formatThaiNumber(netNormal)} ชิ้น
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-txt-mid">รับซื้อ (เข้ากองกลาง)</span>
+          <span className="font-bold text-maroon">
+            {formatThaiNumber(grossBuy)} − {formatThaiNumber(totalBuy)} ={" "}
+            {formatThaiNumber(netBuy)} ชิ้น
+          </span>
+        </div>
       </div>
 
-      <div className="flex gap-2.5 mt-5">
+      <div className="flex gap-2.5">
         <button
           type="button"
           onClick={onClose}
@@ -204,66 +249,63 @@ export default function PoolAdjustmentModal({
   );
 }
 
-function Row({
-  icon,
-  label,
-  gross,
-  net,
-  value,
-  note,
-  placeholder,
+function ItemRow({
+  item,
   locked,
-  onChange,
-  onNoteChange,
+  onUpdate,
+  onRemove,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  gross: number;
-  net: number;
-  value: string;
-  note: string;
-  placeholder: string;
+  item: Item;
   locked: boolean;
-  onChange: (v: string) => void;
-  onNoteChange: (v: string) => void;
+  onUpdate: (field: keyof Item, value: string) => void;
+  onRemove: () => void;
 }) {
+  const sideLabel = item.side === "buy" ? "รับซื้อ" : "ขายทั่วไป";
+  const sideBg = item.side === "buy" ? "bg-gold-pale/40" : "bg-maroon-50";
   return (
-    <div className="bg-cream/60 rounded-[12px] p-3.5 border border-bdr">
-      <div className="flex items-center gap-1.5 text-sm font-bold text-txt mb-2.5">
-        {icon}
-        {label}
-        <span className="ml-auto text-xs font-normal text-txt-soft">
-          กองรวม {formatThaiNumber(gross)} ชิ้น
+    <div
+      className={`rounded-[10px] p-2.5 border border-bdr ${sideBg} flex flex-col gap-2`}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold text-maroon shrink-0 px-2 py-0.5 rounded-full bg-white border border-bdr">
+          {sideLabel}
         </span>
+        <input
+          type="text"
+          value={item.label}
+          disabled={locked}
+          maxLength={120}
+          placeholder="เหตุผล (เช่น โปรโมชั่น)"
+          onChange={(e) => onUpdate("label", e.target.value)}
+          className={`flex-1 min-w-0 px-3 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
+        />
+        {!locked && (
+          <button
+            type="button"
+            aria-label="ลบรายการ"
+            onClick={onRemove}
+            className="w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
+          >
+            <IconTrash size={15} className="text-red" strokeWidth={2.2} />
+          </button>
+        )}
       </div>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm text-txt-mid shrink-0">หักออก</span>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-txt-soft shrink-0">จำนวน</span>
         <div className="relative flex-1">
           <input
             type="number"
             inputMode="numeric"
-            value={value}
+            value={item.pieces || ""}
             disabled={locked}
             placeholder="0"
-            onChange={(e) => onChange(e.target.value)}
-            className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
+            onChange={(e) => onUpdate("pieces", e.target.value)}
+            className={`w-full px-3 py-2 rounded-[8px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs pointer-events-none">
             ชิ้น
           </span>
         </div>
-      </div>
-      <input
-        type="text"
-        value={note}
-        disabled={locked}
-        maxLength={120}
-        placeholder={placeholder}
-        onChange={(e) => onNoteChange(e.target.value)}
-        className={`w-full px-3.5 py-2 rounded-[9px] border border-bdr text-sm outline-none font-[inherit] mb-2 ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt-mid bg-white"}`}
-      />
-      <div className="text-sm text-txt-mid text-center pt-1 border-t border-dashed border-bdr">
-        เข้ากองกลางจริง: <b className="text-maroon">{formatThaiNumber(net)} ชิ้น</b>
       </div>
     </div>
   );
