@@ -10,6 +10,7 @@ import {
   Handshake as IconHandshake,
   Lightbulb as IconLightbulb,
   Lock as IconLock,
+  Minus as IconMinus,
   Network as IconNetwork,
   Package as IconPackage,
   Plus as IconPlus,
@@ -35,7 +36,7 @@ import {
 import PoolFlowModal from "../modals/PoolFlowModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
-import PoolAdjustmentCard from "./PoolAdjustmentCard";
+import PoolAdjustmentModal from "./PoolAdjustmentModal";
 
 /* ─── Salary Admin Edit ────────────────────────────────────────── */
 export default function SalaryAdminEdit({
@@ -61,6 +62,7 @@ export default function SalaryAdminEdit({
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
   const [showPoolFlow, setShowPoolFlow] = useState(false);
+  const [showPoolAdjust, setShowPoolAdjust] = useState(false);
   // กล่องเตือน "draft จะหาย" ในแอป (แทน window.confirm ที่เพี้ยนใน mobile webview)
   // รองรับทั้งเปลี่ยนพนักงานและเปลี่ยนเดือน
   const [pendingNav, setPendingNav] = useState<{
@@ -164,6 +166,26 @@ export default function SalaryAdminEdit({
         },
       }
     : salaryData;
+
+  // ยอดกองกลางรวมทั้งเดือน (ทุกคนใน pool group) — ใช้แสดงในกล่อง "หักกองกลาง"
+  // (adjustment เป็นระดับเดือน ไม่ผูกกับพนักงานที่เลือกอยู่)
+  const monthPool = useMemo(() => {
+    let normal = 0;
+    let buy = 0;
+    let hasGroup = false;
+    for (const emp of employeeDirectory) {
+      const roleId =
+        liveSalaryData[emp.id]?.[selectedMonth]?.roleId ?? emp.roleId;
+      const role = roles.find((r) => r.id === roleId);
+      if (!role?.poolGroup) continue;
+      hasGroup = true;
+      const sal = liveSalaryData[emp.id]?.[selectedMonth];
+      if (!sal) continue;
+      normal += sal.normalSalePieces || 0;
+      buy += sal.buyPieces || 0;
+    }
+    return { normal, buy, hasGroup };
+  }, [employeeDirectory, roles, liveSalaryData, selectedMonth]);
 
   /* ─── Heavy computation: memoized ───────────────────────────────── */
   const { poolShare, poolGroupEmployees, salaryCalculation } = useMemo(() => {
@@ -321,17 +343,30 @@ export default function SalaryAdminEdit({
 
   return (
     <div>
-      {/* ปุ่มแผนผังเงินเดือน + dropdown เลือกเดือน (เลือกย้อนหลังเพื่อแก้ไขได้) */}
+      {/* ปุ่มแผนผังเงินเดือน + หักกองกลาง + dropdown เลือกเดือน */}
       <div className="flex items-center justify-between gap-2 mb-2.5">
-        <button
-          type="button"
-          onClick={() => setShowPoolFlow(true)}
-          title="แผนผังเงินเดือน"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
-        >
-          <IconNetwork size={14} strokeWidth={2.4} />
-          แผนผังเงินเดือน
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowPoolFlow(true)}
+            title="แผนผังเงินเดือน"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
+          >
+            <IconNetwork size={14} strokeWidth={2.4} />
+            แผนผังเงินเดือน
+          </button>
+          {monthPool.hasGroup && (
+            <button
+              type="button"
+              onClick={() => setShowPoolAdjust(true)}
+              title="หักออกจากกองกลาง"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
+            >
+              <IconMinus size={14} strokeWidth={2.4} />
+              หักกองกลาง
+            </button>
+          )}
+        </div>
         <div className="relative">
           <select
             value={selectedMonth}
@@ -706,25 +741,6 @@ export default function SalaryAdminEdit({
             </div>
           </div>
         </div>
-      )}
-
-      {/* ─── หักจากกองกลาง (ระดับเดือน) ──────────────────────────
-           บางสินค้าไม่ได้ค่าคอม (โปรโมชั่น / ทองแท่ง MD ฯลฯ) → admin ใส่หัก
-           รวมระดับเดือน ไม่ต้องใส่ทีละคน · เกณฑ์ 80% ใช้ gross อยู่เหมือนเดิม */}
-      {poolShare && poolGroupEmployees.length > 1 && (
-        <PoolAdjustmentCard
-          yearMonth={selectedMonth}
-          locked={locked}
-          adjustment={poolAdjustments?.[selectedMonth]}
-          grossNormal={
-            poolShare.grossSellPoolPieces ?? poolShare.totalSellPoolPieces
-          }
-          grossBuy={
-            poolShare.grossBuyPoolPieces ?? poolShare.totalBuyPoolPieces
-          }
-          onSave={onSetPoolAdjustment}
-          showToast={showToast}
-        />
       )}
 
       {/* Desktop: 2 คอลัมน์ — ซ้าย ค่าคอม+รายรับ / ขวา บัตรสมาชิก+รายการหัก (มือถือเรียงเดี่ยวเหมือนเดิม) */}
@@ -1498,6 +1514,19 @@ export default function SalaryAdminEdit({
           initialMonth={selectedMonth}
           poolAdjustments={poolAdjustments}
           isConfirmed={!!payrollConfirms?.[selectedMonth]?.confirmedAt}
+        />
+      )}
+
+      {showPoolAdjust && (
+        <PoolAdjustmentModal
+          yearMonth={selectedMonth}
+          locked={locked}
+          adjustment={poolAdjustments?.[selectedMonth]}
+          grossNormal={monthPool.normal}
+          grossBuy={monthPool.buy}
+          onSave={onSetPoolAdjustment}
+          onClose={() => setShowPoolAdjust(false)}
+          showToast={showToast}
         />
       )}
     </div>
