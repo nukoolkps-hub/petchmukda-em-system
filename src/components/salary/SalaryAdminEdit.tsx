@@ -354,6 +354,52 @@ export default function SalaryAdminEdit({
     (salaryCalculation.specialSaleCommission || 0) +
     (salaryCalculation.buyCommission || 0);
 
+  // breakdown ของ "รวมค่าคอมตามจำนวนชิ้น" — แสดงว่ามาจากชิ้นไหน × เรท
+  const sc = salaryCalculation;
+  const commissionBreakdown = sc.usesSinglePieceRate
+    ? [
+        {
+          label: "ค่าคอมตามชิ้น",
+          pieces: sc.singleRatePieces,
+          rate: sc.singlePieceRate,
+          amount: sc.singleRateCommission,
+        },
+      ]
+    : [
+        {
+          label: "ขาย (ทั่วไป)",
+          pieces: sc.normalSalePieces,
+          rate: sc.normalSalePieceRate,
+          amount: sc.normalSaleCommission,
+        },
+        {
+          label: "ขาย (พิเศษ)",
+          pieces: sc.specialSalePieces,
+          rate: sc.specialSalePieceRate,
+          amount: sc.specialSaleCommission,
+        },
+        {
+          label: "รับซื้อ",
+          pieces: sc.buyPieces,
+          rate: sc.buyPieceRate,
+          amount: sc.buyCommission,
+        },
+      ];
+  const memberBonusBreakdown = [
+    {
+      label: "เชิญชวนสมัครบัตร",
+      pieces: sc.invitePieces,
+      rate: sc.invitePieceRate,
+      amount: sc.inviteCommission,
+    },
+    {
+      label: "ย้ายข้อมูลบัตร",
+      pieces: sc.transferPieces,
+      rate: sc.transferPieceRate,
+      amount: sc.transferCommission,
+    },
+  ];
+
   // ปิดรอบถาวรแล้ว (พ้น 7 วันหลังยืนยันยอดครั้งแรก) → ห้ามแก้เดือนนี้
   const monthLock = getPayrollLock(payrollConfirms?.[selectedMonth]);
   const locked = monthLock.locked;
@@ -1110,29 +1156,74 @@ export default function SalaryAdminEdit({
           </div>
 
           {/* Commission total — สรุปจากค่าคอมด้านบน */}
-          <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
-            <IconDiamond size={16} strokeWidth={2.2} color={COLORS.gold} />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs text-txt-soft font-semibold">
-                รวมค่าคอมตามจำนวนชิ้น
-              </div>
-              <div className="text-base font-bold text-green mt-px">
-                +฿{formatThaiNumber(pieceCommissionTotal)}
+          <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
+            <div className="flex items-center gap-2.5">
+              <IconDiamond size={16} strokeWidth={2.2} color={COLORS.gold} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-txt-soft font-semibold">
+                  รวมค่าคอมตามจำนวนชิ้น
+                </div>
+                <div className="text-base font-bold text-green mt-px">
+                  +฿{formatThaiNumber(pieceCommissionTotal)}
+                </div>
               </div>
             </div>
+            {commissionBreakdown.some((b) => b.amount > 0) && (
+              <div className="mt-2 pt-2 border-t border-dashed border-bdr flex flex-col gap-1">
+                {commissionBreakdown
+                  .filter((b) => b.amount > 0)
+                  .map((b) => (
+                    <div
+                      key={b.label}
+                      className="flex justify-between text-[11px] text-txt-soft"
+                    >
+                      <span>
+                        {b.label} ·{" "}
+                        {formatThaiNumber(Number(b.pieces.toFixed(1)))} ชิ้น × ฿
+                        {formatThaiNumber(b.rate)}
+                      </span>
+                      <span className="font-semibold text-txt-mid">
+                        +฿{formatThaiNumber(b.amount)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Member-card bonus total — สรุปจากโบนัสบัตรสมาชิกด้านบน */}
-          <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
-            <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs text-txt-soft font-semibold">
-                รวมโบนัสบัตรสมาชิก
-              </div>
-              <div className="text-base font-bold text-green mt-px">
-                +฿{formatThaiNumber(salaryCalculation.memberBonusTotal)}
+          <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
+            <div className="flex items-center gap-2.5">
+              <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-txt-soft font-semibold">
+                  รวมโบนัสบัตรสมาชิก
+                </div>
+                <div className="text-base font-bold text-green mt-px">
+                  +฿{formatThaiNumber(salaryCalculation.memberBonusTotal)}
+                </div>
               </div>
             </div>
+            {memberBonusBreakdown.some((b) => b.amount > 0) && (
+              <div className="mt-2 pt-2 border-t border-dashed border-bdr flex flex-col gap-1">
+                {memberBonusBreakdown
+                  .filter((b) => b.amount > 0)
+                  .map((b) => (
+                    <div
+                      key={b.label}
+                      className="flex justify-between text-[11px] text-txt-soft"
+                    >
+                      <span>
+                        {b.label} · {formatThaiNumber(b.pieces)} ใบ × ฿
+                        {formatThaiNumber(b.rate)}
+                      </span>
+                      <span className="font-semibold text-txt-mid">
+                        +฿{formatThaiNumber(b.amount)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
 
           {FIELDS_EARN.map((f) => (
