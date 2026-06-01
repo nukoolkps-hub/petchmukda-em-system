@@ -44,6 +44,7 @@ export default function SalaryAdminEdit({
   allLeaves,
   advanceRequests,
   roles,
+  payrollConfirms,
   setUnsavedDirty,
   showToast,
 }) {
@@ -1449,6 +1450,7 @@ export default function SalaryAdminEdit({
           allLeaves={allLeaves}
           roles={roles}
           initialMonth={selectedMonth}
+          isConfirmed={!!payrollConfirms?.[selectedMonth]?.confirmedAt}
         />
       )}
     </div>

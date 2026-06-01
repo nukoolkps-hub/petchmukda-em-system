@@ -4,6 +4,7 @@ import {
   ChevronDown as IconChevronDown,
   Diamond as IconDiamond,
   Layers as IconLayers,
+  Lock as IconLock,
   Network as IconNetwork,
   ShoppingBag as IconShoppingBag,
   TrendingDown as IconTrendingDown,
@@ -25,6 +26,10 @@ interface PoolFlowModalProps {
   allLeaves?: any[];
   roles?: Role[];
   initialMonth?: string;
+  // เดือนนี้ admin "ยืนยันยอด" แล้วหรือยัง — ถ้ายัง ตัวเลขในแผนผังยังเปลี่ยนได้
+  // (admin ยังแก้/พนักงานยื่นลาเพิ่มได้) → ล็อกแผนผังกันสับสน เปิดดูได้หลัง
+  // confirm เท่านั้น
+  isConfirmed?: boolean;
 }
 
 /* ─── Pool Flow Modal — แผนผังการแบ่งค่าคอม Pool ─────────────────
@@ -44,6 +49,7 @@ export default function PoolFlowModal({
   allLeaves = [],
   roles = [],
   initialMonth,
+  isConfirmed = false,
 }: PoolFlowModalProps) {
   const now = new Date();
   const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -220,7 +226,9 @@ export default function PoolFlowModal({
       )}
 
       {/* body */}
-      {!activeGroup ? (
+      {!isConfirmed ? (
+        <LockedState monthLabel={monthLabel} isAdmin={isAdmin} />
+      ) : !activeGroup ? (
         <EmptyState text="ตำแหน่งของคุณไม่ได้ใช้ระบบกองกลาง — ค่าคอมคิดตามจำนวนชิ้นของตัวเองโดยตรง" />
       ) : groupEmployeeIds.length === 0 ? (
         <EmptyState text={`ยังไม่มีข้อมูลค่าคอมของทีมนี้ในเดือน ${monthLabel}`} />
@@ -464,6 +472,31 @@ function EmptyState({ text }: { text: string }) {
   return (
     <div className="text-center text-txt-soft py-10 px-6 text-sm bg-cream/50 rounded-[14px] border border-dashed border-bdr">
       {text}
+    </div>
+  );
+}
+
+function LockedState({
+  monthLabel,
+  isAdmin,
+}: {
+  monthLabel: string;
+  isAdmin: boolean;
+}) {
+  return (
+    <div className="text-center py-8 px-6 bg-amber-lt/40 rounded-[14px] border border-amber/30 flex flex-col items-center gap-2.5">
+      <div className="w-12 h-12 rounded-full bg-amber/20 flex items-center justify-center">
+        <IconLock size={22} className="text-amber" strokeWidth={2.4} />
+      </div>
+      <div className="font-bold text-txt text-base">ยังไม่เปิดให้ดูแผนผัง</div>
+      <div className="text-sm text-txt-mid leading-normal max-w-[380px]">
+        เดือน <b className="text-maroon">{monthLabel}</b> ยังไม่ได้ยืนยันยอด —
+        ตัวเลขอาจยังเปลี่ยนได้ (พนักงานยังยื่นลาเพิ่ม หรือ admin ยังแก้ค่าคอมได้)
+        <br />
+        {isAdmin
+          ? 'กด "ยืนยันยอด" ในหน้า "จ่ายเงิน" ของเดือนนี้ก่อน → แผนผังจะเปิดให้ดู'
+          : "รอ admin ยืนยันยอดของเดือนนี้ก่อน แล้วจะเปิดให้ดูได้"}
+      </div>
     </div>
   );
 }

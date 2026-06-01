@@ -13,7 +13,7 @@ const {
 } = BUSINESS_RULES;
 
 /* ─── Pool Share Helper (สูตรตาม Excel) ──────────────────────────
-   ฝั่ง "ขาย"   = ทั่วไป + พิเศษ ของแต่ละคน → รวมเป็น Pool ขาย
+   ฝั่ง "ขาย"   = เกณฑ์ 80% ใช้ (ทั่วไป+พิเศษ) · กองกลางที่หารแบ่งใช้ "ทั่วไป" เท่านั้น
    ฝั่ง "รับซื้อ" = รับซื้อ ของแต่ละคน         → รวมเป็น Pool รับซื้อ
 
    สูตรการแบ่งทำแยกฝั่งขายและฝั่งรับซื้อ:
@@ -31,8 +31,8 @@ const {
    - "buy"   → ปิดฝั่งรับซื้อ
    - "both"  → ปิดทั้งคู่ + ถ้าขาย < 50% ของ Top → ไม่ได้เงินเดือนพื้นฐาน
 
-   กฎ 80%: ถ้าชิ้นน้อยกว่า 80% ของ Top → ตัดออกจาก Pool
-   ขาย-พิเศษ → ใครขายใครได้ (ไม่ใช่ Pool เดียวกัน — แต่นับรวม sellPieces) */
+   กฎ 80%: ถ้าชิ้น (ทั่วไป+พิเศษ) น้อยกว่า 80% ของ Top → ตัดออกจาก Pool
+   ขาย-พิเศษ → ใครขายใครได้: นับตอนเช็ก 80% แต่ไม่เอาเข้ากองที่หารแบ่ง */
 export function computePoolSharesForGroup({
   groupEmployeeIds,
   salaryData,
@@ -112,7 +112,9 @@ export function computePoolSharesForGroup({
   groupEmployeeIds.forEach((employeeId) => {
     const salary = salaryData[employeeId]?.[yearMonth];
     if (salary) {
-      totalSellPoolPieces += sellPieces[employeeId]; // ทั่วไป + พิเศษ
+      // กองกลางที่นำมาแบ่ง = เฉพาะ "ขายทั่วไป" — ขายพิเศษ ใครขายใครได้
+      // (จ่ายตรงผ่าน specialSaleCommission อยู่แล้ว ไม่เข้ากองที่หารแบ่ง)
+      totalSellPoolPieces += salary.normalSalePieces || 0;
       totalBuyPoolPieces += buyPieces[employeeId]; // รับซื้อ
     }
   });

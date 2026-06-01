@@ -52,6 +52,7 @@ export default function SalaryView({
   advanceRequests,
   onOpenAdvance,
   roles,
+  payrollConfirms,
   showToast,
 }) {
   const now = new Date();
@@ -855,6 +856,7 @@ export default function SalaryView({
           allLeaves={allLeaves}
           roles={roles}
           initialMonth={selectedMonth}
+          isConfirmed={!!payrollConfirms?.[selectedMonth]?.confirmedAt}
         />
       )}
     </div>

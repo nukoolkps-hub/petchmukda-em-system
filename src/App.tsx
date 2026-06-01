@@ -414,6 +414,7 @@ export default function LeaveApp() {
                         advanceRequests={myAdvanceRequests}
                         onOpenAdvance={() => setShowAdvanceModal(true)}
                         roles={roles}
+                        payrollConfirms={payrollConfirms}
                         showToast={showToast}
                       />
                     </div>

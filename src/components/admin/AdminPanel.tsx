@@ -198,6 +198,7 @@ export default function AdminPanel({
           allLeaves={allLeaves}
           advanceRequests={advanceRequests}
           roles={roles}
+          payrollConfirms={payrollConfirms}
           setUnsavedDirty={setUnsavedDirty}
           showToast={showToast}
         />
