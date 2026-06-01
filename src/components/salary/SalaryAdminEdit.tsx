@@ -1436,7 +1436,7 @@ export default function SalaryAdminEdit({
             )}
             {overTotalDays > 0 && (
               <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-                รวมหัก: −฿
+                หักเดือนนี้: −฿
                 {formatThaiNumber(salaryCalculation.overQuotaDeduction)}
               </div>
             )}
@@ -1474,7 +1474,7 @@ export default function SalaryAdminEdit({
                   );
                 })}
                 <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-                  รวมหัก: −฿
+                  หักเดือนนี้: −฿
                   {formatThaiNumber(salaryCalculation.advanceDeduction)}
                 </div>
               </>
@@ -1504,7 +1504,7 @@ export default function SalaryAdminEdit({
                 );
               })}
               <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-                รวมหัก: −฿{formatThaiNumber(salaryCalculation.loanDeduction)}
+                หักเดือนนี้: −฿{formatThaiNumber(salaryCalculation.loanDeduction)}
               </div>
             </div>
           )}
