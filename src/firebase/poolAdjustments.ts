@@ -20,6 +20,7 @@ const ref = collection(db, COLLECTIONS.POOL_ADJUSTMENTS);
 
 export interface PoolAdjustmentItem {
   id: string;
+  poolGroup: string; // ตำแหน่ง/กลุ่มกองกลางที่รายการนี้สังกัด (role.poolGroup)
   side: "normal" | "buy";
   pieces: number;
   label: string;
@@ -64,6 +65,7 @@ export async function setPoolAdjustment(
   const items = (fields.items || [])
     .map<PoolAdjustmentItem>((it) => ({
       id: it.id || randomId(),
+      poolGroup: it.poolGroup || "",
       side: it.side === "buy" ? "buy" : "normal",
       pieces: Math.max(0, Number(it.pieces) || 0),
       label: (it.label || "").slice(0, 120),

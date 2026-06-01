@@ -283,6 +283,7 @@ export interface AppData {
     fields: {
       items?: {
         id: string;
+        poolGroup: string;
         side: "normal" | "buy";
         pieces: number;
         label: string;
@@ -293,6 +294,7 @@ export interface AppData {
 
 export interface PoolAdjustmentItem {
   id: string;
+  poolGroup: string;
   side: "normal" | "buy";
   pieces: number;
   label: string;

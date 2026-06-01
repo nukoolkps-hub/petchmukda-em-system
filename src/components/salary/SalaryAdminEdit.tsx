@@ -167,24 +167,40 @@ export default function SalaryAdminEdit({
       }
     : salaryData;
 
-  // ยอดกองกลางรวมทั้งเดือน (ทุกคนใน pool group) — ใช้แสดงในกล่อง "หักกองกลาง"
-  // (adjustment เป็นระดับเดือน ไม่ผูกกับพนักงานที่เลือกอยู่)
-  const monthPool = useMemo(() => {
-    let normal = 0;
-    let buy = 0;
-    let hasGroup = false;
+  // ยอดกองกลาง "แยกตามตำแหน่ง (poolGroup)" — ใช้แสดง/หัก ในกล่องหักกองกลาง
+  // (adjustment เป็นระดับเดือน แต่หักแยกตามกลุ่ม)
+  const poolGroupsInfo = useMemo(() => {
+    const map = new Map<
+      string,
+      { id: string; label: string; normal: number; buy: number }
+    >();
+    // label ของแต่ละกลุ่ม = รวมชื่อ role ที่อยู่กลุ่มเดียวกัน
+    for (const r of roles) {
+      if (!r.poolGroup) continue;
+      const prev = map.get(r.poolGroup);
+      if (prev) prev.label = `${prev.label} / ${r.name}`;
+      else
+        map.set(r.poolGroup, {
+          id: r.poolGroup,
+          label: r.name,
+          normal: 0,
+          buy: 0,
+        });
+    }
+    // รวมชิ้นของแต่ละกลุ่ม
     for (const emp of employeeDirectory) {
       const roleId =
         liveSalaryData[emp.id]?.[selectedMonth]?.roleId ?? emp.roleId;
       const role = roles.find((r) => r.id === roleId);
       if (!role?.poolGroup) continue;
-      hasGroup = true;
+      const g = map.get(role.poolGroup);
+      if (!g) continue;
       const sal = liveSalaryData[emp.id]?.[selectedMonth];
       if (!sal) continue;
-      normal += sal.normalSalePieces || 0;
-      buy += sal.buyPieces || 0;
+      g.normal += sal.normalSalePieces || 0;
+      g.buy += sal.buyPieces || 0;
     }
-    return { normal, buy, hasGroup };
+    return [...map.values()];
   }, [employeeDirectory, roles, liveSalaryData, selectedMonth]);
 
   /* ─── Heavy computation: memoized ───────────────────────────────── */
@@ -209,6 +225,7 @@ export default function SalaryAdminEdit({
         yearMonth: selectedMonth,
         employeeDirectory,
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
+        poolGroup: employeeRole.poolGroup,
       });
       employeePoolShare = shares[selectedEmployeeId];
     }
@@ -355,7 +372,7 @@ export default function SalaryAdminEdit({
             <IconNetwork size={14} strokeWidth={2.4} />
             แผนผังเงินเดือน
           </button>
-          {monthPool.hasGroup && (
+          {poolGroupsInfo.length > 0 && (
             <button
               type="button"
               onClick={() => setShowPoolAdjust(true)}
@@ -1538,8 +1555,7 @@ export default function SalaryAdminEdit({
           yearMonth={selectedMonth}
           locked={locked}
           adjustment={poolAdjustments?.[selectedMonth]}
-          grossNormal={monthPool.normal}
-          grossBuy={monthPool.buy}
+          poolGroups={poolGroupsInfo}
           onSave={onSetPoolAdjustment}
           onClose={() => setShowPoolAdjust(false)}
           showToast={showToast}

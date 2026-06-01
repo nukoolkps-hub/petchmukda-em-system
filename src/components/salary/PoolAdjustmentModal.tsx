@@ -1,7 +1,7 @@
 /* ─── Pool Adjustment Modal ────────────────────────────────────────
-   admin ใส่ "รายการหักจากกองกลาง" ระดับเดือน — โปรโมชั่น / ทองแท่ง MD ฯลฯ
-   เป็น array ของ items {side, pieces, label} เพิ่ม/ลบได้อิสระ. เกณฑ์ 80%
-   ยังใช้ gross เหมือนเดิม (พนักงานยัง credit อยู่)                       */
+   admin ใส่ "รายการหักจากกองกลาง" ระดับเดือน แยกตาม "ตำแหน่ง" (poolGroup)
+   — โปรโมชั่น / ทองแท่ง MD ฯลฯ. แต่ละ item: {poolGroup, side, pieces, label}
+   เกณฑ์ 80% ยังใช้ gross เหมือนเดิม (พนักงานยัง credit อยู่)             */
 import {
   Lock as IconLock,
   Minus as IconMinus,
@@ -15,17 +15,24 @@ import BaseModal from "../shared/BaseModal";
 
 interface Item {
   id: string;
+  poolGroup: string;
   side: "normal" | "buy";
   pieces: number;
   label: string;
+}
+
+interface PoolGroupInfo {
+  id: string;
+  label: string;
+  normal: number; // gross ขายทั่วไปของกลุ่มนี้
+  buy: number; // gross รับซื้อของกลุ่มนี้
 }
 
 interface Props {
   yearMonth: string;
   locked: boolean;
   adjustment?: { items?: Item[] };
-  grossNormal: number;
-  grossBuy: number;
+  poolGroups: PoolGroupInfo[];
   onSave: (yearMonth: string, fields: { items: Item[] }) => Promise<void>;
   onClose: () => void;
   showToast?: (msg: string) => void;
@@ -35,9 +42,13 @@ function randomId() {
   return Math.random().toString(36).slice(2, 11);
 }
 
-function normalizeItems(items?: Item[]): Item[] {
+function normalizeItems(
+  items: Item[] | undefined,
+  fallbackGroup: string,
+): Item[] {
   return (items || []).map((it) => ({
     id: it.id || randomId(),
+    poolGroup: it.poolGroup || fallbackGroup,
     side: it.side === "buy" ? "buy" : "normal",
     pieces: Number(it.pieces) || 0,
     label: it.label || "",
@@ -48,70 +59,64 @@ export default function PoolAdjustmentModal({
   yearMonth,
   locked,
   adjustment,
-  grossNormal,
-  grossBuy,
+  poolGroups,
   onSave,
   onClose,
   showToast,
 }: Props) {
-  // init จาก server doc — re-init เฉพาะเมื่อเปลี่ยนเดือน (ไม่ผูกกับ adjustment
-  // reference เพราะ parent re-render สร้าง object ใหม่ทุกครั้ง จะ reset state ทับ)
+  const firstGroup = poolGroups[0]?.id || "";
+
+  // init จาก server doc — re-init เฉพาะเมื่อเปลี่ยนเดือน
   const [items, setItems] = useState<Item[]>(() =>
-    normalizeItems(adjustment?.items),
+    normalizeItems(adjustment?.items, firstGroup),
   );
   const [saving, setSaving] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-sync ตามเดือนเท่านั้น
   useEffect(() => {
-    setItems(normalizeItems(adjustment?.items));
+    setItems(normalizeItems(adjustment?.items, firstGroup));
   }, [yearMonth]);
-
-  const totalNormal = items
-    .filter((i) => i.side === "normal")
-    .reduce((s, i) => s + Math.max(0, Number(i.pieces) || 0), 0);
-  const totalBuy = items
-    .filter((i) => i.side === "buy")
-    .reduce((s, i) => s + Math.max(0, Number(i.pieces) || 0), 0);
-  const netNormal = Math.max(0, grossNormal - totalNormal);
-  const netBuy = Math.max(0, grossBuy - totalBuy);
-
-  // dirty = items ของ user ต่างจาก server (เทียบ field สำคัญ ไม่สน id)
-  const compareKey = (arr: Item[]) =>
-    arr
-      .map((i) => `${i.side}:${Number(i.pieces) || 0}:${i.label.trim()}`)
-      .sort()
-      .join("|");
-  const serverItems = normalizeItems(adjustment?.items);
-  const dirty = compareKey(items) !== compareKey(serverItems);
 
   const [y, mo] = yearMonth.split("-");
   const monthLabel = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
 
-  function addItem(side: "normal" | "buy") {
+  // dirty = items ของ user ต่างจาก server
+  const compareKey = (arr: Item[]) =>
+    arr
+      .map(
+        (i) =>
+          `${i.poolGroup}:${i.side}:${Number(i.pieces) || 0}:${i.label.trim()}`,
+      )
+      .sort()
+      .join("|");
+  const dirty =
+    compareKey(items) !==
+    compareKey(normalizeItems(adjustment?.items, firstGroup));
+
+  function addItem() {
     setItems((prev) => [
       ...prev,
-      { id: randomId(), side, pieces: 0, label: "" },
+      {
+        id: randomId(),
+        poolGroup: firstGroup,
+        side: "normal",
+        pieces: 0,
+        label: "",
+      },
     ]);
   }
   function removeItem(id: string) {
     setItems((prev) => prev.filter((i) => i.id !== id));
   }
-  function updateItem(id: string, field: keyof Item, value: string) {
-    setItems((prev) =>
-      prev.map((i) => {
-        if (i.id !== id) return i;
-        if (field === "pieces") {
-          return { ...i, pieces: Number(value) || 0 };
-        }
-        if (field === "side") {
-          return { ...i, side: value === "buy" ? "buy" : "normal" };
-        }
-        if (field === "label") {
-          return { ...i, label: value };
-        }
-        return i;
-      }),
-    );
+  function updateItem(id: string, patch: Partial<Item>) {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  }
+
+  // ยอดหักรวมต่อกลุ่ม+ฝั่ง (สำหรับกล่องสรุป)
+  function deducted(groupId: string, side: "normal" | "buy") {
+    return items
+      .filter((i) => i.poolGroup === groupId && i.side === side)
+      .reduce((s, i) => s + Math.max(0, Number(i.pieces) || 0), 0);
   }
 
   async function save() {
@@ -161,7 +166,8 @@ export default function PoolAdjustmentModal({
 
       <div className="text-xs text-txt-soft mb-3.5 leading-relaxed">
         ยอดที่หักออก จะไม่ถูกนำไปแบ่งในกองกลาง แต่{" "}
-        <b className="text-txt-mid">ยังนับเป็นยอดของพนักงาน</b> (ไม่กระทบเกณฑ์ 80%)
+        <b className="text-txt-mid">ยังนับเป็นยอดของพนักงาน</b> (ไม่กระทบเกณฑ์ 80%) ·
+        หักแยกตามตำแหน่ง
       </div>
 
       {/* รายการหัก */}
@@ -175,52 +181,53 @@ export default function PoolAdjustmentModal({
             <ItemRow
               key={item.id}
               item={item}
+              poolGroups={poolGroups}
               locked={locked}
-              onUpdate={(f, v) => updateItem(item.id, f, v)}
+              onUpdate={(patch) => updateItem(item.id, patch)}
               onRemove={() => removeItem(item.id)}
             />
           ))}
         </div>
       )}
 
-      {/* ปุ่มเพิ่ม — แยก 2 ฝั่ง ให้กดง่าย (เลือก side ตั้งแต่เพิ่ม) */}
       {!locked && (
-        <div className="grid grid-cols-2 gap-2 mb-3.5">
-          <button
-            type="button"
-            onClick={() => addItem("normal")}
-            className="py-2.5 rounded-[10px] border-[1.5px] border-dashed border-maroon/30 bg-cream text-maroon text-sm font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
-          >
-            <IconPlus size={14} strokeWidth={2.4} />
-            หักจากขายทั่วไป
-          </button>
-          <button
-            type="button"
-            onClick={() => addItem("buy")}
-            className="py-2.5 rounded-[10px] border-[1.5px] border-dashed border-maroon/30 bg-cream text-maroon text-sm font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
-          >
-            <IconPlus size={14} strokeWidth={2.4} />
-            หักจากรับซื้อ
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={addItem}
+          className="w-full mb-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-maroon/30 bg-cream text-maroon text-sm font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
+        >
+          <IconPlus size={14} strokeWidth={2.4} />
+          เพิ่มรายการหัก
+        </button>
       )}
 
-      {/* สรุปยอดสุทธิ */}
-      <div className="bg-gold-pale/60 rounded-[12px] p-3 mb-3.5 border border-gold/25 text-sm">
-        <div className="flex justify-between mb-1">
-          <span className="text-txt-mid">ขายทั่วไป (เข้ากองกลาง)</span>
-          <span className="font-bold text-maroon">
-            {formatThaiNumber(grossNormal)} − {formatThaiNumber(totalNormal)} ={" "}
-            {formatThaiNumber(netNormal)} ชิ้น
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-txt-mid">รับซื้อ (เข้ากองกลาง)</span>
-          <span className="font-bold text-maroon">
-            {formatThaiNumber(grossBuy)} − {formatThaiNumber(totalBuy)} ={" "}
-            {formatThaiNumber(netBuy)} ชิ้น
-          </span>
-        </div>
+      {/* สรุปยอดสุทธิ แยกตามตำแหน่ง */}
+      <div className="bg-gold-pale/60 rounded-[12px] p-3 mb-3.5 border border-gold/25 text-sm flex flex-col gap-2.5">
+        {poolGroups.map((g) => {
+          const dN = deducted(g.id, "normal");
+          const dB = deducted(g.id, "buy");
+          return (
+            <div key={g.id}>
+              <div className="font-bold text-maroon text-xs mb-0.5">
+                {g.label}
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-txt-mid">ขายทั่วไป</span>
+                <span className="font-semibold">
+                  {formatThaiNumber(g.normal)} − {formatThaiNumber(dN)} ={" "}
+                  {formatThaiNumber(Math.max(0, g.normal - dN))} ชิ้น
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-txt-mid">รับซื้อ</span>
+                <span className="font-semibold">
+                  {formatThaiNumber(g.buy)} − {formatThaiNumber(dB)} ={" "}
+                  {formatThaiNumber(Math.max(0, g.buy - dB))} ชิ้น
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex gap-2.5">
@@ -251,34 +258,47 @@ export default function PoolAdjustmentModal({
 
 function ItemRow({
   item,
+  poolGroups,
   locked,
   onUpdate,
   onRemove,
 }: {
   item: Item;
+  poolGroups: PoolGroupInfo[];
   locked: boolean;
-  onUpdate: (field: keyof Item, value: string) => void;
+  onUpdate: (patch: Partial<Item>) => void;
   onRemove: () => void;
 }) {
-  const sideLabel = item.side === "buy" ? "รับซื้อ" : "ขายทั่วไป";
-  const sideBg = item.side === "buy" ? "bg-gold-pale/40" : "bg-maroon-50";
+  const selectCls =
+    "px-2.5 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt cursor-pointer disabled:bg-cream-dk disabled:text-txt-soft disabled:cursor-not-allowed";
   return (
-    <div
-      className={`rounded-[10px] p-2.5 border border-bdr ${sideBg} flex flex-col gap-2`}
-    >
+    <div className="rounded-[10px] p-2.5 border border-bdr bg-cream/60 flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-bold text-maroon shrink-0 px-2 py-0.5 rounded-full bg-white border border-bdr">
-          {sideLabel}
-        </span>
-        <input
-          type="text"
-          value={item.label}
+        {/* ตำแหน่ง */}
+        <select
+          value={item.poolGroup}
           disabled={locked}
-          maxLength={120}
-          placeholder="เหตุผล (เช่น โปรโมชั่น)"
-          onChange={(e) => onUpdate("label", e.target.value)}
-          className={`flex-1 min-w-0 px-3 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
-        />
+          onChange={(e) => onUpdate({ poolGroup: e.target.value })}
+          className={`flex-1 min-w-0 ${selectCls}`}
+        >
+          {poolGroups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.label}
+            </option>
+          ))}
+        </select>
+        {/* ฝั่ง */}
+        <select
+          value={item.side}
+          disabled={locked}
+          onChange={(e) =>
+            onUpdate({ side: e.target.value === "buy" ? "buy" : "normal" })
+          }
+          className={selectCls}
+        >
+          <option value="normal">ขายทั่วไป</option>
+          <option value="buy">รับซื้อ</option>
+        </select>
         {!locked && (
           <button
             type="button"
@@ -291,15 +311,23 @@ function ItemRow({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-txt-soft shrink-0">จำนวน</span>
-        <div className="relative flex-1">
+        <input
+          type="text"
+          value={item.label}
+          disabled={locked}
+          maxLength={120}
+          placeholder="เหตุผล (เช่น โปรโมชั่น)"
+          onChange={(e) => onUpdate({ label: e.target.value })}
+          className={`flex-1 min-w-0 px-3 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
+        />
+        <div className="relative w-[110px] shrink-0">
           <input
             type="number"
             inputMode="numeric"
             value={item.pieces || ""}
             disabled={locked}
             placeholder="0"
-            onChange={(e) => onUpdate("pieces", e.target.value)}
+            onChange={(e) => onUpdate({ pieces: Number(e.target.value) || 0 })}
             className={`w-full px-3 py-2 rounded-[8px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs pointer-events-none">

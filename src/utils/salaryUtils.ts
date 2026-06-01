@@ -43,7 +43,8 @@ export function computePoolSharesForGroup({
   allLeaves,
   yearMonth,
   employeeDirectory,
-  poolAdjustment, // { items: [{side, pieces, label}] } — ระดับเดือน
+  poolAdjustment, // { items: [{poolGroup, side, pieces, label}] } — ระดับเดือน
+  poolGroup, // ตำแหน่ง/กลุ่มที่กำลังคำนวณ — กรอง adjustment เฉพาะของกลุ่มนี้
 }: {
   groupEmployeeIds: string[];
   salaryData: any;
@@ -51,8 +52,14 @@ export function computePoolSharesForGroup({
   yearMonth: string;
   employeeDirectory: any[];
   poolAdjustment?: {
-    items?: { side: string; pieces: number; label: string }[];
+    items?: {
+      poolGroup?: string;
+      side: string;
+      pieces: number;
+      label: string;
+    }[];
   } | null;
+  poolGroup?: string | null;
 }) {
   if (!groupEmployeeIds || groupEmployeeIds.length === 0) return {};
 
@@ -136,7 +143,11 @@ export function computePoolSharesForGroup({
   // รวมจาก items แยกตามฝั่ง · clamp ≥ 0 · เก็บ gross + รายการไว้สำหรับแสดงผล
   const grossSellPoolPieces = totalSellPoolPieces;
   const grossBuyPoolPieces = totalBuyPoolPieces;
-  const adjItems = poolAdjustment?.items || [];
+  // กรองเฉพาะรายการของ "ตำแหน่งนี้" — item เก่าที่ไม่มี poolGroup ถือว่าใช้ได้
+  // กับทุกกลุ่ม (backward compat data ก่อนมี field นี้)
+  const adjItems = (poolAdjustment?.items || []).filter(
+    (it) => !it.poolGroup || !poolGroup || it.poolGroup === poolGroup,
+  );
   const excludedNormalItems = adjItems.filter((it) => it.side === "normal");
   const excludedBuyItems = adjItems.filter((it) => it.side === "buy");
   const excludedNormal = excludedNormalItems.reduce(

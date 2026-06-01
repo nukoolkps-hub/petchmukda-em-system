@@ -138,6 +138,7 @@ export default function SalaryView({
         yearMonth: selectedMonth,
         employeeDirectory,
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
+        poolGroup: employeeRole.poolGroup,
       });
       employeePoolShare = shares[employeeInfo?.id];
     }

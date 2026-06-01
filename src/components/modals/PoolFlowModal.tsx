@@ -150,6 +150,7 @@ export default function PoolFlowModal({
         yearMonth: selectedMonth,
         employeeDirectory,
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
+        poolGroup: activeGroup,
       }),
     [
       groupEmployeeIds,
@@ -158,6 +159,7 @@ export default function PoolFlowModal({
       selectedMonth,
       employeeDirectory,
       poolAdjustments,
+      activeGroup,
     ],
   );
 

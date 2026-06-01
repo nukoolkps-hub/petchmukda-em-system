@@ -136,6 +136,7 @@ export default function PayrollSummaryPanel({
             yearMonth: selectedMonth,
             employeeDirectory,
             poolAdjustment: poolAdjustments?.[selectedMonth] || null,
+            poolGroup: employeeRole.poolGroup,
           });
           poolShare = shares[employee.id];
         }
