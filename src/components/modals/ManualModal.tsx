@@ -1,13 +1,17 @@
 import {
   AlertTriangle as IconAlertTriangle,
   Ban as IconBan,
+  Banknote as IconBanknote,
   Book as IconBook,
   CalendarDays as IconCalendar,
   Check as IconCheck,
   ClipboardList as IconClipboardList,
   Diamond as IconDiamond,
+  HandCoins as IconHandCoins,
   Handshake as IconHandshake,
   Lightbulb as IconLightbulb,
+  Lock as IconLock,
+  Minus as IconMinus,
   RefreshCw as IconRefresh,
   Ruler as IconRuler,
   ShoppingBag as IconShoppingBag,
@@ -46,7 +50,7 @@ export default function ManualModal({ onClose }) {
       </div>
 
       {/* tabs */}
-      <div className="flex bg-cream-dk rounded-[11px] p-1 mb-3.5 gap-0.5">
+      <div className="grid grid-cols-2 bg-cream-dk rounded-[11px] p-1 mb-3.5 gap-0.5">
         {[
           {
             id: "leave",
@@ -63,6 +67,24 @@ export default function ManualModal({ onClose }) {
               <span className="inline-flex items-center gap-1.5">
                 <IconDiamond size={14} strokeWidth={2.4} />
                 กฎค่าคอม
+              </span>
+            ),
+          },
+          {
+            id: "money",
+            label: (
+              <span className="inline-flex items-center gap-1.5">
+                <IconHandCoins size={14} strokeWidth={2.4} />
+                เบิก / กู้
+              </span>
+            ),
+          },
+          {
+            id: "lock",
+            label: (
+              <span className="inline-flex items-center gap-1.5">
+                <IconLock size={14} strokeWidth={2.4} />
+                ปิดรอบ 7 วัน
               </span>
             ),
           },
@@ -255,6 +277,20 @@ export default function ManualModal({ onClose }) {
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
+                <IconDiamond size={16} strokeWidth={2.4} />
+                ขายทั่วไป
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              <b>เข้ากองกลาง</b> — ยอดของทุกคนรวมกัน แล้วแบ่งตามสูตร 7 ข้อ ข้างบน
+            </p>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
                 <IconSparkles size={16} strokeWidth={2.4} />
                 ขายพิเศษ
               </span>
@@ -262,8 +298,32 @@ export default function ManualModal({ onClose }) {
             color={COLORS.gold}
           >
             <p>
-              <b>ไม่เข้ากองกลาง</b> — ใครขายใครได้ คูณ Rate ของตัวเอง
+              <b>ใครขายใครได้</b> — คูณ Rate ของตัวเอง · ไม่เข้ากองกลางที่ หารแบ่ง ·{" "}
+              <b>แต่</b>นับรวมในการเทียบเกณฑ์ 80% (ช่วยเข้ากอง)
             </p>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconMinus size={16} strokeWidth={2.4} />
+                หักจากกองกลาง (สินค้าโปรโมชั่น / ทองแท่ง MD)
+              </span>
+            }
+            color={COLORS.red}
+          >
+            <p>
+              บางสินค้าไม่ได้ค่าคอม — admin กรอก "รายการหัก" ระดับเดือน
+              <b>แยกตามตำแหน่ง</b> (เช่น สินค้าโปรโมชั่นฝั่งขาย, ทองแท่ง MD ฝั่งรับซื้อ)
+            </p>
+            <ul>
+              <li>
+                <b>กองกลางที่หารแบ่ง</b> = ยอดจริง − ยอดที่หัก ⇒ น้อยลง
+              </li>
+              <li>
+                <b>เกณฑ์ 80%</b> ใช้ยอดจริง (ไม่หัก) — พนักงานยัง credit เข้ากอง
+              </li>
+            </ul>
           </Section>
 
           <Section
@@ -379,6 +439,170 @@ export default function ManualModal({ onClose }) {
               </li>
             </ul>
           </Section>
+        </div>
+      )}
+
+      {tab === "money" && (
+        <div className="text-sm text-txt-mid leading-[1.8]">
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconBanknote size={16} strokeWidth={2.4} />
+                เบิกเงินล่วงหน้า
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              <b>พนักงานขอเอง</b> ผ่านแอป — admin อนุมัติ/ปฏิเสธ ใน LINE
+            </p>
+            <ul>
+              <li>
+                <b>เพดาน:</b> 50% ของเงินเดือนพื้นฐาน
+              </li>
+              <li>อนุมัติแล้ว → admin โอนเงินทันที + แนบสลิปกลับในแอป</li>
+              <li>
+                เดือนถัดไป → <b>หักจากเงินเดือนเต็มก้อน</b> รอบเดียวจบ
+              </li>
+              <li>
+                <b className="text-red">บล็อกในวันสุดท้ายของเดือน</b> (วันทำเงินเดือน)
+              </li>
+            </ul>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconHandCoins size={16} strokeWidth={2.4} />
+                เงินกู้ผ่อนคืน
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              <b>Admin สร้างให้</b> — กำหนดเงินต้น + ผ่อนเดือนละ X บาท →
+              ระบบหักจากเงินเดือนอัตโนมัติทุกเดือนจนครบ
+            </p>
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconRuler size={14} strokeWidth={2.4} />
+                  สูตรหักผ่อน
+                </span>
+              }
+              color={COLORS.text}
+            >
+              <ul>
+                <li>
+                  <b>เรียงตามเดือนเริ่ม</b> (FIFO) — ก้อนเก่าหักก่อน
+                </li>
+                <li>
+                  <b>หักเท่าที่มี</b> — ถ้าเงินเดือนไม่พอ หักได้แค่ที่เหลือ ·
+                  ส่วนที่ขาดยกไปเดือนถัดไป
+                </li>
+                <li>
+                  ผ่อนครบ → สถานะเปลี่ยนเป็น <b>"ผ่อนครบแล้ว"</b> อัตโนมัติ
+                </li>
+              </ul>
+              <p className="mt-2 text-xs text-txt-soft">
+                ระบบเก็บประวัติการหักรายเดือน (ledger) → คงเหลือถูกต้อง
+                แม้มีเดือนหักไม่ครบหรือข้ามเดือน
+              </p>
+            </Card>
+          </Section>
+
+          <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
+            <b className="text-maroon inline-flex items-center gap-1">
+              <IconLightbulb size={14} strokeWidth={2.4} />
+              ตัวอย่าง:
+            </b>{" "}
+            กู้ ฿30,000 ผ่อนเดือนละ ฿5,000 เริ่ม มิ.ย.
+            <br />
+            <ul className="pl-[18px] my-1.5 mx-0">
+              <li>
+                มิ.ย.: เงินเดือนสุทธิเหลือ ฿20,000 → หัก <b>฿5,000</b> (คงเหลือ 25,000)
+              </li>
+              <li>
+                ก.ค.: เงินเดือนสุทธิเหลือ ฿3,200 → หัก <b>฿3,200</b> (คงเหลือ 21,800) ←
+                หักเท่าที่มี
+              </li>
+              <li>ส.ค.-ต.ค.: หักครบเดือนละ ฿5,000 จนเหลือ ฿6,800</li>
+              <li>พ.ย.: หัก ฿5,000 → คงเหลือ ฿1,800</li>
+              <li>
+                ธ.ค.: หัก <b>฿1,800</b> (เดือนสุดท้าย) → ผ่อนครบ ✓
+              </li>
+            </ul>
+          </Box>
+        </div>
+      )}
+
+      {tab === "lock" && (
+        <div className="text-sm text-txt-mid leading-[1.8]">
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconLock size={16} strokeWidth={2.4} />
+                ปิดรอบ 7 วันหลังยืนยันยอด
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              หลัง admin กด "ยืนยันยอด" เดือนหนึ่งๆ — แก้ไขได้อีก <b>7 วัน</b> นับจากยืนยัน{" "}
+              <b>ครั้งแรก</b> (ไม่รีเซ็ตเมื่อยืนยันใหม่). พ้นกำหนด ⇒{" "}
+              <b className="text-red">ล็อกถาวร</b>
+            </p>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconBan size={16} strokeWidth={2.4} />
+                สิ่งที่ทำไม่ได้หลังปิดรอบ
+              </span>
+            }
+            color={COLORS.red}
+          >
+            <Card title="ของเดือนที่ปิดรอบแล้ว" color={COLORS.text}>
+              <ul>
+                <li>แก้ค่าคอม / เงินเดือน</li>
+                <li>ยื่นใบลา / ลบใบลา</li>
+                <li>เบิกเงินล่วงหน้า / อนุมัติ-ปฏิเสธคำขอ</li>
+                <li>ยืนยันยอดใหม่</li>
+                <li>หักจากกองกลาง (poolAdjustments)</li>
+              </ul>
+              <p className="mt-2 text-xs text-txt-soft">
+                บังคับ 2 ชั้น: UI ปุ่ม disabled + Firestore rules ปฏิเสธ การเขียน
+                (ป้องกันการ bypass)
+              </p>
+            </Card>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconCheck size={16} strokeWidth={2.4} />
+                ระหว่าง 7 วันแรก
+              </span>
+            }
+            color={COLORS.green}
+          >
+            <p>
+              ยังแก้/ยืนยันใหม่ได้ตามปกติ — เหมาะกับการ <b>ฟิกซ์ตัวเลข</b> ทีหลัง
+              ถ้าพนักงานยื่นลาเพิ่ม หรือ admin เพิ่งคิดเพิ่ม. ปุ่ม "ยืนยันยอดใหม่"
+              จะเด้งขึ้นมาให้กดทันทีที่ข้อมูลเปลี่ยน
+            </p>
+          </Section>
+
+          <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
+            <b className="text-maroon inline-flex items-center gap-1">
+              <IconLightbulb size={14} strokeWidth={2.4} />
+              ทำไม 7 วัน?
+            </b>
+            <br />
+            ให้เวลา admin ปรับแก้ตัวเลขหลังจ่ายเงินจริง (พนักงานทักท้วง, พบลาเพิ่ม, คำนวณผิด
+            ฯลฯ) — พอครบกำหนดล็อกถาวร เพื่อกัน ข้อมูลในอดีตเปลี่ยนแปลงโดยไม่ตั้งใจ
+          </Box>
         </div>
       )}
 
