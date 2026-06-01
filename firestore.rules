@@ -44,10 +44,13 @@ service cloud.firestore {
     // + 7 วัน) ที่เก็บไว้ใน payrollConfirms/{ym}. ใช้ร่วมกับฝั่ง UI
     // (src/utils/payrollLock.ts) — กันแก้ค่าคอม/ลา/เบิก ของเดือนที่ปิดรอบแล้ว
     // doc เก่าที่ไม่มี lockAtMs → ถือว่ายังไม่ล็อก (UI fallback จัดการต่อ)
+    // defensive: ถ้า doc ไม่มี / ไม่มี lockAtMs / lockAtMs ≤ 0 → ถือว่ายัง
+    // ไม่ล็อก. ใช้ data.get(field, default) เพื่อไม่ throw เมื่อ field หาย
     function monthLocked(ym) {
-      return exists(/databases/$(database)/documents/payrollConfirms/$(ym))
-        && get(/databases/$(database)/documents/payrollConfirms/$(ym)).data.lockAtMs is number
-        && request.time.toMillis() > get(/databases/$(database)/documents/payrollConfirms/$(ym)).data.lockAtMs;
+      let path = /databases/$(database)/documents/payrollConfirms/$(ym);
+      return exists(path)
+        && get(path).data.get('lockAtMs', 0) > 0
+        && request.time.toMillis() > get(path).data.get('lockAtMs', 0);
     }
 
     function isSelfProfileUpdate() {
