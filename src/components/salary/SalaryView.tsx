@@ -240,7 +240,16 @@ export default function SalaryView({
     });
   }
 
-  if (!data || !salaryCalculation) {
+  // เดือนนี้ admin ยืนยันยอดแล้วหรือยัง — ถ้ายัง แสดง "รอยืนยันยอด" กันสับสน
+  // (ตัวเลขก่อนยืนยันยังเปลี่ยนได้ ยังไม่ใช่ยอดจริง)
+  const isMonthConfirmed = !!payrollConfirms?.[selectedMonth]?.confirmedAt;
+  const selectedMonthLabel = (() => {
+    const [y, mo] = selectedMonth.split("-");
+    return `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+  })();
+
+  if (!isMonthConfirmed || !data || !salaryCalculation) {
+    const waitingConfirm = !isMonthConfirmed;
     return (
       <div>
         <div className="flex items-center justify-between gap-2 mb-3.5">
@@ -269,17 +278,24 @@ export default function SalaryView({
           </div>
         </div>
         <div className="text-center text-txt-soft py-[50px] px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr">
-          <div className="flex justify-center mb-3 text-gold">
-            <IconBanknote size={48} strokeWidth={1.8} />
+          <div
+            className={`flex justify-center mb-3 ${waitingConfirm ? "text-amber" : "text-gold"}`}
+          >
+            {waitingConfirm ? (
+              <IconClock size={48} strokeWidth={1.8} />
+            ) : (
+              <IconBanknote size={48} strokeWidth={1.8} />
+            )}
           </div>
-          <div className="font-bold text-txt mb-1">ยังไม่มีข้อมูลเงินเดือน</div>
+          <div className="font-bold text-txt mb-1">
+            {waitingConfirm ? "รอยืนยันยอด" : "ยังไม่มีข้อมูลเงินเดือน"}
+          </div>
           <div className="text-sm text-txt-soft mb-5">
-            เดือน {(() => {
-              const [y, mo] = selectedMonth.split("-");
-              return `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
-            })()}
+            เดือน {selectedMonthLabel}
+            {waitingConfirm && " ยังไม่ได้ยืนยันยอด"}
           </div>
-          {months.includes(currentYearMonth) &&
+          {!waitingConfirm &&
+            months.includes(currentYearMonth) &&
             selectedMonth !== currentYearMonth && (
               <button
                 onClick={() => setSelectedMonth(currentYearMonth)}

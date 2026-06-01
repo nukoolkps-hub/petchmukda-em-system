@@ -227,7 +227,7 @@ export default function PoolFlowModal({
 
       {/* body */}
       {!isConfirmed ? (
-        <LockedState monthLabel={monthLabel} isAdmin={isAdmin} />
+        <LockedState monthLabel={monthLabel} />
       ) : !activeGroup ? (
         <EmptyState text="ตำแหน่งของคุณไม่ได้ใช้ระบบกองกลาง — ค่าคอมคิดตามจำนวนชิ้นของตัวเองโดยตรง" />
       ) : groupEmployeeIds.length === 0 ? (
@@ -476,26 +476,15 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
-function LockedState({
-  monthLabel,
-  isAdmin,
-}: {
-  monthLabel: string;
-  isAdmin: boolean;
-}) {
+function LockedState({ monthLabel }: { monthLabel: string }) {
   return (
-    <div className="text-center py-8 px-6 bg-amber-lt/40 rounded-[14px] border border-amber/30 flex flex-col items-center gap-2.5">
-      <div className="w-12 h-12 rounded-full bg-amber/20 flex items-center justify-center">
+    <div className="text-center py-10 px-6 bg-cream/50 rounded-[14px] border border-dashed border-bdr flex flex-col items-center gap-2.5">
+      <div className="w-12 h-12 rounded-full bg-amber-lt flex items-center justify-center">
         <IconLock size={22} className="text-amber" strokeWidth={2.4} />
       </div>
-      <div className="font-bold text-txt text-base">ยังไม่เปิดให้ดูแผนผัง</div>
-      <div className="text-sm text-txt-mid leading-normal max-w-[380px]">
-        เดือน <b className="text-maroon">{monthLabel}</b> ยังไม่ได้ยืนยันยอด —
-        ตัวเลขอาจยังเปลี่ยนได้ (พนักงานยังยื่นลาเพิ่ม หรือ admin ยังแก้ค่าคอมได้)
-        <br />
-        {isAdmin
-          ? 'กด "ยืนยันยอด" ในหน้า "จ่ายเงิน" ของเดือนนี้ก่อน → แผนผังจะเปิดให้ดู'
-          : "รอ admin ยืนยันยอดของเดือนนี้ก่อน แล้วจะเปิดให้ดูได้"}
+      <div className="font-bold text-txt text-base">รอยืนยันยอด</div>
+      <div className="text-sm text-txt-soft">
+        เดือน {monthLabel} ยังไม่ได้ยืนยันยอด
       </div>
     </div>
   );
