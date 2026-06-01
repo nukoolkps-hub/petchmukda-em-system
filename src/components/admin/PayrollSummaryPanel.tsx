@@ -279,6 +279,9 @@ export default function PayrollSummaryPanel({
 
   // ยืนยันยอด (ใช้ร่วมทั้งปุ่มยืนยันครั้งแรกและยืนยันใหม่) — กันกดซ้ำด้วย submitting
   // การยืนยันครั้งแรกถามผ่าน pendingConfirm modal ก่อน (ไม่ใช่ native confirm)
+  // ขั้นที่ผู้ใช้รอ: onSetPayrollConfirm เดี่ยว (เขียน 1 doc — เร็ว) เสร็จแล้ว
+  // ปลดล็อกปุ่ม ส่วน backfill snapshots + freeze สลิปทำเบื้องหลัง best-effort
+  // กันบล็อก UI / แย่ network กับการบันทึกเดือนอื่นที่ admin อาจทำพร้อมกัน
   async function confirmPayroll(
     totalForMonth: number,
     empCountForMonth: number,
@@ -293,15 +296,29 @@ export default function PayrollSummaryPanel({
         employeeCount: empCountForMonth,
         breakdownSig,
       });
-      showToast?.(isRenew ? "ยืนยันยอดใหม่เรียบร้อย" : "ยืนยันยอดเรียบร้อย");
-      await backfillPoolSnapshots();
-      await freezeAllSlips();
     } catch (err) {
       console.error("[PayrollSummary] confirm failed:", err);
       showToast?.("ยืนยันยอดไม่สำเร็จ");
-    } finally {
       setSubmitting(false);
+      return;
     }
+    showToast?.(isRenew ? "ยืนยันยอดใหม่เรียบร้อย" : "ยืนยันยอดเรียบร้อย");
+    setSubmitting(false);
+
+    // งานเบื้องหลัง — ไม่ await ให้ปุ่มกลับมาใช้ได้ทันที
+    (async () => {
+      try {
+        await backfillPoolSnapshots();
+      } catch (err) {
+        console.error("[PayrollSummary] backfill snapshots failed:", err);
+      }
+      try {
+        await freezeAllSlips();
+      } catch (err) {
+        console.error("[PayrollSummary] freeze slips failed:", err);
+        showToast?.("บันทึกสลิปเข้าระบบไม่สำเร็จบางส่วน");
+      }
+    })();
   }
 
   return (
