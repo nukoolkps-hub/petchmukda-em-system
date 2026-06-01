@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
-import { buildLoanContext } from "../../firebase/employeeLoans";
+import { buildLoanContext, loanRemaining } from "../../firebase/employeeLoans";
 import { printSalaryCertificate } from "../../print/printSalaryCertificate";
 import { printSalarySlip } from "../../print/printSalarySlip";
 import {
@@ -509,6 +509,79 @@ export default function SalaryView({
           </div>
         </div>
       </div>
+
+      {/* เงินกู้ของคุณ (loan) */}
+      {(() => {
+        const myLoans = (employeeLoans || []).filter(
+          (l) => l.employeeId === salaryEmployeeId && l.status !== "cancelled",
+        );
+        if (myLoans.length === 0) return null;
+        return (
+          <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+            <div className="flex items-center gap-2 mb-3">
+              <IconHandCoins
+                size={18}
+                strokeWidth={2.2}
+                color={COLORS.maroon}
+              />
+              <div className="font-bold text-base text-txt">เงินกู้ของคุณ</div>
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {myLoans.map((loan) => {
+                const remaining = loanRemaining(loan);
+                const paid = (loan.principal || 0) - remaining;
+                const pct =
+                  loan.principal > 0
+                    ? Math.min(100, Math.round((paid / loan.principal) * 100))
+                    : 0;
+                const thisMonth =
+                  salaryCalculation.loanBreakdown?.find((b) => b.id === loan.id)
+                    ?.amount || 0;
+                const done = remaining <= 0;
+                return (
+                  <div
+                    key={loan.id}
+                    className="bg-cream rounded-[10px] p-3 border border-bdr"
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="text-sm font-bold text-txt truncate">
+                        {loan.note || "เงินกู้"}
+                      </div>
+                      {done ? (
+                        <span className="text-xs font-bold text-green shrink-0">
+                          ผ่อนครบแล้ว
+                        </span>
+                      ) : thisMonth > 0 ? (
+                        <span className="text-xs font-semibold text-red shrink-0">
+                          เดือนนี้หัก −฿{formatThaiNumber(thisMonth)}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="h-1.5 rounded-full bg-cream-dk overflow-hidden mb-1.5">
+                      <div
+                        className="h-full bg-maroon rounded-full"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-txt-soft">
+                      <span>
+                        ผ่อนเดือนละ ฿{formatThaiNumber(loan.monthlyDeduction)}
+                      </span>
+                      <span>
+                        คงเหลือ{" "}
+                        <b className="text-maroon">
+                          ฿{formatThaiNumber(remaining)}
+                        </b>{" "}
+                        / ฿{formatThaiNumber(loan.principal)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Earnings */}
       <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
