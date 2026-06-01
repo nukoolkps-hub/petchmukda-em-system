@@ -625,6 +625,13 @@ export default function SalaryAdminEdit({
                     {salaryCalculation.normalSalePieces.toFixed(1)}
                   </b>{" "}
                   / {poolShare.totalSellPoolPieces}
+                  {poolShare.excludedNormalPieces > 0 && (
+                    <span className="text-red">
+                      {" "}
+                      (กอง {poolShare.grossSellPoolPieces} − หัก{" "}
+                      {poolShare.excludedNormalPieces})
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -658,6 +665,13 @@ export default function SalaryAdminEdit({
                     {salaryCalculation.buyPieces.toFixed(1)}
                   </b>{" "}
                   / {poolShare.totalBuyPoolPieces}
+                  {poolShare.excludedBuyPieces > 0 && (
+                    <span className="text-red">
+                      {" "}
+                      (กอง {poolShare.grossBuyPoolPieces} − หัก{" "}
+                      {poolShare.excludedBuyPieces})
+                    </span>
+                  )}
                 </div>
               </div>
             )}

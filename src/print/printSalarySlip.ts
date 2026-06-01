@@ -40,6 +40,29 @@ function buildSalarySlipHTML(
 
   const formatNumber = (value) => Number(value || 0).toLocaleString("th-TH");
 
+  // หมายเหตุ "หักจากกองกลาง" ของฝั่งขาย/รับซื้อ — ระบุชื่อรายการ + จำนวนชิ้นที่หัก
+  const poolExcludeNote = (side: "normal" | "buy") => {
+    if (!poolShare) return "";
+    const items =
+      side === "normal"
+        ? poolShare.excludedNormalItems
+        : poolShare.excludedBuyItems;
+    const total =
+      side === "normal"
+        ? poolShare.excludedNormalPieces
+        : poolShare.excludedBuyPieces;
+    if (!total || total <= 0) return "";
+    const gross =
+      side === "normal"
+        ? poolShare.grossSellPoolPieces
+        : poolShare.grossBuyPoolPieces;
+    const detail = (items || [])
+      .filter((it) => (Number(it.pieces) || 0) > 0)
+      .map((it) => `${it.label || "ไม่ระบุ"} ${formatNumber(it.pieces)}`)
+      .join(", ");
+    return `<br/><span style="font-size:10px;color:#999;">กองกลาง ${formatNumber(gross)} − หัก ${formatNumber(total)} ชิ้น${detail ? ` (${detail})` : ""}</span>`;
+  };
+
   // ── สร้างรายการรายรับ ──
   const earnRows: { label: string; value: any }[] = [];
   earnRows.push({ label: "เงินเดือนพื้นฐาน", value: salaryCalculation.baseSalary });
@@ -52,7 +75,7 @@ function buildSalarySlipHTML(
   } else {
     if (salaryCalculation.normalSaleCommission > 0)
       earnRows.push({
-        label: "ค่าคอมขาย-ทั่วไป",
+        label: `ค่าคอมขาย-ทั่วไป${poolExcludeNote("normal")}`,
         value: salaryCalculation.normalSaleCommission,
       });
     if (salaryCalculation.specialSaleCommission > 0)
@@ -62,7 +85,7 @@ function buildSalarySlipHTML(
       });
     if (salaryCalculation.buyCommission > 0)
       earnRows.push({
-        label: "ค่าคอมรับซื้อ",
+        label: `ค่าคอมรับซื้อ${poolExcludeNote("buy")}`,
         value: salaryCalculation.buyCommission,
       });
   }
