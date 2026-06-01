@@ -18,6 +18,10 @@ import {
 import { subscribeLeaves, subscribeLeavesByEmployeeId } from "../leaves";
 import { subscribePayrollConfirms } from "../payrollConfirms";
 import {
+  type PoolAdjustmentsByMonth,
+  subscribePoolAdjustments,
+} from "../poolAdjustments";
+import {
   type PoolSnapshotsByMonth,
   subscribeAllPoolSnapshots,
 } from "../poolSnapshots";
@@ -277,6 +281,14 @@ export function usePoolSnapshots() {
   return useScopedSubscription(
     () => subscribeAllPoolSnapshots,
     {} as PoolSnapshotsByMonth,
+    [],
+  );
+}
+
+export function usePoolAdjustments() {
+  return useScopedSubscription(
+    () => subscribePoolAdjustments,
+    {} as PoolAdjustmentsByMonth,
     [],
   );
 }

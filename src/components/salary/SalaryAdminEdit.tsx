@@ -35,6 +35,7 @@ import {
 import PoolFlowModal from "../modals/PoolFlowModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
+import PoolAdjustmentCard from "./PoolAdjustmentCard";
 
 /* ─── Salary Admin Edit ────────────────────────────────────────── */
 export default function SalaryAdminEdit({
@@ -46,6 +47,8 @@ export default function SalaryAdminEdit({
   advanceRequests,
   roles,
   payrollConfirms,
+  poolAdjustments,
+  onSetPoolAdjustment,
   setUnsavedDirty,
   showToast,
 }) {
@@ -183,6 +186,7 @@ export default function SalaryAdminEdit({
         allLeaves,
         yearMonth: selectedMonth,
         employeeDirectory,
+        poolAdjustment: poolAdjustments?.[selectedMonth] || null,
       });
       employeePoolShare = shares[selectedEmployeeId];
     }
@@ -214,6 +218,7 @@ export default function SalaryAdminEdit({
     employeeInfo,
     totalLeaveDays,
     approvedAdvanceTotal,
+    poolAdjustments,
   ]);
 
   function update(field, value) {
@@ -701,6 +706,25 @@ export default function SalaryAdminEdit({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─── หักจากกองกลาง (ระดับเดือน) ──────────────────────────
+           บางสินค้าไม่ได้ค่าคอม (โปรโมชั่น / ทองแท่ง MD ฯลฯ) → admin ใส่หัก
+           รวมระดับเดือน ไม่ต้องใส่ทีละคน · เกณฑ์ 80% ใช้ gross อยู่เหมือนเดิม */}
+      {poolShare && poolGroupEmployees.length > 1 && (
+        <PoolAdjustmentCard
+          yearMonth={selectedMonth}
+          locked={locked}
+          adjustment={poolAdjustments?.[selectedMonth]}
+          grossNormal={
+            poolShare.grossSellPoolPieces ?? poolShare.totalSellPoolPieces
+          }
+          grossBuy={
+            poolShare.grossBuyPoolPieces ?? poolShare.totalBuyPoolPieces
+          }
+          onSave={onSetPoolAdjustment}
+          showToast={showToast}
+        />
       )}
 
       {/* Desktop: 2 คอลัมน์ — ซ้าย ค่าคอม+รายรับ / ขวา บัตรสมาชิก+รายการหัก (มือถือเรียงเดี่ยวเหมือนเดิม) */}
@@ -1472,6 +1496,7 @@ export default function SalaryAdminEdit({
           allLeaves={allLeaves}
           roles={roles}
           initialMonth={selectedMonth}
+          poolAdjustments={poolAdjustments}
           isConfirmed={!!payrollConfirms?.[selectedMonth]?.confirmedAt}
         />
       )}

@@ -53,6 +53,7 @@ export default function SalaryView({
   onOpenAdvance,
   roles,
   payrollConfirms,
+  poolAdjustments,
   showToast,
 }) {
   const now = new Date();
@@ -136,6 +137,7 @@ export default function SalaryView({
         allLeaves,
         yearMonth: selectedMonth,
         employeeDirectory,
+        poolAdjustment: poolAdjustments?.[selectedMonth] || null,
       });
       employeePoolShare = shares[employeeInfo?.id];
     }
@@ -168,6 +170,7 @@ export default function SalaryView({
     employeeInfo,
     data,
     salaryEmployeeId,
+    poolAdjustments,
   ]);
 
   function handlePrintSlip() {
@@ -866,6 +869,7 @@ export default function SalaryView({
           allLeaves={allLeaves}
           roles={roles}
           initialMonth={selectedMonth}
+          poolAdjustments={poolAdjustments}
           isConfirmed={!!payrollConfirms?.[selectedMonth]?.confirmedAt}
         />
       )}

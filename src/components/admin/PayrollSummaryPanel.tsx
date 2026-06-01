@@ -38,6 +38,7 @@ export default function PayrollSummaryPanel({
   advanceRequests,
   roles,
   payrollConfirms,
+  poolAdjustments,
   onSetPayrollConfirm,
   onSaveSalary,
   showToast,
@@ -134,6 +135,7 @@ export default function PayrollSummaryPanel({
             allLeaves,
             yearMonth: selectedMonth,
             employeeDirectory,
+            poolAdjustment: poolAdjustments?.[selectedMonth] || null,
           });
           poolShare = shares[employee.id];
         }
@@ -166,6 +168,7 @@ export default function PayrollSummaryPanel({
     selectedMonth,
     allLeaves,
     monthlyApprovedAdvances.data,
+    poolAdjustments,
   ]);
 
   // filter by search

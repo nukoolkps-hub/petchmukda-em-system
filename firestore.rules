@@ -168,6 +168,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ─── Pool Adjustments (admin หักจากกองกลาง ระดับเดือน) ─────
+    // {excludedNormalPieces, excludedBuyPieces, notes} — 1 doc/เดือน
+    // อ่าน: signed-in (ฝั่งพนักงานใช้คำนวณ pool ของตัวเอง)
+    // เขียน: admin · ปิดรอบแล้ว (lockAtMs) ห้ามเขียน
+    match /poolAdjustments/{yearMonth} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin() && !monthLocked(yearMonth);
+    }
+
     // ─── Pool Snapshots (public, non-sensitive copy ของ pool fields) ───
     // 1 doc/เดือน, shape: { [empId]: { pieces, roleId, poolExclusion,
     // totalLeaveDays } } — ทุกคนอ่านได้เพื่อคำนวณ pool ของกลุ่ม

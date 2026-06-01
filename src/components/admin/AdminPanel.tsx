@@ -39,6 +39,8 @@ export default function AdminPanel({
   onDeleteRole,
   payrollConfirms,
   onSetPayrollConfirm,
+  poolAdjustments,
+  onSetPoolAdjustment,
   showToast,
   // controlled by App so the desktop Sidebar can drive section as well
   section,
@@ -173,6 +175,7 @@ export default function AdminPanel({
           roles={roles}
           payrollConfirms={payrollConfirms}
           onSetPayrollConfirm={onSetPayrollConfirm}
+          poolAdjustments={poolAdjustments}
           onSaveSalary={onSaveSalary}
           showToast={showToast}
         />
@@ -199,6 +202,8 @@ export default function AdminPanel({
           advanceRequests={advanceRequests}
           roles={roles}
           payrollConfirms={payrollConfirms}
+          poolAdjustments={poolAdjustments}
+          onSetPoolAdjustment={onSetPoolAdjustment}
           setUnsavedDirty={setUnsavedDirty}
           showToast={showToast}
         />

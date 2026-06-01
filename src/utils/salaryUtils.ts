@@ -14,7 +14,11 @@ const {
 
 /* ─── Pool Share Helper (สูตรตาม Excel) ──────────────────────────
    ฝั่ง "ขาย"   = เกณฑ์ 80% ใช้ (ทั่วไป+พิเศษ) · กองกลางที่หารแบ่งใช้ "ทั่วไป" เท่านั้น
-   ฝั่ง "รับซื้อ" = รับซื้อ ของแต่ละคน         → รวมเป็น Pool รับซื้อ
+                  − poolAdjustment.excludedNormalPieces (สินค้าโปรโมชั่น ฯลฯ)
+   ฝั่ง "รับซื้อ" = รับซื้อของแต่ละคน − poolAdjustment.excludedBuyPieces (MD ฯลฯ)
+                  ขาย-พิเศษ → ใครขายใครได้: นับ 80% แต่ไม่เอาเข้ากองที่หารแบ่ง
+   poolAdjustment ระดับ "เดือน" ที่ admin ใส่แยก ไม่ใช่ per-employee — หักเฉพาะ
+   ยอดที่เข้ากอง ไม่กระทบเกณฑ์ 80% (พนักงานยัง credit อยู่)
 
    สูตรการแบ่งทำแยกฝั่งขายและฝั่งรับซื้อ:
    - effectiveLeave = max(0, totalLeave − LEAVE_DEDUCTION_FREE_DAYS)
@@ -39,6 +43,17 @@ export function computePoolSharesForGroup({
   allLeaves,
   yearMonth,
   employeeDirectory,
+  poolAdjustment, // { excludedNormalPieces, excludedBuyPieces } — ระดับเดือน
+}: {
+  groupEmployeeIds: string[];
+  salaryData: any;
+  allLeaves: any[];
+  yearMonth: string;
+  employeeDirectory: any[];
+  poolAdjustment?: {
+    excludedNormalPieces?: number;
+    excludedBuyPieces?: number;
+  } | null;
 }) {
   if (!groupEmployeeIds || groupEmployeeIds.length === 0) return {};
 
@@ -106,7 +121,7 @@ export function computePoolSharesForGroup({
     }
   });
 
-  // --- Step 2: รวม Pool จากชิ้นของทุกคน (รวมคนที่ถูกตัด) ---
+  // --- Step 2: รวม Pool จากชิ้นของทุกคน แล้วหัก "ไม่นับค่าคอม" ระดับเดือน ---
   let totalSellPoolPieces = 0;
   let totalBuyPoolPieces = 0;
   groupEmployeeIds.forEach((employeeId) => {
@@ -118,6 +133,20 @@ export function computePoolSharesForGroup({
       totalBuyPoolPieces += buyPieces[employeeId]; // รับซื้อ
     }
   });
+  // หัก adjustment ระดับเดือน (admin ใส่แยก — เช่น สินค้าโปรโมชั่น / ทองแท่ง MD)
+  // clamp ขั้นต่ำที่ 0 กันค่าหักเผลอเกินกองกลาง · เก็บ gross ไว้แสดงในแผนผัง
+  const grossSellPoolPieces = totalSellPoolPieces;
+  const grossBuyPoolPieces = totalBuyPoolPieces;
+  const excludedNormal = Math.max(
+    0,
+    Number(poolAdjustment?.excludedNormalPieces) || 0,
+  );
+  const excludedBuy = Math.max(
+    0,
+    Number(poolAdjustment?.excludedBuyPieces) || 0,
+  );
+  totalSellPoolPieces = Math.max(0, totalSellPoolPieces - excludedNormal);
+  totalBuyPoolPieces = Math.max(0, totalBuyPoolPieces - excludedBuy);
 
   // --- Step 3: คำนวณตามสูตร Excel แยก 2 ฝั่ง ---
   function computeShares(poolEligibility, totalPoolPieces) {
@@ -212,6 +241,10 @@ export function computePoolSharesForGroup({
       // ข้อมูล Pool
       totalSellPoolPieces,
       totalBuyPoolPieces,
+      grossSellPoolPieces,
+      grossBuyPoolPieces,
+      excludedNormalPieces: excludedNormal,
+      excludedBuyPieces: excludedBuy,
       eligibleSellEmployeeCount: sellResult.eligibleEmployeeCount,
       sellBaseSharePercent: sellResult.baseSharePercent,
       sellLeaveDeductionFactor: sellResult.leaveDeductionFactor,

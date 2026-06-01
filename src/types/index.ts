@@ -224,6 +224,7 @@ export interface AppData {
   advanceRequests: AdvanceRequest[];
   roles: Role[];
   payrollConfirms: PayrollConfirms;
+  poolAdjustments: PoolAdjustmentsByMonth;
   loading: boolean;
   error: Error | null;
 
@@ -277,4 +278,23 @@ export interface AppData {
     yearMonth: string,
     summary: PayrollConfirmEntry,
   ) => void | Promise<void>;
+  setPoolAdjustment: (
+    yearMonth: string,
+    fields: {
+      excludedNormalPieces?: number;
+      excludedBuyPieces?: number;
+      excludedNormalNote?: string;
+      excludedBuyNote?: string;
+    },
+  ) => Promise<void>;
 }
+
+export interface PoolAdjustmentEntry {
+  excludedNormalPieces?: number;
+  excludedBuyPieces?: number;
+  excludedNormalNote?: string;
+  excludedBuyNote?: string;
+  updatedAt?: number;
+}
+
+export type PoolAdjustmentsByMonth = Record<string, PoolAdjustmentEntry>;

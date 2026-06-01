@@ -88,4 +88,7 @@ export const COLLECTIONS = {
   ADVANCES: "advances",
   ROLES: "roles",
   PAYROLL_CONFIRMS: "payrollConfirms",
+  // Admin ใส่ "จำนวนที่ไม่นับค่าคอม" ระดับกองกลาง (โปรโมชั่น / ทองแท่ง MD ฯลฯ)
+  // — หักจากยอดที่นำเข้ากองกลาง 1 doc ต่อเดือน
+  POOL_ADJUSTMENTS: "poolAdjustments",
 };

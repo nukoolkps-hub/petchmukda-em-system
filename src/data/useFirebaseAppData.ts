@@ -13,12 +13,14 @@ import {
   useEmployeesForScope,
   useLeavesForScope,
   usePayrollConfirmsForScope,
+  usePoolAdjustments,
   usePoolSnapshots,
   useRoles,
   useSalariesForScope,
 } from "../firebase/hooks/useFirestore";
 import * as leavesAPI from "../firebase/leaves";
 import * as payrollConfirmsAPI from "../firebase/payrollConfirms";
+import * as poolAdjustmentsAPI from "../firebase/poolAdjustments";
 import * as poolSnapshotsAPI from "../firebase/poolSnapshots";
 import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
@@ -64,6 +66,7 @@ export default function useFirebaseAppData({
   // อ่าน salaries ของเพื่อน). admin ไม่ต้องใช้ก็ได้ — แต่ subscribe ทิ้งไว้
   // ค่า read น้อย (1 doc/เดือน) ไม่กระทบ performance.
   const poolSnapResult = usePoolSnapshots();
+  const poolAdjResult = usePoolAdjustments();
 
   // employee เห็น salaries ของตัวเองคนเดียว — เติม peer-data จาก
   // poolSnapshots ลงไปใน salaryData ก่อนส่งต่อให้ component (SalaryView,
@@ -92,7 +95,8 @@ export default function useFirebaseAppData({
     advResult.loading ||
     rolesResult.loading ||
     pcResult.loading ||
-    poolSnapResult.loading;
+    poolSnapResult.loading ||
+    poolAdjResult.loading;
   const error =
     employeeResult.error ||
     leavesResult.error ||
@@ -100,7 +104,8 @@ export default function useFirebaseAppData({
     advResult.error ||
     rolesResult.error ||
     pcResult.error ||
-    poolSnapResult.error;
+    poolSnapResult.error ||
+    poolAdjResult.error;
 
   // เดือน (YYYY-MM) นี้ถูกล็อกถาวรแล้วหรือยัง (พ้น 7 วันหลังยืนยันยอดครั้งแรก)
   function monthLocked(yearMonth: string) {
@@ -278,6 +283,12 @@ export default function useFirebaseAppData({
     });
   }
 
+  /* ─── Pool Adjustments (หักจากกองกลาง ระดับเดือน) ────────── */
+  async function setPoolAdjustment(yearMonth, fields) {
+    if (monthLocked(yearMonth)) throw new Error(LOCK_MSG);
+    await poolAdjustmentsAPI.setPoolAdjustment(yearMonth, fields);
+  }
+
   /* ─── Legacy setters (deprecated — แต่ component เก่าใช้) ───
      ใน Firebase mode setters เหล่านี้เป็น no-op
      เพราะ data sync ผ่าน real-time subscription                   */
@@ -292,6 +303,7 @@ export default function useFirebaseAppData({
     advanceRequests: advResult.data,
     roles: rolesResult.data,
     payrollConfirms: pcResult.data,
+    poolAdjustments: poolAdjResult.data,
 
     // Status
     loading,
@@ -319,5 +331,6 @@ export default function useFirebaseAppData({
     upsertRole,
     deleteRole,
     setPayrollConfirm,
+    setPoolAdjustment,
   };
 }

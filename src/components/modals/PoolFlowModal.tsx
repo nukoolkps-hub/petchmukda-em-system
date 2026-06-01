@@ -26,6 +26,10 @@ interface PoolFlowModalProps {
   allLeaves?: any[];
   roles?: Role[];
   initialMonth?: string;
+  poolAdjustments?: Record<
+    string,
+    { excludedNormalPieces?: number; excludedBuyPieces?: number }
+  >;
   // เดือนนี้ admin "ยืนยันยอด" แล้วหรือยัง — ถ้ายัง ตัวเลขในแผนผังยังเปลี่ยนได้
   // (admin ยังแก้/พนักงานยื่นลาเพิ่มได้) → ล็อกแผนผังกันสับสน เปิดดูได้หลัง
   // confirm เท่านั้น
@@ -49,6 +53,7 @@ export default function PoolFlowModal({
   allLeaves = [],
   roles = [],
   initialMonth,
+  poolAdjustments,
   isConfirmed = false,
 }: PoolFlowModalProps) {
   const now = new Date();
@@ -144,8 +149,16 @@ export default function PoolFlowModal({
         allLeaves,
         yearMonth: selectedMonth,
         employeeDirectory,
+        poolAdjustment: poolAdjustments?.[selectedMonth] || null,
       }),
-    [groupEmployeeIds, salaryData, allLeaves, selectedMonth, employeeDirectory],
+    [
+      groupEmployeeIds,
+      salaryData,
+      allLeaves,
+      selectedMonth,
+      employeeDirectory,
+      poolAdjustments,
+    ],
   );
 
   // ชื่อแสดงผล (admin = ชื่อจริง · พนักงาน = "คุณ" / "เพื่อนร่วมทีม #n")

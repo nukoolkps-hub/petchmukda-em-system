@@ -118,6 +118,8 @@ export default function LeaveApp() {
     advanceRequests,
     roles,
     payrollConfirms,
+    poolAdjustments,
+    setPoolAdjustment,
     loading,
     error,
     setSalaryData,
@@ -420,6 +422,7 @@ export default function LeaveApp() {
                         onOpenAdvance={() => setShowAdvanceModal(true)}
                         roles={roles}
                         payrollConfirms={payrollConfirms}
+                        poolAdjustments={poolAdjustments}
                         showToast={showToast}
                       />
                     </div>
@@ -451,6 +454,8 @@ export default function LeaveApp() {
                       onUpsertRole={upsertRole}
                       onDeleteRole={deleteRole}
                       payrollConfirms={payrollConfirms}
+                      poolAdjustments={poolAdjustments}
+                      onSetPoolAdjustment={setPoolAdjustment}
                       onSetPayrollConfirm={setPayrollConfirm}
                       showToast={showToast}
                     />
