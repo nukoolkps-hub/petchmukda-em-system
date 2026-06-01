@@ -212,7 +212,7 @@ export default function PoolAdjustmentModal({
                 {g.label}
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-txt-mid">ขายทั่วไป</span>
+                <span className="text-txt-mid">ขาย (ทั่วไป)</span>
                 <span className="font-semibold">
                   {formatThaiNumber(g.normal)} − {formatThaiNumber(dN)} ={" "}
                   {formatThaiNumber(Math.max(0, g.normal - dN))} ชิ้น
@@ -296,7 +296,7 @@ function ItemRow({
           }
           className={selectCls}
         >
-          <option value="normal">ขายทั่วไป</option>
+          <option value="normal">ขาย (ทั่วไป)</option>
           <option value="buy">รับซื้อ</option>
         </select>
         {!locked && (
