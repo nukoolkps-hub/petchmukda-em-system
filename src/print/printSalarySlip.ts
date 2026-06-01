@@ -56,11 +56,15 @@ function buildSalarySlipHTML(
       side === "normal"
         ? poolShare.grossSellPoolPieces
         : poolShare.grossBuyPoolPieces;
+    const net =
+      side === "normal"
+        ? poolShare.totalSellPoolPieces
+        : poolShare.totalBuyPoolPieces;
     const detail = (items || [])
       .filter((it) => (Number(it.pieces) || 0) > 0)
       .map((it) => `${it.label || "ไม่ระบุ"} ${formatNumber(it.pieces)}`)
       .join(", ");
-    return `<br/><span style="font-size:10px;color:#999;">กองกลาง ${formatNumber(gross)} − หัก ${formatNumber(total)} ชิ้น${detail ? ` (${detail})` : ""}</span>`;
+    return `<br/><span style="font-size:10px;color:#999;">กองกลาง ${formatNumber(gross)} − ${formatNumber(total)} = ${formatNumber(net)} ชิ้น${detail ? ` (หัก: ${detail})` : ""}</span>`;
   };
 
   // ── สร้างรายการรายรับ ──

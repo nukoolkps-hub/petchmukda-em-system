@@ -628,8 +628,9 @@ export default function SalaryAdminEdit({
                   {poolShare.excludedNormalPieces > 0 && (
                     <span className="text-red">
                       {" "}
-                      (กอง {poolShare.grossSellPoolPieces} − หัก{" "}
-                      {poolShare.excludedNormalPieces})
+                      (กอง {poolShare.grossSellPoolPieces} −{" "}
+                      {poolShare.excludedNormalPieces} ={" "}
+                      {poolShare.totalSellPoolPieces})
                     </span>
                   )}
                 </div>
@@ -668,8 +669,9 @@ export default function SalaryAdminEdit({
                   {poolShare.excludedBuyPieces > 0 && (
                     <span className="text-red">
                       {" "}
-                      (กอง {poolShare.grossBuyPoolPieces} − หัก{" "}
-                      {poolShare.excludedBuyPieces})
+                      (กอง {poolShare.grossBuyPoolPieces} −{" "}
+                      {poolShare.excludedBuyPieces} ={" "}
+                      {poolShare.totalBuyPoolPieces})
                     </span>
                   )}
                 </div>

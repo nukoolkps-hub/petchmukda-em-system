@@ -62,11 +62,15 @@ export function buildSalarySlipDocDef({
       side === "normal"
         ? poolShare.grossSellPoolPieces
         : poolShare.grossBuyPoolPieces;
+    const net =
+      side === "normal"
+        ? poolShare.totalSellPoolPieces
+        : poolShare.totalBuyPoolPieces;
     const detail = (items || [])
       .filter((it: any) => (Number(it.pieces) || 0) > 0)
       .map((it: any) => `${it.label || "ไม่ระบุ"} ${formatNumber(it.pieces)}`)
       .join(", ");
-    return `\nกองกลาง ${formatNumber(gross)} − หัก ${formatNumber(total)} ชิ้น${detail ? ` (${detail})` : ""}`;
+    return `\nกองกลาง ${formatNumber(gross)} − ${formatNumber(total)} = ${formatNumber(net)} ชิ้น${detail ? ` (หัก: ${detail})` : ""}`;
   };
 
   /* ─── สร้าง earnings rows ─────────────────────────────── */

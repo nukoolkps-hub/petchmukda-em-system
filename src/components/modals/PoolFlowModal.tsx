@@ -406,8 +406,9 @@ function PoolSideFlow({
         {excludedTotal > 0 && (
           <div className="text-[11px] text-gold-lt/80 mt-1 text-left bg-white/10 rounded px-2 py-1.5">
             <div className="font-semibold mb-0.5">
-              หักจากกอง {formatThaiNumber(grossPool)} −{" "}
-              {formatThaiNumber(excludedTotal)} ชิ้น
+              ก่อนหัก {formatThaiNumber(grossPool)} −{" "}
+              {formatThaiNumber(excludedTotal)} = {formatThaiNumber(totalPool)}{" "}
+              ชิ้น
             </div>
             {excludedItems.map((it, idx) => (
               <div key={idx} className="opacity-90">

@@ -549,11 +549,11 @@ export default function SalaryView({
                   ),
                   main: "ค่าคอมขาย (ทั่วไป)",
                   sub: poolShare
-                    ? `กองกลาง ${poolShare.totalSellPoolPieces} ชิ้น${
+                    ? `กองกลาง ${
                         poolShare.excludedNormalPieces > 0
-                          ? ` (หัก ${poolShare.excludedNormalPieces})`
-                          : ""
-                      } · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`
+                          ? `${poolShare.grossSellPoolPieces} − ${poolShare.excludedNormalPieces} = ${poolShare.totalSellPoolPieces}`
+                          : poolShare.totalSellPoolPieces
+                      } ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`
                     : `${salaryCalculation.normalSalePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`,
                   value: salaryCalculation.normalSaleCommission,
                 },
@@ -579,11 +579,11 @@ export default function SalaryView({
                   ),
                   main: "ค่าคอมรับซื้อ",
                   sub: poolShare
-                    ? `กองกลาง ${poolShare.totalBuyPoolPieces} ชิ้น${
+                    ? `กองกลาง ${
                         poolShare.excludedBuyPieces > 0
-                          ? ` (หัก ${poolShare.excludedBuyPieces})`
-                          : ""
-                      } · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`
+                          ? `${poolShare.grossBuyPoolPieces} − ${poolShare.excludedBuyPieces} = ${poolShare.totalBuyPoolPieces}`
+                          : poolShare.totalBuyPoolPieces
+                      } ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`
                     : `${salaryCalculation.buyPieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`,
                   value: salaryCalculation.buyCommission,
                 },
