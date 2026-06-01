@@ -2,7 +2,7 @@
   "name": "mukda-employee",
   "private": true,
   "version": "1.0.0",
-  "description": "ระบบพนักงานห้างเพชรทองมุกดา - ระบบลา, เงินเดือน, ค่าคอม Pool, หนังสือรับรอง, LINE Bot",
+  "description": "ห้างเพชรทองมุกดา — ระบบพนักงาน: ระบบลา, เงินเดือน, ค่าคอมกองกลาง, หนังสือรับรอง, LINE Bot",
   "type": "module",
   "scripts": {
     "dev": "firebase emulators:start --project demo-petchmukda-bot --only auth,firestore,functions,storage & vite",

@@ -1,6 +1,6 @@
 {
 	"name": "muktha-functions",
-	"description": "Firebase Cloud Functions สำหรับระบบพนักงานห้างเพชรทองมุกดา",
+	"description": "Firebase Cloud Functions สำหรับห้างเพชรทองมุกดา — ระบบพนักงาน",
 	"main": "lib/index.js",
 	"scripts": {
 		"build": "tsc",

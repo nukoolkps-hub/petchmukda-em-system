@@ -1,5 +1,5 @@
 /**
- * Shared type definitions — ระบบพนักงานห้างเพชรทองมุกดา
+ * Shared type definitions — ห้างเพชรทองมุกดา ระบบพนักงาน
  */
 
 /* ─── LINE config stored in Firestore /config/secrets ─────────── */

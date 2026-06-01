@@ -1,5 +1,5 @@
 /**
- * Firebase Cloud Functions — ระบบพนักงานห้างเพชรทองมุกดา
+ * Firebase Cloud Functions — ห้างเพชรทองมุกดา ระบบพนักงาน
  * Barrel file: re-exports all functions so Firebase discovers them.
  */
 
