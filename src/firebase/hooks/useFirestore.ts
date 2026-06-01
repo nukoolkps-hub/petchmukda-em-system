@@ -12,6 +12,10 @@ import {
   subscribePendingAdvances,
 } from "../advances";
 import {
+  subscribeEmployeeLoans,
+  subscribeEmployeeLoansByEmployeeId,
+} from "../employeeLoans";
+import {
   subscribeEmployeeByLineUserId,
   subscribeEmployees,
 } from "../employees";
@@ -201,6 +205,27 @@ export function useEmployeesForScope({
     },
     [] as any[],
     [isAdmin, authUid],
+  );
+}
+
+export function useEmployeeLoansForScope({
+  isAdmin,
+  employeeId,
+}: {
+  isAdmin: boolean;
+  employeeId: string | null;
+}) {
+  return useScopedSubscription(
+    () => {
+      if (isAdmin) return subscribeEmployeeLoans;
+      if (employeeId) {
+        return (onChange, onError) =>
+          subscribeEmployeeLoansByEmployeeId(employeeId, onChange, onError);
+      }
+      return null;
+    },
+    [] as any[],
+    [isAdmin, employeeId],
   );
 }
 

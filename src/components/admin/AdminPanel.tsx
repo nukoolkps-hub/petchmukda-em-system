@@ -9,6 +9,7 @@ import {
 import SalaryAdminEdit from "../salary/SalaryAdminEdit";
 import AdminAdvancePanel from "./AdminAdvancePanel";
 import EmployeeAdminPanel from "./EmployeeAdminPanel";
+import EmployeeLoansPanel from "./EmployeeLoansPanel";
 import LeaveListPanel from "./LeaveListPanel";
 import LeaveSummaryPanel from "./LeaveSummaryPanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
@@ -41,6 +42,10 @@ export default function AdminPanel({
   onSetPayrollConfirm,
   poolAdjustments,
   onSetPoolAdjustment,
+  employeeLoans,
+  onAddLoan,
+  onUpdateLoan,
+  onDeleteLoan,
   showToast,
   // controlled by App so the desktop Sidebar can drive section as well
   section,
@@ -187,6 +192,18 @@ export default function AdminPanel({
           advanceRequests={advanceRequests || []}
           employeeDirectory={employeeDirectory}
           onUpdate={onUpdateAdvance}
+          showToast={showToast}
+        />
+      )}
+
+      {/* ── LOANS section (เงินกู้ผ่อนคืน) ── */}
+      {section === "loans" && (
+        <EmployeeLoansPanel
+          employeeLoans={employeeLoans || []}
+          employeeDirectory={employeeDirectory}
+          onAddLoan={onAddLoan}
+          onUpdateLoan={onUpdateLoan}
+          onDeleteLoan={onDeleteLoan}
           showToast={showToast}
         />
       )}

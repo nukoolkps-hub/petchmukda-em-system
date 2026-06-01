@@ -171,6 +171,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ─── Employee Loans (เงินกู้ผ่อนคืน — admin สร้าง) ──────────
+    // อ่าน: admin หรือเจ้าของ · เขียน: admin เท่านั้น
+    match /employeeLoans/{loanId} {
+      allow read:  if isAdmin() || isEmployeeOwner(resource.data.employeeId);
+      allow write: if isAdmin();
+    }
+
     // ─── Pool Adjustments (admin หักจากกองกลาง ระดับเดือน) ─────
     // {excludedNormalPieces, excludedBuyPieces, notes} — 1 doc/เดือน
     // อ่าน: signed-in (ฝั่งพนักงานใช้คำนวณ pool ของตัวเอง)

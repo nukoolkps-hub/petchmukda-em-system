@@ -120,6 +120,10 @@ export default function LeaveApp() {
     payrollConfirms,
     poolAdjustments,
     setPoolAdjustment,
+    employeeLoans,
+    addEmployeeLoan,
+    updateEmployeeLoan,
+    deleteEmployeeLoan,
     loading,
     error,
     setSalaryData,
@@ -456,6 +460,10 @@ export default function LeaveApp() {
                       payrollConfirms={payrollConfirms}
                       poolAdjustments={poolAdjustments}
                       onSetPoolAdjustment={setPoolAdjustment}
+                      employeeLoans={employeeLoans}
+                      onAddLoan={addEmployeeLoan}
+                      onUpdateLoan={updateEmployeeLoan}
+                      onDeleteLoan={deleteEmployeeLoan}
                       onSetPayrollConfirm={setPayrollConfirm}
                       showToast={showToast}
                     />

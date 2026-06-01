@@ -7,9 +7,11 @@
 import { useMemo } from "react";
 import * as advancesAPI from "../firebase/advances";
 
+import * as employeeLoansAPI from "../firebase/employeeLoans";
 import * as employeesAPI from "../firebase/employees";
 import {
   useAdvancesForScope,
+  useEmployeeLoansForScope,
   useEmployeesForScope,
   useLeavesForScope,
   usePayrollConfirmsForScope,
@@ -61,6 +63,10 @@ export default function useFirebaseAppData({
   });
   const rolesResult = useRoles();
   const pcResult = usePayrollConfirmsForScope({ isAdmin });
+  const loansResult = useEmployeeLoansForScope({
+    isAdmin,
+    employeeId: currentEmployeeId,
+  });
   // poolSnapshots: doc per month มี pieces + roleId + poolExclusion + leaveDays
   // ของทุกคน — เป็น public source สำหรับ pool calc ฝั่งพนักงาน (ที่ไม่ได้
   // อ่าน salaries ของเพื่อน). admin ไม่ต้องใช้ก็ได้ — แต่ subscribe ทิ้งไว้
@@ -96,7 +102,8 @@ export default function useFirebaseAppData({
     rolesResult.loading ||
     pcResult.loading ||
     poolSnapResult.loading ||
-    poolAdjResult.loading;
+    poolAdjResult.loading ||
+    loansResult.loading;
   const error =
     employeeResult.error ||
     leavesResult.error ||
@@ -105,7 +112,8 @@ export default function useFirebaseAppData({
     rolesResult.error ||
     pcResult.error ||
     poolSnapResult.error ||
-    poolAdjResult.error;
+    poolAdjResult.error ||
+    loansResult.error;
 
   // เดือน (YYYY-MM) นี้ถูกล็อกถาวรแล้วหรือยัง (พ้น 7 วันหลังยืนยันยอดครั้งแรก)
   function monthLocked(yearMonth: string) {
@@ -256,6 +264,17 @@ export default function useFirebaseAppData({
     await advancesAPI.rejectAdvance(id, reason);
   }
 
+  /* ─── Employee Loans (เงินกู้ผ่อนคืน — admin สร้าง) ────────── */
+  async function addEmployeeLoan(loan) {
+    return await employeeLoansAPI.addEmployeeLoan(loan);
+  }
+  async function updateEmployeeLoan(id, fields) {
+    await employeeLoansAPI.updateEmployeeLoan(id, fields);
+  }
+  async function deleteEmployeeLoan(id) {
+    await employeeLoansAPI.deleteEmployeeLoan(id);
+  }
+
   /* ─── Roles ─────────────────────────────────────────────── */
   async function upsertRole(role) {
     await rolesAPI.upsertRole(role);
@@ -304,6 +323,7 @@ export default function useFirebaseAppData({
     roles: rolesResult.data,
     payrollConfirms: pcResult.data,
     poolAdjustments: poolAdjResult.data,
+    employeeLoans: loansResult.data,
 
     // Status
     loading,
@@ -332,5 +352,8 @@ export default function useFirebaseAppData({
     deleteRole,
     setPayrollConfirm,
     setPoolAdjustment,
+    addEmployeeLoan,
+    updateEmployeeLoan,
+    deleteEmployeeLoan,
   };
 }

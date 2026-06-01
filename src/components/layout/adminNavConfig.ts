@@ -9,6 +9,7 @@ import {
   Coins as IconCoins,
   CreditCard as IconCreditCard,
   Diamond as IconDiamond,
+  HandCoins as IconHandCoins,
   Settings as IconSettings,
   Tag as IconTag,
   Users as IconUsers,
@@ -19,6 +20,7 @@ export type AdminSectionId =
   | "leaves"
   | "salary"
   | "advance"
+  | "loans"
   | "payroll"
   | "roles"
   | "positions";
@@ -60,6 +62,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { id: "salary", label: "ค่าคอม", Icon: IconDiamond },
       { id: "advance", label: "เบิกเงิน", Icon: IconCashBanknote },
+      { id: "loans", label: "กู้เงิน", Icon: IconHandCoins },
       { id: "payroll", label: "จ่ายเงิน", Icon: IconCreditCard },
     ],
   },
