@@ -516,9 +516,13 @@ export default function PayrollSummaryPanel({
                 <div className="text-sm text-txt-mid px-2.5 py-1.5 bg-white rounded-lg">
                   ยอด <b>฿{formatThaiNumber(confirmed.totalAmount)}</b> ·{" "}
                   {confirmed.employeeCount} คน
-                  <div className="text-xs text-txt-soft mt-1 inline-flex items-center gap-1">
-                    <IconLock size={10} strokeWidth={2.4} />
-                    แก้ไขได้อีก {lock.daysLeft} วัน แล้วปิดรอบถาวร
+                  <div className="text-xs text-txt-soft mt-1.5 flex items-center gap-1.5">
+                    <IconLock
+                      size={11}
+                      strokeWidth={2.4}
+                      className="shrink-0"
+                    />
+                    <span>แก้ไขได้อีก {lock.daysLeft} วัน แล้วปิดรอบถาวร</span>
                   </div>
                 </div>
               )}
