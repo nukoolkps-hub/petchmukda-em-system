@@ -155,7 +155,7 @@ interface Item {
 }
 ```
 
-**กฎ:** เกณฑ์ 80% ใช้ gross (ไม่หัก พนักงานยัง credit อยู่ในกอง) ·
+**กฎ:** เกณฑ์ 80% ใช้ gross (ไม่หัก พนักงานยังมีสิทธิ์อยู่ในกอง) ·
 กองที่หารแบ่งใช้ `net = gross − Σ items ของ poolGroup นั้น`
 
 ### employeeLoans/{loanId}

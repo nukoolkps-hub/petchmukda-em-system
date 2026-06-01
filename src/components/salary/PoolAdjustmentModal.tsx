@@ -1,7 +1,7 @@
 /* ─── Pool Adjustment Modal ────────────────────────────────────────
    admin ใส่ "รายการหักจากกองกลาง" ระดับเดือน แยกตาม "ตำแหน่ง" (poolGroup)
    — โปรโมชั่น / ทองแท่ง MD ฯลฯ. แต่ละ item: {poolGroup, side, pieces, label}
-   เกณฑ์ 80% ยังใช้ gross เหมือนเดิม (พนักงานยัง credit อยู่)             */
+   เกณฑ์ 80% ยังใช้ gross เหมือนเดิม (พนักงานยังมีสิทธิ์อยู่ในกอง)             */
 import {
   Lock as IconLock,
   Minus as IconMinus,

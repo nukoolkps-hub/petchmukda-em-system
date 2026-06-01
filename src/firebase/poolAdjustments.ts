@@ -10,7 +10,7 @@
    }
 
    กฎ:
-   - เกณฑ์ 80%: ใช้ gross (ไม่หัก) — พนักงานยัง credit อยู่ในกอง
+   - เกณฑ์ 80%: ใช้ gross (ไม่หัก) — พนักงานยังมีสิทธิ์อยู่ในกอง
    - กองกลางที่หารแบ่ง: ใช้ net (gross − sum of items)
    - ขาย-พิเศษ: ไม่มี adjustment (ใครขายใครได้อยู่แล้ว)                 */
 import { collection, doc, onSnapshot, setDoc } from "firebase/firestore";
