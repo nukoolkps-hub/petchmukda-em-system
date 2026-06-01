@@ -16,8 +16,9 @@ Earnings = baseSalary
 
 Deductions = overQuotaDeduction
            + advanceDeduction
+           + loanDeduction         (เงินกู้ผ่อนคืน — หักเท่าที่มี FIFO)
            + socialSecurity
-           + lateDeduction
+           + customDeductions
 
 Net = Earnings - Deductions
 ```
@@ -57,6 +58,7 @@ Source: `src/utils/salaryUtils.ts` → `calculateSalary()`
 1. รวบรวมทุกคนใน pool group เดียวกัน (จาก `role.poolGroup`)
 2. หา **top** ในฝั่งนั้น: `topSellPieces = max(sellPieces ทุกคน)`, `topBuyPieces = max(buyPieces)`
 3. **กฎ 80%** — เกณฑ์เข้า pool: `pieces ≥ topPieces × POOL_THRESHOLD (= 0.8)` → ต่ำกว่าถูกตัดออก
+   - ฝั่งขาย: ใช้ `sellPieces = normalSalePieces + specialSalePieces` เทียบ
 4. นับ `eligibleEmployeeCount` (n) = จำนวนคนที่ยังเหลือใน pool
 5. **เปอร์เซ็นต์ฐาน:** `baseSharePercent = 100 ÷ n`
 6. **ตัวคูณหักวันลา:** `leaveDeductionFactor = baseSharePercent ÷ DAYS_PER_MONTH (= 30)`
@@ -64,7 +66,10 @@ Source: `src/utils/salaryUtils.ts` → `calculateSalary()`
 8. **% หัก** ของแต่ละคน: `leaveDeductionPercent[i] = effectiveLeave[i] × leaveDeductionFactor × (n − 1)`
 9. **% แบ่งเพื่อน** (กระจายให้คนอื่นๆ): `redistributedPercent[i] = leaveDeductionPercent[i] ÷ (n − 1)`
 10. **% สุทธิ** ของแต่ละคน: `finalSharePercent[i] = baseSharePercent − leaveDeductionPercent[i] + Σ(redistributedPercent ของคนอื่น)`
-11. **Pool รวม:** `totalPoolPieces = Σ pieces ของทุกคน` (รวมคนที่ถูกตัดด้วย — ชิ้นเขายังเข้า pool, แต่เขาไม่ได้รับส่วนแบ่ง)
+11. **Pool รวมที่หารแบ่ง** (gross):
+    - ฝั่งขาย: `Σ normalSalePieces` (ทั่วไปเท่านั้น — **ไม่รวมพิเศษ**)
+    - ฝั่งรับซื้อ: `Σ buyPieces`
+    - แล้ว**หัก** `poolAdjustments` ของตำแหน่งนั้น → ได้ `totalPoolPieces` (net)
 12. **ชิ้นที่ได้:** `allocatedPieces[i] = (finalSharePercent[i] ÷ 100) × totalPoolPieces`
 
 #### ทำไม 2 วันแรกฟรี
@@ -73,7 +78,9 @@ Source: `src/utils/salaryUtils.ts` → `calculateSalary()`
 
 ### ขาย-พิเศษ (specialSalePieces)
 
-ไม่เข้า pool — ใครขายใครได้: `commission = pieces × specialSalePieceRate` แต่ยังนับรวมใน `topSellPieces` (ส่งผลต่อ 80% threshold)
+**ใครขายใครได้** — `commission = pieces × specialSalePieceRate` จ่ายตรงเข้า
+คนนั้น · ไม่เข้ากองกลางที่หารแบ่ง · **แต่นับรวมใน `sellPieces`** ตอนเทียบ
+80% threshold (พนักงานยังได้ credit ในการเข้ากอง)
 
 ### Base Salary Threshold
 
@@ -119,5 +126,50 @@ Source: `src/utils/leaveUtils.ts`
 - เพดาน: 50% ของ baseSalary
 - Status flow: `pending → approved / rejected`
 - Approved → หักจากเงินเดือนรอบถัดไป
+- พนักงาน**ขอเอง** · admin อนุมัติ/ปฏิเสธ
+- บล็อกการเบิกในวันสุดท้ายของเดือน (วันทำเงินเดือน)
 - LINE notification: แจ้ง admin เมื่อมีคำขอ, แจ้งพนักงานเมื่อ approve/reject
 - Cleanup: Cloud Function ลบ advances เกิน 6 เดือน (ทุกวันที่ 1)
+
+## ระบบเงินกู้ผ่อนคืน (`employeeLoans`)
+
+ต่างจากเบิกล่วงหน้า — **admin สร้างเอง** + หักจากเงินเดือนอัตโนมัติทุกเดือน
+จนครบ โดยใช้ **ledger** เก็บยอดที่หักจริงรายเดือน
+
+- ฟิลด์หลัก: `principal` (เงินต้น) · `monthlyDeduction` (ผ่อนเดือนละ) ·
+  `startMonth` · `status` · `repayments[ym]` (ledger)
+- คงเหลือ = `principal − Σ repayments`
+- **สูตรหัก (FIFO):** เรียงตาม `startMonth` → `id` · ต่อก้อน:
+  - `due = min(monthlyDeduction, คงเหลือ ไม่นับเดือนนี้)`
+  - `take = min(due, เงินเดือนสุทธิที่เหลือ)` ← **หักเท่าที่มี** (cap)
+- บันทึก ledger ตอน admin "ยืนยันยอด" — `repayments[ym]` เขียน
+  เป็น overwrite (idempotent re-confirm) + `status = "paid_off"` เมื่อครบ
+- Status flow: `active → paid_off / cancelled`
+
+Source: `src/firebase/employeeLoans.ts`, `src/utils/salaryUtils.ts` (`calculateSalary`)
+
+## รายการหักจากกองกลาง (`poolAdjustments`)
+
+admin ใส่ "จำนวนที่ไม่นับค่าคอม" ระดับเดือน — บางสินค้าไม่ได้ค่าคอม
+(สินค้าโปรโมชั่นฝั่งขาย, ทองแท่ง MD ฝั่งรับซื้อ ฯลฯ) · 1 doc/เดือน
+
+- Schema: `items: [{id, poolGroup, side: "normal"|"buy", pieces, label}]`
+- **แยกตามตำแหน่ง (`poolGroup`):** หัก item ของกลุ่ม A ไม่กระทบกลุ่ม B
+- **เกณฑ์ 80% ใช้ gross** (ไม่หัก) — พนักงานยังได้ credit จากยอดที่ทำ
+- **กองที่หารแบ่งใช้ net:** `totalSellPoolPieces = gross − Σ items(side="normal")`
+- ไม่มี side adjustment สำหรับ "ขาย-พิเศษ" (ใครขายใครได้อยู่แล้ว)
+
+## กฎปิดรอบ 7 วัน
+
+หลัง admin "ยืนยันยอด" แต่ละเดือน — แก้ไขได้อีก **7 วัน** นับจาก
+"ยืนยันครั้งแรก" (`firstConfirmedAt`, ไม่รีเซ็ตเมื่อยืนยันใหม่). พ้นกำหนด →
+**ล็อกถาวร**: ห้ามแก้ค่าคอม/เงินเดือน · ห้ามยื่น/ลบลา · ห้ามเบิกเงิน ·
+ห้ามยืนยันใหม่ · ห้ามหักกองกลาง — ของเดือนนั้น
+
+- `payrollConfirms/{ym}.lockAtMs = firstConfirmedAt + 7 วัน` (ms)
+- Single source of truth: `src/utils/payrollLock.ts` (`getPayrollLock`)
+- บังคับ 2 ชั้น:
+  - **UI:** ปุ่ม disabled + banner "ปิดรอบแล้ว"
+  - **Firestore rules:** ฟังก์ชัน `monthLocked(ym)` ใน firestore.rules
+    ป้องกันการเขียน leaves/advances/salaries/payrollConfirms/poolAdjustments
+    ของเดือนที่ล็อก

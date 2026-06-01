@@ -53,7 +53,6 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | buyPieces | number | ชิ้นรับซื้อ |
 | invitePieces | number | ชิ้นเชิญสมัครบัตร |
 | transferPieces | number | ชิ้นย้ายข้อมูลบัตร |
-| lateDeduction | number | หักมาสาย/ขาดงาน |
 | socialSecurity | number | ประกันสังคม |
 | customEarnings | `{label,amount}[]` | รายรับที่ admin เพิ่มเอง |
 | customDeductions | `{label,amount}[]` | รายหักที่ admin เพิ่มเอง |
@@ -107,9 +106,16 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 
 | Field | Type | Description |
 |---|---|---|
-| confirmedAt | string (ISO) | เวลายืนยัน |
+| confirmedAt | string (ISO) | เวลายืนยัน (ล่าสุด — อัปเดตเมื่อ "ยืนยันยอดใหม่") |
+| firstConfirmedAt | string (ISO) | เวลายืนยัน **ครั้งแรก** — ไม่รีเซ็ตเมื่อยืนยันใหม่ ใช้คิด grace 7 วัน |
+| lockAtMs | number | `firstConfirmedAt + 7 วัน` (ms) — พ้นแล้วเดือนนี้ "ปิดรอบถาวร" |
 | totalAmount | number | ยอดรวม |
 | employeeCount | number | จำนวนพนักงาน |
+| breakdownSig | string | ลายเซ็น `{id:netSalary}` ทุกคน — ใช้เทียบว่า "ข้อมูลเปลี่ยนหลังยืนยัน" |
+
+> **ปิดรอบ 7 วัน:** เมื่อ `request.time > lockAtMs` → ห้ามแก้ค่าคอม/ลา/เบิก/
+> ยืนยันใหม่ ของเดือนนั้น (บังคับทั้ง UI ผ่าน `src/utils/payrollLock.ts` และ
+> firestore.rules ผ่านฟังก์ชัน `monthLocked(ym)`)
 
 ### poolSnapshots/{YYYY-MM}
 
@@ -127,6 +133,60 @@ poolSnapshots/2026-05 = {
 
 เขียนโดย `updateSalary` (mirror ทุกครั้งที่ save) + `backfillPoolSnapshots()` ตอน "ยืนยันยอด"
 ดูสถาปัตยกรรม phase 1/2 ที่ [`../reference.md`](../reference.md) → "Privacy: salaries vs poolSnapshots"
+
+### poolAdjustments/{YYYY-MM}
+
+"รายการหักจากกองกลาง" ที่ admin ใส่ — บางสินค้าไม่ได้ค่าคอม (โปรโมชั่นฝั่งขาย,
+ทองแท่ง MD ฝั่งรับซื้อ ฯลฯ) · หักระดับเดือน + **แยกตามตำแหน่ง (`poolGroup`)** ·
+1 doc/เดือน
+
+| Field | Type | Description |
+|---|---|---|
+| items | `Item[]` | รายการหัก (ดูด้านล่าง) |
+| updatedAt | number | epoch ms |
+
+```ts
+interface Item {
+  id: string;
+  poolGroup: string;     // ตำแหน่ง/กลุ่มที่หักจาก (role.poolGroup)
+  side: "normal" | "buy"; // ฝั่งขายทั่วไป หรือ รับซื้อ
+  pieces: number;        // จำนวนชิ้นที่ไม่นับค่าคอม
+  label: string;         // เหตุผล (เช่น "โปรโมชั่น", "ทองแท่ง MD")
+}
+```
+
+**กฎ:** เกณฑ์ 80% ใช้ gross (ไม่หัก พนักงานยัง credit อยู่ในกอง) ·
+กองที่หารแบ่งใช้ `net = gross − Σ items ของ poolGroup นั้น`
+
+### employeeLoans/{loanId}
+
+เงินกู้ผ่อนคืน — admin สร้าง (ต่างจากเบิกล่วงหน้าที่พนักงานขอ) ·
+หักจากเงินเดือนอัตโนมัติทุกเดือนจนครบ · ใช้ **ledger** (`repayments[ym]`)
+เก็บยอดที่หักจริงแต่ละเดือน → คงเหลือแม่นยำเสมอ
+
+| Field | Type | Description |
+|---|---|---|
+| employeeId | string | id พนักงาน |
+| employeeName | string | snapshot ชื่อ (ตอนสร้าง) |
+| principal | number | เงินต้น |
+| monthlyDeduction | number | ผ่อนเดือนละกี่บาท |
+| startMonth | string | `YYYY-MM` เดือนแรกที่เริ่มหัก |
+| note | string | เหตุผล |
+| status | `"active" \| "paid_off" \| "cancelled"` | สถานะ |
+| repayments | `Record<YYYY-MM, number>` | **ledger** — ยอดที่หักจริงแต่ละเดือน |
+| createdAt | string (ISO) | เวลาสร้าง |
+
+**คงเหลือ:** `principal − Σ repayments` (helper `loanRemaining()`)
+
+**สูตรหัก:** ตอน `calculateSalary` ของแต่ละเดือน:
+1. คำนวณ `netBeforeLoan = earnings − (advance + ss + overQuota + custom)`
+2. วน loop active loans เรียง FIFO (`startMonth` → `id`):
+   - `due = min(monthlyDeduction, คงเหลือ ที่ไม่นับเดือนนี้)`
+   - `take = min(due, avail)` ← cap ที่เงินสุทธิที่เหลือ
+   - `avail -= take` · `loanRepayments[id] = take`
+3. `loanDeduction = Σ take` → หักจาก deductions
+4. ตอน admin ยืนยันยอด → เขียน `repayments[ym]` (idempotent) +
+   `status = "paid_off"` เมื่อ Σ ≥ principal
 
 ### config/secrets (Cloud Functions only)
 
@@ -147,14 +207,16 @@ poolSnapshots/2026-05 = {
 | salaries/{empId}/months/{ym} | admin / owner | admin only |
 | collectionGroup `months` | admin only | blocked |
 | poolSnapshots/{YYYY-MM} | all signed-in | admin only |
-| advances | admin / owner | owner (create), admin (update/delete) |
+| poolAdjustments/{YYYY-MM} | all signed-in | admin (+ เดือนยังไม่ปิดรอบ) |
+| employeeLoans/{loanId} | admin / owner | admin only |
+| advances | admin / owner | owner (create), admin (update/delete) — เดือนปิดรอบแล้วเขียนไม่ได้ |
 | roles | all signed-in | admin only |
-| payrollConfirms | all signed-in | admin only |
+| payrollConfirms | all signed-in | admin (เดือนปิดรอบ → ยืนยันใหม่ไม่ได้) |
 | certCounters/{พ.ศ.} | all signed-in | all signed-in (count ต้อง +1 เท่านั้น) |
 | config/* | blocked | blocked (Functions ใช้ Admin SDK) |
 
 **Peer data สำหรับกองกลาง (Pool):**
-salary doc มี field อ่อนไหว (`note`, `customDeductions`, `lateDeduction`,
+salary doc มี field อ่อนไหว (`note`, `customDeductions`,
 `socialSecurity`, `slipUrl`) — ปิดไม่ให้พนักงานอ่านของเพื่อน แต่ pool calc
 ต้องรู้ pieces + roleId + poolExclusion + วันลา ของเพื่อนทั้งกลุ่ม → ย้ายไปไว้ใน
 `poolSnapshots/{ym}` ที่อ่านได้ทุก signed-in (mirror ทุกครั้งที่ admin save salary)
