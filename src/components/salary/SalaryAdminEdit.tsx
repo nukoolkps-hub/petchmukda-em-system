@@ -1042,9 +1042,18 @@ export default function SalaryAdminEdit({
               Rate ต่อชิ้นกำหนดในแท็บ "ข้อมูลพนักงาน"
             </div>
             {poolShare && (
-              <div className="mt-2 text-xs text-maroon text-center px-2.5 py-1.5 rounded-lg bg-[#C9973A15] inline-flex items-center justify-center gap-1 w-full">
-                <IconHandshake size={12} strokeWidth={2.4} />
-                ค่าคอมจะถูกคำนวณจากกองกลาง หลังจากที่ Admin บันทึกชิ้นของทุกคนแล้ว
+              <div className="mt-2 text-xs text-maroon px-3 py-2.5 rounded-lg bg-[#C9973A15] flex items-start gap-2">
+                <IconHandshake
+                  size={18}
+                  strokeWidth={2.2}
+                  className="shrink-0 mt-0.5"
+                />
+                <div className="leading-relaxed">
+                  <div className="font-bold">ค่าคอมจะถูกคำนวณจากกองกลาง</div>
+                  <div className="text-txt-soft">
+                    หลังจากที่ Admin บันทึกชิ้นของทุกคนแล้ว
+                  </div>
+                </div>
               </div>
             )}
           </div>
