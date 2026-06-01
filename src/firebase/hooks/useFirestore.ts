@@ -85,6 +85,7 @@ function useScopedSubscription<T>(
   getSubscribeFn: () => SubscribeFn<T> | null,
   defaultValue: T,
   deps: DependencyList,
+  options?: { keepPreviousData?: boolean },
 ): SubscriptionResult<T> {
   const [data, setData] = useState<T>(defaultValue);
   const [loading, setLoading] = useState(false);
@@ -92,10 +93,14 @@ function useScopedSubscription<T>(
 
   useEffect(() => {
     const subscribeFn = getSubscribeFn();
-    // reset ทุกครั้งที่ scope/เดือนเปลี่ยน — กันข้อมูล "ชุดเก่า" ค้างแสดงต่อ
+    // โดยปกติ reset ทุกครั้งที่ scope/เดือนเปลี่ยน — กันข้อมูล "ชุดเก่า" ค้างแสดง
     // (เช่น เปลี่ยนเดือนในประวัติเบิกเงิน แล้ว query ใหม่ยังไม่มา/ error →
-    //  เดิมจะยังโชว์เดือนก่อน)
-    setData(defaultValue);
+    //  เดิมจะยังโชว์เดือนก่อน). ถ้า keepPreviousData = true จะ "ไม่ล้าง"
+    // ข้อมูลเดิม รอแทนเมื่อชุดใหม่มา — ลดอาการ "กระพริบ" (เช่นหน้าจ่ายเงิน
+    // ที่ยอดเด้งเป็น 0 ชั่ววินาทีตอนสลับเดือน)
+    if (!options?.keepPreviousData) {
+      setData(defaultValue);
+    }
     setError(null);
     if (!subscribeFn) {
       setLoading(false);
@@ -237,6 +242,7 @@ export function useAdvancesByStatusAndMonth({
     },
     [] as any[],
     [enabled, status, yearMonth],
+    { keepPreviousData: true },
   );
 }
 
@@ -249,6 +255,7 @@ export function useApprovedAdvancesByMonth(yearMonth: string | null) {
     },
     [] as any[],
     [yearMonth],
+    { keepPreviousData: true },
   );
 }
 
