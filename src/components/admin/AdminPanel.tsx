@@ -129,7 +129,13 @@ export default function AdminPanel({
             <ActiveGroupIcon size={12} color={COLORS.gold} strokeWidth={2.5} />
             <span className="truncate">{activeGroup.label}</span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div
+            className={
+              activeGroup.items.length > 2
+                ? "grid grid-cols-2 gap-1.5"
+                : "flex flex-wrap gap-1.5"
+            }
+          >
             {activeGroup.items.map((item) => {
               const Icon = item.Icon;
               const active = section === item.id;
@@ -142,7 +148,7 @@ export default function AdminPanel({
                   type="button"
                   aria-pressed={active}
                   onClick={() => tryChangeSection(item.id)}
-                  className={`relative min-w-[88px] flex-1 px-2.5 py-[9px] rounded-[9px] border cursor-pointer font-[inherit] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap ${active ? "bg-gold-pale text-maroon border-[#C9973A80] shadow-[0_1px_5px_rgba(201,151,58,0.25)]" : "bg-transparent text-txt-soft border-transparent hover:bg-white/70"}`}
+                  className={`relative min-w-0 flex-1 px-2.5 py-[9px] rounded-[9px] border cursor-pointer font-[inherit] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap ${active ? "bg-gold-pale text-maroon border-[#C9973A80] shadow-[0_1px_5px_rgba(201,151,58,0.25)]" : "bg-transparent text-txt-soft border-transparent hover:bg-white/70"}`}
                 >
                   <Icon
                     size={16}
