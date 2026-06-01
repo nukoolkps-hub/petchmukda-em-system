@@ -47,19 +47,40 @@ export default function PoolAdjustmentModal({
   onClose,
   showToast,
 }: Props) {
-  const [normalExc, setNormalExc] = useState<string>("");
-  const [buyExc, setBuyExc] = useState<string>("");
-  const [normalNote, setNormalNote] = useState<string>("");
-  const [buyNote, setBuyNote] = useState<string>("");
+  // init จาก server doc ครั้งเดียวตอน mount + re-init เมื่อเปลี่ยนเดือน
+  // (เดิม useEffect deps มี adjustment → ทุกครั้ง parent re-render reference
+  // ใหม่ จะ reset state ทับสิ่งที่ user พิมพ์)
+  const [normalExc, setNormalExc] = useState<string>(() =>
+    adjustment?.excludedNormalPieces
+      ? String(adjustment.excludedNormalPieces)
+      : "",
+  );
+  const [buyExc, setBuyExc] = useState<string>(() =>
+    adjustment?.excludedBuyPieces ? String(adjustment.excludedBuyPieces) : "",
+  );
+  const [normalNote, setNormalNote] = useState<string>(
+    () => adjustment?.excludedNormalNote ?? "",
+  );
+  const [buyNote, setBuyNote] = useState<string>(
+    () => adjustment?.excludedBuyNote ?? "",
+  );
   const [saving, setSaving] = useState(false);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-sync ตามเดือน
+  // re-init เฉพาะเมื่อเปลี่ยนเดือน (yearMonth) — ไม่ผูกกับ adjustment ref
+  // เพื่อกัน parent re-render ทับ state ที่ user พิมพ์อยู่
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-sync ตามเดือนเท่านั้น
   useEffect(() => {
-    setNormalExc(String(adjustment?.excludedNormalPieces ?? "") || "");
-    setBuyExc(String(adjustment?.excludedBuyPieces ?? "") || "");
+    setNormalExc(
+      adjustment?.excludedNormalPieces
+        ? String(adjustment.excludedNormalPieces)
+        : "",
+    );
+    setBuyExc(
+      adjustment?.excludedBuyPieces ? String(adjustment.excludedBuyPieces) : "",
+    );
     setNormalNote(adjustment?.excludedNormalNote ?? "");
     setBuyNote(adjustment?.excludedBuyNote ?? "");
-  }, [yearMonth, adjustment]);
+  }, [yearMonth]);
 
   const normalNum = Math.max(0, Number(normalExc) || 0);
   const buyNum = Math.max(0, Number(buyExc) || 0);
