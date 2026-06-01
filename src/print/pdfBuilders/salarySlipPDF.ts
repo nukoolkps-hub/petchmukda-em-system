@@ -94,8 +94,6 @@ export function buildSalarySlipDocDef({
 
   /* ─── สร้าง deductions rows ───────────────────────────── */
   const dedRows: [string, string][] = [];
-  if (data.lateDeduction > 0)
-    dedRows.push(["มาสาย / ขาดงาน", formatNumber(data.lateDeduction)]);
   if (salaryCalculation.advanceDeduction > 0)
     dedRows.push([
       "เบิกล่วงหน้า",

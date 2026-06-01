@@ -274,7 +274,6 @@ export const SALARY_INIT: SalaryData = {
       buyPieces: 40, // รับซื้อ (Top)
       invitePieces: 14,
       transferPieces: 6,
-      lateDeduction: 0,
       socialSecurity: 750,
       note: "",
     },
@@ -289,7 +288,6 @@ export const SALARY_INIT: SalaryData = {
       buyPieces: 35, // (87.5% ของ Top 40) ✅
       invitePieces: 8,
       transferPieces: 4,
-      lateDeduction: 0,
       socialSecurity: 750,
       note: "",
     },
@@ -304,7 +302,6 @@ export const SALARY_INIT: SalaryData = {
       buyPieces: 20, // (50% ของ Top 40) ❌
       invitePieces: 6,
       transferPieces: 3,
-      lateDeduction: 0,
       socialSecurity: 750,
       note: "",
     },
@@ -319,7 +316,6 @@ export const SALARY_INIT: SalaryData = {
       buyPieces: 25, // ไม่นับเพราะถูกปิดสิทธิ์อยู่แล้ว
       invitePieces: 4,
       transferPieces: 2,
-      lateDeduction: 0,
       socialSecurity: 750,
       note: "",
     },
@@ -330,7 +326,6 @@ export const SALARY_INIT: SalaryData = {
       singleRatePieces: 65, // 65 × 120 = 7,800 (ผู้จัดการ — ค่าคอมแยก)
       invitePieces: 18,
       transferPieces: 9,
-      lateDeduction: 0,
       socialSecurity: 750,
       note: "",
     },
@@ -341,7 +336,6 @@ export const SALARY_INIT: SalaryData = {
       singleRatePieces: 42, // 42 × 90 = 3,780 (ช่างทอง — ค่าคอมแยก)
       invitePieces: 0,
       transferPieces: 0,
-      lateDeduction: 500,
       socialSecurity: 750,
       note: "",
     },

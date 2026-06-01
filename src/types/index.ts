@@ -59,7 +59,6 @@ export interface SalaryMonth {
   buyPieces?: number;
   invitePieces?: number;
   transferPieces?: number;
-  lateDeduction?: number;
   socialSecurity?: number;
   customEarnings?: { label: string; amount: number }[]; // รายการรายรับที่ Admin เพิ่มเอง
   customDeductions?: { label: string; amount: number }[]; // รายการหักที่ Admin เพิ่มเอง

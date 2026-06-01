@@ -84,8 +84,6 @@ function buildSalarySlipHTML(
 
   // ── รายการหัก ──
   const dedRows: { label: string; value: any }[] = [];
-  if (data.lateDeduction > 0)
-    dedRows.push({ label: "หักขาดงาน/มาสาย", value: data.lateDeduction });
   if (salaryCalculation.advanceDeduction > 0) {
     dedRows.push({
       label: "หักเงินเบิกล่วงหน้า",

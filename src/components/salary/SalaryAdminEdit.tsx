@@ -96,7 +96,6 @@ export default function SalaryAdminEdit({
     buyPieces: 0,
     invitePieces: 0,
     transferPieces: 0,
-    lateDeduction: 0,
     note: "",
   };
   const data = useMemo(() => ({ ...savedData, ...draft }), [savedData, draft]);

@@ -4,8 +4,8 @@
             roleId, poolExclusion, totalLeaveDays } }
 
    ทำไมต้องมี collection แยก:
-   - salaries มี field sensitive (note, customDeductions, lateDeduction,
-     socialSecurity, slipUrl ฯลฯ) — เปิดอ่านให้พนักงานทุกคนไม่ได้
+   - salaries มี field sensitive (note, customDeductions, socialSecurity,
+     slipUrl ฯลฯ) — เปิดอ่านให้พนักงานทุกคนไม่ได้
    - แต่ pool calc ต้องอ่าน pieces + roleId + poolExclusion + leave ของ
      เพื่อนทั้งกลุ่ม → ถ้าล็อก salaries แล้ว pool จะคำนวณผิด
    - แก้: คัดเฉพาะ field ที่จำเป็นต่อ pool ออกมาใส่ doc public — เปิดอ่านได้

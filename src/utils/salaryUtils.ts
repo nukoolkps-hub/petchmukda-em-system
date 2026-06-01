@@ -344,7 +344,6 @@ export function calculateSalary(
       )
     : 0;
   const deductions =
-    (salary.lateDeduction || 0) +
     advanceDeduction +
     socialSecurityAmount +
     overQuotaDeduction +
