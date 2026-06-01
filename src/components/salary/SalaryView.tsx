@@ -649,7 +649,7 @@ export default function SalaryView({
         </div>
         {[
           {
-            icon: "⏰",
+            icon: <IconClock size={16} strokeWidth={2.2} color={COLORS.red} />,
             main: "หักขาดงาน/มาสาย",
             sub: "",
             value: data.lateDeduction,
