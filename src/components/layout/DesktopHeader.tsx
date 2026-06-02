@@ -2,7 +2,7 @@
 
 import { BookOpen as IconBook2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import MosaicPattern from "../shared/MosaicPattern";
+import MemphisPattern from "../shared/MemphisPattern";
 import { PAGE_TITLES } from "./navConfig";
 
 interface DesktopHeaderProps {
@@ -20,7 +20,7 @@ export default function DesktopHeader({
 
   return (
     <div className="leave-desktop-header relative overflow-hidden">
-      <MosaicPattern variant="header" idPrefix="dh" />
+      <MemphisPattern variant="header" />
       <div className="relative flex items-center justify-between">
         <div>
           <div className="text-white font-bold text-2xl">

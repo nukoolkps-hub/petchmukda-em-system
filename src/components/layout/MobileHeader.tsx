@@ -10,7 +10,7 @@ import { useLocation } from "react-router-dom";
 import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
 import Diamond from "../shared/Diamond";
-import MosaicPattern from "../shared/MosaicPattern";
+import MemphisPattern from "../shared/MemphisPattern";
 import { PAGE_TITLES } from "./navConfig";
 
 interface MobileHeaderProps {
@@ -38,8 +38,8 @@ export default function MobileHeader({
 
   return (
     <div className="leave-header-mobile bg-linear-to-br from-maroon-dk via-maroon to-maroon-lt pt-5 px-5 pb-0 shrink-0 relative overflow-hidden">
-      {/* Mosaic decoration */}
-      <MosaicPattern variant="header" idPrefix="mg" />
+      {/* Memphis scatter decoration */}
+      <MemphisPattern variant="header" />
 
       <div className="flex items-center justify-between mb-4 relative">
         <div className="flex items-center gap-2.5">
