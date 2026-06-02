@@ -2,6 +2,7 @@
    admin สร้างเงินกู้ให้พนักงาน — กำหนดเงินต้น + ผ่อนเดือนละ X → ระบบจะหัก
    จากเงินเดือนอัตโนมัติทุกเดือนจนครบ (Stage B). หน้านี้: list + create/cancel  */
 import {
+  ChevronDown as IconChevronDown,
   CircleCheck as IconCircleCheck,
   HandCoins as IconHandCoins,
   Plus as IconPlus,
@@ -320,17 +321,24 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
       <label className="block text-sm text-txt-mid font-semibold mb-1.5">
         พนักงาน
       </label>
-      <select
-        value={employeeId}
-        onChange={(e) => setEmployeeId(e.target.value)}
-        className={`${inputCls} mb-3 cursor-pointer font-semibold`}
-      >
-        {employeeDirectory.map((e) => (
-          <option key={e.id} value={e.id}>
-            {e.name}
-          </option>
-        ))}
-      </select>
+      <div className="relative mb-3">
+        <select
+          value={employeeId}
+          onChange={(e) => setEmployeeId(e.target.value)}
+          className={`${inputCls} appearance-none pr-10 cursor-pointer font-semibold`}
+        >
+          {employeeDirectory.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.name}
+            </option>
+          ))}
+        </select>
+        <IconChevronDown
+          size={14}
+          strokeWidth={2.4}
+          className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-2.5 mb-3">
         <div>
@@ -364,17 +372,24 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
       <label className="block text-sm text-txt-mid font-semibold mb-1.5">
         เริ่มหักเดือน
       </label>
-      <select
-        value={startMonth}
-        onChange={(e) => setStartMonth(e.target.value)}
-        className={`${inputCls} mb-3 cursor-pointer font-semibold`}
-      >
-        {monthOptions().map((m) => (
-          <option key={m} value={m}>
-            {monthLabel(m)}
-          </option>
-        ))}
-      </select>
+      <div className="relative mb-3">
+        <select
+          value={startMonth}
+          onChange={(e) => setStartMonth(e.target.value)}
+          className={`${inputCls} appearance-none pr-10 cursor-pointer font-semibold`}
+        >
+          {monthOptions().map((m) => (
+            <option key={m} value={m}>
+              {monthLabel(m)}
+            </option>
+          ))}
+        </select>
+        <IconChevronDown
+          size={14}
+          strokeWidth={2.4}
+          className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+        />
+      </div>
 
       <label className="block text-sm text-txt-mid font-semibold mb-1.5">
         หมายเหตุ

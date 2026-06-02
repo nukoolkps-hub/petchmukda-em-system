@@ -492,11 +492,16 @@ export default function PayrollSummaryPanel({
             );
           }
 
+          // หลังเปลี่ยนเดือน advance hook ยัง resubscribe (keepPreviousData
+          // ทำให้ข้อมูลเดือนเก่าค้างชั่วครู่) → ยอด rows คำนวณไม่ตรงเดือนใหม่ →
+          // isStale แสดง amber ชั่ววินาทีก่อนกลับเป็นเขียว = แว็บ
+          // ป้องกัน: ไม่เช็ค stale ระหว่าง loading
           const isStale =
-            confirmed.totalAmount !== totalForMonth ||
-            confirmed.employeeCount !== empCountForMonth ||
-            (typeof confirmed.breakdownSig === "string" &&
-              confirmed.breakdownSig !== breakdownSig);
+            !monthlyApprovedAdvances.loading &&
+            (confirmed.totalAmount !== totalForMonth ||
+              confirmed.employeeCount !== empCountForMonth ||
+              (typeof confirmed.breakdownSig === "string" &&
+                confirmed.breakdownSig !== breakdownSig));
           return (
             <div
               className={`rounded-[14px] px-4 py-3.5 mb-3.5 border-[1.5px] ${isStale ? "bg-amber-lt border-amber/40" : "bg-green-lt border-green/25"}`}
