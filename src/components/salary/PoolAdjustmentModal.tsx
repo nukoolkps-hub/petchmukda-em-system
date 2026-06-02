@@ -3,6 +3,7 @@
    — โปรโมชั่น / ทองแท่ง MD ฯลฯ. แต่ละ item: {poolGroup, side, pieces, label}
    เกณฑ์ 80% ยังใช้ gross เหมือนเดิม (พนักงานยังมีสิทธิ์อยู่ในกอง)             */
 import {
+  ChevronDown as IconChevronDown,
   Lock as IconLock,
   Minus as IconMinus,
   Plus as IconPlus,
@@ -270,35 +271,43 @@ function ItemRow({
   onRemove: () => void;
 }) {
   const selectCls =
-    "px-2.5 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt cursor-pointer disabled:bg-cream-dk disabled:text-txt-soft disabled:cursor-not-allowed";
+    "w-full appearance-none pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt cursor-pointer disabled:bg-cream-dk disabled:text-txt-soft disabled:cursor-not-allowed";
+  const chevronCls =
+    "absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft";
   return (
     <div className="rounded-[10px] p-2.5 border border-bdr bg-cream/60 flex flex-col gap-2">
       <div className="flex items-center gap-2">
         {/* ตำแหน่ง */}
-        <select
-          value={item.poolGroup}
-          disabled={locked}
-          onChange={(e) => onUpdate({ poolGroup: e.target.value })}
-          className={`flex-1 min-w-0 ${selectCls}`}
-        >
-          {poolGroups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative flex-1 min-w-0">
+          <select
+            value={item.poolGroup}
+            disabled={locked}
+            onChange={(e) => onUpdate({ poolGroup: e.target.value })}
+            className={selectCls}
+          >
+            {poolGroups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.label}
+              </option>
+            ))}
+          </select>
+          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+        </div>
         {/* ฝั่ง */}
-        <select
-          value={item.side}
-          disabled={locked}
-          onChange={(e) =>
-            onUpdate({ side: e.target.value === "buy" ? "buy" : "normal" })
-          }
-          className={selectCls}
-        >
-          <option value="normal">ขาย (ทั่วไป)</option>
-          <option value="buy">รับซื้อ</option>
-        </select>
+        <div className="relative">
+          <select
+            value={item.side}
+            disabled={locked}
+            onChange={(e) =>
+              onUpdate({ side: e.target.value === "buy" ? "buy" : "normal" })
+            }
+            className={selectCls}
+          >
+            <option value="normal">ขาย (ทั่วไป)</option>
+            <option value="buy">รับซื้อ</option>
+          </select>
+          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+        </div>
         {!locked && (
           <button
             type="button"

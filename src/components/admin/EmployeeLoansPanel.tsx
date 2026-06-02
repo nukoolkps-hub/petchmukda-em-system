@@ -29,8 +29,9 @@ function monthLabel(ym: string) {
 function monthOptions(): string[] {
   const now = new Date();
   const out: string[] = [];
-  // ย้อนหลัง 3 เดือน → ล่วงหน้า 3 เดือน
-  for (let i = -3; i <= 3; i++) {
+  // เดือนปัจจุบัน + ล่วงหน้า 3 เดือน (ไม่ย้อนหลัง — กันสร้างเงินกู้ใส่เดือนเก่า
+  // ที่อาจปิดรอบไปแล้ว)
+  for (let i = 0; i <= 3; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
     out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
