@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { Employee, LeaveEntry } from "../../types";
+import { MemphisCornerSticker } from "../shared/MemphisPattern";
 import TeamCalendar from "./TeamCalendar";
 
 interface HomeTabProps {
@@ -39,10 +40,11 @@ export default function HomeTab({
     <>
       {/* Monthly quota card */}
       <div
-        className={`bg-white rounded-[18px] px-5 py-4.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] mb-3 border-[1.5px] ${overQuotaDeduction ? "border-[#C0392B50]" : "border-bdr"}`}
+        className={`relative overflow-hidden bg-white rounded-[18px] px-5 py-4.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] mb-3 border-[1.5px] ${overQuotaDeduction ? "border-[#C0392B50]" : "border-bdr"}`}
       >
+        <MemphisCornerSticker position="tr" tone="gold" />
         {/* title row */}
-        <div className="flex items-center justify-between mb-3.5">
+        <div className="relative flex items-center justify-between mb-3.5">
           <div>
             <div className="font-bold text-maroon text-base">
               โควต้าการลาเดือนนี้

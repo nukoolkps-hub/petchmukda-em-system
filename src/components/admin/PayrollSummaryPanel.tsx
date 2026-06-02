@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
-import { buildLoanContext, loanRemaining } from "../../firebase/employeeLoans";
+import { buildLoanContext } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";

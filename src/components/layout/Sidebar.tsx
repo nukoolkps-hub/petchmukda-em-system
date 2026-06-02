@@ -10,7 +10,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
 import Diamond from "../shared/Diamond";
-import MosaicPattern from "../shared/MosaicPattern";
+import MemphisPattern from "../shared/MemphisPattern";
 import {
   ADMIN_NAV_GROUPS,
   type AdminSectionId,
@@ -54,8 +54,8 @@ export default function Sidebar({
 
   return (
     <div className="leave-sidebar">
-      {/* Mosaic bg */}
-      <MosaicPattern variant="sidebar" idPrefix="sg" />
+      {/* Memphis bg */}
+      <MemphisPattern variant="sidebar" />
 
       {/* Brand */}
       <div className="leave-sidebar-profile relative">
