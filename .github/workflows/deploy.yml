@@ -50,16 +50,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
 
       - run: npm ci --prefix functions
 
       - run: npm run build --prefix functions
 
-      - uses: w9jds/firebase-action@v13.32.0
+      - uses: google-github-actions/auth@v2
         with:
-          args: deploy --only functions --project petchmukda-bot --force
-        env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - run: npx -y firebase-tools@13.32.0 deploy --only functions --project petchmukda-bot --force
 
   deploy-firestore-rules:
     name: Deploy Firestore Rules
@@ -68,11 +70,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: w9jds/firebase-action@v13.32.0
+      - uses: actions/setup-node@v4
         with:
-          args: deploy --only firestore:petchmukda-bot:rules --project petchmukda-bot --force
-        env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          node-version: 22
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - run: npx -y firebase-tools@13.32.0 deploy --only firestore:petchmukda-bot:rules --project petchmukda-bot --force
 
   deploy-storage-rules:
     name: Deploy Storage Rules
@@ -81,8 +87,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: w9jds/firebase-action@v13.32.0
+      - uses: actions/setup-node@v4
         with:
-          args: deploy --only storage --project petchmukda-bot
-        env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          node-version: 22
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - run: npx -y firebase-tools@13.32.0 deploy --only storage --project petchmukda-bot
