@@ -8,7 +8,10 @@
 
 import { type FirebaseOptions, initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
-import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import {
+  connectFirestoreEmulator,
+  initializeFirestore,
+} from "firebase/firestore";
 import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
 import firebaseConfigs from "./firebaseConfig.json";
@@ -59,7 +62,18 @@ if (missingKeys.length > 0) {
 }
 
 export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, FIRESTORE_DATABASE_ID);
+/* ─── Firestore transport ──────────────────────────────────────
+   ในเบราว์เซอร์ default Firestore ใช้ WebChannel (bidi long-poll).
+   LINE in-app browser (LIFF WebView) บล็อก keep-alive ของ WebChannel
+   บ่อย → connection ดู open แต่ data ไม่ไหล → onSnapshot ค้าง
+   forever → user ค้างหน้า loading screen ตลอด.
+   experimentalAutoDetectLongPolling ให้ SDK ตรวจจับเอง ถ้า WebChannel
+   ใช้ไม่ได้ → fallback ไป long-polling ปกติ                          */
+export const db = initializeFirestore(
+  app,
+  { experimentalAutoDetectLongPolling: true },
+  FIRESTORE_DATABASE_ID,
+);
 export const auth = getAuth(app);
 export const functions = getFunctions(app, "asia-southeast1");
 export const storage = getStorage(app);
