@@ -17,6 +17,18 @@ import { COLLECTIONS, db } from "./config";
 
 const ref = collection(db, COLLECTIONS.EMPLOYEES);
 
+/* ─── เรียงตาม displayOrder (ที่ admin ลากย้าย) → ชื่อ (fallback) ─── */
+function sortByDisplayOrder(list) {
+  return list.sort((a, b) => {
+    const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;
+    const bo = typeof b.displayOrder === "number" ? b.displayOrder : null;
+    if (ao !== null && bo !== null) return ao - bo;
+    if (ao !== null) return -1;
+    if (bo !== null) return 1;
+    return (a.name || "").localeCompare(b.name || "", "th");
+  });
+}
+
 /* ─── Read All (real-time) ───────────────────────────────────
    ใช้ onSnapshot — อัพเดต UI ทันทีเมื่อข้อมูลเปลี่ยน             */
 export function subscribeEmployees(onChange, onError) {
@@ -24,7 +36,7 @@ export function subscribeEmployees(onChange, onError) {
     query(ref, orderBy("name")),
     (snap) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      onChange(list);
+      onChange(sortByDisplayOrder(list));
     },
     (err) => {
       console.error("[Employees] subscribe error:", err);
@@ -51,7 +63,19 @@ export function subscribeEmployeeByLineUserId(lineUserId, onChange, onError) {
 /* ─── Read All (one-time) ───────────────────────────────────── */
 export async function getAllEmployees() {
   const snap = await getDocs(query(ref, orderBy("name")));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return sortByDisplayOrder(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+}
+
+/* ─── Batch update displayOrder — ใช้ตอน admin ลาก reorder card ─── */
+export async function reorderEmployees(orderedIds) {
+  await Promise.all(
+    orderedIds.map((id, index) =>
+      updateDoc(doc(ref, id), {
+        displayOrder: index,
+        updatedAt: Date.now(),
+      }),
+    ),
+  );
 }
 
 /* ─── Read by ID ─────────────────────────────────────────────── */
