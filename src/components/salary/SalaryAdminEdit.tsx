@@ -1777,7 +1777,7 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }) {
       {...attributes}
       {...listeners}
       style={style}
-      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none ${
+      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none select-none [-webkit-touch-callout:none] [-webkit-user-select:none] ${
         selected
           ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
           : "border-bdr bg-white"
