@@ -26,14 +26,21 @@ window.addEventListener("load", () => {
 
 /* ─── Loading Screen (Firebase auth initializing) ──────────
    Firebase auth check ไม่มี progress จริง — fake asymptotic progress
-   ที่ค่อยขึ้น ใกล้ 95% ช้าลง พอ auth เสร็จ component unmount เลย    */
+   ที่ค่อยขึ้น ใกล้ 95% ช้าลง พอ auth เสร็จ component unmount เลย.
+   ถ้านิ่งเกิน 15 วิ (slow) → โชว์ปุ่ม "โหลดใหม่" — กันค้างหน้านี้ใน
+   LINE WebView ที่ Firebase auth/Firestore handshake บางครั้ง hang  */
 function AuthLoadingScreen() {
   const [progress, setProgress] = useState(0);
+  const [slow, setSlow] = useState(false);
   useEffect(() => {
     const id = setInterval(() => {
       setProgress((p) => Math.min(95, p + (95 - p) * 0.06));
     }, 80);
-    return () => clearInterval(id);
+    const slowTimer = setTimeout(() => setSlow(true), 15000);
+    return () => {
+      clearInterval(id);
+      clearTimeout(slowTimer);
+    };
   }, []);
 
   return (
@@ -53,6 +60,20 @@ function AuthLoadingScreen() {
       <div className="mt-1.5 text-xs font-bold text-gold-lt/80 tabular-nums">
         {Math.round(progress)}%
       </div>
+      {slow && (
+        <button
+          type="button"
+          onClick={() => {
+            // ล้าง ?code=&state= ของ LINE callback (กัน rerun callback เก่า) + reload
+            sessionStorage.removeItem("vite-preload-reloaded");
+            window.location.href =
+              window.location.origin + window.location.pathname;
+          }}
+          className="mt-5 px-4 py-2 rounded-[10px] border-[1.5px] border-gold/40 bg-white/10 text-gold-lt text-xs font-bold cursor-pointer font-[inherit]"
+        >
+          ค้างไม่ขึ้น? แตะเพื่อโหลดใหม่
+        </button>
+      )}
     </div>
   );
 }
