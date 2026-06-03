@@ -129,6 +129,7 @@ export default function LeaveApp() {
     setSalaryData,
     updateEmployee,
     deleteEmployee,
+    reorderEmployees,
     updateSalary,
     addLeave: addLeaveAction,
     deleteLeave: deleteLeaveAction,
@@ -450,6 +451,7 @@ export default function LeaveApp() {
                       onDelete={leaveForm.handleDelete}
                       onUpdateRole={handleUpdateRole}
                       onDeleteEmployee={handleDeleteEmployee}
+                      onReorderEmployees={reorderEmployees}
                       salaryData={salaryData}
                       setSalaryData={setSalaryData}
                       onSaveSalary={updateSalary}

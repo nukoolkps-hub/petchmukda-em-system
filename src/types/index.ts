@@ -26,6 +26,7 @@ export interface Employee {
   transferPieceRate?: number;
   salaryDisabled?: boolean;
   poolExclusion?: "sell" | "buy" | "both" | "" | null;
+  displayOrder?: number; // ลำดับการเรียง card admin ลากย้ายได้ — sync ทุกคน
   balance?: LeaveBalance;
   used?: LeaveBalance;
 }

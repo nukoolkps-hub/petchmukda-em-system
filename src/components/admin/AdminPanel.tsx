@@ -30,6 +30,7 @@ export default function AdminPanel({
   onDelete,
   onUpdateRole,
   onDeleteEmployee,
+  onReorderEmployees,
   salaryData,
   setSalaryData,
   onSaveSalary,
@@ -230,6 +231,7 @@ export default function AdminPanel({
           poolAdjustments={poolAdjustments}
           onSetPoolAdjustment={onSetPoolAdjustment}
           employeeLoans={employeeLoans}
+          onReorderEmployees={onReorderEmployees}
           setUnsavedDirty={setUnsavedDirty}
           showToast={showToast}
         />

@@ -1,4 +1,19 @@
 import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  rectSortingStrategy,
+  SortableContext,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   AlertTriangle as IconAlertTriangle,
   Banknote as IconBanknote,
   Briefcase as IconBriefcase,
@@ -53,6 +68,7 @@ export default function SalaryAdminEdit({
   poolAdjustments,
   onSetPoolAdjustment,
   employeeLoans,
+  onReorderEmployees,
   setUnsavedDirty,
   showToast,
 }) {
@@ -473,63 +489,18 @@ export default function SalaryAdminEdit({
         </div>
       )}
 
-      {/* employee cards — เลือกพนักงานแบบการ์ด มองง่ายกว่า dropdown
+      {/* employee cards — เลือกพนักงานแบบการ์ด + ลากเรียงลำดับได้
+         (admin ลาก → save displayOrder ลง Firestore → sync ทุก device).
+         distance: 6px ก่อนเริ่มลาก → คลิกเพื่อ "เลือก" ยังทำงานปกติ
          จุดสถานะ: เขียว=บันทึกชิ้นเดือนนี้แล้ว, เทา=ยังไม่บันทึก */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 mb-3.5">
-        {employeeDirectory.map((employee) => {
-          const selected = employee.id === selectedEmployeeId;
-          const _role = roles?.find((r) => r.id === employee.roleId);
-          const monthData = salaryData[employee.id]?.[selectedMonth];
-          const hasData = !!(
-            monthData &&
-            ((monthData.singleRatePieces || 0) > 0 ||
-              (monthData.normalSalePieces || 0) > 0 ||
-              (monthData.specialSalePieces || 0) > 0 ||
-              (monthData.buyPieces || 0) > 0 ||
-              (monthData.invitePieces || 0) > 0 ||
-              (monthData.transferPieces || 0) > 0)
-          );
-          return (
-            <button
-              key={employee.id}
-              type="button"
-              onClick={() => tryChangeEmployee(employee.id)}
-              className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] transition-colors ${
-                selected
-                  ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
-                  : "border-bdr bg-white"
-              }`}
-            >
-              <span
-                aria-label={hasData ? "บันทึกแล้ว" : "ยังไม่บันทึก"}
-                title={hasData ? "บันทึกแล้ว" : "ยังไม่บันทึก"}
-                className={`absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full border border-white shadow-sm ${
-                  hasData ? "bg-green" : "bg-txt-soft/40"
-                }`}
-              />
-              <AvatarCircle
-                avatar={employee.avatar}
-                avatarType={employee.avatarType}
-                avatarImageUrl={employee.avatarImageUrl}
-                size={44}
-                fontSize={14}
-                border={`2px solid ${COLORS.gold}40`}
-              />
-              <div className="w-full min-w-0 text-center">
-                <div
-                  className={`font-bold text-sm truncate leading-tight ${selected ? "text-maroon" : "text-txt"}`}
-                >
-                  {employee.name}
-                </div>
-                <div className="text-xs text-txt-soft truncate leading-tight mt-0.5 inline-flex items-center gap-1">
-                  <IconBriefcase size={11} strokeWidth={2.4} />
-                  {employee.role || "-"}
-                </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+      <EmployeeCardGrid
+        employees={employeeDirectory}
+        selectedId={selectedEmployeeId}
+        onSelect={tryChangeEmployee}
+        onReorder={onReorderEmployees}
+        salaryData={salaryData}
+        selectedMonth={selectedMonth}
+      />
 
       {/* Pool info card — แสดงตอนอยู่ใน group */}
       {poolShare && poolGroupEmployees.length > 1 && (
@@ -1695,5 +1666,149 @@ export default function SalaryAdminEdit({
         />
       )}
     </div>
+  );
+}
+
+/* ─── Sortable employee cards ─────────────────────────────────────
+   Optimistic local order — sync ลง Firestore หลังลากเสร็จ
+   distance: 6px → คลิกเพื่อ "เลือก" ยังทำงาน, ต้องลากเกิน 6px จึง drag */
+function EmployeeCardGrid({
+  employees,
+  selectedId,
+  onSelect,
+  onReorder,
+  salaryData,
+  selectedMonth,
+}) {
+  const [localOrder, setLocalOrder] = useState<string[] | null>(null);
+
+  // sync ลำดับจาก props เมื่อ employees เปลี่ยน — ทิ้ง localOrder ถ้ามี id
+  // หายไป/เพิ่มใหม่ (เช่น Firestore sync มา)
+  useEffect(() => {
+    if (!localOrder) return;
+    const fromProps = employees
+      .map((e) => e.id)
+      .sort()
+      .join(",");
+    const fromLocal = [...localOrder].sort().join(",");
+    if (fromProps !== fromLocal) setLocalOrder(null);
+  }, [employees, localOrder]);
+
+  const orderedEmployees = useMemo(() => {
+    if (!localOrder) return employees;
+    const byId = new Map(employees.map((e) => [e.id, e]));
+    return localOrder.map((id) => byId.get(id)).filter(Boolean);
+  }, [employees, localOrder]);
+
+  const ids: string[] = orderedEmployees.map((e) => e.id);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = ids.indexOf(String(active.id));
+    const newIndex = ids.indexOf(String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(ids, oldIndex, newIndex);
+    setLocalOrder(next);
+    onReorder?.(next).catch((err) => {
+      console.error("[reorderEmployees] failed:", err);
+      setLocalOrder(null); // rollback ถ้า save fail
+    });
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={ids} strategy={rectSortingStrategy}>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 mb-3.5">
+          {orderedEmployees.map((employee) => {
+            const monthData = salaryData[employee.id]?.[selectedMonth];
+            const hasData = !!(
+              monthData &&
+              ((monthData.singleRatePieces || 0) > 0 ||
+                (monthData.normalSalePieces || 0) > 0 ||
+                (monthData.specialSalePieces || 0) > 0 ||
+                (monthData.buyPieces || 0) > 0 ||
+                (monthData.invitePieces || 0) > 0 ||
+                (monthData.transferPieces || 0) > 0)
+            );
+            return (
+              <SortableEmployeeCard
+                key={employee.id}
+                employee={employee}
+                selected={employee.id === selectedId}
+                hasData={hasData}
+                onSelect={() => onSelect(employee.id)}
+              />
+            );
+          })}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function SortableEmployeeCard({ employee, selected, hasData, onSelect }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: employee.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      onClick={onSelect}
+      {...attributes}
+      {...listeners}
+      style={style}
+      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none ${
+        selected
+          ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
+          : "border-bdr bg-white"
+      } ${isDragging ? "opacity-80 scale-[1.04] shadow-[0_8px_22px_rgba(123,28,28,0.22)]" : ""}`}
+    >
+      <span
+        aria-label={hasData ? "บันทึกแล้ว" : "ยังไม่บันทึก"}
+        title={hasData ? "บันทึกแล้ว" : "ยังไม่บันทึก"}
+        className={`absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full border border-white shadow-sm ${
+          hasData ? "bg-green" : "bg-txt-soft/40"
+        }`}
+      />
+      <AvatarCircle
+        avatar={employee.avatar}
+        avatarType={employee.avatarType}
+        avatarImageUrl={employee.avatarImageUrl}
+        size={44}
+        fontSize={14}
+        border={`2px solid ${COLORS.gold}40`}
+      />
+      <div className="w-full min-w-0 text-center">
+        <div
+          className={`font-bold text-sm truncate leading-tight ${selected ? "text-maroon" : "text-txt"}`}
+        >
+          {employee.name}
+        </div>
+        <div className="text-xs text-txt-soft truncate leading-tight mt-0.5 inline-flex items-center gap-1">
+          <IconBriefcase size={11} strokeWidth={2.4} />
+          {employee.role || "-"}
+        </div>
+      </div>
+    </button>
   );
 }
