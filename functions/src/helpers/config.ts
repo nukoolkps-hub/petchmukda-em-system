@@ -45,6 +45,27 @@ export async function getLineConfig(): Promise<LineConfig> {
 	return cleaned as LineConfig;
 }
 
+/* ─── Notification toggle (admin UI: LINE BOT > การแจ้งเตือน) ─────
+   อ่าน config/notifications doc — default semantic: missing field /
+   !== false → enabled. เฉพาะ === false เท่านั้นที่ skip                 */
+export async function isNotificationEnabled(
+	field:
+		| "dailySummaryEnabled"
+		| "advanceRequestEnabled"
+		| "advanceApprovalEnabled",
+): Promise<boolean> {
+	try {
+		const doc = await getAppFirestore().doc("config/notifications").get();
+		return (doc.data() as Record<string, unknown> | undefined)?.[field] !== false;
+	} catch (err) {
+		console.warn(
+			"[isNotificationEnabled] read failed, defaulting to enabled:",
+			err,
+		);
+		return true; // fail-safe: ส่งต่อ ไม่ block
+	}
+}
+
 /* ─── Check if LINE user ID is in admin list ─────────────────── */
 export function isConfiguredAdminLineUser(
 	lineUserId: string,

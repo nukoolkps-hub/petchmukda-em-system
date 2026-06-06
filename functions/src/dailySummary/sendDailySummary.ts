@@ -15,7 +15,11 @@
 
 import type { Firestore } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { getAppFirestore, getLineConfig } from "../helpers/config.js";
+import {
+	getAppFirestore,
+	getLineConfig,
+	isNotificationEnabled,
+} from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
 import { buildDailySummaryFlex } from "./buildFlex.js";
 import {
@@ -51,6 +55,11 @@ export const sendDailySummary = onSchedule(
 		serviceAccount: CALENDAR_SA,
 	},
 	async () => {
+		// Admin toggle ปิดได้ใน UI: /admin → LINE BOT → การแจ้งเตือน
+		if (!(await isNotificationEnabled("dailySummaryEnabled"))) {
+			console.log("[sendDailySummary] disabled in admin config, skipping");
+			return;
+		}
 		const ymd = bangkokYmd(new Date());
 		const db = getAppFirestore();
 		const claimed = await claimToday(db, ymd);

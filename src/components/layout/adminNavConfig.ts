@@ -2,6 +2,7 @@
    แยกออกมาจาก AdminPanel เพื่อให้ Sidebar ใช้ render nav บน Desktop ได้   */
 
 import {
+  Bell as IconBell,
   CalendarDays as IconCalendarEvent,
   Banknote as IconCashBanknote,
   BarChart3 as IconChartBar,
@@ -10,6 +11,7 @@ import {
   CreditCard as IconCreditCard,
   Diamond as IconDiamond,
   HandCoins as IconHandCoins,
+  MessageCircle as IconMessageCircle,
   Settings as IconSettings,
   Tag as IconTag,
   Users as IconUsers,
@@ -23,9 +25,10 @@ export type AdminSectionId =
   | "loans"
   | "payroll"
   | "roles"
-  | "positions";
+  | "positions"
+  | "linebot-notifications";
 
-export type AdminGroupId = "leave" | "payroll" | "settings";
+export type AdminGroupId = "leave" | "payroll" | "settings" | "linebot";
 
 type AdminNavIcon = typeof IconChartBar;
 
@@ -74,6 +77,15 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { id: "roles", label: "พนักงาน", Icon: IconUsers },
       { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
+    ],
+  },
+  {
+    id: "linebot",
+    label: "LINE BOT",
+    defaultSection: "linebot-notifications",
+    Icon: IconMessageCircle,
+    items: [
+      { id: "linebot-notifications", label: "การแจ้งเตือน", Icon: IconBell },
     ],
   },
 ];
