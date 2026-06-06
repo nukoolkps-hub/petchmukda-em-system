@@ -14,7 +14,6 @@
  */
 
 import type { Firestore } from "firebase-admin/firestore";
-import { onRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getAppFirestore, getLineConfig } from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
@@ -76,47 +75,7 @@ export const sendDailySummary = onSchedule(
 	},
 );
 
-/** Manual test endpoint — ส่งจริงเข้าทุกกลุ่ม (ใช้ตอน setup ครั้งแรก) */
-export const sendDailySummaryNow = onRequest(
-	{ timeoutSeconds: 120 },
-	async (_req, res) => {
-		try {
-			const results = await runDailySummary();
-			res.json({ status: "sent", results });
-		} catch (err) {
-			console.error("[sendDailySummaryNow] error:", err);
-			res.status(500).json({
-				error: err instanceof Error ? err.message : String(err),
-			});
-		}
-	},
-);
-
-/** Preview endpoint — ส่งทุกกลุ่มไป LINE ID เดียว (admin ทดสอบ layout) */
-export const previewDailySummary = onRequest(
-	{ timeoutSeconds: 120 },
-	async (req, res) => {
-		const target =
-			typeof req.query.target === "string" ? req.query.target.trim() : "";
-		if (!target) {
-			res.status(400).json({
-				error: "missing ?target=<LINE_USER_ID> query param",
-			});
-			return;
-		}
-		try {
-			const results = await runDailySummary({ targetOverride: target });
-			res.json({ status: "sent", target, results });
-		} catch (err) {
-			console.error("[previewDailySummary] error:", err);
-			res.status(500).json({
-				error: err instanceof Error ? err.message : String(err),
-			});
-		}
-	},
-);
-
-/* ─── Core logic — เรียกได้ทั้ง scheduled และ HTTP ──────────── */
+/* ─── Core logic — เรียกได้ทั้ง scheduled และ LINE command ──── */
 
 export async function runDailySummary(
 	options: RunOptions = {},
