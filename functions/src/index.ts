@@ -27,5 +27,8 @@ export { setAdmin } from "./auth/setAdmin.js";
 // LINE webhook
 export { lineWebhook } from "./line/webhook.js";
 
+// Leaves — แจ้งเตือนรายวันทาง LINE
+export { notifyDailyLeaves } from "./leave/notifyDailyLeaves.js";
+
 // Maintenance
 export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";

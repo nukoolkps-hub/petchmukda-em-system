@@ -15,6 +15,7 @@ export const EMPLOYEE_EDIT_FIELDS = [
   "salaryDisabled",
   "poolExclusion",
   "name",
+  "nickname",
 ] as const;
 
 /** มี draft ค้างสำหรับพนักงานคนนี้ไหม (ใช้โชว์ badge "มีการแก้ไข") */
