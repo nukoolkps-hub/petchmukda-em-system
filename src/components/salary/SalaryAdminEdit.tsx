@@ -208,6 +208,7 @@ export default function SalaryAdminEdit({
     }
     // รวมชิ้นของแต่ละกลุ่ม
     for (const emp of employeeDirectory) {
+      if (emp.salaryDisabled) continue;
       const roleId =
         liveSalaryData[emp.id]?.[selectedMonth]?.roleId ?? emp.roleId;
       const role = roles.find((r) => r.id === roleId);
@@ -228,6 +229,7 @@ export default function SalaryAdminEdit({
     let poolGroupEmployeesDraft: any[] = [];
     if (employeeRole?.poolGroup) {
       poolGroupEmployeesDraft = employeeDirectory.filter((employee) => {
+        if (employee.salaryDisabled) return false;
         const roleIdForMonth =
           salaryData[employee.id]?.[selectedMonth]?.roleId ?? employee.roleId;
         const role = roles.find(
@@ -494,7 +496,7 @@ export default function SalaryAdminEdit({
          distance: 6px ก่อนเริ่มลาก → คลิกเพื่อ "เลือก" ยังทำงานปกติ
          จุดสถานะ: เขียว=บันทึกชิ้นเดือนนี้แล้ว, เทา=ยังไม่บันทึก */}
       <EmployeeCardGrid
-        employees={employeeDirectory}
+        employees={employeeDirectory.filter((e) => !e.salaryDisabled)}
         selectedId={selectedEmployeeId}
         onSelect={tryChangeEmployee}
         onReorder={onReorderEmployees}

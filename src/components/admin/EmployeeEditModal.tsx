@@ -552,7 +552,7 @@ export default function EmployeeEditModal({
                     ปิดสิทธิ์ระบบเงินเดือน
                   </div>
                   <div className="text-xs text-txt-soft mt-0.5 leading-normal">
-                    ซ่อนแท็บ "เงินเดือน" จากพนักงาน · ใช้ได้แค่ระบบลา
+                    ไม่นับเข้าระบบเงินเดือน/กองกลาง · ใช้ได้แค่ระบบลา
                   </div>
                 </div>
               </label>

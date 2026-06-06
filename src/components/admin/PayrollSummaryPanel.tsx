@@ -97,9 +97,13 @@ export default function PayrollSummaryPanel({
     const roleIdForMonth = (employee) =>
       salaryData[employee.id]?.[selectedMonth]?.roleId ?? employee.roleId;
 
+    // กรองพนักงานที่ "ปิดสิทธิ์ระบบเงินเดือน" ออก — ใช้แค่ระบบลา ไม่อยู่ใน
+    // payroll/pool calculation ใดๆ
+    const activeEmps = employeeDirectory.filter((e) => !e.salaryDisabled);
+
     // group employees by role for shared Pool
     const groupedEmpsByPool = {};
-    employeeDirectory.forEach((employee) => {
+    activeEmps.forEach((employee) => {
       const r = roles.find((rl) => rl.id === roleIdForMonth(employee));
       if (r?.poolGroup) {
         if (!groupedEmpsByPool[r.poolGroup])
@@ -109,7 +113,7 @@ export default function PayrollSummaryPanel({
     });
 
     // compute each employee's netSalary salary
-    return employeeDirectory
+    return activeEmps
       .map((employee) => {
         const employeeRole = roles.find(
           (r) => r.id === roleIdForMonth(employee),
@@ -215,6 +219,7 @@ export default function PayrollSummaryPanel({
     const ids = new Set<string>();
     for (const row of rows) ids.add(row.employee.id);
     for (const emp of employeeDirectory) {
+      if (emp.salaryDisabled) continue;
       const r = roles.find((rl) => rl.id === emp.roleId);
       if (r?.poolGroup) ids.add(emp.id);
     }

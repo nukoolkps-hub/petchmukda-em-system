@@ -115,6 +115,7 @@ export default function PoolFlowModal({
     if (isAdmin) {
       return employeeDirectory
         .filter((e) => {
+          if (e.salaryDisabled) return false;
           const roleIdForMonth =
             salaryData[e.id]?.[selectedMonth]?.roleId ?? e.roleId;
           const r = roles.find((rl) => rl.id === roleIdForMonth);
