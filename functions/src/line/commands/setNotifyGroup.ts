@@ -20,6 +20,11 @@ const UNSET_TRIGGER = "ยกเลิกแจ้งเตือนกลุ่
 
 type Payload = { action: "set" | "unset" };
 
+/** ลบ whitespace ทั้งหมด — รับ "แจ้งเตือน กลุ่มนี้" / "แจ้งเตือนกลุ่มนี้" ได้ทั้งคู่ */
+function normalize(s: string): string {
+	return s.replace(/\s+/g, "");
+}
+
 export const setNotifyGroupCommand: LineCommand<Payload> = {
 	name: "แจ้งเตือนกลุ่มนี้",
 	parse({ event, text }) {
@@ -28,10 +33,11 @@ export const setNotifyGroupCommand: LineCommand<Payload> = {
 		const selfMentions = getMentionees(event).filter(
 			(m) => m.type === "user" && m.isSelf === true,
 		);
-		const cleaned = removeMentionRanges(text, selfMentions).trim();
+		const cleaned = normalize(removeMentionRanges(text, selfMentions));
 
-		if (cleaned === SET_TRIGGER) return matched({ action: "set" });
-		if (cleaned === UNSET_TRIGGER) return matched({ action: "unset" });
+		if (cleaned === normalize(SET_TRIGGER)) return matched({ action: "set" });
+		if (cleaned === normalize(UNSET_TRIGGER))
+			return matched({ action: "unset" });
 		return notMatched();
 	},
 	async handle({ config, event }, payload) {
