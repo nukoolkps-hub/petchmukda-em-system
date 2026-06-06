@@ -1777,11 +1777,11 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }) {
       {...attributes}
       {...listeners}
       style={style}
-      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none select-none [-webkit-touch-callout:none] [-webkit-user-select:none] ${
+      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none select-none [-webkit-touch-callout:none] [-webkit-user-select:none] transition-transform duration-150 ease-out active:scale-[1.03] ${
         selected
           ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
           : "border-bdr bg-white"
-      } ${isDragging ? "opacity-80 scale-[1.04] shadow-[0_8px_22px_rgba(123,28,28,0.22)]" : ""}`}
+      } ${isDragging ? "opacity-80 scale-[1.06] shadow-[0_8px_22px_rgba(123,28,28,0.22)]" : ""}`}
     >
       <span
         aria-label={hasData ? "บันทึกแล้ว" : "ยังไม่บันทึก"}
