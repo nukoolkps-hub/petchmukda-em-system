@@ -39,11 +39,16 @@ interface GroupResult {
 	skipped?: string;
 }
 
+// appspot SA ต้องการเพราะ user แชร์ Google Calendar ให้ SA นี้
+// (default compute SA ไม่ได้ถูกแชร์)
+const CALENDAR_SA = "petchmukda-bot@appspot.gserviceaccount.com";
+
 export const sendDailySummary = onSchedule(
 	{
 		schedule: "30 7 * * *",
 		timeZone: APP_TIMEZONE,
 		timeoutSeconds: 120,
+		serviceAccount: CALENDAR_SA,
 	},
 	async () => {
 		const ymd = bangkokYmd(new Date());

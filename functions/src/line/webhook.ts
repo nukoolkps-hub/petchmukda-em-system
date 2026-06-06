@@ -11,7 +11,11 @@ import type { LineConfig } from "../types.js";
 import { dispatchLineCommand } from "./core/dispatcher.js";
 import type { LineEvent, LineHttpRequest } from "./core/types.js";
 
-export const lineWebhook = onRequest(async (request, res) => {
+// appspot SA — ต้องการเพราะ ทดสอบแจ้งเตือน command เรียก runDailySummary
+// ที่อ่าน Google Calendar (user แชร์ให้ appspot SA ไว้ ไม่ใช่ compute SA)
+export const lineWebhook = onRequest(
+	{ serviceAccount: "petchmukda-bot@appspot.gserviceaccount.com" },
+	async (request, res) => {
 	if (request.method !== "POST") {
 		res.status(405).send("Method Not Allowed");
 		return;

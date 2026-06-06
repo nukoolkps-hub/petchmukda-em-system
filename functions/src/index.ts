@@ -7,13 +7,11 @@ import { initializeApp } from "firebase-admin/app";
 import { setGlobalOptions } from "firebase-functions/v2";
 
 initializeApp();
-// Gen 2 Cloud Functions default = compute SA — แต่ระบบนี้แชร์ Google Calendar
-// + IAM permissions ทั้งหมดให้กับ appspot SA ไว้แล้ว ตั้ง runtime SA ให้ตรง
-// กับที่แชร์ไว้ ไม่ต้องไปแชร์ permissions อีกชุดให้ compute SA
-setGlobalOptions({
-	region: "asia-southeast1",
-	serviceAccount: "petchmukda-bot@appspot.gserviceaccount.com",
-});
+// Default SA (compute) สำหรับ function ทั่วไป — auth.createCustomToken ใช้
+// signBlob ได้กับ default SA. ส่วน function ที่ต้องใช้ Google Calendar
+// (sendDailySummary, lineWebhook) override เป็น appspot SA แยกเฉพาะตัว
+// เพราะ user แชร์ calendar ให้ appspot SA ไว้แล้ว — กัน 1 ทาง break อีกทาง
+setGlobalOptions({ region: "asia-southeast1" });
 
 export { cleanupOldAdvances } from "./advance/cleanupOldAdvances.js";
 export { processAdvanceNotifications } from "./advance/processAdvanceNotifications.js";
