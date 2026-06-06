@@ -1,8 +1,8 @@
 /**
- * Flex Bubble — สรุปประจำวัน (maroon theme)
+ * Flex Bubble — สรุปประจำวัน (pastel-of-day header + cream body)
  *
  * Layout:
- * - Header: maroon background + 🏆 หัวเรื่อง + group name + 📅 วันที่
+ * - Header: pastel bg ของวัน + วงกลม vivid ของวัน + 🏆 หัวเรื่อง
  * - Body:
  *   - ภารกิจวันนี้ (Calendar events) — หรือ "ไม่มีภารกิจ"
  *   - คนหยุดวันนี้ (Leaves) — เฉพาะกลุ่มที่ includeLeaves
@@ -16,7 +16,6 @@ import type { ThaiDayName } from "./dateUtils.js";
 import type { LeaveItem } from "./leaves.js";
 import { parseTipParts } from "./tip.js";
 
-const GOLD = COLORS.goldLight; // #E8C87A
 const GOLD_PALE = COLORS.goldPale; // #F5E6C8
 const MAROON = COLORS.maroon; // #7B1C1C
 const CREAM = "#FFFDF5";
@@ -25,16 +24,31 @@ const TEXT_DK = "#3D2C20";
 const TEXT_MID = "#5D4037";
 const TEXT_SOFT = "#9E8B7D";
 
-/** สีจุดบน header — สลับตามวันในสัปดาห์ ให้ความรู้สึกแปลกใหม่แต่ละวัน */
-const DAY_ACCENT: Record<ThaiDayName, string> = {
-	อาทิตย์: "#E53935",
-	จันทร์: "#FBC02D",
-	อังคาร: "#EC407A",
-	พุธ: "#66BB6A",
-	พฤหัสบดี: "#FB8C00",
-	ศุกร์: "#42A5F5",
-	เสาร์: "#8E24AA",
+/** สี header background — pastel ของวันในสัปดาห์ */
+const DAY_PASTEL_BG: Record<ThaiDayName, string> = {
+	อาทิตย์: "#FFCDD2", // ชมพูพาสเทล
+	จันทร์: "#FFF59D", // เหลืองพาสเทล
+	อังคาร: "#F8BBD0", // ชมพู
+	พุธ: "#C8E6C9", // เขียวพาสเทล
+	พฤหัสบดี: "#FFE0B2", // ส้มพาสเทล
+	ศุกร์: "#BBDEFB", // ฟ้าพาสเทล
+	เสาร์: "#E1BEE7", // ม่วงพาสเทล
 };
+
+/** สีวงกลมประจำวัน — vivid version (เด่นกว่า pastel background) */
+const DAY_ACCENT: Record<ThaiDayName, string> = {
+	อาทิตย์: "#E53935", // แดง
+	จันทร์: "#FBC02D", // เหลือง
+	อังคาร: "#EC407A", // ชมพูเข้ม
+	พุธ: "#66BB6A", // เขียว
+	พฤหัสบดี: "#FB8C00", // ส้ม
+	ศุกร์: "#42A5F5", // ฟ้า
+	เสาร์: "#8E24AA", // ม่วง
+};
+
+/** สีข้อความบน header pastel — ใช้สีเข้มให้อ่านง่าย */
+const HEADER_TITLE = "#1A1A1A"; // ดำสนิท
+const HEADER_SUB = "#3D2C20"; // น้ำตาลเข้ม
 
 interface BuildFlexInput {
 	groupName: string;
@@ -48,12 +62,13 @@ interface BuildFlexInput {
 
 export function buildDailySummaryFlex(input: BuildFlexInput): LinePushMessage {
 	const { groupName, dateStr, dayName, events, leaves, tip, calendarError } = input;
-	const accent = DAY_ACCENT[dayName] || GOLD;
+	const accent = DAY_ACCENT[dayName] || MAROON;
+	const headerBg = DAY_PASTEL_BG[dayName] || GOLD_PALE;
 
 	const bubble: Record<string, unknown> = {
 		type: "bubble",
 		size: "giga",
-		header: buildHeader(groupName, dateStr, dayName, accent),
+		header: buildHeader(groupName, dateStr, dayName, accent, headerBg),
 		body: buildBody(events, leaves, calendarError, accent),
 	};
 
@@ -68,18 +83,19 @@ export function buildDailySummaryFlex(input: BuildFlexInput): LinePushMessage {
 	};
 }
 
-/* ─── header — maroon gradient + day accent dot ───────────────── */
+/* ─── header — pastel bg ของวัน + วงกลม vivid + ตัวอักษรสีเข้ม ── */
 
 function buildHeader(
 	groupName: string,
 	dateStr: string,
 	dayName: ThaiDayName,
 	accent: string,
+	headerBg: string,
 ) {
 	return {
 		type: "box",
 		layout: "horizontal",
-		backgroundColor: MAROON,
+		backgroundColor: headerBg,
 		paddingAll: "0px",
 		contents: [
 			{
@@ -102,14 +118,14 @@ function buildHeader(
 									{
 										type: "text",
 										text: "สรุปภารกิจประจำวัน",
-										color: GOLD,
+										color: HEADER_TITLE,
 										size: "lg",
 										weight: "bold",
 									},
 									{
 										type: "text",
 										text: groupName,
-										color: GOLD_PALE,
+										color: HEADER_SUB,
 										size: "sm",
 										weight: "bold",
 									},
@@ -125,7 +141,7 @@ function buildHeader(
 							{
 								type: "text",
 								text: `📅 วัน${dayName}  ${dateStr}`,
-								color: GOLD_PALE,
+								color: HEADER_SUB,
 								size: "xs",
 								weight: "bold",
 							},
