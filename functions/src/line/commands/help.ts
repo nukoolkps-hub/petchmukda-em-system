@@ -99,6 +99,11 @@ function makeHelpFlexMessage(): LinePushMessage {
 						description: "ยกเลิกการส่งสรุปคนหยุดเข้ากลุ่มนี้",
 						scope: "กลุ่ม",
 					}),
+					commandBox({
+						command: "ทดสอบแจ้งเตือน",
+						description: "ดูตัวอย่าง flex message ก่อนเอาขึ้นจริง",
+						scope: "กลุ่ม",
+					}),
 				],
 			},
 		},
