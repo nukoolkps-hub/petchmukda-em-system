@@ -64,7 +64,7 @@ export function buildDailySummaryFlex(input: BuildFlexInput): LinePushMessage {
 	return {
 		type: "flex",
 		altText: `สรุปภารกิจประจำวัน (${dateStr}) — ${groupName}`,
-		contents: bubble as never,
+		contents: bubble,
 	};
 }
 

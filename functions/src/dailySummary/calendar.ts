@@ -49,8 +49,11 @@ function formatEvent(event: {
 	description?: string | null;
 	location?: string | null;
 }): CalendarEvent {
-	const isAllDay =
-		!!event.start?.date && !event.start.dateTime;
+	// event อาจไม่มี dateTime ทั้ง start/end (allday) หรือมีแค่ start
+	const startDT = event.start?.dateTime;
+	const endDT = event.end?.dateTime;
+	const isAllDay = !startDT;
+
 	let time: string;
 	if (isAllDay) {
 		time = "🌟 ทั้งวัน";
@@ -61,30 +64,33 @@ function formatEvent(event: {
 			minute: "2-digit",
 			hour12: false,
 		});
-		const startStr = event.start?.dateTime
-			? fmt.format(new Date(event.start.dateTime))
-			: "";
-		const endStr = event.end?.dateTime
-			? fmt.format(new Date(event.end.dateTime))
-			: "";
-		time = endStr
-			? `⏰ ${startStr}-${endStr} น.`
-			: `⏰ ${startStr} น.`;
+		const startStr = fmt.format(new Date(startDT));
+		const endStr = endDT ? fmt.format(new Date(endDT)) : "";
+		time = endStr ? `⏰ ${startStr}-${endStr} น.` : `⏰ ${startStr} น.`;
 	}
 
-	const description = (event.description || "")
+	return {
+		time,
+		title: event.summary || "(ไม่มีชื่อ)",
+		description: stripHtml(event.description || ""),
+		location: event.location || "",
+	};
+}
+
+/** ตัด HTML tag + decode entity ที่พบบ่อยใน Google Calendar description */
+function stripHtml(html: string): string {
+	return html
 		.replace(/<br\s*\/?>/gi, "\n")
 		.replace(/<[^>]+>/g, "")
 		.replace(/&nbsp;/g, " ")
 		.replace(/&amp;/g, "&")
 		.replace(/&lt;/g, "<")
 		.replace(/&gt;/g, ">")
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'")
+		.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+		.replace(/&#x([0-9a-f]+);/gi, (_, n) =>
+			String.fromCharCode(parseInt(n, 16)),
+		)
 		.trim();
-
-	return {
-		time,
-		title: event.summary || "(ไม่มีชื่อ)",
-		description,
-		location: event.location || "",
-	};
 }

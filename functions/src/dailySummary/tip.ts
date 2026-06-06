@@ -25,8 +25,6 @@ export async function generateDailyTip(
 	const recentTips = await getRecentTips();
 	const systemPrompt = buildSystemPrompt();
 
-	let lastResult: DailyTip | null = null;
-
 	for (let attempt = 1; attempt <= TIP_RETRY_LIMIT; attempt++) {
 		const userPrompt = buildUserPrompt(recentTips);
 
@@ -63,21 +61,12 @@ export async function generateDailyTip(
 		console.warn(
 			`[generateDailyTip] duplicate/empty on attempt ${attempt}, retrying`,
 		);
-		lastResult = {
-			description: parsed.description,
-			summary: parsed.summary,
-			raw: rawText,
-		};
 	}
 
-	// ครบ retry แล้วยังซ้ำ → ใช้ผลล่าสุด (ดีกว่าไม่ได้อะไรเลย)
-	console.warn("[generateDailyTip] retry limit reached — using last tip even if duplicate");
-	if (lastResult?.raw) {
-		await saveRecentTip(lastResult.raw);
-		return lastResult;
-	}
+	// ครบ retry แล้วยังซ้ำ — throw ดีกว่า save duplicate ทับลง recentTips
+	// (caller จัดการ — sendDailySummary จะ log + ส่ง flex โดยไม่มี tip)
 	throw new Error(
-		`Failed to generate tip after ${TIP_RETRY_LIMIT} attempts`,
+		`Failed to generate non-duplicate tip after ${TIP_RETRY_LIMIT} attempts`,
 	);
 }
 
