@@ -9,6 +9,9 @@ export interface LineConfig {
 	ADMIN_LINE_USER_ID?: string;
 	LINE_LOGIN_CHANNEL_ID?: string;
 	LINE_LOGIN_CHANNEL_SECRET?: string;
+	// Claude API key สำหรับ generateDailyTip — ตั้งใน Firestore /config/secrets
+	// (เก็บที่เดียวกับ LINE config เพื่อ minimize Secret Manager versions)
+	ANTHROPIC_API_KEY?: string;
 }
 
 export type ISODateString = string;
