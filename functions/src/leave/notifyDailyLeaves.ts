@@ -33,7 +33,7 @@ const THAI_MONTHS_SHORT = [
 	"ธ.ค.",
 ];
 
-interface LeaveItem {
+export interface LeaveItem {
 	nickname: string;
 	kindLabel: string;
 	dateLabel: string;
@@ -156,7 +156,7 @@ async function claimToday(db: Firestore, ymd: string): Promise<boolean> {
 }
 
 /** เวลาไทย (UTC+7) — return YYYY-MM-DD + Thai-formatted "วันที่ X เดือน พ.ศ." */
-function bangkokToday(): { ymd: string; thai: string } {
+export function bangkokToday(): { ymd: string; thai: string } {
 	const now = new Date();
 	const bkk = new Date(now.getTime() + 7 * 60 * 60 * 1000);
 	const y = bkk.getUTCFullYear();
@@ -182,7 +182,7 @@ function stringValue(value: unknown): string | undefined {
 	return trimmed || undefined;
 }
 
-function buildLeaveFlex(
+export function buildLeaveFlex(
 	todayThai: string,
 	items: LeaveItem[],
 ): LinePushMessage {
