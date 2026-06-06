@@ -89,6 +89,16 @@ function makeHelpFlexMessage(): LinePushMessage {
 						description: "เชื่อมหรือเพิ่มพนักงานด้วยชื่อที่ระบุ",
 						scope: "กลุ่ม",
 					}),
+					commandBox({
+						command: "แจ้งเตือนกลุ่มนี้",
+						description: "ตั้งกลุ่มนี้เป็นที่ส่งสรุปคนหยุดรายวัน 07:30",
+						scope: "กลุ่ม",
+					}),
+					commandBox({
+						command: "ยกเลิกแจ้งเตือนกลุ่มนี้",
+						description: "ยกเลิกการส่งสรุปคนหยุดเข้ากลุ่มนี้",
+						scope: "กลุ่ม",
+					}),
 				],
 			},
 		},
