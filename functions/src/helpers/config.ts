@@ -28,11 +28,21 @@ export const COLORS = {
 export const formatThaiNumber = (n: number | string | undefined): string =>
 	Number(n || 0).toLocaleString("th-TH");
 
-/* ─── Read LINE secrets from Firestore ────────────────────────── */
+/* ─── Read LINE secrets from Firestore ──────────────────────────
+   trim field names + string values — กัน user/admin พิมพ์ space
+   ติดมาตอนสร้าง field ใน Firestore Console (เคยมีเคส
+   "ANTHROPIC_API_KEY " ที่ trailing space ทำให้อ่านไม่เจอ)         */
 export async function getLineConfig(): Promise<LineConfig> {
 	const db = getAppFirestore();
 	const doc = await db.doc("config/secrets").get();
-	return (doc.data() as LineConfig | undefined) || {};
+	const raw = doc.data();
+	if (!raw) return {};
+	const cleaned: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(raw)) {
+		const trimmedKey = key.trim();
+		cleaned[trimmedKey] = typeof value === "string" ? value.trim() : value;
+	}
+	return cleaned as LineConfig;
 }
 
 /* ─── Check if LINE user ID is in admin list ─────────────────── */
