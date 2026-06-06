@@ -13,6 +13,7 @@ import {
   MessageCircle as IconMessageCircle,
   Package as IconPackage,
   Pencil as IconPencil,
+  Plus as IconPlus,
   RefreshCw as IconRefresh,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
@@ -71,6 +72,9 @@ export default function EmployeeEditModal({
   const editingPoolExclusion = editingRole[`${employee.id}:poolExclusion`];
   const editingName = editingRole[`${employee.id}:name`];
   const editingNickname = editingRole[`${employee.id}:nickname`];
+  const editingRecurringItems = editingRole[`${employee.id}:recurringItems`] as
+    | RecurringItem[]
+    | undefined;
   const dirty =
     editingNormalSalePieceRate !== undefined ||
     editingSpecialSalePieceRate !== undefined ||
@@ -85,7 +89,8 @@ export default function EmployeeEditModal({
     editingSalaryDisabled !== undefined ||
     editingPoolExclusion !== undefined ||
     editingName !== undefined ||
-    editingNickname !== undefined;
+    editingNickname !== undefined ||
+    editingRecurringItems !== undefined;
 
   const clearDraft = () =>
     setEditingRole((prev) => clearEmployeeDraft(prev, employee.id));
@@ -147,6 +152,17 @@ export default function EmployeeEditModal({
       await onUpdateRole(employee.id, "prefix", editingPrefix);
     if (editingNickname !== undefined)
       await onUpdateRole(employee.id, "nickname", editingNickname.trim());
+    if (editingRecurringItems !== undefined) {
+      // sanitize: ตัด trailing space ใน label + แปลง amount เป็น number
+      const cleaned = editingRecurringItems
+        .map((it) => ({
+          ...it,
+          label: (it.label || "").trim(),
+          amount: Number(it.amount) || 0,
+        }))
+        .filter((it) => it.label || it.amount > 0); // ทิ้งรายการว่าง
+      await onUpdateRole(employee.id, "recurringItems", cleaned);
+    }
     if (editingSalaryDisabled !== undefined)
       await onUpdateRole(employee.id, "salaryDisabled", editingSalaryDisabled);
     if (editingPoolExclusion !== undefined)
@@ -193,6 +209,7 @@ export default function EmployeeEditModal({
         </button>
       </div>
       <div className="px-4 py-3.5">
+        <SectionHeader icon="👤" title="ข้อมูลส่วนตัว" />
         {/* Name + prefix — editable */}
         <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
@@ -371,78 +388,6 @@ export default function EmployeeEditModal({
           </div>
         </div>
 
-        {/* Base Salary */}
-        <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-          <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
-            <IconBriefcase
-              size={12}
-              strokeWidth={2.4}
-              className="inline mr-1 -mt-px"
-            />
-            เงินเดือนพื้นฐาน
-          </label>
-          <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
-              ฿
-            </span>
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              value={
-                editingBaseSalary !== undefined
-                  ? editingBaseSalary
-                  : (employee.baseSalary ?? "")
-              }
-              onChange={(e) =>
-                setEditingRole((previousEditingRole) => ({
-                  ...previousEditingRole,
-                  [`${employee.id}:baseSalary`]: e.target.value,
-                }))
-              }
-              className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingBaseSalary !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
-            />
-          </div>
-          <div className="text-xs text-txt-soft mt-[3px]">หน่วย: บาท/เดือน</div>
-        </div>
-
-        {/* Social Security */}
-        <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-          <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
-            <IconBuildingBank
-              size={12}
-              strokeWidth={2.4}
-              className="inline mr-1 -mt-px"
-            />
-            หักประกันสังคม
-          </label>
-          <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
-              ฿
-            </span>
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              value={
-                editingSocialSecurity !== undefined
-                  ? editingSocialSecurity
-                  : (employee.socialSecurity ?? "")
-              }
-              onChange={(e) =>
-                setEditingRole((previousEditingRole) => ({
-                  ...previousEditingRole,
-                  [`${employee.id}:socialSecurity`]: e.target.value,
-                }))
-              }
-              className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingSocialSecurity !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
-            />
-          </div>
-          <div className="text-xs text-txt-soft mt-[3px]">
-            หน่วย: บาท/เดือน (หักทุกเดือนอัตโนมัติ)
-          </div>
-        </div>
-
         {/* Start work month — ใช้ในหนังสือรับรองเงินเดือน */}
         <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
@@ -515,6 +460,79 @@ export default function EmployeeEditModal({
           })()}
           <div className="text-xs text-txt-soft mt-[3px]">
             ใช้ในหนังสือรับรองเงินเดือน
+          </div>
+        </div>
+
+        <SectionHeader icon="💰" title="เงินเดือน" />
+        {/* Base Salary */}
+        <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+          <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
+            <IconBriefcase
+              size={12}
+              strokeWidth={2.4}
+              className="inline mr-1 -mt-px"
+            />
+            เงินเดือนพื้นฐาน
+          </label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
+              ฿
+            </span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              value={
+                editingBaseSalary !== undefined
+                  ? editingBaseSalary
+                  : (employee.baseSalary ?? "")
+              }
+              onChange={(e) =>
+                setEditingRole((previousEditingRole) => ({
+                  ...previousEditingRole,
+                  [`${employee.id}:baseSalary`]: e.target.value,
+                }))
+              }
+              className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingBaseSalary !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+            />
+          </div>
+          <div className="text-xs text-txt-soft mt-[3px]">หน่วย: บาท/เดือน</div>
+        </div>
+
+        {/* Social Security */}
+        <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+          <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
+            <IconBuildingBank
+              size={12}
+              strokeWidth={2.4}
+              className="inline mr-1 -mt-px"
+            />
+            หักประกันสังคม
+          </label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
+              ฿
+            </span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              value={
+                editingSocialSecurity !== undefined
+                  ? editingSocialSecurity
+                  : (employee.socialSecurity ?? "")
+              }
+              onChange={(e) =>
+                setEditingRole((previousEditingRole) => ({
+                  ...previousEditingRole,
+                  [`${employee.id}:socialSecurity`]: e.target.value,
+                }))
+              }
+              className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingSocialSecurity !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+            />
+          </div>
+          <div className="text-xs text-txt-soft mt-[3px]">
+            หน่วย: บาท/เดือน (หักทุกเดือนอัตโนมัติ)
           </div>
         </div>
 
@@ -937,6 +955,20 @@ export default function EmployeeEditModal({
             </div>
           );
         })()}
+
+        <RecurringItemsEditor
+          items={
+            editingRecurringItems !== undefined
+              ? editingRecurringItems
+              : employee.recurringItems || []
+          }
+          onChange={(next) =>
+            setEditingRole((previousEditingRole) => ({
+              ...previousEditingRole,
+              [`${employee.id}:recurringItems`]: next,
+            }))
+          }
+        />
       </div>
       <div className="sticky bottom-0 z-10 bg-white px-4 py-3 border-t border-bdr shadow-[0_-8px_20px_rgba(90,30,10,0.06)]">
         {dirty ? (
@@ -976,5 +1008,158 @@ export default function EmployeeEditModal({
         )}
       </div>
     </BaseModal>
+  );
+}
+
+/* ─── Section header — divider + title ของแต่ละกลุ่ม field ─── */
+function SectionHeader({ icon, title }: { icon: string; title: string }) {
+  return (
+    <div className="mt-1 mb-3 flex items-center gap-2">
+      <div className="text-base font-extrabold text-maroon flex items-center gap-1.5">
+        <span className="text-lg leading-none">{icon}</span>
+        {title}
+      </div>
+      <div className="flex-1 h-px bg-gold/30" />
+    </div>
+  );
+}
+
+/* ─── รายการประจำเดือน (รายรับ + รายจ่าย) — admin เพิ่ม/ลบได้
+       items ใส่ครั้งเดียว เด่นทุกๆ เดือนใน calculateSalary ────────── */
+type RecurringItem = {
+  id: string;
+  type: "income" | "deduction";
+  label: string;
+  amount: number;
+};
+
+function RecurringItemsEditor({
+  items,
+  onChange,
+}: {
+  items: RecurringItem[];
+  onChange: (next: RecurringItem[]) => void;
+}) {
+  const incomes = items.filter((i) => i.type === "income");
+  const deductions = items.filter((i) => i.type === "deduction");
+
+  const addItem = (type: "income" | "deduction") => {
+    const id = `${type}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    onChange([...items, { id, type, label: "", amount: 0 }]);
+  };
+
+  const updateItem = (id: string, patch: Partial<RecurringItem>) => {
+    onChange(items.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+  };
+
+  const removeItem = (id: string) => {
+    onChange(items.filter((it) => it.id !== id));
+  };
+
+  return (
+    <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+      <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
+        <IconPlus size={12} strokeWidth={2.4} />
+        รายการประจำเดือน
+        <span className="font-normal text-txt-soft">(ใช้ทุกเดือน จนกว่าจะลบ)</span>
+      </label>
+
+      {/* รายรับ */}
+      <div className="mb-2">
+        <div className="text-xs font-bold text-green mb-1.5">+ รายรับ</div>
+        <div className="flex flex-col gap-1.5">
+          {incomes.map((item) => (
+            <RecurringItemRow
+              key={item.id}
+              item={item}
+              tint="green"
+              onLabel={(v) => updateItem(item.id, { label: v })}
+              onAmount={(v) => updateItem(item.id, { amount: v })}
+              onRemove={() => removeItem(item.id)}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => addItem("income")}
+            className="self-start inline-flex items-center gap-1 px-2.5 py-1 rounded-[7px] border border-dashed border-green bg-green-lt text-green text-xs font-bold cursor-pointer font-[inherit]"
+          >
+            <IconPlus size={11} strokeWidth={2.6} />
+            เพิ่มรายการรายรับ
+          </button>
+        </div>
+      </div>
+
+      {/* รายจ่าย */}
+      <div>
+        <div className="text-xs font-bold text-red mb-1.5">− รายจ่าย</div>
+        <div className="flex flex-col gap-1.5">
+          {deductions.map((item) => (
+            <RecurringItemRow
+              key={item.id}
+              item={item}
+              tint="red"
+              onLabel={(v) => updateItem(item.id, { label: v })}
+              onAmount={(v) => updateItem(item.id, { amount: v })}
+              onRemove={() => removeItem(item.id)}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => addItem("deduction")}
+            className="self-start inline-flex items-center gap-1 px-2.5 py-1 rounded-[7px] border border-dashed border-red bg-red-lt text-red text-xs font-bold cursor-pointer font-[inherit]"
+          >
+            <IconPlus size={11} strokeWidth={2.6} />
+            เพิ่มรายการรายจ่าย
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecurringItemRow({
+  item,
+  tint,
+  onLabel,
+  onAmount,
+  onRemove,
+}: {
+  item: RecurringItem;
+  tint: "green" | "red";
+  onLabel: (v: string) => void;
+  onAmount: (v: number) => void;
+  onRemove: () => void;
+}) {
+  const borderCls =
+    tint === "green"
+      ? "border-green/40 bg-green-lt/30"
+      : "border-red/30 bg-red-lt/30";
+  return (
+    <div
+      className={`flex gap-1.5 items-center p-1.5 rounded-[8px] border ${borderCls}`}
+    >
+      <input
+        type="text"
+        value={item.label}
+        onChange={(e) => onLabel(e.target.value)}
+        placeholder="ชื่อรายการ"
+        className="flex-1 min-w-0 py-1.5 px-2 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-txt bg-white border border-bdr"
+      />
+      <input
+        type="number"
+        value={item.amount || ""}
+        onChange={(e) => onAmount(parseFloat(e.target.value) || 0)}
+        placeholder="0"
+        className="shrink-0 w-[100px] py-1.5 px-2 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-txt bg-white border border-bdr text-right"
+      />
+      <button
+        type="button"
+        aria-label="ลบรายการ"
+        onClick={onRemove}
+        className="shrink-0 w-7 h-7 rounded-[6px] border border-bdr bg-white text-txt-soft cursor-pointer flex items-center justify-center"
+      >
+        <IconTrash size={12} strokeWidth={2.4} />
+      </button>
+    </div>
   );
 }

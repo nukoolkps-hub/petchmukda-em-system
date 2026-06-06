@@ -28,8 +28,18 @@ export interface Employee {
   salaryDisabled?: boolean;
   poolExclusion?: "sell" | "buy" | "both" | "" | null;
   displayOrder?: number; // ลำดับการเรียง card admin ลากย้ายได้ — sync ทุกคน
+  recurringItems?: RecurringItem[]; // รายรับ/รายจ่ายประจำเดือน (ใช้ทุกเดือน)
   balance?: LeaveBalance;
   used?: LeaveBalance;
+}
+
+/** รายการประจำเดือน — admin เพิ่มได้ทั้งรายรับและรายจ่าย ใช้ทุกๆ เดือน
+ *  จนกว่าจะลบ (เช่น ค่าเดินทาง +500/เดือน, ค่าชุด -200/เดือน) */
+export interface RecurringItem {
+  id: string;
+  type: "income" | "deduction";
+  label: string;
+  amount: number;
 }
 
 export interface LeaveEntry {
