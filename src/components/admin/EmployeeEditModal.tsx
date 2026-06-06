@@ -11,6 +11,7 @@ import {
   Lightbulb as IconLightbulb,
   Lock as IconLock,
   MessageCircle as IconMessageCircle,
+  Minus as IconMinus,
   Package as IconPackage,
   Pencil as IconPencil,
   Plus as IconPlus,
@@ -209,7 +210,7 @@ export default function EmployeeEditModal({
         </button>
       </div>
       <div className="px-4 py-3.5">
-        <SectionHeader icon="👤" title="ข้อมูลส่วนตัว" />
+        <SectionHeader icon={IconUser} title="ข้อมูลส่วนตัว" />
         {/* Name + prefix — editable */}
         <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
@@ -463,7 +464,7 @@ export default function EmployeeEditModal({
           </div>
         </div>
 
-        <SectionHeader icon="💰" title="เงินเดือน" />
+        <SectionHeader icon={IconCircleDollarSign} title="เงินเดือน" />
         {/* Base Salary */}
         <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
           <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
@@ -1012,11 +1013,17 @@ export default function EmployeeEditModal({
 }
 
 /* ─── Section header — divider + title ของแต่ละกลุ่ม field ─── */
-function SectionHeader({ icon, title }: { icon: string; title: string }) {
+function SectionHeader({
+  icon: Icon,
+  title,
+}: {
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  title: string;
+}) {
   return (
     <div className="mt-1 mb-3 flex items-center gap-2">
       <div className="text-base font-extrabold text-maroon flex items-center gap-1.5">
-        <span className="text-lg leading-none">{icon}</span>
+        <Icon size={18} strokeWidth={2.4} />
         {title}
       </div>
       <div className="flex-1 h-px bg-gold/30" />
@@ -1066,7 +1073,10 @@ function RecurringItemsEditor({
 
       {/* รายรับ */}
       <div className="mb-2">
-        <div className="text-xs font-bold text-green mb-1.5">+ รายรับ</div>
+        <div className="text-xs font-bold text-green mb-1.5 inline-flex items-center gap-1">
+          <IconPlus size={12} strokeWidth={2.6} />
+          รายรับ
+        </div>
         <div className="flex flex-col gap-1.5">
           {incomes.map((item) => (
             <RecurringItemRow
@@ -1091,7 +1101,10 @@ function RecurringItemsEditor({
 
       {/* รายจ่าย */}
       <div>
-        <div className="text-xs font-bold text-red mb-1.5">− รายจ่าย</div>
+        <div className="text-xs font-bold text-red mb-1.5 inline-flex items-center gap-1">
+          <IconMinus size={12} strokeWidth={2.6} />
+          รายจ่าย
+        </div>
         <div className="flex flex-col gap-1.5">
           {deductions.map((item) => (
             <RecurringItemRow
