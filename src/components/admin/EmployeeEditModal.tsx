@@ -612,7 +612,7 @@ export default function EmployeeEditModal({
                 employeeRole && !employeeRole.poolGroup;
               if (usesSinglePieceRate) {
                 return (
-                  <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                  <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                     <div className="text-sm font-bold text-maroon mb-2">
                       <IconCircleDollarSign
                         size={12}
@@ -729,7 +729,7 @@ export default function EmployeeEditModal({
                 );
               }
               return (
-                <div className="p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                   {/* Exclude from Pool — 3 levels (only for pool-group roles) */}
                   {employeeRole?.poolGroup &&
                     (() => {
