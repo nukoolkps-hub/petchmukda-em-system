@@ -396,6 +396,30 @@ export function calculateSalary(
         0,
       )
     : 0;
+  // รายการประจำเดือนของพนักงาน (recurringItems) — ตั้งครั้งเดียวที่
+  // employee doc ใช้ทุกๆ เดือนจนกว่าจะลบ. แยก income/deduction.
+  const recurringItems: { type: string; label: string; amount: number }[] =
+    Array.isArray(rates?.recurringItems) ? rates.recurringItems : [];
+  const recurringIncomes = recurringItems
+    .filter((it) => it.type === "income")
+    .map((it) => ({
+      label: it.label || "(ไม่ระบุ)",
+      amount: Number(it.amount) || 0,
+    }));
+  const recurringDeductions = recurringItems
+    .filter((it) => it.type === "deduction")
+    .map((it) => ({
+      label: it.label || "(ไม่ระบุ)",
+      amount: Number(it.amount) || 0,
+    }));
+  const recurringIncomesTotal = recurringIncomes.reduce(
+    (s, it) => s + it.amount,
+    0,
+  );
+  const recurringDeductionsTotal = recurringDeductions.reduce(
+    (s, it) => s + it.amount,
+    0,
+  );
   const earnings =
     baseSalary +
     singleRateCommission +
@@ -404,7 +428,8 @@ export function calculateSalary(
     buyCommission +
     memberBonusTotal +
     attendanceBonus +
-    customEarningsTotal;
+    customEarningsTotal +
+    recurringIncomesTotal;
   const advanceDeduction = approvedAdvanceTotal || 0;
   const customDeductionsTotal = Array.isArray(salary.customDeductions)
     ? salary.customDeductions.reduce(
@@ -420,7 +445,8 @@ export function calculateSalary(
     advanceDeduction +
     socialSecurityAmount +
     overQuotaDeduction +
-    customDeductionsTotal;
+    customDeductionsTotal +
+    recurringDeductionsTotal;
   let loanDeduction = 0;
   const loanRepayments: Record<string, number> = {}; // {loanId: ยอดหักเดือนนี้}
   const loanBreakdown: { id: string; amount: number }[] = [];
@@ -461,6 +487,10 @@ export function calculateSalary(
     loanDeduction,
     loanRepayments, // {loanId: ยอดหักเดือนนี้} — ใช้บันทึก ledger ตอนยืนยันยอด
     loanBreakdown, // [{id, amount}] — เรียงตามที่หัก (สำหรับแสดงผล)
+    recurringIncomes, // [{label, amount}] — รายรับประจำเดือนจาก employee doc
+    recurringDeductions, // [{label, amount}] — รายจ่ายประจำเดือน
+    recurringIncomesTotal,
+    recurringDeductionsTotal,
     overQuotaDeduction,
     dailySalaryRate,
     weekdayOverQuotaDays,

@@ -16,6 +16,7 @@ export const EMPLOYEE_EDIT_FIELDS = [
   "poolExclusion",
   "name",
   "nickname",
+  "recurringItems",
 ] as const;
 
 /** มี draft ค้างสำหรับพนักงานคนนี้ไหม (ใช้โชว์ badge "มีการแก้ไข") */
