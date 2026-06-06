@@ -28,11 +28,8 @@ export { setAdmin } from "./auth/setAdmin.js";
 export { lineWebhook } from "./line/webhook.js";
 
 // Daily summary — ภารกิจ + คนหยุด + เคล็ดลับ → ส่งเข้า LINE 07:30 ทุกวัน
-export {
-	previewDailySummary,
-	sendDailySummary,
-	sendDailySummaryNow,
-} from "./dailySummary/sendDailySummary.js";
+// (manual test: Cloud Scheduler "Force run" หรือ LINE command "ทดสอบแจ้งเตือน")
+export { sendDailySummary } from "./dailySummary/sendDailySummary.js";
 
 // Maintenance
 export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";
