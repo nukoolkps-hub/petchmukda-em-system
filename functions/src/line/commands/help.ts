@@ -90,19 +90,9 @@ function makeHelpFlexMessage(): LinePushMessage {
 						scope: "กลุ่ม",
 					}),
 					commandBox({
-						command: "แจ้งเตือนกลุ่มนี้",
-						description: "ตั้งกลุ่มนี้เป็นที่ส่งสรุปคนหยุดรายวัน 07:30",
-						scope: "กลุ่ม",
-					}),
-					commandBox({
-						command: "ยกเลิกแจ้งเตือนกลุ่มนี้",
-						description: "ยกเลิกการส่งสรุปคนหยุดเข้ากลุ่มนี้",
-						scope: "กลุ่ม",
-					}),
-					commandBox({
 						command: "ทดสอบแจ้งเตือน",
-						description: "ดูตัวอย่าง flex message ก่อนเอาขึ้นจริง",
-						scope: "กลุ่ม",
+						description: "Bot push ตัวอย่างสรุปประจำวัน (Calendar + คนหยุด + เคล็ดลับ) มาให้ดู",
+						scope: "แชทส่วนตัว",
 					}),
 				],
 			},
