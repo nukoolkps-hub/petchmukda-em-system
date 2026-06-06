@@ -138,11 +138,16 @@ export async function runDailySummary(
 		let tipDebugError: string | null = null;
 		if (group.sendAiTip) {
 			if (!anthropicApiKey) {
-				tipDebugError =
-					"ANTHROPIC_API_KEY ไม่ได้ตั้งใน Firestore /config/secrets";
-				console.warn(
-					`[runDailySummary] ${group.name}: ${tipDebugError}`,
-				);
+				// dump field ที่อยู่จริงใน config/secrets เพื่อช่วย diagnose
+				// (เช่น user เพิ่ม field ใน default DB แทน named DB / typo
+				//  / value เป็น empty string)
+				const configKeys = Object.keys(config).sort();
+				const hasFieldButEmpty =
+					"ANTHROPIC_API_KEY" in config && !config.ANTHROPIC_API_KEY;
+				tipDebugError = hasFieldButEmpty
+					? "ANTHROPIC_API_KEY มี field ใน config/secrets แต่ value ว่าง"
+					: `ANTHROPIC_API_KEY ไม่พบใน config/secrets\n\nField ที่อ่านได้จาก doc: ${configKeys.length ? configKeys.join(", ") : "(ไม่มีเลย — อาจอ่านผิด database)"}\n\nDB ที่กำลังอ่าน: ${process.env.FIRESTORE_DATABASE_ID || "petchmukda-bot"}`;
+				console.warn(`[runDailySummary] ${group.name}: ${tipDebugError}`);
 			} else {
 				try {
 					const tipResult = await generateDailyTip(anthropicApiKey);
