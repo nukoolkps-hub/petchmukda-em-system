@@ -184,7 +184,7 @@ export default function AdminAdvancePanel({
             <button
               key={f.id}
               onClick={() => setFilter(f.id as AdvanceFilter)}
-              className={`px-3.5 py-[7px] rounded-[20px] cursor-pointer font-[inherit] text-sm font-semibold whitespace-nowrap border
+              className={`px-3 py-2 rounded-[10px] cursor-pointer font-[inherit] text-sm font-semibold whitespace-nowrap border-[1.5px]
                 ${filter === f.id ? "bg-maroon text-gold-lt border-maroon" : "bg-cream text-txt-mid border-bdr"}`}
             >
               {f.label}
