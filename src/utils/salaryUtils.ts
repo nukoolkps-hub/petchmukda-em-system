@@ -63,12 +63,21 @@ export function computePoolSharesForGroup({
 }) {
   if (!groupEmployeeIds || groupEmployeeIds.length === 0) return {};
 
+  // กรองพนักงานที่ "ปิดสิทธิ์ระบบเงินเดือน" ออกก่อน — กลุ่มนี้ใช้แอปเฉพาะ
+  // ระบบลา ไม่นับเข้ากองกลาง ไม่ pull เกณฑ์ 80% และไม่ได้รับ commission
+  // (single source of truth — caller ที่ลืม filter ก็ปลอดภัย)
+  const activeIds = groupEmployeeIds.filter((id) => {
+    const employee = employeeDirectory.find((e) => e.id === id);
+    return !employee?.salaryDisabled;
+  });
+  if (activeIds.length === 0) return {};
+
   // --- Step 0: คัดข้อมูลพื้นฐานของแต่ละคน ---
   const sellPieces: Record<string, number> = {}; // ทั่วไป + พิเศษ ของตัวเอง
   const buyPieces: Record<string, number> = {}; // รับซื้อของตัวเอง
   const totalLeave: Record<string, number> = {}; // วันหยุดรวม (ปกติ + อาทิตย์)
   const poolExclusion: Record<string, string | null> = {};
-  groupEmployeeIds.forEach((employeeId) => {
+  activeIds.forEach((employeeId) => {
     const salary = salaryData[employeeId]?.[yearMonth];
     const employee = employeeDirectory.find(
       (candidateEmployee) => candidateEmployee.id === employeeId,
@@ -107,7 +116,7 @@ export function computePoolSharesForGroup({
   // --- Step 1: หาว่าใครเข้า Pool ฝั่งไหนบ้าง ---
   const sellPoolEligibility = {};
   const buyPoolEligibility = {};
-  groupEmployeeIds.forEach((employeeId) => {
+  activeIds.forEach((employeeId) => {
     const employeePoolExclusion = poolExclusion[employeeId];
     if (employeePoolExclusion === "sell" || employeePoolExclusion === "both") {
       sellPoolEligibility[employeeId] = false;
@@ -130,7 +139,7 @@ export function computePoolSharesForGroup({
   // --- Step 2: รวม Pool จากชิ้นของทุกคน แล้วหัก "ไม่นับค่าคอม" ระดับเดือน ---
   let totalSellPoolPieces = 0;
   let totalBuyPoolPieces = 0;
-  groupEmployeeIds.forEach((employeeId) => {
+  activeIds.forEach((employeeId) => {
     const salary = salaryData[employeeId]?.[yearMonth];
     if (salary) {
       // กองกลางที่นำมาแบ่ง = เฉพาะ "ขายทั่วไป" — ขายพิเศษ ใครขายใครได้
@@ -163,7 +172,7 @@ export function computePoolSharesForGroup({
 
   // --- Step 3: คำนวณตามสูตร Excel แยก 2 ฝั่ง ---
   function computeShares(poolEligibility, totalPoolPieces) {
-    const eligibleEmployeeIds = groupEmployeeIds.filter(
+    const eligibleEmployeeIds = activeIds.filter(
       (employeeId) => poolEligibility[employeeId],
     );
     const eligibleEmployeeCount = eligibleEmployeeIds.length;
@@ -230,7 +239,7 @@ export function computePoolSharesForGroup({
 
   // --- Step 4: ประกอบผลลัพธ์ของแต่ละคน ---
   const result = {};
-  groupEmployeeIds.forEach((employeeId) => {
+  activeIds.forEach((employeeId) => {
     const sellShare = sellResult.shares[employeeId];
     const buyShare = buyResult.shares[employeeId];
     const losesBaseSalary =
