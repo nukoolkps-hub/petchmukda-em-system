@@ -135,12 +135,25 @@ export async function runDailySummary(
 		}
 
 		let tip: string | null = null;
-		if (group.sendAiTip && anthropicApiKey) {
-			try {
-				const tipResult = await generateDailyTip(anthropicApiKey);
-				tip = tipResult.raw;
-			} catch (err) {
-				console.error(`[runDailySummary] tip error for ${group.name}:`, err);
+		let tipDebugError: string | null = null;
+		if (group.sendAiTip) {
+			if (!anthropicApiKey) {
+				tipDebugError =
+					"ANTHROPIC_API_KEY ไม่ได้ตั้งใน Firestore /config/secrets";
+				console.warn(
+					`[runDailySummary] ${group.name}: ${tipDebugError}`,
+				);
+			} else {
+				try {
+					const tipResult = await generateDailyTip(anthropicApiKey);
+					tip = tipResult.raw;
+				} catch (err) {
+					tipDebugError = err instanceof Error ? err.message : String(err);
+					console.error(
+						`[runDailySummary] tip error for ${group.name}:`,
+						tipDebugError,
+					);
+				}
 			}
 		}
 
@@ -151,6 +164,9 @@ export async function runDailySummary(
 			events,
 			leaves: group.includeLeaves ? todayLeaves : null,
 			tip,
+			// preview mode (targetOverride set): โชว์ error ของ tip ในกล่อง
+			// แทน skip เงียบๆ — ให้ admin debug ง่าย
+			tipDebugError: targetOverride ? tipDebugError : null,
 			calendarError,
 		});
 

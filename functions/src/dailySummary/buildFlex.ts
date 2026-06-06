@@ -58,10 +58,22 @@ interface BuildFlexInput {
 	leaves: LeaveItem[] | null; // null = ไม่แสดง section (ไม่ใช่กลุ่มพนักงาน)
 	tip: string | null; // raw tip text — null = ไม่แสดง section
 	calendarError: boolean;
+	/** preview mode debug — ถ้าไม่ใช่ null โชว์ error ในกล่อง tip
+	 *  (ใช้ตอน admin ทดสอบเพื่อหาเหตุที่ tip ไม่ขึ้น) */
+	tipDebugError?: string | null;
 }
 
 export function buildDailySummaryFlex(input: BuildFlexInput): LinePushMessage {
-	const { groupName, dateStr, dayName, events, leaves, tip, calendarError } = input;
+	const {
+		groupName,
+		dateStr,
+		dayName,
+		events,
+		leaves,
+		tip,
+		calendarError,
+		tipDebugError,
+	} = input;
 	const accent = DAY_ACCENT[dayName] || MAROON;
 	const headerBg = DAY_PASTEL_BG[dayName] || GOLD_PALE;
 
@@ -74,6 +86,8 @@ export function buildDailySummaryFlex(input: BuildFlexInput): LinePushMessage {
 
 	if (tip) {
 		bubble.footer = buildTipFooter(tip);
+	} else if (tipDebugError) {
+		bubble.footer = buildTipDebugFooter(tipDebugError);
 	}
 
 	return {
@@ -459,6 +473,56 @@ function buildTipFooter(tip: string): Record<string, unknown> {
 				backgroundColor: "#FFF8E1",
 				cornerRadius: "10px",
 				paddingAll: "14px",
+			},
+		],
+	};
+}
+
+/* ─── debug footer สำหรับ preview mode — โชว์ error ของ tip ─── */
+
+function buildTipDebugFooter(errorMessage: string): Record<string, unknown> {
+	return {
+		type: "box",
+		layout: "vertical",
+		backgroundColor: CREAM,
+		paddingAll: "16px",
+		paddingTop: "0px",
+		contents: [
+			{
+				type: "box",
+				layout: "vertical",
+				backgroundColor: "#FFF0F0",
+				cornerRadius: "10px",
+				paddingAll: "14px",
+				contents: [
+					{
+						type: "text",
+						text: "⚠️ เคล็ดลับยังไม่พร้อม (preview only)",
+						color: "#CC0000",
+						size: "sm",
+						weight: "bold",
+					},
+					{
+						type: "separator",
+						margin: "8px",
+						color: "#F0CACA",
+					},
+					{
+						type: "text",
+						text: errorMessage,
+						color: "#5D4037",
+						size: "xs",
+						wrap: true,
+						margin: "10px",
+					},
+					{
+						type: "text",
+						text: "ดูใน Functions Logs สำหรับรายละเอียดเพิ่มเติม",
+						color: "#9E8B7D",
+						size: "xxs",
+						margin: "8px",
+					},
+				],
 			},
 		],
 	};
