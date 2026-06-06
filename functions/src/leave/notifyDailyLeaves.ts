@@ -1,6 +1,9 @@
 /**
  * notifyDailyLeaves — แจ้งเตือนทุกวันเวลา 07:30 ตามเวลาไทยว่ามีพนักงาน
- * คนไหนหยุดวันนี้บ้าง ส่งให้พนักงานทุกคนที่ผูก lineUserId แล้ว
+ * คนไหนหยุดวันนี้บ้าง ส่งเข้ากลุ่ม LINE ที่ admin ตั้งไว้
+ *
+ * กลุ่มที่ส่งเก็บใน config/notifications.employeeGroupId — ตั้งโดย
+ * admin พิมพ์ "แจ้งเตือนกลุ่มนี้" ในกลุ่ม LINE (commands/setNotifyGroup.ts)
  *
  * แสดงชื่อโดยใช้ "ชื่อเล่น" (employee.nickname) ก่อน fallback ไป full name
  *
@@ -49,6 +52,19 @@ export const notifyDailyLeaves = onSchedule(
 		const db = getAppFirestore();
 		const { ymd, thai: todayThai } = bangkokToday();
 
+		// อ่าน groupId ที่ admin ตั้งไว้ — ถ้ายังไม่ได้ตั้ง → skip ทั้งวัน
+		const notifConfig = await db.doc("config/notifications").get();
+		const groupId = stringValue(
+			(notifConfig.data() as Record<string, unknown> | undefined)
+				?.employeeGroupId,
+		);
+		if (!groupId) {
+			console.warn(
+				"[notifyDailyLeaves] employeeGroupId not configured — admin ต้องพิมพ์ 'แจ้งเตือนกลุ่มนี้' ในกลุ่ม LINE ก่อน",
+			);
+			return;
+		}
+
 		// Idempotency: claim today's slot ก่อนส่ง
 		const claimed = await claimToday(db, ymd);
 		if (!claimed) {
@@ -75,7 +91,7 @@ export const notifyDailyLeaves = onSchedule(
 			console.log(`[notifyDailyLeaves] no leaves for ${ymd}`);
 			await db
 				.doc(`dailyLeaveNotifications/${ymd}`)
-				.update({ skippedReason: "no_leaves", sentCount: 0 });
+				.update({ skippedReason: "no_leaves", sent: false });
 			return;
 		}
 
@@ -100,46 +116,28 @@ export const notifyDailyLeaves = onSchedule(
 			return { nickname, kindLabel, dateLabel };
 		});
 
-		// recipients = พนักงานทุกคนที่ผูก lineUserId
-		const recipients = empSnap.docs
-			.map((e) => stringValue(e.data().lineUserId))
-			.filter((id): id is string => Boolean(id));
-
-		if (recipients.length === 0) {
-			console.warn(`[notifyDailyLeaves] no recipients with lineUserId`);
-			await db
-				.doc(`dailyLeaveNotifications/${ymd}`)
-				.update({ skippedReason: "no_recipients", sentCount: 0 });
-			return;
-		}
-
 		const message = buildLeaveFlex(todayThai, items);
 
-		// ส่งแบบ best-effort — ถ้าคนใดคนหนึ่ง fail ไม่ block ที่เหลือ
-		let sent = 0;
-		await Promise.all(
-			recipients.map((uid) =>
-				pushLineMessage(token, uid, message)
-					.then(() => {
-						sent += 1;
-					})
-					.catch((err) => {
-						console.error(
-							`[notifyDailyLeaves] push to ${uid} failed:`,
-							err instanceof Error ? err.message : String(err),
-						);
-					}),
-			),
-		);
-
-		await db.doc(`dailyLeaveNotifications/${ymd}`).update({
-			sentCount: sent,
-			recipientCount: recipients.length,
-			leaveCount: items.length,
-		});
-		console.log(
-			`[notifyDailyLeaves] sent ${sent}/${recipients.length} for ${ymd}`,
-		);
+		try {
+			await pushLineMessage(token, groupId, message);
+			await db.doc(`dailyLeaveNotifications/${ymd}`).update({
+				sent: true,
+				groupId,
+				leaveCount: items.length,
+			});
+			console.log(
+				`[notifyDailyLeaves] sent to group ${groupId} (${items.length} leave items)`,
+			);
+		} catch (err) {
+			const errMessage = err instanceof Error ? err.message : String(err);
+			console.error(`[notifyDailyLeaves] push to group ${groupId} failed:`, errMessage);
+			await db.doc(`dailyLeaveNotifications/${ymd}`).update({
+				sent: false,
+				error: errMessage,
+				groupId,
+			});
+			throw err;
+		}
 	},
 );
 

@@ -3,6 +3,7 @@ import { groupIdCommand } from "../commands/groupId.js";
 import { helpCommand } from "../commands/help.js";
 import { idCommand } from "../commands/id.js";
 import { myIdCommand } from "../commands/myId.js";
+import { setNotifyGroupCommand } from "../commands/setNotifyGroup.js";
 import { setupEmployeeCommand } from "../commands/setupEmployee.js";
 import { replyText } from "./reply.js";
 import type { LineCommand, LineCommandContext } from "./types.js";
@@ -13,6 +14,7 @@ const commands: LineCommand[] = [
 	helpCommand,
 	idCommand,
 	setupEmployeeCommand,
+	setNotifyGroupCommand,
 ];
 
 export async function dispatchLineCommand(
