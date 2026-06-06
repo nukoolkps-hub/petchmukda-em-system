@@ -13,6 +13,7 @@ import {
 	formatThaiNumber,
 	getAppFirestore,
 	getLineConfig,
+	isNotificationEnabled,
 } from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
 import type { LinePushMessage } from "../types.js";
@@ -25,6 +26,13 @@ const BATCH_SIZE = 20;
 export const processAdvanceNotifications = onSchedule(
 	{ schedule: "* * * * *", timeZone: "Asia/Bangkok" },
 	async () => {
+		// Admin toggle: /admin → LINE BOT → การแจ้งเตือน
+		if (!(await isNotificationEnabled("advanceApprovalEnabled"))) {
+			console.log(
+				"[processAdvanceNotifications] disabled in admin config, skipping",
+			);
+			return;
+		}
 		const config = await getLineConfig();
 		if (!config.LINE_CHANNEL_ACCESS_TOKEN) {
 			console.warn("[processAdvanceNotifications] LINE config not set");

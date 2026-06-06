@@ -3,7 +3,11 @@
  */
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { FIRESTORE_DATABASE_ID, getLineConfig } from "../helpers/config.js";
+import {
+	FIRESTORE_DATABASE_ID,
+	getLineConfig,
+	isNotificationEnabled,
+} from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
 
 export const onAdvanceCreated = onDocumentCreated(
@@ -12,6 +16,12 @@ export const onAdvanceCreated = onDocumentCreated(
 		const advance = event.data?.data();
 		if (!advance) return;
 		console.log(`[onAdvanceCreated] New advance: ${event.params.advanceId}`);
+
+		// Admin toggle: /admin → LINE BOT → การแจ้งเตือน
+		if (!(await isNotificationEnabled("advanceRequestEnabled"))) {
+			console.log("[onAdvanceCreated] disabled in admin config, skipping");
+			return;
+		}
 
 		const config = await getLineConfig();
 		if (!config.LINE_CHANNEL_ACCESS_TOKEN || !config.ADMIN_LINE_USER_ID) {

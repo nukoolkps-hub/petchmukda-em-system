@@ -8,12 +8,19 @@ import {
 	formatThaiNumber,
 	getAppFirestore,
 	getLineConfig,
+	isNotificationEnabled,
 } from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
 import { parseNotifyAdvanceRequestPayload } from "../helpers/payload.js";
 
 export const notifyAdvanceRequest = onCall(async (request) => {
 	if (!request.auth) throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+
+	// Admin toggle: /admin → LINE BOT → การแจ้งเตือน
+	if (!(await isNotificationEnabled("advanceRequestEnabled"))) {
+		console.log("[notifyAdvanceRequest] disabled in admin config, skipping");
+		return { ok: true, skipped: true };
+	}
 
 	const uid = request.auth.uid;
 	const employeeSnap = await getAppFirestore()
