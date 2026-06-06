@@ -39,3 +39,4 @@ export { sendDailySummary } from "./dailySummary/sendDailySummary.js";
 
 // Maintenance
 export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";
+export { cleanupOldTips } from "./maintenance/cleanupOldTips.js";

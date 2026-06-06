@@ -16,8 +16,14 @@
 export const APP_TIMEZONE = "Asia/Bangkok";
 export const AI_MODEL = "claude-sonnet-4-6";
 export const AI_MAX_TOKENS = 1024;
+/** จำนวน tip ล่าสุดที่ดึงมา dedup ก่อนยิง Claude */
 export const RECENT_TIPS_LIMIT = 30;
+/** retry กี่ครั้งถ้า Claude ตอบซ้ำ */
 export const TIP_RETRY_LIMIT = 3;
+/** เก็บ recentTips ย้อนหลังกี่วัน — เกินนี้ cleanupOldTips ลบทิ้ง */
+export const RECENT_TIPS_RETENTION_DAYS = 60;
+/** ชื่อวันเสาร์ — ใช้ skip การส่งเคล็ดลับวันเสาร์ที่ไม่มี event */
+export const SAT_DAY_NAME = "เสาร์";
 
 export interface DailySummaryGroup {
 	name: string;

@@ -9,7 +9,7 @@
  * 3. ถ้า group.sendAiTip → เรียก Claude API
  * 4. รวมเป็น flex bubble (maroon theme) → push เข้า LINE group
  *
- * Idempotency: doc `dailyLeaveNotifications/{ymd}` เป็น guard
+ * Idempotency: doc `dailySummarySent/{ymd}` เป็น guard
  * (claim ครั้งเดียว — กัน at-least-once delivery ของ Cloud Scheduler)
  */
 
@@ -17,24 +17,19 @@ import type { Firestore } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getAppFirestore, getLineConfig } from "../helpers/config.js";
 import { pushLineMessage } from "../helpers/line.js";
-import type { LinePushMessage } from "../types.js";
+import { buildDailySummaryFlex } from "./buildFlex.js";
 import {
+	type CalendarEvent,
 	createCalendarClient,
 	fetchTodayEvents,
 } from "./calendar.js";
-import { APP_TIMEZONE, DAILY_SUMMARY_GROUPS } from "./config.js";
-import {
-	bangkokYmd,
-	formatDateTH,
-	getThaiDayName,
-} from "./dateUtils.js";
-import { buildDailySummaryFlex } from "./buildFlex.js";
+import { APP_TIMEZONE, DAILY_SUMMARY_GROUPS, SAT_DAY_NAME } from "./config.js";
+import { bangkokYmd, formatDateTH, getThaiDayName } from "./dateUtils.js";
 import { fetchTodayLeaves, type LeaveItem } from "./leaves.js";
 import { generateDailyTip } from "./tip.js";
 
 interface RunOptions {
 	targetOverride?: string; // ส่งทุก message ไป LINE ID นี้แทน (สำหรับ preview)
-	idempotencyKey?: string; // ใช้กับ scheduled call เพื่อกันส่งซ้ำ
 }
 
 interface GroupResult {
@@ -59,15 +54,15 @@ export const sendDailySummary = onSchedule(
 			return;
 		}
 		try {
-			const results = await runDailySummary({ idempotencyKey: ymd });
-			await db.doc(`dailyLeaveNotifications/${ymd}`).update({
+			const results = await runDailySummary();
+			await db.doc(`dailySummarySent/${ymd}`).update({
 				results,
 				sentAt: new Date().toISOString(),
 			});
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : String(err);
 			await db
-				.doc(`dailyLeaveNotifications/${ymd}`)
+				.doc(`dailySummarySent/${ymd}`)
 				.update({ error: msg })
 				.catch(() => undefined);
 			throw err;
@@ -84,7 +79,7 @@ export async function runDailySummary(
 	const now = new Date();
 	const dateStr = formatDateTH(now);
 	const dayName = getThaiDayName(now);
-	const isSaturday = dayName === "เสาร์";
+	const isSaturday = dayName === SAT_DAY_NAME;
 
 	const config = await getLineConfig();
 	const token = config.LINE_CHANNEL_ACCESS_TOKEN;
@@ -93,29 +88,37 @@ export async function runDailySummary(
 
 	const db = getAppFirestore();
 	const calendar = createCalendarClient();
-
-	// ดึง leaves ครั้งเดียว ใช้ร่วมทุก group ที่ includeLeaves=true
 	const hasLeavesGroup = DAILY_SUMMARY_GROUPS.some((g) => g.includeLeaves);
-	let todayLeaves: LeaveItem[] = [];
-	if (hasLeavesGroup) {
-		try {
-			todayLeaves = await fetchTodayLeaves(db, now);
-		} catch (err) {
-			console.error("[runDailySummary] fetchTodayLeaves error:", err);
-		}
-	}
+
+	// ดึง leaves + Calendar events ของทุก group แบบ parallel — ลด latency จาก
+	// O(groups × roundtrip) → O(roundtrip) (ใหญ่สุดของชุดงาน)
+	const [todayLeaves, eventsByGroup] = await Promise.all([
+		hasLeavesGroup
+			? fetchTodayLeaves(db, now).catch((err) => {
+					console.error("[runDailySummary] fetchTodayLeaves error:", err);
+					return [] as LeaveItem[];
+				})
+			: Promise.resolve<LeaveItem[]>([]),
+		Promise.all(
+			DAILY_SUMMARY_GROUPS.map((group) =>
+				fetchTodayEvents(calendar, group.calendarId, now)
+					.then((events) => ({ events, error: false }))
+					.catch((err) => {
+						console.error(
+							`[runDailySummary] calendar error for ${group.name}:`,
+							err,
+						);
+						return { events: [] as CalendarEvent[], error: true };
+					}),
+			),
+		),
+	]);
 
 	const results: GroupResult[] = [];
 
-	for (const group of DAILY_SUMMARY_GROUPS) {
-		let events: Awaited<ReturnType<typeof fetchTodayEvents>> = [];
-		let calendarError = false;
-		try {
-			events = await fetchTodayEvents(calendar, group.calendarId, now);
-		} catch (err) {
-			console.error(`[runDailySummary] calendar error for ${group.name}:`, err);
-			calendarError = true;
-		}
+	for (let i = 0; i < DAILY_SUMMARY_GROUPS.length; i++) {
+		const group = DAILY_SUMMARY_GROUPS[i];
+		const { events, error: calendarError } = eventsByGroup[i];
 
 		// Skip กลุ่มที่ไม่มี event + ไม่ส่ง tip + ไม่ใช่กลุ่มพนักงาน
 		// (กันส่งข้อความ "ไม่มีภารกิจ" รบกวนตอนวันหยุด/ไม่มีอะไรเลย)
@@ -153,7 +156,7 @@ export async function runDailySummary(
 
 		const target = targetOverride || group.lineTargetId;
 		try {
-			await pushLineMessage(token, target, flex as LinePushMessage);
+			await pushLineMessage(token, target, flex);
 			results.push({ name: group.name, sent: true });
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : String(err);
@@ -167,7 +170,7 @@ export async function runDailySummary(
 
 /** Atomic claim ของวันนี้ — กัน scheduler ยิงซ้ำส่งสแปม */
 async function claimToday(db: Firestore, ymd: string): Promise<boolean> {
-	const ref = db.doc(`dailyLeaveNotifications/${ymd}`);
+	const ref = db.doc(`dailySummarySent/${ymd}`);
 	return db.runTransaction(async (tx) => {
 		const snap = await tx.get(ref);
 		if (snap.exists) return false;

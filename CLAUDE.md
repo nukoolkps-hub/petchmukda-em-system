@@ -115,8 +115,10 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 | `src/firebase/auth.ts` | LINE Login + auth helpers |
 | `src/contexts/AuthContext.tsx` | Auth state provider |
 | `public/fonts/Sarabun-*.ttf` | Self-host Thai font (CSP block CDN ภายนอก) |
-| `functions/src/index.ts` | Cloud Functions barrel exports |
-| `functions/src/line/` | LINE Bot webhook + commands |
+| `functions/src/index.ts` | Cloud Functions barrel exports + `setGlobalOptions({ serviceAccount: "petchmukda-bot@appspot.gserviceaccount.com" })` |
+| `functions/src/line/` | LINE Bot webhook + commands (`ทดสอบแจ้งเตือน`, `คำสั่ง`, `ไอดีกลุ่ม`, ฯลฯ) |
+| `functions/src/dailySummary/` | สรุปประจำวัน 07:30 — Google Calendar + คนหยุด + เคล็ดลับ Claude |
+| `functions/src/maintenance/cleanupOldTips.ts` | ลบ `recentTips` ที่เก่ากว่า 60 วัน (กัน collection โต) |
 | `firestore.rules` | Firestore security rules |
 | `storage.rules` | Storage security rules |
 
@@ -158,8 +160,24 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 
 ผู้พัฒนาทำงานผ่าน Claude Code on the web ทั้งหมด — **ไม่มี local clone**, file ทุกอย่างอยู่บน GitHub และ container ของ session นี้เท่านั้น ดังนั้นทำ deploy ด้วยมือไม่ได้ และไม่ต้องบอก user ให้รันคำสั่งบนเครื่องตัวเอง
 
-- **LINE config:** Firestore `config/secrets` document
+- **LINE config:** Firestore `config/secrets` document (`LINE_CHANNEL_ACCESS_TOKEN`, `ADMIN_LINE_USER_ID`, `ANTHROPIC_API_KEY`, ฯลฯ)
 - **URL:** https://petchmukda-bot.web.app
+
+### Daily Summary (07:30)
+
+Cloud Functions `sendDailySummary` ส่ง flex สรุปประจำวันเข้า LINE 3 กลุ่ม (`DAILY_SUMMARY_GROUPS` ใน `functions/src/dailySummary/config.ts`) — มี 3 section ในกล่องเดียว:
+1. **📋 ภารกิจวันนี้** — ดึงจาก Google Calendar (3 calendars แยกตามกลุ่ม)
+2. **👥 พนักงานหยุดวันนี้** — เฉพาะกลุ่มที่ `includeLeaves: true` (we r mukda)
+3. **💡 เคล็ดลับมืออาชีพ** — Claude API (เฉพาะ `sendAiTip: true`) + dedup ด้วย `recentTips` collection (30 ล่าสุด)
+
+**Setup ที่ต้องทำครั้งเดียวต่อ Firebase project:**
+1. Share Google Calendars ทั้ง 3 ใบกับ `petchmukda-bot@appspot.gserviceaccount.com` (permission: "See all event details")
+2. Enable **Google Calendar API** ใน GCP Console: https://console.cloud.google.com/apis/library/calendar-json.googleapis.com?project=petchmukda-bot
+3. เพิ่ม `ANTHROPIC_API_KEY` ใน Firestore `config/secrets`
+
+**Manual test:** พิมพ์ `ทดสอบแจ้งเตือน` ใน LINE 1:1 chat — bot push ตัวอย่างมาให้ admin ดู (เรียก Claude API จริง + เห็นทุก section)
+
+**Idempotency:** `dailySummarySent/{ymd}` claim ผ่าน transaction — กัน Cloud Scheduler ยิงซ้ำส่งสแปม
 
 ## Reference Docs
 
