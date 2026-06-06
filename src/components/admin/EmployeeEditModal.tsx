@@ -70,6 +70,7 @@ export default function EmployeeEditModal({
   const editingSalaryDisabled = editingRole[`${employee.id}:salaryDisabled`];
   const editingPoolExclusion = editingRole[`${employee.id}:poolExclusion`];
   const editingName = editingRole[`${employee.id}:name`];
+  const editingNickname = editingRole[`${employee.id}:nickname`];
   const dirty =
     editingNormalSalePieceRate !== undefined ||
     editingSpecialSalePieceRate !== undefined ||
@@ -83,7 +84,8 @@ export default function EmployeeEditModal({
     editingPrefix !== undefined ||
     editingSalaryDisabled !== undefined ||
     editingPoolExclusion !== undefined ||
-    editingName !== undefined;
+    editingName !== undefined ||
+    editingNickname !== undefined;
 
   const clearDraft = () =>
     setEditingRole((prev) => clearEmployeeDraft(prev, employee.id));
@@ -143,6 +145,8 @@ export default function EmployeeEditModal({
       await onUpdateRole(employee.id, "startWorkMonth", editingStartWorkMonth);
     if (editingPrefix !== undefined)
       await onUpdateRole(employee.id, "prefix", editingPrefix);
+    if (editingNickname !== undefined)
+      await onUpdateRole(employee.id, "nickname", editingNickname.trim());
     if (editingSalaryDisabled !== undefined)
       await onUpdateRole(employee.id, "salaryDisabled", editingSalaryDisabled);
     if (editingPoolExclusion !== undefined)
@@ -232,6 +236,31 @@ export default function EmployeeEditModal({
           </div>
           <div className="text-xs text-txt-soft mt-[3px]">
             คำนำหน้าใช้ในหนังสือรับรองเงินเดือน
+          </div>
+          {/* Nickname — ใช้ในแจ้งเตือนรายวันทาง LINE */}
+          <div className="mt-2.5">
+            <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
+              ชื่อเล่น
+              <span className="font-normal text-txt-soft">
+                (ใช้ในแจ้งเตือน LINE รายวัน)
+              </span>
+            </label>
+            <input
+              type="text"
+              value={
+                editingNickname !== undefined
+                  ? editingNickname
+                  : employee.nickname || ""
+              }
+              onChange={(e) =>
+                setEditingRole((previousEditingRole) => ({
+                  ...previousEditingRole,
+                  [`${employee.id}:nickname`]: e.target.value,
+                }))
+              }
+              placeholder="เช่น พี่หมู, น้องนุ่น"
+              className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingNickname !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+            />
           </div>
         </div>
         {/* Role — read-only (แก้จากแท็บ "ตำแหน่ง") */}
