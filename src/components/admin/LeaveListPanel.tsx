@@ -139,7 +139,7 @@ export default function LeaveListPanel({
               </div>
               <button
                 onClick={() => setConfirmLeave(lv)}
-                className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
+                className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30] active:scale-[0.92] transition-transform duration-100"
               >
                 <IconTrash size={16} color={COLORS.red} strokeWidth={2.2} />
               </button>

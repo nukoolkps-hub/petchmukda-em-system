@@ -197,7 +197,7 @@ export default function Sidebar({
                           key={item.id}
                           type="button"
                           onClick={() => onAdminSectionChange(item.id)}
-                          className={`flex items-center gap-3 px-3 py-2 ml-3.5 rounded-lg cursor-pointer transition-all duration-200 relative text-left ${active ? "bg-white/12 text-gold-lt" : "bg-transparent text-white/55"}`}
+                          className={`flex items-center gap-3 px-3 py-2 ml-3.5 rounded-lg cursor-pointer transition-all duration-150 relative text-left active:scale-[0.97] ${active ? "bg-white/12 text-gold-lt" : "bg-transparent text-white/55"}`}
                         >
                           <ItemIcon
                             size={16}
