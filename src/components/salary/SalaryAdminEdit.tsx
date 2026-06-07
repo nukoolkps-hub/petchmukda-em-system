@@ -1766,9 +1766,12 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }) {
     transition,
     isDragging,
   } = useSortable({ id: employee.id });
+  // ระหว่างลาก dnd-kit set transform: translate3d(...) ทุก frame ตามนิ้ว
+  // → Tailwind class "transition-transform" ทำให้ position lag ตาม
+  // ใส่ transition เฉพาะตอนไม่ลาก (สำหรับ press-feedback + drop-into-place)
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? "none" : transition,
     zIndex: isDragging ? 50 : undefined,
   };
   return (
@@ -1779,7 +1782,9 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }) {
       {...attributes}
       {...listeners}
       style={style}
-      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none select-none [-webkit-touch-callout:none] [-webkit-user-select:none] transition-transform duration-150 ease-out active:scale-[1.03] ${
+      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none select-none [-webkit-touch-callout:none] [-webkit-user-select:none] ${
+        isDragging ? "" : "transition-transform duration-150 ease-out active:scale-[1.03]"
+      } ${
         selected
           ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
           : "border-bdr bg-white"
