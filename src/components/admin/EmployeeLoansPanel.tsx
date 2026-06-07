@@ -419,7 +419,7 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
+          className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
         >
           ยกเลิก
         </button>

@@ -281,7 +281,7 @@ export default function PoolFlowModal({
 
       <button
         onClick={onClose}
-        className="w-full p-3.5 mt-5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
+        className="w-full p-3.5 mt-5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
       >
         ปิด
       </button>

@@ -263,13 +263,13 @@ export default function RolesAdminPanel({
                               return n;
                             })
                           }
-                          className="flex-1 p-2 rounded-lg border border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+                          className="flex-1 p-2 rounded-lg border border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
                         >
                           ยกเลิก
                         </button>
                         <button
                           onClick={() => saveEdit(rl.id)}
-                          className="flex-1 p-2 rounded-lg border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit]"
+                          className="flex-1 p-2 rounded-lg border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
                         >
                           บันทึก
                         </button>
@@ -381,13 +381,13 @@ export default function RolesAdminPanel({
             <div className="flex gap-2.5">
               <button
                 onClick={() => setConfirmDel(null)}
-                className="flex-1 p-3 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+                className="flex-1 p-3 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={() => deleteRole(confirmDel.id)}
-                className="flex-1 p-3 rounded-xl border-none bg-red text-white text-sm font-bold cursor-pointer font-[inherit]"
+                className="flex-1 p-3 rounded-xl border-none bg-red text-white text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
               >
                 ลบ
               </button>
