@@ -200,24 +200,25 @@ export default function EmployeeLoansPanel({
               <button
                 type="button"
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 py-3 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid font-semibold cursor-pointer font-[inherit]"
+                className="flex-1 py-3 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
               >
                 ยกเลิก
               </button>
               <button
                 type="button"
-                onClick={async () => {
-                  try {
-                    await onDeleteLoan(confirmDelete.id);
-                    showToast?.("ลบเงินกู้แล้ว");
-                  } catch (err) {
-                    showToast?.(
-                      err instanceof Error ? err.message : "ลบไม่สำเร็จ",
-                    );
-                  }
+                onClick={() => {
+                  // ปิด modal ทันที + ลบ async ใน background
+                  const target = confirmDelete;
                   setConfirmDelete(null);
+                  onDeleteLoan(target.id)
+                    .then(() => showToast?.("ลบเงินกู้แล้ว"))
+                    .catch((err: unknown) =>
+                      showToast?.(
+                        err instanceof Error ? err.message : "ลบไม่สำเร็จ",
+                      ),
+                    );
                 }}
-                className="flex-1 py-3 rounded-xl border-none bg-red text-white font-bold cursor-pointer font-[inherit]"
+                className="flex-1 py-3 rounded-xl border-none bg-red text-white font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
               >
                 ลบ
               </button>

@@ -128,6 +128,9 @@ export default function AdminAdvancePanel({
   }
 
   async function handleReject(request) {
+    // ปิด modal ทันที (optimistic) — user ไม่ต้องรอ Firestore round-trip
+    // ก่อนเห็น modal หาย / กลับสู่ list
+    setConfirmReject(null);
     try {
       await onUpdate(
         request.id,
@@ -141,8 +144,6 @@ export default function AdminAdvancePanel({
     } catch (err) {
       console.error("[AdminAdvancePanel] reject failed:", err);
       showToast?.("ปฏิเสธไม่สำเร็จ");
-    } finally {
-      setConfirmReject(null);
     }
   }
 
@@ -184,7 +185,7 @@ export default function AdminAdvancePanel({
             <button
               key={f.id}
               onClick={() => setFilter(f.id as AdvanceFilter)}
-              className={`px-3 py-2 rounded-[10px] cursor-pointer font-[inherit] text-sm font-semibold whitespace-nowrap border-[1.5px]
+              className={`px-3 py-2 rounded-[10px] cursor-pointer font-[inherit] text-sm font-semibold whitespace-nowrap border-[1.5px] transition-all duration-100 active:scale-[0.96]
                 ${filter === f.id ? "bg-maroon text-gold-lt border-maroon" : "bg-cream text-txt-mid border-bdr"}`}
             >
               {f.label}
@@ -389,12 +390,12 @@ export default function AdminAdvancePanel({
                   <div className="flex gap-2 mt-2.5">
                     <button
                       onClick={() => setConfirmReject(request)}
-                      className="px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-red/25 bg-red-lt text-red text-sm font-semibold cursor-pointer font-[inherit] inline-flex items-center gap-1"
+                      className="px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-red/25 bg-red-lt text-red text-sm font-semibold cursor-pointer font-[inherit] inline-flex items-center gap-1 active:scale-[0.97] transition-transform duration-100"
                     >
                       <IconX size={14} strokeWidth={2.4} />
                       ปฏิเสธ
                     </button>
-                    <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-maroon)/0.25]">
+                    <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-maroon)/0.25] active:scale-[0.98] transition-transform duration-100">
                       {uploadingSlip === request.id ? (
                         "กำลังอัปโหลด..."
                       ) : (
@@ -464,13 +465,13 @@ export default function AdminAdvancePanel({
           <div className="flex gap-2.5">
             <button
               onClick={() => setConfirmReject(null)}
-              className="flex-1 p-3 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+              className="flex-1 p-3 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
             >
               ยกเลิก
             </button>
             <button
               onClick={() => handleReject(confirmReject)}
-              className="flex-1 p-3 rounded-xl border-none bg-red text-white text-sm font-bold cursor-pointer font-[inherit]"
+              className="flex-1 p-3 rounded-xl border-none bg-red text-white text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
             >
               ปฏิเสธ
             </button>

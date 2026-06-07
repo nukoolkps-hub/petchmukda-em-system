@@ -21,7 +21,7 @@ export default function BottomNav({ navItems }: BottomNavProps) {
           <button
             key={n.id}
             onClick={() => navigate(n.path)}
-            className={`flex-1 pt-2.5 pb-3 bg-transparent border-none cursor-pointer font-[inherit] flex flex-col items-center gap-1 transition-colors duration-200 relative ${active ? (isAdminTab ? "text-maroon" : "text-gold") : "text-txt-soft"}`}
+            className={`flex-1 pt-2.5 pb-3 bg-transparent border-none cursor-pointer font-[inherit] flex flex-col items-center gap-1 transition-all duration-150 relative active:scale-[0.92] ${active ? (isAdminTab ? "text-maroon" : "text-gold") : "text-txt-soft"}`}
           >
             {active && (
               <>

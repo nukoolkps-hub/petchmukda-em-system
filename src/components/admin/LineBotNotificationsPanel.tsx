@@ -32,7 +32,9 @@ export default function LineBotNotificationsPanel({
   const { user } = useAuth();
   const [settings, setSettings] = useState<NotificationSettings>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState<string | null>(null);
+  // Optimistic overrides — flip toggle ทันทีโดยไม่รอ Firestore round-trip
+  // Subscription return → settings มี value ใหม่ → merge เป็น authoritative
+  const [optimistic, setOptimistic] = useState<NotificationSettings>({});
 
   useEffect(() => {
     const unsub = subscribeNotificationSettings(
@@ -45,8 +47,12 @@ export default function LineBotNotificationsPanel({
     return unsub;
   }, []);
 
+  // View = settings + optimistic overrides (optimistic ชนะ)
   // Default semantic: ไม่ใช่ false → enabled
-  const isOn = (field: keyof NotificationSettings) => settings[field] !== false;
+  const isOn = (field: keyof NotificationSettings) => {
+    if (field in optimistic) return optimistic[field] !== false;
+    return settings[field] !== false;
+  };
 
   async function toggle(
     field:
@@ -55,7 +61,8 @@ export default function LineBotNotificationsPanel({
       | "advanceApprovalEnabled",
   ) {
     const next = !isOn(field);
-    setSaving(field);
+    // Flip ทันที (optimistic) — switch เคลื่อนทันที ผู้ใช้ไม่รู้สึกหน่วง
+    setOptimistic((prev) => ({ ...prev, [field]: next }));
     try {
       await updateNotificationSettings(
         { [field]: next },
@@ -63,10 +70,14 @@ export default function LineBotNotificationsPanel({
       );
       showToast?.(`${next ? "เปิด" : "ปิด"}การแจ้งเตือนเรียบร้อย`);
     } catch (err) {
+      // Rollback: ลบ override ของ field นี้ → กลับไปแสดง value จาก Firestore
       console.error("[LineBotNotificationsPanel] toggle error:", err);
+      setOptimistic((prev) => {
+        const copy = { ...prev };
+        delete copy[field];
+        return copy;
+      });
       showToast?.("บันทึกไม่สำเร็จ");
-    } finally {
-      setSaving(null);
     }
   }
 
@@ -86,7 +97,6 @@ export default function LineBotNotificationsPanel({
           title="สรุปประจำวัน 07:30"
           description="bot push ภารกิจ + คนหยุด + เคล็ดลับ เข้ากลุ่ม we r mukda ทุกเช้า"
           enabled={isOn("dailySummaryEnabled")}
-          saving={saving === "dailySummaryEnabled"}
           disabled={loading}
           onToggle={() => toggle("dailySummaryEnabled")}
         />
@@ -95,7 +105,6 @@ export default function LineBotNotificationsPanel({
           title="คำขอเบิกเงินล่วงหน้า"
           description="แจ้ง admin เมื่อพนักงานยื่นเบิกเงินใหม่"
           enabled={isOn("advanceRequestEnabled")}
-          saving={saving === "advanceRequestEnabled"}
           disabled={loading}
           onToggle={() => toggle("advanceRequestEnabled")}
         />
@@ -104,7 +113,6 @@ export default function LineBotNotificationsPanel({
           title="ผลอนุมัติคำขอเบิกเงิน"
           description="แจ้งพนักงานเมื่อ admin อนุมัติหรือปฏิเสธคำขอ"
           enabled={isOn("advanceApprovalEnabled")}
-          saving={saving === "advanceApprovalEnabled"}
           disabled={loading}
           onToggle={() => toggle("advanceApprovalEnabled")}
         />
@@ -118,7 +126,6 @@ function ToggleRow({
   title,
   description,
   enabled,
-  saving,
   disabled,
   onToggle,
 }: {
@@ -130,7 +137,6 @@ function ToggleRow({
   title: string;
   description: string;
   enabled: boolean;
-  saving: boolean;
   disabled: boolean;
   onToggle: () => void;
 }) {
@@ -138,14 +144,14 @@ function ToggleRow({
     <button
       type="button"
       onClick={onToggle}
-      disabled={disabled || saving}
-      className={`w-full text-left px-3.5 py-3 rounded-[12px] border-[1.5px] transition-colors cursor-pointer font-[inherit] ${
+      disabled={disabled}
+      className={`w-full text-left px-3.5 py-3 rounded-[12px] border-[1.5px] transition-all duration-150 cursor-pointer font-[inherit] active:scale-[0.99] ${
         enabled ? "bg-cream border-gold/40" : "bg-white border-bdr opacity-70"
-      } ${disabled || saving ? "cursor-wait" : ""}`}
+      } ${disabled ? "cursor-wait" : ""}`}
     >
       <div className="flex items-start gap-3">
         <div
-          className={`shrink-0 w-9 h-9 rounded-[10px] flex items-center justify-center ${
+          className={`shrink-0 w-9 h-9 rounded-[10px] flex items-center justify-center transition-colors ${
             enabled ? "bg-gold-pale" : "bg-bdr"
           }`}
         >
@@ -161,7 +167,7 @@ function ToggleRow({
             {description}
           </div>
         </div>
-        <ToggleSwitch enabled={enabled} disabled={disabled || saving} />
+        <ToggleSwitch enabled={enabled} disabled={disabled} />
       </div>
     </button>
   );
@@ -176,12 +182,12 @@ function ToggleSwitch({
 }) {
   return (
     <div
-      className={`shrink-0 mt-1 w-11 h-6 rounded-full transition-colors ${
+      className={`shrink-0 mt-1 w-11 h-6 rounded-full transition-colors duration-200 ${
         enabled ? "bg-green" : "bg-bdr"
       } ${disabled ? "opacity-60" : ""}`}
     >
       <div
-        className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform mt-0.5 ${
+        className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 mt-0.5 ${
           enabled ? "translate-x-[22px]" : "translate-x-0.5"
         }`}
       />
