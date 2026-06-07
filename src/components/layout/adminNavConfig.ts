@@ -14,6 +14,7 @@ import {
   MessageCircle as IconMessageCircle,
   Settings as IconSettings,
   Tag as IconTag,
+  Terminal as IconTerminal,
   Users as IconUsers,
 } from "lucide-react";
 
@@ -26,7 +27,8 @@ export type AdminSectionId =
   | "payroll"
   | "roles"
   | "positions"
-  | "linebot-notifications";
+  | "linebot-notifications"
+  | "linebot-commands";
 
 export type AdminGroupId = "leave" | "payroll" | "settings" | "linebot";
 
@@ -86,6 +88,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     Icon: IconMessageCircle,
     items: [
       { id: "linebot-notifications", label: "การแจ้งเตือน", Icon: IconBell },
+      { id: "linebot-commands", label: "คำสั่ง", Icon: IconTerminal },
     ],
   },
 ];
