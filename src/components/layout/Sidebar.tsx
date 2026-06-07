@@ -155,7 +155,7 @@ export default function Sidebar({
         ) : (
           <button
             onClick={onEditProfile}
-            className="flex items-center gap-2.5 bg-white/8 border-[1.5px] border-dashed border-gold-lt/30 rounded-[14px] px-3.5 py-2.5 w-full cursor-pointer font-[inherit]"
+            className="flex items-center gap-2.5 bg-white/8 border-[1.5px] border-dashed border-gold-lt/30 rounded-[14px] px-3.5 py-2.5 w-full cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
           >
             <IconUser size={24} strokeWidth={2} className="text-gold-lt" />
             <span className="text-gold-lt text-sm font-semibold">

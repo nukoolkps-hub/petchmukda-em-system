@@ -1012,7 +1012,7 @@ export default function EmployeeEditModal({
           <div className="flex gap-2">
             <button
               onClick={() => cancelAll(true)}
-              className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+              className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
             >
               ยกเลิกการแก้ไข
             </button>
@@ -1037,7 +1037,7 @@ export default function EmployeeEditModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+              className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
             >
               ปิด
             </button>
@@ -1137,7 +1137,7 @@ function RecurringItemsEditor({
           <button
             type="button"
             onClick={() => addItem("income")}
-            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-dashed border-green/60 bg-green-lt/40 text-green text-sm font-semibold cursor-pointer font-[inherit]"
+            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-dashed border-green/60 bg-green-lt/40 text-green text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
           >
             <IconPlus size={14} strokeWidth={2.4} />
             เพิ่มรายการรายรับ
@@ -1167,7 +1167,7 @@ function RecurringItemsEditor({
           <button
             type="button"
             onClick={() => addItem("deduction")}
-            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-dashed border-red/50 bg-red-lt/40 text-red text-sm font-semibold cursor-pointer font-[inherit]"
+            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-dashed border-red/50 bg-red-lt/40 text-red text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
           >
             <IconPlus size={14} strokeWidth={2.4} />
             เพิ่มรายการรายจ่าย

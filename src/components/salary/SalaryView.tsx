@@ -919,7 +919,7 @@ export default function SalaryView({
               <button
                 type="button"
                 onClick={() => setShowCertModal(false)}
-                className="flex-1 py-2.5 rounded-lg bg-white text-txt-mid text-sm font-bold border border-bdr cursor-pointer font-[inherit]"
+                className="flex-1 py-2.5 rounded-lg bg-white text-txt-mid text-sm font-bold border border-bdr cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
               >
                 ยกเลิก
               </button>

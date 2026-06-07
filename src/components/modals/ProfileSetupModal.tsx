@@ -296,7 +296,7 @@ export default function ProfileSetupModal({
                   </div>
                   <button
                     onClick={() => fileRef.current?.click()}
-                    className="px-4 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+                    className="px-4 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
                   >
                     เปลี่ยนรูป
                   </button>
@@ -393,7 +393,7 @@ export default function ProfileSetupModal({
       {initial && onClose && (
         <button
           onClick={onClose}
-          className="w-full p-3.5 mt-2.5 bg-transparent border-[1.5px] border-bdr rounded-[14px] text-base font-semibold text-txt-soft cursor-pointer font-[inherit]"
+          className="w-full p-3.5 mt-2.5 bg-transparent border-[1.5px] border-bdr rounded-[14px] text-base font-semibold text-txt-soft cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
         >
           ยกเลิก
         </button>

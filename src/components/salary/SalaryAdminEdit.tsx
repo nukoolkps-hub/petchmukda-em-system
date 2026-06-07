@@ -1574,7 +1574,7 @@ export default function SalaryAdminEdit({
         <div className="mt-3.5 pt-3.5 border-t border-dashed border-bdr flex gap-2">
           <button
             onClick={cancelAll}
-            className="flex-1 py-3 rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+            className="flex-1 py-3 rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
           >
             ยกเลิกการแก้ไข
           </button>
@@ -1621,7 +1621,7 @@ export default function SalaryAdminEdit({
           <div className="flex gap-2.5">
             <button
               onClick={() => setPendingNav(null)}
-              className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit]"
+              className="flex-1 p-3.5 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
             >
               อยู่ต่อ
             </button>
