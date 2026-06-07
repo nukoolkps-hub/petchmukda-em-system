@@ -12,6 +12,7 @@ import EmployeeAdminPanel from "./EmployeeAdminPanel";
 import EmployeeLoansPanel from "./EmployeeLoansPanel";
 import LeaveListPanel from "./LeaveListPanel";
 import LeaveSummaryPanel from "./LeaveSummaryPanel";
+import LineBotCommandsPanel from "./LineBotCommandsPanel";
 import LineBotNotificationsPanel from "./LineBotNotificationsPanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
 import RolesAdminPanel from "./RolesAdminPanel";
@@ -182,6 +183,9 @@ export default function AdminPanel({
       {section === "linebot-notifications" && (
         <LineBotNotificationsPanel showToast={showToast} />
       )}
+
+      {/* ── LINE BOT > COMMANDS section ── */}
+      {section === "linebot-commands" && <LineBotCommandsPanel />}
 
       {/* ── PAYROLL SUMMARY section ── */}
       {section === "payroll" && (
