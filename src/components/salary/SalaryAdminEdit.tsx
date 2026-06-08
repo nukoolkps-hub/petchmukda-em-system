@@ -881,7 +881,8 @@ export default function SalaryAdminEdit({
             {/* Normal */}
             {(() => {
               const exc = employeeInfo?.poolExclusion;
-              const disabled = exc === "sell" || exc === "both";
+              const poolDisabled = exc === "sell" || exc === "both";
+              const disabled = poolDisabled || locked;
               return (
                 <div
                   className={`rounded-[10px] p-3 mb-2.5 relative border ${disabled ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
@@ -892,7 +893,7 @@ export default function SalaryAdminEdit({
                     >
                       <IconDiamond size={14} strokeWidth={2.4} />
                       ขาย (ทั่วไป)
-                      {disabled && (
+                      {poolDisabled && (
                         <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20] inline-flex items-center gap-0.5">
                           <IconLock size={11} strokeWidth={2.4} />
                           ถูกปิด
@@ -915,7 +916,7 @@ export default function SalaryAdminEdit({
                       <input
                         type="number"
                         inputMode="numeric"
-                        value={disabled ? "" : data.normalSalePieces || ""}
+                        value={poolDisabled ? "" : data.normalSalePieces || ""}
                         disabled={disabled}
                         onChange={(e) =>
                           update("normalSalePieces", e.target.value)
@@ -932,9 +933,13 @@ export default function SalaryAdminEdit({
             })()}
 
             {/* Special — ใครขายใครได้ ไม่ขึ้นกับ poolExclusion */}
-            <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
+            <div
+              className={`rounded-[10px] p-3 mb-2.5 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+            >
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-bold text-txt flex items-center gap-1.5">
+                <div
+                  className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
+                >
                   <IconSparkles size={16} strokeWidth={2.2} />
                   ขาย (พิเศษ)
                 </div>
@@ -952,10 +957,11 @@ export default function SalaryAdminEdit({
                     type="number"
                     inputMode="numeric"
                     value={data.specialSalePieces || ""}
+                    disabled={locked}
                     onChange={(e) =>
                       update("specialSalePieces", e.target.value)
                     }
-                    className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
+                    className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
                     ชิ้น
@@ -967,7 +973,8 @@ export default function SalaryAdminEdit({
             {/* Buy */}
             {(() => {
               const exc = employeeInfo?.poolExclusion;
-              const disabled = exc === "buy" || exc === "both";
+              const poolDisabled = exc === "buy" || exc === "both";
+              const disabled = poolDisabled || locked;
               return (
                 <div
                   className={`rounded-[10px] p-3 relative border ${disabled ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
@@ -978,7 +985,7 @@ export default function SalaryAdminEdit({
                     >
                       <IconShoppingBag size={14} strokeWidth={2.4} />
                       รับซื้อ
-                      {disabled && (
+                      {poolDisabled && (
                         <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20] inline-flex items-center gap-0.5">
                           <IconLock size={11} strokeWidth={2.4} />
                           ถูกปิด
@@ -997,7 +1004,7 @@ export default function SalaryAdminEdit({
                       <input
                         type="number"
                         inputMode="numeric"
-                        value={disabled ? "" : data.buyPieces || ""}
+                        value={poolDisabled ? "" : data.buyPieces || ""}
                         disabled={disabled}
                         onChange={(e) => update("buyPieces", e.target.value)}
                         className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
@@ -1048,9 +1055,13 @@ export default function SalaryAdminEdit({
           </div>
 
           {/* Invite */}
-          <div className="bg-gold-pale rounded-[10px] p-3 mb-2.5 border border-[#C9973A30]">
+          <div
+            className={`rounded-[10px] p-3 mb-2.5 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+          >
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-txt flex items-center gap-1.5">
+              <div
+                className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
+              >
                 <IconTicket size={16} strokeWidth={2.2} />
                 เชิญชวนสมัครบัตร
               </div>
@@ -1067,8 +1078,9 @@ export default function SalaryAdminEdit({
                   type="number"
                   inputMode="numeric"
                   value={data.invitePieces || ""}
+                  disabled={locked}
                   onChange={(e) => update("invitePieces", e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
+                  className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
                   ใบ
@@ -1082,9 +1094,13 @@ export default function SalaryAdminEdit({
           </div>
 
           {/* Transfer */}
-          <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
+          <div
+            className={`rounded-[10px] p-3 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+          >
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-bold text-txt flex items-center gap-1.5">
+              <div
+                className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
+              >
                 <IconRefresh size={16} strokeWidth={2.2} />
                 ย้ายข้อมูลบัตร
               </div>
@@ -1101,8 +1117,9 @@ export default function SalaryAdminEdit({
                   type="number"
                   inputMode="numeric"
                   value={data.transferPieces || ""}
+                  disabled={locked}
                   onChange={(e) => update("transferPieces", e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
+                  className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
                   ใบ
@@ -1283,11 +1300,12 @@ export default function SalaryAdminEdit({
                 <input
                   type="text"
                   value={item?.label || ""}
+                  disabled={locked}
                   onChange={(e) =>
                     updateCustomEarning(index, "label", e.target.value)
                   }
                   placeholder="ชื่อรายการ"
-                  className="flex-1 min-w-0 px-3 py-2.5 rounded-[10px] border border-bdr text-sm font-semibold outline-none font-[inherit] text-txt bg-cream"
+                  className={`flex-1 min-w-0 px-3 py-2.5 rounded-[10px] border border-bdr text-sm font-semibold outline-none font-[inherit] text-txt bg-cream ${locked ? "opacity-60 cursor-not-allowed" : ""}`}
                 />
                 <div className="relative w-[110px] shrink-0">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
@@ -1298,31 +1316,35 @@ export default function SalaryAdminEdit({
                     inputMode="decimal"
                     min="0"
                     value={item?.amount || ""}
+                    disabled={locked}
                     onChange={(e) =>
                       updateCustomEarning(index, "amount", e.target.value)
                     }
-                    className="w-full py-2.5 pr-2 pl-[26px] rounded-[10px] border border-bdr text-sm font-bold text-right outline-none font-[inherit] text-txt bg-cream"
+                    className={`w-full py-2.5 pr-2 pl-[26px] rounded-[10px] border border-bdr text-sm font-bold text-right outline-none font-[inherit] text-txt bg-cream ${locked ? "opacity-60 cursor-not-allowed" : ""}`}
                   />
                 </div>
                 <button
                   type="button"
                   aria-label="ลบรายการ"
+                  disabled={locked}
                   onClick={() => removeCustomEarning(index)}
-                  className="w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
+                  className={`w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center border-[1.5px] border-[#C0392B30] ${locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                 >
                   <IconTrash size={16} color={COLORS.red} strokeWidth={2.2} />
                 </button>
               </div>
             ),
           )}
-          <button
-            type="button"
-            onClick={addCustomEarning}
-            className="w-full mt-2.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-green/40 bg-green-lt text-green text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
-          >
-            <IconPlus size={14} strokeWidth={2.4} />
-            เพิ่มรายการรายรับ
-          </button>
+          {!locked && (
+            <button
+              type="button"
+              onClick={addCustomEarning}
+              className="w-full mt-2.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-green/40 bg-green-lt text-green text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
+            >
+              <IconPlus size={14} strokeWidth={2.4} />
+              เพิ่มรายการรายรับ
+            </button>
+          )}
         </div>
 
         {/* Deductions inputs */}
@@ -1491,11 +1513,12 @@ export default function SalaryAdminEdit({
               <input
                 type="text"
                 value={item?.label || ""}
+                disabled={locked}
                 onChange={(e) =>
                   updateCustomDeduction(index, "label", e.target.value)
                 }
                 placeholder="ชื่อรายการ"
-                className="flex-1 min-w-0 px-3 py-2.5 rounded-[10px] border border-bdr text-sm font-semibold outline-none font-[inherit] text-txt bg-cream"
+                className={`flex-1 min-w-0 px-3 py-2.5 rounded-[10px] border border-bdr text-sm font-semibold outline-none font-[inherit] text-txt bg-cream ${locked ? "opacity-60 cursor-not-allowed" : ""}`}
               />
               <div className="relative w-[110px] shrink-0">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
@@ -1506,30 +1529,34 @@ export default function SalaryAdminEdit({
                   inputMode="decimal"
                   min="0"
                   value={item?.amount || ""}
+                  disabled={locked}
                   onChange={(e) =>
                     updateCustomDeduction(index, "amount", e.target.value)
                   }
-                  className="w-full py-2.5 pr-2 pl-[26px] rounded-[10px] border border-bdr text-sm font-bold text-right outline-none font-[inherit] text-txt bg-cream"
+                  className={`w-full py-2.5 pr-2 pl-[26px] rounded-[10px] border border-bdr text-sm font-bold text-right outline-none font-[inherit] text-txt bg-cream ${locked ? "opacity-60 cursor-not-allowed" : ""}`}
                 />
               </div>
               <button
                 type="button"
                 aria-label="ลบรายการ"
+                disabled={locked}
                 onClick={() => removeCustomDeduction(index)}
-                className="w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
+                className={`w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center border-[1.5px] border-[#C0392B30] ${locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               >
                 <IconTrash size={16} color={COLORS.red} strokeWidth={2.2} />
               </button>
             </div>
           ))}
-          <button
-            type="button"
-            onClick={addCustomDeduction}
-            className="w-full mt-2.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-[#C0392B40] bg-red-lt text-red text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
-          >
-            <IconPlus size={14} strokeWidth={2.4} />
-            เพิ่มรายการหัก
-          </button>
+          {!locked && (
+            <button
+              type="button"
+              onClick={addCustomDeduction}
+              className="w-full mt-2.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-[#C0392B40] bg-red-lt text-red text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5"
+            >
+              <IconPlus size={14} strokeWidth={2.4} />
+              เพิ่มรายการหัก
+            </button>
+          )}
         </div>
       </div>
 
@@ -1540,10 +1567,11 @@ export default function SalaryAdminEdit({
         </label>
         <textarea
           value={data.note || ""}
+          disabled={locked}
           onChange={(e) => update("note", e.target.value)}
           rows={2}
           placeholder="ระบุหมายเหตุ..."
-          className="w-full px-3.5 py-3 rounded-[10px] border border-bdr text-sm resize-none outline-none font-[inherit] text-txt bg-white"
+          className={`w-full px-3.5 py-3 rounded-[10px] border border-bdr text-sm resize-none outline-none font-[inherit] text-txt bg-white ${locked ? "opacity-60 cursor-not-allowed bg-cream-dk" : ""}`}
         />
       </div>
 
