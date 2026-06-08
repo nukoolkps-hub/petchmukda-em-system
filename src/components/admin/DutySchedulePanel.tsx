@@ -407,7 +407,7 @@ function DutyEditModal({
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
+            className="w-full min-w-0 box-border appearance-none py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
           />
           <div className="text-xs text-txt-soft mt-1">
             คนแรกใน pool ทำหน้าที่ในช่วงที่เริ่ม
