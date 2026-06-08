@@ -9,7 +9,6 @@
 import {
   CalendarClock as IconCalendarClock,
   CalendarRange as IconCalendarRange,
-  RotateCw as IconRotate,
   UserCheck as IconUserCheck,
   X as IconX,
 } from "lucide-react";
@@ -31,19 +30,38 @@ interface Props {
   onClose: () => void;
 }
 
-/** label ช่วง period — weekly: "16-22 มิ.ย." · monthly: "มิถุนายน" */
-function formatRange(start: string, end: string, period: string): string {
+/** label เดือน (พ.ศ.) จาก "YYYY-MM" → "มิถุนายน 2569" */
+function monthLabel(ym: string): string {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, m - 1, 1);
+  return `${d.toLocaleDateString("th-TH", { month: "long" })} ${y + 543}`;
+}
+
+/** label ช่วงในเดือน — monthly: "ทั้งเดือน" · weekly ในเดือนเดียว: "8-14"
+ *  · weekly คร่อมเดือน: "29 มิ.ย. - 5 ก.ค." */
+function formatRangeInMonth(
+  start: string,
+  end: string,
+  period: string,
+): string {
+  if (period === "monthly") return "ทั้งเดือน";
   const s = new Date(`${start}T00:00:00`);
-  if (period === "monthly") {
-    return s.toLocaleDateString("th-TH", { month: "long" });
-  }
   const e = new Date(`${end}T00:00:00`);
+  if (s.getMonth() === e.getMonth()) {
+    return `${s.getDate()}-${e.getDate()}`;
+  }
   const sMonth = s.toLocaleDateString("th-TH", { month: "short" });
   const eMonth = e.toLocaleDateString("th-TH", { month: "short" });
-  if (s.getMonth() === e.getMonth()) {
-    return `${s.getDate()}-${e.getDate()} ${eMonth}`;
-  }
   return `${s.getDate()} ${sMonth} - ${e.getDate()} ${eMonth}`;
+}
+
+interface ForecastItem {
+  start: string;
+  end: string;
+  dutyId: string;
+  dutyName: string;
+  period: "weekly" | "monthly";
+  primaryEmpId: string | null;
 }
 
 export default function DutyForecastModal({
@@ -78,34 +96,49 @@ export default function DutyForecastModal({
     [duties, poolByDutyId, todayYmd, endYmd],
   );
 
-  // "เฉพาะของฉัน" — flatten periods ที่เป็นของ profileId เรียงตามวันที่
-  const myPeriods = useMemo(() => {
-    if (!profileId) return [];
-    const items: {
-      dutyId: string;
-      dutyName: string;
-      period: "weekly" | "monthly";
-      start: string;
-      end: string;
-    }[] = [];
+  // flatten ทุก period → item เดียว เรียงตามวันที่ (แล้วชื่อหน้าที่)
+  const allItems = useMemo(() => {
+    const items: ForecastItem[] = [];
     for (const f of forecast) {
       for (const p of f.periods) {
-        if (p.primaryEmpId === profileId) {
-          items.push({
-            dutyId: f.dutyId,
-            dutyName: f.dutyName,
-            period: f.period,
-            start: p.start,
-            end: p.end,
-          });
-        }
+        items.push({
+          start: p.start,
+          end: p.end,
+          dutyId: f.dutyId,
+          dutyName: f.dutyName,
+          period: f.period,
+          primaryEmpId: p.primaryEmpId,
+        });
       }
     }
-    items.sort((a, b) => a.start.localeCompare(b.start));
+    items.sort(
+      (a, b) =>
+        a.start.localeCompare(b.start) ||
+        a.dutyName.localeCompare(b.dutyName, "th"),
+    );
     return items;
-  }, [forecast, profileId]);
+  }, [forecast]);
+
+  // group เป็นเดือน (ตาม start) — "ทั้งเดือนแยกเป็นเดือนๆ"
+  const months = useMemo(() => {
+    const filtered =
+      profileId && mineOnly
+        ? allItems.filter((it) => it.primaryEmpId === profileId)
+        : allItems;
+    const map = new Map<string, ForecastItem[]>();
+    for (const it of filtered) {
+      const ym = it.start.slice(0, 7);
+      const list = map.get(ym);
+      if (list) list.push(it);
+      else map.set(ym, [it]);
+    }
+    return [...map.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([ym, items]) => ({ ym, label: monthLabel(ym), items }));
+  }, [allItems, profileId, mineOnly]);
 
   const hasData = (dutyAssignmentsToday?.assignments?.length || 0) > 0;
+  const showPerson = !(profileId && mineOnly);
 
   return (
     <BaseModal onClose={onClose} maxWidthClass="max-w-[560px]">
@@ -146,7 +179,7 @@ export default function DutyForecastModal({
                   : "bg-white text-txt-mid border-bdr"
               }`}
             >
-              เฉพาะของฉัน
+              เฉพาะของคุณ
             </button>
             <button
               type="button"
@@ -171,100 +204,77 @@ export default function DutyForecastModal({
           <div className="text-center text-txt-soft py-10 px-6">
             ยังไม่มีข้อมูลตาราง — ลองรีเฟรชหลัง admin ตั้งค่าหน้าที่
           </div>
-        ) : mineOnly && profileId ? (
-          /* ─── view: เฉพาะของฉัน (chronological) ─── */
-          myPeriods.length === 0 ? (
-            <div className="text-center text-txt-soft py-10 px-6">
-              <div className="flex justify-center mb-3 text-gold">
-                <IconUserCheck size={40} strokeWidth={1.8} />
-              </div>
-              คุณยังไม่มีหน้าที่ในช่วงที่เหลือของปีนี้
+        ) : months.length === 0 ? (
+          <div className="text-center text-txt-soft py-10 px-6">
+            <div className="flex justify-center mb-3 text-gold">
+              <IconUserCheck size={40} strokeWidth={1.8} />
             </div>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              {myPeriods.map((p, i) => (
-                <div
-                  key={`${p.dutyId}-${p.start}-${i}`}
-                  className="flex items-center gap-2.5 p-2.5 rounded-[10px] bg-gold-pale/50 border border-gold/30"
-                >
-                  <div className="w-[120px] shrink-0 text-sm font-bold text-maroon">
-                    {formatRange(p.start, p.end, p.period)}
-                  </div>
-                  <div className="flex-1 min-w-0 text-sm font-semibold text-txt truncate">
-                    {p.dutyName}
-                  </div>
-                  <div className="shrink-0 text-[11px] text-txt-soft inline-flex items-center gap-1">
-                    <IconRotate size={10} strokeWidth={2.4} />
-                    {p.period === "weekly" ? "สัปดาห์" : "เดือน"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
+            คุณยังไม่มีหน้าที่ในช่วงที่เหลือของปีนี้
+          </div>
         ) : (
-          /* ─── view: ทั้งหมด (group by duty) ─── */
-          <div className="flex flex-col gap-3">
-            {forecast.map((f) => (
+          /* ─── view: แยกตามเดือน ─── */
+          <div className="flex flex-col gap-3.5">
+            {months.map((mth) => (
               <div
-                key={f.dutyId}
+                key={mth.ym}
                 className="rounded-[12px] border border-bdr bg-white overflow-hidden"
               >
-                <div className="flex items-center gap-2 px-3 py-2.5 bg-cream border-b border-bdr">
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-maroon">
                   <IconCalendarClock
                     size={16}
                     strokeWidth={2.4}
-                    className="text-maroon shrink-0"
+                    className="text-gold-lt shrink-0"
                   />
-                  <div className="flex-1 min-w-0 font-bold text-sm text-txt truncate">
-                    {f.dutyName}
-                  </div>
-                  <div className="shrink-0 text-[11px] text-txt-soft inline-flex items-center gap-1">
-                    <IconRotate size={10} strokeWidth={2.4} />
-                    สลับทุก{f.period === "weekly" ? "สัปดาห์" : "เดือน"}
+                  <div className="flex-1 min-w-0 font-bold text-sm text-gold-lt">
+                    {mth.label}
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  {f.periods.map((p, i) => {
-                    const emp = p.primaryEmpId
-                      ? empById.get(p.primaryEmpId)
+                  {mth.items.map((it, i) => {
+                    const emp = it.primaryEmpId
+                      ? empById.get(it.primaryEmpId)
                       : null;
-                    const isMe = !!profileId && p.primaryEmpId === profileId;
+                    const isMe = !!profileId && it.primaryEmpId === profileId;
                     return (
                       <div
-                        key={`${p.start}-${i}`}
-                        className={`flex items-center gap-2.5 px-3 py-2 text-sm ${
-                          i % 2 === 0 ? "bg-white" : "bg-cream/40"
-                        } ${isMe ? "bg-gold-pale/70" : ""}`}
+                        key={`${it.dutyId}-${it.start}-${i}`}
+                        className={`flex items-center gap-2.5 px-3 py-2 text-sm border-t border-bdr/60 ${
+                          isMe ? "bg-gold-pale/70" : "bg-white"
+                        }`}
                       >
-                        <div className="w-[120px] shrink-0 font-semibold text-txt-mid">
-                          {formatRange(p.start, p.end, f.period)}
+                        <div className="w-[78px] shrink-0 font-bold text-maroon text-center">
+                          {formatRangeInMonth(it.start, it.end, it.period)}
                         </div>
-                        {emp ? (
-                          <div className="flex-1 min-w-0 flex items-center gap-2">
-                            <AvatarCircle
-                              avatar={emp.avatar}
-                              avatarType={emp.avatarType}
-                              avatarImageUrl={emp.avatarImageUrl}
-                              size={22}
-                              fontSize={10}
-                              border="none"
-                            />
-                            <span
-                              className={`truncate ${isMe ? "font-bold text-maroon" : "font-semibold text-txt"}`}
-                            >
-                              {emp.nickname || emp.name}
-                              {isMe && (
-                                <span className="ml-1 text-[11px] text-maroon-lt font-bold">
-                                  (คุณ)
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex-1 text-txt-soft italic text-xs">
-                            ยังไม่มีคนในตำแหน่ง
-                          </div>
-                        )}
+                        <div className="flex-1 min-w-0 font-semibold text-txt truncate">
+                          {it.dutyName}
+                        </div>
+                        {showPerson &&
+                          (emp ? (
+                            <div className="shrink-0 flex items-center gap-1.5 max-w-[42%]">
+                              <AvatarCircle
+                                avatar={emp.avatar}
+                                avatarType={emp.avatarType}
+                                avatarImageUrl={emp.avatarImageUrl}
+                                size={22}
+                                fontSize={10}
+                                border="none"
+                              />
+                              <span
+                                className={`truncate text-xs ${isMe ? "font-bold text-maroon" : "font-semibold text-txt-mid"}`}
+                              >
+                                {emp.nickname || emp.name}
+                                {isMe && (
+                                  <span className="ml-1 text-[11px] text-maroon-lt font-bold">
+                                    (คุณ)
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="shrink-0 text-txt-soft italic text-xs">
+                              ยังไม่มีคน
+                            </div>
+                          ))}
                       </div>
                     );
                   })}
