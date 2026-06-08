@@ -267,11 +267,15 @@ function DutyTodayCard({
           <div>
             <div className="font-bold text-maroon text-base">หน้าที่วันนี้</div>
             <div className="text-sm text-txt-soft mt-0.5">
-              {new Date().toLocaleDateString("th-TH", {
+              {new Intl.DateTimeFormat("th-TH", {
                 weekday: "long",
                 day: "numeric",
                 month: "long",
-              })}
+                year: "numeric",
+              })
+                .formatToParts(new Date())
+                .map((p) => (p.type === "year" ? `พ.ศ. ${p.value}` : p.value))
+                .join("")}
             </div>
           </div>
         </div>
