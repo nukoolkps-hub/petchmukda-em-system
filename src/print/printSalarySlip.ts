@@ -200,31 +200,27 @@ function buildSalarySlipHTML(
     @page{size:A4 portrait;margin:8mm;}
     @media print{
       html,body{width:210mm;height:297mm;}
-      body{background:#fff;padding:0;line-height:1.25;}
+      body{background:#fff;padding:0;line-height:1.4;}
+      /* slip สูงเต็มหน้า A4 (281mm = 297 − margin 8mm×2) + flex column
+         เพื่อดันลายเซ็น/footer ลงล่างสุด — ช่องว่างกระจายเป็นช่องไฟ
+         ไม่กองล่าง. เนื้อหาเยอะ slip ก็ยืดเกิน → ขึ้นหน้า 2 อัตโนมัติ */
       .slip{border:1px solid #333 !important;max-width:194mm !important;
-        margin:0 auto !important;padding:16px 32px 14px !important;
+        margin:0 auto !important;padding:24px 38px 20px !important;
+        min-height:281mm;display:flex;flex-direction:column;
         page-break-inside:avoid;break-inside:avoid;}
       .slip *{page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
-      /* ── บีบขนาดลงให้พอดี A4 หน้าเดียว (เฉพาะตอนพิมพ์) ── */
-      .letterhead{padding-bottom:8px;margin-bottom:10px;}
-      .company{font-size:15pt;margin-bottom:3px;}
-      .addr{font-size:9.5pt;line-height:1.45;}
-      .doc-title{font-size:13pt;}
-      .doc-period{font-size:10.5pt;margin-bottom:10px;}
-      .meta{font-size:10.5pt;gap:4px 24px;margin-bottom:10px;padding:9px 12px;}
-      .sec-label{font-size:11pt;margin:10px 0 0;padding-bottom:4px;}
-      table{font-size:10.5pt;}
-      table td{padding:3.5px 2px;}
-      .subtotal{font-size:11pt;padding:5px 2px;}
-      .warn{font-size:10pt;padding:7px 12px;margin-bottom:10px;}
-      .net{margin-top:10px;padding:10px 16px;}
-      .net .lbl{font-size:11.5pt;}
-      .net .amt{font-size:18pt;}
-      .signatures{margin-top:22px;gap:40px;}
-      .sig-line{margin-top:36px;padding-top:5px;font-size:10.5pt;}
-      .sig-name{font-size:9.5pt;}
-      .footer{margin-top:12px;padding-top:8px;font-size:8.5pt;}
+      /* ── ช่องไฟเนื้อหา (เฉพาะตอนพิมพ์) ── */
+      .letterhead{padding-bottom:12px;margin-bottom:18px;}
+      .meta{margin-bottom:18px;padding:14px 18px;gap:9px 28px;}
+      .sec-label{margin:18px 0 0;padding-bottom:6px;}
+      table td{padding:8px 2px;}
+      .subtotal{padding:9px 2px;}
+      .net{margin-top:22px;padding:16px 22px;}
+      /* ลายเซ็น: ดันลงล่างสุด + ช่องสูงขึ้นให้เซ็นสบาย + ระยะห่างกว้างขึ้น */
+      .signatures{margin-top:auto;padding-top:40px;gap:56px;}
+      .sig-line{margin-top:72px;padding-top:8px;}
+      .footer{margin-top:24px;}
     }
     .print-btn{
       position:fixed;bottom:20px;right:20px;
