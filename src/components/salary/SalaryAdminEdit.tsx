@@ -1777,9 +1777,7 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }) {
   // - idle (press):   fallback "transform 150ms ease-out" → active:scale smooth
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: isDragging
-      ? "none"
-      : transition || "transform 150ms ease-out",
+    transition: isDragging ? "none" : transition || "transform 150ms ease-out",
     zIndex: isDragging ? 50 : undefined,
   };
   return (

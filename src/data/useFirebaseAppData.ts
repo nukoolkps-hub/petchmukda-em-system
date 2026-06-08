@@ -6,11 +6,12 @@
 
 import { useMemo } from "react";
 import * as advancesAPI from "../firebase/advances";
-
+import * as dutiesAPI from "../firebase/duties";
 import * as employeeLoansAPI from "../firebase/employeeLoans";
 import * as employeesAPI from "../firebase/employees";
 import {
   useAdvancesForScope,
+  useDuties,
   useEmployeeLoansForScope,
   useEmployeesForScope,
   useLeavesForScope,
@@ -62,6 +63,7 @@ export default function useFirebaseAppData({
     employeeId: currentEmployeeId,
   });
   const rolesResult = useRoles();
+  const dutiesResult = useDuties();
   const pcResult = usePayrollConfirmsForScope({ isAdmin });
   const loansResult = useEmployeeLoansForScope({
     isAdmin,
@@ -282,6 +284,12 @@ export default function useFirebaseAppData({
   async function upsertRole(role) {
     await rolesAPI.upsertRole(role);
   }
+  async function upsertDuty(id, data) {
+    return await dutiesAPI.upsertDuty(id, data);
+  }
+  async function deleteDuty(id) {
+    await dutiesAPI.deleteDuty(id);
+  }
   async function deleteRole(id) {
     await rolesAPI.deleteRole(id);
   }
@@ -324,6 +332,7 @@ export default function useFirebaseAppData({
     salaryData,
     advanceRequests: advResult.data,
     roles: rolesResult.data,
+    duties: dutiesResult.data,
     payrollConfirms: pcResult.data,
     poolAdjustments: poolAdjResult.data,
     employeeLoans: loansResult.data,
@@ -353,6 +362,8 @@ export default function useFirebaseAppData({
     approveAdvance,
     rejectAdvance,
     upsertRole,
+    upsertDuty,
+    deleteDuty,
     deleteRole,
     setPayrollConfirm,
     setPoolAdjustment,

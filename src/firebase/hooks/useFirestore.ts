@@ -11,6 +11,7 @@ import {
   subscribeApprovedAdvancesByMonth,
   subscribePendingAdvances,
 } from "../advances";
+import { subscribeDuties } from "../duties";
 import {
   subscribeEmployeeLoans,
   subscribeEmployeeLoansByEmployeeId,
@@ -155,6 +156,7 @@ export const usePendingAdvances = makeSubscriptionHook(
   [] as any[],
 );
 export const useRoles = makeSubscriptionHook(subscribeRoles, [] as any[]);
+export const useDuties = makeSubscriptionHook(subscribeDuties, [] as any[]);
 
 // salaries และ payrollConfirms ใช้ object format
 export const useSalaries = makeSubscriptionHook(

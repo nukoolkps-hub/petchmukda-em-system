@@ -8,6 +8,7 @@ import {
 } from "../layout/adminNavConfig";
 import SalaryAdminEdit from "../salary/SalaryAdminEdit";
 import AdminAdvancePanel from "./AdminAdvancePanel";
+import DutySchedulePanel from "./DutySchedulePanel";
 import EmployeeAdminPanel from "./EmployeeAdminPanel";
 import EmployeeLoansPanel from "./EmployeeLoansPanel";
 import LeaveListPanel from "./LeaveListPanel";
@@ -41,6 +42,9 @@ export default function AdminPanel({
   roles,
   onUpsertRole,
   onDeleteRole,
+  duties,
+  onUpsertDuty,
+  onDeleteDuty,
   payrollConfirms,
   onSetPayrollConfirm,
   poolAdjustments,
@@ -175,6 +179,18 @@ export default function AdminPanel({
           onUpdateEmployeeRole={onUpdateRole}
           onUpsertRole={onUpsertRole}
           onDeleteRole={onDeleteRole}
+          showToast={showToast}
+        />
+      )}
+
+      {/* ── DUTY SCHEDULE section ── */}
+      {section === "duty-schedule" && (
+        <DutySchedulePanel
+          duties={duties || []}
+          employeeDirectory={employeeDirectory}
+          allLeaves={allLeaves || []}
+          onUpsertDuty={onUpsertDuty}
+          onDeleteDuty={onDeleteDuty}
           showToast={showToast}
         />
       )}

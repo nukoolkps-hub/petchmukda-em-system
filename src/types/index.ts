@@ -121,6 +121,19 @@ export interface Role {
   icon: string;
 }
 
+/** ตารางเวร admin-managed — แต่ละเวร rotate ตาม pool ของพนักงาน
+ *  weekly = สลับทุก 7 วัน, monthly = สลับทุกเดือนตามปฏิทิน
+ *  rotationStartDate = anchor ของ round-robin (วันแรกของ index 0)        */
+export interface Duty {
+  id: string;
+  name: string;
+  period: "weekly" | "monthly";
+  poolEmployeeIds: string[]; // ลำดับ array = ลำดับ rotation
+  rotationStartDate: string; // "YYYY-MM-DD"
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface PayrollConfirmEntry {
   confirmedAt: string;
   totalAmount: number;

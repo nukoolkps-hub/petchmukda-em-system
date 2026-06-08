@@ -3,12 +3,16 @@
 import {
   AlertOctagon as IconAlertOctagon,
   AlertTriangle as IconAlertTriangle,
+  CalendarClock as IconCalendarClock,
   CircleCheck as IconCircleCheck,
   ClipboardList as IconClipboardList,
   Wallet as IconWallet,
 } from "lucide-react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
-import type { Employee, LeaveEntry } from "../../types";
+import type { Duty, Employee, LeaveEntry } from "../../types";
+import { toYMD } from "../../utils/dateUtils";
+import { computeAllDutiesForDay } from "../../utils/dutyUtils";
+import AvatarCircle from "../shared/AvatarCircle";
 import { MemphisCornerSticker } from "../shared/MemphisPattern";
 import TeamCalendar from "./TeamCalendar";
 
@@ -16,12 +20,14 @@ interface HomeTabProps {
   profile: any;
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
+  duties?: Duty[];
 }
 
 export default function HomeTab({
   profile,
   allLeaves,
   employeeDirectory,
+  duties,
 }: HomeTabProps) {
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -162,6 +168,16 @@ export default function HomeTab({
         )}
       </div>
 
+      {/* ── เวรวันนี้ ── */}
+      {duties && duties.length > 0 && (
+        <DutyTodayCard
+          duties={duties}
+          allLeaves={allLeaves}
+          employeeDirectory={employeeDirectory}
+          profileId={profile?.id || null}
+        />
+      )}
+
       {/* leave type mini stats */}
       <div className="grid grid-cols-2 gap-2.5 mb-1.5">
         {LEAVE_TYPES.map((lt) => {
@@ -220,5 +236,122 @@ export default function HomeTab({
         ]}
       />
     </>
+  );
+}
+
+/* ─── เวรวันนี้ — สำหรับ HomeTab พนักงาน ──────────────────────── */
+function DutyTodayCard({
+  duties,
+  allLeaves,
+  employeeDirectory,
+  profileId,
+}: {
+  duties: Duty[];
+  allLeaves: LeaveEntry[];
+  employeeDirectory: Employee[];
+  profileId: string | null;
+}) {
+  const todayYmd = toYMD(new Date());
+  const assignments = computeAllDutiesForDay(
+    duties,
+    todayYmd,
+    employeeDirectory,
+    allLeaves,
+  );
+  const empById = new Map(employeeDirectory.map((e) => [e.id, e]));
+  const myDuties = assignments.filter((a) => a.actualEmpId === profileId);
+
+  return (
+    <div className="relative overflow-hidden bg-white rounded-[18px] px-5 py-4.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] mb-3 border-[1.5px] border-bdr">
+      <MemphisCornerSticker position="tr" tone="gold" />
+      <div className="relative">
+        <div className="flex items-center gap-2 mb-3">
+          <IconCalendarClock
+            size={18}
+            strokeWidth={2.4}
+            className="text-maroon"
+          />
+          <div>
+            <div className="font-bold text-maroon text-base">เวรวันนี้</div>
+            <div className="text-sm text-txt-soft mt-0.5">
+              {new Date().toLocaleDateString("th-TH", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ของฉัน */}
+        {myDuties.length > 0 && (
+          <div className="mb-3 p-2.5 rounded-[10px] bg-gold-pale border border-gold/40">
+            <div className="text-xs font-bold text-maroon mb-1.5">
+              🙋 ของคุณวันนี้
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {myDuties.map((a) => (
+                <div
+                  key={a.dutyId}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-maroon text-gold-lt text-xs font-bold"
+                >
+                  {a.dutyName}
+                  {a.reason === "substitute_for_leave" && (
+                    <span className="text-[10px] opacity-80">(แทน)</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* รายการเวรทั้งหมด */}
+        <div className="flex flex-col gap-1.5">
+          {assignments.map((a) => {
+            const actual = a.actualEmpId ? empById.get(a.actualEmpId) : null;
+            const primary = a.primaryEmpId ? empById.get(a.primaryEmpId) : null;
+            const isMe = a.actualEmpId === profileId;
+            const isSub =
+              a.reason === "substitute_for_leave" || a.reason === "double_up";
+            return (
+              <div
+                key={a.dutyId}
+                className={`flex items-center gap-2 p-2 rounded-[9px] ${
+                  isMe ? "bg-gold-pale/60 border border-gold/30" : "bg-cream"
+                }`}
+              >
+                <div className="text-sm font-bold text-maroon flex-1 truncate">
+                  {a.dutyName}
+                </div>
+                {actual ? (
+                  <>
+                    <AvatarCircle
+                      avatar={actual.avatar}
+                      avatarType={actual.avatarType}
+                      avatarImageUrl={actual.avatarImageUrl}
+                      size={24}
+                      fontSize={10}
+                      border="none"
+                    />
+                    <div className="text-xs font-semibold text-txt">
+                      {actual.nickname || actual.name}
+                    </div>
+                    {isSub && primary && (
+                      <div className="text-[10px] text-txt-soft">
+                        แทน {primary.nickname || primary.name}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-xs text-txt-soft italic">
+                    {a.reason === "all_on_leave" ? "ทุกคนลา" : "—"}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
