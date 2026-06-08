@@ -10,9 +10,8 @@ import {
   Wallet as IconWallet,
 } from "lucide-react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
+import type { DutyAssignmentsSnapshot } from "../../firebase/dutyAssignments";
 import type { Duty, Employee, LeaveEntry } from "../../types";
-import { toYMD } from "../../utils/dateUtils";
-import { computeAllDutiesForDay } from "../../utils/dutyUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import { MemphisCornerSticker } from "../shared/MemphisPattern";
 import TeamCalendar from "./TeamCalendar";
@@ -22,6 +21,7 @@ interface HomeTabProps {
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
   duties?: Duty[];
+  dutyAssignmentsToday?: DutyAssignmentsSnapshot | null;
 }
 
 export default function HomeTab({
@@ -29,6 +29,7 @@ export default function HomeTab({
   allLeaves,
   employeeDirectory,
   duties,
+  dutyAssignmentsToday,
 }: HomeTabProps) {
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -46,14 +47,15 @@ export default function HomeTab({
   return (
     <>
       {/* ── หน้าที่วันนี้ — เหนือ quota เพราะใช้เช็คทุกวัน ── */}
-      {duties && duties.length > 0 && (
-        <DutyTodayCard
-          duties={duties}
-          allLeaves={allLeaves}
-          employeeDirectory={employeeDirectory}
-          profileId={profile?.id || null}
-        />
-      )}
+      {duties &&
+        duties.length > 0 &&
+        dutyAssignmentsToday &&
+        dutyAssignmentsToday.assignments.length > 0 && (
+          <DutyTodayCard
+            snapshot={dutyAssignmentsToday}
+            profileId={profile?.id || null}
+          />
+        )}
 
       {/* Monthly quota card */}
       <div
@@ -232,26 +234,33 @@ export default function HomeTab({
   );
 }
 
-/* ─── หน้าที่วันนี้ — สำหรับ HomeTab พนักงาน ──────────────────────── */
+/* ─── หน้าที่วันนี้ — สำหรับ HomeTab พนักงาน ────────────────────────
+   ใช้ server-computed snapshot · ฝั่งพนักงานอ่าน peer data (employees/
+   leaves) ของเพื่อนไม่ได้เพราะ Firestore rules → Cloud Function compute
+   ส่วนกลาง ส่ง safe projection (id/name/nickname/avatar/displayOrder
+   เท่านั้น ไม่มี salary/bank/lineUserId)                                  */
 function DutyTodayCard({
-  duties,
-  allLeaves,
-  employeeDirectory,
+  snapshot,
   profileId,
 }: {
-  duties: Duty[];
-  allLeaves: LeaveEntry[];
-  employeeDirectory: Employee[];
+  snapshot: DutyAssignmentsSnapshot;
   profileId: string | null;
 }) {
-  const todayYmd = toYMD(new Date());
-  const assignments = computeAllDutiesForDay(
-    duties,
-    todayYmd,
-    employeeDirectory,
-    allLeaves,
-  );
-  const empById = new Map(employeeDirectory.map((e) => [e.id, e]));
+  const assignments = snapshot.assignments;
+  // empById จาก pool members ของทุก duty รวมกัน (snapshot self-contained)
+  const empById = new Map<
+    string,
+    {
+      name: string;
+      nickname: string;
+      avatar: string;
+      avatarType: "text" | "emoji" | "image";
+      avatarImageUrl: string | null;
+    }
+  >();
+  for (const a of assignments) {
+    for (const m of a.pool) empById.set(m.id, m);
+  }
   const myDuties = assignments.filter((a) => a.actualEmpId === profileId);
 
   return (

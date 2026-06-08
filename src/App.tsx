@@ -161,7 +161,7 @@ export default function LeaveApp() {
     deleteDuty,
     setPayrollConfirm,
   } = data;
-  const { duties } = data;
+  const { duties, dutyAssignmentsToday } = data;
 
   /* ─── Profile hook ─────────────────────────────────────────── */
   const {
@@ -393,6 +393,7 @@ export default function LeaveApp() {
                       allLeaves={allLeaves}
                       employeeDirectory={employeeDirectory}
                       duties={duties}
+                      dutyAssignmentsToday={dutyAssignmentsToday}
                     />
                   )
                 }
@@ -485,6 +486,7 @@ export default function LeaveApp() {
                       roles={roles}
                       onUpsertRole={upsertRole}
                       duties={duties}
+                      dutyAssignmentsToday={dutyAssignmentsToday}
                       onUpsertDuty={upsertDuty}
                       onDeleteDuty={deleteDuty}
                       onDeleteRole={deleteRole}
