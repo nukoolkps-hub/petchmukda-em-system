@@ -10,7 +10,7 @@
 - **Auth:** Firebase Auth (LINE Login + Dev mode)
 - **Storage:** Firebase Storage
 - **Linting:** Biome
-- **Icons:** `lucide-react` (อันเดียวทั้งระบบ — ไม่ผสมชุดอื่น)
+- **Icons:** `lucide-react` (อันเดียวทั้งระบบ — ไม่ผสมชุดอื่น) · **ห้ามใช้ emoji เป็น icon ใน UI** (label, heading, button, warning ฯลฯ) ทุกที่ต้อง Lucide เท่านั้น · ยกเว้น content/text ที่ความหมายเป็น emoji จริงๆ (เช่น avatar emoji picker, leave-type icons ใน `constants.ts`)
 - **PDF:** pdfmake 0.3.x — Thai font Sarabun self-host ที่ `public/fonts/`
   - register ผ่าน `pdfMake.addVirtualFileSystem()` + `setFonts()` (ไม่ใช่ `.vfs` แบบ 0.1.x)
 - **Routing:** react-router-dom v7 (HashRouter)

@@ -6,6 +6,7 @@ import {
   CalendarClock as IconCalendarClock,
   CircleCheck as IconCircleCheck,
   ClipboardList as IconClipboardList,
+  UserCheck as IconUserCheck,
   Wallet as IconWallet,
 } from "lucide-react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
@@ -286,8 +287,9 @@ function DutyTodayCard({
         {/* ของฉัน */}
         {myDuties.length > 0 && (
           <div className="mb-3 p-2.5 rounded-[10px] bg-gold-pale border border-gold/40">
-            <div className="text-xs font-bold text-maroon mb-1.5">
-              🙋 ของคุณวันนี้
+            <div className="text-xs font-bold text-maroon mb-1.5 inline-flex items-center gap-1">
+              <IconUserCheck size={12} strokeWidth={2.4} />
+              ของคุณวันนี้
             </div>
             <div className="flex flex-wrap gap-1.5">
               {myDuties.map((a) => (
