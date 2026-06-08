@@ -90,11 +90,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     id: "duty",
-    label: "เวร",
+    label: "หน้าที่",
     defaultSection: "duty-schedule",
     Icon: IconCalendarClock,
     items: [
-      { id: "duty-schedule", label: "ตารางเวร", Icon: IconCalendarClock },
+      { id: "duty-schedule", label: "ตารางหน้าที่", Icon: IconCalendarClock },
     ],
   },
   {

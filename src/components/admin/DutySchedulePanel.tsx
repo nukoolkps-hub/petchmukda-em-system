@@ -1,4 +1,4 @@
-/* ─── Admin: Duty Schedule (ตารางเวร) ──────────────────────────
+/* ─── Admin: Duty Schedule (ตารางหน้าที่) ──────────────────────────
    admin สร้าง/แก้/ลบ duty + เลือก pool พนักงาน + เรียงลำดับ rotation     */
 
 import {
@@ -56,7 +56,7 @@ export default function DutySchedulePanel({
     <div>
       <div className="flex items-center justify-between gap-2 mb-3.5">
         <div className="text-sm text-txt-soft">
-          ตารางเวร — ระบบหมุนคนอัตโนมัติ + หาคนแทนถ้าลา
+          ตารางหน้าที่รับผิดชอบ — ระบบหมุนคนอัตโนมัติ + หาคนแทนถ้าลา
         </div>
         <button
           type="button"
@@ -64,7 +64,7 @@ export default function DutySchedulePanel({
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shrink-0 shadow-[0_3px_10px_rgba(123,28,28,0.25)] active:scale-[0.98] transition-transform duration-100"
         >
           <IconPlus size={15} strokeWidth={2.4} />
-          เพิ่มเวร
+          เพิ่มหน้าที่
         </button>
       </div>
 
@@ -73,7 +73,7 @@ export default function DutySchedulePanel({
           <div className="flex justify-center mb-3 text-gold">
             <IconCalendarClock size={44} strokeWidth={1.8} />
           </div>
-          ยังไม่มีเวร — เริ่มกดเพิ่ม
+          ยังไม่มีหน้าที่ — เริ่มกดเพิ่ม
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
@@ -99,7 +99,7 @@ export default function DutySchedulePanel({
           employeeDirectory={employeeDirectory}
           onSave={async (data) => {
             await onUpsertDuty(editing === "new" ? null : editing.id, data);
-            showToast?.(editing === "new" ? "เพิ่มเวรแล้ว" : "บันทึกแล้ว");
+            showToast?.(editing === "new" ? "เพิ่มหน้าที่แล้ว" : "บันทึกแล้ว");
             setEditing(null);
           }}
           onClose={() => setEditing(null)}
@@ -113,7 +113,7 @@ export default function DutySchedulePanel({
           contentClassName="px-6 py-7"
         >
           <div className="text-center">
-            <div className="font-bold text-lg text-txt mb-1.5">ลบเวรนี้?</div>
+            <div className="font-bold text-lg text-txt mb-1.5">ลบหน้าที่นี้?</div>
             <div className="text-sm text-txt-mid mb-5">
               "{confirmDelete.name}"
             </div>
@@ -131,7 +131,7 @@ export default function DutySchedulePanel({
                   const target = confirmDelete;
                   setConfirmDelete(null);
                   onDeleteDuty(target.id)
-                    .then(() => showToast?.("ลบเวรแล้ว"))
+                    .then(() => showToast?.("ลบหน้าที่แล้ว"))
                     .catch((err: unknown) => {
                       showToast?.(
                         err instanceof Error
@@ -153,7 +153,7 @@ export default function DutySchedulePanel({
   );
 }
 
-/* ─── card 1 เวร — แสดง period + วันนี้ใครทำ + pool list ────── */
+/* ─── card 1 หน้าที่ — แสดง period + วันนี้ใครทำ + pool list ────── */
 function DutyCard({
   duty,
   assignment,
@@ -202,7 +202,7 @@ function DutyCard({
         <button
           type="button"
           onClick={onDelete}
-          aria-label="ลบเวร"
+          aria-label="ลบหน้าที่"
           className="shrink-0 w-8 h-8 rounded-[8px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30] active:scale-[0.92] transition-transform"
         >
           <IconTrash size={13} className="text-red" strokeWidth={2.2} />
@@ -276,7 +276,7 @@ function DutyCard({
   );
 }
 
-/* ─── Modal สำหรับเพิ่ม/แก้เวร ──────────────────────────────── */
+/* ─── Modal สำหรับเพิ่ม/แก้หน้าที่ ──────────────────────────────── */
 function DutyEditModal({
   duty,
   employeeDirectory,
@@ -336,7 +336,7 @@ function DutyEditModal({
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-extrabold text-lg text-txt">
-            {duty ? "แก้ไขเวร" : "เพิ่มเวรใหม่"}
+            {duty ? "แก้ไขหน้าที่" : "เพิ่มหน้าที่ใหม่"}
           </div>
         </div>
         <button
@@ -353,7 +353,7 @@ function DutyEditModal({
         {/* name */}
         <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
           <label className="text-xs text-maroon font-bold mb-1.5 block">
-            ชื่อเวร
+            ชื่อหน้าที่
           </label>
           <input
             type="text"
@@ -399,7 +399,7 @@ function DutyEditModal({
             className="w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
           />
           <div className="text-xs text-txt-soft mt-1">
-            คนแรกใน pool ทำเวรในช่วงที่เริ่ม
+            คนแรกใน pool ทำหน้าที่ในช่วงที่เริ่ม
           </div>
         </div>
 

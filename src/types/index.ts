@@ -121,7 +121,7 @@ export interface Role {
   icon: string;
 }
 
-/** ตารางเวร admin-managed — แต่ละเวร rotate ตาม pool ของพนักงาน
+/** ตารางหน้าที่ admin-managed — แต่ละหน้าที่ rotate ตาม pool ของพนักงาน
  *  weekly = สลับทุก 7 วัน, monthly = สลับทุกเดือนตามปฏิทิน
  *  rotationStartDate = anchor ของ round-robin (วันแรกของ index 0)        */
 export interface Duty {
