@@ -41,7 +41,7 @@ export default function BaseModal({
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
-        className={`w-full ${maxWidthClass} max-h-[92vh] overflow-y-auto bg-white rounded-xl shadow-[0_24px_60px_rgba(45,26,14,0.3)] animate-[modalIn_0.2s_cubic-bezier(.22,.68,0,1.2)] ${contentClassName}`}
+        className={`w-full ${maxWidthClass} max-h-[92vh] overflow-y-auto bg-white rounded-xl shadow-[0_24px_60px_rgba(45,26,14,0.3)] animate-[modalIn_0.18s_cubic-bezier(0.2,0.8,0.2,1)] ${contentClassName}`}
       >
         {children}
       </div>

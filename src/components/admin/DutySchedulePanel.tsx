@@ -314,8 +314,9 @@ function DutyEditModal({
     duty?.period || "weekly",
   );
   const [roleId, setRoleId] = useState<string>(duty?.roleId || "");
-  const [startDate, setStartDate] = useState(
-    duty?.rotationStartDate || toYMD(new Date()),
+  // rotation anchor — เก็บเป็นเดือน (YYYY-MM) · save จริงเป็น YYYY-MM-01
+  const [startMonth, setStartMonth] = useState(
+    (duty?.rotationStartDate || toYMD(new Date())).slice(0, 7),
   );
   const [saving, setSaving] = useState(false);
 
@@ -398,19 +399,20 @@ function DutyEditModal({
           </div>
         </div>
 
-        {/* rotation start date */}
+        {/* rotation start month */}
         <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
           <label className="text-xs text-maroon font-bold mb-1.5 block">
-            เริ่ม rotation วันที่
+            เริ่ม rotation เดือน
           </label>
           <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
+            type="month"
+            value={startMonth}
+            onChange={(e) => setStartMonth(e.target.value)}
+            style={{ WebkitAppearance: "none" }}
+            className="w-full min-w-0 box-border appearance-none py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
           />
           <div className="text-xs text-txt-soft mt-1">
-            คนแรกใน pool ทำหน้าที่ในช่วงที่เริ่ม
+            คนแรกใน pool ทำหน้าที่ตั้งแต่ต้นเดือนนี้
           </div>
         </div>
 
@@ -511,7 +513,7 @@ function DutyEditModal({
                   name: name.trim(),
                   period,
                   roleId,
-                  rotationStartDate: startDate,
+                  rotationStartDate: `${startMonth}-01`,
                 });
               } finally {
                 setSaving(false);
