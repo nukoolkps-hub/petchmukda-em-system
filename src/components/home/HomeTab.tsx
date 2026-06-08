@@ -314,11 +314,12 @@ function DutyTodayCard({
             <div className="flex flex-wrap gap-2">
               {myDuties.map((a) => (
                 <div
-                  key={a.dutyId}
+                  key={`${a.dutyId}-${a.targetEmpId || ""}`}
                   className="inline-flex items-center gap-1.5 px-3.5 py-[5px] rounded-[20px] bg-maroon text-gold-lt text-sm font-semibold"
                 >
                   {a.dutyName}
-                  {a.reason === "substitute_for_leave" && (
+                  {(a.reason === "substitute_for_leave" ||
+                    a.reason === "coverage") && (
                     <span className="text-xs opacity-80">(แทน)</span>
                   )}
                 </div>
@@ -327,10 +328,11 @@ function DutyTodayCard({
           </div>
         )}
 
-        {/* หน้าที่ของเพื่อน — exclude ตัวเอง เพราะมีในช่อง "ของคุณวันนี้" แล้ว */}
+        {/* หน้าที่ของเพื่อน — exclude ตัวเอง เพราะมีในช่อง "ของคุณวันนี้" แล้ว
+            + ซ่อน coverage ที่เป้าหมายไม่ลา (ไม่มีอะไรเกิดขึ้น) */}
         {(() => {
           const otherAssignments = assignments.filter(
-            (a) => a.actualEmpId !== profileId,
+            (a) => a.actualEmpId !== profileId && a.reason !== "target_present",
           );
           if (otherAssignments.length === 0) return null;
           return (
@@ -350,9 +352,10 @@ function DutyTodayCard({
                 const isSub =
                   a.reason === "substitute_for_leave" ||
                   a.reason === "double_up";
+                const isCov = a.kind === "coverage";
                 return (
                   <div
-                    key={a.dutyId}
+                    key={`${a.dutyId}-${a.targetEmpId || ""}`}
                     className="flex items-center gap-2 p-2 rounded-[9px] bg-cream"
                   >
                     <div className="text-sm font-bold text-maroon flex-1 truncate">
@@ -371,15 +374,26 @@ function DutyTodayCard({
                         <div className="text-xs font-semibold text-txt">
                           {actual.nickname || actual.name}
                         </div>
-                        {isSub && primary && (
+                        {isCov ? (
                           <div className="text-[10px] text-txt-soft">
-                            แทน {primary.nickname || primary.name}
+                            แทน {a.targetName || "—"}
                           </div>
+                        ) : (
+                          isSub &&
+                          primary && (
+                            <div className="text-[10px] text-txt-soft">
+                              แทน {primary.nickname || primary.name}
+                            </div>
+                          )
                         )}
                       </>
                     ) : (
                       <div className="text-xs text-txt-soft italic">
-                        {a.reason === "all_on_leave" ? "ทุกคนลา" : "—"}
+                        {a.reason === "all_on_leave"
+                          ? "ทุกคนลา"
+                          : a.reason === "coverage_no_candidate"
+                            ? "ไม่มีคนแทน"
+                            : "—"}
                       </div>
                     )}
                   </div>

@@ -128,10 +128,16 @@ export interface Role {
 export interface Duty {
   id: string;
   name: string;
+  /** kind = "rotation" (default) → หมุนเวียนตาม period · "coverage" → เวรแทน
+   *  คนลาของตำแหน่งเป้าหมาย (เลือกคนแทนจาก candidateEmpIds ให้ยุติธรรม)   */
+  kind?: "rotation" | "coverage";
   period: "weekly" | "monthly";
-  roleId: string; // ตำแหน่งที่ทำหน้าที่นี้ — pool resolve จาก employees ที่ roleId ตรง
+  roleId: string; // (rotation) ตำแหน่งที่ทำหน้าที่นี้ — pool resolve จาก employees ที่ roleId ตรง
   excludedEmpIds?: string[]; // คนในตำแหน่งที่ admin ตัดออก ไม่ให้ทำหน้าที่นี้
   rotationStartDate: string; // "YYYY-MM-DD"
+  // ─── coverage (kind="coverage") ───────────────────────────────
+  coverageRoleId?: string; // ตำแหน่งเป้าหมาย — เมื่อคนในตำแหน่งนี้ลา ต้องหาคนแทน
+  candidateEmpIds?: string[]; // รายชื่อคนแทน (admin เลือก · ระบบหมุนให้ยุติธรรม)
   createdAt: number;
   updatedAt: number;
 }

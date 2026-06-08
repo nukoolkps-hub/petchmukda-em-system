@@ -379,18 +379,20 @@ export function computeDutyForecast(
   todayYmd: string,
   endYmd: string,
 ): DutyForecast[] {
+  // coverage = เวรแทนคนลา (ขึ้นกับการลาจริง) → forecast ล่วงหน้าไม่ได้
+  const rotationDuties = duties.filter((d) => d.kind !== "coverage");
   const cache = new Map<string, Map<string, string | null>>();
   const primariesAt = (ymd: string) => {
     const key = ymd < todayYmd ? todayYmd : ymd;
     let m = cache.get(key);
     if (!m) {
-      m = computeForecastPrimaries(duties, poolByDutyId, key);
+      m = computeForecastPrimaries(rotationDuties, poolByDutyId, key);
       cache.set(key, m);
     }
     return m;
   };
 
-  return duties.map((duty) => {
+  return rotationDuties.map((duty) => {
     const periods: ForecastPeriod[] = [];
     let idx = Math.max(0, getPeriodIndex(duty, todayYmd));
     // เดินไปข้างหน้าจน period start เกิน endYmd (safety cap 80 รอบ)
