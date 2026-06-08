@@ -11,7 +11,7 @@ import {
   X as IconX,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { Duty, Employee, LeaveEntry } from "../../types";
+import type { Duty, Employee, LeaveEntry, Role } from "../../types";
 import { toYMD } from "../../utils/dateUtils";
 import { computeAllDutiesForDay, getPeriodIndex } from "../../utils/dutyUtils";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -19,6 +19,7 @@ import BaseModal from "../shared/BaseModal";
 
 interface Props {
   duties: Duty[];
+  roles: Role[];
   employeeDirectory: Employee[];
   allLeaves: LeaveEntry[];
   onUpsertDuty: (
@@ -31,6 +32,7 @@ interface Props {
 
 export default function DutySchedulePanel({
   duties,
+  roles,
   employeeDirectory,
   allLeaves,
   onUpsertDuty,
@@ -85,6 +87,8 @@ export default function DutySchedulePanel({
                 duty={duty}
                 assignment={assignment}
                 empById={empById}
+                roles={roles}
+                employeeDirectory={employeeDirectory}
                 onEdit={() => setEditing(duty)}
                 onDelete={() => setConfirmDelete(duty)}
               />
@@ -96,6 +100,7 @@ export default function DutySchedulePanel({
       {editing && (
         <DutyEditModal
           duty={editing === "new" ? null : editing}
+          roles={roles}
           employeeDirectory={employeeDirectory}
           onSave={async (data) => {
             await onUpsertDuty(editing === "new" ? null : editing.id, data);
@@ -158,15 +163,31 @@ function DutyCard({
   duty,
   assignment,
   empById,
+  roles,
+  employeeDirectory,
   onEdit,
   onDelete,
 }: {
   duty: Duty;
   assignment: ReturnType<typeof computeAllDutiesForDay>[number] | undefined;
   empById: Map<string, Employee>;
+  roles: Role[];
+  employeeDirectory: Employee[];
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const role = roles.find((r) => r.id === duty.roleId);
+  // Resolve pool ที่ display ใน card — เรียงเหมือน activePool ใน dutyUtils
+  const resolvedPool = employeeDirectory
+    .filter((e) => e.roleId === duty.roleId && !e.salaryDisabled)
+    .sort((a, b) => {
+      const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;
+      const bo = typeof b.displayOrder === "number" ? b.displayOrder : null;
+      if (ao !== null && bo !== null) return ao - bo;
+      if (ao !== null) return -1;
+      if (bo !== null) return 1;
+      return (a.name || "").localeCompare(b.name || "", "th");
+    });
   const primary = assignment?.primaryEmpId
     ? empById.get(assignment.primaryEmpId)
     : null;
@@ -245,20 +266,18 @@ function DutyCard({
         )}
       </div>
 
-      {/* pool rotation list */}
+      {/* pool rotation list — resolved จาก role members */}
       <div>
         <div className="text-xs text-txt-soft mb-1.5 inline-flex items-center gap-1">
           <IconUsers size={11} strokeWidth={2.4} />
-          ลำดับการสลับ ({duty.poolEmployeeIds.length} คน)
+          ตำแหน่ง {role?.name || "(ลบแล้ว)"} · {resolvedPool.length} คน
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {duty.poolEmployeeIds.map((id, idx) => {
-            const emp = empById.get(id);
-            if (!emp) return null;
-            const isCurrent = assignment?.primaryEmpId === id;
+          {resolvedPool.map((emp, idx) => {
+            const isCurrent = assignment?.primaryEmpId === emp.id;
             return (
               <div
-                key={id}
+                key={emp.id}
                 className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold ${
                   isCurrent
                     ? "bg-maroon text-gold-lt"
@@ -279,11 +298,13 @@ function DutyCard({
 /* ─── Modal สำหรับเพิ่ม/แก้หน้าที่ ──────────────────────────────── */
 function DutyEditModal({
   duty,
+  roles,
   employeeDirectory,
   onSave,
   onClose,
 }: {
   duty: Duty | null;
+  roles: Role[];
   employeeDirectory: Employee[];
   onSave: (data: Omit<Duty, "id" | "createdAt" | "updatedAt">) => Promise<void>;
   onClose: () => void;
@@ -292,37 +313,27 @@ function DutyEditModal({
   const [period, setPeriod] = useState<"weekly" | "monthly">(
     duty?.period || "weekly",
   );
-  const [poolIds, setPoolIds] = useState<string[]>(duty?.poolEmployeeIds || []);
+  const [roleId, setRoleId] = useState<string>(duty?.roleId || "");
   const [startDate, setStartDate] = useState(
     duty?.rotationStartDate || toYMD(new Date()),
   );
   const [saving, setSaving] = useState(false);
 
-  const toggleEmp = (id: string) => {
-    setPoolIds((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
-    );
-  };
+  // Preview pool — คนในตำแหน่งที่เลือก (เรียงเหมือน rotation จริง)
+  const previewPool = roleId
+    ? employeeDirectory
+        .filter((e) => e.roleId === roleId && !e.salaryDisabled)
+        .sort((a, b) => {
+          const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;
+          const bo = typeof b.displayOrder === "number" ? b.displayOrder : null;
+          if (ao !== null && bo !== null) return ao - bo;
+          if (ao !== null) return -1;
+          if (bo !== null) return 1;
+          return (a.name || "").localeCompare(b.name || "", "th");
+        })
+    : [];
 
-  const moveUp = (idx: number) => {
-    if (idx === 0) return;
-    setPoolIds((prev) => {
-      const copy = [...prev];
-      [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-      return copy;
-    });
-  };
-  const moveDown = (idx: number) => {
-    setPoolIds((prev) => {
-      if (idx >= prev.length - 1) return prev;
-      const copy = [...prev];
-      [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
-      return copy;
-    });
-  };
-
-  const canSave = name.trim() && poolIds.length > 0;
-  const empById = new Map(employeeDirectory.map((e) => [e.id, e]));
+  const canSave = name.trim() && roleId;
 
   return (
     <BaseModal onClose={onClose} maxWidthClass="max-w-[480px]">
@@ -403,79 +414,27 @@ function DutyEditModal({
           </div>
         </div>
 
-        {/* pool — selected list with reorder */}
-        {poolIds.length > 0 && (
-          <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-            <label className="text-xs text-maroon font-bold mb-2 block">
-              ลำดับการสลับ ({poolIds.length} คน)
-            </label>
-            <div className="flex flex-col gap-1.5">
-              {poolIds.map((id, idx) => {
-                const emp = empById.get(id);
-                if (!emp) return null;
-                return (
-                  <div
-                    key={id}
-                    className="flex items-center gap-2 p-2 rounded-[8px] bg-white border border-bdr"
-                  >
-                    <span className="w-6 text-center text-xs font-bold text-maroon">
-                      {idx + 1}
-                    </span>
-                    <AvatarCircle
-                      avatar={emp.avatar}
-                      avatarType={emp.avatarType}
-                      avatarImageUrl={emp.avatarImageUrl}
-                      size={26}
-                      fontSize={11}
-                      border="none"
-                    />
-                    <div className="flex-1 text-sm font-semibold text-txt truncate">
-                      {emp.nickname || emp.name}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => moveUp(idx)}
-                      disabled={idx === 0}
-                      className="w-7 h-7 rounded-[6px] border border-bdr bg-cream text-txt-mid text-xs cursor-pointer disabled:opacity-30 active:scale-[0.92] transition-transform"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveDown(idx)}
-                      disabled={idx === poolIds.length - 1}
-                      className="w-7 h-7 rounded-[6px] border border-bdr bg-cream text-txt-mid text-xs cursor-pointer disabled:opacity-30 active:scale-[0.92] transition-transform"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleEmp(id)}
-                      aria-label="ลบจาก pool"
-                      className="w-7 h-7 rounded-[6px] bg-red-lt flex items-center justify-center cursor-pointer border border-[#C0392B30] active:scale-[0.92] transition-transform"
-                    >
-                      <IconX size={12} className="text-red" strokeWidth={2.4} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* pool — all employees to pick */}
+        {/* role selector — ตำแหน่งไหนทำหน้าที่นี้ */}
         <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
           <label className="text-xs text-maroon font-bold mb-2 block">
-            เลือกคนเข้า pool
+            ตำแหน่งที่ทำหน้าที่นี้
           </label>
           <div className="flex flex-col gap-1">
-            {employeeDirectory.map((emp) => {
-              const selected = poolIds.includes(emp.id);
+            {roles.length === 0 && (
+              <div className="text-xs text-txt-soft italic p-2">
+                ยังไม่มีตำแหน่ง — เพิ่มที่ "ตั้งค่า → ตำแหน่ง" ก่อน
+              </div>
+            )}
+            {roles.map((role) => {
+              const selected = roleId === role.id;
+              const memberCount = employeeDirectory.filter(
+                (e) => e.roleId === role.id && !e.salaryDisabled,
+              ).length;
               return (
                 <button
-                  key={emp.id}
+                  key={role.id}
                   type="button"
-                  onClick={() => toggleEmp(emp.id)}
+                  onClick={() => setRoleId(role.id)}
                   className={`flex items-center gap-2 p-2 rounded-[8px] border-[1.5px] cursor-pointer font-[inherit] text-left active:scale-[0.99] transition-transform ${
                     selected
                       ? "bg-gold-pale border-gold"
@@ -483,27 +442,53 @@ function DutyEditModal({
                   }`}
                 >
                   <input
-                    type="checkbox"
+                    type="radio"
                     checked={selected}
                     readOnly
                     className="w-4 h-4 accent-maroon pointer-events-none"
                   />
-                  <AvatarCircle
-                    avatar={emp.avatar}
-                    avatarType={emp.avatarType}
-                    avatarImageUrl={emp.avatarImageUrl}
-                    size={26}
-                    fontSize={11}
-                    border="none"
-                  />
                   <div className="flex-1 text-sm font-semibold text-txt truncate">
-                    {emp.nickname || emp.name}
+                    {role.name}
                   </div>
+                  <span className="text-xs font-bold text-maroon shrink-0">
+                    {memberCount} คน
+                  </span>
                 </button>
               );
             })}
           </div>
         </div>
+
+        {/* preview pool — คนในตำแหน่งที่เลือก เรียงตาม displayOrder */}
+        {previewPool.length > 0 && (
+          <div className="mb-3 p-3 rounded-[10px] bg-cream border border-bdr">
+            <label className="text-xs text-txt-mid font-bold mb-2 block">
+              ลำดับการสลับ (preview · {previewPool.length} คน)
+            </label>
+            <div className="text-xs text-txt-soft mb-2">
+              ตามลำดับใน "เงินเดือน → ค่าคอม" (admin ลากเรียงได้)
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {previewPool.map((emp, idx) => (
+                <div
+                  key={emp.id}
+                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-white text-txt-mid border border-bdr text-xs font-semibold"
+                >
+                  <span className="opacity-60">{idx + 1}.</span>
+                  <AvatarCircle
+                    avatar={emp.avatar}
+                    avatarType={emp.avatarType}
+                    avatarImageUrl={emp.avatarImageUrl}
+                    size={18}
+                    fontSize={9}
+                    border="none"
+                  />
+                  {emp.nickname || emp.name}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* footer */}
@@ -525,7 +510,7 @@ function DutyEditModal({
                 await onSave({
                   name: name.trim(),
                   period,
-                  poolEmployeeIds: poolIds,
+                  roleId,
                   rotationStartDate: startDate,
                 });
               } finally {

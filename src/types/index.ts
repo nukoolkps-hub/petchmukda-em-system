@@ -121,14 +121,15 @@ export interface Role {
   icon: string;
 }
 
-/** ตารางหน้าที่ admin-managed — แต่ละหน้าที่ rotate ตาม pool ของพนักงาน
+/** ตารางหน้าที่ admin-managed — admin กำหนดว่า "ตำแหน่งไหน ทำหน้าที่อะไร"
+ *  ระบบ pull คนจากตำแหน่งนั้นมา rotate ตาม displayOrder + period
  *  weekly = สลับทุก 7 วัน, monthly = สลับทุกเดือนตามปฏิทิน
  *  rotationStartDate = anchor ของ round-robin (วันแรกของ index 0)        */
 export interface Duty {
   id: string;
   name: string;
   period: "weekly" | "monthly";
-  poolEmployeeIds: string[]; // ลำดับ array = ลำดับ rotation
+  roleId: string; // ตำแหน่งที่ทำหน้าที่นี้ — pool resolve จาก employees ที่ roleId ตรง
   rotationStartDate: string; // "YYYY-MM-DD"
   createdAt: number;
   updatedAt: number;

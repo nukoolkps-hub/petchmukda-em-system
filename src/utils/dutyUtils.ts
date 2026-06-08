@@ -73,11 +73,22 @@ function isOnLeave(leaves: LeaveEntry[], empId: string, ymd: string): boolean {
   );
 }
 
-/** filter pool — เก็บเฉพาะคนที่ยังมีตัวอยู่ใน employeeDirectory
- *  (ถ้าถูกลบจาก system → ตัดออกจาก pool โดยอัตโนมัติ) */
+/** Resolve pool — คนในตำแหน่ง duty.roleId เรียงตาม displayOrder (asc) →
+ *  ชื่อ (asc) เป็น fallback. คนที่ salaryDisabled ถือว่าใช้แอปแค่ระบบลา
+ *  ไม่ทำหน้าที่ → exclude. คนที่ถูกลบจาก system → ไม่อยู่ใน list → exclude
+ *  อัตโนมัติ. ลำดับ deterministic — ปรับด้วย admin reorder (displayOrder) */
 function activePool(duty: Duty, employees: Employee[]): string[] {
-  const known = new Set(employees.map((e) => e.id));
-  return duty.poolEmployeeIds.filter((id) => known.has(id));
+  return employees
+    .filter((e) => e.roleId === duty.roleId && !e.salaryDisabled)
+    .sort((a, b) => {
+      const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;
+      const bo = typeof b.displayOrder === "number" ? b.displayOrder : null;
+      if (ao !== null && bo !== null) return ao - bo;
+      if (ao !== null) return -1;
+      if (bo !== null) return 1;
+      return (a.name || "").localeCompare(b.name || "", "th");
+    })
+    .map((e) => e.id);
 }
 
 /** คำนวณ assignment ของหน้าที่เดียวในวันเดียว — ใช้ primariesToday เพื่อ
