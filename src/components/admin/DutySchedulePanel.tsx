@@ -12,21 +12,22 @@ import {
   X as IconX,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { Duty, Employee, LeaveEntry, Role } from "../../types";
+import type {
+  DutyAssignmentsSnapshot,
+  SnapshotAssignment,
+  SnapshotPoolMember,
+} from "../../firebase/dutyAssignments";
+import type { Duty, Employee, Role } from "../../types";
 import { toYMD } from "../../utils/dateUtils";
-import {
-  computeAllDutiesForDay,
-  getPeriodIndex,
-  resolveDutyPool,
-} from "../../utils/dutyUtils";
+import { getPeriodIndex } from "../../utils/dutyUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 
 interface Props {
   duties: Duty[];
+  dutyAssignmentsToday: DutyAssignmentsSnapshot | null;
   roles: Role[];
   employeeDirectory: Employee[];
-  allLeaves: LeaveEntry[];
   onUpsertDuty: (
     id: string | null,
     data: Omit<Duty, "id" | "createdAt" | "updatedAt">,
@@ -37,9 +38,9 @@ interface Props {
 
 export default function DutySchedulePanel({
   duties,
+  dutyAssignmentsToday,
   roles,
   employeeDirectory,
-  allLeaves,
   onUpsertDuty,
   onDeleteDuty,
   showToast,
@@ -47,17 +48,19 @@ export default function DutySchedulePanel({
   const [editing, setEditing] = useState<Duty | "new" | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Duty | null>(null);
 
-  const todayYmd = toYMD(new Date());
+  // assignments + pool มาจาก server snapshot — single source of truth
+  // กับฝั่งพนักงาน (Firestore rules ปิดให้พนักงานอ่าน peer data ไม่ได้)
   const assignments = useMemo(
-    () =>
-      computeAllDutiesForDay(duties, todayYmd, employeeDirectory, allLeaves),
-    [duties, todayYmd, employeeDirectory, allLeaves],
+    () => dutyAssignmentsToday?.assignments || [],
+    [dutyAssignmentsToday],
   );
   const empById = useMemo(() => {
-    const m = new Map<string, Employee>();
-    for (const e of employeeDirectory) m.set(e.id, e);
+    const m = new Map<string, SnapshotPoolMember>();
+    for (const a of assignments) {
+      for (const member of a.pool) m.set(member.id, member);
+    }
     return m;
-  }, [employeeDirectory]);
+  }, [assignments]);
 
   return (
     <div>
@@ -93,7 +96,6 @@ export default function DutySchedulePanel({
                 assignment={assignment}
                 empById={empById}
                 roles={roles}
-                employeeDirectory={employeeDirectory}
                 onEdit={() => setEditing(duty)}
                 onDelete={() => setConfirmDelete(duty)}
               />
@@ -169,23 +171,20 @@ function DutyCard({
   assignment,
   empById,
   roles,
-  employeeDirectory,
   onEdit,
   onDelete,
 }: {
   duty: Duty;
-  assignment: ReturnType<typeof computeAllDutiesForDay>[number] | undefined;
-  empById: Map<string, Employee>;
+  assignment: SnapshotAssignment | undefined;
+  empById: Map<string, SnapshotPoolMember>;
   roles: Role[];
-  employeeDirectory: Employee[];
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const role = roles.find((r) => r.id === duty.roleId);
-  // ใช้ resolveDutyPool — single source of truth กับ rotation algorithm
-  // (filter salaryDisabled + excludedEmpIds + sort by displayOrder)
-  const resolvedPool = resolveDutyPool(duty, employeeDirectory);
-  const excludedCount = duty.excludedEmpIds?.length || 0;
+  // Pool + excludedCount มาจาก snapshot (server-computed กับ rotation algorithm)
+  const resolvedPool = assignment?.pool || [];
+  const excludedCount = assignment?.excludedCount || 0;
   const primary = assignment?.primaryEmpId
     ? empById.get(assignment.primaryEmpId)
     : null;

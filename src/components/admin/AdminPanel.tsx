@@ -43,6 +43,7 @@ export default function AdminPanel({
   onUpsertRole,
   onDeleteRole,
   duties,
+  dutyAssignmentsToday,
   onUpsertDuty,
   onDeleteDuty,
   payrollConfirms,
@@ -187,9 +188,9 @@ export default function AdminPanel({
       {section === "duty-schedule" && (
         <DutySchedulePanel
           duties={duties || []}
+          dutyAssignmentsToday={dutyAssignmentsToday}
           roles={roles || []}
           employeeDirectory={employeeDirectory}
-          allLeaves={allLeaves || []}
           onUpsertDuty={onUpsertDuty}
           onDeleteDuty={onDeleteDuty}
           showToast={showToast}

@@ -7,11 +7,13 @@
 import { useMemo } from "react";
 import * as advancesAPI from "../firebase/advances";
 import * as dutiesAPI from "../firebase/duties";
+import { triggerRecomputeDutyAssignments } from "../firebase/dutyAssignments";
 import * as employeeLoansAPI from "../firebase/employeeLoans";
 import * as employeesAPI from "../firebase/employees";
 import {
   useAdvancesForScope,
   useDuties,
+  useDutyAssignments,
   useEmployeeLoansForScope,
   useEmployeesForScope,
   useLeavesForScope,
@@ -64,6 +66,10 @@ export default function useFirebaseAppData({
   });
   const rolesResult = useRoles();
   const dutiesResult = useDuties();
+  // dutyAssignmentsToday/snapshot — server-computed สำหรับ display ทั้ง 2 ฝั่ง
+  // (Firestore rules ปิดให้พนักงานอ่าน employees/leaves ของเพื่อนไม่ได้
+  // → client compute ผิด → ใช้ snapshot นี้แทน)
+  const dutyAssignmentsResult = useDutyAssignments();
   const pcResult = usePayrollConfirmsForScope({ isAdmin });
   const loansResult = useEmployeeLoansForScope({
     isAdmin,
@@ -126,26 +132,34 @@ export default function useFirebaseAppData({
   /* ─── Leaves (real-time → no local setState needed) ────── */
   async function addLeave(leave) {
     if (monthLocked(monthOf(leave?.start))) throw new Error(LOCK_MSG);
-    return await leavesAPI.addLeave(leave);
+    const id = await leavesAPI.addLeave(leave);
+    triggerRecomputeDutyAssignments();
+    return id;
   }
   async function deleteLeave(id) {
     const target = leavesResult.data.find((l) => l.id === id);
     if (target && monthLocked(monthOf(target.start))) throw new Error(LOCK_MSG);
     await leavesAPI.deleteLeave(id);
+    triggerRecomputeDutyAssignments();
   }
 
   /* ─── Employees ─────────────────────────────────────────── */
   async function updateEmployee(id, fields) {
     await employeesAPI.updateEmployee(id, fields);
+    triggerRecomputeDutyAssignments();
   }
   async function upsertEmployee(employee) {
-    return await employeesAPI.upsertEmployee(employee.id, employee);
+    const id = await employeesAPI.upsertEmployee(employee.id, employee);
+    triggerRecomputeDutyAssignments();
+    return id;
   }
   async function deleteEmployee(id) {
     await employeesAPI.deleteEmployee(id);
+    triggerRecomputeDutyAssignments();
   }
   async function reorderEmployees(orderedIds) {
     await employeesAPI.reorderEmployees(orderedIds);
+    triggerRecomputeDutyAssignments();
   }
 
   /* ─── Salaries ──────────────────────────────────────────── */
@@ -285,10 +299,13 @@ export default function useFirebaseAppData({
     await rolesAPI.upsertRole(role);
   }
   async function upsertDuty(id, data) {
-    return await dutiesAPI.upsertDuty(id, data);
+    const newId = await dutiesAPI.upsertDuty(id, data);
+    triggerRecomputeDutyAssignments();
+    return newId;
   }
   async function deleteDuty(id) {
     await dutiesAPI.deleteDuty(id);
+    triggerRecomputeDutyAssignments();
   }
   async function deleteRole(id) {
     await rolesAPI.deleteRole(id);
@@ -333,6 +350,7 @@ export default function useFirebaseAppData({
     advanceRequests: advResult.data,
     roles: rolesResult.data,
     duties: dutiesResult.data,
+    dutyAssignmentsToday: dutyAssignmentsResult.data,
     payrollConfirms: pcResult.data,
     poolAdjustments: poolAdjResult.data,
     employeeLoans: loansResult.data,
