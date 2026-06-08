@@ -24,6 +24,7 @@ import { getPeriodIndex } from "../../utils/dutyUtils";
 import DutyForecastModal from "../modals/DutyForecastModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
+import ThaiMonthPicker from "../shared/ThaiMonthPicker";
 
 interface Props {
   duties: Duty[];
@@ -446,13 +447,7 @@ function DutyEditModal({
           <label className="text-xs text-maroon font-bold mb-1.5 block">
             เริ่ม rotation เดือน
           </label>
-          <input
-            type="month"
-            value={startMonth}
-            onChange={(e) => setStartMonth(e.target.value)}
-            style={{ WebkitAppearance: "none" }}
-            className="w-full min-w-0 box-border appearance-none py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
-          />
+          <ThaiMonthPicker value={startMonth} onChange={setStartMonth} />
           <div className="text-xs text-txt-soft mt-1">
             คนแรกใน pool ทำหน้าที่ตั้งแต่ต้นเดือนนี้
           </div>
