@@ -149,11 +149,11 @@ export function computeDutyForDay(
   }
 
   // primary ลา → หา substitute (ข้ามคนที่ติดหน้าที่อื่น + ข้ามคนที่ลา)
-  // ใช้ fullPool ที่นี่ — substitute เป็น exception ยืมจากคนถูก lock ได้
-  // (เช่น weekly primary ลา → monthly person ทำแทน 1 วัน ถ้าไม่มีใครว่าง)
+  // ใช้ pool (ที่ filter แล้ว = excludeForPrimary applied) ที่นี่ —
+  // คนที่ทำ monthly จะ "หาย" ทั้งเดือน ไม่มาช่วย weekly แม้ตอนคนลา
   const baseOffset = idx + dutyIndex;
-  for (let offset = 1; offset < fullPool.length; offset++) {
-    const cand = fullPool[(baseOffset + offset) % fullPool.length];
+  for (let offset = 1; offset < pool.length; offset++) {
+    const cand = pool[(baseOffset + offset) % pool.length];
     if (cand === primary) continue;
     if (isOnLeave(leaves, cand, todayYmd)) continue;
     if (primariesToday.has(cand)) continue; // ไม่ทับหน้าที่อื่น
@@ -169,9 +169,10 @@ export function computeDutyForDay(
     };
   }
 
-  // fallback: ทุกคนใน pool ติดหน้าที่อื่น → ใช้ใครก็ได้ที่ไม่ลา (double up)
-  for (let offset = 1; offset < fullPool.length; offset++) {
-    const cand = fullPool[(baseOffset + offset) % fullPool.length];
+  // fallback: ทุกคนใน pool ติดหน้าที่อื่น → ใช้ใครก็ได้ใน pool ที่ไม่ลา
+  // (double up — ยังไม่ออกไป fullPool ตามกฎ monthly แยก)
+  for (let offset = 1; offset < pool.length; offset++) {
+    const cand = pool[(baseOffset + offset) % pool.length];
     if (cand === primary) continue;
     if (isOnLeave(leaves, cand, todayYmd)) continue;
     return {
