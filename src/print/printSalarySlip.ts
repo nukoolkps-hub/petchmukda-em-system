@@ -210,17 +210,20 @@ function buildSalarySlipHTML(
         page-break-inside:avoid;break-inside:avoid;}
       .slip *{page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
-      /* ── ช่องไฟเนื้อหา (เฉพาะตอนพิมพ์) ── */
-      .letterhead{padding-bottom:12px;margin-bottom:18px;}
-      .meta{margin-bottom:18px;padding:14px 18px;gap:9px 28px;}
-      .sec-label{margin:18px 0 0;padding-bottom:6px;}
-      table td{padding:8px 2px;}
-      .subtotal{padding:9px 2px;}
-      .net{margin-top:22px;padding:16px 22px;}
-      /* ลายเซ็น: ดันลงล่างสุด + ช่องสูงขึ้นให้เซ็นสบาย + ระยะห่างกว้างขึ้น */
-      .signatures{margin-top:auto;padding-top:40px;gap:56px;}
-      .sig-line{margin-top:72px;padding-top:8px;}
-      .footer{margin-top:24px;}
+      /* ── ช่องไฟเนื้อหา (เฉพาะตอนพิมพ์) — คุมให้ natural < 1 หน้า
+         แล้ว min-height + margin-top:auto เติมช่องว่างที่เหลือให้เต็มหน้า ── */
+      .letterhead{padding-bottom:8px;margin-bottom:10px;}
+      .doc-period{margin-bottom:12px;}
+      .meta{margin-bottom:10px;padding:9px 16px;gap:5px 28px;}
+      .sec-label{margin:10px 0 0;padding-bottom:5px;}
+      table td{padding:4px 2px;}
+      .subtotal{padding:6px 2px;}
+      .net{margin-top:14px;padding:12px 20px;}
+      /* ลายเซ็น: ดันลงล่างสุด (margin-top:auto) — ช่องว่างที่เหลือไปอยู่
+         เหนือลายเซ็น ไม่กองล่างหน้า */
+      .signatures{margin-top:auto;padding-top:14px;gap:48px;}
+      .sig-line{margin-top:46px;padding-top:7px;}
+      .footer{margin-top:14px;}
     }
     .print-btn{
       position:fixed;bottom:20px;right:20px;
