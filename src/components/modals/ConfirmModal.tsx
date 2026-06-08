@@ -24,7 +24,13 @@ export default function ConfirmModal({ leave, onConfirm, onCancel }) {
       <div className="text-sm text-txt-mid text-center mb-5 leading-[1.8]">
         <b>{leave.employeeName}</b>
         <br />
-        {lt?.icon} {lt?.label} · {fmtDate(leave.start)}
+        <span className="inline-flex items-center gap-1.5 align-middle">
+          {lt?.Icon && (
+            <lt.Icon size={14} strokeWidth={2.2} style={{ color: lt.color }} />
+          )}
+          {lt?.label}
+        </span>{" "}
+        · {fmtDate(leave.start)}
         {leave.start !== leave.end ? ` – ${fmtDate(leave.end)}` : ""}
         <br />
         <span className="text-sm text-txt-soft">({leave.days} วันทำการ)</span>

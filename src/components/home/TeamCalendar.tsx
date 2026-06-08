@@ -281,9 +281,15 @@ export default function TeamCalendar({
                     <div className="font-semibold text-txt text-base">
                       {leaveEntry.employeeName}
                     </div>
-                    <div className="text-sm text-txt-mid mt-0.5">
-                      {leaveType?.icon} {leaveType?.label} · {leaveEntry.days}{" "}
-                      วันทำการ
+                    <div className="text-sm text-txt-mid mt-0.5 inline-flex items-center gap-1.5">
+                      {leaveType?.Icon && (
+                        <leaveType.Icon
+                          size={13}
+                          strokeWidth={2.2}
+                          style={{ color: leaveType.color }}
+                        />
+                      )}
+                      {leaveType?.label} · {leaveEntry.days} วันทำการ
                     </div>
                   </div>
                 </div>

@@ -198,10 +198,10 @@ export default function HomeTab({
               className="bg-white rounded-[14px] p-3.5 shadow-[0_1px_6px_rgba(90,30,10,0.06)] border border-bdr flex items-center gap-3"
             >
               <div
-                className="w-9 h-9 rounded-[10px] flex items-center justify-center text-xl shrink-0"
-                style={{ background: lt.colorLt }}
+                className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
+                style={{ background: lt.colorLt, color: lt.color }}
               >
-                {lt.icon}
+                <lt.Icon size={18} strokeWidth={2.2} />
               </div>
               <div>
                 <div className="text-sm font-semibold text-txt">{lt.label}</div>
