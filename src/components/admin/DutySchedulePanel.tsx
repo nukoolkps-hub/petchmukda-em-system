@@ -5,6 +5,7 @@ import {
   AlertTriangle as IconAlertTriangle,
   CalendarClock as IconCalendarClock,
   CalendarDays as IconCalendarDays,
+  CalendarRange as IconCalendarRange,
   Plus as IconPlus,
   RotateCw as IconRotate,
   Trash2 as IconTrash,
@@ -20,6 +21,7 @@ import type {
 import type { Duty, Employee, Role } from "../../types";
 import { toYMD } from "../../utils/dateUtils";
 import { getPeriodIndex } from "../../utils/dutyUtils";
+import DutyForecastModal from "../modals/DutyForecastModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 
@@ -47,6 +49,7 @@ export default function DutySchedulePanel({
 }: Props) {
   const [editing, setEditing] = useState<Duty | "new" | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Duty | null>(null);
+  const [showForecast, setShowForecast] = useState(false);
 
   // assignments + pool มาจาก server snapshot — single source of truth
   // กับฝั่งพนักงาน (Firestore rules ปิดให้พนักงานอ่าน peer data ไม่ได้)
@@ -68,14 +71,26 @@ export default function DutySchedulePanel({
         <div className="text-sm text-txt-soft">
           ตารางหน้าที่รับผิดชอบ — ระบบหมุนคนอัตโนมัติ + หาคนแทนถ้าลา
         </div>
-        <button
-          type="button"
-          onClick={() => setEditing("new")}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shrink-0 shadow-[0_3px_10px_rgba(123,28,28,0.25)] active:scale-[0.98] transition-transform duration-100"
-        >
-          <IconPlus size={15} strokeWidth={2.4} />
-          เพิ่มหน้าที่
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {duties.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowForecast(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream text-maroon text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
+            >
+              <IconCalendarRange size={15} strokeWidth={2.4} />
+              ดูล่วงหน้า
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setEditing("new")}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_rgba(123,28,28,0.25)] active:scale-[0.98] transition-transform duration-100"
+          >
+            <IconPlus size={15} strokeWidth={2.4} />
+            เพิ่มหน้าที่
+          </button>
+        </div>
       </div>
 
       {duties.length === 0 ? (
@@ -102,6 +117,15 @@ export default function DutySchedulePanel({
             );
           })}
         </div>
+      )}
+
+      {showForecast && (
+        <DutyForecastModal
+          duties={duties}
+          dutyAssignmentsToday={dutyAssignmentsToday}
+          profileId={null}
+          onClose={() => setShowForecast(false)}
+        />
       )}
 
       {editing && (
