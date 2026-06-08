@@ -198,7 +198,7 @@ export default function RequestTab({
         ยื่นคำขอลา
       </button>
 
-      {/* ── ประวัติการลาของฉัน ── */}
+      {/* ── ประวัติการลาของคุณ ── */}
       <div className="mt-8">
         <GoldDivider />
         <div className="text-base font-bold text-txt mb-3.5 flex items-center gap-2">
@@ -207,7 +207,7 @@ export default function RequestTab({
             strokeWidth={2.4}
             className="text-maroon"
           />
-          ประวัติการลาของฉัน
+          ประวัติการลาของคุณ
           <span className="text-sm text-txt-soft font-medium ml-auto">
             {myLeaves.length} รายการ
           </span>
