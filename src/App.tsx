@@ -154,8 +154,11 @@ export default function LeaveApp() {
     rejectAdvance: rejectAdvanceAction,
     upsertRole,
     deleteRole,
+    upsertDuty,
+    deleteDuty,
     setPayrollConfirm,
   } = data;
+  const { duties } = data;
 
   /* ─── Profile hook ─────────────────────────────────────────── */
   const {
@@ -384,6 +387,7 @@ export default function LeaveApp() {
                       profile={profile}
                       allLeaves={allLeaves}
                       employeeDirectory={employeeDirectory}
+                      duties={duties}
                     />
                   )
                 }
@@ -475,6 +479,9 @@ export default function LeaveApp() {
                       onUpdateAdvance={adminUpdateAdvance}
                       roles={roles}
                       onUpsertRole={upsertRole}
+                      duties={duties}
+                      onUpsertDuty={upsertDuty}
+                      onDeleteDuty={deleteDuty}
                       onDeleteRole={deleteRole}
                       payrollConfirms={payrollConfirms}
                       poolAdjustments={poolAdjustments}

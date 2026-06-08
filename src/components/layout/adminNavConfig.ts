@@ -3,6 +3,7 @@
 
 import {
   Bell as IconBell,
+  CalendarClock as IconCalendarClock,
   CalendarDays as IconCalendarEvent,
   Banknote as IconCashBanknote,
   BarChart3 as IconChartBar,
@@ -27,10 +28,16 @@ export type AdminSectionId =
   | "payroll"
   | "roles"
   | "positions"
+  | "duty-schedule"
   | "linebot-notifications"
   | "linebot-commands";
 
-export type AdminGroupId = "leave" | "payroll" | "settings" | "linebot";
+export type AdminGroupId =
+  | "leave"
+  | "payroll"
+  | "settings"
+  | "duty"
+  | "linebot";
 
 type AdminNavIcon = typeof IconChartBar;
 
@@ -79,6 +86,15 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { id: "roles", label: "พนักงาน", Icon: IconUsers },
       { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
+    ],
+  },
+  {
+    id: "duty",
+    label: "เวร",
+    defaultSection: "duty-schedule",
+    Icon: IconCalendarClock,
+    items: [
+      { id: "duty-schedule", label: "ตารางเวร", Icon: IconCalendarClock },
     ],
   },
   {
