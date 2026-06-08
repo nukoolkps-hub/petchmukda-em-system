@@ -32,7 +32,7 @@ export default function BaseModal({
 
   return (
     <div
-      className={`fixed inset-0 ${zIndexClass} flex items-center justify-center px-4 sm:px-6 bg-[rgba(45,26,14,0.65)] backdrop-blur-[6px] ${overlayClassName}`}
+      className={`fixed inset-0 ${zIndexClass} flex items-center justify-center px-4 sm:px-6 pt-[max(env(safe-area-inset-top),12px)] pb-[max(env(safe-area-inset-bottom),12px)] bg-[rgba(45,26,14,0.65)] backdrop-blur-[6px] ${overlayClassName}`}
       onClick={() => {
         if (closeOnBackdrop) onClose();
       }}
