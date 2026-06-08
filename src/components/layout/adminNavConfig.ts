@@ -79,16 +79,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     ],
   },
   {
-    id: "settings",
-    label: "ตั้งค่า",
-    defaultSection: "roles",
-    Icon: IconSettings,
-    items: [
-      { id: "roles", label: "พนักงาน", Icon: IconUsers },
-      { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
-    ],
-  },
-  {
     id: "duty",
     label: "หน้าที่",
     defaultSection: "duty-schedule",
@@ -105,6 +95,16 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { id: "linebot-notifications", label: "การแจ้งเตือน", Icon: IconBell },
       { id: "linebot-commands", label: "คำสั่ง", Icon: IconTerminal },
+    ],
+  },
+  {
+    id: "settings",
+    label: "ตั้งค่า",
+    defaultSection: "roles",
+    Icon: IconSettings,
+    items: [
+      { id: "roles", label: "พนักงาน", Icon: IconUsers },
+      { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
     ],
   },
 ];
