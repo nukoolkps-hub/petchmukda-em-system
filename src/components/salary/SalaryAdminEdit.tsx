@@ -1766,12 +1766,20 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }) {
     transition,
     isDragging,
   } = useSortable({ id: employee.id });
-  // ระหว่างลาก dnd-kit set transform: translate3d(...) ทุก frame ตามนิ้ว
-  // → Tailwind class "transition-transform" ทำให้ position lag ตาม
-  // ใส่ transition เฉพาะตอนไม่ลาก (สำหรับ press-feedback + drop-into-place)
+  // จัดการ transition ที่ inline style เดียว — ไม่ใช้ Tailwind transition-*
+  // กัน 2 transition rule applies ต่อ transform property พร้อมกัน
+  // (เคยมี Tailwind class transition-transform + dnd-kit inline transition
+  //  → drop animation อาจขัดกัน)
+  //
+  // 3 state:
+  // - isDragging:     transition "none" → ตามนิ้วทันที
+  // - drop animation: dnd-kit ส่ง transition prop มา → ใช้ตามนั้น
+  // - idle (press):   fallback "transform 150ms ease-out" → active:scale smooth
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: isDragging ? "none" : transition,
+    transition: isDragging
+      ? "none"
+      : transition || "transform 150ms ease-out",
     zIndex: isDragging ? 50 : undefined,
   };
   return (
@@ -1783,7 +1791,7 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }) {
       {...listeners}
       style={style}
       className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none select-none [-webkit-touch-callout:none] [-webkit-user-select:none] ${
-        isDragging ? "" : "transition-transform duration-150 ease-out active:scale-[1.03]"
+        isDragging ? "" : "active:scale-[1.03]"
       } ${
         selected
           ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
