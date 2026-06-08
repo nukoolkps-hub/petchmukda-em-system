@@ -2,7 +2,10 @@
    All business logic lives in hooks; all UI in focused components.
    This file wires everything together.                            */
 
-import { AlertTriangle as IconAlertTriangle } from "lucide-react";
+import {
+  AlertTriangle as IconAlertTriangle,
+  Check as IconCheck,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Navigate,
@@ -305,7 +308,9 @@ export default function LeaveApp() {
     return (
       <div className="fixed inset-0 flex items-center justify-center p-6 bg-cream font-sans">
         <div className="max-w-[400px] px-5 py-6 bg-white rounded-[18px] border border-red/25 text-center shadow-[0_8px_24px_rgba(192,57,43,0.12)]">
-          <div className="text-3xl mb-2">⚠️</div>
+          <div className="flex justify-center mb-2">
+            <IconAlertTriangle size={36} strokeWidth={2} className="text-red" />
+          </div>
           <div className="text-base font-bold text-red mb-2">
             เชื่อมต่อข้อมูลไม่สำเร็จ
           </div>
@@ -589,8 +594,9 @@ export default function LeaveApp() {
             // (translateY) — แยกชั้นกันเพื่อกัน iOS Safari render เพี้ยน
             // (translate ของ Tailwind ถูก keyframe override พริบ ๆ → toast ขยับซ้ายแล้วกลับมาตรง)
             <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-500">
-              <div className="bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] animate-[toastIn_0.25s_ease] whitespace-nowrap">
-                ✓ {toastMsg}
+              <div className="bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] animate-[toastIn_0.25s_ease] whitespace-nowrap inline-flex items-center gap-1.5">
+                <IconCheck size={14} strokeWidth={2.6} />
+                {toastMsg}
               </div>
             </div>
           )}

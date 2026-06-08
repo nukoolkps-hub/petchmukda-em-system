@@ -2,6 +2,7 @@
    admin สร้าง/แก้/ลบ duty + เลือก pool พนักงาน + เรียงลำดับ rotation     */
 
 import {
+  AlertTriangle as IconAlertTriangle,
   CalendarClock as IconCalendarClock,
   CalendarDays as IconCalendarDays,
   Plus as IconPlus,
@@ -487,8 +488,9 @@ function DutyEditModal({
                 ลำดับการสลับ · {includedCount}/{previewPool.length} คน
               </label>
               {includedCount === 0 && (
-                <span className="text-[11px] text-red font-bold">
-                  ⚠ ตัดออกหมดแล้ว
+                <span className="text-[11px] text-red font-bold inline-flex items-center gap-1">
+                  <IconAlertTriangle size={11} strokeWidth={2.4} />
+                  ตัดออกหมดแล้ว
                 </span>
               )}
             </div>
