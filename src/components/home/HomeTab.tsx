@@ -287,15 +287,15 @@ function DutyTodayCard({
               <IconUserCheck size={12} strokeWidth={2.4} />
               ของคุณวันนี้
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {myDuties.map((a) => (
                 <div
                   key={a.dutyId}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-maroon text-gold-lt text-xs font-bold"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-[5px] rounded-[20px] bg-maroon text-gold-lt text-sm font-bold"
                 >
                   {a.dutyName}
                   {a.reason === "substitute_for_leave" && (
-                    <span className="text-[10px] opacity-80">(แทน)</span>
+                    <span className="text-xs opacity-80">(แทน)</span>
                   )}
                 </div>
               ))}
