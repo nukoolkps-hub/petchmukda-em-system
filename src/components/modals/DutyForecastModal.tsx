@@ -119,22 +119,38 @@ export default function DutyForecastModal({
     return items;
   }, [forecast]);
 
-  // group เป็นเดือน (ตาม start) — "ทั้งเดือนแยกเป็นเดือนๆ"
+  // group 2 ชั้น: เดือน → วัน (card ต่อช่วงวัน · ในการ์ดมีหลายหน้าที่)
   const months = useMemo(() => {
     const filtered =
       profileId && mineOnly
         ? allItems.filter((it) => it.primaryEmpId === profileId)
         : allItems;
-    const map = new Map<string, ForecastItem[]>();
+    // ym → (dateKey → items[])  · allItems เรียงตาม start+dutyName แล้ว
+    const byMonth = new Map<string, Map<string, ForecastItem[]>>();
     for (const it of filtered) {
       const ym = it.start.slice(0, 7);
-      const list = map.get(ym);
+      const dateKey = `${it.start}__${it.end}`;
+      let dates = byMonth.get(ym);
+      if (!dates) {
+        dates = new Map();
+        byMonth.set(ym, dates);
+      }
+      const list = dates.get(dateKey);
       if (list) list.push(it);
-      else map.set(ym, [it]);
+      else dates.set(dateKey, [it]);
     }
-    return [...map.entries()]
+    return [...byMonth.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([ym, items]) => ({ ym, label: monthLabel(ym), items }));
+      .map(([ym, dates]) => ({
+        ym,
+        label: monthLabel(ym),
+        dateGroups: [...dates.values()].map((items) => ({
+          start: items[0].start,
+          end: items[0].end,
+          period: items[0].period,
+          items,
+        })),
+      }));
   }, [allItems, profileId, mineOnly]);
 
   const hasData = (dutyAssignmentsToday?.assignments?.length || 0) > 0;
@@ -212,14 +228,12 @@ export default function DutyForecastModal({
             คุณยังไม่มีหน้าที่ในช่วงที่เหลือของปีนี้
           </div>
         ) : (
-          /* ─── view: แยกตามเดือน ─── */
+          /* ─── view: เดือน → การ์ดต่อวัน → หน้าที่ + ชื่อ ─── */
           <div className="flex flex-col gap-3.5">
             {months.map((mth) => (
-              <div
-                key={mth.ym}
-                className="rounded-[12px] border border-bdr bg-white overflow-hidden"
-              >
-                <div className="flex items-center gap-2 px-3 py-2.5 bg-maroon">
+              <div key={mth.ym}>
+                {/* หัวข้อเดือน */}
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-maroon rounded-[12px] mb-2">
                   <IconCalendarClock
                     size={16}
                     strokeWidth={2.4}
@@ -229,55 +243,71 @@ export default function DutyForecastModal({
                     {mth.label}
                   </div>
                 </div>
-                <div className="flex flex-col">
-                  {mth.items.map((it, i) => {
-                    const emp = it.primaryEmpId
-                      ? empById.get(it.primaryEmpId)
-                      : null;
-                    const isMe = !!profileId && it.primaryEmpId === profileId;
-                    return (
-                      <div
-                        key={`${it.dutyId}-${it.start}-${i}`}
-                        className={`flex items-center gap-2.5 px-3 py-2 text-sm border-t border-bdr/60 ${
-                          isMe ? "bg-gold-pale/70" : "bg-white"
-                        }`}
-                      >
-                        <div className="w-[78px] shrink-0 font-bold text-maroon text-center">
-                          {formatRangeInMonth(it.start, it.end, it.period)}
-                        </div>
-                        <div className="flex-1 min-w-0 font-semibold text-txt truncate">
-                          {it.dutyName}
-                        </div>
-                        {showPerson &&
-                          (emp ? (
-                            <div className="shrink-0 flex items-center gap-1.5 max-w-[42%]">
-                              <AvatarCircle
-                                avatar={emp.avatar}
-                                avatarType={emp.avatarType}
-                                avatarImageUrl={emp.avatarImageUrl}
-                                size={22}
-                                fontSize={10}
-                                border="none"
-                              />
-                              <span
-                                className={`truncate text-xs ${isMe ? "font-bold text-maroon" : "font-semibold text-txt-mid"}`}
-                              >
-                                {emp.nickname || emp.name}
-                                {isMe && (
-                                  <span className="ml-1 text-[11px] text-maroon-lt font-bold">
-                                    (คุณ)
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="shrink-0 text-txt-soft italic text-xs">
-                              ยังไม่มีคน
-                            </div>
-                          ))}
+
+                {/* การ์ดต่อช่วงวัน */}
+                <div className="flex flex-col gap-2">
+                  {mth.dateGroups.map((dg) => (
+                    <div
+                      key={`${dg.start}-${dg.end}`}
+                      className="rounded-[11px] border border-bdr bg-white overflow-hidden"
+                    >
+                      {/* หัวการ์ด = วันที่ */}
+                      <div className="px-3 py-1.5 bg-gold-pale/60 border-b border-bdr">
+                        <span className="text-sm font-bold text-maroon">
+                          {formatRangeInMonth(dg.start, dg.end, dg.period)}
+                        </span>
                       </div>
-                    );
-                  })}
+                      {/* หน้าที่ + ชื่อ */}
+                      <div className="flex flex-col">
+                        {dg.items.map((it, i) => {
+                          const emp = it.primaryEmpId
+                            ? empById.get(it.primaryEmpId)
+                            : null;
+                          const isMe =
+                            !!profileId && it.primaryEmpId === profileId;
+                          return (
+                            <div
+                              key={`${it.dutyId}-${i}`}
+                              className={`flex items-center gap-2.5 px-3 py-2 text-sm ${
+                                i > 0 ? "border-t border-bdr/50" : ""
+                              } ${isMe ? "bg-gold-pale/40" : ""}`}
+                            >
+                              <div className="flex-1 min-w-0 font-semibold text-txt truncate">
+                                {it.dutyName}
+                              </div>
+                              {showPerson &&
+                                (emp ? (
+                                  <div className="shrink-0 flex items-center gap-1.5 max-w-[55%]">
+                                    <AvatarCircle
+                                      avatar={emp.avatar}
+                                      avatarType={emp.avatarType}
+                                      avatarImageUrl={emp.avatarImageUrl}
+                                      size={22}
+                                      fontSize={10}
+                                      border="none"
+                                    />
+                                    <span
+                                      className={`truncate text-xs ${isMe ? "font-bold text-maroon" : "font-semibold text-txt-mid"}`}
+                                    >
+                                      {emp.nickname || emp.name}
+                                      {isMe && (
+                                        <span className="ml-1 text-[11px] text-maroon-lt font-bold">
+                                          (คุณ)
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="shrink-0 text-txt-soft italic text-xs">
+                                    ยังไม่มีคน
+                                  </div>
+                                ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
