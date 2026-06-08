@@ -1,5 +1,10 @@
 /* ─── App-wide constants ─────────────────────────────────────────── */
 
+import {
+  Briefcase as IconBriefcase,
+  Stethoscope as IconStethoscope,
+} from "lucide-react";
+
 export const FONT_LINK =
   "https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap";
 
@@ -45,14 +50,14 @@ export const LEAVE_TYPES = [
   {
     id: "personal",
     label: "ลากิจ",
-    icon: "💼",
+    Icon: IconBriefcase,
     color: "#1E40AF",
     colorLt: "#DDEEFF",
   },
   {
     id: "sick",
     label: "ลาป่วย",
-    icon: "🏥",
+    Icon: IconStethoscope,
     color: "#0F766E",
     colorLt: "#CCFBF1",
   },

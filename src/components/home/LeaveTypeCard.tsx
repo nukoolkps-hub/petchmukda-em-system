@@ -34,7 +34,9 @@ export default function LeaveTypeCard({
           <IconCheck size={11} color="#fff" strokeWidth={3} />
         </div>
       )}
-      <div className="text-3xl mb-2.5">{lt.icon}</div>
+      <div className="flex justify-center mb-2.5" style={{ color: lt.color }}>
+        <lt.Icon size={32} strokeWidth={2} />
+      </div>
       <div className="font-bold text-lg" style={{ color: lt.color }}>
         {lt.label}
       </div>

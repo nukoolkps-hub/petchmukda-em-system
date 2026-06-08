@@ -231,10 +231,13 @@ export default function RequestTab({
                   className="bg-white rounded-[14px] p-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3 cursor-pointer"
                 >
                   <div
-                    className="w-10 h-10 rounded-[10px] flex items-center justify-center text-xl shrink-0"
-                    style={{ background: lt?.colorLt || COLORS.creamDark }}
+                    className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
+                    style={{
+                      background: lt?.colorLt || COLORS.creamDark,
+                      color: lt?.color || COLORS.textMedium,
+                    }}
                   >
-                    {lt?.icon}
+                    {lt?.Icon && <lt.Icon size={20} strokeWidth={2.2} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-txt text-base mb-0.5">
