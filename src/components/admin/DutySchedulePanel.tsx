@@ -408,6 +408,7 @@ function DutyEditModal({
             type="month"
             value={startMonth}
             onChange={(e) => setStartMonth(e.target.value)}
+            style={{ WebkitAppearance: "none" }}
             className="w-full min-w-0 box-border appearance-none py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
           />
           <div className="text-xs text-txt-soft mt-1">
