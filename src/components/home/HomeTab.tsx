@@ -303,52 +303,67 @@ function DutyTodayCard({
           </div>
         )}
 
-        {/* รายการหน้าที่ทั้งหมด */}
-        <div className="flex flex-col gap-1.5">
-          {assignments.map((a) => {
-            const actual = a.actualEmpId ? empById.get(a.actualEmpId) : null;
-            const primary = a.primaryEmpId ? empById.get(a.primaryEmpId) : null;
-            const isMe = a.actualEmpId === profileId;
-            const isSub =
-              a.reason === "substitute_for_leave" || a.reason === "double_up";
-            return (
-              <div
-                key={a.dutyId}
-                className={`flex items-center gap-2 p-2 rounded-[9px] ${
-                  isMe ? "bg-gold-pale/60 border border-gold/30" : "bg-cream"
-                }`}
-              >
-                <div className="text-sm font-bold text-maroon flex-1 truncate">
-                  {a.dutyName}
+        {/* หน้าที่ของเพื่อน — exclude ตัวเอง เพราะมีในช่อง "ของคุณวันนี้" แล้ว */}
+        {(() => {
+          const otherAssignments = assignments.filter(
+            (a) => a.actualEmpId !== profileId,
+          );
+          if (otherAssignments.length === 0) return null;
+          return (
+            <div className="flex flex-col gap-1.5">
+              {myDuties.length > 0 && (
+                <div className="text-xs font-bold text-txt-soft mb-0.5">
+                  ของเพื่อนๆ
                 </div>
-                {actual ? (
-                  <>
-                    <AvatarCircle
-                      avatar={actual.avatar}
-                      avatarType={actual.avatarType}
-                      avatarImageUrl={actual.avatarImageUrl}
-                      size={24}
-                      fontSize={10}
-                      border="none"
-                    />
-                    <div className="text-xs font-semibold text-txt">
-                      {actual.nickname || actual.name}
+              )}
+              {otherAssignments.map((a) => {
+                const actual = a.actualEmpId
+                  ? empById.get(a.actualEmpId)
+                  : null;
+                const primary = a.primaryEmpId
+                  ? empById.get(a.primaryEmpId)
+                  : null;
+                const isSub =
+                  a.reason === "substitute_for_leave" ||
+                  a.reason === "double_up";
+                return (
+                  <div
+                    key={a.dutyId}
+                    className="flex items-center gap-2 p-2 rounded-[9px] bg-cream"
+                  >
+                    <div className="text-sm font-bold text-maroon flex-1 truncate">
+                      {a.dutyName}
                     </div>
-                    {isSub && primary && (
-                      <div className="text-[10px] text-txt-soft">
-                        แทน {primary.nickname || primary.name}
+                    {actual ? (
+                      <>
+                        <AvatarCircle
+                          avatar={actual.avatar}
+                          avatarType={actual.avatarType}
+                          avatarImageUrl={actual.avatarImageUrl}
+                          size={24}
+                          fontSize={10}
+                          border="none"
+                        />
+                        <div className="text-xs font-semibold text-txt">
+                          {actual.nickname || actual.name}
+                        </div>
+                        {isSub && primary && (
+                          <div className="text-[10px] text-txt-soft">
+                            แทน {primary.nickname || primary.name}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-xs text-txt-soft italic">
+                        {a.reason === "all_on_leave" ? "ทุกคนลา" : "—"}
                       </div>
                     )}
-                  </>
-                ) : (
-                  <div className="text-xs text-txt-soft italic">
-                    {a.reason === "all_on_leave" ? "ทุกคนลา" : "—"}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
