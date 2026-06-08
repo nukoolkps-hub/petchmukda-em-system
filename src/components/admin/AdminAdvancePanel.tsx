@@ -128,8 +128,7 @@ export default function AdminAdvancePanel({
   }
 
   async function handleReject(request) {
-    // ปิด modal ทันที (optimistic) — user ไม่ต้องรอ Firestore round-trip
-    // ก่อนเห็น modal หาย / กลับสู่ list
+    // ปิด modal ทันที (optimistic) — ถ้า fail จะเปิดใหม่พร้อม toast บอก
     setConfirmReject(null);
     try {
       await onUpdate(
@@ -143,7 +142,9 @@ export default function AdminAdvancePanel({
       showToast?.("ปฏิเสธคำขอแล้ว");
     } catch (err) {
       console.error("[AdminAdvancePanel] reject failed:", err);
-      showToast?.("ปฏิเสธไม่สำเร็จ");
+      showToast?.("ปฏิเสธไม่สำเร็จ — ลองอีกครั้ง");
+      // Rollback: เปิด modal ใหม่ให้ user retry ได้
+      setConfirmReject(request);
     }
   }
 

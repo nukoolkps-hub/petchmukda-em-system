@@ -208,15 +208,20 @@ export default function EmployeeLoansPanel({
                 type="button"
                 onClick={() => {
                   // ปิด modal ทันที + ลบ async ใน background
+                  // ถ้า fail จะเปิด modal ใหม่พร้อม toast บอก
                   const target = confirmDelete;
                   setConfirmDelete(null);
                   onDeleteLoan(target.id)
                     .then(() => showToast?.("ลบเงินกู้แล้ว"))
-                    .catch((err: unknown) =>
+                    .catch((err: unknown) => {
                       showToast?.(
-                        err instanceof Error ? err.message : "ลบไม่สำเร็จ",
-                      ),
-                    );
+                        err instanceof Error
+                          ? `ลบไม่สำเร็จ: ${err.message}`
+                          : "ลบไม่สำเร็จ — ลองอีกครั้ง",
+                      );
+                      // Rollback: re-open modal เพื่อ retry
+                      setConfirmDelete(target);
+                    });
                 }}
                 className="flex-1 py-3 rounded-xl border-none bg-red text-white font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
               >

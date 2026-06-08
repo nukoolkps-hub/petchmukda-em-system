@@ -47,23 +47,40 @@ export async function getLineConfig(): Promise<LineConfig> {
 
 /* ─── Notification toggle (admin UI: LINE BOT > การแจ้งเตือน) ─────
    อ่าน config/notifications doc — default semantic: missing field /
-   !== false → enabled. เฉพาะ === false เท่านั้นที่ skip                 */
+   !== false → enabled. เฉพาะ === false เท่านั้นที่ skip
+
+   Cache 60 วินาที — processAdvanceNotifications รันทุกนาที → ลด
+   Firestore read จาก 1440/วัน → ~24/วัน per warm instance              */
+const NOTIFICATION_CACHE_TTL_MS = 60_000;
+let notificationCache: {
+	settings: Record<string, unknown> | undefined;
+	expiresAt: number;
+} = { settings: undefined, expiresAt: 0 };
+
 export async function isNotificationEnabled(
 	field:
 		| "dailySummaryEnabled"
 		| "advanceRequestEnabled"
 		| "advanceApprovalEnabled",
 ): Promise<boolean> {
-	try {
-		const doc = await getAppFirestore().doc("config/notifications").get();
-		return (doc.data() as Record<string, unknown> | undefined)?.[field] !== false;
-	} catch (err) {
-		console.warn(
-			"[isNotificationEnabled] read failed, defaulting to enabled:",
-			err,
-		);
-		return true; // fail-safe: ส่งต่อ ไม่ block
+	const now = Date.now();
+	if (now > notificationCache.expiresAt) {
+		try {
+			const doc = await getAppFirestore().doc("config/notifications").get();
+			notificationCache = {
+				settings: doc.data() as Record<string, unknown> | undefined,
+				expiresAt: now + NOTIFICATION_CACHE_TTL_MS,
+			};
+		} catch (err) {
+			console.warn(
+				"[isNotificationEnabled] read failed, defaulting to enabled:",
+				err,
+			);
+			// Fail-safe: ส่งต่อ ไม่ block (แต่ไม่ update cache → retry รอบหน้า)
+			return true;
+		}
 	}
+	return notificationCache.settings?.[field] !== false;
 }
 
 /* ─── Check if LINE user ID is in admin list ─────────────────── */
