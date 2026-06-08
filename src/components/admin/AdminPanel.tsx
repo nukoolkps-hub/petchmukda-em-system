@@ -187,6 +187,7 @@ export default function AdminPanel({
       {section === "duty-schedule" && (
         <DutySchedulePanel
           duties={duties || []}
+          roles={roles || []}
           employeeDirectory={employeeDirectory}
           allLeaves={allLeaves || []}
           onUpsertDuty={onUpsertDuty}
