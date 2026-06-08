@@ -45,12 +45,15 @@ export default function DesktopHeader({
             กฏการคำนวณต่างๆ
           </button>
           <div className="text-sm text-gold-lt/50">
-            {new Date().toLocaleDateString("th-TH", {
+            {new Intl.DateTimeFormat("th-TH", {
               weekday: "long",
               day: "numeric",
               month: "long",
               year: "numeric",
-            })}
+            })
+              .formatToParts(new Date())
+              .map((p) => (p.type === "year" ? `พ.ศ. ${p.value}` : p.value))
+              .join("")}
           </div>
         </div>
       </div>
