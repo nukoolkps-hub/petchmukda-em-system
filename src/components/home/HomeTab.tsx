@@ -168,7 +168,7 @@ export default function HomeTab({
         )}
       </div>
 
-      {/* ── เวรวันนี้ ── */}
+      {/* ── หน้าที่วันนี้ ── */}
       {duties && duties.length > 0 && (
         <DutyTodayCard
           duties={duties}
@@ -239,7 +239,7 @@ export default function HomeTab({
   );
 }
 
-/* ─── เวรวันนี้ — สำหรับ HomeTab พนักงาน ──────────────────────── */
+/* ─── หน้าที่วันนี้ — สำหรับ HomeTab พนักงาน ──────────────────────── */
 function DutyTodayCard({
   duties,
   allLeaves,
@@ -272,7 +272,7 @@ function DutyTodayCard({
             className="text-maroon"
           />
           <div>
-            <div className="font-bold text-maroon text-base">เวรวันนี้</div>
+            <div className="font-bold text-maroon text-base">หน้าที่วันนี้</div>
             <div className="text-sm text-txt-soft mt-0.5">
               {new Date().toLocaleDateString("th-TH", {
                 weekday: "long",
@@ -305,7 +305,7 @@ function DutyTodayCard({
           </div>
         )}
 
-        {/* รายการเวรทั้งหมด */}
+        {/* รายการหน้าที่ทั้งหมด */}
         <div className="flex flex-col gap-1.5">
           {assignments.map((a) => {
             const actual = a.actualEmpId ? empById.get(a.actualEmpId) : null;
