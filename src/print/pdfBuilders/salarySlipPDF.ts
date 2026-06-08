@@ -27,7 +27,6 @@ export function buildSalarySlipDocDef({
   employeeRole,
   data,
   salaryCalculation,
-  poolShare,
   selectedMonth,
   monthApprovedAdvances,
 }) {
@@ -46,33 +45,6 @@ export function buildSalarySlipDocDef({
   const bankAccountNumber =
     employeeInfo?.bankAccountNumber || profile?.bankAccountNumber || "-";
 
-  // หมายเหตุ "หักจากกองกลาง" ต่อท้าย label (ชื่อรายการ + จำนวนที่หัก)
-  const poolExcludeNote = (side: "normal" | "buy"): string => {
-    if (!poolShare) return "";
-    const items =
-      side === "normal"
-        ? poolShare.excludedNormalItems
-        : poolShare.excludedBuyItems;
-    const total =
-      side === "normal"
-        ? poolShare.excludedNormalPieces
-        : poolShare.excludedBuyPieces;
-    if (!total || total <= 0) return "";
-    const gross =
-      side === "normal"
-        ? poolShare.grossSellPoolPieces
-        : poolShare.grossBuyPoolPieces;
-    const net =
-      side === "normal"
-        ? poolShare.totalSellPoolPieces
-        : poolShare.totalBuyPoolPieces;
-    const detail = (items || [])
-      .filter((it: any) => (Number(it.pieces) || 0) > 0)
-      .map((it: any) => `${it.label || "ไม่ระบุ"} ${formatNumber(it.pieces)}`)
-      .join(", ");
-    return `\nกองกลาง ${formatNumber(gross)} − ${formatNumber(total)} = ${formatNumber(net)} ชิ้น${detail ? ` (หัก: ${detail})` : ""}`;
-  };
-
   /* ─── สร้าง earnings rows ─────────────────────────────── */
   const earnRows: [string, string][] = [];
   earnRows.push(["เงินเดือนพื้นฐาน", formatNumber(salaryCalculation.baseSalary)]);
@@ -85,7 +57,7 @@ export function buildSalarySlipDocDef({
   } else {
     if (salaryCalculation.normalSaleCommission > 0)
       earnRows.push([
-        `ค่าคอมขาย-ทั่วไป${poolExcludeNote("normal")}`,
+        "ค่าคอมขาย-ทั่วไป",
         formatNumber(salaryCalculation.normalSaleCommission),
       ]);
     if (salaryCalculation.specialSaleCommission > 0)
@@ -95,7 +67,7 @@ export function buildSalarySlipDocDef({
       ]);
     if (salaryCalculation.buyCommission > 0)
       earnRows.push([
-        `ค่าคอมรับซื้อ${poolExcludeNote("buy")}`,
+        "ค่าคอมรับซื้อ",
         formatNumber(salaryCalculation.buyCommission),
       ]);
   }
