@@ -91,10 +91,13 @@ function activePool(duty: Duty, employees: Employee[]): string[] {
     .map((e) => e.id);
 }
 
-/** คำนวณ assignment ของหน้าที่เดียวในวันเดียว — ใช้ primariesToday เพื่อ
- *  exclude คนที่เป็น primary หน้าที่อื่นในวันนี้ออกจาก substitute pool       */
+/** คำนวณ assignment ของหน้าที่เดียวในวันเดียว
+ *  dutyIndex: ลำดับของหน้าที่ในชุด (เริ่มที่ 0) — ใช้ shift primary ไม่ให้ทับ
+ *             หน้าที่อื่น ตำแหน่งเดียวกัน period เดียวกัน
+ *  primariesToday: ใช้ exclude ตอนหา substitute ("ไม่ทับคนอื่น")           */
 export function computeDutyForDay(
   duty: Duty,
+  dutyIndex: number,
   todayYmd: string,
   employees: Employee[],
   leaves: LeaveEntry[],
@@ -117,7 +120,9 @@ export function computeDutyForDay(
   }
 
   const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-  const primary = pool[idx % pool.length];
+  // shift primary ด้วย dutyIndex → หน้าที่อื่นที่ใช้ pool/period เดียวกัน
+  // จะได้คนละคน (ถ้า pool.length ≥ duties.length)
+  const primary = pool[(idx + dutyIndex) % pool.length];
 
   // primary ไม่ลา → ใช้ primary
   if (!isOnLeave(leaves, primary, todayYmd)) {
@@ -134,8 +139,10 @@ export function computeDutyForDay(
   }
 
   // primary ลา → หา substitute (ข้ามคนที่ติดหน้าที่อื่น + ข้ามคนที่ลา)
+  // เริ่มไล่จากตำแหน่ง primary+1 — ใช้ idx+dutyIndex+offset
+  const baseOffset = idx + dutyIndex;
   for (let offset = 1; offset < pool.length; offset++) {
-    const cand = pool[(idx + offset) % pool.length];
+    const cand = pool[(baseOffset + offset) % pool.length];
     if (cand === primary) continue;
     if (isOnLeave(leaves, cand, todayYmd)) continue;
     if (primariesToday.has(cand)) continue; // ไม่ทับหน้าที่อื่น
@@ -153,7 +160,7 @@ export function computeDutyForDay(
 
   // fallback: ทุกคนใน pool ติดหน้าที่อื่น → ใช้ใครก็ได้ที่ไม่ลา (double up)
   for (let offset = 1; offset < pool.length; offset++) {
-    const cand = pool[(idx + offset) % pool.length];
+    const cand = pool[(baseOffset + offset) % pool.length];
     if (cand === primary) continue;
     if (isOnLeave(leaves, cand, todayYmd)) continue;
     return {
@@ -190,18 +197,26 @@ export function computeAllDutiesForDay(
   employees: Employee[],
   leaves: LeaveEntry[],
 ): DutyAssignment[] {
-  // Pass 1: หา primary (ก่อนเช็ค leave) ของทุกหน้าที่ → ใช้สำหรับ substitute
-  // exclusion. ถ้า primary คนนั้นลา substitute ไม่ควรเอามาทับ
+  // Pass 1: หา primary (ก่อนเช็ค leave) ของทุกหน้าที่ — shift ด้วย dutyIndex
+  // กันไม่ให้หน้าที่ที่ใช้ pool+period+startDate เดียวกันมี primary ทับกัน
   const primariesToday = new Set<string>();
-  for (const duty of duties) {
+  duties.forEach((duty, dutyIndex) => {
     const pool = activePool(duty, employees);
-    if (pool.length === 0) continue;
+    if (pool.length === 0) return;
     const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    primariesToday.add(pool[idx % pool.length]);
-  }
+    primariesToday.add(pool[(idx + dutyIndex) % pool.length]);
+  });
 
-  // Pass 2: compute actual ของแต่ละหน้าที่ (รับรู้ primaries ของหน้าที่อื่น)
-  return duties.map((duty) =>
-    computeDutyForDay(duty, todayYmd, employees, leaves, primariesToday),
+  // Pass 2: compute actual ของแต่ละหน้าที่ (รับรู้ primaries ของหน้าที่อื่น
+  // เพื่อให้ substitute ไม่ทับ)
+  return duties.map((duty, dutyIndex) =>
+    computeDutyForDay(
+      duty,
+      dutyIndex,
+      todayYmd,
+      employees,
+      leaves,
+      primariesToday,
+    ),
   );
 }
