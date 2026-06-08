@@ -173,6 +173,15 @@ function buildCertificateHTML(
         min-height:281mm !important;max-width:194mm !important;margin:0 auto !important;
         page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
+      /* บีบช่องไฟให้ natural < 1 หน้า แล้ว .body{flex:1} เติมเต็มหน้า
+         (ดันลายเซ็นลงล่าง · ช่องว่างกระจายใต้เนื้อความ) */
+      .title{margin:14px 0 4px;}
+      .title-en{margin-bottom:16px;}
+      .body{line-height:1.7;}
+      .date-line{margin-top:20px;}
+      .signatures{margin-top:24px;}
+      .sig-line{margin-top:58px;}
+      .validity{margin-top:16px;}
     }
     .print-btn{
       position:fixed;bottom:20px;right:20px;
