@@ -76,10 +76,18 @@ function isOnLeave(leaves: LeaveEntry[], empId: string, ymd: string): boolean {
 /** Resolve pool — คนในตำแหน่ง duty.roleId เรียงตาม displayOrder (asc) →
  *  ชื่อ (asc) เป็น fallback. คนที่ salaryDisabled ถือว่าใช้แอปแค่ระบบลา
  *  ไม่ทำหน้าที่ → exclude. คนที่ถูกลบจาก system → ไม่อยู่ใน list → exclude
- *  อัตโนมัติ. ลำดับ deterministic — ปรับด้วย admin reorder (displayOrder) */
-function activePool(duty: Duty, employees: Employee[]): string[] {
+ *  อัตโนมัติ. คนใน duty.excludedEmpIds (admin ตัดออก) → exclude.
+ *  ลำดับ deterministic — ปรับด้วย admin reorder (displayOrder)
+ *
+ *  public — UI อื่นๆ (DutyCard ใน admin) ก็ใช้ตัวนี้เพื่อแสดงรายชื่อ pool
+ *  จะได้ตรงกับ rotation จริงเสมอ (single source of truth)               */
+export function resolveDutyPool(duty: Duty, employees: Employee[]): Employee[] {
+  const excluded = new Set(duty.excludedEmpIds || []);
   return employees
-    .filter((e) => e.roleId === duty.roleId && !e.salaryDisabled)
+    .filter(
+      (e) =>
+        e.roleId === duty.roleId && !e.salaryDisabled && !excluded.has(e.id),
+    )
     .sort((a, b) => {
       const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;
       const bo = typeof b.displayOrder === "number" ? b.displayOrder : null;
@@ -87,8 +95,11 @@ function activePool(duty: Duty, employees: Employee[]): string[] {
       if (ao !== null) return -1;
       if (bo !== null) return 1;
       return (a.name || "").localeCompare(b.name || "", "th");
-    })
-    .map((e) => e.id);
+    });
+}
+
+function activePool(duty: Duty, employees: Employee[]): string[] {
+  return resolveDutyPool(duty, employees).map((e) => e.id);
 }
 
 /** คำนวณ assignment ของหน้าที่เดียวในวันเดียว

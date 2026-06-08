@@ -130,6 +130,7 @@ export interface Duty {
   name: string;
   period: "weekly" | "monthly";
   roleId: string; // ตำแหน่งที่ทำหน้าที่นี้ — pool resolve จาก employees ที่ roleId ตรง
+  excludedEmpIds?: string[]; // คนในตำแหน่งที่ admin ตัดออก ไม่ให้ทำหน้าที่นี้
   rotationStartDate: string; // "YYYY-MM-DD"
   createdAt: number;
   updatedAt: number;

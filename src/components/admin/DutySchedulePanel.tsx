@@ -13,7 +13,11 @@ import {
 import { useMemo, useState } from "react";
 import type { Duty, Employee, LeaveEntry, Role } from "../../types";
 import { toYMD } from "../../utils/dateUtils";
-import { computeAllDutiesForDay, getPeriodIndex } from "../../utils/dutyUtils";
+import {
+  computeAllDutiesForDay,
+  getPeriodIndex,
+  resolveDutyPool,
+} from "../../utils/dutyUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 
@@ -177,17 +181,10 @@ function DutyCard({
   onDelete: () => void;
 }) {
   const role = roles.find((r) => r.id === duty.roleId);
-  // Resolve pool ที่ display ใน card — เรียงเหมือน activePool ใน dutyUtils
-  const resolvedPool = employeeDirectory
-    .filter((e) => e.roleId === duty.roleId && !e.salaryDisabled)
-    .sort((a, b) => {
-      const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;
-      const bo = typeof b.displayOrder === "number" ? b.displayOrder : null;
-      if (ao !== null && bo !== null) return ao - bo;
-      if (ao !== null) return -1;
-      if (bo !== null) return 1;
-      return (a.name || "").localeCompare(b.name || "", "th");
-    });
+  // ใช้ resolveDutyPool — single source of truth กับ rotation algorithm
+  // (filter salaryDisabled + excludedEmpIds + sort by displayOrder)
+  const resolvedPool = resolveDutyPool(duty, employeeDirectory);
+  const excludedCount = duty.excludedEmpIds?.length || 0;
   const primary = assignment?.primaryEmpId
     ? empById.get(assignment.primaryEmpId)
     : null;
@@ -271,6 +268,9 @@ function DutyCard({
         <div className="text-xs text-txt-soft mb-1.5 inline-flex items-center gap-1">
           <IconUsers size={11} strokeWidth={2.4} />
           ตำแหน่ง {role?.name || "(ลบแล้ว)"} · {resolvedPool.length} คน
+          {excludedCount > 0 && (
+            <span className="text-txt-soft">(ตัดออก {excludedCount} คน)</span>
+          )}
         </div>
         <div className="flex flex-wrap gap-1.5">
           {resolvedPool.map((emp, idx) => {
@@ -318,9 +318,23 @@ function DutyEditModal({
   const [startMonth, setStartMonth] = useState(
     (duty?.rotationStartDate || toYMD(new Date())).slice(0, 7),
   );
+  // คนในตำแหน่งที่ admin ตัดออก — ไม่ให้เข้า rotation pool
+  const [excludedIds, setExcludedIds] = useState<Set<string>>(
+    () => new Set(duty?.excludedEmpIds || []),
+  );
   const [saving, setSaving] = useState(false);
 
-  // Preview pool — คนในตำแหน่งที่เลือก (เรียงเหมือน rotation จริง)
+  function toggleExclude(empId: string) {
+    setExcludedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(empId)) next.delete(empId);
+      else next.add(empId);
+      return next;
+    });
+  }
+
+  // Preview pool — คนในตำแหน่งที่เลือก ทั้งหมด (รวมที่ตัดออก) เรียงตาม
+  // displayOrder เพื่อให้ admin toggle ได้
   const previewPool = roleId
     ? employeeDirectory
         .filter((e) => e.roleId === roleId && !e.salaryDisabled)
@@ -334,7 +348,11 @@ function DutyEditModal({
         })
     : [];
 
-  const canSave = name.trim() && roleId;
+  const includedCount = previewPool.filter(
+    (e) => !excludedIds.has(e.id),
+  ).length;
+
+  const canSave = name.trim() && roleId && includedCount > 0;
 
   return (
     <BaseModal onClose={onClose} maxWidthClass="max-w-[480px]">
@@ -461,33 +479,51 @@ function DutyEditModal({
           </div>
         </div>
 
-        {/* preview pool — คนในตำแหน่งที่เลือก เรียงตาม displayOrder */}
+        {/* preview pool — toggle ตัดคนออกได้ (excludedIds) */}
         {previewPool.length > 0 && (
           <div className="mb-3 p-3 rounded-[10px] bg-cream border border-bdr">
-            <label className="text-xs text-txt-mid font-bold mb-2 block">
-              ลำดับการสลับ (preview · {previewPool.length} คน)
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs text-txt-mid font-bold">
+                ลำดับการสลับ · {includedCount}/{previewPool.length} คน
+              </label>
+              {includedCount === 0 && (
+                <span className="text-[11px] text-red font-bold">
+                  ⚠ ตัดออกหมดแล้ว
+                </span>
+              )}
+            </div>
             <div className="text-xs text-txt-soft mb-2">
-              ตามลำดับใน "เงินเดือน → ค่าคอม" (admin ลากเรียงได้)
+              คลิกชื่อเพื่อตัดคนออก/นำกลับ (ตัดออกจะข้ามใน rotation)
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {previewPool.map((emp, idx) => (
-                <div
-                  key={emp.id}
-                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-white text-txt-mid border border-bdr text-xs font-semibold"
-                >
-                  <span className="opacity-60">{idx + 1}.</span>
-                  <AvatarCircle
-                    avatar={emp.avatar}
-                    avatarType={emp.avatarType}
-                    avatarImageUrl={emp.avatarImageUrl}
-                    size={18}
-                    fontSize={9}
-                    border="none"
-                  />
-                  {emp.nickname || emp.name}
-                </div>
-              ))}
+              {previewPool.map((emp) => {
+                const isExcluded = excludedIds.has(emp.id);
+                return (
+                  <button
+                    key={emp.id}
+                    type="button"
+                    onClick={() => toggleExclude(emp.id)}
+                    className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold cursor-pointer font-[inherit] border transition-all active:scale-[0.96] ${
+                      isExcluded
+                        ? "bg-cream-dk/40 text-txt-soft border-bdr line-through opacity-60"
+                        : "bg-white text-txt-mid border-bdr hover:border-maroon"
+                    }`}
+                  >
+                    <AvatarCircle
+                      avatar={emp.avatar}
+                      avatarType={emp.avatarType}
+                      avatarImageUrl={emp.avatarImageUrl}
+                      size={18}
+                      fontSize={9}
+                      border="none"
+                    />
+                    {emp.nickname || emp.name}
+                    {isExcluded && (
+                      <IconX size={11} strokeWidth={2.4} className="ml-0.5" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -513,6 +549,7 @@ function DutyEditModal({
                   name: name.trim(),
                   period,
                   roleId,
+                  excludedEmpIds: [...excludedIds],
                   rotationStartDate: `${startMonth}-01`,
                 });
               } finally {
