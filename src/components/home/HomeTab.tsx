@@ -45,6 +45,16 @@ export default function HomeTab({
 
   return (
     <>
+      {/* ── หน้าที่วันนี้ — เหนือ quota เพราะใช้เช็คทุกวัน ── */}
+      {duties && duties.length > 0 && (
+        <DutyTodayCard
+          duties={duties}
+          allLeaves={allLeaves}
+          employeeDirectory={employeeDirectory}
+          profileId={profile?.id || null}
+        />
+      )}
+
       {/* Monthly quota card */}
       <div
         className={`relative overflow-hidden bg-white rounded-[18px] px-5 py-4.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] mb-3 border-[1.5px] ${overQuotaDeduction ? "border-[#C0392B50]" : "border-bdr"}`}
@@ -168,16 +178,6 @@ export default function HomeTab({
           </div>
         )}
       </div>
-
-      {/* ── หน้าที่วันนี้ ── */}
-      {duties && duties.length > 0 && (
-        <DutyTodayCard
-          duties={duties}
-          allLeaves={allLeaves}
-          employeeDirectory={employeeDirectory}
-          profileId={profile?.id || null}
-        />
-      )}
 
       {/* leave type mini stats */}
       <div className="grid grid-cols-2 gap-2.5 mb-1.5">
