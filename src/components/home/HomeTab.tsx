@@ -211,14 +211,6 @@ export default function HomeTab({
           );
         })}
       </div>
-      <div className="text-sm text-txt-soft text-right mb-3.5">
-        ข้อมูล ณ วันที่{" "}
-        {new Date().toLocaleDateString("th-TH", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })}
-      </div>
       <TeamCalendar
         leaveEntries={allLeaves}
         employeeDirectory={[
