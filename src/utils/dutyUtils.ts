@@ -45,25 +45,33 @@ export function getPeriodIndex(duty: Duty, todayYmd: string): number {
   return monthsBetween(duty.rotationStartDate, todayYmd);
 }
 
-/** ช่วงของ period ที่ today อยู่ใน — สำหรับแสดง "สัปดาห์นี้ X – Y" */
-export function getPeriodRange(
+/** ช่วงของ period index ที่ระบุ — index 0 = period แรก (rotationStartDate) */
+export function getPeriodRangeForIndex(
   duty: Duty,
-  todayYmd: string,
+  idx: number,
 ): { start: string; end: string } {
-  const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
+  const safeIdx = Math.max(0, idx);
   const start = new Date(`${duty.rotationStartDate}T00:00:00`);
   if (duty.period === "weekly") {
-    start.setDate(start.getDate() + idx * 7);
+    start.setDate(start.getDate() + safeIdx * 7);
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
     return { start: toYMD(start), end: toYMD(end) };
   }
-  start.setMonth(start.getMonth() + idx);
+  start.setMonth(start.getMonth() + safeIdx);
   start.setDate(1);
   const end = new Date(start);
   end.setMonth(end.getMonth() + 1);
   end.setDate(0); // last day of period month
   return { start: toYMD(start), end: toYMD(end) };
+}
+
+/** ช่วงของ period ที่ today อยู่ใน — สำหรับแสดง "สัปดาห์นี้ X – Y" */
+export function getPeriodRange(
+  duty: Duty,
+  todayYmd: string,
+): { start: string; end: string } {
+  return getPeriodRangeForIndex(duty, getPeriodIndex(duty, todayYmd));
 }
 
 /** ลาวันนั้นไหม — leave.start ≤ ymd ≤ leave.end (string compare) */
@@ -293,5 +301,117 @@ export function computeAllDutiesForDay(
       lockedByMonthly, // weekly exclude คนที่ทำ monthly
       primariesToday,
     );
+  });
+}
+
+/* ─── Forecast (ปฏิทินหน้าที่ล่วงหน้า) ──────────────────────────────
+   คำนวณ "primary ของแต่ละ period ในอนาคต" — ใช้ pool ที่ resolve แล้ว
+   (จาก server snapshot) ดังนั้นทั้ง admin/พนักงานคำนวณเองได้ client-side
+   โดยไม่ต้องอ่าน employees/leaves ของเพื่อน
+
+   Forecast แสดงเฉพาะ primary ตาม rotation (deterministic) — ไม่รวม
+   substitute/leave เพราะการลาในอนาคตยังไม่รู้ + เป็น schedule สำหรับ
+   "เตรียมพร้อม" ล่วงหน้า                                                */
+
+/** primary ของทุก duty ในวันที่ระบุ — รับ pool ที่ resolve แล้ว
+ *  (dutyId → ordered empIds). Logic ตรงกับ computeAllDutiesForDay phase
+ *  1+2 (monthly lock cross-duty + weekly exclude) แต่ไม่มี substitute    */
+export function computeForecastPrimaries(
+  duties: Duty[],
+  poolByDutyId: Map<string, string[]>,
+  todayYmd: string,
+): Map<string, string | null> {
+  const monthly = duties.filter((d) => d.period === "monthly");
+  const weekly = duties.filter((d) => d.period === "weekly");
+  const locked = new Set<string>();
+  const result = new Map<string, string | null>();
+
+  monthly.forEach((duty, idx) => {
+    const full = poolByDutyId.get(duty.id) || [];
+    if (full.length === 0) {
+      result.set(duty.id, null);
+      return;
+    }
+    const remaining = full.filter((id) => !locked.has(id));
+    const pool = remaining.length > 0 ? remaining : full;
+    const pIdx = Math.max(0, getPeriodIndex(duty, todayYmd));
+    const primary = pool[(pIdx + idx) % pool.length];
+    locked.add(primary);
+    result.set(duty.id, primary);
+  });
+
+  weekly.forEach((duty, idx) => {
+    const full = poolByDutyId.get(duty.id) || [];
+    if (full.length === 0) {
+      result.set(duty.id, null);
+      return;
+    }
+    const preferred = full.filter((id) => !locked.has(id));
+    const pool = preferred.length > 0 ? preferred : full;
+    const pIdx = Math.max(0, getPeriodIndex(duty, todayYmd));
+    const primary = pool[(pIdx + idx) % pool.length];
+    result.set(duty.id, primary);
+  });
+
+  return result;
+}
+
+export interface ForecastPeriod {
+  index: number;
+  start: string; // YYYY-MM-DD
+  end: string;
+  primaryEmpId: string | null;
+}
+
+export interface DutyForecast {
+  dutyId: string;
+  dutyName: string;
+  period: "weekly" | "monthly";
+  periods: ForecastPeriod[];
+}
+
+/** Forecast ของทุก duty ตั้งแต่ period ปัจจุบัน → endYmd (เช่นสิ้นปี)
+ *  คืน per-duty timeline. คำนวณ primary ณ ต้น period แต่ละช่วง (cache
+ *  ตามวันที่เพื่อไม่คำนวณซ้ำ)                                              */
+export function computeDutyForecast(
+  duties: Duty[],
+  poolByDutyId: Map<string, string[]>,
+  todayYmd: string,
+  endYmd: string,
+): DutyForecast[] {
+  const cache = new Map<string, Map<string, string | null>>();
+  const primariesAt = (ymd: string) => {
+    const key = ymd < todayYmd ? todayYmd : ymd;
+    let m = cache.get(key);
+    if (!m) {
+      m = computeForecastPrimaries(duties, poolByDutyId, key);
+      cache.set(key, m);
+    }
+    return m;
+  };
+
+  return duties.map((duty) => {
+    const periods: ForecastPeriod[] = [];
+    let idx = Math.max(0, getPeriodIndex(duty, todayYmd));
+    // เดินไปข้างหน้าจน period start เกิน endYmd (safety cap 80 รอบ)
+    while (periods.length < 80) {
+      const range = getPeriodRangeForIndex(duty, idx);
+      if (range.start > endYmd) break;
+      const repDate = range.start < todayYmd ? todayYmd : range.start;
+      const primary = primariesAt(repDate).get(duty.id) ?? null;
+      periods.push({
+        index: idx,
+        start: range.start,
+        end: range.end,
+        primaryEmpId: primary,
+      });
+      idx++;
+    }
+    return {
+      dutyId: duty.id,
+      dutyName: duty.name,
+      period: duty.period,
+      periods,
+    };
   });
 }

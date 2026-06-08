@@ -4,14 +4,17 @@ import {
   AlertOctagon as IconAlertOctagon,
   AlertTriangle as IconAlertTriangle,
   CalendarClock as IconCalendarClock,
+  CalendarRange as IconCalendarRange,
   CircleCheck as IconCircleCheck,
   ClipboardList as IconClipboardList,
   UserCheck as IconUserCheck,
   Wallet as IconWallet,
 } from "lucide-react";
+import { useState } from "react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { DutyAssignmentsSnapshot } from "../../firebase/dutyAssignments";
 import type { Duty, Employee, LeaveEntry } from "../../types";
+import DutyForecastModal from "../modals/DutyForecastModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import { MemphisCornerSticker } from "../shared/MemphisPattern";
 import TeamCalendar from "./TeamCalendar";
@@ -52,6 +55,7 @@ export default function HomeTab({
         dutyAssignmentsToday &&
         dutyAssignmentsToday.assignments.length > 0 && (
           <DutyTodayCard
+            duties={duties}
             snapshot={dutyAssignmentsToday}
             profileId={profile?.id || null}
           />
@@ -240,12 +244,15 @@ export default function HomeTab({
    ส่วนกลาง ส่ง safe projection (id/name/nickname/avatar/displayOrder
    เท่านั้น ไม่มี salary/bank/lineUserId)                                  */
 function DutyTodayCard({
+  duties,
   snapshot,
   profileId,
 }: {
+  duties: Duty[];
   snapshot: DutyAssignmentsSnapshot;
   profileId: string | null;
 }) {
+  const [showForecast, setShowForecast] = useState(false);
   const assignments = snapshot.assignments;
   // empById จาก pool members ของทุก duty รวมกัน (snapshot self-contained)
   const empById = new Map<
@@ -273,7 +280,7 @@ function DutyTodayCard({
             strokeWidth={2.4}
             className="text-maroon"
           />
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="font-bold text-maroon text-base">หน้าที่วันนี้</div>
             <div className="text-sm text-txt-soft mt-0.5">
               {new Intl.DateTimeFormat("th-TH", {
@@ -287,6 +294,14 @@ function DutyTodayCard({
                 .join("")}
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setShowForecast(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[9px] border border-bdr bg-cream text-maroon text-xs font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform"
+          >
+            <IconCalendarRange size={13} strokeWidth={2.4} />
+            ดูล่วงหน้า
+          </button>
         </div>
 
         {/* ของฉัน */}
@@ -374,6 +389,15 @@ function DutyTodayCard({
           );
         })()}
       </div>
+
+      {showForecast && (
+        <DutyForecastModal
+          duties={duties}
+          dutyAssignmentsToday={snapshot}
+          profileId={profileId}
+          onClose={() => setShowForecast(false)}
+        />
+      )}
     </div>
   );
 }
