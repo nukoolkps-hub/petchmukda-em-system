@@ -25,6 +25,7 @@ import {
 	type Duty,
 	type Employee,
 	type LeaveEntry,
+	replayCoverageHistory,
 	resolveDutyPool,
 } from "./dutyUtils.js";
 
@@ -45,18 +46,24 @@ interface SafeEmployee {
 interface AssignmentItem {
 	dutyId: string;
 	dutyName: string;
+	kind: "rotation" | "coverage";
 	period: "weekly" | "monthly";
 	primaryEmpId: string | null;
 	actualEmpId: string | null;
+	targetEmpId: string | null; // coverage: คนในตำแหน่งเป้าหมายที่ลา
+	targetName: string | null; // ชื่อ/ชื่อเล่นของ target (denorm สำหรับ display)
 	reason:
 		| "rotation"
 		| "substitute_for_leave"
 		| "double_up"
 		| "all_on_leave"
-		| "empty_pool";
+		| "empty_pool"
+		| "coverage"
+		| "coverage_no_candidate"
+		| "target_present";
 	periodStart: string;
 	periodEnd: string;
-	pool: SafeEmployee[]; // pool members สำหรับ display ใน admin DutyCard
+	pool: SafeEmployee[]; // rotation: สมาชิก pool · coverage: รายชื่อคนแทน
 	excludedCount: number;
 }
 
@@ -82,11 +89,14 @@ async function buildSnapshot(): Promise<Snapshot> {
 	const db = getAppFirestore();
 	const ymd = bangkokYmd(new Date());
 
+	// coverage ต้อง replay ตั้งแต่ต้นปีเพื่อนับ "ใครแทนไปกี่ครั้ง" (ยุติธรรม)
+	// → ดึง leaves ทั้งปี (end >= 1 ม.ค. ปีนี้)
+	const yearStart = `${ymd.slice(0, 4)}-01-01`;
+
 	const [dutiesSnap, employeesSnap, leavesSnap] = await Promise.all([
 		db.collection("duties").get(),
 		db.collection("employees").get(),
-		// only leaves ที่ยังไม่จบ → filter start <= today ใน memory
-		db.collection("leaves").where("end", ">=", ymd).get(),
+		db.collection("leaves").where("end", ">=", yearStart).get(),
 	]);
 
 	const duties: Duty[] = dutiesSnap.docs
@@ -97,23 +107,60 @@ async function buildSnapshot(): Promise<Snapshot> {
 		(d) => ({ id: d.id, ...d.data() }) as Employee,
 	);
 
-	const leaves: LeaveEntry[] = leavesSnap.docs
-		.map((d) => d.data() as LeaveEntry)
-		.filter((l) => l.start <= ymd && l.end >= ymd);
+	// leaves ทั้งปี (สำหรับ replay coverage) + leaves วันนี้ (สำหรับ rotation)
+	const allLeaves: LeaveEntry[] = leavesSnap.docs.map(
+		(d) => d.data() as LeaveEntry,
+	);
+	const leaves: LeaveEntry[] = allLeaves.filter(
+		(l) => l.start <= ymd && l.end >= ymd,
+	);
 
-	const assignments = computeAllDutiesForDay(duties, ymd, employees, leaves);
+	// history การแทน (เฉพาะวันก่อนหน้า → ไม่นับวันนี้) เพื่อเลือกคนยุติธรรม
+	const coverageDuties = duties.filter((d) => d.kind === "coverage");
+	const coverageHistory = replayCoverageHistory(
+		coverageDuties,
+		employees,
+		allLeaves,
+		yearStart,
+		ymd, // exclusive → ถึงเมื่อวาน
+	);
 
-	// dutyId → resolved pool members (safe projection)
+	const assignments = computeAllDutiesForDay(
+		duties,
+		ymd,
+		employees,
+		leaves,
+		coverageHistory,
+	);
+
+	// dutyId → display pool (rotation: สมาชิกตำแหน่ง · coverage: รายชื่อคนแทน)
+	const empById = new Map(employees.map((e) => [e.id, e]));
 	const items: AssignmentItem[] = assignments.map((a) => {
 		const duty = duties.find((d) => d.id === a.dutyId);
-		const pool = duty ? resolveDutyPool(duty, employees).map(toSafe) : [];
-		const excludedCount = duty?.excludedEmpIds?.length || 0;
+		let pool: SafeEmployee[] = [];
+		if (duty?.kind === "coverage") {
+			pool = (duty.candidateEmpIds || [])
+				.map((id) => empById.get(id))
+				.filter((e): e is Employee => !!e)
+				.map(toSafe);
+		} else if (duty) {
+			pool = resolveDutyPool(duty, employees).map(toSafe);
+		}
+		const excludedCount =
+			duty?.kind === "coverage" ? 0 : duty?.excludedEmpIds?.length || 0;
 		return {
 			dutyId: a.dutyId,
 			dutyName: a.dutyName,
+			kind: a.kind || "rotation",
 			period: a.period,
 			primaryEmpId: a.primaryEmpId,
 			actualEmpId: a.actualEmpId,
+			targetEmpId: a.targetEmpId ?? null,
+			targetName: a.targetEmpId
+				? empById.get(a.targetEmpId)?.nickname ||
+					empById.get(a.targetEmpId)?.name ||
+					null
+				: null,
 			reason: a.reason,
 			periodStart: a.periodStart,
 			periodEnd: a.periodEnd,

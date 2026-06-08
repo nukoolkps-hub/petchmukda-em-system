@@ -29,15 +29,21 @@ export interface SnapshotPoolMember {
 export interface SnapshotAssignment {
   dutyId: string;
   dutyName: string;
+  kind?: "rotation" | "coverage";
   period: "weekly" | "monthly";
   primaryEmpId: string | null;
   actualEmpId: string | null;
+  targetEmpId?: string | null; // coverage: คนในตำแหน่งเป้าหมายที่ลา
+  targetName?: string | null; // ชื่อ target (denorm)
   reason:
     | "rotation"
     | "substitute_for_leave"
     | "double_up"
     | "all_on_leave"
-    | "empty_pool";
+    | "empty_pool"
+    | "coverage"
+    | "coverage_no_candidate"
+    | "target_present";
   periodStart: string;
   periodEnd: string;
   pool: SnapshotPoolMember[];

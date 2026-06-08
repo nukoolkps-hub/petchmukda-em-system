@@ -206,7 +206,9 @@ function DutyCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const isCoverage = duty.kind === "coverage";
   const role = roles.find((r) => r.id === duty.roleId);
+  const coverageRole = roles.find((r) => r.id === duty.coverageRoleId);
   // Pool + excludedCount มาจาก snapshot (server-computed กับ rotation algorithm)
   const resolvedPool = assignment?.pool || [];
   const excludedCount = assignment?.excludedCount || 0;
@@ -232,7 +234,9 @@ function DutyCard({
           <div className="font-bold text-txt text-sm truncate">{duty.name}</div>
           <div className="text-xs text-txt-soft inline-flex items-center gap-1 mt-0.5">
             <IconRotate size={11} strokeWidth={2.4} />
-            สลับทุก{duty.period === "weekly" ? "สัปดาห์" : "เดือน"}
+            {isCoverage
+              ? `แทนคนลา · ${coverageRole?.name || "(ลบแล้ว)"}`
+              : `สลับทุก${duty.period === "weekly" ? "สัปดาห์" : "เดือน"}`}
           </div>
         </div>
         <button
@@ -272,28 +276,41 @@ function DutyCard({
               <div className="text-sm font-bold text-maroon truncate">
                 {actual.nickname || actual.name}
               </div>
-              {isSubstitute && primary && (
+              {isCoverage ? (
                 <div className="text-[11px] text-txt-soft">
-                  แทน {primary.nickname || primary.name} (ลา)
+                  แทน {assignment?.targetName || "—"} (ลา)
                 </div>
+              ) : (
+                isSubstitute &&
+                primary && (
+                  <div className="text-[11px] text-txt-soft">
+                    แทน {primary.nickname || primary.name} (ลา)
+                  </div>
+                )
               )}
             </div>
           </div>
         ) : (
           <div className="text-sm text-txt-soft italic">
-            {assignment?.reason === "all_on_leave"
-              ? "ทุกคนใน pool ลาวันนี้"
-              : "ยังไม่ได้ตั้ง pool"}
+            {isCoverage
+              ? assignment?.reason === "coverage_no_candidate"
+                ? `${assignment?.targetName || "เป้าหมาย"} ลา — ไม่มีคนแทนได้`
+                : `${coverageRole?.name || "เป้าหมาย"}ไม่ลาวันนี้ — ไม่ต้องมีคนแทน`
+              : assignment?.reason === "all_on_leave"
+                ? "ทุกคนใน pool ลาวันนี้"
+                : "ยังไม่ได้ตั้ง pool"}
           </div>
         )}
       </div>
 
-      {/* pool rotation list — resolved จาก role members */}
+      {/* pool list — rotation: สมาชิกตำแหน่ง · coverage: รายชื่อคนแทน */}
       <div>
         <div className="text-xs text-txt-soft mb-1.5 inline-flex items-center gap-1">
           <IconUsers size={11} strokeWidth={2.4} />
-          ตำแหน่ง {role?.name || "(ลบแล้ว)"} · {resolvedPool.length} คน
-          {excludedCount > 0 && (
+          {isCoverage
+            ? `คนที่มาแทนได้ · ${resolvedPool.length} คน`
+            : `ตำแหน่ง ${role?.name || "(ลบแล้ว)"} · ${resolvedPool.length} คน`}
+          {!isCoverage && excludedCount > 0 && (
             <span className="text-txt-soft">(ตัดออก {excludedCount} คน)</span>
           )}
         </div>
@@ -335,6 +352,9 @@ function DutyEditModal({
   onClose: () => void;
 }) {
   const [name, setName] = useState(duty?.name || "");
+  const [kind, setKind] = useState<"rotation" | "coverage">(
+    duty?.kind || "rotation",
+  );
   const [period, setPeriod] = useState<"weekly" | "monthly">(
     duty?.period || "weekly",
   );
@@ -347,6 +367,13 @@ function DutyEditModal({
   const [excludedIds, setExcludedIds] = useState<Set<string>>(
     () => new Set(duty?.excludedEmpIds || []),
   );
+  // coverage — ตำแหน่งเป้าหมาย + รายชื่อคนแทน
+  const [coverageRoleId, setCoverageRoleId] = useState<string>(
+    duty?.coverageRoleId || "",
+  );
+  const [candidateIds, setCandidateIds] = useState<Set<string>>(
+    () => new Set(duty?.candidateEmpIds || []),
+  );
   const [saving, setSaving] = useState(false);
 
   function toggleExclude(empId: string) {
@@ -357,6 +384,26 @@ function DutyEditModal({
       return next;
     });
   }
+  function toggleCandidate(empId: string) {
+    setCandidateIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(empId)) next.delete(empId);
+      else next.add(empId);
+      return next;
+    });
+  }
+
+  // รายชื่อพนักงานทั้งหมด (active) เรียงตาม displayOrder — สำหรับเลือกคนแทน
+  const allActive = employeeDirectory
+    .filter((e) => !e.salaryDisabled)
+    .sort((a, b) => {
+      const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;
+      const bo = typeof b.displayOrder === "number" ? b.displayOrder : null;
+      if (ao !== null && bo !== null) return ao - bo;
+      if (ao !== null) return -1;
+      if (bo !== null) return 1;
+      return (a.name || "").localeCompare(b.name || "", "th");
+    });
 
   // Preview pool — คนในตำแหน่งที่เลือก ทั้งหมด (รวมที่ตัดออก) เรียงตาม
   // displayOrder เพื่อให้ admin toggle ได้
@@ -377,7 +424,10 @@ function DutyEditModal({
     (e) => !excludedIds.has(e.id),
   ).length;
 
-  const canSave = name.trim() && roleId && includedCount > 0;
+  const canSave =
+    kind === "coverage"
+      ? !!name.trim() && !!coverageRoleId && candidateIds.size > 0
+      : !!name.trim() && !!roleId && includedCount > 0;
 
   return (
     <BaseModal onClose={onClose} maxWidthClass="max-w-[480px]">
@@ -414,138 +464,262 @@ function DutyEditModal({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="เช่น ทำความสะอาด, จัดของแถม"
+            placeholder="เช่น ทำความสะอาด, แทนบัญชี"
             className="w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
           />
         </div>
 
-        {/* period */}
+        {/* kind — หมุนเวียน / แทนคนลา */}
         <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
           <label className="text-xs text-maroon font-bold mb-1.5 block">
-            สลับทุก
+            ประเภทหน้าที่
           </label>
           <div className="flex gap-2">
-            {(["weekly", "monthly"] as const).map((p) => (
+            {(
+              [
+                ["rotation", "หมุนเวียน"],
+                ["coverage", "แทนคนลา"],
+              ] as const
+            ).map(([k, lbl]) => (
               <button
-                key={p}
+                key={k}
                 type="button"
-                onClick={() => setPeriod(p)}
+                onClick={() => setKind(k)}
                 className={`flex-1 py-2 rounded-[9px] text-sm font-semibold cursor-pointer font-[inherit] border-[1.5px] active:scale-[0.98] transition-transform duration-100 ${
-                  period === p
+                  kind === k
                     ? "bg-maroon text-white border-maroon"
                     : "bg-white text-txt-mid border-bdr"
                 }`}
               >
-                {p === "weekly" ? "สัปดาห์ (7 วัน)" : "เดือน"}
+                {lbl}
               </button>
             ))}
           </div>
-        </div>
-
-        {/* rotation start month */}
-        <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-          <label className="text-xs text-maroon font-bold mb-1.5 block">
-            เริ่ม rotation เดือน
-          </label>
-          <ThaiMonthPicker value={startMonth} onChange={setStartMonth} />
-          <div className="text-xs text-txt-soft mt-1">
-            คนแรกใน pool ทำหน้าที่ตั้งแต่ต้นเดือนนี้
+          <div className="text-xs text-txt-soft mt-1.5">
+            {kind === "rotation"
+              ? "หมุนเวียนคนในตำแหน่งตามรอบ (สัปดาห์/เดือน)"
+              : "เมื่อคนในตำแหน่งเป้าหมายลา → ระบบเลือกคนแทนให้ยุติธรรม"}
           </div>
         </div>
 
-        {/* role selector — ตำแหน่งไหนทำหน้าที่นี้ */}
-        <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-          <label className="text-xs text-maroon font-bold mb-2 block">
-            ตำแหน่งที่ทำหน้าที่นี้
-          </label>
-          <div className="flex flex-col gap-1">
-            {roles.length === 0 && (
-              <div className="text-xs text-txt-soft italic p-2">
-                ยังไม่มีตำแหน่ง — เพิ่มที่ "ตั้งค่า → ตำแหน่ง" ก่อน
-              </div>
-            )}
-            {roles.map((role) => {
-              const selected = roleId === role.id;
-              const memberCount = employeeDirectory.filter(
-                (e) => e.roleId === role.id && !e.salaryDisabled,
-              ).length;
-              return (
-                <button
-                  key={role.id}
-                  type="button"
-                  onClick={() => setRoleId(role.id)}
-                  className={`flex items-center gap-2 p-2 rounded-[8px] border-[1.5px] cursor-pointer font-[inherit] text-left active:scale-[0.99] transition-transform ${
-                    selected
-                      ? "bg-gold-pale border-gold"
-                      : "bg-white border-bdr"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    checked={selected}
-                    readOnly
-                    className="w-4 h-4 accent-maroon pointer-events-none"
-                  />
-                  <div className="flex-1 text-sm font-semibold text-txt truncate">
-                    {role.name}
-                  </div>
-                  <span className="text-xs font-bold text-maroon shrink-0">
-                    {memberCount} คน
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* preview pool — toggle ตัดคนออกได้ (excludedIds) */}
-        {previewPool.length > 0 && (
-          <div className="mb-3 p-3 rounded-[10px] bg-cream border border-bdr">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs text-txt-mid font-bold">
-                ลำดับการสลับ · {includedCount}/{previewPool.length} คน
+        {/* ─── coverage fields ─── */}
+        {kind === "coverage" && (
+          <>
+            {/* target role */}
+            <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+              <label className="text-xs text-maroon font-bold mb-2 block">
+                ตำแหน่งเป้าหมาย (เมื่อลา ต้องหาคนแทน)
               </label>
-              {includedCount === 0 && (
-                <span className="text-[11px] text-red font-bold inline-flex items-center gap-1">
-                  <IconAlertTriangle size={11} strokeWidth={2.4} />
-                  ตัดออกหมดแล้ว
-                </span>
-              )}
+              <div className="flex flex-col gap-1">
+                {roles.map((role) => {
+                  const selected = coverageRoleId === role.id;
+                  const memberCount = employeeDirectory.filter(
+                    (e) => e.roleId === role.id && !e.salaryDisabled,
+                  ).length;
+                  return (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() => setCoverageRoleId(role.id)}
+                      className={`flex items-center gap-2 p-2 rounded-[8px] border-[1.5px] cursor-pointer font-[inherit] text-left active:scale-[0.99] transition-transform ${
+                        selected
+                          ? "bg-gold-pale border-gold"
+                          : "bg-white border-bdr"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        checked={selected}
+                        readOnly
+                        className="w-4 h-4 accent-maroon pointer-events-none"
+                      />
+                      <div className="flex-1 text-sm font-semibold text-txt truncate">
+                        {role.name}
+                      </div>
+                      <span className="text-xs font-bold text-maroon shrink-0">
+                        {memberCount} คน
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="text-xs text-txt-soft mb-2">
-              คลิกชื่อเพื่อตัดคนออก/นำกลับ (ตัดออกจะข้ามใน rotation)
+
+            {/* candidates */}
+            <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+              <label className="text-xs text-maroon font-bold mb-1 block">
+                รายชื่อคนที่มาแทนได้ ({candidateIds.size} คน)
+              </label>
+              <div className="text-xs text-txt-soft mb-2">
+                เลือกคนที่ทำ weekly — ระบบจะเลือกคน "ที่เคยแทนน้อยสุด" ก่อน ให้ยุติธรรม
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {allActive.map((emp) => {
+                  const on = candidateIds.has(emp.id);
+                  return (
+                    <button
+                      key={emp.id}
+                      type="button"
+                      onClick={() => toggleCandidate(emp.id)}
+                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold cursor-pointer font-[inherit] border transition-all active:scale-[0.96] ${
+                        on
+                          ? "bg-maroon text-gold-lt border-maroon"
+                          : "bg-white text-txt-mid border-bdr hover:border-maroon"
+                      }`}
+                    >
+                      <AvatarCircle
+                        avatar={emp.avatar}
+                        avatarType={emp.avatarType}
+                        avatarImageUrl={emp.avatarImageUrl}
+                        size={18}
+                        fontSize={9}
+                        border="none"
+                      />
+                      {emp.nickname || emp.name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {previewPool.map((emp) => {
-                const isExcluded = excludedIds.has(emp.id);
-                return (
+          </>
+        )}
+
+        {/* ─── rotation fields ─── */}
+        {kind === "rotation" && (
+          <>
+            {/* period */}
+            <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+              <label className="text-xs text-maroon font-bold mb-1.5 block">
+                สลับทุก
+              </label>
+              <div className="flex gap-2">
+                {(["weekly", "monthly"] as const).map((p) => (
                   <button
-                    key={emp.id}
+                    key={p}
                     type="button"
-                    onClick={() => toggleExclude(emp.id)}
-                    className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold cursor-pointer font-[inherit] border transition-all active:scale-[0.96] ${
-                      isExcluded
-                        ? "bg-cream-dk/40 text-txt-soft border-bdr line-through opacity-60"
-                        : "bg-white text-txt-mid border-bdr hover:border-maroon"
+                    onClick={() => setPeriod(p)}
+                    className={`flex-1 py-2 rounded-[9px] text-sm font-semibold cursor-pointer font-[inherit] border-[1.5px] active:scale-[0.98] transition-transform duration-100 ${
+                      period === p
+                        ? "bg-maroon text-white border-maroon"
+                        : "bg-white text-txt-mid border-bdr"
                     }`}
                   >
-                    <AvatarCircle
-                      avatar={emp.avatar}
-                      avatarType={emp.avatarType}
-                      avatarImageUrl={emp.avatarImageUrl}
-                      size={18}
-                      fontSize={9}
-                      border="none"
-                    />
-                    {emp.nickname || emp.name}
-                    {isExcluded && (
-                      <IconX size={11} strokeWidth={2.4} className="ml-0.5" />
-                    )}
+                    {p === "weekly" ? "สัปดาห์ (7 วัน)" : "เดือน"}
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
+
+            {/* rotation start month */}
+            <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+              <label className="text-xs text-maroon font-bold mb-1.5 block">
+                เริ่ม rotation เดือน
+              </label>
+              <ThaiMonthPicker value={startMonth} onChange={setStartMonth} />
+              <div className="text-xs text-txt-soft mt-1">
+                คนแรกใน pool ทำหน้าที่ตั้งแต่ต้นเดือนนี้
+              </div>
+            </div>
+
+            {/* role selector — ตำแหน่งไหนทำหน้าที่นี้ */}
+            <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+              <label className="text-xs text-maroon font-bold mb-2 block">
+                ตำแหน่งที่ทำหน้าที่นี้
+              </label>
+              <div className="flex flex-col gap-1">
+                {roles.length === 0 && (
+                  <div className="text-xs text-txt-soft italic p-2">
+                    ยังไม่มีตำแหน่ง — เพิ่มที่ "ตั้งค่า → ตำแหน่ง" ก่อน
+                  </div>
+                )}
+                {roles.map((role) => {
+                  const selected = roleId === role.id;
+                  const memberCount = employeeDirectory.filter(
+                    (e) => e.roleId === role.id && !e.salaryDisabled,
+                  ).length;
+                  return (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() => setRoleId(role.id)}
+                      className={`flex items-center gap-2 p-2 rounded-[8px] border-[1.5px] cursor-pointer font-[inherit] text-left active:scale-[0.99] transition-transform ${
+                        selected
+                          ? "bg-gold-pale border-gold"
+                          : "bg-white border-bdr"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        checked={selected}
+                        readOnly
+                        className="w-4 h-4 accent-maroon pointer-events-none"
+                      />
+                      <div className="flex-1 text-sm font-semibold text-txt truncate">
+                        {role.name}
+                      </div>
+                      <span className="text-xs font-bold text-maroon shrink-0">
+                        {memberCount} คน
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* preview pool — toggle ตัดคนออกได้ (excludedIds) */}
+            {previewPool.length > 0 && (
+              <div className="mb-3 p-3 rounded-[10px] bg-cream border border-bdr">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs text-txt-mid font-bold">
+                    ลำดับการสลับ · {includedCount}/{previewPool.length} คน
+                  </label>
+                  {includedCount === 0 && (
+                    <span className="text-[11px] text-red font-bold inline-flex items-center gap-1">
+                      <IconAlertTriangle size={11} strokeWidth={2.4} />
+                      ตัดออกหมดแล้ว
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-txt-soft mb-2">
+                  คลิกชื่อเพื่อตัดคนออก/นำกลับ (ตัดออกจะข้ามใน rotation)
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {previewPool.map((emp) => {
+                    const isExcluded = excludedIds.has(emp.id);
+                    return (
+                      <button
+                        key={emp.id}
+                        type="button"
+                        onClick={() => toggleExclude(emp.id)}
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold cursor-pointer font-[inherit] border transition-all active:scale-[0.96] ${
+                          isExcluded
+                            ? "bg-cream-dk/40 text-txt-soft border-bdr line-through opacity-60"
+                            : "bg-white text-txt-mid border-bdr hover:border-maroon"
+                        }`}
+                      >
+                        <AvatarCircle
+                          avatar={emp.avatar}
+                          avatarType={emp.avatarType}
+                          avatarImageUrl={emp.avatarImageUrl}
+                          size={18}
+                          fontSize={9}
+                          border="none"
+                        />
+                        {emp.nickname || emp.name}
+                        {isExcluded && (
+                          <IconX
+                            size={11}
+                            strokeWidth={2.4}
+                            className="ml-0.5"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -565,13 +739,26 @@ function DutyEditModal({
             onClick={async () => {
               setSaving(true);
               try {
-                await onSave({
-                  name: name.trim(),
-                  period,
-                  roleId,
-                  excludedEmpIds: [...excludedIds],
-                  rotationStartDate: `${startMonth}-01`,
-                });
+                await onSave(
+                  kind === "coverage"
+                    ? {
+                        name: name.trim(),
+                        kind: "coverage",
+                        period: "weekly",
+                        roleId: "",
+                        coverageRoleId,
+                        candidateEmpIds: [...candidateIds],
+                        rotationStartDate: `${startMonth}-01`,
+                      }
+                    : {
+                        name: name.trim(),
+                        kind: "rotation",
+                        period,
+                        roleId,
+                        excludedEmpIds: [...excludedIds],
+                        rotationStartDate: `${startMonth}-01`,
+                      },
+                );
               } finally {
                 setSaving(false);
               }
