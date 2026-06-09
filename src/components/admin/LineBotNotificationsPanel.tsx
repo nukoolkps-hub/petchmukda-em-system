@@ -21,6 +21,7 @@ import {
   subscribeNotificationSettings,
   updateNotificationSettings,
 } from "../../firebase/notificationSettings";
+import ToggleSwitch from "../shared/ToggleSwitch";
 
 interface LineBotNotificationsPanelProps {
   showToast?: (message: string) => void;
@@ -167,30 +168,10 @@ function ToggleRow({
             {description}
           </div>
         </div>
-        <ToggleSwitch enabled={enabled} disabled={disabled} />
+        <div className="mt-1">
+          <ToggleSwitch enabled={enabled} disabled={disabled} />
+        </div>
       </div>
     </button>
-  );
-}
-
-function ToggleSwitch({
-  enabled,
-  disabled,
-}: {
-  enabled: boolean;
-  disabled: boolean;
-}) {
-  return (
-    <div
-      className={`shrink-0 mt-1 w-11 h-6 rounded-full transition-colors duration-200 ${
-        enabled ? "bg-green" : "bg-bdr"
-      } ${disabled ? "opacity-60" : ""}`}
-    >
-      <div
-        className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 mt-0.5 ${
-          enabled ? "translate-x-[22px]" : "translate-x-0.5"
-        }`}
-      />
-    </div>
   );
 }
