@@ -29,6 +29,7 @@ import * as poolAdjustmentsAPI from "../firebase/poolAdjustments";
 import * as poolSnapshotsAPI from "../firebase/poolSnapshots";
 import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
+import { employeeHasPoolExemptDuty } from "../utils/dutyUtils";
 import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
 import {
   isMonthLocked,
@@ -212,12 +213,21 @@ export default function useFirebaseAppData({
       ...callerFields
     } = fields || {};
 
+    // เดือนนี้คนนี้ทำ monthly duty ที่ให้สิทธิ์กองกลางไหม → ยกเว้นเกณฑ์ 80%
+    const poolThresholdExempt = employeeHasPoolExemptDuty(
+      employeeId,
+      yearMonth,
+      dutiesResult.data,
+      employeeResult.data,
+    );
+
     // snapshot เรท/ตำแหน่งจากข้อมูลพนักงานปัจจุบัน — เขียนเฉพาะตอน "ไม่ freeze"
     const rateSnapshot = freezeSnapshot
       ? {}
       : {
           roleId: employee.roleId ?? null,
           poolExclusion: employee.poolExclusion ?? null,
+          poolThresholdExempt,
           baseSalary: employee.baseSalary ?? 0,
           singlePieceRate: employee.singlePieceRate ?? 0,
           normalSalePieceRate: employee.normalSalePieceRate ?? 0,
@@ -246,6 +256,7 @@ export default function useFirebaseAppData({
         roleId: saved?.roleId ?? employee.roleId ?? null,
         poolExclusion: saved?.poolExclusion ?? employee.poolExclusion ?? null,
         totalLeaveDays: saved?.totalLeaveDays ?? totalLeaveDays,
+        poolThresholdExempt: saved?.poolThresholdExempt ?? poolThresholdExempt,
       });
     } catch (err) {
       // poolSnapshot write fail ไม่ block การ save salary หลัก — แต่ log

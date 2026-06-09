@@ -29,6 +29,7 @@ export interface Employee {
 	roleId: string;
 	displayOrder?: number;
 	salaryDisabled?: boolean;
+	poolExclusion?: "sell" | "buy" | "both" | "" | null;
 }
 
 export interface LeaveEntry {
@@ -119,10 +120,16 @@ function isOnLeave(leaves: LeaveEntry[], empId: string, ymd: string): boolean {
 
 export function resolveDutyPool(duty: Duty, employees: Employee[]): Employee[] {
 	const excluded = new Set(duty.excludedEmpIds || []);
+	// คน poolExclusion="both" ห้ามทำ monthly duty (ติดทั้งเดือนเสี่ยงหลุดเกณฑ์
+	// 50% เงินเดือนพื้นฐาน โดย exemption ช่วยไม่ได้)
+	const blockBoth = duty.period === "monthly";
 	return employees
 		.filter(
 			(e) =>
-				e.roleId === duty.roleId && !e.salaryDisabled && !excluded.has(e.id),
+				e.roleId === duty.roleId &&
+				!e.salaryDisabled &&
+				!excluded.has(e.id) &&
+				!(blockBoth && e.poolExclusion === "both"),
 		)
 		.sort((a, b) => {
 			const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;

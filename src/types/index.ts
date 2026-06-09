@@ -83,6 +83,9 @@ export interface SalaryMonth {
   roleId?: string; // ใช้ map → role.poolGroup
   poolExclusion?: "sell" | "buy" | "both" | null;
   totalLeaveDays?: number; // weekday leaves + over-quota Sundays
+  // เดือนนี้คนนี้ทำ monthly duty ที่ "ให้สิทธิ์กองกลาง" → ยกเว้นเกณฑ์ 80%
+  // (ทั้ง sell+buy) แต่ยังเคารพ poolExclusion + เกณฑ์ 50% เงินเดือนพื้นฐาน
+  poolThresholdExempt?: boolean;
 }
 
 export type SalaryData = Record<string, Record<string, SalaryMonth>>;
@@ -134,6 +137,10 @@ export interface Duty {
   period: "weekly" | "monthly";
   roleId: string; // (rotation) ตำแหน่งที่ทำหน้าที่นี้ — pool resolve จาก employees ที่ roleId ตรง
   excludedEmpIds?: string[]; // คนในตำแหน่งที่ admin ตัดออก ไม่ให้ทำหน้าที่นี้
+  // (monthly เท่านั้น) ให้สิทธิ์กองกลางแก่คนที่ทำหน้าที่นี้ทั้งเดือน แม้ขาย/ซื้อ
+  // ไม่ถึง 80% ของ top — เพราะติดทำหน้าที่ขายไม่ทันเพื่อน · ยกเว้นเกณฑ์ 80%
+  // เท่านั้น (ยังเคารพ poolExclusion ที่ admin ปิด + เกณฑ์ 50% เงินเดือนพื้นฐาน)
+  grantsPoolEligibility?: boolean;
   rotationStartDate: string; // "YYYY-MM-DD"
   // ─── coverage (kind="coverage") ───────────────────────────────
   coverageRoleId?: string; // ตำแหน่งเป้าหมาย — เมื่อคนในตำแหน่งนี้ลา ต้องหาคนแทน
