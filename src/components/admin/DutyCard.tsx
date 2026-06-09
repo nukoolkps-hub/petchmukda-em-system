@@ -131,11 +131,16 @@ export default function DutyCard({
         />
         <div className="flex-1 min-w-0">
           <div className="font-bold text-txt text-sm truncate">{duty.name}</div>
-          <div className="text-xs text-txt-soft inline-flex items-center gap-1 mt-0.5">
+          <div className="text-xs text-txt-soft inline-flex items-center gap-1 mt-0.5 flex-wrap">
             <IconRotate size={11} strokeWidth={2.4} />
             {isCoverage
               ? `แทนคนลา · ${coverageRole?.name || "(ลบแล้ว)"}`
               : `สลับทุก${duty.period === "weekly" ? "สัปดาห์" : "เดือน"}`}
+            {duty.period === "monthly" && duty.grantsPoolEligibility && (
+              <span className="px-1.5 py-px rounded-[6px] bg-gold-pale text-maroon font-bold text-[10px]">
+                ให้สิทธิ์กองกลาง
+              </span>
+            )}
           </div>
         </div>
         <button

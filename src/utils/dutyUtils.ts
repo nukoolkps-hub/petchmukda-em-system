@@ -91,10 +91,17 @@ function isOnLeave(leaves: LeaveEntry[], empId: string, ymd: string): boolean {
  *  จะได้ตรงกับ rotation จริงเสมอ (single source of truth)               */
 export function resolveDutyPool(duty: Duty, employees: Employee[]): Employee[] {
   const excluded = new Set(duty.excludedEmpIds || []);
+  // คน poolExclusion="both" (ปิดทั้งคู่ — ไม่อยู่ในกองกลาง + ใช้เกณฑ์ 50%
+  // เงินเดือนพื้นฐาน) ห้ามทำ monthly duty — ติดทั้งเดือนแล้วเสี่ยงหลุด 50%
+  // โดย exemption ช่วยไม่ได้ (exemption ยกเว้นแค่เกณฑ์ 80%)
+  const blockBoth = duty.period === "monthly";
   return employees
     .filter(
       (e) =>
-        e.roleId === duty.roleId && !e.salaryDisabled && !excluded.has(e.id),
+        e.roleId === duty.roleId &&
+        !e.salaryDisabled &&
+        !excluded.has(e.id) &&
+        !(blockBoth && e.poolExclusion === "both"),
     )
     .sort((a, b) => {
       const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;
@@ -302,6 +309,34 @@ export function computeAllDutiesForDay(
       primariesToday,
     );
   });
+}
+
+/** employeeId เป็นคนที่ทำ monthly duty ที่ "ให้สิทธิ์กองกลาง" ในเดือน yearMonth
+ *  ไหม → ใช้ตอน stamp poolThresholdExempt ลง salary snapshot
+ *  ดู primary (คนที่ถูกกำหนดทั้งเดือน) ไม่ใช่ substitute · empty leaves      */
+export function employeeHasPoolExemptDuty(
+  employeeId: string,
+  yearMonth: string, // "YYYY-MM"
+  duties: Duty[],
+  employees: Employee[],
+): boolean {
+  const exemptIds = new Set(
+    duties
+      .filter(
+        (d) =>
+          d.kind !== "coverage" &&
+          d.period === "monthly" &&
+          d.grantsPoolEligibility,
+      )
+      .map((d) => d.id),
+  );
+  if (exemptIds.size === 0) return false;
+  // ใช้กลางเดือนเป็นตัวแทน + ไม่ใส่ leaves (ดู primary ตาม rotation)
+  const repDate = `${yearMonth}-15`;
+  const assignments = computeAllDutiesForDay(duties, repDate, employees, []);
+  return assignments.some(
+    (a) => exemptIds.has(a.dutyId) && a.primaryEmpId === employeeId,
+  );
 }
 
 /* ─── Forecast (ปฏิทินหน้าที่ล่วงหน้า) ──────────────────────────────

@@ -77,6 +77,8 @@ export function computePoolSharesForGroup({
   const buyPieces: Record<string, number> = {}; // รับซื้อของตัวเอง
   const totalLeave: Record<string, number> = {}; // วันหยุดรวม (ปกติ + อาทิตย์)
   const poolExclusion: Record<string, string | null> = {};
+  // เดือนนี้คนนี้ทำ monthly duty ที่ให้สิทธิ์กองกลาง → ยกเว้นเกณฑ์ 80%
+  const thresholdExempt: Record<string, boolean> = {};
   activeIds.forEach((employeeId) => {
     const salary = salaryData[employeeId]?.[yearMonth];
     const employee = employeeDirectory.find(
@@ -92,6 +94,7 @@ export function computePoolSharesForGroup({
       salary?.poolExclusion !== undefined
         ? salary.poolExclusion
         : employee?.poolExclusion || null;
+    thresholdExempt[employeeId] = salary?.poolThresholdExempt === true;
     if (typeof salary?.totalLeaveDays === "number") {
       totalLeave[employeeId] = salary.totalLeaveDays;
     } else if (employee) {
@@ -118,11 +121,14 @@ export function computePoolSharesForGroup({
   const buyPoolEligibility = {};
   activeIds.forEach((employeeId) => {
     const employeePoolExclusion = poolExclusion[employeeId];
+    // ทำ monthly duty ที่ให้สิทธิ์กองกลาง → ผ่านเกณฑ์ 80% อัตโนมัติ
+    // แต่ poolExclusion ที่ admin ปิดยังมาก่อนเสมอ (ปิดฝั่งไหน ฝั่งนั้นไม่ได้)
+    const exempt = thresholdExempt[employeeId];
     if (employeePoolExclusion === "sell" || employeePoolExclusion === "both") {
       sellPoolEligibility[employeeId] = false;
     } else {
       sellPoolEligibility[employeeId] =
-        topSellPieces === 0
+        exempt || topSellPieces === 0
           ? true
           : sellPieces[employeeId] >= sellEligibilityThreshold;
     }
@@ -130,7 +136,7 @@ export function computePoolSharesForGroup({
       buyPoolEligibility[employeeId] = false;
     } else {
       buyPoolEligibility[employeeId] =
-        topBuyPieces === 0
+        exempt || topBuyPieces === 0
           ? true
           : buyPieces[employeeId] >= buyEligibilityThreshold;
     }

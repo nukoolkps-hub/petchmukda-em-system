@@ -59,6 +59,10 @@ export default function DutyEditModal({
   const [excludedIds, setExcludedIds] = useState<Set<string>>(
     () => new Set(duty?.excludedEmpIds || []),
   );
+  // (monthly) ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%
+  const [grantsPoolEligibility, setGrantsPoolEligibility] = useState<boolean>(
+    duty?.grantsPoolEligibility ?? false,
+  );
   // coverage — ตำแหน่งเป้าหมาย + รายชื่อคนแทน
   const [coverageRoleId, setCoverageRoleId] = useState<string>(
     duty?.coverageRoleId || "",
@@ -204,6 +208,8 @@ export default function DutyEditModal({
             excludedIds={excludedIds}
             toggleExclude={toggleExclude}
             includedCount={includedCount}
+            grantsPoolEligibility={grantsPoolEligibility}
+            setGrantsPoolEligibility={setGrantsPoolEligibility}
           />
         )}
       </div>
@@ -241,6 +247,9 @@ export default function DutyEditModal({
                         period,
                         roleId,
                         excludedEmpIds: [...excludedIds],
+                        // toggle เฉพาะ monthly · weekly บังคับ false
+                        grantsPoolEligibility:
+                          period === "monthly" ? grantsPoolEligibility : false,
                         rotationStartDate: `${startMonth}-01`,
                       },
                 );
@@ -397,6 +406,8 @@ function RotationFields({
   excludedIds,
   toggleExclude,
   includedCount,
+  grantsPoolEligibility,
+  setGrantsPoolEligibility,
 }: {
   roles: Role[];
   employeeDirectory: Employee[];
@@ -410,6 +421,8 @@ function RotationFields({
   excludedIds: Set<string>;
   toggleExclude: (id: string) => void;
   includedCount: number;
+  grantsPoolEligibility: boolean;
+  setGrantsPoolEligibility: (v: boolean) => void;
 }) {
   return (
     <>
@@ -435,6 +448,38 @@ function RotationFields({
           ))}
         </div>
       </div>
+
+      {/* monthly: สิทธิ์กองกลางแม้ขายไม่ถึง 80% */}
+      {period === "monthly" && (
+        <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+          <button
+            type="button"
+            onClick={() => setGrantsPoolEligibility(!grantsPoolEligibility)}
+            className="w-full flex items-center gap-2.5 cursor-pointer font-[inherit] text-left"
+          >
+            <span
+              className={`shrink-0 w-11 h-6 rounded-full relative transition-colors ${
+                grantsPoolEligibility ? "bg-maroon" : "bg-bdr"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${
+                  grantsPoolEligibility ? "left-[22px]" : "left-0.5"
+                }`}
+              />
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-bold text-txt">
+                ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%
+              </span>
+              <span className="block text-xs text-txt-soft mt-0.5">
+                คนทำหน้าที่นี้ติดทั้งเดือน ขายไม่ทันเพื่อน → เข้ากองกลางได้ (ยังเคารพฝั่งที่ admin
+                ปิด · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%)
+              </span>
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* rotation start month */}
       <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">

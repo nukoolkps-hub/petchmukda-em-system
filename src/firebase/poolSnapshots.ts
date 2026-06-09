@@ -22,6 +22,7 @@ export interface PoolSnapshotFields {
   roleId?: string | null;
   poolExclusion?: string | null;
   totalLeaveDays?: number;
+  poolThresholdExempt?: boolean; // ทำ monthly duty ที่ให้สิทธิ์กองกลางเดือนนี้
 }
 
 export type PoolSnapshotsByMonth = Record<
