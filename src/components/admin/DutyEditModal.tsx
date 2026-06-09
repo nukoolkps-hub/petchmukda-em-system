@@ -14,6 +14,7 @@ import { toYMD } from "../../utils/dateUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import ThaiMonthPicker from "../shared/ThaiMonthPicker";
+import ToggleSwitch from "../shared/ToggleSwitch";
 
 /** เรียงพนักงานตาม displayOrder (asc) → ชื่อ (fallback) — ตรงกับ
  *  resolveDutyPool ฝั่ง server เพื่อให้ preview ตรงกับ rotation จริง */
@@ -457,17 +458,7 @@ function RotationFields({
             onClick={() => setGrantsPoolEligibility(!grantsPoolEligibility)}
             className="w-full flex items-center gap-2.5 cursor-pointer font-[inherit] text-left"
           >
-            <span
-              className={`shrink-0 w-11 h-6 rounded-full relative transition-colors ${
-                grantsPoolEligibility ? "bg-maroon" : "bg-bdr"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${
-                  grantsPoolEligibility ? "left-[22px]" : "left-0.5"
-                }`}
-              />
-            </span>
+            <ToggleSwitch enabled={grantsPoolEligibility} />
             <span className="flex-1 min-w-0">
               <span className="block text-sm font-bold text-txt">
                 ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%
