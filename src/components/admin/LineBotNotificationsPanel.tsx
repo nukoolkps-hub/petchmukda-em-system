@@ -168,7 +168,7 @@ function ToggleRow({
             {description}
           </div>
         </div>
-        <div className="mt-1">
+        <div className="shrink-0 mt-1">
           <ToggleSwitch enabled={enabled} disabled={disabled} />
         </div>
       </div>
