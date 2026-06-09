@@ -332,7 +332,6 @@ function computeCoverageForDay(
 	const assignments: DutyAssignment[] = [];
 	const pulled = new Set<string>();
 	const usedToday = new Set<string>();
-	const nameById = new Map(employees.map((e) => [e.id, e]));
 	for (const duty of coverageDuties) {
 		// แยกเคส: ตำแหน่งเป้าหมายไม่มีคนเลย (admin ตั้งค่าผิด) vs ทุกคนมาทำงานปกติ
 		const hasAnyTarget = employees.some(
@@ -382,7 +381,6 @@ function computeCoverageForDay(
 			// บันทึกเพื่อให้วันถัดไปยุติธรรม (ในการ replay จะนับเองอยู่แล้ว
 			// แต่กรณีหลายเป้าหมายวันเดียว เพิ่ม count ทันทีกันเลือกซ้ำคนเดิม)
 			if (pick) history.set(pick, (history.get(pick) || 0) + 1);
-			void nameById;
 		}
 	}
 	return { assignments, pulled };
