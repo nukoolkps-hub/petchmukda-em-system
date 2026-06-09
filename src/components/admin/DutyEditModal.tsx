@@ -450,26 +450,24 @@ function RotationFields({
         </div>
       </div>
 
-      {/* monthly: สิทธิ์กองกลางแม้ขายไม่ถึง 80% */}
+      {/* monthly: สิทธิ์กองกลางแม้ขายไม่ถึง 80% — ทั้งกรอบกดได้ + tactile feedback */}
       {period === "monthly" && (
-        <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-          <button
-            type="button"
-            onClick={() => setGrantsPoolEligibility(!grantsPoolEligibility)}
-            className="w-full flex items-center gap-2.5 cursor-pointer font-[inherit] text-left"
-          >
-            <ToggleSwitch enabled={grantsPoolEligibility} />
-            <span className="flex-1 min-w-0">
-              <span className="block text-sm font-bold text-txt">
-                ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%
-              </span>
-              <span className="block text-xs text-txt-soft mt-0.5">
-                คนทำหน้าที่นี้ติดทั้งเดือน ขายไม่ทันเพื่อน → เข้ากองกลางได้ (ยังเคารพฝั่งที่ admin
-                ปิด · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%)
-              </span>
+        <button
+          type="button"
+          onClick={() => setGrantsPoolEligibility(!grantsPoolEligibility)}
+          className="w-full text-left mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all duration-150 active:scale-[0.99]"
+        >
+          <ToggleSwitch enabled={grantsPoolEligibility} />
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-txt">
+              ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%
             </span>
-          </button>
-        </div>
+            <span className="block text-xs text-txt-soft mt-0.5">
+              คนทำหน้าที่นี้ติดทั้งเดือน ขายไม่ทันเพื่อน → เข้ากองกลางได้ (ยังเคารพฝั่งที่ admin
+              ปิด · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%)
+            </span>
+          </span>
+        </button>
       )}
 
       {/* rotation start month */}
