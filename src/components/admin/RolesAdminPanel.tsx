@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import { COLORS } from "../../constants";
 import AvatarCircle from "../shared/AvatarCircle";
+import RichTextEditor from "../shared/RichTextEditor";
 
 /* ─── Admin: Roles Management Panel ────────────────────────────── */
 export default function RolesAdminPanel({
@@ -144,17 +145,13 @@ export default function RolesAdminPanel({
           <label className="text-xs text-txt-soft font-semibold mb-1 block">
             หน้าที่หลัก (พนักงานจะเห็นในหน้า Home)
           </label>
-          <textarea
-            value={newRole.mainDuties}
-            onChange={(e) =>
-              setNewRole({ ...newRole, mainDuties: e.target.value })
-            }
-            placeholder={
-              "เช่น\n• ดูแลลูกค้าหน้าร้าน\n• เช็คทอง+ของแถม\n• ปิดยอดประจำวัน"
-            }
-            rows={4}
-            className="w-full px-3 py-2 rounded-[9px] border border-bdr text-sm outline-none font-[inherit] box-border mb-2.5 resize-y"
-          />
+          <div className="mb-2.5">
+            <RichTextEditor
+              value={newRole.mainDuties}
+              onChange={(html) => setNewRole({ ...newRole, mainDuties: html })}
+              placeholder="เช่น ดูแลลูกค้าหน้าร้าน · เช็คทอง+ของแถม · ปิดยอดประจำวัน"
+            />
+          </div>
           <button
             onClick={addRole}
             disabled={!newRole.name.trim()}
@@ -277,26 +274,22 @@ export default function RolesAdminPanel({
                           <label className="text-xs text-txt-soft font-semibold mb-1 block">
                             หน้าที่หลัก (พนักงานจะเห็นในหน้า Home)
                           </label>
-                          <textarea
+                          <RichTextEditor
                             value={
                               e?.mainDuties !== undefined
                                 ? e.mainDuties
                                 : rl.mainDuties || ""
                             }
-                            onChange={(ev) =>
+                            onChange={(html) =>
                               setEditing((p) => ({
                                 ...p,
                                 [rl.id]: {
                                   ...(p[rl.id] || rl),
-                                  mainDuties: ev.target.value,
+                                  mainDuties: html,
                                 },
                               }))
                             }
-                            placeholder={
-                              "เช่น\n• ดูแลลูกค้าหน้าร้าน\n• เช็คทอง+ของแถม"
-                            }
-                            rows={4}
-                            className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[inherit] box-border bg-gold-pale/30 resize-y"
+                            placeholder="เช่น ดูแลลูกค้าหน้าร้าน · เช็คทอง+ของแถม"
                           />
                         </div>
                       </>
