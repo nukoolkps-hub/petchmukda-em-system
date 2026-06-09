@@ -39,7 +39,12 @@ export default function HomeTab({
   dutyAssignmentsToday,
 }: HomeTabProps) {
   const [showMainDuties, setShowMainDuties] = useState(false);
-  const myRole = roles?.find((r) => r.id === profile?.roleId) || null;
+  // profile (จาก useProfile) เก็บแค่ role name string ไม่มี roleId — lookup
+  // employee จาก directory (id ตรง) แล้วค่อย map → role doc
+  const myEmployee = profile
+    ? employeeDirectory.find((e) => e.id === profile.id)
+    : null;
+  const myRole = roles?.find((r) => r.id === myEmployee?.roleId) || null;
   const hasMainDuties = !!myRole?.mainDuties?.trim();
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
