@@ -59,6 +59,11 @@ Source: `src/utils/salaryUtils.ts` → `calculateSalary()`
 2. หา **top** ในฝั่งนั้น: `topSellPieces = max(sellPieces ทุกคน)`, `topBuyPieces = max(buyPieces)`
 3. **กฎ 80%** — เกณฑ์เข้า pool: `pieces ≥ topPieces × POOL_THRESHOLD (= 0.8)` → ต่ำกว่าถูกตัดออก
    - ฝั่งขาย: ใช้ `sellPieces = normalSalePieces + specialSalePieces` เทียบ
+   - **ข้อยกเว้น (duty):** คนที่ทำหน้าที่รายเดือนที่เปิด `grantsPoolEligibility` ในเดือนนั้น
+     (`salary.poolThresholdExempt = true`) → ผ่านเกณฑ์ 80% อัตโนมัติทั้ง sell+buy
+     (ติดทำหน้าที่ทั้งเดือน ขายไม่ทันเพื่อน) · **แต่ยังเคารพ `poolExclusion`** (Admin ปิดฝั่งไหน
+     ฝั่งนั้นไม่ได้) และ **ไม่กระทบเกณฑ์ 50% เงินเดือนพื้นฐาน** · คน `poolExclusion="both"`
+     ถูกกันออกจากรอบหน้าที่รายเดือน (`resolveDutyPool`) เพราะเสี่ยงหลุด 50%
 4. นับ `eligibleEmployeeCount` (n) = จำนวนคนที่ยังเหลือใน pool
 5. **เปอร์เซ็นต์ฐาน:** `baseSharePercent = 100 ÷ n`
 6. **ตัวคูณหักวันลา:** `leaveDeductionFactor = baseSharePercent ÷ DAYS_PER_MONTH (= 30)`

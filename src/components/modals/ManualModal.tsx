@@ -4,6 +4,8 @@ import {
   Banknote as IconBanknote,
   Book as IconBook,
   CalendarDays as IconCalendar,
+  CalendarClock as IconCalendarClock,
+  CalendarRange as IconCalendarRange,
   Check as IconCheck,
   ClipboardList as IconClipboardList,
   Diamond as IconDiamond,
@@ -13,6 +15,7 @@ import {
   Lock as IconLock,
   Minus as IconMinus,
   RefreshCw as IconRefresh,
+  RotateCw as IconRotate,
   Ruler as IconRuler,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
@@ -20,6 +23,7 @@ import {
   Sun as IconSun,
   Ticket as IconTicket,
   TrendingDown as IconTrendingDown,
+  UserCheck as IconUserCheck,
   X as IconX,
 } from "lucide-react";
 import { useState } from "react";
@@ -88,11 +92,22 @@ export default function ManualModal({ onClose }) {
               </span>
             ),
           },
+          {
+            id: "duty",
+            wide: true,
+            label: (
+              <span className="inline-flex items-center gap-1.5">
+                <IconCalendarClock size={14} strokeWidth={2.4} />
+                หน้าที่รับผิดชอบ
+              </span>
+            ),
+          },
         ].map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`flex-1 px-2 py-2.5 rounded-[9px] border-none cursor-pointer font-[inherit] text-sm font-semibold transition-all
+              ${"wide" in t && t.wide ? "col-span-2" : ""}
               ${tab === t.id ? "bg-white text-maroon shadow-[0_1px_6px_rgba(90,30,10,0.10)]" : "bg-transparent text-txt-soft"}`}
           >
             {t.label}
@@ -364,6 +379,12 @@ export default function ManualModal({ onClose }) {
                 <b className="text-red">ตัดออกจากกองกลาง</b> ฝั่งนั้น
                 (จำนวนคนที่มีสิทธิ์ลดลง → เปอร์เซ็นต์ฐานและตัวคูณหักวันลาเปลี่ยนตาม)
               </p>
+              <p className="mt-1.5">
+                <b className="text-green">ข้อยกเว้น:</b> คนที่ทำ{" "}
+                <b>หน้าที่รายเดือนที่ "ให้สิทธิ์กองกลาง"</b> ในเดือนนั้น → เข้ากองกลางได้ทั้ง 2
+                ฝั่งแม้ &lt; 80% (ติดทำหน้าที่ทั้งเดือน ขายไม่ทันเพื่อน) · แต่ยังเคารพฝั่งที่ Admin
+                ปิด · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%
+              </p>
             </Card>
             <Card
               title={
@@ -603,6 +624,121 @@ export default function ManualModal({ onClose }) {
             <br />
             ให้เวลา admin ปรับแก้ตัวเลขหลังจ่ายเงินจริง (พนักงานทักท้วง, พบลาเพิ่ม, คำนวณผิด
             ฯลฯ) — พอครบกำหนดล็อกถาวร เพื่อกัน ข้อมูลในอดีตเปลี่ยนแปลงโดยไม่ตั้งใจ
+          </Box>
+        </div>
+      )}
+
+      {tab === "duty" && (
+        <div className="text-sm text-txt-mid leading-[1.8]">
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconCalendarClock size={16} strokeWidth={2.4} />
+                ตารางหน้าที่รับผิดชอบ
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              Admin กำหนดว่า <b>ตำแหน่งไหนทำหน้าที่อะไร</b> (เช่น ทำความสะอาด,
+              จัดของแถม, Online) ระบบ <b>หมุนเวียนคนอัตโนมัติ</b> ตามลำดับ —
+              ไม่ต้องแก้ทุกสัปดาห์/เดือน
+            </p>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconRotate size={16} strokeWidth={2.4} />2 ประเภทหน้าที่
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconRotate size={14} strokeWidth={2.4} />
+                  หมุนเวียน (rotation)
+                </span>
+              }
+              color={COLORS.text}
+            >
+              <ul>
+                <li>
+                  <b>รายสัปดาห์</b> — สลับคนทุก 7 วัน
+                </li>
+                <li>
+                  <b>รายเดือน</b> — สลับคนทุกเดือน (เช่น Online)
+                </li>
+                <li>วนตามลำดับให้ทุกคนได้ทำเท่าๆ กัน (ยุติธรรมเชิงสถิติ)</li>
+              </ul>
+            </Card>
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconUserCheck size={14} strokeWidth={2.4} />
+                  แทนคนลา (coverage)
+                </span>
+              }
+              color={COLORS.text}
+            >
+              <p>
+                สำหรับตำแหน่งที่ไม่มีรอบหมุน (เช่น บัญชี) — เมื่อคนในตำแหน่งลา
+                ระบบเลือกคนแทนจากรายชื่อที่ Admin ตั้งไว้ โดยเลือก{" "}
+                <b>คนที่เคยแทนน้อยสุดก่อน</b> ให้ยุติธรรม
+              </p>
+            </Card>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconHandshake size={16} strokeWidth={2.4} />
+                คนลา → หาคนแทนอัตโนมัติ
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <ul>
+              <li>คนที่ถึงคิวลา → ระบบเลื่อนหาคนถัดไปที่ว่าง</li>
+              <li>
+                <b>ไม่ทับหน้าที่อื่น</b> — ข้ามคนที่มีหน้าที่อื่นในวันนั้นก่อน
+              </li>
+              <li>คนทำรายเดือนลา → ดึงคนที่ว่างมาคลุมให้</li>
+            </ul>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconDiamond size={16} strokeWidth={2.4} />
+                หน้าที่รายเดือน + สิทธิ์กองกลาง
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              หน้าที่ <b>รายเดือน</b> เปิดตัวเลือก{" "}
+              <b>"ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%"</b> ได้ — คนทำติดทั้งเดือน
+              ขายไม่ทันเพื่อน จึงเข้ากองกลางได้ทั้ง 2 ฝั่ง
+            </p>
+            <ul>
+              <li>ยังเคารพฝั่งที่ Admin ปิด (ปิดรับซื้อ → ไม่ได้ฝั่งรับซื้อ)</li>
+              <li>ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%</li>
+              <li>
+                คน <b>"ปิดทั้งคู่"</b> → ทำรายเดือนไม่ได้ (เสี่ยงหลุด 50%)
+              </li>
+            </ul>
+          </Section>
+
+          <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
+            <b className="text-maroon inline-flex items-center gap-1">
+              <IconCalendarRange size={14} strokeWidth={2.4} />
+              ปฏิทินหน้าที่ล่วงหน้า
+            </b>
+            <br />
+            กดปุ่ม "ดูล่วงหน้า" เพื่อดูตารางหมุนเวียนไปจนถึงสิ้นปี — วางแผนเตรียมตัวได้ (พนักงานดู
+            "เฉพาะของคุณ" ได้)
           </Box>
         </div>
       )}
