@@ -3,18 +3,21 @@ import {
   ChevronDown as IconChevronDown,
   Cross as IconCross,
   FastForward as IconFastForward,
+  Lock as IconLock,
   Trash2 as IconTrash,
 } from "lucide-react";
 import { useState } from "react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
-import type { Employee, LeaveEntry } from "../../types";
+import type { Employee, LeaveEntry, PayrollConfirms } from "../../types";
 import { fmtDateWithWeekday, isFuture } from "../../utils/dateUtils";
+import { isMonthLocked, monthOf } from "../../utils/payrollLock";
 import ConfirmModal from "../modals/ConfirmModal";
 import AvatarCircle from "../shared/AvatarCircle";
 
 interface LeaveListPanelProps {
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
+  payrollConfirms: PayrollConfirms;
   onDelete: (id: string | number) => void;
 }
 
@@ -22,6 +25,7 @@ interface LeaveListPanelProps {
 export default function LeaveListPanel({
   allLeaves,
   employeeDirectory,
+  payrollConfirms,
   onDelete,
 }: LeaveListPanelProps) {
   const [employeeFilter, setFilterEmp] = useState("");
@@ -88,6 +92,7 @@ export default function LeaveListPanel({
           const employeeInfo = employeeDirectory.find(
             (e) => e.id === lv.employeeId,
           );
+          const locked = isMonthLocked(payrollConfirms?.[monthOf(lv.start)]);
           return (
             <div
               key={lv.id}
@@ -138,10 +143,25 @@ export default function LeaveListPanel({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setConfirmLeave(lv)}
-                className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30] active:scale-[0.92] transition-transform duration-100"
+                disabled={locked}
+                title={locked ? "เดือนนี้ปิดรอบแล้ว — ลบใบลาไม่ได้" : undefined}
+                className={`w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 border-[1.5px] ${
+                  locked
+                    ? "bg-cream border-bdr opacity-50 cursor-not-allowed"
+                    : "bg-red-lt border-[#C0392B30] cursor-pointer active:scale-[0.92] transition-transform duration-100"
+                }`}
               >
-                <IconTrash size={16} color={COLORS.red} strokeWidth={2.2} />
+                {locked ? (
+                  <IconLock
+                    size={14}
+                    className="text-txt-soft"
+                    strokeWidth={2.2}
+                  />
+                ) : (
+                  <IconTrash size={16} color={COLORS.red} strokeWidth={2.2} />
+                )}
               </button>
             </div>
           );
