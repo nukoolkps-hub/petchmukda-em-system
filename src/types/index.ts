@@ -133,6 +133,8 @@ export interface Role {
   name: string;
   poolGroup: string | null;
   icon: string;
+  /** หน้าที่หลักของตำแหน่ง (admin กรอกเอง · null = ไม่ได้ตั้งค่า) */
+  mainDuties?: string | null;
 }
 
 /** ตารางหน้าที่ admin-managed — admin กำหนดว่า "ตำแหน่งไหน ทำหน้าที่อะไร"

@@ -34,6 +34,7 @@ export async function upsertRole(role) {
       name: role.name,
       poolGroup: role.poolGroup,
       icon: role.icon,
+      mainDuties: role.mainDuties ?? null,
       updatedAt: Date.now(),
     },
     { merge: true },

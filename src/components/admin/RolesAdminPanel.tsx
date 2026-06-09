@@ -23,8 +23,12 @@ export default function RolesAdminPanel({
   onDeleteRole,
   showToast,
 }) {
-  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup}}
-  const [newRole, setNewRole] = useState({ name: "", poolGroup: "" });
+  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, mainDuties}}
+  const [newRole, setNewRole] = useState({
+    name: "",
+    poolGroup: "",
+    mainDuties: "",
+  });
   const [showAdd, setShowAdd] = useState(false);
   const [confirmDel, setConfirmDel] = useState<any>(null);
 
@@ -38,6 +42,7 @@ export default function RolesAdminPanel({
         ...current,
         name: e.name || current.name,
         poolGroup: e.poolGroup || null,
+        mainDuties: e.mainDuties?.trim() || null,
       });
       setEditing((prev) => {
         const n = { ...prev };
@@ -59,8 +64,9 @@ export default function RolesAdminPanel({
         id,
         name: newRole.name.trim(),
         poolGroup: newRole.poolGroup.trim() || null,
+        mainDuties: newRole.mainDuties.trim() || null,
       });
-      setNewRole({ name: "", poolGroup: "" });
+      setNewRole({ name: "", poolGroup: "", mainDuties: "" });
       setShowAdd(false);
       showToast?.("เพิ่มตำแหน่งแล้ว");
     } catch (err) {
@@ -134,6 +140,20 @@ export default function RolesAdminPanel({
             }
             placeholder='กลุ่มกองกลาง (ทิ้งว่างถ้าไม่แชร์ค่าคอม) เช่น "sales"'
             className="w-full px-3 py-[9px] rounded-[9px] border border-bdr text-sm outline-none font-[Prompt,monospace] box-border mb-2.5"
+          />
+          <label className="text-xs text-txt-soft font-semibold mb-1 block">
+            หน้าที่หลัก (พนักงานจะเห็นในหน้า Home)
+          </label>
+          <textarea
+            value={newRole.mainDuties}
+            onChange={(e) =>
+              setNewRole({ ...newRole, mainDuties: e.target.value })
+            }
+            placeholder={
+              "เช่น\n• ดูแลลูกค้าหน้าร้าน\n• เช็คทอง+ของแถม\n• ปิดยอดประจำวัน"
+            }
+            rows={4}
+            className="w-full px-3 py-2 rounded-[9px] border border-bdr text-sm outline-none font-[inherit] box-border mb-2.5 resize-y"
           />
           <button
             onClick={addRole}
@@ -229,29 +249,57 @@ export default function RolesAdminPanel({
                       </span>
                     </div>
                     {dirty && (
-                      <div className="mb-2.5">
-                        <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                          กลุ่มกองกลาง (ทิ้งว่างถ้าไม่แชร์)
-                        </label>
-                        <input
-                          value={
-                            e?.poolGroup !== undefined
-                              ? e.poolGroup
-                              : rl.poolGroup || ""
-                          }
-                          onChange={(ev) =>
-                            setEditing((p) => ({
-                              ...p,
-                              [rl.id]: {
-                                ...(p[rl.id] || rl),
-                                poolGroup: ev.target.value,
-                              },
-                            }))
-                          }
-                          placeholder="เช่น sales"
-                          className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[Prompt,monospace] box-border bg-gold-pale/30"
-                        />
-                      </div>
+                      <>
+                        <div className="mb-2.5">
+                          <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                            กลุ่มกองกลาง (ทิ้งว่างถ้าไม่แชร์)
+                          </label>
+                          <input
+                            value={
+                              e?.poolGroup !== undefined
+                                ? e.poolGroup
+                                : rl.poolGroup || ""
+                            }
+                            onChange={(ev) =>
+                              setEditing((p) => ({
+                                ...p,
+                                [rl.id]: {
+                                  ...(p[rl.id] || rl),
+                                  poolGroup: ev.target.value,
+                                },
+                              }))
+                            }
+                            placeholder="เช่น sales"
+                            className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[Prompt,monospace] box-border bg-gold-pale/30"
+                          />
+                        </div>
+                        <div className="mb-2.5">
+                          <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                            หน้าที่หลัก (พนักงานจะเห็นในหน้า Home)
+                          </label>
+                          <textarea
+                            value={
+                              e?.mainDuties !== undefined
+                                ? e.mainDuties
+                                : rl.mainDuties || ""
+                            }
+                            onChange={(ev) =>
+                              setEditing((p) => ({
+                                ...p,
+                                [rl.id]: {
+                                  ...(p[rl.id] || rl),
+                                  mainDuties: ev.target.value,
+                                },
+                              }))
+                            }
+                            placeholder={
+                              "เช่น\n• ดูแลลูกค้าหน้าร้าน\n• เช็คทอง+ของแถม"
+                            }
+                            rows={4}
+                            className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[inherit] box-border bg-gold-pale/30 resize-y"
+                          />
+                        </div>
+                      </>
                     )}
                     {dirty ? (
                       <div className="flex gap-1.5">
@@ -283,6 +331,7 @@ export default function RolesAdminPanel({
                               [rl.id]: {
                                 name: rl.name,
                                 poolGroup: rl.poolGroup || "",
+                                mainDuties: rl.mainDuties || "",
                               },
                             }))
                           }

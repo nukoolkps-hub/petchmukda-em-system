@@ -392,6 +392,7 @@ export default function LeaveApp() {
                       profile={profile}
                       allLeaves={allLeaves}
                       employeeDirectory={employeeDirectory}
+                      roles={roles}
                       duties={duties}
                       dutyAssignmentsToday={dutyAssignmentsToday}
                     />

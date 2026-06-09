@@ -7,14 +7,16 @@ import {
   CalendarRange as IconCalendarRange,
   CircleCheck as IconCircleCheck,
   ClipboardList as IconClipboardList,
+  ScrollText as IconScrollText,
   UserCheck as IconUserCheck,
   Wallet as IconWallet,
 } from "lucide-react";
 import { useState } from "react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { DutyAssignmentsSnapshot } from "../../firebase/dutyAssignments";
-import type { Duty, Employee, LeaveEntry } from "../../types";
+import type { Duty, Employee, LeaveEntry, Role } from "../../types";
 import DutyForecastModal from "../modals/DutyForecastModal";
+import RoleMainDutiesModal from "../modals/RoleMainDutiesModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import { MemphisCornerSticker } from "../shared/MemphisPattern";
 import TeamCalendar from "./TeamCalendar";
@@ -23,6 +25,7 @@ interface HomeTabProps {
   profile: any;
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
+  roles?: Role[];
   duties?: Duty[];
   dutyAssignmentsToday?: DutyAssignmentsSnapshot | null;
 }
@@ -31,9 +34,13 @@ export default function HomeTab({
   profile,
   allLeaves,
   employeeDirectory,
+  roles,
   duties,
   dutyAssignmentsToday,
 }: HomeTabProps) {
+  const [showMainDuties, setShowMainDuties] = useState(false);
+  const myRole = roles?.find((r) => r.id === profile?.roleId) || null;
+  const hasMainDuties = !!myRole?.mainDuties?.trim();
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
@@ -49,6 +56,27 @@ export default function HomeTab({
 
   return (
     <>
+      {/* ── ปุ่ม "หน้าที่หลัก" ── โชว์เมื่อ admin ตั้ง mainDuties ของตำแหน่งไว้ */}
+      {hasMainDuties && myRole && (
+        <div className="flex justify-end mb-2">
+          <button
+            type="button"
+            onClick={() => setShowMainDuties(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] border border-bdr bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit] shadow-[0_1px_5px_rgba(90,30,10,0.05)] active:scale-[0.96] transition-transform"
+          >
+            <IconScrollText size={13} strokeWidth={2.4} />
+            หน้าที่หลัก
+          </button>
+        </div>
+      )}
+
+      {showMainDuties && myRole && (
+        <RoleMainDutiesModal
+          role={myRole}
+          onClose={() => setShowMainDuties(false)}
+        />
+      )}
+
       {/* ── หน้าที่วันนี้ — เหนือ quota เพราะใช้เช็คทุกวัน ── */}
       {duties &&
         duties.length > 0 &&
