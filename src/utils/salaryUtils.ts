@@ -426,6 +426,8 @@ export function calculateSalary(
     (s, it) => s + it.amount,
     0,
   );
+  // เงินค่าแทน (coverage) — admin stamp ตอน save salary · denorm ใน snapshot
+  const coveragePay = Number(salary.coveragePay) || 0;
   const earnings =
     baseSalary +
     singleRateCommission +
@@ -434,6 +436,7 @@ export function calculateSalary(
     buyCommission +
     memberBonusTotal +
     attendanceBonus +
+    coveragePay +
     customEarningsTotal +
     recurringIncomesTotal;
   const advanceDeduction = approvedAdvanceTotal || 0;
@@ -523,6 +526,7 @@ export function calculateSalary(
     transferPieceRate,
     attendanceBonus,
     bonusDays,
+    coveragePay,
     leaveDays,
     advanceDeduction,
     socialSecurity: socialSecurityAmount,

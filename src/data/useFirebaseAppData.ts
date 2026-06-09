@@ -29,7 +29,10 @@ import * as poolAdjustmentsAPI from "../firebase/poolAdjustments";
 import * as poolSnapshotsAPI from "../firebase/poolSnapshots";
 import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
-import { employeeHasPoolExemptDuty } from "../utils/dutyUtils";
+import {
+  computeCoverageEarningsForMonth,
+  employeeHasPoolExemptDuty,
+} from "../utils/dutyUtils";
 import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
 import {
   isMonthLocked,
@@ -220,6 +223,14 @@ export default function useFirebaseAppData({
       dutiesResult.data,
       employeeResult.data,
     );
+    // เงินค่าแทน (coverage) ของเดือนนี้ — count × rate ต่อ duty
+    const coverage = computeCoverageEarningsForMonth(
+      employeeId,
+      yearMonth,
+      dutiesResult.data,
+      employeeResult.data,
+      leavesResult.data,
+    );
 
     // snapshot เรท/ตำแหน่งจากข้อมูลพนักงานปัจจุบัน — เขียนเฉพาะตอน "ไม่ freeze"
     const rateSnapshot = freezeSnapshot
@@ -228,6 +239,8 @@ export default function useFirebaseAppData({
           roleId: employee.roleId ?? null,
           poolExclusion: employee.poolExclusion ?? null,
           poolThresholdExempt,
+          coveragePay: coverage.total,
+          coveragePayBreakdown: coverage.breakdown,
           baseSalary: employee.baseSalary ?? 0,
           singlePieceRate: employee.singlePieceRate ?? 0,
           normalSalePieceRate: employee.normalSalePieceRate ?? 0,

@@ -86,6 +86,17 @@ export function buildSalarySlipDocDef({
       "โบนัสแห่งความขยัน(ไม่หยุด)",
       formatNumber(salaryCalculation.attendanceBonus),
     ]);
+  if ((salaryCalculation.coveragePay || 0) > 0) {
+    const brk = Array.isArray(data.coveragePayBreakdown)
+      ? data.coveragePayBreakdown
+          .map((b: any) => `${b.dutyName} ${b.count}×${formatNumber(b.rate)}`)
+          .join(", ")
+      : "";
+    earnRows.push([
+      brk ? `เงินค่าแทน\n${brk}` : "เงินค่าแทน",
+      formatNumber(salaryCalculation.coveragePay),
+    ]);
+  }
   if (Array.isArray(data.customEarnings))
     for (const e of data.customEarnings)
       if (e?.amount > 0)
