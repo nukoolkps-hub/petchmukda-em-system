@@ -339,6 +339,150 @@ export function employeeHasPoolExemptDuty(
   );
 }
 
+/* ─── Coverage earnings (เงินค่าแทน) ────────────────────────────────
+   คำนวณว่าคนคนหนึ่งใน yearMonth ถูกเลือกเป็นคนแทน (coverage actual)
+   ทั้งหมดกี่ครั้ง × rate ของแต่ละ duty → breakdown รายหน้าที่
+   replay logic เดียวกับ server (functions/duty/dutyUtils) เพื่อให้นับตรงกัน */
+
+function dutyIsOnLeave(
+  leaves: LeaveEntry[],
+  empId: string,
+  ymd: string,
+): boolean {
+  return leaves.some(
+    (l) => l.employeeId === empId && l.start <= ymd && l.end >= ymd,
+  );
+}
+
+function pickCoverageCandidate(
+  duty: Duty,
+  todayYmd: string,
+  employees: Employee[],
+  leaves: LeaveEntry[],
+  history: Map<string, number>,
+  usedToday: Set<string>,
+): string | null {
+  const byId = new Map(employees.map((e) => [e.id, e]));
+  const eligible = (duty.candidateEmpIds || [])
+    .map((id) => byId.get(id))
+    .filter(
+      (e): e is Employee =>
+        !!e &&
+        !e.salaryDisabled &&
+        !usedToday.has(e.id) &&
+        !dutyIsOnLeave(leaves, e.id, todayYmd),
+    )
+    .sort((a, b) => {
+      const ca = history.get(a.id) || 0;
+      const cb = history.get(b.id) || 0;
+      if (ca !== cb) return ca - cb;
+      const ao = typeof a.displayOrder === "number" ? a.displayOrder : 1e9;
+      const bo = typeof b.displayOrder === "number" ? b.displayOrder : 1e9;
+      if (ao !== bo) return ao - bo;
+      return (a.name || "").localeCompare(b.name || "", "th");
+    });
+  return eligible.length > 0 ? eligible[0].id : null;
+}
+
+function dutyAbsentTargets(
+  duty: Duty,
+  todayYmd: string,
+  employees: Employee[],
+  leaves: LeaveEntry[],
+): string[] {
+  return employees
+    .filter(
+      (e) =>
+        e.roleId === duty.coverageRoleId &&
+        !e.salaryDisabled &&
+        dutyIsOnLeave(leaves, e.id, todayYmd),
+    )
+    .sort(
+      (a, b) =>
+        (typeof a.displayOrder === "number" ? a.displayOrder : 1e9) -
+        (typeof b.displayOrder === "number" ? b.displayOrder : 1e9),
+    )
+    .map((e) => e.id);
+}
+
+export interface CoverageEarning {
+  dutyId: string;
+  dutyName: string;
+  count: number;
+  rate: number;
+  subtotal: number;
+}
+
+/** เงินค่าแทนของ employeeId ใน yearMonth — replay coverage ทั้งปี (จำเป็น
+ *  เพื่อให้ "ใครเคยแทนน้อยสุด" นับถูก) แล้วเฉพาะวันใน yearMonth นับเข้า
+ *  คนนี้ × rate ของแต่ละ duty                                            */
+export function computeCoverageEarningsForMonth(
+  employeeId: string,
+  yearMonth: string, // "YYYY-MM"
+  duties: Duty[],
+  employees: Employee[],
+  allLeaves: LeaveEntry[],
+): { total: number; breakdown: CoverageEarning[] } {
+  const coverageDuties = duties.filter(
+    (d) => d.kind === "coverage" && (d.coveragePayPerOccurrence || 0) > 0,
+  );
+  if (coverageDuties.length === 0) return { total: 0, breakdown: [] };
+
+  const [y, m] = yearMonth.split("-").map(Number);
+  const yearStart = `${y}-01-01`;
+  const monthStart = `${yearMonth}-01`;
+  const monthEnd = new Date(y, m, 0);
+  const monthEndYmd = `${yearMonth}-${String(monthEnd.getDate()).padStart(2, "0")}`;
+
+  // นับครั้งที่ employeeId ถูกเลือกในเดือนนี้ (per duty)
+  const countByDuty = new Map<string, number>();
+  const history = new Map<string, number>();
+  const start = new Date(`${yearStart}T00:00:00`);
+  // replay ตั้งแต่ต้นปี — รอบในเดือน yearMonth นับเข้า count, รอบก่อนหน้านับเข้า history
+  for (let d = new Date(start); ; d.setDate(d.getDate() + 1)) {
+    const ymd = toYMD(d);
+    if (ymd > monthEndYmd) break;
+    const inMonth = ymd >= monthStart && ymd <= monthEndYmd;
+    const usedToday = new Set<string>();
+    for (const duty of coverageDuties) {
+      for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
+        const pick = pickCoverageCandidate(
+          duty,
+          ymd,
+          employees,
+          allLeaves,
+          history,
+          usedToday,
+        );
+        if (!pick) continue;
+        usedToday.add(pick);
+        history.set(pick, (history.get(pick) || 0) + 1);
+        if (inMonth && pick === employeeId) {
+          countByDuty.set(duty.id, (countByDuty.get(duty.id) || 0) + 1);
+        }
+      }
+    }
+  }
+
+  const breakdown: CoverageEarning[] = [];
+  let total = 0;
+  for (const duty of coverageDuties) {
+    const count = countByDuty.get(duty.id) || 0;
+    if (count === 0) continue;
+    const rate = Number(duty.coveragePayPerOccurrence) || 0;
+    const subtotal = count * rate;
+    total += subtotal;
+    breakdown.push({
+      dutyId: duty.id,
+      dutyName: duty.name,
+      count,
+      rate,
+      subtotal,
+    });
+  }
+  return { total, breakdown };
+}
+
 /* ─── Forecast (ปฏิทินหน้าที่ล่วงหน้า) ──────────────────────────────
    คำนวณ "primary ของแต่ละ period ในอนาคต" — ใช้ pool ที่ resolve แล้ว
    (จาก server snapshot) ดังนั้นทั้ง admin/พนักงานคำนวณเองได้ client-side

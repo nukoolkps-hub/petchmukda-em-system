@@ -80,6 +80,19 @@ function buildSalarySlipHTML(
       label: "โบนัสแห่งความขยัน(ไม่หยุด)",
       value: salaryCalculation.attendanceBonus,
     });
+  if ((salaryCalculation.coveragePay || 0) > 0) {
+    const brk = Array.isArray(data.coveragePayBreakdown)
+      ? data.coveragePayBreakdown
+          .map((b) => `${b.dutyName} ${b.count}×${formatNumber(b.rate)}`)
+          .join(", ")
+      : "";
+    earnRows.push({
+      label: brk
+        ? `เงินค่าแทน <span style="font-size:10px;color:#999;">(${brk})</span>`
+        : "เงินค่าแทน",
+      value: salaryCalculation.coveragePay,
+    });
+  }
 
   // ── รายการหัก ──
   const dedRows: { label: string; value: any }[] = [];

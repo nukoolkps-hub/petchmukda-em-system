@@ -71,6 +71,10 @@ export default function DutyEditModal({
   const [candidateIds, setCandidateIds] = useState<Set<string>>(
     () => new Set(duty?.candidateEmpIds || []),
   );
+  // (coverage) เงินตอบแทนต่อครั้งที่แทน — เก็บเป็น string เพื่อ control input
+  const [coveragePayInput, setCoveragePayInput] = useState<string>(
+    duty?.coveragePayPerOccurrence ? String(duty.coveragePayPerOccurrence) : "",
+  );
   const [saving, setSaving] = useState(false);
 
   function toggleExclude(empId: string) {
@@ -194,6 +198,8 @@ export default function DutyEditModal({
             candidateIds={candidateIds}
             toggleCandidate={toggleCandidate}
             coverageCandidates={coverageCandidates}
+            coveragePayInput={coveragePayInput}
+            setCoveragePayInput={setCoveragePayInput}
           />
         ) : (
           <RotationFields
@@ -240,6 +246,9 @@ export default function DutyEditModal({
                         roleId: "",
                         coverageRoleId,
                         candidateEmpIds: [...candidateIds],
+                        coveragePayPerOccurrence:
+                          Math.max(0, Number(coveragePayInput) || 0) ||
+                          undefined,
                         rotationStartDate: `${startMonth}-01`,
                       }
                     : {
@@ -331,6 +340,8 @@ function CoverageFields({
   candidateIds,
   toggleCandidate,
   coverageCandidates,
+  coveragePayInput,
+  setCoveragePayInput,
 }: {
   roles: Role[];
   employeeDirectory: Employee[];
@@ -339,6 +350,8 @@ function CoverageFields({
   candidateIds: Set<string>;
   toggleCandidate: (id: string) => void;
   coverageCandidates: Employee[];
+  coveragePayInput: string;
+  setCoveragePayInput: (v: string) => void;
 }) {
   return (
     <>
@@ -387,6 +400,30 @@ function CoverageFields({
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* เงินตอบแทนต่อครั้งที่แทน */}
+      <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+        <label className="text-xs text-maroon font-bold mb-1.5 block">
+          เงินตอบแทนต่อครั้งที่แทน (฿)
+        </label>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-txt-soft">฿</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min="0"
+            value={coveragePayInput}
+            onChange={(e) => setCoveragePayInput(e.target.value)}
+            placeholder="0"
+            className="flex-1 py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
+          />
+          <span className="text-xs text-txt-soft">/ครั้ง</span>
+        </div>
+        <div className="text-xs text-txt-soft mt-1.5">
+          คนที่มาแทนจะได้เงินตอบแทน × จำนวนวันที่แทนในเดือนนั้น · แสดงในสลิป "เงินค่าแทน" ·
+          ใส่ 0 หรือเว้นว่าง = ไม่จ่าย
         </div>
       </div>
     </>
@@ -463,8 +500,8 @@ function RotationFields({
               ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%
             </span>
             <span className="block text-xs text-txt-soft mt-0.5">
-              คนทำหน้าที่นี้ติดทั้งเดือน ขายไม่ทันเพื่อน → เข้ากองกลางได้ (ยังเคารพฝั่งที่ admin
-              ปิด · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%)
+              คนทำหน้าที่นี้ติดทั้งเดือน ขายไม่ทันเพื่อน → เข้ากองกลางได้ (ยังเคารพฝั่งที่ admin ปิด
+              · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%)
             </span>
           </span>
         </button>

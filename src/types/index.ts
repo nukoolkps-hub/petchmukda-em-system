@@ -86,6 +86,17 @@ export interface SalaryMonth {
   // เดือนนี้คนนี้ทำ monthly duty ที่ "ให้สิทธิ์กองกลาง" → ยกเว้นเกณฑ์ 80%
   // (ทั้ง sell+buy) แต่ยังเคารพ poolExclusion + เกณฑ์ 50% เงินเดือนพื้นฐาน
   poolThresholdExempt?: boolean;
+  // ─── Coverage pay snapshot ─────────────────────────────────
+  // จำนวนเงินตอบแทนรวม + breakdown รายหน้าที่ (denorm จาก
+  // computeCoverageEarnings ตอน admin save salary)
+  coveragePay?: number;
+  coveragePayBreakdown?: {
+    dutyId: string;
+    dutyName: string;
+    count: number; // จำนวนวันที่แทนในเดือนนั้น
+    rate: number; // ฿/ครั้ง
+    subtotal: number; // count × rate
+  }[];
 }
 
 export type SalaryData = Record<string, Record<string, SalaryMonth>>;
@@ -145,6 +156,9 @@ export interface Duty {
   // ─── coverage (kind="coverage") ───────────────────────────────
   coverageRoleId?: string; // ตำแหน่งเป้าหมาย — เมื่อคนในตำแหน่งนี้ลา ต้องหาคนแทน
   candidateEmpIds?: string[]; // รายชื่อคนแทน (admin เลือก · ระบบหมุนให้ยุติธรรม)
+  /** (coverage) เงินตอบแทน "ต่อครั้ง/วันที่แทน" — ฿ · นับจากจำนวนวันที่
+   *  คนนั้นถูกเลือกเป็นคนแทนใน yearMonth · แสดงในสลิปแยกบรรทัด "เงินค่าแทน" */
+  coveragePayPerOccurrence?: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -222,6 +236,7 @@ export interface SalaryCalcResult {
   transferPieceRate: number;
   attendanceBonus: number;
   bonusDays: number;
+  coveragePay: number; // เงินตอบแทนแทนคนลา (รวม)
   leaveDays: number;
   advanceDeduction: number;
   loanDeduction: number;

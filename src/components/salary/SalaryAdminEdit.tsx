@@ -1195,6 +1195,46 @@ export default function SalaryAdminEdit({
             )}
           </div>
 
+          {/* เงินค่าแทน (coverage) — admin stamp ตอน save · auto-computed */}
+          {(salaryCalculation.coveragePay || 0) > 0 && (
+            <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
+              <div className="flex items-center gap-2.5">
+                <IconHandshake
+                  size={16}
+                  strokeWidth={2.2}
+                  color={COLORS.gold}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-txt-soft font-semibold">
+                    เงินค่าแทน (แทนคนลาเดือนนี้)
+                  </div>
+                  <div className="text-base font-bold text-green mt-px">
+                    +฿{formatThaiNumber(salaryCalculation.coveragePay || 0)}
+                  </div>
+                </div>
+              </div>
+              {Array.isArray(data.coveragePayBreakdown) &&
+                data.coveragePayBreakdown.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-dashed border-bdr flex flex-col gap-1">
+                    {data.coveragePayBreakdown.map((b) => (
+                      <div
+                        key={b.dutyId}
+                        className="flex justify-between text-[11px] text-txt-soft"
+                      >
+                        <span>
+                          {b.dutyName} · {b.count} ครั้ง × ฿
+                          {formatThaiNumber(b.rate)}
+                        </span>
+                        <span className="font-semibold text-txt-mid">
+                          +฿{formatThaiNumber(b.subtotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+            </div>
+          )}
+
           {/* Member-card bonus total — สรุปจากโบนัสบัตรสมาชิกด้านบน */}
           <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
             <div className="flex items-center gap-2.5">
