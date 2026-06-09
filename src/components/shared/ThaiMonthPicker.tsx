@@ -20,13 +20,13 @@ function fmtMonthYear(y: number, m1to12: number): string {
   return `${THAI_MONTH_NAMES[m1to12 - 1]} ${y + 543}`;
 }
 
-/** -3..+3 จากเดือนปัจจุบัน (ค.ศ.) → list ของ {ym, label} */
+/** เดือนนี้..+6 (ค.ศ.) → list ของ {ym, label} */
 function buildOptions(): { ym: string; label: string }[] {
   const now = new Date();
   const baseY = now.getFullYear();
   const baseM = now.getMonth() + 1; // 1..12
   const out: { ym: string; label: string }[] = [];
-  for (let offset = -3; offset <= 3; offset++) {
+  for (let offset = 0; offset <= 6; offset++) {
     // คำนวณ year+month ผ่าน Date เพื่อจัดการการข้ามปี
     const d = new Date(baseY, baseM - 1 + offset, 1);
     const y = d.getFullYear();
