@@ -278,6 +278,7 @@ export default function AdminPanel({
         <LeaveListPanel
           allLeaves={allLeaves}
           employeeDirectory={employeeDirectory}
+          payrollConfirms={payrollConfirms}
           onDelete={onDelete}
         />
       )}
