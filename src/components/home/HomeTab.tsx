@@ -361,7 +361,7 @@ function DutyTodayCard({
                     key={`${a.dutyId}-${a.targetEmpId || ""}`}
                     className="flex items-center gap-2 p-2 rounded-[9px] bg-cream"
                   >
-                    <div className="text-sm font-bold text-maroon flex-1 truncate">
+                    <div className="text-sm font-semibold text-maroon flex-1 truncate">
                       {a.dutyName}
                     </div>
                     {actual ? (
