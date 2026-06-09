@@ -1,7 +1,9 @@
 /* ─── หน้าที่หลักของตำแหน่ง — modal โชว์รายละเอียดที่ admin กรอกไว้ ──── */
 
 import { ScrollText as IconScrollText, X as IconX } from "lucide-react";
+import { useMemo } from "react";
 import type { Role } from "../../types";
+import { looksLikeHtml, sanitizeRichText } from "../../utils/sanitizeRichText";
 import BaseModal from "../shared/BaseModal";
 
 interface Props {
@@ -11,6 +13,11 @@ interface Props {
 
 export default function RoleMainDutiesModal({ role, onClose }: Props) {
   const text = (role.mainDuties || "").trim();
+  const isHtml = useMemo(() => looksLikeHtml(text), [text]);
+  const safeHtml = useMemo(
+    () => (isHtml ? sanitizeRichText(text) : ""),
+    [isHtml, text],
+  );
 
   return (
     <BaseModal onClose={onClose} maxWidthClass="max-w-[460px]">
@@ -35,13 +42,19 @@ export default function RoleMainDutiesModal({ role, onClose }: Props) {
       </div>
 
       <div className="px-5 py-4">
-        {text ? (
-          <div className="whitespace-pre-wrap text-sm text-txt leading-relaxed">
-            {text}
-          </div>
-        ) : (
+        {!text ? (
           <div className="text-center text-txt-soft py-6 text-sm">
             ยังไม่ได้กำหนดหน้าที่หลักของตำแหน่งนี้
+          </div>
+        ) : isHtml ? (
+          <div
+            className="rich-text-content text-sm text-txt"
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized via whitelist (sanitizeRichText)
+            dangerouslySetInnerHTML={{ __html: safeHtml }}
+          />
+        ) : (
+          <div className="whitespace-pre-wrap text-sm text-txt leading-relaxed">
+            {text}
           </div>
         )}
       </div>
