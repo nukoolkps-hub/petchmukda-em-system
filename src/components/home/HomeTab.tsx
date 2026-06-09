@@ -332,7 +332,10 @@ function DutyTodayCard({
             + ซ่อน coverage ที่เป้าหมายไม่ลา (ไม่มีอะไรเกิดขึ้น) */}
         {(() => {
           const otherAssignments = assignments.filter(
-            (a) => a.actualEmpId !== profileId && a.reason !== "target_present",
+            (a) =>
+              a.actualEmpId !== profileId &&
+              a.reason !== "target_present" &&
+              a.reason !== "empty_target_role",
           );
           if (otherAssignments.length === 0) return null;
           return (

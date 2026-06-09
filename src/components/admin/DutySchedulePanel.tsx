@@ -291,11 +291,19 @@ function DutyCard({
             </div>
           </div>
         ) : (
-          <div className="text-sm text-txt-soft italic">
+          <div
+            className={`text-sm italic ${
+              isCoverage && assignment?.reason === "empty_target_role"
+                ? "text-red font-semibold not-italic"
+                : "text-txt-soft"
+            }`}
+          >
             {isCoverage
               ? assignment?.reason === "coverage_no_candidate"
                 ? `${assignment?.targetName || "เป้าหมาย"} ลา — ไม่มีคนแทนได้`
-                : `${coverageRole?.name || "เป้าหมาย"}ไม่ลาวันนี้ — ไม่ต้องมีคนแทน`
+                : assignment?.reason === "empty_target_role"
+                  ? `⚠ ไม่มีคนในตำแหน่ง ${coverageRole?.name || "เป้าหมาย"} — กรุณาตรวจสอบการตั้งค่า`
+                  : `${coverageRole?.name || "เป้าหมาย"}ไม่ลาวันนี้ — ไม่ต้องมีคนแทน`
               : assignment?.reason === "all_on_leave"
                 ? "ทุกคนใน pool ลาวันนี้"
                 : "ยังไม่ได้ตั้ง pool"}

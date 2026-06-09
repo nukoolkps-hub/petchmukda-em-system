@@ -46,6 +46,7 @@ export type DutyReason =
 	// coverage (kind="coverage")
 	| "coverage" // มีคนแทนเรียบร้อย
 	| "coverage_no_candidate" // ตำแหน่งเป้าหมายลา แต่หาคนแทนไม่ได้
+	| "empty_target_role" // ตำแหน่งเป้าหมายไม่มีคนเลย (admin ตั้งค่าผิด)
 	| "target_present"; // ไม่มีคนในตำแหน่งเป้าหมายลาวันนี้
 
 export interface DutyAssignment {
@@ -333,6 +334,10 @@ function computeCoverageForDay(
 	const usedToday = new Set<string>();
 	const nameById = new Map(employees.map((e) => [e.id, e]));
 	for (const duty of coverageDuties) {
+		// แยกเคส: ตำแหน่งเป้าหมายไม่มีคนเลย (admin ตั้งค่าผิด) vs ทุกคนมาทำงานปกติ
+		const hasAnyTarget = employees.some(
+			(e) => e.roleId === duty.coverageRoleId && !e.salaryDisabled,
+		);
 		const targets = absentTargets(duty, todayYmd, employees, leaves);
 		if (targets.length === 0) {
 			assignments.push({
@@ -343,7 +348,7 @@ function computeCoverageForDay(
 				primaryEmpId: null,
 				actualEmpId: null,
 				targetEmpId: null,
-				reason: "target_present",
+				reason: hasAnyTarget ? "target_present" : "empty_target_role",
 				periodStart: todayYmd,
 				periodEnd: todayYmd,
 			});

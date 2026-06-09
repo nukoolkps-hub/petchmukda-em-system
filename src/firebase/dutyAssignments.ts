@@ -43,6 +43,7 @@ export interface SnapshotAssignment {
     | "empty_pool"
     | "coverage"
     | "coverage_no_candidate"
+    | "empty_target_role"
     | "target_present";
   periodStart: string;
   periodEnd: string;
