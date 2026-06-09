@@ -13,6 +13,7 @@ Earnings = baseSalary
          + invitePieces × invitePieceRate
          + transferPieces × transferPieceRate
          + attendanceBonus
+         + coveragePay              (เงินค่าแทน — coverage duty × จำนวนวันที่แทน)
 
 Deductions = overQuotaDeduction
            + advanceDeduction
@@ -152,6 +153,27 @@ Source: `src/utils/leaveUtils.ts`
 - Status flow: `active → paid_off / cancelled`
 
 Source: `src/firebase/employeeLoans.ts`, `src/utils/salaryUtils.ts` (`calculateSalary`)
+
+## เงินค่าแทน (coverage pay)
+
+Coverage duty (kind="coverage") ตั้ง `coveragePayPerOccurrence` (฿/ครั้ง) ได้
+— คนที่ถูกเลือกเป็นคนแทน (`actualEmpId` ของ coverage assignment) ใน
+yearMonth ได้เงินตอบแทน = `rate × จำนวนวัน`
+
+- **คำนวณ:** `computeCoverageEarningsForMonth(employeeId, yearMonth, duties, employees, allLeaves)`
+  ใน `src/utils/dutyUtils.ts` — replay coverage ตั้งแต่ต้นปี (จำเป็นเพื่อให้
+  "เคยแทนน้อยสุด" นับถูก) · นับเฉพาะวันใน yearMonth เข้า count, รอบก่อนหน้า
+  นับเข้า history เท่านั้น
+- **Stamp ที่ไหน:** `updateSalary` (`src/data/useFirebaseAppData.ts`) คำนวณ +
+  เขียน `salary.coveragePay` + `salary.coveragePayBreakdown` (denorm
+  สำหรับ employee view + slip)
+- **เพิ่มเข้า earnings:** `calculateSalary` รวม `coveragePay` ใน `earnings`
+- **แสดงที่ไหน:** SalaryAdminEdit (การ์ดแยก) · สลิป 2 path
+  (`printSalarySlip.ts` + `pdfBuilders/salarySlipPDF.ts`) บรรทัด
+  "เงินค่าแทน" + breakdown
+- **rate = 0/undefined → ไม่จ่าย:** ไม่ stamp + ไม่ขึ้นในสลิป
+
+Source: `src/utils/dutyUtils.ts` → `computeCoverageEarningsForMonth()`
 
 ## รายการหักจากกองกลาง (`poolAdjustments`)
 

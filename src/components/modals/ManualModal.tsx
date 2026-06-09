@@ -693,6 +693,35 @@ export default function ManualModal({ onClose }) {
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
+                <IconBanknote size={16} strokeWidth={2.4} />
+                เงินค่าแทน
+              </span>
+            }
+            color={COLORS.green}
+          >
+            <p>
+              หน้าที่ <b>"แทนคนลา"</b> ตั้ง <b>"เงินตอบแทนต่อครั้งที่แทน"</b> ได้ —
+              คนแทนได้เงินตามจำนวนวันที่ถูกเลือกในเดือนนั้น
+            </p>
+            <ul>
+              <li>
+                <b>สูตร:</b> เงินค่าแทน = อัตราต่อครั้ง × จำนวนวันที่แทนในเดือน
+              </li>
+              <li>
+                ระบบนับอัตโนมัติตอน Admin save salary — แสดงในสลิปแยกบรรทัด
+                <b> "เงินค่าแทน"</b> + breakdown รายหน้าที่
+              </li>
+              <li>ไม่ตั้งอัตรา (หรือใส่ 0) → ไม่จ่าย (ทำหน้าที่แทนตามปกติ ไม่มีเงินเพิ่ม)</li>
+            </ul>
+            <p className="text-xs text-txt-soft mt-1.5">
+              <b>ตัวอย่าง:</b> หน้าที่ "แทนบัญชี" ตั้ง ฿100/ครั้ง · แก้วถูกเลือกแทน บัญชีเดือนนี้ 3
+              วัน → ได้ <b className="text-green">฿300</b> เพิ่มในสลิป
+            </p>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
                 <IconHandshake size={16} strokeWidth={2.4} />
                 คนลา → หาคนแทนอัตโนมัติ
               </span>
