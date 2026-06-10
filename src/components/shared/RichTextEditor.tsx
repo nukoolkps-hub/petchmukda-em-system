@@ -86,7 +86,7 @@ export default function RichTextEditor({
         suppressContentEditableWarning
         data-placeholder={placeholder}
         onInput={(e) => onChange((e.currentTarget as HTMLDivElement).innerHTML)}
-        className={`rich-text-editor px-3 py-2 text-sm outline-none font-[inherit] text-txt ${minHeightClass}`}
+        className={`rich-text rich-text-editor px-3 py-2 text-sm outline-none font-[inherit] text-txt ${minHeightClass}`}
       />
     </div>
   );

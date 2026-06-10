@@ -10,7 +10,6 @@ import {
   CalendarClock as IconCalendarClock,
   CalendarRange as IconCalendarRange,
   UserCheck as IconUserCheck,
-  X as IconX,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type {
@@ -22,6 +21,7 @@ import { toYMD } from "../../utils/dateUtils";
 import { computeDutyForecast } from "../../utils/dutyUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
+import ModalHeader from "../shared/ModalHeader";
 
 interface Props {
   duties: Duty[];
@@ -158,29 +158,12 @@ export default function DutyForecastModal({
 
   return (
     <BaseModal onClose={onClose} maxWidthClass="max-w-[560px]">
-      <div className="sticky top-0 z-10 bg-cream px-5 py-4 border-b border-bdr flex items-center gap-3">
-        <div className="w-10 h-10 rounded-[11px] bg-gold-pale flex items-center justify-center shrink-0">
-          <IconCalendarRange
-            size={20}
-            strokeWidth={2.4}
-            className="text-maroon"
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-extrabold text-lg text-txt">ปฏิทินหน้าที่ล่วงหน้า</div>
-          <div className="text-xs text-txt-soft mt-0.5">
-            ตารางหมุนเวียนถึงสิ้นปี พ.ศ. {beYear}
-          </div>
-        </div>
-        <button
-          type="button"
-          aria-label="ปิด"
-          onClick={onClose}
-          className="w-9 h-9 rounded-[10px] border border-bdr bg-white text-txt-mid cursor-pointer flex items-center justify-center"
-        >
-          <IconX size={18} strokeWidth={2.3} />
-        </button>
-      </div>
+      <ModalHeader
+        Icon={IconCalendarRange}
+        title="ปฏิทินหน้าที่ล่วงหน้า"
+        subtitle={`ตารางหมุนเวียนถึงสิ้นปี พ.ศ. ${beYear}`}
+        onClose={onClose}
+      />
 
       <div className="px-4 py-3.5">
         {/* toggle เฉพาะของฉัน — เฉพาะฝั่งพนักงาน */}

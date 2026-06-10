@@ -39,6 +39,14 @@ export default function LeaveListPanel({
     .filter((lv) => !filterType || lv.type === filterType)
     .sort((a, b) => b.start.localeCompare(a.start));
 
+  // เดือนที่ปิดรอบแล้ว — precompute ครั้งเดียวจาก payrollConfirms (กี่เดือน
+  // ก็ไม่กี่ key) แทนการเรียก isMonthLocked() ต่อแถวต่อ render
+  const lockedMonths = new Set(
+    Object.keys(payrollConfirms || {}).filter((ym) =>
+      isMonthLocked(payrollConfirms[ym]),
+    ),
+  );
+
   return (
     <div>
       <div className="flex gap-2 mb-3.5">
@@ -92,7 +100,7 @@ export default function LeaveListPanel({
           const employeeInfo = employeeDirectory.find(
             (e) => e.id === lv.employeeId,
           );
-          const locked = isMonthLocked(payrollConfirms?.[monthOf(lv.start)]);
+          const locked = lockedMonths.has(monthOf(lv.start));
           return (
             <div
               key={lv.id}

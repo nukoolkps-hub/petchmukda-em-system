@@ -9,8 +9,9 @@
    - placeholder: ข้อความตอนยังไม่เลือก                            */
 
 import { ChevronDown as IconChevronDown } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { THAI_BANKS } from "../../constants";
+import { useClickOutside } from "../../hooks/useClickOutside";
 import BankLogo from "./BankLogo";
 
 interface BankPickerProps {
@@ -31,21 +32,7 @@ export default function BankPicker({
   const selected = THAI_BANKS.find((b) => b.name === value) || null;
 
   // close on outside click / Escape
-  useEffect(() => {
-    if (!open) return;
-    function onClick(e: MouseEvent) {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useClickOutside(wrapRef, () => setOpen(false), open, true);
 
   return (
     <div className="relative" ref={wrapRef}>

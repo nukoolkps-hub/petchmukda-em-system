@@ -26,6 +26,8 @@ interface HomeTabProps {
   profile: any;
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
+  /** employee record ของผู้ใช้ปัจจุบัน (จาก useProfile) — มี roleId */
+  currentEmployee?: Employee | null;
   roles?: Role[];
   duties?: Duty[];
   dutyAssignmentsToday?: DutyAssignmentsSnapshot | null;
@@ -35,17 +37,15 @@ export default function HomeTab({
   profile,
   allLeaves,
   employeeDirectory,
+  currentEmployee,
   roles,
   duties,
   dutyAssignmentsToday,
 }: HomeTabProps) {
   const [showMainDuties, setShowMainDuties] = useState(false);
-  // profile (จาก useProfile) เก็บแค่ role name string ไม่มี roleId — lookup
-  // employee จาก directory (id ตรง) แล้วค่อย map → role doc
-  const myEmployee = profile
-    ? employeeDirectory.find((e) => e.id === profile.id)
-    : null;
-  const myRole = roles?.find((r) => r.id === myEmployee?.roleId) || null;
+  // ใช้ currentEmployee จาก useProfile (single source of identity) แทนการ
+  // re-derive จาก employeeDirectory — roleId อยู่ที่นี่อยู่แล้ว
+  const myRole = roles?.find((r) => r.id === currentEmployee?.roleId) || null;
   const hasMainDuties = !isRichTextEmpty(myRole?.mainDuties);
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;

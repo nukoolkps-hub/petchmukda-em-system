@@ -10,7 +10,7 @@ import {
   User as IconUser,
   X as IconX,
 } from "lucide-react";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { COLORS } from "../../constants";
 import {
   isRichTextEmpty,
@@ -108,10 +108,15 @@ export default function RolesAdminPanel({
     groups[k].push(r);
   });
 
-  function changeEmpRole(employeeId, roleId, roleName) {
-    onUpdateEmployeeRole(employeeId, "roleId", roleId);
-    onUpdateEmployeeRole(employeeId, "role", roleName);
-  }
+  // useCallback → ref คงที่ ให้ EmployeeRoleAssignmentList ที่ memo ไว้
+  // ไม่ re-render ตอนพิมพ์ใน editor (onUpdateEmployeeRole เป็น prop คงที่)
+  const changeEmpRole = useCallback(
+    (employeeId: string, roleId: string, roleName: string) => {
+      onUpdateEmployeeRole(employeeId, "roleId", roleId);
+      onUpdateEmployeeRole(employeeId, "role", roleName);
+    },
+    [onUpdateEmployeeRole],
+  );
 
   return (
     <div>
@@ -372,57 +377,13 @@ export default function RolesAdminPanel({
         );
       })}
 
-      {/* Assign roles to employees */}
-      <div className="mt-6 pt-4 border-t border-dashed border-bdr">
-        <div className="text-sm font-bold text-maroon mb-2.5 flex items-center gap-2">
-          <IconTarget size={16} strokeWidth={2.2} />
-          กำหนดตำแหน่งให้พนักงาน
-        </div>
-        <div className="flex flex-col gap-2">
-          {employeeDirectory.map((employee) => (
-            <div
-              key={employee.id}
-              className="bg-white rounded-[10px] px-3 py-2.5 border border-bdr flex items-center gap-2.5"
-            >
-              <AvatarCircle
-                avatar={employee.avatar}
-                avatarType={employee.avatarType}
-                avatarImageUrl={employee.avatarImageUrl}
-                size={34}
-                fontSize={11}
-                border={`1.5px solid ${COLORS.gold}30`}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-txt whitespace-nowrap overflow-hidden text-ellipsis">
-                  {employee.name}
-                </div>
-              </div>
-              <div className="relative">
-                <select
-                  value={employee.roleId || ""}
-                  onChange={(ev) => {
-                    const rl = roles.find((r) => r.id === ev.target.value);
-                    if (rl) changeEmpRole(employee.id, rl.id, rl.name);
-                  }}
-                  className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt"
-                >
-                  <option value="">— เลือก —</option>
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-                <IconChevronDown
-                  size={12}
-                  strokeWidth={2.4}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Assign roles to employees — แยก + memo: ไม่ขึ้นกับ draft แก้ไข
+          ตำแหน่ง จึงไม่ต้อง re-render ตอนพิมพ์ใน editor หน้าที่หลัก */}
+      <EmployeeRoleAssignmentList
+        employeeDirectory={employeeDirectory}
+        roles={roles}
+        onChangeEmpRole={changeEmpRole}
+      />
 
       {/* Confirm delete */}
       {confirmDel && (
@@ -457,3 +418,73 @@ export default function RolesAdminPanel({
     </div>
   );
 }
+
+/* ─── EmployeeRoleAssignmentList — รายชื่อพนักงาน + dropdown ตำแหน่ง ──
+   memo: re-render เฉพาะเมื่อ employeeDirectory/roles/handler เปลี่ยน —
+   ไม่ใช่ทุก keystroke ที่ admin พิมพ์ใน editor หน้าที่หลัก             */
+const EmployeeRoleAssignmentList = memo(function EmployeeRoleAssignmentList({
+  employeeDirectory,
+  roles,
+  onChangeEmpRole,
+}: {
+  employeeDirectory: any[];
+  roles: any[];
+  onChangeEmpRole: (
+    employeeId: string,
+    roleId: string,
+    roleName: string,
+  ) => void;
+}) {
+  return (
+    <div className="mt-6 pt-4 border-t border-dashed border-bdr">
+      <div className="text-sm font-bold text-maroon mb-2.5 flex items-center gap-2">
+        <IconTarget size={16} strokeWidth={2.2} />
+        กำหนดตำแหน่งให้พนักงาน
+      </div>
+      <div className="flex flex-col gap-2">
+        {employeeDirectory.map((employee) => (
+          <div
+            key={employee.id}
+            className="bg-white rounded-[10px] px-3 py-2.5 border border-bdr flex items-center gap-2.5"
+          >
+            <AvatarCircle
+              avatar={employee.avatar}
+              avatarType={employee.avatarType}
+              avatarImageUrl={employee.avatarImageUrl}
+              size={34}
+              fontSize={11}
+              border={`1.5px solid ${COLORS.gold}30`}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-txt whitespace-nowrap overflow-hidden text-ellipsis">
+                {employee.name}
+              </div>
+            </div>
+            <div className="relative">
+              <select
+                value={employee.roleId || ""}
+                onChange={(ev) => {
+                  const rl = roles.find((r) => r.id === ev.target.value);
+                  if (rl) onChangeEmpRole(employee.id, rl.id, rl.name);
+                }}
+                className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt"
+              >
+                <option value="">— เลือก —</option>
+                {roles.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+              <IconChevronDown
+                size={12}
+                strokeWidth={2.4}
+                className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
