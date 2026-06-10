@@ -161,6 +161,13 @@ export interface Duty {
   /** (coverage) เงินตอบแทน "ต่อครั้ง/วันที่แทน" — ฿ · นับจากจำนวนวันที่
    *  คนนั้นถูกเลือกเป็นคนแทนใน yearMonth · แสดงในสลิปแยกบรรทัด "เงินค่าแทน" */
   coveragePayPerOccurrence?: number;
+  /** Primary cache (B · stability) — เก็บคนที่ระบบเลือกเป็น primary
+   *  ใน period ปัจจุบัน · pool เปลี่ยนกลาง period ไม่ recompute (ใช้ cache)
+   *  · invalidate ตอน period boundary หรือคนใน cache หายจาก pool        */
+  cachedPrimary?: {
+    periodIndex: number;
+    empId: string;
+  } | null;
   createdAt: number;
   updatedAt: number;
 }

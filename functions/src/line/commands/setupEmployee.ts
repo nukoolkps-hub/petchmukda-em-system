@@ -117,11 +117,22 @@ async function handleSetupEmployeeCommand({
 			setupCommand.employeeKey,
 		);
 
+		// C · Auto-anchor — ตอนสร้างพนักงานใหม่ ให้ต่อท้าย queue (max+1)
+		//      เพื่อไม่แทรกกลาง rotation ที่หมุนอยู่ของหน้าที่ต่างๆ
+		const allEmpsSnap = await db.collection("employees").get();
+		let maxOrder = -1;
+		for (const d of allEmpsSnap.docs) {
+			const v = d.data()?.displayOrder;
+			if (typeof v === "number" && v > maxOrder) maxOrder = v;
+		}
+		const nextOrder = maxOrder + 1;
+
 		const employeeRef = db.collection("employees").doc();
 		await employeeRef.set({
 			name: setupCommand.employeeKey,
 			role: "-",
 			roleId: "",
+			displayOrder: nextOrder,
 			avatar: makeAvatarText(setupCommand.employeeKey),
 			avatarType: "text",
 			avatarImageUrl: null,
