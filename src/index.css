@@ -377,12 +377,21 @@ input[type="number"] {
 }
 .rich-text ul,
 .rich-text ol {
-  list-style: none;
+  /* !important + list-style-type: none ทับ inline style ที่ contentEditable
+     (iOS Safari) อาจใส่บน <ul>/<ol> ตอนพิมพ์ในตัว editor */
+  list-style: none !important;
+  list-style-type: none !important;
   padding-left: 1.25em;
   margin: 0.25em 0;
 }
 .rich-text li {
   margin: 0.15em 0;
+}
+.rich-text li::marker {
+  /* บางเบราว์เซอร์ยังวาด ::marker แม้ list-style: none → ปิดที่ pseudo
+     element ตรงๆ ให้แน่นอน */
+  content: "";
+  font-size: 0;
 }
 .rich-text blockquote {
   margin: 0 0 0 1.25em !important;
