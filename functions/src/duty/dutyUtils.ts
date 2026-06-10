@@ -36,14 +36,15 @@ export function hashDutyId(id: string): number {
 }
 
 /** เลือก primary (A+B) — cache → hash base → skip-collision (กระจายคน)
- *  used = คนที่เป็น primary ของหน้าที่อื่นในรอบนี้แล้ว · single source ของ
- *  การเลือก primary (ใช้ทั้ง Phase 1/2 และ standalone) — ต้องตรงกับ client */
+ *  used = คนที่เป็น primary ของหน้าที่อื่นในรอบนี้แล้ว · คืน null เมื่อ pool
+ *  ว่าง (safety net) · ⚠️ ต้องตรงกับ src/utils/dutyUtils.ts เป๊ะ           */
 export function pickPrimary(
 	duty: Duty,
 	pool: string[],
 	periodIdx: number,
 	used: Set<string>,
-): string {
+): string | null {
+	if (pool.length === 0) return null; // กัน % 0 = NaN
 	const cache = duty.cachedPrimary;
 	if (
 		cache &&
@@ -217,11 +218,25 @@ export function computeDutyForDay(
 
 	const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
 	// ใช้ primary ที่ Phase 1/2 คำนวณไว้ (cache + hash + de-collide) ถ้ายัง
-	// อยู่ใน pool · ไม่งั้น compute เอง (standalone)
+	// อยู่ใน pool · ไม่งั้น compute เอง — ใช้ primariesToday เป็น used set
+	// เพื่อเคารพ skip-collision แม้ใน fallback
 	const primary =
 		precomputedPrimary && pool.includes(precomputedPrimary)
 			? precomputedPrimary
-			: pickPrimary(duty, pool, idx, new Set<string>());
+			: pickPrimary(duty, pool, idx, primariesToday);
+	if (!primary) {
+		// pool ว่างหลัง filter ทุกชั้น (ไม่ควรถึง — fullPool guard ด้านบน)
+		return {
+			dutyId: duty.id,
+			dutyName: duty.name,
+			period: duty.period,
+			primaryEmpId: null,
+			actualEmpId: null,
+			reason: "empty_pool",
+			periodStart,
+			periodEnd,
+		};
+	}
 
 	if (!isOnLeave(leaves, primary, todayYmd)) {
 		return {
@@ -496,6 +511,31 @@ export function computeAllDutiesForDay(
 	return out;
 }
 
+/** assign primary ให้หน้าที่กลุ่มหนึ่ง — ลูปเดียวใช้ทั้ง monthly (lockPicked)
+ *  และ weekly · ⚠️ ต้องตรงกับ src/utils/dutyUtils.ts เป๊ะ                  */
+function assignPrimaries(
+	duties: Duty[],
+	todayYmd: string,
+	poolOf: (duty: Duty) => string[],
+	assigned: Set<string>,
+	locked: Set<string>,
+	lockPicked: boolean,
+	out: Map<string, string>,
+): void {
+	for (const duty of duties) {
+		const fullPool = poolOf(duty);
+		if (fullPool.length === 0) continue;
+		const remaining = fullPool.filter((id) => !locked.has(id));
+		const pool = remaining.length > 0 ? remaining : fullPool;
+		const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
+		const primary = pickPrimary(duty, pool, idx, assigned);
+		if (!primary) continue;
+		assigned.add(primary);
+		if (lockPicked) locked.add(primary);
+		out.set(duty.id, primary);
+	}
+}
+
 function computeRotationForDay(
 	duties: Duty[],
 	todayYmd: string,
@@ -509,29 +549,26 @@ function computeRotationForDay(
 	const assigned = new Set<string>();
 	const lockedByMonthly = new Set<string>();
 	const primaryByDuty = new Map<string, string>();
+	const poolOf = (duty: Duty) => activePool(duty, employees);
 
-	monthlyDuties.forEach((duty) => {
-		const fullPool = activePool(duty, employees);
-		if (fullPool.length === 0) return;
-		const remaining = fullPool.filter((id) => !lockedByMonthly.has(id));
-		const pool = remaining.length > 0 ? remaining : fullPool;
-		const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-		const primary = pickPrimary(duty, pool, idx, assigned);
-		assigned.add(primary);
-		lockedByMonthly.add(primary);
-		primaryByDuty.set(duty.id, primary);
-	});
-
-	weeklyDuties.forEach((duty) => {
-		const fullPool = activePool(duty, employees);
-		if (fullPool.length === 0) return;
-		const preferred = fullPool.filter((id) => !lockedByMonthly.has(id));
-		const pool = preferred.length > 0 ? preferred : fullPool;
-		const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-		const primary = pickPrimary(duty, pool, idx, assigned);
-		assigned.add(primary);
-		primaryByDuty.set(duty.id, primary);
-	});
+	assignPrimaries(
+		monthlyDuties,
+		todayYmd,
+		poolOf,
+		assigned,
+		lockedByMonthly,
+		true,
+		primaryByDuty,
+	);
+	assignPrimaries(
+		weeklyDuties,
+		todayYmd,
+		poolOf,
+		assigned,
+		lockedByMonthly,
+		false,
+		primaryByDuty,
+	);
 
 	const primariesToday = new Set<string>(primaryByDuty.values());
 
