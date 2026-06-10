@@ -15,6 +15,7 @@ import { useState } from "react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { DutyAssignmentsSnapshot } from "../../firebase/dutyAssignments";
 import type { Duty, Employee, LeaveEntry, Role } from "../../types";
+import { isRichTextEmpty } from "../../utils/sanitizeRichText";
 import DutyForecastModal from "../modals/DutyForecastModal";
 import RoleMainDutiesModal from "../modals/RoleMainDutiesModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -45,7 +46,7 @@ export default function HomeTab({
     ? employeeDirectory.find((e) => e.id === profile.id)
     : null;
   const myRole = roles?.find((r) => r.id === myEmployee?.roleId) || null;
-  const hasMainDuties = !!myRole?.mainDuties?.trim();
+  const hasMainDuties = !isRichTextEmpty(myRole?.mainDuties);
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 

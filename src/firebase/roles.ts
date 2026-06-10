@@ -33,7 +33,9 @@ export async function upsertRole(role) {
     {
       name: role.name,
       poolGroup: role.poolGroup,
-      icon: role.icon,
+      // ?? null กัน setDoc throw — Firestore reject undefined (ไม่ได้ตั้ง
+      // ignoreUndefinedProperties) · ตำแหน่งสร้างใหม่ไม่มี icon
+      icon: role.icon ?? null,
       mainDuties: role.mainDuties ?? null,
       updatedAt: Date.now(),
     },

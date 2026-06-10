@@ -73,3 +73,19 @@ export function sanitizeRichText(html: string): string {
 export function looksLikeHtml(value: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(value);
 }
+
+/** ดึงเฉพาะ text จริง (ตัด tag ทิ้ง) — ใช้เช็คว่า rich text "ว่างจริง"
+ *  หรือไม่ (contentEditable เคลียร์แล้วมักเหลือ <br>/<div><br></div>) */
+export function richTextToPlainText(html: string): string {
+  if (!html) return "";
+  if (typeof document === "undefined") return html.replace(/<[^>]*>/g, "");
+  const tmpl = document.createElement("template");
+  tmpl.innerHTML = html;
+  return tmpl.content.textContent || "";
+}
+
+/** rich text ที่ไม่มี text จริง (มีแต่ tag ว่าง / ช่องว่าง / &nbsp;)
+ *  → ถือว่า "ว่าง" · ใช้ทั้งฝั่ง save (เก็บเป็น null) และฝั่ง render */
+export function isRichTextEmpty(html: string | null | undefined): boolean {
+  return richTextToPlainText(html || "").trim() === "";
+}

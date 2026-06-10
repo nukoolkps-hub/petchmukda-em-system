@@ -12,8 +12,21 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { COLORS } from "../../constants";
+import {
+  isRichTextEmpty,
+  sanitizeRichText,
+} from "../../utils/sanitizeRichText";
 import AvatarCircle from "../shared/AvatarCircle";
 import RichTextEditor from "../shared/RichTextEditor";
+
+/** normalize ฟิลด์ "หน้าที่หลัก" ก่อนเก็บ:
+ *  - ว่างจริง (เคลียร์แล้วเหลือ <br>) → null
+ *  - มีเนื้อหา → sanitize ทันทีตอน write (single source of truth ปลอดภัย
+ *    ทุก surface รวมถึง editor ฝั่ง admin — ไม่ต้องพึ่ง sanitize ตอน render) */
+function cleanMainDuties(html: string | null | undefined): string | null {
+  if (isRichTextEmpty(html)) return null;
+  return sanitizeRichText(html || "");
+}
 
 /* ─── Admin: Roles Management Panel ────────────────────────────── */
 export default function RolesAdminPanel({
@@ -43,7 +56,7 @@ export default function RolesAdminPanel({
         ...current,
         name: e.name || current.name,
         poolGroup: e.poolGroup || null,
-        mainDuties: e.mainDuties?.trim() || null,
+        mainDuties: cleanMainDuties(e.mainDuties),
       });
       setEditing((prev) => {
         const n = { ...prev };
@@ -65,7 +78,7 @@ export default function RolesAdminPanel({
         id,
         name: newRole.name.trim(),
         poolGroup: newRole.poolGroup.trim() || null,
-        mainDuties: newRole.mainDuties.trim() || null,
+        mainDuties: cleanMainDuties(newRole.mainDuties),
       });
       setNewRole({ name: "", poolGroup: "", mainDuties: "" });
       setShowAdd(false);
@@ -324,7 +337,11 @@ export default function RolesAdminPanel({
                               [rl.id]: {
                                 name: rl.name,
                                 poolGroup: rl.poolGroup || "",
-                                mainDuties: rl.mainDuties || "",
+                                // sanitize ก่อนใส่ editor — กัน HTML ดิบ/พิษ
+                                // จาก DB รันใน contentEditable ฝั่ง admin
+                                mainDuties: sanitizeRichText(
+                                  rl.mainDuties || "",
+                                ),
                               },
                             }))
                           }
