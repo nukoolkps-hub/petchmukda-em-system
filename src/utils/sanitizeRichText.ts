@@ -21,13 +21,32 @@ const ALLOWED_TAGS = new Set([
 
 const ALLOWED_ATTRS_BY_TAG: Record<string, Set<string>> = {
   FONT: new Set(["size"]),
+  // ul/ol รับ class="rt-bullet" ได้ — เป็น flag แยก "bullet ที่ตั้งใจ
+  // ใส่" (โชว์จุด) ออกจาก ul ที่ contentEditable สร้างเองตอน indent
+  UL: new Set(["class"]),
+  OL: new Set(["class"]),
 };
+
+// whitelist ค่า class ที่อนุญาต — กันใส่ class แปลกๆ ที่อาจถูกผูกกับ
+// CSS อื่น (เก็บได้แค่ rt-bullet ทุกตัวอื่นถูกตัด)
+const ALLOWED_CLASS_VALUES = new Set(["rt-bullet"]);
 
 function cleanElement(el: Element) {
   const tag = el.tagName;
   const allowedAttrs = ALLOWED_ATTRS_BY_TAG[tag] || new Set<string>();
   for (const attr of Array.from(el.attributes)) {
-    if (!allowedAttrs.has(attr.name)) el.removeAttribute(attr.name);
+    if (!allowedAttrs.has(attr.name)) {
+      el.removeAttribute(attr.name);
+      continue;
+    }
+    if (attr.name === "class") {
+      const kept = attr.value
+        .split(/\s+/)
+        .filter((c) => ALLOWED_CLASS_VALUES.has(c))
+        .join(" ");
+      if (kept) el.setAttribute("class", kept);
+      else el.removeAttribute("class");
+    }
   }
 }
 
