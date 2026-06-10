@@ -215,18 +215,22 @@ export default function ManualModal({ onClose }) {
             </b>{" "}
             เงินเดือน ฿18,000 ลาวันธรรมดา 1 + วันอาทิตย์ 1<br />
             เรท/วัน = 18,000 ÷ 30 = <b>฿600</b>
-            <br />
-            <span className="text-green inline-flex items-center gap-1">
-              <IconCheck size={14} strokeWidth={3} />
-              ได้โบนัสแห่งความขยัน
-            </span>{" "}
-            1 × 600 = <b>฿600</b>
-            <br />
-            <span className="text-red inline-flex items-center gap-1">
-              <IconX size={14} strokeWidth={3} />
-              หักวันอาทิตย์
-            </span>{" "}
-            600 × 1.5 = <b>฿900</b>
+            <div className="grid grid-cols-[max-content_1fr] gap-x-2 gap-y-1 mt-1.5 items-center">
+              <span className="text-green inline-flex items-center gap-1">
+                <IconCheck size={14} strokeWidth={3} className="shrink-0" />
+                ได้โบนัสแห่งความขยัน
+              </span>
+              <span>
+                1 × 600 = <b>฿600</b>
+              </span>
+              <span className="text-red inline-flex items-center gap-1">
+                <IconX size={14} strokeWidth={3} className="shrink-0" />
+                หักวันอาทิตย์
+              </span>
+              <span>
+                600 × 1.5 = <b>฿900</b>
+              </span>
+            </div>
           </Box>
         </div>
       )}
