@@ -3,7 +3,11 @@
 import { ScrollText as IconScrollText, X as IconX } from "lucide-react";
 import { useMemo } from "react";
 import type { Role } from "../../types";
-import { looksLikeHtml, sanitizeRichText } from "../../utils/sanitizeRichText";
+import {
+  isRichTextEmpty,
+  looksLikeHtml,
+  sanitizeRichText,
+} from "../../utils/sanitizeRichText";
 import BaseModal from "../shared/BaseModal";
 
 interface Props {
@@ -13,6 +17,8 @@ interface Props {
 
 export default function RoleMainDutiesModal({ role, onClose }: Props) {
   const text = (role.mainDuties || "").trim();
+  // เช็คเนื้อหาจริง — legacy value อาจมีแต่ <br>/<div> ว่างที่ trim ไม่ตัด
+  const empty = isRichTextEmpty(text);
   const isHtml = useMemo(() => looksLikeHtml(text), [text]);
   const safeHtml = useMemo(
     () => (isHtml ? sanitizeRichText(text) : ""),
@@ -42,7 +48,7 @@ export default function RoleMainDutiesModal({ role, onClose }: Props) {
       </div>
 
       <div className="px-5 py-4">
-        {!text ? (
+        {empty ? (
           <div className="text-center text-txt-soft py-6 text-sm">
             ยังไม่ได้กำหนดหน้าที่หลักของตำแหน่งนี้
           </div>
