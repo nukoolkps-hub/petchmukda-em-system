@@ -17,6 +17,7 @@ import {
   RefreshCw as IconRefresh,
   RotateCw as IconRotate,
   Ruler as IconRuler,
+  Scale as IconScale,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
   Star as IconStar,
@@ -670,7 +671,7 @@ export default function ManualModal({ onClose }) {
                 <li>
                   <b>รายเดือน</b> — สลับคนทุกเดือน (เช่น Online)
                 </li>
-                <li>วนตามลำดับให้ทุกคนได้ทำเท่าๆ กัน (ยุติธรรมเชิงสถิติ)</li>
+                <li>วนเป็นรอบ — ครบรอบหนึ่ง ทุกคนได้ทำหน้าที่นั้นคนละ 1 ครั้ง เท่ากันเสมอ</li>
               </ul>
             </Card>
             <Card
@@ -734,6 +735,54 @@ export default function ManualModal({ onClose }) {
                 <b>ไม่ทับหน้าที่อื่น</b> — ข้ามคนที่มีหน้าที่อื่นในวันนั้นก่อน
               </li>
               <li>คนทำรายเดือนลา → ดึงคนที่ว่างมาคลุมให้</li>
+            </ul>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconScale size={16} strokeWidth={2.4} />
+                กติกาความยุติธรรม
+              </span>
+            }
+            color={COLORS.green}
+          >
+            <ul>
+              <li>
+                <b>1 วัน 1 คน 1 หน้าที่</b> — ระบบกระจายหน้าที่ให้คนละคนเสมอ ไม่มีใครโดน 2
+                หน้าที่พร้อมกัน (ยกเว้นคนน้อยกว่าหน้าที่ หรือมีคนลา)
+              </li>
+              <li>
+                <b>ครบรอบ = เท่ากันเป๊ะ</b> — ถ้าทีมไม่เปลี่ยน ทุกคนได้แต่ละหน้าที่
+                จำนวนครั้งเท่ากันทุกปี · มีคนน้อยกว่าหน้าที่ → คิว "พัก" ก็หมุนเวียนเท่ากัน
+              </li>
+              <li>
+                <b>คนใหม่ต่อท้ายคิว</b> — พนักงานเข้าใหม่ไม่เบียดคิวใคร
+                รอเข้ารอบหมุนถัดไปตามลำดับ
+              </li>
+            </ul>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconLock size={16} strokeWidth={2.4} />
+                ตารางนิ่ง ไม่สะเทือนง่าย
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              คนที่ได้รับหน้าที่ของสัปดาห์/เดือนนี้แล้ว จะ<b>ถูกล็อกไว้จนจบรอบ</b> —
+              ระหว่างรอบมีอะไรเปลี่ยน ตารางของคุณไม่เด้งไปมา:
+            </p>
+            <ul>
+              <li>มีคนเข้า/ออกจากทีมกลางรอบ → คนทำหน้าที่รอบนี้คงเดิม</li>
+              <li>Admin เพิ่ม/ลบหน้าที่อื่น → คิวหน้าที่ของคุณไม่ขยับ</li>
+              <li>
+                ยกเว้นคนที่ถูกล็อกไว้<b>ลาหรือออกจากทีม</b> → ระบบหาคนแทนทันที
+              </li>
+              <li>ขึ้นรอบใหม่ (สัปดาห์/เดือนถัดไป) → หมุนไปคนถัดไปตามปกติ</li>
             </ul>
           </Section>
 
