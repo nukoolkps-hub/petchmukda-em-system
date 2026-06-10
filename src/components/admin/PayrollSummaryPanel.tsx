@@ -411,12 +411,6 @@ export default function PayrollSummaryPanel({
         </div>
       </div>
 
-      {monthlyApprovedAdvances.loading && (
-        <div className="mb-3.5 px-3.5 py-2.5 rounded-[10px] bg-cream border border-bdr text-sm text-txt-soft">
-          กำลังโหลดข้อมูลเบิกเงินเดือนนี้...
-        </div>
-      )}
-
       {monthlyApprovedAdvances.error && (
         <div className="mb-3.5 px-3.5 py-2.5 rounded-[10px] bg-red-lt border border-red/25 text-sm text-red">
           โหลดข้อมูลเบิกเงินเดือนนี้ไม่สำเร็จ
@@ -435,13 +429,25 @@ export default function PayrollSummaryPanel({
           <path d="M6 3h12l4 6-10 12L2 9z" />
         </svg>
         <div className="relative">
-          <div className="text-sm text-gold-lt/65 mb-[3px]">
+          <div className="text-sm text-gold-lt/65 mb-[3px] flex items-center gap-1.5">
             ยอดที่ต้องโอนเดือนนี้ ({filtered.length} คน)
+            {advanceDataBlocked && !monthlyApprovedAdvances.error && (
+              // indicator เล็กในการ์ดแทนแถบโหลดแยก — ไม่ดัน layout
+              <IconRefresh
+                size={12}
+                strokeWidth={2.4}
+                className="animate-spin opacity-70"
+              />
+            )}
           </div>
-          <div className="text-3xl font-extrabold text-gold-lt tracking-[-0.02em] mb-2">
+          {/* ระหว่างรอข้อมูลเบิกของเดือนใหม่ ยอดยังคำนวณจากเบิกเดือนเก่า
+              (keepPreviousData) → จางตัวเลขไว้ก่อน กันเข้าใจผิดว่า final */}
+          <div
+            className={`text-3xl font-extrabold text-gold-lt tracking-[-0.02em] mb-2 transition-opacity duration-200 ${advanceDataBlocked ? "opacity-40" : ""}`}
+          >
             ฿{formatThaiNumber(totalPayout)}
           </div>
-          {totalAdvance > 0 && (
+          {totalAdvance > 0 && !advanceDataBlocked && (
             <div className="text-sm text-gold-lt/60 pt-2 border-t border-gold-lt/15 flex items-center gap-1.5">
               <IconBanknote size={14} strokeWidth={2.4} className="shrink-0" />
               <span>
