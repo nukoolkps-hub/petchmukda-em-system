@@ -13,7 +13,8 @@
     "lint": "biome lint --write .",
     "format": "biome format --write .",
     "check": "biome check --write .",
-    "typecheck": "tsc --noEmit"
+    "check:duty-sync": "node scripts/check-duty-sync.mjs",
+    "typecheck": "tsc --noEmit && node scripts/check-duty-sync.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

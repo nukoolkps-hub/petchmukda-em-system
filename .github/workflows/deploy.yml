@@ -55,6 +55,9 @@ jobs:
 
       - run: npm ci --prefix functions
 
+      # กัน rotation algorithm client/server diverge — fail ก่อน deploy
+      - run: node scripts/check-duty-sync.mjs
+
       - run: npm run build --prefix functions
 
       - uses: google-github-actions/auth@v2
