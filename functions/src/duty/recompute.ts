@@ -161,7 +161,13 @@ async function buildSnapshot(): Promise<Snapshot> {
 		);
 	}
 	if (writes.length > 0) {
-		await Promise.allSettled(writes);
+		const results = await Promise.allSettled(writes);
+		const failed = results.filter((r) => r.status === "rejected").length;
+		if (failed > 0) {
+			console.error(
+				`[recompute] cache write-back: ${failed}/${writes.length} duty docs failed`,
+			);
+		}
 	}
 
 	// dutyId → display pool (rotation: สมาชิกตำแหน่ง · coverage: รายชื่อคนแทน)

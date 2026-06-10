@@ -118,21 +118,27 @@ async function handleSetupEmployeeCommand({
 		);
 
 		// C · Auto-anchor — ตอนสร้างพนักงานใหม่ ให้ต่อท้าย queue (max+1)
-		//      เพื่อไม่แทรกกลาง rotation ที่หมุนอยู่ของหน้าที่ต่างๆ
+		//   เพื่อไม่แทรกกลาง rotation ที่หมุนอยู่ของหน้าที่ต่างๆ
+		// ⚠️ resolveDutyPool เรียงคน "มี displayOrder" ไว้ก่อนคน "ไม่มี" ดังนั้น
+		//   ตั้ง displayOrder เฉพาะเมื่อพนักงานเดิม "ทุกคน" มี displayOrder แล้ว
+		//   (admin เคยลากเรียง) — ไม่งั้นคนใหม่ที่ได้เลขจะกระโดดไปหน้าคน null
+		//   → ปล่อยว่าง ให้เรียงตามชื่อรวมกับคนอื่น (ไม่แทรกหน้า)
 		const allEmpsSnap = await db.collection("employees").get();
-		let maxOrder = -1;
+		const orders: number[] = [];
 		for (const d of allEmpsSnap.docs) {
 			const v = d.data()?.displayOrder;
-			if (typeof v === "number" && v > maxOrder) maxOrder = v;
+			if (typeof v === "number") orders.push(v);
 		}
-		const nextOrder = maxOrder + 1;
+		const everyoneOrdered =
+			allEmpsSnap.size > 0 && orders.length === allEmpsSnap.size;
+		const nextOrder = everyoneOrdered ? Math.max(...orders) + 1 : null;
 
 		const employeeRef = db.collection("employees").doc();
 		await employeeRef.set({
 			name: setupCommand.employeeKey,
 			role: "-",
 			roleId: "",
-			displayOrder: nextOrder,
+			...(nextOrder !== null ? { displayOrder: nextOrder } : {}),
 			avatar: makeAvatarText(setupCommand.employeeKey),
 			avatarType: "text",
 			avatarImageUrl: null,
