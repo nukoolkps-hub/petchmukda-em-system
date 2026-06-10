@@ -377,8 +377,8 @@ input[type="number"] {
 }
 .rich-text ul,
 .rich-text ol {
-  /* !important + list-style-type: none ทับ inline style ที่ contentEditable
-     (iOS Safari) อาจใส่บน <ul>/<ol> ตอนพิมพ์ในตัว editor */
+  /* default ของ list ใน editor: ไม่โชว์จุด — กัน contentEditable สร้าง
+     ul/ol เองตอน indent แล้วโผล่จุดที่ admin ไม่ได้ตั้งใจ */
   list-style: none !important;
   list-style-type: none !important;
   padding-left: 1.25em;
@@ -388,10 +388,24 @@ input[type="number"] {
   margin: 0.15em 0;
 }
 .rich-text li::marker {
-  /* บางเบราว์เซอร์ยังวาด ::marker แม้ list-style: none → ปิดที่ pseudo
-     element ตรงๆ ให้แน่นอน */
   content: "";
   font-size: 0;
+}
+/* bullet ที่ admin ตั้งใจกดปุ่ม "รายการ" — โชว์จุดตามปกติ */
+.rich-text ul.rt-bullet {
+  list-style: disc !important;
+  list-style-type: disc !important;
+  padding-left: 1.5em;
+}
+.rich-text ol.rt-bullet {
+  list-style: decimal !important;
+  list-style-type: decimal !important;
+  padding-left: 1.5em;
+}
+.rich-text ul.rt-bullet > li::marker,
+.rich-text ol.rt-bullet > li::marker {
+  content: normal;
+  font-size: inherit;
 }
 .rich-text blockquote {
   margin: 0 0 0 1.25em !important;

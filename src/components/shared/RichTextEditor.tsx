@@ -45,6 +45,29 @@ export default function RichTextEditor({
     el?.focus();
   }
 
+  /** bullet button: insertUnorderedList แล้วติด class rt-bullet บน
+   *  ul ที่เพิ่งสร้าง — CSS ใช้ class นี้แยก "bullet ที่ตั้งใจใส่"
+   *  (โชว์จุด) ออกจาก ul ที่ contentEditable สร้างเองตอน indent
+   *  (ไม่โชว์จุด) */
+  function execBullet() {
+    document.execCommand("insertUnorderedList");
+    const sel = window.getSelection();
+    let node: Node | null = sel?.anchorNode || null;
+    while (node && node !== ref.current) {
+      if (node.nodeType === 1) {
+        const tag = (node as Element).tagName;
+        if (tag === "UL" || tag === "OL") {
+          (node as Element).classList.add("rt-bullet");
+          break;
+        }
+      }
+      node = node.parentNode;
+    }
+    const el = ref.current;
+    if (el) onChange(el.innerHTML);
+    el?.focus();
+  }
+
   return (
     <div className="rounded-[9px] border border-bdr bg-white overflow-hidden">
       {/* toolbar */}
@@ -63,10 +86,7 @@ export default function RichTextEditor({
         <ToolbarButton onClick={() => exec("bold")} label="ตัวหนา">
           <IconBold size={14} strokeWidth={2.4} />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => exec("insertUnorderedList")}
-          label="รายการ"
-        >
+        <ToolbarButton onClick={execBullet} label="รายการ">
           <IconList size={14} strokeWidth={2.4} />
         </ToolbarButton>
         <div className="flex items-center rounded-md overflow-hidden border border-bdr">
