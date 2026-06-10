@@ -14,7 +14,9 @@ import type { Duty, Employee, LeaveEntry } from "../types";
 import { toYMD } from "./dateUtils";
 
 /** FNV-1a 32-bit hash — deterministic, no deps, low collision rate
- *  ใช้แปลง duty.id → ตัวเลขคงที่ → กลายเป็น slot ใน pool                */
+ *  ใช้แปลง duty.id → ตัวเลขคงที่ → กลายเป็น slot ใน pool
+ *  ⚠️ ต้องเหมือน functions/src/duty/dutyUtils.ts เป๊ะ (client/server compute
+ *     ต้องตรงกัน) — แก้ที่นี่แล้วแก้ฝั่ง server ด้วย                       */
 export function hashDutyId(id: string): number {
   let h = 2166136261;
   for (let i = 0; i < id.length; i++) {
@@ -22,6 +24,34 @@ export function hashDutyId(id: string): number {
     h = Math.imul(h, 16777619);
   }
   return h >>> 0; // unsigned 32-bit
+}
+
+/** เลือก primary ของหน้าที่ — single source of truth ของ A+B
+ *  B · cache: ถ้า periodIndex ตรง + คนยังอยู่ใน pool + ยังไม่ถูกใช้รอบนี้
+ *  A · hash base + skip-collision: hashDutyId เป็น slot เริ่มต้น แล้วเลื่อน
+ *      ข้ามคนที่ถูกหน้าที่อื่นจองแล้ว (used) → กระจายให้คนละคน
+ *  used = คนที่เป็น primary ของหน้าที่อื่นในรอบนี้แล้ว (กัน 2 หน้าที่ทับคน) */
+export function pickPrimary(
+  duty: Duty,
+  pool: string[],
+  periodIdx: number,
+  used: Set<string>,
+): string {
+  const cache = duty.cachedPrimary;
+  if (
+    cache &&
+    cache.periodIndex === periodIdx &&
+    pool.includes(cache.empId) &&
+    !used.has(cache.empId)
+  ) {
+    return cache.empId;
+  }
+  const base = (periodIdx + hashDutyId(duty.id)) % pool.length;
+  for (let off = 0; off < pool.length; off++) {
+    const cand = pool[(base + off) % pool.length];
+    if (!used.has(cand)) return cand;
+  }
+  return pool[base]; // ทุกคนถูกใช้หมด → ยอมซ้ำ (หน้าที่ > คน)
 }
 
 export interface DutyAssignment {
@@ -142,11 +172,11 @@ function activePool(duty: Duty, employees: Employee[]): string[] {
  *    monthly แล้ว — แยกออกจาก weekly)
  *  primariesToday: ใช้ exclude ตอนหา substitute ("ไม่ทับคนอื่น")
  *
- *  Algorithm (A · stable hash):
+ *  Algorithm:
  *  - pool พรีเฟอเรนซ์ = activePool − excludeForPrimary
  *  - ถ้า pool เหลือ 0 → fallback ใช้ activePool ทั้งหมด (ห้ามให้มีหน้าที่ว่าง)
- *  - primary = pool[(periodIndex + hashDutyId(duty.id)) % length]
- *    → offset ผูกกับ duty.id (คงที่) แทนตำแหน่งใน array (สั่นเวลา CRUD)  */
+ *  - primary มาจาก precomputedPrimary (Phase 1/2 ที่ de-collide แล้ว) —
+ *    ถ้าไม่ส่งมา (standalone) compute เองผ่าน pickPrimary                   */
 export function computeDutyForDay(
   duty: Duty,
   todayYmd: string,
@@ -154,6 +184,7 @@ export function computeDutyForDay(
   leaves: LeaveEntry[],
   excludeForPrimary: Set<string>,
   primariesToday: Set<string>,
+  precomputedPrimary?: string,
 ): DutyAssignment {
   const fullPool = activePool(duty, employees);
   const { start: periodStart, end: periodEnd } = getPeriodRange(duty, todayYmd);
@@ -177,8 +208,12 @@ export function computeDutyForDay(
   const pool = preferredPool.length > 0 ? preferredPool : fullPool;
 
   const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-  const baseOffset = idx + hashDutyId(duty.id);
-  const primary = pool[baseOffset % pool.length];
+  // ใช้ primary ที่ Phase 1/2 คำนวณไว้ (de-collide แล้ว) ถ้ายังอยู่ใน pool
+  // ปัจจุบัน · ไม่งั้น compute เอง (standalone / pool เปลี่ยน)
+  const primary =
+    precomputedPrimary && pool.includes(precomputedPrimary)
+      ? precomputedPrimary
+      : pickPrimary(duty, pool, idx, new Set<string>());
 
   // primary ไม่ลา → ใช้ primary
   if (!isOnLeave(leaves, primary, todayYmd)) {
@@ -195,10 +230,10 @@ export function computeDutyForDay(
   }
 
   // primary ลา → หา substitute (ข้ามคนที่ติดหน้าที่อื่น + ข้ามคนที่ลา)
-  // ใช้ pool (ที่ filter แล้ว = excludeForPrimary applied) ที่นี่ —
-  // คนที่ทำ monthly จะ "หาย" ทั้งเดือน ไม่มาช่วย weekly แม้ตอนคนลา
+  // scan เริ่มจากตำแหน่ง primary ใน pool (deterministic)
+  const startIdx = Math.max(0, pool.indexOf(primary));
   for (let offset = 1; offset < pool.length; offset++) {
-    const cand = pool[(baseOffset + offset) % pool.length];
+    const cand = pool[(startIdx + offset) % pool.length];
     if (cand === primary) continue;
     if (isOnLeave(leaves, cand, todayYmd)) continue;
     if (primariesToday.has(cand)) continue; // ไม่ทับหน้าที่อื่น
@@ -217,7 +252,7 @@ export function computeDutyForDay(
   // fallback: ทุกคนใน pool ติดหน้าที่อื่น → ใช้ใครก็ได้ใน pool ที่ไม่ลา
   // (double up — ยังไม่ออกไป fullPool ตามกฎ monthly แยก)
   for (let offset = 1; offset < pool.length; offset++) {
-    const cand = pool[(baseOffset + offset) % pool.length];
+    const cand = pool[(startIdx + offset) % pool.length];
     if (cand === primary) continue;
     if (isOnLeave(leaves, cand, todayYmd)) continue;
     return {
@@ -265,63 +300,52 @@ export function computeAllDutiesForDay(
   const monthlyDuties = duties.filter((d) => d.period === "monthly");
   const weeklyDuties = duties.filter((d) => d.period === "weekly");
 
-  // Phase 1: monthly primaries — ไม่มี exclude (assign ก่อน + lock)
+  // assigned = คนที่เป็น primary แล้วในรอบนี้ — pickPrimary ใช้ skip-collision
+  // (2 หน้าที่ pool เดียวกัน → คนละคน) · lockedByMonthly = monthly กันออก weekly
+  const assigned = new Set<string>();
   const lockedByMonthly = new Set<string>();
-  const monthlyPrimaries = new Map<string, string>(); // dutyId → empId
+  const primaryByDuty = new Map<string, string>(); // dutyId → empId
+
+  // Phase 1: monthly primaries (assign ก่อน + lock)
   monthlyDuties.forEach((duty) => {
     const fullPool = activePool(duty, employees);
     if (fullPool.length === 0) return;
-    // monthly แต่ละตัวต่างกันด้วย hashDutyId + ห้ามทับกันเอง
     const remaining = fullPool.filter((id) => !lockedByMonthly.has(id));
     const pool = remaining.length > 0 ? remaining : fullPool;
     const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    const primary = pool[(idx + hashDutyId(duty.id)) % pool.length];
+    const primary = pickPrimary(duty, pool, idx, assigned);
+    assigned.add(primary);
     lockedByMonthly.add(primary);
-    monthlyPrimaries.set(duty.id, primary);
+    primaryByDuty.set(duty.id, primary);
   });
 
   // Phase 2: weekly primaries — exclude คนที่ทำ monthly ทั้งเดือน
-  const weeklyPrimaries = new Map<string, string>();
   weeklyDuties.forEach((duty) => {
     const fullPool = activePool(duty, employees);
     if (fullPool.length === 0) return;
     const preferred = fullPool.filter((id) => !lockedByMonthly.has(id));
     const pool = preferred.length > 0 ? preferred : fullPool;
     const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    const primary = pool[(idx + hashDutyId(duty.id)) % pool.length];
-    weeklyPrimaries.set(duty.id, primary);
+    const primary = pickPrimary(duty, pool, idx, assigned);
+    assigned.add(primary);
+    primaryByDuty.set(duty.id, primary);
   });
 
-  // primariesToday = รวมทุก primary จาก monthly + weekly เพื่อให้
-  // substitute logic exclude ("ไม่ทับ")
-  const primariesToday = new Set<string>([
-    ...monthlyPrimaries.values(),
-    ...weeklyPrimaries.values(),
-  ]);
+  // primariesToday = primary ทั้งหมด (de-collide แล้ว) — substitute "ไม่ทับ"
+  const primariesToday = new Set<string>(primaryByDuty.values());
 
-  // Phase 3: compute actual ของแต่ละ duty — preserve original order ใน
-  // duties array. excludeForPrimary = lockedByMonthly สำหรับ weekly,
-  // Set ว่างสำหรับ monthly (อิง hashDutyId ภายใน computeDutyForDay)
-  return duties.map((duty) => {
-    if (duty.period === "monthly") {
-      return computeDutyForDay(
-        duty,
-        todayYmd,
-        employees,
-        leaves,
-        new Set<string>(), // monthly ไม่มี exclude (assign ก่อน weekly)
-        primariesToday,
-      );
-    }
-    return computeDutyForDay(
+  // Phase 3: compute actual — ส่ง primary ที่คำนวณไว้ (ไม่ compute ซ้ำ)
+  return duties.map((duty) =>
+    computeDutyForDay(
       duty,
       todayYmd,
       employees,
       leaves,
-      lockedByMonthly, // weekly exclude คนที่ทำ monthly
+      duty.period === "monthly" ? new Set<string>() : lockedByMonthly,
       primariesToday,
-    );
-  });
+      primaryByDuty.get(duty.id),
+    ),
+  );
 }
 
 /** employeeId เป็นคนที่ทำ monthly duty ที่ "ให้สิทธิ์กองกลาง" ในเดือน yearMonth
@@ -506,8 +530,9 @@ export function computeCoverageEarningsForMonth(
    "เตรียมพร้อม" ล่วงหน้า                                                */
 
 /** primary ของทุก duty ในวันที่ระบุ — รับ pool ที่ resolve แล้ว
- *  (dutyId → ordered empIds). Logic ตรงกับ computeAllDutiesForDay phase
- *  1+2 (monthly lock cross-duty + weekly exclude) แต่ไม่มี substitute    */
+ *  (dutyId → ordered empIds). ใช้ pickPrimary ตัวเดียวกับ computeAllDuties
+ *  ForDay (cache + hash + skip-collision) เพื่อให้ forecast แถวสัปดาห์
+ *  ปัจจุบันตรงกับ snapshot ฝั่ง server (cache มีผลเฉพาะ period ปัจจุบัน)   */
 export function computeForecastPrimaries(
   duties: Duty[],
   poolByDutyId: Map<string, string[]>,
@@ -515,6 +540,7 @@ export function computeForecastPrimaries(
 ): Map<string, string | null> {
   const monthly = duties.filter((d) => d.period === "monthly");
   const weekly = duties.filter((d) => d.period === "weekly");
+  const assigned = new Set<string>();
   const locked = new Set<string>();
   const result = new Map<string, string | null>();
 
@@ -527,7 +553,8 @@ export function computeForecastPrimaries(
     const remaining = full.filter((id) => !locked.has(id));
     const pool = remaining.length > 0 ? remaining : full;
     const pIdx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    const primary = pool[(pIdx + hashDutyId(duty.id)) % pool.length];
+    const primary = pickPrimary(duty, pool, pIdx, assigned);
+    assigned.add(primary);
     locked.add(primary);
     result.set(duty.id, primary);
   });
@@ -541,7 +568,8 @@ export function computeForecastPrimaries(
     const preferred = full.filter((id) => !locked.has(id));
     const pool = preferred.length > 0 ? preferred : full;
     const pIdx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    const primary = pool[(pIdx + hashDutyId(duty.id)) % pool.length];
+    const primary = pickPrimary(duty, pool, pIdx, assigned);
+    assigned.add(primary);
     result.set(duty.id, primary);
   });
 

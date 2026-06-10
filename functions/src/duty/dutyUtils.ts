@@ -24,7 +24,8 @@ export interface Duty {
 	updatedAt?: number;
 }
 
-/** FNV-1a 32-bit hash (A) — stable slot per duty.id แทนตำแหน่งใน array */
+/** FNV-1a 32-bit hash (A) — stable slot per duty.id แทนตำแหน่งใน array
+ *  ⚠️ ต้องเหมือน src/utils/dutyUtils.ts เป๊ะ (client/server compute ตรงกัน) */
 export function hashDutyId(id: string): number {
 	let h = 2166136261;
 	for (let i = 0; i < id.length; i++) {
@@ -32,6 +33,32 @@ export function hashDutyId(id: string): number {
 		h = Math.imul(h, 16777619);
 	}
 	return h >>> 0;
+}
+
+/** เลือก primary (A+B) — cache → hash base → skip-collision (กระจายคน)
+ *  used = คนที่เป็น primary ของหน้าที่อื่นในรอบนี้แล้ว · single source ของ
+ *  การเลือก primary (ใช้ทั้ง Phase 1/2 และ standalone) — ต้องตรงกับ client */
+export function pickPrimary(
+	duty: Duty,
+	pool: string[],
+	periodIdx: number,
+	used: Set<string>,
+): string {
+	const cache = duty.cachedPrimary;
+	if (
+		cache &&
+		cache.periodIndex === periodIdx &&
+		pool.includes(cache.empId) &&
+		!used.has(cache.empId)
+	) {
+		return cache.empId;
+	}
+	const base = (periodIdx + hashDutyId(duty.id)) % pool.length;
+	for (let off = 0; off < pool.length; off++) {
+		const cand = pool[(base + off) % pool.length];
+		if (!used.has(cand)) return cand;
+	}
+	return pool[base]; // ทุกคนถูกใช้หมด → ยอมซ้ำ
 }
 
 export interface Employee {
@@ -167,6 +194,7 @@ export function computeDutyForDay(
 	leaves: LeaveEntry[],
 	excludeForPrimary: Set<string>,
 	primariesToday: Set<string>,
+	precomputedPrimary?: string,
 ): DutyAssignment {
 	const fullPool = activePool(duty, employees);
 	const { start: periodStart, end: periodEnd } = getPeriodRange(duty, todayYmd);
@@ -188,16 +216,12 @@ export function computeDutyForDay(
 	const pool = preferredPool.length > 0 ? preferredPool : fullPool;
 
 	const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-	// B · ใช้ cache ถ้า period ปัจจุบันตรงและคนยังอยู่ใน pool
-	//      (กัน pool เปลี่ยนกลาง period ส่งผลต่อ primary)
-	const cache = duty.cachedPrimary;
-	const usableCache =
-		cache &&
-		cache.periodIndex === idx &&
-		pool.includes(cache.empId);
-	// A · slot จาก hash(duty.id) — stable เวลา CRUD หน้าที่อื่น
-	const baseOffset = idx + hashDutyId(duty.id);
-	const primary = usableCache ? cache.empId : pool[baseOffset % pool.length];
+	// ใช้ primary ที่ Phase 1/2 คำนวณไว้ (cache + hash + de-collide) ถ้ายัง
+	// อยู่ใน pool · ไม่งั้น compute เอง (standalone)
+	const primary =
+		precomputedPrimary && pool.includes(precomputedPrimary)
+			? precomputedPrimary
+			: pickPrimary(duty, pool, idx, new Set<string>());
 
 	if (!isOnLeave(leaves, primary, todayYmd)) {
 		return {
@@ -212,8 +236,10 @@ export function computeDutyForDay(
 		};
 	}
 
+	// substitute scan เริ่มจากตำแหน่ง primary ใน pool (deterministic)
+	const startIdx = Math.max(0, pool.indexOf(primary));
 	for (let offset = 1; offset < pool.length; offset++) {
-		const cand = pool[(baseOffset + offset) % pool.length];
+		const cand = pool[(startIdx + offset) % pool.length];
 		if (cand === primary) continue;
 		if (isOnLeave(leaves, cand, todayYmd)) continue;
 		if (primariesToday.has(cand)) continue;
@@ -230,7 +256,7 @@ export function computeDutyForDay(
 	}
 
 	for (let offset = 1; offset < pool.length; offset++) {
-		const cand = pool[(baseOffset + offset) % pool.length];
+		const cand = pool[(startIdx + offset) % pool.length];
 		if (cand === primary) continue;
 		if (isOnLeave(leaves, cand, todayYmd)) continue;
 		return {
@@ -470,23 +496,6 @@ export function computeAllDutiesForDay(
 	return out;
 }
 
-/** เลือก primary ของ duty: ใช้ cache ถ้า valid (B) → fallback ไป hash (A) */
-function pickPrimary(
-	duty: Duty,
-	pool: string[],
-	periodIdx: number,
-): string {
-	const cache = duty.cachedPrimary;
-	if (
-		cache &&
-		cache.periodIndex === periodIdx &&
-		pool.includes(cache.empId)
-	) {
-		return cache.empId;
-	}
-	return pool[(periodIdx + hashDutyId(duty.id)) % pool.length];
-}
-
 function computeRotationForDay(
 	duties: Duty[],
 	todayYmd: string,
@@ -496,53 +505,45 @@ function computeRotationForDay(
 	const monthlyDuties = duties.filter((d) => d.period === "monthly");
 	const weeklyDuties = duties.filter((d) => d.period === "weekly");
 
+	// assigned = คนที่เป็น primary แล้วรอบนี้ (pickPrimary skip-collision)
+	const assigned = new Set<string>();
 	const lockedByMonthly = new Set<string>();
-	const monthlyPrimaries = new Map<string, string>();
+	const primaryByDuty = new Map<string, string>();
+
 	monthlyDuties.forEach((duty) => {
 		const fullPool = activePool(duty, employees);
 		if (fullPool.length === 0) return;
 		const remaining = fullPool.filter((id) => !lockedByMonthly.has(id));
 		const pool = remaining.length > 0 ? remaining : fullPool;
 		const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-		const primary = pickPrimary(duty, pool, idx);
+		const primary = pickPrimary(duty, pool, idx, assigned);
+		assigned.add(primary);
 		lockedByMonthly.add(primary);
-		monthlyPrimaries.set(duty.id, primary);
+		primaryByDuty.set(duty.id, primary);
 	});
 
-	const weeklyPrimaries = new Map<string, string>();
 	weeklyDuties.forEach((duty) => {
 		const fullPool = activePool(duty, employees);
 		if (fullPool.length === 0) return;
 		const preferred = fullPool.filter((id) => !lockedByMonthly.has(id));
 		const pool = preferred.length > 0 ? preferred : fullPool;
 		const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-		const primary = pickPrimary(duty, pool, idx);
-		weeklyPrimaries.set(duty.id, primary);
+		const primary = pickPrimary(duty, pool, idx, assigned);
+		assigned.add(primary);
+		primaryByDuty.set(duty.id, primary);
 	});
 
-	const primariesToday = new Set<string>([
-		...monthlyPrimaries.values(),
-		...weeklyPrimaries.values(),
-	]);
+	const primariesToday = new Set<string>(primaryByDuty.values());
 
-	return duties.map((duty) => {
-		if (duty.period === "monthly") {
-			return computeDutyForDay(
-				duty,
-				todayYmd,
-				employees,
-				leaves,
-				new Set<string>(),
-				primariesToday,
-			);
-		}
-		return computeDutyForDay(
+	return duties.map((duty) =>
+		computeDutyForDay(
 			duty,
 			todayYmd,
 			employees,
 			leaves,
-			lockedByMonthly,
+			duty.period === "monthly" ? new Set<string>() : lockedByMonthly,
 			primariesToday,
-		);
-	});
+			primaryByDuty.get(duty.id),
+		),
+	);
 }
