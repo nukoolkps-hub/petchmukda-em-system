@@ -1,18 +1,23 @@
 /* ─── ThaiMonthPicker — เลือกเดือน (พ.ศ.) ภาษาไทย ──────────────────
-   Dropdown ช่วง ±3 เดือนจากปัจจุบัน (7 ตัวเลือก รวมเดือนนี้) —
-   เพียงพอสำหรับการตั้ง rotation anchor (ไม่ต้องเลื่อนปี/ดู 12 เดือน)
+   Dropdown ช่วงเดือนรอบปัจจุบัน — เพียงพอสำหรับการตั้ง rotation anchor
+   (ไม่ต้องเลื่อนปี/ดู 12 เดือน) · ปรับช่วงผ่าน monthsBack/monthsAhead
    value/onChange เป็น "YYYY-MM" (ค.ศ.) เหมือน <input type="month"> เดิม */
 
 import {
   Calendar as IconCalendar,
   ChevronDown as IconChevronDown,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { THAI_MONTH_NAMES } from "../../constants";
+import { useClickOutside } from "../../hooks/useClickOutside";
 
 interface Props {
   value: string; // "YYYY-MM"
   onChange: (value: string) => void;
+  /** กี่เดือนย้อนหลังจากเดือนนี้ที่เลือกได้ (default 0 = ไม่ย้อนหลัง) */
+  monthsBack?: number;
+  /** กี่เดือนข้างหน้าจากเดือนนี้ที่เลือกได้ (default 6) */
+  monthsAhead?: number;
 }
 
 /** label เต็ม: "มิถุนายน 2569" */
@@ -20,13 +25,16 @@ function fmtMonthYear(y: number, m1to12: number): string {
   return `${THAI_MONTH_NAMES[m1to12 - 1]} ${y + 543}`;
 }
 
-/** เดือนนี้..+6 (ค.ศ.) → list ของ {ym, label} */
-function buildOptions(): { ym: string; label: string }[] {
+/** -monthsBack..+monthsAhead จากเดือนนี้ (ค.ศ.) → list ของ {ym, label} */
+function buildOptions(
+  monthsBack: number,
+  monthsAhead: number,
+): { ym: string; label: string }[] {
   const now = new Date();
   const baseY = now.getFullYear();
   const baseM = now.getMonth() + 1; // 1..12
   const out: { ym: string; label: string }[] = [];
-  for (let offset = 0; offset <= 6; offset++) {
+  for (let offset = -monthsBack; offset <= monthsAhead; offset++) {
     // คำนวณ year+month ผ่าน Date เพื่อจัดการการข้ามปี
     const d = new Date(baseY, baseM - 1 + offset, 1);
     const y = d.getFullYear();
@@ -39,10 +47,15 @@ function buildOptions(): { ym: string; label: string }[] {
   return out;
 }
 
-export default function ThaiMonthPicker({ value, onChange }: Props) {
+export default function ThaiMonthPicker({
+  value,
+  onChange,
+  monthsBack = 0,
+  monthsAhead = 6,
+}: Props) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const options = buildOptions();
+  const options = buildOptions(monthsBack, monthsAhead);
   const [selY, selM] = value
     ? value.split("-").map(Number)
     : [new Date().getFullYear(), new Date().getMonth() + 1];
@@ -52,14 +65,7 @@ export default function ThaiMonthPicker({ value, onChange }: Props) {
   );
 
   // ปิด dropdown เมื่อคลิกข้างนอก
-  useEffect(() => {
-    if (!open) return;
-    function handleClick(e: MouseEvent) {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
+  useClickOutside(wrapRef, () => setOpen(false), open);
 
   return (
     <div ref={wrapRef} className="relative">

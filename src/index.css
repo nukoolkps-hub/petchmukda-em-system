@@ -365,37 +365,32 @@ input[type="number"] {
   border-top: 1px dashed rgba(201, 151, 58, 0.31);
 }
 
-/* ─── Rich text — editor surface + rendered content ──────────────
-   กฎทุกข้อใส่ทั้ง .rich-text-editor (admin) และ .rich-text-content
-   (พนักงาน) คู่กันเสมอ — สองฝั่งต้อง render เหมือนกัน (WYSIWYG)
-   - placeholder ผ่าน data-placeholder บน contentEditable
+/* ─── Rich text (WYSIWYG) ────────────────────────────────────────
+   class .rich-text ใส่บนทั้ง 2 surface (editor ฝั่ง admin + content
+   ฝั่งพนักงาน) → กฎเขียนที่เดียว สองฝั่ง render เหมือนกันแน่นอน
    - list styles (ul/ol) ที่ Tailwind v4 ปิด default ไว้
    - blockquote = ย่อหน้า (execCommand indent) — !important ทับ inline
-     style ของเบราว์เซอร์ใน editor ให้เท่าฝั่ง render ที่ style ถูก strip */
-.rich-text-editor:empty:before {
-  content: attr(data-placeholder);
-  color: rgba(45, 26, 14, 0.4);
-  pointer-events: none;
-}
-.rich-text-editor,
-.rich-text-content {
+     style ของเบราว์เซอร์ใน editor ให้เท่าฝั่ง render ที่ style ถูก strip
+   .rich-text-editor เพิ่มเฉพาะ placeholder (เป็นของ editor เท่านั้น)  */
+.rich-text {
   line-height: 1.55;
 }
-.rich-text-editor ul,
-.rich-text-content ul,
-.rich-text-editor ol,
-.rich-text-content ol {
+.rich-text ul,
+.rich-text ol {
   list-style: none;
   padding-left: 1.25em;
   margin: 0.25em 0;
 }
-.rich-text-editor li,
-.rich-text-content li {
+.rich-text li {
   margin: 0.15em 0;
 }
-.rich-text-editor blockquote,
-.rich-text-content blockquote {
+.rich-text blockquote {
   margin: 0 0 0 1.25em !important;
   padding: 0 !important;
   border: none !important;
+}
+.rich-text-editor:empty:before {
+  content: attr(data-placeholder);
+  color: rgba(45, 26, 14, 0.4);
+  pointer-events: none;
 }

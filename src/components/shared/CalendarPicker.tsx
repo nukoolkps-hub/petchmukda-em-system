@@ -12,6 +12,7 @@ import {
   THAI_SHORT_WEEKDAY_NAMES,
   TODAY,
 } from "../../constants";
+import { useClickOutside } from "../../hooks/useClickOutside";
 import { fmtShort, toYMD } from "../../utils/dateUtils";
 
 /* ─── Calendar date picker ─────────────────────────────────────── */
@@ -21,14 +22,7 @@ export default function CalendarPicker({ value, onChange, minDate, error }) {
   const [vy, setVy] = useState(initD.getFullYear());
   const [vm, setVm] = useState(initD.getMonth());
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        setOpen(false);
-    };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, []);
+  useClickOutside(ref, () => setOpen(false), open);
   useEffect(() => {
     if (value) {
       const d = new Date(`${value}T00:00:00`);
