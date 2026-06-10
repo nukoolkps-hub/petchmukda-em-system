@@ -366,13 +366,20 @@ input[type="number"] {
 }
 
 /* ─── Rich text — editor surface + rendered content ──────────────
+   กฎทุกข้อใส่ทั้ง .rich-text-editor (admin) และ .rich-text-content
+   (พนักงาน) คู่กันเสมอ — สองฝั่งต้อง render เหมือนกัน (WYSIWYG)
    - placeholder ผ่าน data-placeholder บน contentEditable
    - list styles (ul/ol) ที่ Tailwind v4 ปิด default ไว้
-   - ขนาดตัวอักษรจาก <font size="N"> ของ execCommand                  */
+   - blockquote = ย่อหน้า (execCommand indent) — !important ทับ inline
+     style ของเบราว์เซอร์ใน editor ให้เท่าฝั่ง render ที่ style ถูก strip */
 .rich-text-editor:empty:before {
   content: attr(data-placeholder);
   color: rgba(45, 26, 14, 0.4);
   pointer-events: none;
+}
+.rich-text-editor,
+.rich-text-content {
+  line-height: 1.55;
 }
 .rich-text-editor ul,
 .rich-text-content ul,
@@ -386,7 +393,9 @@ input[type="number"] {
 .rich-text-content li {
   margin: 0.15em 0;
 }
-.rich-text-content {
-  white-space: pre-wrap;
-  line-height: 1.55;
+.rich-text-editor blockquote,
+.rich-text-content blockquote {
+  margin: 0 0 0 1.25em !important;
+  padding: 0 !important;
+  border: none !important;
 }

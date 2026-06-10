@@ -16,6 +16,7 @@ const ALLOWED_TAGS = new Set([
   "OL",
   "LI",
   "FONT", // execCommand("fontSize") สร้าง <font size="N">
+  "BLOCKQUOTE", // execCommand("indent") นอก list สร้าง <blockquote>
 ]);
 
 const ALLOWED_ATTRS_BY_TAG: Record<string, Set<string>> = {
