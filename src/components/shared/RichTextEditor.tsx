@@ -4,15 +4,9 @@
      • ขนาดตัวอักษร (เล็ก/ปกติ/ใหญ่)
      • ตัวหนา (Bold)
      • รายการ (• bullet list)
-     • ย่อหน้าเข้า/ออก (indent / outdent)
    เก็บค่าเป็น HTML string · sanitize ตอน render ในฝั่งผู้อ่าน        */
 
-import {
-  Bold as IconBold,
-  IndentIncrease as IconIndent,
-  List as IconList,
-  IndentDecrease as IconOutdent,
-} from "lucide-react";
+import { Bold as IconBold, List as IconList } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 interface Props {
@@ -89,14 +83,6 @@ export default function RichTextEditor({
         <ToolbarButton onClick={execBullet} label="รายการ">
           <IconList size={14} strokeWidth={2.4} />
         </ToolbarButton>
-        <div className="flex items-center rounded-md overflow-hidden border border-bdr">
-          <ToolbarButton onClick={() => exec("outdent")} label="ลดย่อหน้า">
-            <IconOutdent size={14} strokeWidth={2.4} />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => exec("indent")} label="เพิ่มย่อหน้า">
-            <IconIndent size={14} strokeWidth={2.4} />
-          </ToolbarButton>
-        </div>
       </div>
 
       {/* editor surface */}
