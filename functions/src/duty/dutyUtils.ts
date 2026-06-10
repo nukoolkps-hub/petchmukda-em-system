@@ -15,8 +15,23 @@ export interface Duty {
 	rotationStartDate: string; // "YYYY-MM-DD"
 	coverageRoleId?: string;
 	candidateEmpIds?: string[];
+	/** Primary cache (B) — pool เปลี่ยนกลาง period ไม่กระทบคนทำหน้าที่ */
+	cachedPrimary?: {
+		periodIndex: number;
+		empId: string;
+	} | null;
 	createdAt?: number;
 	updatedAt?: number;
+}
+
+/** FNV-1a 32-bit hash (A) — stable slot per duty.id แทนตำแหน่งใน array */
+export function hashDutyId(id: string): number {
+	let h = 2166136261;
+	for (let i = 0; i < id.length; i++) {
+		h ^= id.charCodeAt(i);
+		h = Math.imul(h, 16777619);
+	}
+	return h >>> 0;
 }
 
 export interface Employee {
@@ -147,7 +162,6 @@ function activePool(duty: Duty, employees: Employee[]): string[] {
 
 export function computeDutyForDay(
 	duty: Duty,
-	dutyIndex: number,
 	todayYmd: string,
 	employees: Employee[],
 	leaves: LeaveEntry[],
@@ -174,7 +188,16 @@ export function computeDutyForDay(
 	const pool = preferredPool.length > 0 ? preferredPool : fullPool;
 
 	const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-	const primary = pool[(idx + dutyIndex) % pool.length];
+	// B · ใช้ cache ถ้า period ปัจจุบันตรงและคนยังอยู่ใน pool
+	//      (กัน pool เปลี่ยนกลาง period ส่งผลต่อ primary)
+	const cache = duty.cachedPrimary;
+	const usableCache =
+		cache &&
+		cache.periodIndex === idx &&
+		pool.includes(cache.empId);
+	// A · slot จาก hash(duty.id) — stable เวลา CRUD หน้าที่อื่น
+	const baseOffset = idx + hashDutyId(duty.id);
+	const primary = usableCache ? cache.empId : pool[baseOffset % pool.length];
 
 	if (!isOnLeave(leaves, primary, todayYmd)) {
 		return {
@@ -189,7 +212,6 @@ export function computeDutyForDay(
 		};
 	}
 
-	const baseOffset = idx + dutyIndex;
 	for (let offset = 1; offset < pool.length; offset++) {
 		const cand = pool[(baseOffset + offset) % pool.length];
 		if (cand === primary) continue;
@@ -448,6 +470,23 @@ export function computeAllDutiesForDay(
 	return out;
 }
 
+/** เลือก primary ของ duty: ใช้ cache ถ้า valid (B) → fallback ไป hash (A) */
+function pickPrimary(
+	duty: Duty,
+	pool: string[],
+	periodIdx: number,
+): string {
+	const cache = duty.cachedPrimary;
+	if (
+		cache &&
+		cache.periodIndex === periodIdx &&
+		pool.includes(cache.empId)
+	) {
+		return cache.empId;
+	}
+	return pool[(periodIdx + hashDutyId(duty.id)) % pool.length];
+}
+
 function computeRotationForDay(
 	duties: Duty[],
 	todayYmd: string,
@@ -459,25 +498,25 @@ function computeRotationForDay(
 
 	const lockedByMonthly = new Set<string>();
 	const monthlyPrimaries = new Map<string, string>();
-	monthlyDuties.forEach((duty, monthlyIdx) => {
+	monthlyDuties.forEach((duty) => {
 		const fullPool = activePool(duty, employees);
 		if (fullPool.length === 0) return;
 		const remaining = fullPool.filter((id) => !lockedByMonthly.has(id));
 		const pool = remaining.length > 0 ? remaining : fullPool;
 		const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-		const primary = pool[(idx + monthlyIdx) % pool.length];
+		const primary = pickPrimary(duty, pool, idx);
 		lockedByMonthly.add(primary);
 		monthlyPrimaries.set(duty.id, primary);
 	});
 
 	const weeklyPrimaries = new Map<string, string>();
-	weeklyDuties.forEach((duty, weeklyIdx) => {
+	weeklyDuties.forEach((duty) => {
 		const fullPool = activePool(duty, employees);
 		if (fullPool.length === 0) return;
 		const preferred = fullPool.filter((id) => !lockedByMonthly.has(id));
 		const pool = preferred.length > 0 ? preferred : fullPool;
 		const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-		const primary = pool[(idx + weeklyIdx) % pool.length];
+		const primary = pickPrimary(duty, pool, idx);
 		weeklyPrimaries.set(duty.id, primary);
 	});
 
@@ -486,14 +525,10 @@ function computeRotationForDay(
 		...weeklyPrimaries.values(),
 	]);
 
-	let monthlyCounter = 0;
-	let weeklyCounter = 0;
 	return duties.map((duty) => {
 		if (duty.period === "monthly") {
-			const dutyIndex = monthlyCounter++;
 			return computeDutyForDay(
 				duty,
-				dutyIndex,
 				todayYmd,
 				employees,
 				leaves,
@@ -501,10 +536,8 @@ function computeRotationForDay(
 				primariesToday,
 			);
 		}
-		const dutyIndex = weeklyCounter++;
 		return computeDutyForDay(
 			duty,
-			dutyIndex,
 			todayYmd,
 			employees,
 			leaves,

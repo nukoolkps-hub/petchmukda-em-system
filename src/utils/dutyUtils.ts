@@ -1,8 +1,28 @@
 /* ─── Duty rotation + substitute logic ─────────────────────────
-   Pure functions — รับ input ออก output, ไม่แตะ Firestore / state    */
+   Pure functions — รับ input ออก output, ไม่แตะ Firestore / state
+
+   ─── Rotation stability (A+B+C) ────────────────────────────────
+   A · dutyOffset = stableSlot(duty.id) แทนตำแหน่งใน array — เพิ่ม/ลบ
+       หน้าที่ตัวหนึ่งไม่กระทบ slot ของหน้าที่ตัวอื่น
+   B · ฝั่ง server: ถ้า duty.cachedPrimary ตรง periodIndex ปัจจุบันและคน
+       ยังอยู่ใน pool → ใช้ cache แทนคำนวณใหม่ (pool เปลี่ยนกลาง period
+       ไม่กระทบ primary) — fallback ลงมาที่ A เมื่อ cache invalid
+   C · ตอนสร้างพนักงานใหม่: displayOrder = max(existing)+1 → คนใหม่ต่อ
+       ท้าย queue ไม่แทรกกลาง                                      */
 
 import type { Duty, Employee, LeaveEntry } from "../types";
 import { toYMD } from "./dateUtils";
+
+/** FNV-1a 32-bit hash — deterministic, no deps, low collision rate
+ *  ใช้แปลง duty.id → ตัวเลขคงที่ → กลายเป็น slot ใน pool                */
+export function hashDutyId(id: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0; // unsigned 32-bit
+}
 
 export interface DutyAssignment {
   dutyId: string;
@@ -118,18 +138,17 @@ function activePool(duty: Duty, employees: Employee[]): string[] {
 }
 
 /** คำนวณ assignment ของหน้าที่เดียวในวันเดียว
- *  dutyIndex: ลำดับใน group (monthly แยก / weekly แยก) — ใช้ shift primary
  *  excludeForPrimary: ID ของคนที่ "ไม่ให้เป็น primary" (เช่น คนที่ทำ
  *    monthly แล้ว — แยกออกจาก weekly)
  *  primariesToday: ใช้ exclude ตอนหา substitute ("ไม่ทับคนอื่น")
  *
- *  Algorithm:
+ *  Algorithm (A · stable hash):
  *  - pool พรีเฟอเรนซ์ = activePool − excludeForPrimary
  *  - ถ้า pool เหลือ 0 → fallback ใช้ activePool ทั้งหมด (ห้ามให้มีหน้าที่ว่าง)
- *  - primary = preferredPool[(periodIndex + dutyIndex) % length]            */
+ *  - primary = pool[(periodIndex + hashDutyId(duty.id)) % length]
+ *    → offset ผูกกับ duty.id (คงที่) แทนตำแหน่งใน array (สั่นเวลา CRUD)  */
 export function computeDutyForDay(
   duty: Duty,
-  dutyIndex: number,
   todayYmd: string,
   employees: Employee[],
   leaves: LeaveEntry[],
@@ -158,7 +177,8 @@ export function computeDutyForDay(
   const pool = preferredPool.length > 0 ? preferredPool : fullPool;
 
   const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-  const primary = pool[(idx + dutyIndex) % pool.length];
+  const baseOffset = idx + hashDutyId(duty.id);
+  const primary = pool[baseOffset % pool.length];
 
   // primary ไม่ลา → ใช้ primary
   if (!isOnLeave(leaves, primary, todayYmd)) {
@@ -177,7 +197,6 @@ export function computeDutyForDay(
   // primary ลา → หา substitute (ข้ามคนที่ติดหน้าที่อื่น + ข้ามคนที่ลา)
   // ใช้ pool (ที่ filter แล้ว = excludeForPrimary applied) ที่นี่ —
   // คนที่ทำ monthly จะ "หาย" ทั้งเดือน ไม่มาช่วย weekly แม้ตอนคนลา
-  const baseOffset = idx + dutyIndex;
   for (let offset = 1; offset < pool.length; offset++) {
     const cand = pool[(baseOffset + offset) % pool.length];
     if (cand === primary) continue;
@@ -235,8 +254,8 @@ export function computeDutyForDay(
  *  3. Phase 3 — compute actual (substitute ถ้า primary ลา) — ใช้
  *     primariesToday set กัน "ทับ"
  *
- *  Order ของ dutyIndex แยกตาม group (monthly idx / weekly idx) — ลำดับ
- *  ภายในยึดตาม createdAt ASC (เรียงใน subscribeDuties)                  */
+ *  Offset ของแต่ละหน้าที่ใช้ hashDutyId(duty.id) — stable ตาม id (เพิ่ม/
+ *  ลบหน้าที่ตัวอื่น ไม่กระทบ slot ของหน้าที่นี้)                          */
 export function computeAllDutiesForDay(
   duties: Duty[],
   todayYmd: string,
@@ -249,27 +268,27 @@ export function computeAllDutiesForDay(
   // Phase 1: monthly primaries — ไม่มี exclude (assign ก่อน + lock)
   const lockedByMonthly = new Set<string>();
   const monthlyPrimaries = new Map<string, string>(); // dutyId → empId
-  monthlyDuties.forEach((duty, monthlyIdx) => {
+  monthlyDuties.forEach((duty) => {
     const fullPool = activePool(duty, employees);
     if (fullPool.length === 0) return;
-    // monthly แต่ละตัวต่างกันด้วย monthlyIdx + ห้ามทับกันเอง
+    // monthly แต่ละตัวต่างกันด้วย hashDutyId + ห้ามทับกันเอง
     const remaining = fullPool.filter((id) => !lockedByMonthly.has(id));
     const pool = remaining.length > 0 ? remaining : fullPool;
     const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    const primary = pool[(idx + monthlyIdx) % pool.length];
+    const primary = pool[(idx + hashDutyId(duty.id)) % pool.length];
     lockedByMonthly.add(primary);
     monthlyPrimaries.set(duty.id, primary);
   });
 
   // Phase 2: weekly primaries — exclude คนที่ทำ monthly ทั้งเดือน
   const weeklyPrimaries = new Map<string, string>();
-  weeklyDuties.forEach((duty, weeklyIdx) => {
+  weeklyDuties.forEach((duty) => {
     const fullPool = activePool(duty, employees);
     if (fullPool.length === 0) return;
     const preferred = fullPool.filter((id) => !lockedByMonthly.has(id));
     const pool = preferred.length > 0 ? preferred : fullPool;
     const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    const primary = pool[(idx + weeklyIdx) % pool.length];
+    const primary = pool[(idx + hashDutyId(duty.id)) % pool.length];
     weeklyPrimaries.set(duty.id, primary);
   });
 
@@ -281,16 +300,12 @@ export function computeAllDutiesForDay(
   ]);
 
   // Phase 3: compute actual ของแต่ละ duty — preserve original order ใน
-  // duties array. แต่ละ duty ใช้ dutyIndex ใน group ของมัน + excludeForPrimary
-  // = lockedByMonthly สำหรับ weekly, Set ว่างสำหรับ monthly
-  let monthlyCounter = 0;
-  let weeklyCounter = 0;
+  // duties array. excludeForPrimary = lockedByMonthly สำหรับ weekly,
+  // Set ว่างสำหรับ monthly (อิง hashDutyId ภายใน computeDutyForDay)
   return duties.map((duty) => {
     if (duty.period === "monthly") {
-      const dutyIndex = monthlyCounter++;
       return computeDutyForDay(
         duty,
-        dutyIndex,
         todayYmd,
         employees,
         leaves,
@@ -298,10 +313,8 @@ export function computeAllDutiesForDay(
         primariesToday,
       );
     }
-    const dutyIndex = weeklyCounter++;
     return computeDutyForDay(
       duty,
-      dutyIndex,
       todayYmd,
       employees,
       leaves,
@@ -505,7 +518,7 @@ export function computeForecastPrimaries(
   const locked = new Set<string>();
   const result = new Map<string, string | null>();
 
-  monthly.forEach((duty, idx) => {
+  monthly.forEach((duty) => {
     const full = poolByDutyId.get(duty.id) || [];
     if (full.length === 0) {
       result.set(duty.id, null);
@@ -514,12 +527,12 @@ export function computeForecastPrimaries(
     const remaining = full.filter((id) => !locked.has(id));
     const pool = remaining.length > 0 ? remaining : full;
     const pIdx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    const primary = pool[(pIdx + idx) % pool.length];
+    const primary = pool[(pIdx + hashDutyId(duty.id)) % pool.length];
     locked.add(primary);
     result.set(duty.id, primary);
   });
 
-  weekly.forEach((duty, idx) => {
+  weekly.forEach((duty) => {
     const full = poolByDutyId.get(duty.id) || [];
     if (full.length === 0) {
       result.set(duty.id, null);
@@ -528,7 +541,7 @@ export function computeForecastPrimaries(
     const preferred = full.filter((id) => !locked.has(id));
     const pool = preferred.length > 0 ? preferred : full;
     const pIdx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    const primary = pool[(pIdx + idx) % pool.length];
+    const primary = pool[(pIdx + hashDutyId(duty.id)) % pool.length];
     result.set(duty.id, primary);
   });
 

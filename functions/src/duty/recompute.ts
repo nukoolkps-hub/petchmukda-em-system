@@ -24,6 +24,7 @@ import {
 	computeAllDutiesForDay,
 	type Duty,
 	type Employee,
+	getPeriodIndex,
 	type LeaveEntry,
 	replayCoverageHistory,
 	resolveDutyPool,
@@ -133,6 +134,35 @@ async function buildSnapshot(): Promise<Snapshot> {
 		leaves,
 		coverageHistory,
 	);
+
+	// B · write-back cache: stamp primaryEmpId + periodIndex ของ rotation
+	// duties ลง /duties/{id}.cachedPrimary — สำหรับ read next time จะ skip
+	// computation ใช้ค่านี้ตรงๆ (กัน pool เปลี่ยนกลาง period ส่งผลต่อ
+	// primary). Batch + เปรียบเทียบก่อนเขียนเพื่อลด write ไม่จำเป็น
+	const writes: Promise<unknown>[] = [];
+	for (const a of assignments) {
+		if (a.kind === "coverage") continue;
+		if (!a.primaryEmpId) continue;
+		const duty = duties.find((d) => d.id === a.dutyId);
+		if (!duty) continue;
+		const periodIdx = Math.max(0, getPeriodIndex(duty, ymd));
+		const existing = duty.cachedPrimary;
+		const same =
+			existing?.empId === a.primaryEmpId &&
+			existing?.periodIndex === periodIdx;
+		if (same) continue;
+		writes.push(
+			db
+				.doc(`duties/${duty.id}`)
+				.set(
+					{ cachedPrimary: { periodIndex: periodIdx, empId: a.primaryEmpId } },
+					{ merge: true },
+				),
+		);
+	}
+	if (writes.length > 0) {
+		await Promise.allSettled(writes);
+	}
 
 	// dutyId → display pool (rotation: สมาชิกตำแหน่ง · coverage: รายชื่อคนแทน)
 	const empById = new Map(employees.map((e) => [e.id, e]));
