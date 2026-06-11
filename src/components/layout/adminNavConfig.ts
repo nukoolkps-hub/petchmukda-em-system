@@ -31,6 +31,7 @@ export type AdminSectionId =
   | "roles"
   | "positions"
   | "duty-schedule"
+  | "calendar-view"
   | "store-calendar"
   | "linebot-notifications"
   | "linebot-commands";
@@ -63,9 +64,10 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     id: "calendar",
     label: "ปฏิทินการทำงาน",
-    defaultSection: "store-calendar",
+    defaultSection: "calendar-view",
     Icon: IconCalendarRange,
     items: [
+      { id: "calendar-view", label: "ปฏิทิน", Icon: IconCalendarEvent },
       {
         id: "store-calendar",
         label: "วันเปิด-ปิดร้าน",

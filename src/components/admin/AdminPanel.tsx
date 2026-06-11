@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { COLORS } from "../../constants";
+import TeamCalendar from "../home/TeamCalendar";
 import {
   ADMIN_NAV_GROUPS,
   type AdminNavGroup,
@@ -197,6 +198,15 @@ export default function AdminPanel({
           onUpsertDuty={onUpsertDuty}
           onDeleteDuty={onDeleteDuty}
           showToast={showToast}
+        />
+      )}
+
+      {/* ── CALENDAR VIEW section (ปฏิทินรวม — ลาทุกคน + วันเปิด-ปิดร้าน) ── */}
+      {section === "calendar-view" && (
+        <TeamCalendar
+          leaveEntries={allLeaves}
+          employeeDirectory={employeeDirectory}
+          storeCalendar={storeCalendar}
         />
       )}
 
