@@ -156,7 +156,7 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 **ผลต่อระบบ:**
 - **หน้าที่:** วันที่ร้านปิด → ไม่โผล่ assignment ใดๆ (server filter ใน Cloud Function `recomputeDutyAssignments`)
 - **การลา:** `leaveUtils.ts` รับ `storeCalendar` param · ใช้นับ "วันทำงาน" สำหรับโควต้า/หัก/โบนัสขยัน
-- **UI admin:** Section "วันเปิด-ปิดร้าน" ใน sidebar (กลุ่ม "หน้าที่")
+- **UI admin:** Section "วันเปิด-ปิดร้าน" ใน sidebar (กลุ่ม "ปฏิทินการทำงาน")
 
 Single source: `src/utils/storeCalendar.ts` · sync helper `applicableDuties` ใน duty client/server ผ่าน CI sync check (`scripts/check-duty-sync.mjs`)
 
