@@ -130,9 +130,15 @@ async function buildSnapshot(): Promise<Snapshot> {
 	);
 
 	// history การแทน (เฉพาะวันก่อนหน้า → ไม่นับวันนี้) เพื่อเลือกคนยุติธรรม
+	// ต้องส่ง monthlyDuties ด้วย เพื่อให้ replay exclude คนที่ทำหน้าที่ประจำเดือน
+	// ของแต่ละวัน (monthly primaries เปลี่ยนทุกเดือน → ต้องคำนวณรายวัน)
 	const coverageDuties = duties.filter((d) => d.kind === "coverage");
+	const monthlyDuties = duties.filter(
+		(d) => d.kind !== "coverage" && d.period === "monthly",
+	);
 	const coverageHistory = replayCoverageHistory(
 		coverageDuties,
+		monthlyDuties,
 		employees,
 		allLeaves,
 		yearStart,
@@ -161,8 +167,7 @@ async function buildSnapshot(): Promise<Snapshot> {
 		const periodIdx = Math.max(0, getPeriodIndex(duty, ymd));
 		const existing = duty.cachedPrimary;
 		const same =
-			existing?.empId === a.primaryEmpId &&
-			existing?.periodIndex === periodIdx;
+			existing?.empId === a.primaryEmpId && existing?.periodIndex === periodIdx;
 		if (same) continue;
 		writes.push(
 			db

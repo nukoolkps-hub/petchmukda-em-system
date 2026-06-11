@@ -345,7 +345,8 @@ export function computeDutyForDay(
 /* ─── Coverage (เวรแทนคนลาของตำแหน่งเป้าหมาย) ───────────────────────
    เลือกคนแทนจาก candidateEmpIds ที่ "เคยแทนน้อยสุด" (ยุติธรรม) →
    tie-break ด้วย displayOrder · ข้ามคนที่ลา/ถูกใช้ไปแล้ววันนั้น
-   coverageHistory = empId → จำนวนครั้งที่เคยแทนสะสม (จาก replay)        */
+   coverageHistory = empId → จำนวนครั้งที่เคยแทนสะสม (จาก replay)
+   monthlyPrimaries = คนที่ทำหน้าที่ประจำเดือนในวันนี้ → ไม่เอามาแทน    */
 function pickCoverageCandidate(
 	duty: Duty,
 	todayYmd: string,
@@ -353,6 +354,7 @@ function pickCoverageCandidate(
 	leaves: LeaveEntry[],
 	history: Map<string, number>,
 	usedToday: Set<string>,
+	monthlyPrimaries: Set<string>,
 ): string | null {
 	const byId = new Map(employees.map((e) => [e.id, e]));
 	const eligible = (duty.candidateEmpIds || [])
@@ -362,6 +364,7 @@ function pickCoverageCandidate(
 				!!e &&
 				!e.salaryDisabled &&
 				!usedToday.has(e.id) &&
+				!monthlyPrimaries.has(e.id) &&
 				!isOnLeave(leaves, e.id, todayYmd),
 		)
 		.sort((a, b) => {
@@ -398,10 +401,37 @@ function absentTargets(
 		.map((e) => e.id);
 }
 
+/** monthly primaries ของวันใดๆ — ใช้ assignPrimaries ตัวเดียวกับ
+ *  computeAllDutiesForDay (cache + hash + de-collide) เพื่อให้ผลตรงกัน
+ *  ⚠️ ต้องเหมือน src/utils/dutyUtils.ts เป๊ะ                              */
+export function monthlyPrimariesForDay(
+	monthlyDuties: Duty[],
+	todayYmd: string,
+	employees: Employee[],
+): Set<string> {
+	if (monthlyDuties.length === 0) return new Set();
+	const assigned = new Set<string>();
+	const locked = new Set<string>();
+	const out = new Map<string, string>();
+	assignPrimaries(
+		monthlyDuties,
+		todayYmd,
+		(d) => activePool(d, employees),
+		assigned,
+		locked,
+		true,
+		out,
+	);
+	return new Set(out.values());
+}
+
 /** Replay coverage ทั้งช่วง [startYmd, endYmd) เพื่อนับว่าใครแทนไปกี่ครั้ง
- *  (ใช้สร้าง history สำหรับเลือกคนที่ยุติธรรมในวันนี้)                    */
+ *  (ใช้สร้าง history สำหรับเลือกคนที่ยุติธรรมในวันนี้)
+ *  monthlyDuties ส่งเข้าไปเพื่อ exclude คนที่ทำหน้าที่ประจำเดือนของแต่ละวัน
+ *  (replay ต้องคำนวณ monthly primaries ของแต่ละวัน เพราะอาจเปลี่ยนทุกเดือน)  */
 export function replayCoverageHistory(
 	coverageDuties: Duty[],
+	monthlyDuties: Duty[],
 	employees: Employee[],
 	allLeaves: LeaveEntry[],
 	startYmd: string,
@@ -413,6 +443,11 @@ export function replayCoverageHistory(
 	const end = new Date(`${endYmd}T00:00:00`);
 	for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
 		const ymd = toYMD(d);
+		const monthlyPrimaries = monthlyPrimariesForDay(
+			monthlyDuties,
+			ymd,
+			employees,
+		);
 		const usedToday = new Set<string>();
 		for (const duty of coverageDuties) {
 			for (const _t of absentTargets(duty, ymd, employees, allLeaves)) {
@@ -423,6 +458,7 @@ export function replayCoverageHistory(
 					allLeaves,
 					history,
 					usedToday,
+					monthlyPrimaries,
 				);
 				if (pick) {
 					usedToday.add(pick);
@@ -442,6 +478,7 @@ function computeCoverageForDay(
 	employees: Employee[],
 	leaves: LeaveEntry[],
 	history: Map<string, number>,
+	monthlyPrimaries: Set<string>,
 ): { assignments: DutyAssignment[]; pulled: Set<string> } {
 	const assignments: DutyAssignment[] = [];
 	const pulled = new Set<string>();
@@ -475,6 +512,7 @@ function computeCoverageForDay(
 				leaves,
 				history,
 				usedToday,
+				monthlyPrimaries,
 			);
 			if (pick) {
 				usedToday.add(pick);
@@ -513,6 +551,15 @@ export function computeAllDutiesForDay(
 	// แยก coverage ออกจาก rotation
 	const coverageDuties = todayDuties.filter((d) => d.kind === "coverage");
 	const rotationDuties = todayDuties.filter((d) => d.kind !== "coverage");
+	const monthlyDuties = rotationDuties.filter((d) => d.period === "monthly");
+
+	// คำนวณ monthly primaries ก่อน — กันคนที่ทำหน้าที่ประจำเดือนไม่ให้
+	// ถูกเลือกเป็นคนแทน coverage (เจ้าตัวควรอยู่กับ monthly duty ของตัวเอง)
+	const monthlyPrimaries = monthlyPrimariesForDay(
+		monthlyDuties,
+		todayYmd,
+		employees,
+	);
 
 	// 1) coverage ก่อน — รู้ว่าใครถูกดึงไปแทนบัญชี
 	const { assignments: coverageAssignments, pulled } = computeCoverageForDay(
@@ -521,6 +568,7 @@ export function computeAllDutiesForDay(
 		employees,
 		leaves,
 		coverageHistory ?? new Map<string, number>(),
+		monthlyPrimaries,
 	);
 
 	// 2) คนที่ถูกดึงไปแทน → ถือว่า "ไม่ว่าง" สำหรับ weekly/monthly ของตัวเอง

@@ -472,14 +472,28 @@ export function employeeHasPoolExemptDuty(
    ทั้งหมดกี่ครั้ง × rate ของแต่ละ duty → breakdown รายหน้าที่
    replay logic เดียวกับ server (functions/duty/dutyUtils) เพื่อให้นับตรงกัน */
 
-function dutyIsOnLeave(
-  leaves: LeaveEntry[],
-  empId: string,
-  ymd: string,
-): boolean {
-  return leaves.some(
-    (l) => l.employeeId === empId && l.start <= ymd && l.end >= ymd,
+/** monthly primaries ของวันใดๆ — ใช้ assignPrimaries ตัวเดียวกับ
+ *  computeAllDutiesForDay (cache + hash + de-collide) เพื่อให้ผลตรงกัน
+ *  ⚠️ ต้องเหมือน functions/src/duty/dutyUtils.ts เป๊ะ                    */
+export function monthlyPrimariesForDay(
+  monthlyDuties: Duty[],
+  todayYmd: string,
+  employees: Employee[],
+): Set<string> {
+  if (monthlyDuties.length === 0) return new Set();
+  const assigned = new Set<string>();
+  const locked = new Set<string>();
+  const out = new Map<string, string>();
+  assignPrimaries(
+    monthlyDuties,
+    todayYmd,
+    (d) => activePool(d, employees),
+    assigned,
+    locked,
+    true,
+    out,
   );
+  return new Set(out.values());
 }
 
 function pickCoverageCandidate(
@@ -489,6 +503,7 @@ function pickCoverageCandidate(
   leaves: LeaveEntry[],
   history: Map<string, number>,
   usedToday: Set<string>,
+  monthlyPrimaries: Set<string>,
 ): string | null {
   const byId = new Map(employees.map((e) => [e.id, e]));
   const eligible = (duty.candidateEmpIds || [])
@@ -498,7 +513,8 @@ function pickCoverageCandidate(
         !!e &&
         !e.salaryDisabled &&
         !usedToday.has(e.id) &&
-        !dutyIsOnLeave(leaves, e.id, todayYmd),
+        !monthlyPrimaries.has(e.id) &&
+        !isOnLeave(leaves, e.id, todayYmd),
     )
     .sort((a, b) => {
       const ca = history.get(a.id) || 0;
@@ -523,7 +539,7 @@ function dutyAbsentTargets(
       (e) =>
         e.roleId === duty.coverageRoleId &&
         !e.salaryDisabled &&
-        dutyIsOnLeave(leaves, e.id, todayYmd),
+        isOnLeave(leaves, e.id, todayYmd),
     )
     .sort(
       (a, b) =>
@@ -555,6 +571,11 @@ export function computeCoverageEarningsForMonth(
     (d) => d.kind === "coverage" && (d.coveragePayPerOccurrence || 0) > 0,
   );
   if (coverageDuties.length === 0) return { total: 0, breakdown: [] };
+  // monthly primaries ของแต่ละวัน → กันคนทำหน้าที่ประจำเดือนไม่ให้ถูก
+  // เลือกเป็นคนแทน (replay ต้องคำนวณรายวัน — primaries เปลี่ยนทุกเดือน)
+  const monthlyDuties = duties.filter(
+    (d) => d.kind !== "coverage" && d.period === "monthly",
+  );
 
   const [y, m] = yearMonth.split("-").map(Number);
   const yearStart = `${y}-01-01`;
@@ -571,6 +592,11 @@ export function computeCoverageEarningsForMonth(
     const ymd = toYMD(d);
     if (ymd > monthEndYmd) break;
     const inMonth = ymd >= monthStart && ymd <= monthEndYmd;
+    const monthlyPrimaries = monthlyPrimariesForDay(
+      monthlyDuties,
+      ymd,
+      employees,
+    );
     const usedToday = new Set<string>();
     for (const duty of coverageDuties) {
       for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
@@ -581,6 +607,7 @@ export function computeCoverageEarningsForMonth(
           allLeaves,
           history,
           usedToday,
+          monthlyPrimaries,
         );
         if (!pick) continue;
         usedToday.add(pick);
