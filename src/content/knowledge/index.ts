@@ -141,7 +141,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "formula",
         label: "ตามน้ำหนัก (ต่อกรัม)",
-        formula: "(ราคาทอง + 3.5%) × 0.0656 + ค่าแรง = ราคาขาย/กรัม",
+        formula: "(ราคาทอง + 3.6%) × 0.0656 + ค่าแรง = ราคาขาย/กรัม",
       },
       {
         type: "live-example",
@@ -149,7 +149,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         compute: ({ sell }) => {
           const labor = 1250;
           const grams = 1.28;
-          const gold9999 = sell * 1.035;
+          const gold9999 = sell * 1.036;
           const perGram = gold9999 * 0.0656;
           const sellPerGram = perGram + labor;
           const total = sellPerGram * grams;
@@ -163,7 +163,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             ],
             steps: [
               {
-                calc: `${fmt(sell)} + 3.5% = ${fmt(gold9999)}`,
+                calc: `${fmt(sell)} + 3.6% = ${fmt(gold9999)}`,
                 meaning: "ราคาทองคำ 99.99%",
               },
               {
@@ -197,7 +197,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { id: "grams", label: "น้ำหนัก", defaultValue: 1.28, suffix: "ก." },
         ],
         compute: ({ gold, labor, grams }) => {
-          const gold9999 = gold * 1.035;
+          const gold9999 = gold * 1.036;
           const perGram = gold9999 * 0.0656;
           const sellPerGram = perGram + labor;
           const total = sellPerGram * grams;
