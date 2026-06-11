@@ -110,28 +110,6 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── ส่วนลด ── */
-  {
-    id: "discounts",
-    title: "ส่วนลด",
-    Icon: IconBadgePercent,
-    blocks: [
-      { type: "h3", text: "ส่วนลดค่าแรง + ค่าเปลี่ยน (ทอง 96.5%)" },
-      {
-        type: "list",
-        items: [
-          "ค่าแรง — ปกติลด 15% · HBD ลด 25%",
-          "ค่าเปลี่ยน — ปกติลด 5% · HBD ลด 5%",
-        ],
-      },
-      { type: "h3", text: "ส่วนลดสำหรับทอง 90" },
-      {
-        type: "list",
-        items: ["ต่างหูแผง 10%", "พระแผง 10%", "แหวนพลอย 10%", "กรอบพระ 10%"],
-      },
-    ],
-  },
-
   /* ── 3. ราคาขาย ── */
   {
     id: "sell-price",
@@ -336,6 +314,28 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "p",
         text: "รับซื้อทองเก่าก่อน แล้วจึงนำเงินที่ได้มาหักลบกับราคาขายทองใหม่",
+      },
+    ],
+  },
+
+  /* ── ส่วนลด ── */
+  {
+    id: "discounts",
+    title: "ส่วนลด",
+    Icon: IconBadgePercent,
+    blocks: [
+      { type: "h3", text: "ส่วนลดค่าแรง + ค่าเปลี่ยน (ทอง 96.5%)" },
+      {
+        type: "list",
+        items: [
+          "ค่าแรง — ปกติลด 15% · HBD ลด 25%",
+          "ค่าเปลี่ยน — ปกติลด 5% · HBD ลด 5%",
+        ],
+      },
+      { type: "h3", text: "ส่วนลดสำหรับทอง 90" },
+      {
+        type: "list",
+        items: ["ต่างหูแผง 10%", "พระแผง 10%", "แหวนพลอย 10%", "กรอบพระ 10%"],
       },
     ],
   },
