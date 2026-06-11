@@ -139,6 +139,27 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 
 ค่าทั้งหมดอยู่ใน `src/constants.ts` → `BUSINESS_RULES` · สูตรเต็ม → `docs/reference/business-rules.md`
 
+### ปฏิทินเปิด-ปิดร้าน (storeCalendar)
+
+**ร้านหยุดวันเสาร์เป็นค่าตั้งต้น** · admin override ได้ผ่าน `/config/storeCalendar`:
+- `extraOpenSaturdays`: เสาร์ที่ admin เปิดพิเศษ (พนักงานมาทำงาน)
+- `extraClosedWeekdays`: จ-ศ ที่ admin ปิดพิเศษ (อบรม/หยุดยาว ฯลฯ)
+
+| วัน | สถานะ default | การลา |
+|---|---|---|
+| อาทิตย์ | เปิด (× 1.5) | หักทุกวัน × 1.5 dailyRate, ไม่นับโควต้า (กฎเดิม) |
+| **เสาร์** | **ปิด** | **ไม่นับ** (ลาวันร้านปิดไม่กระทบเงินเดือน) |
+| เสาร์ ∈ extraOpenSaturdays | เปิด | นับเหมือนวันธรรมดา (โควต้า 2 วัน/เดือน + เกินหัก × 1) |
+| จ-ศ | เปิด | นับเข้าโควต้า · เกินหัก × 1 dailyRate |
+| จ-ศ ∈ extraClosedWeekdays | ปิด | ไม่นับ |
+
+**ผลต่อระบบ:**
+- **หน้าที่:** วันที่ร้านปิด → ไม่โผล่ assignment ใดๆ (server filter ใน Cloud Function `recomputeDutyAssignments`)
+- **การลา:** `leaveUtils.ts` รับ `storeCalendar` param · ใช้นับ "วันทำงาน" สำหรับโควต้า/หัก/โบนัสขยัน
+- **UI admin:** Section "วันเปิด-ปิดร้าน" ใน sidebar (กลุ่ม "หน้าที่")
+
+Single source: `src/utils/storeCalendar.ts` · sync helper `applicableDuties` ใน duty client/server ผ่าน CI sync check (`scripts/check-duty-sync.mjs`)
+
 ## Conventions
 
 - ภาษาไทยใน UI, ภาษาอังกฤษใน code

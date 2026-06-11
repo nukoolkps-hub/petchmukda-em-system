@@ -21,6 +21,7 @@ import {
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
   Star as IconStar,
+  Store as IconStore,
   Sun as IconSun,
   Ticket as IconTicket,
   TrendingDown as IconTrendingDown,
@@ -180,6 +181,31 @@ export default function ManualModal({ onClose }) {
                 </li>
               </ul>
             </Card>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconStore size={16} strokeWidth={2.4} />
+                วันเสาร์ — ร้านปกติหยุด
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <ul>
+              <li>
+                ร้าน <b>หยุดวันเสาร์</b> เป็นค่าเริ่มต้น — <b>ลาเสาร์ปกติไม่นับ</b>{" "}
+                (ร้านปิดอยู่แล้ว)
+              </li>
+              <li>
+                ถ้า admin กำหนด "เสาร์เปิดพิเศษ" → <b>ลาเสาร์นั้นนับเหมือนวันธรรมดา</b>{" "}
+                (เข้าโควต้า 2 วัน/เดือน · เกินหัก × 1)
+              </li>
+              <li>
+                ถ้า admin กำหนด "วันธรรมดาปิดพิเศษ" (อบรม, หยุดยาว ฯลฯ) →{" "}
+                <b>ลาวันนั้นไม่นับ</b>
+              </li>
+            </ul>
           </Section>
 
           <Section

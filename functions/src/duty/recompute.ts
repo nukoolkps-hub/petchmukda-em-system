@@ -95,11 +95,23 @@ async function buildSnapshot(): Promise<Snapshot> {
 	// → ดึง leaves ทั้งปี (end >= 1 ม.ค. ปีนี้)
 	const yearStart = `${ymd.slice(0, 4)}-01-01`;
 
-	const [dutiesSnap, employeesSnap, leavesSnap] = await Promise.all([
-		db.collection("duties").get(),
-		db.collection("employees").get(),
-		db.collection("leaves").where("end", ">=", yearStart).get(),
-	]);
+	const [dutiesSnap, employeesSnap, leavesSnap, calendarSnap] =
+		await Promise.all([
+			db.collection("duties").get(),
+			db.collection("employees").get(),
+			db.collection("leaves").where("end", ">=", yearStart).get(),
+			db.doc("config/storeCalendar").get(),
+		]);
+
+	const calendarData = calendarSnap.exists ? calendarSnap.data() || {} : {};
+	const storeCalendar = {
+		extraOpenSaturdays: Array.isArray(calendarData.extraOpenSaturdays)
+			? (calendarData.extraOpenSaturdays as string[])
+			: [],
+		extraClosedWeekdays: Array.isArray(calendarData.extraClosedWeekdays)
+			? (calendarData.extraClosedWeekdays as string[])
+			: [],
+	};
 
 	const duties: Duty[] = dutiesSnap.docs
 		.map((d) => ({ id: d.id, ...d.data() }) as Duty)
@@ -133,6 +145,7 @@ async function buildSnapshot(): Promise<Snapshot> {
 		employees,
 		leaves,
 		coverageHistory,
+		storeCalendar,
 	);
 
 	// B · write-back cache: stamp primaryEmpId + periodIndex ของ rotation

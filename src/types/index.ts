@@ -175,6 +175,19 @@ export interface Duty {
   updatedAt: number;
 }
 
+/** ปฏิทินวันเปิด-ปิดร้าน (admin-managed · doc เดียว: config/storeCalendar)
+ *  Default:
+ *  - อาทิตย์ = เปิด (× 1.5 ตามกฎเดิม)
+ *  - เสาร์ = ปิด
+ *  - จ-ศ = เปิด
+ *  Override:
+ *  - extraOpenSaturdays: เสาร์ที่ admin เปิดพิเศษ (วันทำงานปกติ)
+ *  - extraClosedWeekdays: จ-ศ ที่ admin ปิดพิเศษ (เช่น วันอบรม)             */
+export interface StoreCalendar {
+  extraOpenSaturdays: string[]; // ["YYYY-MM-DD", ...]
+  extraClosedWeekdays: string[]; // ["YYYY-MM-DD", ...]
+}
+
 export interface PayrollConfirmEntry {
   confirmedAt: string;
   totalAmount: number;
@@ -295,6 +308,7 @@ export interface AppData {
   roles: Role[];
   payrollConfirms: PayrollConfirms;
   poolAdjustments: PoolAdjustmentsByMonth;
+  storeCalendar: StoreCalendar;
   loading: boolean;
   error: Error | null;
 

@@ -68,6 +68,7 @@ export default function SalaryAdminEdit({
   poolAdjustments,
   onSetPoolAdjustment,
   employeeLoans,
+  storeCalendar,
   onReorderEmployees,
   setUnsavedDirty,
   showToast,
@@ -163,9 +164,9 @@ export default function SalaryAdminEdit({
           lv.start.startsWith(selectedMonth),
       )
     : [];
-  const overInfo = getOverQuotaDays(monthLeaves);
+  const overInfo = getOverQuotaDays(monthLeaves, storeCalendar);
   const overTotalDays = overInfo.weekdays + overInfo.sundays;
-  const totalLeaveDays = countWeekdayLeaves(monthLeaves);
+  const totalLeaveDays = countWeekdayLeaves(monthLeaves, storeCalendar);
   const monthApprovedAdvances = (monthlyApprovedAdvances.data || []).filter(
     (r) => r.employeeId === selectedEmployeeId,
   );
@@ -247,6 +248,7 @@ export default function SalaryAdminEdit({
         employeeDirectory,
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
         poolGroup: employeeRole.poolGroup,
+        storeCalendar,
       });
       employeePoolShare = shares[selectedEmployeeId];
     }
@@ -281,6 +283,7 @@ export default function SalaryAdminEdit({
     approvedAdvanceTotal,
     poolAdjustments,
     employeeLoans,
+    storeCalendar,
   ]);
 
   function update(field, value) {

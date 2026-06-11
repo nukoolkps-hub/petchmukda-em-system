@@ -30,6 +30,10 @@ interface PoolFlowModalProps {
     string,
     { items?: { side: string; pieces: number; label: string }[] }
   >;
+  storeCalendar?: {
+    extraOpenSaturdays: string[];
+    extraClosedWeekdays: string[];
+  } | null;
   // เดือนนี้ admin "ยืนยันยอด" แล้วหรือยัง — ถ้ายัง ตัวเลขในแผนผังยังเปลี่ยนได้
   // (admin ยังแก้/พนักงานยื่นลาเพิ่มได้) → ล็อกแผนผังกันสับสน เปิดดูได้หลัง
   // confirm เท่านั้น
@@ -54,6 +58,7 @@ export default function PoolFlowModal({
   roles = [],
   initialMonth,
   poolAdjustments,
+  storeCalendar,
   isConfirmed = false,
 }: PoolFlowModalProps) {
   const now = new Date();
@@ -152,6 +157,7 @@ export default function PoolFlowModal({
         employeeDirectory,
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
         poolGroup: activeGroup,
+        storeCalendar,
       }),
     [
       groupEmployeeIds,
@@ -161,6 +167,7 @@ export default function PoolFlowModal({
       employeeDirectory,
       poolAdjustments,
       activeGroup,
+      storeCalendar,
     ],
   );
 

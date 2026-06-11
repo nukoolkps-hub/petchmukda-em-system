@@ -57,6 +57,7 @@ export default function SalaryView({
   payrollConfirms,
   poolAdjustments,
   employeeLoans,
+  storeCalendar,
   showToast,
 }) {
   const now = new Date();
@@ -109,8 +110,8 @@ export default function SalaryView({
             leave.start.startsWith(selectedMonth),
         )
       : [];
-    const overQuotaInfo = getOverQuotaDays(monthLeaves);
-    const leaveDays = countWeekdayLeaves(monthLeaves);
+    const overQuotaInfo = getOverQuotaDays(monthLeaves, storeCalendar);
+    const leaveDays = countWeekdayLeaves(monthLeaves, storeCalendar);
     const approvedAdvancesForMonth = (advanceRequests || []).filter(
       (advanceRequest) =>
         advanceRequest.month === selectedMonth &&
@@ -142,6 +143,7 @@ export default function SalaryView({
         employeeDirectory,
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
         poolGroup: employeeRole.poolGroup,
+        storeCalendar,
       });
       employeePoolShare = shares[employeeInfo?.id];
     }
@@ -177,6 +179,7 @@ export default function SalaryView({
     salaryEmployeeId,
     poolAdjustments,
     employeeLoans,
+    storeCalendar,
   ]);
 
   function handlePrintSlip() {

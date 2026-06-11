@@ -139,6 +139,7 @@ export default function LeaveApp() {
     payrollConfirms,
     poolAdjustments,
     setPoolAdjustment,
+    updateStoreCalendar: updateStoreCalendarAction,
     employeeLoans,
     addEmployeeLoan,
     updateEmployeeLoan,
@@ -161,7 +162,7 @@ export default function LeaveApp() {
     deleteDuty,
     setPayrollConfirm,
   } = data;
-  const { duties, dutyAssignmentsToday } = data;
+  const { duties, dutyAssignmentsToday, storeCalendar } = data;
 
   /* ─── Profile hook ─────────────────────────────────────────── */
   const {
@@ -396,6 +397,7 @@ export default function LeaveApp() {
                       roles={roles}
                       duties={duties}
                       dutyAssignmentsToday={dutyAssignmentsToday}
+                      storeCalendar={storeCalendar}
                     />
                   )
                 }
@@ -457,6 +459,7 @@ export default function LeaveApp() {
                         payrollConfirms={payrollConfirms}
                         poolAdjustments={poolAdjustments}
                         employeeLoans={employeeLoans}
+                        storeCalendar={storeCalendar}
                         showToast={showToast}
                       />
                     </div>
@@ -500,6 +503,8 @@ export default function LeaveApp() {
                       onUpdateLoan={updateEmployeeLoan}
                       onDeleteLoan={deleteEmployeeLoan}
                       onSetPayrollConfirm={setPayrollConfirm}
+                      storeCalendar={storeCalendar}
+                      onUpdateStoreCalendar={updateStoreCalendarAction}
                       showToast={showToast}
                     />
                   ) : (
