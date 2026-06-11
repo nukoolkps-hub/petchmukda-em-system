@@ -441,13 +441,17 @@ export function replayCoverageHistory(
 	if (coverageDuties.length === 0) return history;
 	const start = new Date(`${startYmd}T00:00:00`);
 	const end = new Date(`${endYmd}T00:00:00`);
+	// memoize ตามเดือน — monthly period ขึ้นกับเดือน ไม่ขึ้นกับวัน
+	// → ~12 ครั้ง/ปี แทน ~365 ครั้ง (×assignPrimaries ทุกครั้ง)
+	const monthlyPrimariesCache = new Map<string, Set<string>>();
 	for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
 		const ymd = toYMD(d);
-		const monthlyPrimaries = monthlyPrimariesForDay(
-			monthlyDuties,
-			ymd,
-			employees,
-		);
+		const ym = ymd.slice(0, 7);
+		let monthlyPrimaries = monthlyPrimariesCache.get(ym);
+		if (!monthlyPrimaries) {
+			monthlyPrimaries = monthlyPrimariesForDay(monthlyDuties, ymd, employees);
+			monthlyPrimariesCache.set(ym, monthlyPrimaries);
+		}
 		const usedToday = new Set<string>();
 		for (const duty of coverageDuties) {
 			for (const _t of absentTargets(duty, ymd, employees, allLeaves)) {

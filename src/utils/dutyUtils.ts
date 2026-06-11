@@ -589,17 +589,21 @@ export function computeCoverageEarningsForMonth(
   // นับครั้งที่ employeeId ถูกเลือกในเดือนนี้ (per duty)
   const countByDuty = new Map<string, number>();
   const history = new Map<string, number>();
+  const monthlyPrimariesCache = new Map<string, Set<string>>();
   const start = new Date(`${yearStart}T00:00:00`);
   // replay ตั้งแต่ต้นปี — รอบในเดือน yearMonth นับเข้า count, รอบก่อนหน้านับเข้า history
   for (let d = new Date(start); ; d.setDate(d.getDate() + 1)) {
     const ymd = toYMD(d);
     if (ymd > monthEndYmd) break;
     const inMonth = ymd >= monthStart && ymd <= monthEndYmd;
-    const monthlyPrimaries = monthlyPrimariesForDay(
-      monthlyDuties,
-      ymd,
-      employees,
-    );
+    // memoize ตามเดือน — monthly period = monthsBetween ไม่ขึ้นกับวัน
+    // จึงคำนวณ ~12 ครั้ง/ปี แทน ~365 ครั้ง (×assignPrimaries ทุกครั้ง)
+    const ym = ymd.slice(0, 7);
+    let monthlyPrimaries = monthlyPrimariesCache.get(ym);
+    if (!monthlyPrimaries) {
+      monthlyPrimaries = monthlyPrimariesForDay(monthlyDuties, ymd, employees);
+      monthlyPrimariesCache.set(ym, monthlyPrimaries);
+    }
     const usedToday = new Set<string>();
     for (const duty of coverageDuties) {
       for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
