@@ -4,6 +4,7 @@
 
 import { ArrowRight as IconArrow } from "lucide-react";
 import { useGoldPrice } from "../../firebase/hooks/useFirestore";
+import MathText from "./MathText";
 
 interface Props {
   title: string;
@@ -43,18 +44,18 @@ export default function LiveExample({ title, compute }: Props) {
         <div className="text-xs text-txt-soft font-semibold mb-1.5">
           วิธีคำนวณ
         </div>
-        <ol className="space-y-1.5">
+        <ol className="space-y-1.5 text-sm">
           {steps.map((step, i) => (
             <li
               key={`s-${i}`}
               className="flex items-start gap-2.5 p-2 rounded-[8px] bg-cream/60 border border-bdr/40"
             >
-              <span className="shrink-0 w-5 h-5 rounded-full bg-maroon text-white text-[10px] font-bold flex items-center justify-center mt-1">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-maroon text-white text-[10px] font-bold flex items-center justify-center mt-0.5">
                 {i + 1}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="text-base font-bold text-txt leading-snug">
-                  {step.calc}
+                <div className="font-bold text-txt leading-snug">
+                  <MathText>{step.calc}</MathText>
                 </div>
                 <div className="text-xs text-txt-soft mt-0.5">
                   ({step.meaning})
