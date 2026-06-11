@@ -441,30 +441,33 @@ export function computeAllDutiesForDay(
 
 /** employeeId เป็นคนที่ทำ monthly duty ที่ "ให้สิทธิ์กองกลาง" ในเดือน yearMonth
  *  ไหม → ใช้ตอน stamp poolThresholdExempt ลง salary snapshot
- *  ดู primary (คนที่ถูกกำหนดทั้งเดือน) ไม่ใช่ substitute · empty leaves      */
+ *  ดู primary (คนที่ถูกกำหนดทั้งเดือน) ไม่ใช่ substitute · empty leaves
+ *  ⚠️ ใช้ monthlyPrimariesForDay ตรงๆ ไม่ผ่าน computeAllDutiesForDay —
+ *  computeAllDutiesForDay จะ filter ผ่าน applicableDuties(calendar) ซึ่ง
+ *  ถ้าวันตัวแทนเป็นวันร้านปิด (เช่น ส.ค. 2569: วันที่ 15 = เสาร์) จะคืน []
+ *  → ทุกคนไม่ได้ exemption ทั้งเดือนแบบเงียบๆ (regression ตอนเพิ่ม calendar) */
 export function employeeHasPoolExemptDuty(
   employeeId: string,
   yearMonth: string, // "YYYY-MM"
   duties: Duty[],
   employees: Employee[],
 ): boolean {
-  const exemptIds = new Set(
-    duties
-      .filter(
-        (d) =>
-          d.kind !== "coverage" &&
-          d.period === "monthly" &&
-          d.grantsPoolEligibility,
-      )
-      .map((d) => d.id),
+  const exemptDuties = duties.filter(
+    (d) =>
+      d.kind !== "coverage" &&
+      d.period === "monthly" &&
+      d.grantsPoolEligibility,
   );
-  if (exemptIds.size === 0) return false;
-  // ใช้กลางเดือนเป็นตัวแทน + ไม่ใส่ leaves (ดู primary ตาม rotation)
-  const repDate = `${yearMonth}-15`;
-  const assignments = computeAllDutiesForDay(duties, repDate, employees, []);
-  return assignments.some(
-    (a) => exemptIds.has(a.dutyId) && a.primaryEmpId === employeeId,
+  if (exemptDuties.length === 0) return false;
+  // ใช้วันที่ 1 ของเดือนเป็นตัวแทน — monthly period = monthsBetween ขึ้นกับ
+  // เดือนเท่านั้น ไม่ขึ้นกับวันในเดือน · monthlyPrimariesForDay ไม่ filter
+  // calendar (skip applicableDuties) → ไม่กระทบเดือนที่วันตัวแทน = วันร้านปิด
+  const primaries = monthlyPrimariesForDay(
+    exemptDuties,
+    `${yearMonth}-01`,
+    employees,
   );
+  return primaries.has(employeeId);
 }
 
 /* ─── Coverage earnings (เงินค่าแทน) ────────────────────────────────
