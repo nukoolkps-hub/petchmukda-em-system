@@ -284,7 +284,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 4. ค่าเปลี่ยน ── */
   {
     id: "exchange",
-    title: "การคำนวณค่าเปลี่ยน (ทอง 96.5%)",
+    title: "การคำนวณค่าเปลี่ยน เพิ่มขึ้น - ลดลง (ทอง 96.5%)",
     Icon: IconExchange,
     blocks: [
       { type: "h3", text: "น้ำหนักเพิ่มขึ้น 0.6 กรัม ถึง 2 สลึง" },
