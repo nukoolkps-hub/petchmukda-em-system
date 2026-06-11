@@ -62,16 +62,34 @@ export default function KnowledgeBlockView({ block }: Props) {
         </ul>
       );
 
-    case "table":
+    case "table": {
+      const alignClass = (i: number) => {
+        const a = block.colAlign?.[i];
+        return a === "center"
+          ? "text-center"
+          : a === "right"
+            ? "text-right"
+            : "text-left";
+      };
+      const fixed = block.colWidths && block.colWidths.length > 0;
       return (
         <div className="mb-3 overflow-x-auto -mx-1 px-1">
-          <table className="w-full text-sm border-collapse rounded-[10px] overflow-hidden">
+          <table
+            className={`w-full text-sm border-collapse rounded-[10px] overflow-hidden ${fixed ? "table-fixed" : ""}`}
+          >
+            {fixed && (
+              <colgroup>
+                {block.colWidths?.map((w, i) => (
+                  <col key={`cw-${i}`} style={{ width: w }} />
+                ))}
+              </colgroup>
+            )}
             <thead>
               <tr className="bg-maroon text-white">
                 {block.columns.map((col, i) => (
                   <th
                     key={`${col}-${i}`}
-                    className="px-2.5 py-1.5 text-left font-bold text-xs whitespace-nowrap"
+                    className={`px-2.5 py-1.5 font-bold text-xs whitespace-nowrap ${alignClass(i)}`}
                   >
                     {col}
                   </th>
@@ -87,7 +105,7 @@ export default function KnowledgeBlockView({ block }: Props) {
                   {row.map((cell, ci) => (
                     <td
                       key={`c-${ri}-${ci}`}
-                      className="px-2.5 py-1.5 text-txt border-b border-bdr/40"
+                      className={`px-2.5 py-1.5 text-txt border-b border-bdr/40 ${alignClass(ci)}`}
                     >
                       {cell}
                     </td>
@@ -103,6 +121,7 @@ export default function KnowledgeBlockView({ block }: Props) {
           )}
         </div>
       );
+    }
 
     case "formula":
       return (
