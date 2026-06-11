@@ -123,25 +123,43 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         formula: "(ราคาทอง + 3.5%) × 0.0656 + ค่าแรง = ราคาขาย/กรัม",
       },
       {
-        type: "example",
-        title: "ตัวอย่าง — ค่าแรง 1,250 ฿ · ทอง 50,000 ฿ · ทอง 1.28 กรัม",
-        given: [
-          "ราคาทองคำแท่งบาทละ 50,000 ฿",
-          "ค่าแรง 1,250 ฿",
-          "ทองหนัก 1.28 กรัม",
-        ],
-        steps: [
-          { calc: "50,000 + 3.5% = 51,750", meaning: "ราคาทองคำ 99.99%" },
-          {
-            calc: "51,750 × 0.0656 = 3,394",
-            meaning: "ราคาทองคำ 99.99% ต่อกรัม",
-          },
-          {
-            calc: "3,394 + 1,250 = 4,644",
-            meaning: "ราคาขายต่อกรัม หลัง + ค่าแรง",
-          },
-          { calc: "4,644 × 1.28 = 5,944", meaning: "ราคาขายต่อชิ้น" },
-        ],
+        type: "live-example",
+        title: "ตัวอย่าง — ค่าแรง 1,250 ฿ · ทอง 1.28 กรัม",
+        compute: ({ sell }) => {
+          const labor = 1250;
+          const grams = 1.28;
+          const gold9999 = sell * 1.035;
+          const perGram = gold9999 * 0.0656;
+          const sellPerGram = perGram + labor;
+          const total = sellPerGram * grams;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ราคาทองคำแท่งบาทละ ${fmt(sell)} ฿`,
+              `ค่าแรง ${fmt(labor)} ฿`,
+              `ทองหนัก ${grams} กรัม`,
+            ],
+            steps: [
+              {
+                calc: `${fmt(sell)} + 3.5% = ${fmt(gold9999)}`,
+                meaning: "ราคาทองคำ 99.99%",
+              },
+              {
+                calc: `${fmt(gold9999)} × 0.0656 = ${fmt(perGram)}`,
+                meaning: "ราคาทองคำ 99.99% ต่อกรัม",
+              },
+              {
+                calc: `${fmt(perGram)} + ${fmt(labor)} = ${fmt(sellPerGram)}`,
+                meaning: "ราคาขายต่อกรัม หลัง + ค่าแรง",
+              },
+              {
+                calc: `${fmt(sellPerGram)} × ${grams} = ${fmt(total)}`,
+                meaning: "ราคาขายต่อชิ้น",
+              },
+            ],
+          };
+        },
       },
       {
         type: "calculator",
@@ -279,15 +297,29 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           "ราคาทองของน้ำหนักที่เพิ่ม + ค่าแรงของน้ำหนักที่เพิ่ม (MD) + ค่าเปลี่ยนทองเก่า (MD)",
       },
       {
-        type: "example",
+        type: "live-example",
         title: "ตัวอย่าง #1 — 1 สลึง เพิ่มเป็น 2 สลึง (MD03)",
-        given: ["ค่าเปลี่ยน 1 สลึง = 1,050 ฿", "ราคาทองคำแท่งบาทละ 50,000 ฿"],
-        steps: [
-          {
-            calc: "(50,000 ÷ 4) + (750 + 300) + 1,050 = 14,600 ฿",
-            meaning: "ราคาค่าเปลี่ยน",
-          },
-        ],
+        compute: ({ sell }) => {
+          const oldChange = 1050;
+          const newLabor = 750;
+          const md = 300;
+          const goldPart = sell / 4;
+          const total = goldPart + (newLabor + md) + oldChange;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ค่าเปลี่ยน 1 สลึง = ${fmt(oldChange)} ฿`,
+              `ราคาทองคำแท่งบาทละ ${fmt(sell)} ฿`,
+            ],
+            steps: [
+              {
+                calc: `(${fmt(sell)} ÷ 4) + (${newLabor} + ${md}) + ${oldChange} = ${fmt(total)} ฿`,
+                meaning: "ราคาค่าเปลี่ยน",
+              },
+            ],
+          };
+        },
       },
       {
         type: "callout",
@@ -295,15 +327,28 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         text: "เพิ่มค่า MD เฉพาะค่าแรง (เคสน้ำหนักเพิ่มไม่เกิน 2 สลึง)",
       },
       {
-        type: "example",
+        type: "live-example",
         title: "ตัวอย่าง #2 — 1 บาท เพิ่มเป็น 2 บาท (MD03)",
-        given: ["ค่าเปลี่ยน 1 บาท = 2,400 ฿", "ราคาทองคำแท่งบาทละ 50,000 ฿"],
-        steps: [
-          {
-            calc: "50,000 + (1,050 + 300) + (2,400 + 300) = 54,050 ฿",
-            meaning: "ราคาค่าเปลี่ยน",
-          },
-        ],
+        compute: ({ sell }) => {
+          const oldChange = 2400;
+          const newLabor = 1050;
+          const md = 300;
+          const total = sell + (newLabor + md) + (oldChange + md);
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ค่าเปลี่ยน 1 บาท = ${fmt(oldChange)} ฿`,
+              `ราคาทองคำแท่งบาทละ ${fmt(sell)} ฿`,
+            ],
+            steps: [
+              {
+                calc: `${fmt(sell)} + (${newLabor} + ${md}) + (${oldChange} + ${md}) = ${fmt(total)} ฿`,
+                meaning: "ราคาค่าเปลี่ยน",
+              },
+            ],
+          };
+        },
       },
       {
         type: "callout",
@@ -526,8 +571,14 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         columns: ["ประเภท", "อัตราหัก"],
         rows: [
           ["ทอง 96.5%", "หัก 15-20% จากราคารับซื้อทองคำแท่ง"],
-          ["ทอง 90", "หัก 40-50% จากราคารับซื้อทองคำแท่ง · หรือหัก 25% หากมีการตรวจ %"],
-          ["นาก", "หัก 80-85% จากราคารับซื้อทองคำแท่ง · หรือหัก 25% หากมีการตรวจ %"],
+          [
+            "ทอง 90",
+            "หัก 40-50% จากราคารับซื้อทองคำแท่ง · หากมีการตรวจ % หักจาก % ที่ได้จากเครื่องตรวจ 25%",
+          ],
+          [
+            "นาก",
+            "หัก 80-85% จากราคารับซื้อทองคำแท่ง · หากมีการตรวจ % หักจาก % ที่ได้จากเครื่องตรวจ 25%",
+          ],
         ],
       },
       { type: "h3", text: "ดอกเบี้ยจำนำ" },
@@ -667,6 +718,26 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["1 บาท", "1 สลึง × 4 ชิ้น", "1,950 ฿"],
         ],
       },
+      {
+        type: "example",
+        title: "ตัวอย่าง (ตามที่ผมเข้าใจ — โปรดยืนยัน)",
+        given: [
+          "ค่าแรง 2 สลึง = 850 ฿",
+          "ค่าแรง ½ สลึง = 650 ฿",
+          "แยก 2 สลึง 1 ชิ้น → ½ สลึง 4 ชิ้น",
+        ],
+        steps: [
+          { calc: "650 × 4 = 2,600 ฿", meaning: "ค่าแรงรวมของชิ้นใหม่" },
+          {
+            calc: "2,600 − 850 = 1,750 ฿",
+            meaning: "ส่วนต่างค่าแรง (ตามสูตรพื้นฐาน)",
+          },
+          {
+            calc: "ตารางด้านบนระบุ 1,350 ฿ ← ต่างกัน 400 ฿",
+            meaning: "อาจมีส่วนลด/MD แยกชิ้น ที่ผมไม่ทราบ — ขอ confirm สูตรจริงด้วย",
+          },
+        ],
+      },
     ],
   },
 
@@ -791,21 +862,36 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         ],
       },
       {
-        type: "example",
+        type: "live-example",
         title: "ตัวอย่าง",
-        given: [
-          "ราคาทองคำแท่ง 66,500 ฿",
-          "ค่ากำเหน็จ 1,000 ฿",
-          "รวม 67,500 ฿",
-          "ราคารับซื้อคืนทองรูปพรรณ 65,066.72 ฿",
-        ],
-        steps: [
-          {
-            calc: "67,500 − 65,066.72 = 2,433.28 ฿",
-            meaning: "ส่วนต่าง (ฐานภาษี)",
-          },
-          { calc: "2,433.28 × 7% = 170.33 ฿", meaning: "VAT ที่ต้องนำส่ง" },
-        ],
+        compute: ({ sell, buy }) => {
+          const gamnet = 1000;
+          const total = sell + gamnet;
+          const diff = total - buy;
+          const vat = Math.max(0, diff) * 0.07;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", {
+              maximumFractionDigits: 2,
+            });
+          return {
+            given: [
+              `ราคาทองคำแท่ง ${fmt(sell)} ฿`,
+              `ค่ากำเหน็จ ${fmt(gamnet)} ฿`,
+              `รวม ${fmt(total)} ฿`,
+              `ราคารับซื้อคืน (สมาคม) ${fmt(buy)} ฿`,
+            ],
+            steps: [
+              {
+                calc: `${fmt(total)} − ${fmt(buy)} = ${fmt(diff)} ฿`,
+                meaning: "ส่วนต่าง (ฐานภาษี)",
+              },
+              {
+                calc: `${fmt(diff)} × 7% = ${fmt(vat)} ฿`,
+                meaning: "VAT ที่ต้องนำส่ง",
+              },
+            ],
+          };
+        },
       },
       {
         type: "calculator",
@@ -824,6 +910,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "ราคารับซื้อคืน",
             defaultValue: 65066.72,
             suffix: "฿",
+            buyPriceDefault: true,
           },
         ],
         compute: ({ gold, gamnet, buyback }) => {

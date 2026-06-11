@@ -23,35 +23,38 @@ function formatOutput(value: number, format: CalcOutput["format"]): string {
 
 export default function Calculator({ title, inputs, compute }: Props) {
   const { data: gold } = useGoldPrice();
-  const hasGoldField = inputs.some((f) => f.goldPriceDefault);
+  const hasLiveField = inputs.some(
+    (f) => f.goldPriceDefault || f.buyPriceDefault,
+  );
 
   const [values, setValues] = useState<Record<string, number>>(() => {
     const init: Record<string, number> = {};
     for (const f of inputs) init[f.id] = f.defaultValue ?? 0;
     return init;
   });
-  // field ที่ผู้ใช้พิมพ์แก้เองแล้ว — จะหยุด sync ราคาทอง live ให้ field นั้น
+  // field ที่ผู้ใช้พิมพ์แก้เองแล้ว — จะหยุด sync ราคา live ให้ field นั้น
   const [touched, setTouched] = useState<Set<string>>(() => new Set());
 
-  // ช่อง "ราคาทองคำแท่ง" → ตั้งค่าตามราคา live จนกว่า user จะแก้เอง
+  // ช่อง "ราคาทอง" / "ราคารับซื้อ" → sync กับราคา live จนกว่า user จะแก้เอง
   useEffect(() => {
-    if (!hasGoldField || gold.pricePerBaht <= 0) return;
+    if (!hasLiveField) return;
     setValues((prev) => {
       let changed = false;
       const next = { ...prev };
       for (const f of inputs) {
-        if (
-          f.goldPriceDefault &&
-          !touched.has(f.id) &&
-          next[f.id] !== gold.pricePerBaht
-        ) {
-          next[f.id] = gold.pricePerBaht;
+        const live = f.goldPriceDefault
+          ? gold.pricePerBaht
+          : f.buyPriceDefault
+            ? gold.buyPrice
+            : null;
+        if (live && live > 0 && !touched.has(f.id) && next[f.id] !== live) {
+          next[f.id] = live;
           changed = true;
         }
       }
       return changed ? next : prev;
     });
-  }, [hasGoldField, gold.pricePerBaht, inputs, touched]);
+  }, [hasLiveField, gold.pricePerBaht, gold.buyPrice, inputs, touched]);
 
   const outputs = useMemo(() => {
     try {
@@ -81,11 +84,12 @@ export default function Calculator({ title, inputs, compute }: Props) {
               className="text-xs font-semibold text-txt-mid flex-1 min-w-0 leading-snug"
             >
               {field.label}
-              {field.goldPriceDefault && !touched.has(field.id) && (
-                <span className="ml-1 text-[10px] text-green font-bold">
-                  · ราคาวันนี้
-                </span>
-              )}
+              {(field.goldPriceDefault || field.buyPriceDefault) &&
+                !touched.has(field.id) && (
+                  <span className="ml-1 text-[10px] text-green font-bold">
+                    · ราคาวันนี้
+                  </span>
+                )}
             </label>
             <div className="flex items-center gap-1.5">
               {field.options ? (
@@ -113,8 +117,8 @@ export default function Calculator({ title, inputs, compute }: Props) {
                   inputMode="decimal"
                   value={Number.isNaN(values[field.id]) ? "" : values[field.id]}
                   onChange={(e) => {
-                    // user แก้ราคาทองเอง → หยุด sync ราคา live ให้ field นี้
-                    if (field.goldPriceDefault) {
+                    // user แก้เอง → หยุด sync ราคา live ให้ field นี้
+                    if (field.goldPriceDefault || field.buyPriceDefault) {
                       setTouched((t) =>
                         t.has(field.id) ? t : new Set(t).add(field.id),
                       );

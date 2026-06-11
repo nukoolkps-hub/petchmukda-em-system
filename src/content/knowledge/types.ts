@@ -15,6 +15,8 @@ export interface CalcField {
   /** ตั้งค่าเริ่มต้นเป็นราคาทองคำแท่ง live (/config/goldPrice) — ยังพิมพ์แก้ได้
    *  ถ้า user ยังไม่แตะ field จะ sync ตามราคาที่ update อัตโนมัติ */
   goldPriceDefault?: boolean;
+  /** ตั้งค่าเริ่มต้นเป็นราคารับซื้อทองคำแท่งสมาคม live (gold.buyPrice) */
+  buyPriceDefault?: boolean;
 }
 
 export interface CalcOutput {
@@ -47,7 +49,17 @@ export type KnowledgeBlock =
       compute: (values: Record<string, number>) => CalcOutput[];
     }
   | { type: "secret"; label: string; value: string }
-  | { type: "change-price-table" };
+  | { type: "change-price-table" }
+  | {
+      /** เหมือน example แต่ "โจทย์" + steps คำนวณจากราคาทองวันนี้
+       *  → ไม่ outdated เมื่อราคาทองขยับ */
+      type: "live-example";
+      title: string;
+      compute: (gold: { sell: number; buy: number }) => {
+        given: string[];
+        steps: { calc: string; meaning: string }[];
+      };
+    };
 
 export interface KnowledgeSection {
   id: string;
