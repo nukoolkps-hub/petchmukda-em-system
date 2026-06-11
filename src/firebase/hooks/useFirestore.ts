@@ -36,6 +36,7 @@ import {
 } from "../poolSnapshots";
 import { subscribeRoles } from "../roles";
 import { subscribeAllSalaries, subscribeEmployeeSalaries } from "../salaries";
+import { EMPTY_STORE_CALENDAR, subscribeStoreCalendar } from "../storeCalendar";
 
 interface SubscriptionResult<T> {
   data: T;
@@ -341,6 +342,16 @@ export function usePayrollConfirmsForScope(_args: { isAdmin: boolean }) {
   return useScopedSubscription(
     () => subscribePayrollConfirms,
     {} as Record<string, any>,
+    [],
+  );
+}
+
+/** subscribe store calendar (ทุกคน signed-in — ทั้ง admin/employee
+ *  ใช้เช็คว่าวันนี้ร้านเปิด-ปิดเหมือนกัน · ขนาดเล็กมาก ไม่ต้องแยก scope) */
+export function useStoreCalendar() {
+  return useScopedSubscription(
+    () => subscribeStoreCalendar,
+    EMPTY_STORE_CALENDAR,
     [],
   );
 }

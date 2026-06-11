@@ -5,6 +5,7 @@ import {
   Bell as IconBell,
   CalendarClock as IconCalendarClock,
   CalendarDays as IconCalendarEvent,
+  CalendarOff as IconCalendarOff,
   Banknote as IconCashBanknote,
   BarChart3 as IconChartBar,
   ClipboardList as IconClipboardList,
@@ -29,6 +30,7 @@ export type AdminSectionId =
   | "roles"
   | "positions"
   | "duty-schedule"
+  | "store-calendar"
   | "linebot-notifications"
   | "linebot-commands";
 
@@ -85,6 +87,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     Icon: IconCalendarClock,
     items: [
       { id: "duty-schedule", label: "ตารางหน้าที่", Icon: IconCalendarClock },
+      {
+        id: "store-calendar",
+        label: "วันเปิด-ปิดร้าน",
+        Icon: IconCalendarOff,
+      },
     ],
   },
   {

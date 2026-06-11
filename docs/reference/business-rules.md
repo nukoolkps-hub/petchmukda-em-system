@@ -124,8 +124,42 @@ Source: `src/utils/salaryUtils.ts` → `computePoolSharesForGroup()` · snapshot
 - 2 ประเภท: ลากิจ (`personal`) + ลาป่วย (`sick`)
 - Balance tracking per employee per month
 - วันลาที่เกินโควต้าจะถูกหักจากเงินเดือน
+- **`leaveUtils` รับ `storeCalendar` param** — นับเฉพาะวันลาที่ตรงกับ "วันทำงาน" (ดู section "ปฏิทินเปิด-ปิดร้าน" ด้านล่าง)
 
 Source: `src/utils/leaveUtils.ts`
+
+## ปฏิทินเปิด-ปิดร้าน (storeCalendar)
+
+ร้านหยุดวันเสาร์เป็นค่าตั้งต้น · admin override ผ่าน `/config/storeCalendar`:
+
+```ts
+interface StoreCalendar {
+  extraOpenSaturdays: string[];   // "YYYY-MM-DD"
+  extraClosedWeekdays: string[];  // "YYYY-MM-DD"
+}
+```
+
+**Default vs override:**
+
+| Day | Default | Override key | Counts as |
+|---|---|---|---|
+| อาทิตย์ | เปิด | — | × 1.5 ทุกวัน (กฎเดิม) |
+| **เสาร์** | **ปิด** | `extraOpenSaturdays` (เปิด) | ลาในวันร้านปิด = ไม่นับ · ลาในเสาร์เปิดพิเศษ = วันธรรมดา |
+| จ-ศ | เปิด | `extraClosedWeekdays` (ปิด) | ลาในวันร้านเปิด = นับ · ลาในวันปิดพิเศษ = ไม่นับ |
+
+**Helper:**
+- `isStoreClosed(ymd, calendar)` — true เมื่อร้านปิด
+- `isQuotaCountableDay(ymd, calendar)` — true เมื่อ "ลา = นับเข้าโควต้า/หัก × 1"
+- `applicableDuties(duties, today, calendar)` — filter หน้าที่ทั้งหมดถ้าร้านปิด · client/server มี sync check
+
+**ผลต่อระบบ:**
+- หน้าที่ (duty): Cloud Function `recomputeDutyAssignments` filter ก่อนเขียน snapshot → วันที่ปิดไม่มี assignment เลย
+- การลา: `countWeekdayLeaves(monthLeaves, calendar)` + `getOverQuotaDays(monthLeaves, calendar)` รับ calendar จาก root (App.tsx → ส่งผ่าน props ทุก consumer)
+- โบนัสขยัน: ใช้ `countWeekdayLeaves` ผลคำนวณเดียวกัน
+
+**UI Admin:** "วันเปิด-ปิดร้าน" ใน sidebar (กลุ่ม "หน้าที่") · เพิ่ม/ลบ → save ทันที + trigger recompute duty assignments
+
+Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/components/admin/StoreCalendarPanel.tsx`
 
 ## ระบบเบิกเงินล่วงหน้า
 

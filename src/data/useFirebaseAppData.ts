@@ -22,6 +22,7 @@ import {
   usePoolSnapshots,
   useRoles,
   useSalariesForScope,
+  useStoreCalendar,
 } from "../firebase/hooks/useFirestore";
 import * as leavesAPI from "../firebase/leaves";
 import * as payrollConfirmsAPI from "../firebase/payrollConfirms";
@@ -29,6 +30,7 @@ import * as poolAdjustmentsAPI from "../firebase/poolAdjustments";
 import * as poolSnapshotsAPI from "../firebase/poolSnapshots";
 import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
+import * as storeCalendarAPI from "../firebase/storeCalendar";
 import {
   computeCoverageEarningsForMonth,
   employeeHasPoolExemptDuty,
@@ -85,6 +87,7 @@ export default function useFirebaseAppData({
   // ค่า read น้อย (1 doc/เดือน) ไม่กระทบ performance.
   const poolSnapResult = usePoolSnapshots();
   const poolAdjResult = usePoolAdjustments();
+  const storeCalendarResult = useStoreCalendar();
 
   // employee เห็น salaries ของตัวเองคนเดียว — เติม peer-data จาก
   // poolSnapshots ลงไปใน salaryData ก่อนส่งต่อให้ component (SalaryView,
@@ -186,8 +189,11 @@ export default function useFirebaseAppData({
       (leave) =>
         leave.employeeId === employeeId && leave.start.startsWith(yearMonth),
     );
-    const weekdayLeaves = countWeekdayLeaves(monthLeaves);
-    const overInfo = getOverQuotaDays(monthLeaves);
+    const weekdayLeaves = countWeekdayLeaves(
+      monthLeaves,
+      storeCalendarResult.data,
+    );
+    const overInfo = getOverQuotaDays(monthLeaves, storeCalendarResult.data);
     const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
 
     // กฎ "ล็อกเมื่อยืนยันยอดแล้ว": ถ้าเดือนนี้ถูกยืนยันยอดแล้ว + มี snapshot เรท
@@ -360,6 +366,12 @@ export default function useFirebaseAppData({
     await poolAdjustmentsAPI.setPoolAdjustment(yearMonth, fields);
   }
 
+  /* ─── Store calendar (ปฏิทินเปิด-ปิดร้าน — admin manage) ─── */
+  async function updateStoreCalendar(cal) {
+    await storeCalendarAPI.updateStoreCalendar(cal);
+    triggerRecomputeDutyAssignments(); // duty filter ขึ้นกับ calendar
+  }
+
   /* ─── Legacy setters (deprecated — แต่ component เก่าใช้) ───
      ใน Firebase mode setters เหล่านี้เป็น no-op
      เพราะ data sync ผ่าน real-time subscription                   */
@@ -378,6 +390,7 @@ export default function useFirebaseAppData({
     payrollConfirms: pcResult.data,
     poolAdjustments: poolAdjResult.data,
     employeeLoans: loansResult.data,
+    storeCalendar: storeCalendarResult.data,
 
     // Status
     loading,
@@ -409,6 +422,7 @@ export default function useFirebaseAppData({
     deleteRole,
     setPayrollConfirm,
     setPoolAdjustment,
+    updateStoreCalendar,
     addEmployeeLoan,
     updateEmployeeLoan,
     deleteEmployeeLoan,

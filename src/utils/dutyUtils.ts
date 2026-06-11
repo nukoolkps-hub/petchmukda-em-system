@@ -32,11 +32,39 @@ export function isSunday(ymd: string): boolean {
   return new Date(y, m - 1, d).getDay() === 0;
 }
 
-/** filter หน้าที่ที่ "applicable วันนี้" — weekly + skipSundays + วันอาทิตย์
- *  → ถูกตัดออก · ใช้ก่อนเข้า phase ใด                                    */
-export function applicableDuties(duties: Duty[], todayYmd: string): Duty[] {
-  if (!isSunday(todayYmd)) return duties;
-  return duties.filter((d) => !(d.period === "weekly" && d.skipSundays));
+interface StoreCalendarLite {
+  extraOpenSaturdays: string[];
+  extraClosedWeekdays: string[];
+}
+
+/** filter หน้าที่ที่ "applicable วันนี้":
+ *  - ร้านปิด (เสาร์ default หรือ admin mark ปิด) → [] (ไม่มีหน้าที่)
+ *  - อาทิตย์ → ตัด weekly+skipSundays (per-duty opt-out)
+ *  - วันทำงานอื่น → ทุกหน้าที่ปกติ                                        */
+export function applicableDuties(
+  duties: Duty[],
+  todayYmd: string,
+  calendar?: StoreCalendarLite | null,
+): Duty[] {
+  const [y, m, d] = todayYmd.split("-").map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  // เสาร์: ปิด default ยกเว้นใน extraOpenSaturdays
+  if (dow === 6 && !(calendar?.extraOpenSaturdays || []).includes(todayYmd)) {
+    return [];
+  }
+  // จันทร์-ศุกร์ ที่อยู่ใน extraClosedWeekdays → ปิดพิเศษ
+  if (
+    dow !== 0 &&
+    dow !== 6 &&
+    (calendar?.extraClosedWeekdays || []).includes(todayYmd)
+  ) {
+    return [];
+  }
+  // อาทิตย์: ใช้ per-duty opt-out
+  if (dow === 0) {
+    return duties.filter((dt) => !(dt.period === "weekly" && dt.skipSundays));
+  }
+  return duties;
 }
 
 /** เลือก primary ของหน้าที่ — single source of truth ของ A+B
@@ -359,9 +387,10 @@ export function computeAllDutiesForDay(
   todayYmd: string,
   employees: Employee[],
   leaves: LeaveEntry[],
+  calendar?: StoreCalendarLite | null,
 ): DutyAssignment[] {
-  // ตัด weekly+skipSundays ออกถ้าวันนี้เป็นวันอาทิตย์ — ไม่โผล่ในผลลัพธ์เลย
-  const todayDuties = applicableDuties(duties, todayYmd);
+  // ร้านปิด → ไม่มีหน้าที่ · อาทิตย์ → ตัด weekly+skipSundays per duty
+  const todayDuties = applicableDuties(duties, todayYmd, calendar);
   const monthlyDuties = todayDuties.filter((d) => d.period === "monthly");
   const weeklyDuties = todayDuties.filter((d) => d.period === "weekly");
 

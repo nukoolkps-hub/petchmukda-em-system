@@ -33,11 +33,39 @@ export function isSunday(ymd: string): boolean {
 	return new Date(y, m - 1, d).getDay() === 0;
 }
 
-/** filter หน้าที่ที่ "applicable วันนี้" — weekly + skipSundays + วันอาทิตย์
- *  → ถูกตัดออก · ใช้ก่อนเข้า phase ใด                                    */
-export function applicableDuties(duties: Duty[], todayYmd: string): Duty[] {
-	if (!isSunday(todayYmd)) return duties;
-	return duties.filter((d) => !(d.period === "weekly" && d.skipSundays));
+interface StoreCalendarLite {
+	extraOpenSaturdays: string[];
+	extraClosedWeekdays: string[];
+}
+
+/** filter หน้าที่ที่ "applicable วันนี้":
+ *  - ร้านปิด (เสาร์ default หรือ admin mark ปิด) → [] (ไม่มีหน้าที่)
+ *  - อาทิตย์ → ตัด weekly+skipSundays (per-duty opt-out)
+ *  - วันทำงานอื่น → ทุกหน้าที่ปกติ                                        */
+export function applicableDuties(
+	duties: Duty[],
+	todayYmd: string,
+	calendar?: StoreCalendarLite | null,
+): Duty[] {
+	const [y, m, d] = todayYmd.split("-").map(Number);
+	const dow = new Date(y, m - 1, d).getDay();
+	// เสาร์: ปิด default ยกเว้นใน extraOpenSaturdays
+	if (dow === 6 && !(calendar?.extraOpenSaturdays || []).includes(todayYmd)) {
+		return [];
+	}
+	// จันทร์-ศุกร์ ที่อยู่ใน extraClosedWeekdays → ปิดพิเศษ
+	if (
+		dow !== 0 &&
+		dow !== 6 &&
+		(calendar?.extraClosedWeekdays || []).includes(todayYmd)
+	) {
+		return [];
+	}
+	// อาทิตย์: ใช้ per-duty opt-out
+	if (dow === 0) {
+		return duties.filter((dt) => !(dt.period === "weekly" && dt.skipSundays));
+	}
+	return duties;
 }
 
 /** FNV-1a 32-bit hash (A) — stable slot per duty.id แทนตำแหน่งใน array
@@ -478,11 +506,10 @@ export function computeAllDutiesForDay(
 	employees: Employee[],
 	leaves: LeaveEntry[],
 	coverageHistory?: Map<string, number>,
+	calendar?: StoreCalendarLite | null,
 ): DutyAssignment[] {
-	// ตัด weekly+skipSundays ออกตั้งแต่ต้น ถ้าวันนี้เป็นวันอาทิตย์
-	// (assignment ของหน้าที่นั้นจะไม่ปรากฏใน snapshot เลย → หน้าจอพนักงาน
-	// สะอาด ไม่ต้องโชว์ "พักวันอาทิตย์")
-	const todayDuties = applicableDuties(duties, todayYmd);
+	// ร้านปิด → ไม่มี assignment เลย · อาทิตย์ → ตัด weekly+skipSundays
+	const todayDuties = applicableDuties(duties, todayYmd, calendar);
 	// แยก coverage ออกจาก rotation
 	const coverageDuties = todayDuties.filter((d) => d.kind === "coverage");
 	const rotationDuties = todayDuties.filter((d) => d.kind !== "coverage");

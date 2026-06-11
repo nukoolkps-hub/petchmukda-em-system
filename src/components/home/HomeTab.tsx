@@ -14,7 +14,13 @@ import {
 import { useState } from "react";
 import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { DutyAssignmentsSnapshot } from "../../firebase/dutyAssignments";
-import type { Duty, Employee, LeaveEntry, Role } from "../../types";
+import type {
+  Duty,
+  Employee,
+  LeaveEntry,
+  Role,
+  StoreCalendar,
+} from "../../types";
 import { isRichTextEmpty } from "../../utils/sanitizeRichText";
 import DutyForecastModal from "../modals/DutyForecastModal";
 import RoleMainDutiesModal from "../modals/RoleMainDutiesModal";
@@ -31,6 +37,7 @@ interface HomeTabProps {
   roles?: Role[];
   duties?: Duty[];
   dutyAssignmentsToday?: DutyAssignmentsSnapshot | null;
+  storeCalendar?: StoreCalendar | null;
 }
 
 export default function HomeTab({
@@ -41,6 +48,8 @@ export default function HomeTab({
   roles,
   duties,
   dutyAssignmentsToday,
+  // storeCalendar plumbed in for future use (manual modal · banner) — ปัจจุบัน
+  // ยังไม่ใช้ระดับนี้ เพราะ snapshot ที่อ่านมาจาก server filter ให้แล้ว
 }: HomeTabProps) {
   const [showMainDuties, setShowMainDuties] = useState(false);
   // ใช้ currentEmployee จาก useProfile (single source of identity) แทนการ

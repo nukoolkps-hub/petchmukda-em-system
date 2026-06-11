@@ -41,6 +41,7 @@ export default function PayrollSummaryPanel({
   payrollConfirms,
   poolAdjustments,
   employeeLoans,
+  storeCalendar,
   onSetPayrollConfirm,
   onSaveSalary,
   onUpdateLoan,
@@ -123,8 +124,8 @@ export default function PayrollSummaryPanel({
           (lv) =>
             lv.employeeId === employee.id && lv.start.startsWith(selectedMonth),
         );
-        const overInfo = getOverQuotaDays(monthLeaves);
-        const totalLeaveDays = countWeekdayLeaves(monthLeaves);
+        const overInfo = getOverQuotaDays(monthLeaves, storeCalendar);
+        const totalLeaveDays = countWeekdayLeaves(monthLeaves, storeCalendar);
         const monthApprovedAdvances = (
           monthlyApprovedAdvances.data || []
         ).filter((r) => r.employeeId === employee.id);
@@ -144,6 +145,7 @@ export default function PayrollSummaryPanel({
             employeeDirectory,
             poolAdjustment: poolAdjustments?.[selectedMonth] || null,
             poolGroup: employeeRole.poolGroup,
+            storeCalendar,
           });
           poolShare = shares[employee.id];
         }
@@ -179,6 +181,7 @@ export default function PayrollSummaryPanel({
     monthlyApprovedAdvances.data,
     poolAdjustments,
     employeeLoans,
+    storeCalendar,
   ]);
 
   // filter by search

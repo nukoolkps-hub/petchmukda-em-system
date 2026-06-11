@@ -45,6 +45,7 @@ export function computePoolSharesForGroup({
   employeeDirectory,
   poolAdjustment, // { items: [{poolGroup, side, pieces, label}] } — ระดับเดือน
   poolGroup, // ตำแหน่ง/กลุ่มที่กำลังคำนวณ — กรอง adjustment เฉพาะของกลุ่มนี้
+  storeCalendar, // ปฏิทินเปิด-ปิดร้าน · ใช้นับวันลา (Sat ปิด → ไม่นับ)
 }: {
   groupEmployeeIds: string[];
   salaryData: any;
@@ -60,6 +61,10 @@ export function computePoolSharesForGroup({
     }[];
   } | null;
   poolGroup?: string | null;
+  storeCalendar?: {
+    extraOpenSaturdays: string[];
+    extraClosedWeekdays: string[];
+  } | null;
 }) {
   if (!groupEmployeeIds || groupEmployeeIds.length === 0) return {};
 
@@ -102,8 +107,8 @@ export function computePoolSharesForGroup({
         (leave) =>
           leave.employeeId === employeeId && leave.start.startsWith(yearMonth),
       );
-      const weekdayLeaves = countWeekdayLeaves(monthLeaves);
-      const overInfo = getOverQuotaDays(monthLeaves);
+      const weekdayLeaves = countWeekdayLeaves(monthLeaves, storeCalendar);
+      const overInfo = getOverQuotaDays(monthLeaves, storeCalendar);
       // วันหยุดรวมตาม Excel = ปกติ + อาทิตย์ทั้งหมด (ไม่ใช่แค่ที่เกินโควต้า)
       totalLeave[employeeId] = weekdayLeaves + (overInfo.sundays || 0);
     } else {

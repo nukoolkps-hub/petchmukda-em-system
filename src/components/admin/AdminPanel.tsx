@@ -17,6 +17,7 @@ import LineBotCommandsPanel from "./LineBotCommandsPanel";
 import LineBotNotificationsPanel from "./LineBotNotificationsPanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
 import RolesAdminPanel from "./RolesAdminPanel";
+import StoreCalendarPanel from "./StoreCalendarPanel";
 
 function AdminNavBadge({ count }: { count: number }) {
   return (
@@ -51,6 +52,8 @@ export default function AdminPanel({
   poolAdjustments,
   onSetPoolAdjustment,
   employeeLoans,
+  storeCalendar,
+  onUpdateStoreCalendar,
   onAddLoan,
   onUpdateLoan,
   onDeleteLoan,
@@ -197,6 +200,15 @@ export default function AdminPanel({
         />
       )}
 
+      {/* ── STORE CALENDAR section (วันเปิด-ปิดร้าน) ── */}
+      {section === "store-calendar" && (
+        <StoreCalendarPanel
+          storeCalendar={storeCalendar}
+          onUpdate={onUpdateStoreCalendar}
+          showToast={showToast}
+        />
+      )}
+
       {/* ── LINE BOT > NOTIFICATIONS section ── */}
       {section === "linebot-notifications" && (
         <LineBotNotificationsPanel showToast={showToast} />
@@ -217,6 +229,7 @@ export default function AdminPanel({
           onSetPayrollConfirm={onSetPayrollConfirm}
           poolAdjustments={poolAdjustments}
           employeeLoans={employeeLoans}
+          storeCalendar={storeCalendar}
           onUpdateLoan={onUpdateLoan}
           onSaveSalary={onSaveSalary}
           showToast={showToast}
@@ -259,6 +272,7 @@ export default function AdminPanel({
           poolAdjustments={poolAdjustments}
           onSetPoolAdjustment={onSetPoolAdjustment}
           employeeLoans={employeeLoans}
+          storeCalendar={storeCalendar}
           onReorderEmployees={onReorderEmployees}
           setUnsavedDirty={setUnsavedDirty}
           showToast={showToast}
