@@ -19,6 +19,8 @@ const FUNCTIONS_TO_CHECK = [
   "assignPrimaries",
   "isSunday",
   "applicableDuties",
+  "monthlyPrimariesForDay",
+  "pickCoverageCandidate",
 ];
 
 /** ดึง body ของ function NAME(...) {...} ด้วยการนับวงเล็บปีกกา */
