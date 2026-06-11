@@ -1,7 +1,9 @@
 import {
   ChevronLeft as IconChevronLeft,
   ChevronRight as IconChevronRight,
+  Lock as IconLock,
   Sparkles as IconSparkles,
+  Store as IconStore,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -11,8 +13,9 @@ import {
   THAI_MONTH_NAMES as thaiMonthNames,
   THAI_SHORT_WEEKDAY_NAMES as thaiShortDayNames,
 } from "../../constants";
-import type { Employee, LeaveEntry } from "../../types";
+import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
 import { dateRange, toYMD as toDateKey } from "../../utils/dateUtils";
+import { isStoreClosed } from "../../utils/storeCalendar";
 import AvatarCircle from "../shared/AvatarCircle";
 
 type CalendarEmployee = Pick<
@@ -23,12 +26,14 @@ type CalendarEmployee = Pick<
 interface TeamCalendarProps {
   leaveEntries: LeaveEntry[];
   employeeDirectory: CalendarEmployee[];
+  storeCalendar?: StoreCalendar | null;
 }
 
 /* ─── Team Calendar ────────────────────────────────────────────── */
 export default function TeamCalendar({
   leaveEntries,
   employeeDirectory,
+  storeCalendar,
 }: TeamCalendarProps) {
   const now = new Date();
   const [visibleYear, setVisibleYear] = useState(now.getFullYear());
@@ -151,6 +156,11 @@ export default function TeamCalendar({
             const isSelectedDate = dateKey === selectedDate;
             const leaveEntriesForDate = leavesByDate[dateKey] || [];
             const hasLeaveEntries = leaveEntriesForDate.length > 0;
+            // ปฏิทินเปิด-ปิดร้าน: เสาร์ default ปิด · admin เปิดบางเสาร์/ปิด จ-ศ บางวันได้
+            const storeClosed = isStoreClosed(dateKey, storeCalendar);
+            const isExtraOpenSat =
+              dayOfWeek === 6 &&
+              !!storeCalendar?.extraOpenSaturdays?.includes(dateKey);
 
             return (
               <div
@@ -160,9 +170,13 @@ export default function TeamCalendar({
                 style={{
                   background: isSelectedDate
                     ? colors.goldPale
-                    : isToday
-                      ? "#E8E8E8"
-                      : colors.white,
+                    : storeClosed
+                      ? colors.creamDark
+                      : isExtraOpenSat
+                        ? colors.greenLight
+                        : isToday
+                          ? "#E8E8E8"
+                          : colors.white,
                   border: `1.5px solid ${
                     isSelectedDate
                       ? `${colors.gold}70`
@@ -185,15 +199,40 @@ export default function TeamCalendar({
                     fontWeight: isToday || isSelectedDate ? 800 : 500,
                     color: isSelectedDate
                       ? colors.gold
-                      : isWeekend
+                      : storeClosed
                         ? `${colors.textSoft}80`
-                        : isToday
-                          ? "#666"
-                          : colors.text,
+                        : isExtraOpenSat
+                          ? colors.green
+                          : isWeekend
+                            ? `${colors.textSoft}80`
+                            : isToday
+                              ? "#666"
+                              : colors.text,
                   }}
                 >
                   {dayOfMonth}
                 </div>
+                {/* marker เปิด-ปิดร้าน (ขนาดเล็กใต้เลข) */}
+                {(storeClosed || isExtraOpenSat) && !hasLeaveEntries && (
+                  <div
+                    className="flex justify-center items-center mt-[2px] text-[8px] font-bold leading-none"
+                    style={{
+                      color: storeClosed ? colors.textSoft : colors.green,
+                    }}
+                  >
+                    {storeClosed ? (
+                      <span className="inline-flex items-center gap-px">
+                        <IconLock size={7} strokeWidth={3} />
+                        ปิด
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-px">
+                        <IconStore size={7} strokeWidth={3} />
+                        เปิด
+                      </span>
+                    )}
+                  </div>
+                )}
                 {hasLeaveEntries && (
                   <div className="flex flex-wrap gap-px justify-center mt-[3px]">
                     {leaveEntriesForDate.slice(0, 3).map((leaveEntry) => {
@@ -222,7 +261,7 @@ export default function TeamCalendar({
             );
           })}
         </div>
-        <div className="flex gap-3.5 mt-3.5 pt-3 border-t border-cream-dk">
+        <div className="flex gap-3.5 mt-3.5 pt-3 border-t border-cream-dk flex-wrap">
           {LEAVE_TYPES.map((lt) => (
             <div key={lt.id} className="flex items-center gap-[5px]">
               <div
@@ -232,6 +271,20 @@ export default function TeamCalendar({
               <span className="text-sm text-txt-soft">{lt.label}</span>
             </div>
           ))}
+          <div className="flex items-center gap-[5px]">
+            <div
+              className="w-2.5 h-2.5 rounded-[3px] border border-bdr"
+              style={{ background: colors.creamDark }}
+            />
+            <span className="text-sm text-txt-soft">ร้านปิด</span>
+          </div>
+          <div className="flex items-center gap-[5px]">
+            <div
+              className="w-2.5 h-2.5 rounded-[3px]"
+              style={{ background: colors.greenLight }}
+            />
+            <span className="text-sm text-txt-soft">เสาร์เปิดพิเศษ</span>
+          </div>
         </div>
       </div>
       <div className="bg-white rounded-[18px] p-4 mb-3.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] border border-bdr">

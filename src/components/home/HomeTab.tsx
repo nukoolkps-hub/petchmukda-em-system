@@ -48,8 +48,7 @@ export default function HomeTab({
   roles,
   duties,
   dutyAssignmentsToday,
-  // storeCalendar plumbed in for future use (manual modal · banner) — ปัจจุบัน
-  // ยังไม่ใช้ระดับนี้ เพราะ snapshot ที่อ่านมาจาก server filter ให้แล้ว
+  storeCalendar,
 }: HomeTabProps) {
   const [showMainDuties, setShowMainDuties] = useState(false);
   // ใช้ currentEmployee จาก useProfile (single source of identity) แทนการ
@@ -262,6 +261,7 @@ export default function HomeTab({
       </div>
       <TeamCalendar
         leaveEntries={allLeaves}
+        storeCalendar={storeCalendar}
         employeeDirectory={[
           ...employeeDirectory,
           ...(profile && !employeeDirectory.find((e) => e.id === profile.id)
