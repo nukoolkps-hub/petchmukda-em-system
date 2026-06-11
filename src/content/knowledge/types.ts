@@ -60,6 +60,8 @@ export type KnowledgeBlock =
     }
   | { type: "secret"; label: string; value: string }
   | { type: "change-price-table" }
+  | { type: "sell-price-96-table" }
+  | { type: "buy-price-96-table" }
   | {
       /** เหมือน example แต่ "โจทย์" + steps คำนวณจากราคาทองวันนี้
        *  → ไม่ outdated เมื่อราคาทองขยับ */

@@ -9,11 +9,13 @@ import {
   AlertTriangle as IconWarn,
 } from "lucide-react";
 import type { KnowledgeBlock } from "../../content/knowledge/types";
+import BuyPrice96Table from "./BuyPrice96Table";
 import Calculator from "./Calculator";
 import ChangePriceTable from "./ChangePriceTable";
 import LiveExample from "./LiveExample";
 import MathText from "./MathText";
 import Secret from "./Secret";
+import SellPrice96Table from "./SellPrice96Table";
 
 interface Props {
   block: KnowledgeBlock;
@@ -257,6 +259,12 @@ export default function KnowledgeBlockView({ block }: Props) {
 
     case "change-price-table":
       return <ChangePriceTable />;
+
+    case "sell-price-96-table":
+      return <SellPrice96Table />;
+
+    case "buy-price-96-table":
+      return <BuyPrice96Table />;
 
     case "live-example":
       return <LiveExample title={block.title} compute={block.compute} />;
