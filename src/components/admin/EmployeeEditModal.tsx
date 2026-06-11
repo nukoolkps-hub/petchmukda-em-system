@@ -4,6 +4,7 @@ import {
   Landmark as IconBuildingBank,
   CalendarDays as IconCalendar,
   Check as IconCheck,
+  ChevronDown as IconChevronDown,
   CircleCheck as IconCircleCheck,
   CircleDollarSign as IconCircleDollarSign,
   Copy as IconCopy,
@@ -242,24 +243,31 @@ export default function EmployeeEditModal({
                 ชื่อพนักงาน (คำนำหน้า + ชื่อ)
               </label>
               <div className="flex gap-2">
-                <select
-                  value={
-                    editingPrefix !== undefined
-                      ? editingPrefix
-                      : employee.prefix || "นางสาว"
-                  }
-                  onChange={(e) =>
-                    setEditingRole((previousEditingRole) => ({
-                      ...previousEditingRole,
-                      [`${employee.id}:prefix`]: e.target.value,
-                    }))
-                  }
-                  className={`shrink-0 w-[110px] py-[9px] px-2 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingPrefix !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
-                >
-                  <option value="นางสาว">นางสาว</option>
-                  <option value="นาง">นาง</option>
-                  <option value="นาย">นาย</option>
-                </select>
+                <div className="relative shrink-0 w-[110px]">
+                  <select
+                    value={
+                      editingPrefix !== undefined
+                        ? editingPrefix
+                        : employee.prefix || "นางสาว"
+                    }
+                    onChange={(e) =>
+                      setEditingRole((previousEditingRole) => ({
+                        ...previousEditingRole,
+                        [`${employee.id}:prefix`]: e.target.value,
+                      }))
+                    }
+                    className={`appearance-none cursor-pointer w-full py-[9px] pl-2.5 pr-7 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingPrefix !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                  >
+                    <option value="นางสาว">นางสาว</option>
+                    <option value="นาง">นาง</option>
+                    <option value="นาย">นาย</option>
+                  </select>
+                  <IconChevronDown
+                    size={12}
+                    strokeWidth={2.4}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                  />
+                </div>
                 <input
                   type="text"
                   value={
@@ -453,32 +461,51 @@ export default function EmployeeEditModal({
                     : "border-bdr bg-cream";
                 return (
                   <div className="flex gap-2">
-                    <select
-                      value={curMonth}
-                      onChange={(e) =>
-                        setYM(curYear || String(nowYear), e.target.value)
-                      }
-                      className={`flex-1 py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
-                    >
-                      <option value="">เดือน</option>
-                      {thaiMonths.map((mn, i) => (
-                        <option key={mn} value={String(i + 1).padStart(2, "0")}>
-                          {mn}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={curYear}
-                      onChange={(e) => setYM(e.target.value, curMonth || "01")}
-                      className={`flex-1 py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
-                    >
-                      <option value="">ปี (พ.ศ.)</option>
-                      {years.map((y) => (
-                        <option key={y} value={String(y)}>
-                          {y + 543}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative flex-1">
+                      <select
+                        value={curMonth}
+                        onChange={(e) =>
+                          setYM(curYear || String(nowYear), e.target.value)
+                        }
+                        className={`appearance-none cursor-pointer w-full py-[9px] pl-3 pr-7 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
+                      >
+                        <option value="">เดือน</option>
+                        {thaiMonths.map((mn, i) => (
+                          <option
+                            key={mn}
+                            value={String(i + 1).padStart(2, "0")}
+                          >
+                            {mn}
+                          </option>
+                        ))}
+                      </select>
+                      <IconChevronDown
+                        size={12}
+                        strokeWidth={2.4}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                      />
+                    </div>
+                    <div className="relative flex-1">
+                      <select
+                        value={curYear}
+                        onChange={(e) =>
+                          setYM(e.target.value, curMonth || "01")
+                        }
+                        className={`appearance-none cursor-pointer w-full py-[9px] pl-3 pr-7 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
+                      >
+                        <option value="">ปี (พ.ศ.)</option>
+                        {years.map((y) => (
+                          <option key={y} value={String(y)}>
+                            {y + 543}
+                          </option>
+                        ))}
+                      </select>
+                      <IconChevronDown
+                        size={12}
+                        strokeWidth={2.4}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                      />
+                    </div>
                   </div>
                 );
               })()}

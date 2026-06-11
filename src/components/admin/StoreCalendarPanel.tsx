@@ -7,6 +7,7 @@
 import {
   CalendarOff as IconCalendarOff,
   CalendarPlus as IconCalendarPlus,
+  ChevronDown as IconChevronDown,
   Plus as IconPlus,
   Store as IconStore,
   Trash2 as IconTrash,
@@ -212,18 +213,25 @@ export default function StoreCalendarPanel({
         {/* add row */}
         {adding === "sat" && (
           <div className="px-3.5 py-3 border-b border-bdr bg-cream/40 flex gap-2 items-center">
-            <select
-              value={satPick}
-              onChange={(e) => setSatPick(e.target.value)}
-              className="flex-1 px-2.5 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white"
-            >
-              <option value="">— เลือกเสาร์ —</option>
-              {satOptions.map((o) => (
-                <option key={o.ymd} value={o.ymd}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex-1">
+              <select
+                value={satPick}
+                onChange={(e) => setSatPick(e.target.value)}
+                className="appearance-none cursor-pointer w-full pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt"
+              >
+                <option value="">— เลือกเสาร์ —</option>
+                {satOptions.map((o) => (
+                  <option key={o.ymd} value={o.ymd}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <IconChevronDown
+                size={12}
+                strokeWidth={2.4}
+                className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+              />
+            </div>
             <button
               type="button"
               onClick={addSaturday}
