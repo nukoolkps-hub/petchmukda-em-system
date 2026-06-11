@@ -61,6 +61,19 @@ export interface AdminNavGroup {
 
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
+    id: "calendar",
+    label: "ปฏิทินการทำงาน",
+    defaultSection: "store-calendar",
+    Icon: IconCalendarRange,
+    items: [
+      {
+        id: "store-calendar",
+        label: "วันเปิด-ปิดร้าน",
+        Icon: IconCalendarOff,
+      },
+    ],
+  },
+  {
     id: "leave",
     label: "งานลา",
     defaultSection: "summary",
@@ -89,19 +102,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     Icon: IconCalendarClock,
     items: [
       { id: "duty-schedule", label: "ตารางหน้าที่", Icon: IconCalendarClock },
-    ],
-  },
-  {
-    id: "calendar",
-    label: "ปฏิทินการทำงาน",
-    defaultSection: "store-calendar",
-    Icon: IconCalendarRange,
-    items: [
-      {
-        id: "store-calendar",
-        label: "วันเปิด-ปิดร้าน",
-        Icon: IconCalendarOff,
-      },
     ],
   },
   {
