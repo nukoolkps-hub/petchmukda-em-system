@@ -45,6 +45,28 @@ export function ceilTo50(n: number): number {
   return Math.ceil(n / 50) * 50;
 }
 
+/** ราคาขายทอง 96.5% เริ่มต้น (ที่ค่าแรงเริ่มต้น) ตามน้ำหนัก
+ *  = (ราคาทอง × 0.0656 × grams) + ค่าแรงเริ่มต้น */
+export function computeSellPrice96(
+  weight: ChangePriceWeight,
+  goldPricePerBaht: number,
+): { goldPart: number; laborPart: number; total: number } {
+  const goldPart = goldByWeight(goldPricePerBaht, weight.grams);
+  const laborPart = weight.laborBase;
+  return { goldPart, laborPart, total: goldPart + laborPart };
+}
+
+/** ราคารับซื้อทอง 96.5% (หัก discount%) ตามน้ำหนัก
+ *  = (ราคาทอง × (1 − discount%)) × 0.0656 × grams */
+export function computeBuyPrice96(
+  weight: ChangePriceWeight,
+  goldPricePerBaht: number,
+  discountPercent: number,
+): number {
+  const adjusted = goldPricePerBaht * (1 - discountPercent / 100);
+  return goldByWeight(adjusted, weight.grams);
+}
+
 /** ค่าเปลี่ยน นน. เท่ากัน — return ราคารวมแล้ว */
 export function computeChangePrice(
   weight: ChangePriceWeight,
