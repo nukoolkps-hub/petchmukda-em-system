@@ -3,6 +3,7 @@
 import {
   Banknote as IconCash,
   FilePlus as IconFilePlus,
+  Gem as IconGem,
   Home as IconHome,
   Shield as IconShield,
 } from "lucide-react";
@@ -77,6 +78,18 @@ export function getNavItems(options: {
             ),
           },
         ]),
+    {
+      id: "knowledge",
+      path: "/knowledge",
+      label: "บทเรียน",
+      icon: (a) => (
+        <IconGem
+          size={22}
+          strokeWidth={a ? 2.5 : 2}
+          fill={a ? `${COLORS.gold}30` : "none"}
+        />
+      ),
+    },
   ];
 }
 
@@ -84,5 +97,6 @@ export const PAGE_TITLES: Record<string, string | null> = {
   home: null,
   request: "ยื่นคำขอลา",
   salary: "เงินเดือน",
+  knowledge: "บทเรียน",
   admin: "จัดการข้อมูลพนักงาน",
 };
