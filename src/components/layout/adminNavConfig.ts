@@ -3,6 +3,7 @@
 
 import {
   Bell as IconBell,
+  Brain as IconBrain,
   CalendarClock as IconCalendarClock,
   CalendarDays as IconCalendarEvent,
   CalendarOff as IconCalendarOff,
@@ -13,7 +14,6 @@ import {
   Coins as IconCoins,
   CreditCard as IconCreditCard,
   Diamond as IconDiamond,
-  Gem as IconGem,
   HandCoins as IconHandCoins,
   MessageCircle as IconMessageCircle,
   Settings as IconSettings,
@@ -133,8 +133,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "knowledge",
     label: "ความรู้ต่างๆ",
     defaultSection: "knowledge",
-    Icon: IconGem,
-    items: [{ id: "knowledge", label: "ความรู้ต่างๆ", Icon: IconGem }],
+    Icon: IconBrain,
+    items: [{ id: "knowledge", label: "ความรู้ต่างๆ", Icon: IconBrain }],
   },
 ];
 

@@ -12,6 +12,9 @@ export interface CalcField {
   suffix?: string;
   /** dropdown — ถ้าใส่ จะ render เป็น select แทน number input */
   options?: { value: number; label: string }[];
+  /** ตั้งค่าเริ่มต้นเป็นราคาทองคำแท่ง live (/config/goldPrice) — ยังพิมพ์แก้ได้
+   *  ถ้า user ยังไม่แตะ field จะ sync ตามราคาที่ update อัตโนมัติ */
+  goldPriceDefault?: boolean;
 }
 
 export interface CalcOutput {

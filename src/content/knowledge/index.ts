@@ -174,6 +174,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "ราคาทองคำแท่ง (บาท/บาท)",
             defaultValue: 50000,
             suffix: "฿",
+            goldPriceDefault: true,
           },
           { id: "labor", label: "ค่าแรง", defaultValue: 1250, suffix: "฿" },
           { id: "grams", label: "น้ำหนัก", defaultValue: 1.28, suffix: "ก." },
@@ -226,6 +227,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "ราคาทองคำแท่ง (บาท/บาท)",
             defaultValue: 50000,
             suffix: "฿",
+            goldPriceDefault: true,
           },
           { id: "labor", label: "ค่าแรง", defaultValue: 1050, suffix: "฿" },
           { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
@@ -370,6 +372,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "ราคาทองคำแท่ง (บาท/บาท)",
             defaultValue: 50000,
             suffix: "฿",
+            goldPriceDefault: true,
           },
           {
             id: "discount",
@@ -423,6 +426,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "ราคาทองคำแท่ง (บาท/บาท)",
             defaultValue: 50000,
             suffix: "฿",
+            goldPriceDefault: true,
           },
           {
             id: "mode",
@@ -807,6 +811,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "ราคาทองคำแท่ง",
             defaultValue: 66500,
             suffix: "฿",
+            goldPriceDefault: true,
           },
           { id: "gamnet", label: "ค่ากำเหน็จ", defaultValue: 1000, suffix: "฿" },
           {

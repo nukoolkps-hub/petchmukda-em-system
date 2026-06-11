@@ -4,8 +4,9 @@
    useMemo เพื่อ compute ใหม่เมื่อ inputs เปลี่ยน                       */
 
 import { Calculator as IconCalc } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CalcField, CalcOutput } from "../../content/knowledge/types";
+import { useGoldPrice } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
 
 interface Props {
@@ -21,11 +22,36 @@ function formatOutput(value: number, format: CalcOutput["format"]): string {
 }
 
 export default function Calculator({ title, inputs, compute }: Props) {
+  const { data: gold } = useGoldPrice();
+  const hasGoldField = inputs.some((f) => f.goldPriceDefault);
+
   const [values, setValues] = useState<Record<string, number>>(() => {
     const init: Record<string, number> = {};
     for (const f of inputs) init[f.id] = f.defaultValue ?? 0;
     return init;
   });
+  // field ที่ผู้ใช้พิมพ์แก้เองแล้ว — จะหยุด sync ราคาทอง live ให้ field นั้น
+  const [touched, setTouched] = useState<Set<string>>(() => new Set());
+
+  // ช่อง "ราคาทองคำแท่ง" → ตั้งค่าตามราคา live จนกว่า user จะแก้เอง
+  useEffect(() => {
+    if (!hasGoldField || gold.pricePerBaht <= 0) return;
+    setValues((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const f of inputs) {
+        if (
+          f.goldPriceDefault &&
+          !touched.has(f.id) &&
+          next[f.id] !== gold.pricePerBaht
+        ) {
+          next[f.id] = gold.pricePerBaht;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [hasGoldField, gold.pricePerBaht, inputs, touched]);
 
   const outputs = useMemo(() => {
     try {
@@ -55,6 +81,11 @@ export default function Calculator({ title, inputs, compute }: Props) {
               className="text-xs font-semibold text-txt-mid flex-1 min-w-0 leading-snug"
             >
               {field.label}
+              {field.goldPriceDefault && !touched.has(field.id) && (
+                <span className="ml-1 text-[10px] text-green font-bold">
+                  · ราคาวันนี้
+                </span>
+              )}
             </label>
             <div className="flex items-center gap-1.5">
               {field.options ? (
@@ -81,15 +112,21 @@ export default function Calculator({ title, inputs, compute }: Props) {
                   type="number"
                   inputMode="decimal"
                   value={Number.isNaN(values[field.id]) ? "" : values[field.id]}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    // user แก้ราคาทองเอง → หยุด sync ราคา live ให้ field นี้
+                    if (field.goldPriceDefault) {
+                      setTouched((t) =>
+                        t.has(field.id) ? t : new Set(t).add(field.id),
+                      );
+                    }
                     setValues((v) => ({
                       ...v,
                       [field.id]:
                         e.target.value === ""
                           ? Number.NaN
                           : Number(e.target.value),
-                    }))
-                  }
+                    }));
+                  }}
                   className="w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt text-right bg-white font-[inherit] outline-none"
                 />
               )}
