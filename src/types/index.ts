@@ -191,7 +191,8 @@ export interface StoreCalendar {
 /** ราคาทองคำไทย (อ้างอิงสมาคมค้าทองคำ · admin update วันละครั้ง)
  *  doc เดียว: /config/goldPrice                                          */
 export interface GoldPrice {
-  pricePerBaht: number; // ฿/บาท (ราคาทองคำแท่ง)
+  pricePerBaht: number; // ฿/บาท ราคาขายออก (ทองคำแท่ง สมาคม)
+  buyPrice: number; // ฿/บาท ราคารับซื้อ (0 = ไม่มีข้อมูล)
   updatedAt: number; // ms epoch
   updatedBy: string; // ชื่อ admin หรือ "auto · ..." (Cloud Function)
   lastFetchError: string; // error ล่าสุดจาก auto-fetch ("" = ไม่มี)
@@ -319,7 +320,6 @@ export interface AppData {
   payrollConfirms: PayrollConfirms;
   poolAdjustments: PoolAdjustmentsByMonth;
   storeCalendar: StoreCalendar;
-  goldPrice: GoldPrice;
   loading: boolean;
   error: Error | null;
 

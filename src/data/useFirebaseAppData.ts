@@ -10,14 +10,12 @@ import * as dutiesAPI from "../firebase/duties";
 import { triggerRecomputeDutyAssignments } from "../firebase/dutyAssignments";
 import * as employeeLoansAPI from "../firebase/employeeLoans";
 import * as employeesAPI from "../firebase/employees";
-import * as goldPriceAPI from "../firebase/goldPrice";
 import {
   useAdvancesForScope,
   useDuties,
   useDutyAssignments,
   useEmployeeLoansForScope,
   useEmployeesForScope,
-  useGoldPrice,
   useLeavesForScope,
   usePayrollConfirmsForScope,
   usePoolAdjustments,
@@ -90,7 +88,6 @@ export default function useFirebaseAppData({
   const poolSnapResult = usePoolSnapshots();
   const poolAdjResult = usePoolAdjustments();
   const storeCalendarResult = useStoreCalendar();
-  const goldPriceResult = useGoldPrice();
 
   // employee เห็น salaries ของตัวเองคนเดียว — เติม peer-data จาก
   // poolSnapshots ลงไปใน salaryData ก่อนส่งต่อให้ component (SalaryView,
@@ -369,11 +366,6 @@ export default function useFirebaseAppData({
     await poolAdjustmentsAPI.setPoolAdjustment(yearMonth, fields);
   }
 
-  /* ─── Gold price (ราคาทองคำไทย — admin update) ─── */
-  async function updateGoldPrice(pricePerBaht, updatedBy) {
-    await goldPriceAPI.updateGoldPrice(pricePerBaht, updatedBy);
-  }
-
   /* ─── Store calendar (ปฏิทินเปิด-ปิดร้าน — admin manage) ─── */
   async function updateStoreCalendar(cal) {
     await storeCalendarAPI.updateStoreCalendar(cal);
@@ -399,7 +391,6 @@ export default function useFirebaseAppData({
     poolAdjustments: poolAdjResult.data,
     employeeLoans: loansResult.data,
     storeCalendar: storeCalendarResult.data,
-    goldPrice: goldPriceResult.data,
 
     // Status
     loading,
@@ -432,7 +423,6 @@ export default function useFirebaseAppData({
     setPayrollConfirm,
     setPoolAdjustment,
     updateStoreCalendar,
-    updateGoldPrice,
     addEmployeeLoan,
     updateEmployeeLoan,
     deleteEmployeeLoan,

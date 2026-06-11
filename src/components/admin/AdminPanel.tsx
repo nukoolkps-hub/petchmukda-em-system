@@ -13,7 +13,6 @@ import AdminAdvancePanel from "./AdminAdvancePanel";
 import DutySchedulePanel from "./DutySchedulePanel";
 import EmployeeAdminPanel from "./EmployeeAdminPanel";
 import EmployeeLoansPanel from "./EmployeeLoansPanel";
-import GoldPricePanel from "./GoldPricePanel";
 import LeaveListPanel from "./LeaveListPanel";
 import LeaveSummaryPanel from "./LeaveSummaryPanel";
 import LineBotCommandsPanel from "./LineBotCommandsPanel";
@@ -57,9 +56,6 @@ export default function AdminPanel({
   employeeLoans,
   storeCalendar,
   onUpdateStoreCalendar,
-  goldPrice,
-  onUpdateGoldPrice,
-  adminName,
   onAddLoan,
   onUpdateLoan,
   onDeleteLoan,
@@ -216,23 +212,15 @@ export default function AdminPanel({
       )}
 
       {/* ── KNOWLEDGE section (บทเรียน) ── */}
-      {section === "knowledge" && <KnowledgeView />}
+      {section === "knowledge" && (
+        <KnowledgeView isAdmin showToast={showToast} />
+      )}
 
       {/* ── STORE CALENDAR section (วันเปิด-ปิดร้าน) ── */}
       {section === "store-calendar" && (
         <StoreCalendarPanel
           storeCalendar={storeCalendar}
           onUpdate={onUpdateStoreCalendar}
-          showToast={showToast}
-        />
-      )}
-
-      {/* ── GOLD PRICE section (ราคาทองคำวันนี้) ── */}
-      {section === "gold-price" && (
-        <GoldPricePanel
-          goldPrice={goldPrice}
-          adminName={adminName}
-          onUpdate={onUpdateGoldPrice}
           showToast={showToast}
         />
       )}

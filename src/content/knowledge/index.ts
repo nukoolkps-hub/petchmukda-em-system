@@ -67,7 +67,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 2. ค่าแรง + ค่าเปลี่ยน ── */
   {
     id: "labor-cost",
-    title: "ค่าแรง + ค่าเปลี่ยน นน. เท่ากัน (ทอง 96.5%)",
+    title: "ค่าแรง + ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น (ทอง 96.5%)",
     Icon: IconTag,
     blocks: [
       {
@@ -89,7 +89,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["2 บาท ขึ้นไป", "บาทละ 1,050"],
         ],
       },
-      { type: "h3", text: "ค่าเปลี่ยน นน. เท่ากัน (อิงราคาทองวันนี้)" },
+      { type: "h3", text: "ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น (อิงราคาทองวันนี้)" },
       { type: "change-price-table" },
       { type: "h3", text: "ส่วนลด" },
       {

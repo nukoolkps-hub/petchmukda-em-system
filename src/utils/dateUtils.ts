@@ -1,5 +1,5 @@
 /* ─── Date helpers ─────────────────────────────────────────────── */
-import { TODAY } from "../constants";
+import { THAI_MONTH_NAMES, TODAY } from "../constants";
 
 export function toYMD(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -73,6 +73,17 @@ export function currentYearMonth(): string {
 
 export function isPast(e: string): boolean {
   return e < TODAY;
+}
+
+/* ms epoch → "11 มิ.ย. 2569 · 23:58 น." — ใช้กับ timestamp (เช่น goldPrice) */
+export function fmtThaiDateTime(ms: number): string {
+  if (!ms) return "—";
+  const d = new Date(ms);
+  const month = THAI_MONTH_NAMES[d.getMonth()];
+  const yearBE = d.getFullYear() + 543;
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${d.getDate()} ${month} ${yearBE} · ${hh}:${mm} น.`;
 }
 
 export function isFuture(s: string): boolean {

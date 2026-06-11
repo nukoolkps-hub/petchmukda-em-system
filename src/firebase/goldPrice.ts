@@ -10,6 +10,7 @@ import { db, functions } from "./config";
 
 export interface GoldPrice {
   pricePerBaht: number;
+  buyPrice: number;
   updatedAt: number;
   updatedBy: string;
   lastFetchError: string;
@@ -21,6 +22,7 @@ const PATH = "config/goldPrice";
 /** ค่าเริ่มต้น — ใช้ก่อน Firestore โหลด · อย่าให้เป็น 0 (จะทำให้ตาราง = 0) */
 export const DEFAULT_GOLD_PRICE: GoldPrice = {
   pricePerBaht: 50000,
+  buyPrice: 0,
   updatedAt: 0,
   updatedBy: "",
   lastFetchError: "",
@@ -40,6 +42,10 @@ export function subscribeGoldPrice(
           typeof data.pricePerBaht === "number" && data.pricePerBaht > 0
             ? data.pricePerBaht
             : DEFAULT_GOLD_PRICE.pricePerBaht,
+        buyPrice:
+          typeof data.buyPrice === "number" && data.buyPrice > 0
+            ? data.buyPrice
+            : 0,
         updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : 0,
         updatedBy: typeof data.updatedBy === "string" ? data.updatedBy : "",
         lastFetchError:

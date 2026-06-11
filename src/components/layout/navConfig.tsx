@@ -81,7 +81,7 @@ export function getNavItems(options: {
     {
       id: "knowledge",
       path: "/knowledge",
-      label: "บทเรียน",
+      label: "ความรู้ต่างๆ",
       icon: (a) => (
         <IconGem
           size={22}
@@ -97,6 +97,6 @@ export const PAGE_TITLES: Record<string, string | null> = {
   home: null,
   request: "ยื่นคำขอลา",
   salary: "เงินเดือน",
-  knowledge: "บทเรียน",
+  knowledge: "ความรู้ต่างๆ",
   admin: "จัดการข้อมูลพนักงาน",
 };

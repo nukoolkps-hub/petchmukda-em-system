@@ -31,7 +31,7 @@ export default function ChangePriceTable() {
       <div className="px-3 py-2.5 bg-gold-pale border-b border-gold/30">
         <div className="flex items-center gap-1.5 text-maroon text-xs font-extrabold">
           <IconCoins size={13} strokeWidth={2.5} />
-          ค่าเปลี่ยน น.น. เท่ากัน — อัปเดตอัตโนมัติ
+          ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น — อัปเดตอัตโนมัติ
         </div>
         <div className="mt-1.5 flex items-baseline gap-2 flex-wrap">
           <span className="text-[11px] text-txt-soft font-semibold">

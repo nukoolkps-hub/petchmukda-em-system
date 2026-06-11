@@ -4,12 +4,12 @@
  * Schedule: ทุก 15 นาที (เวลาไทย) — เขียน /config/goldPrice ใน Firestore
  *
  * Source chain (ลองตามลำดับ — ตัวแรกที่สำเร็จชนะ):
- * 1. ฮั่วเซงเฮง apicheckpricev3.huasengheng.com /api/values/getprice/
+ * 1. goldprice.mukdagold.com /api/price2 (เว็บราคาทองของร้านเอง — สมาคม)
+ *    ตอบ JSON { buyPrice, sellPrice, priceChanged, date, time }
+ * 2. ฮั่วเซงเฮง apicheckpricev3.huasengheng.com /api/values/getprice/
  *    ตอบ XML <ArrayOfGoldPriceStruct> 3 แถว: HSH / REF / JEWEL
  *    → ใช้แถว REF (ราคาอ้างอิงสมาคม) + <Sell> · ตัวเลขมี comma → strip
- *    หมายเหตุ: เว็บ HSH มี bot protection — ต้องส่ง browser-like headers
- * 2. goldprice.mukdagold.com /api/price2 (เว็บราคาทองของร้านเอง — สมาคม)
- *    ตอบ JSON { buyPrice, sellPrice, priceChanged, date, time }
+ *    หมายเหตุ: HSH บล็อก datacenter IP (403) — เป็น fallback เผื่อไว้เฉยๆ
  *
  * Manual trigger: callable function fetchGoldPriceNow (admin only)
  *
@@ -152,9 +152,10 @@ async function fetchFromMukda(): Promise<PriceData> {
 /** ลอง source ตามลำดับ — ตัวแรกที่สำเร็จชนะ · fail หมด → โยน error รวม */
 async function fetchFromAnySource(): Promise<PriceData> {
 	const errors: string[] = [];
+	// mukdagold เป็นตัวหลัก (HSH บล็อก datacenter IP — โดน 403 ตลอด)
 	for (const [name, fn] of [
-		["HSH", fetchFromHsh],
 		["mukda", fetchFromMukda],
+		["HSH", fetchFromHsh],
 	] as const) {
 		try {
 			return await fn();

@@ -36,8 +36,7 @@ export type AdminSectionId =
   | "store-calendar"
   | "linebot-notifications"
   | "linebot-commands"
-  | "knowledge"
-  | "gold-price";
+  | "knowledge";
 
 export type AdminGroupId =
   | "leave"
@@ -132,13 +131,10 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     id: "knowledge",
-    label: "บทเรียน",
+    label: "ความรู้ต่างๆ",
     defaultSection: "knowledge",
     Icon: IconGem,
-    items: [
-      { id: "knowledge", label: "บทเรียน", Icon: IconGem },
-      { id: "gold-price", label: "ราคาทองคำวันนี้", Icon: IconCoins },
-    ],
+    items: [{ id: "knowledge", label: "ความรู้ต่างๆ", Icon: IconGem }],
   },
 ];
 

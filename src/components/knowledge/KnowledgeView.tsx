@@ -6,11 +6,17 @@ import { ChevronDown as IconChevronDown, Gem as IconGem } from "lucide-react";
 import { useEffect, useState } from "react";
 import { COLORS } from "../../constants";
 import { KNOWLEDGE_SECTIONS } from "../../content/knowledge";
+import GoldPriceHeader from "./GoldPriceHeader";
 import KnowledgeBlockView from "./KnowledgeBlock";
 
 const STORAGE_KEY = "knowledge:openSection";
 
-export default function KnowledgeView() {
+interface Props {
+  isAdmin?: boolean;
+  showToast?: (msg: string) => void;
+}
+
+export default function KnowledgeView({ isAdmin, showToast }: Props) {
   const [openId, setOpenId] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return sessionStorage.getItem(STORAGE_KEY);
@@ -30,13 +36,16 @@ export default function KnowledgeView() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-extrabold text-lg text-txt leading-tight">
-            บทเรียน
+            ความรู้ต่างๆ
           </div>
           <div className="text-xs text-txt-soft">
             วิธีการและตัวอย่างต่างๆ ที่ใช้ในการคำนวณราคา ภายในห้างเพชรทองมุกดา · ฉบับปี 2569
           </div>
         </div>
       </div>
+
+      {/* ราคาทองคำแท่งวันนี้ — real-time จาก /config/goldPrice */}
+      <GoldPriceHeader isAdmin={isAdmin} showToast={showToast} />
 
       {/* sections */}
       <div className="flex flex-col gap-2">
