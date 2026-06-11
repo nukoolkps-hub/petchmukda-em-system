@@ -17,7 +17,10 @@ interface Props {
 
 export default function MathText({
   children,
-  opClassName = "text-[1.25em] font-extrabold text-maroon",
+  // font-mono — operators ใน monospace มี stroke หนา + uniform width
+  //             มองง่ายกว่า Bai Jamjuree ที่ stroke บาง
+  // 1.3em — ขยายเล็กน้อย · tracking-wider — เว้นช่องระหว่างเครื่องหมายกับเลข
+  opClassName = "text-[1.3em] font-mono font-black text-maroon tracking-wider",
 }: Props) {
   const parts = children.split(OP_REGEX);
   return (
