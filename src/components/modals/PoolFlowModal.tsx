@@ -13,6 +13,7 @@ import {
 import { type ReactNode, useMemo, useState } from "react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import type { Employee, Role } from "../../types";
+import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { computePoolSharesForGroup } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
@@ -61,8 +62,7 @@ export default function PoolFlowModal({
   storeCalendar,
   isConfirmed = false,
 }: PoolFlowModalProps) {
-  const now = new Date();
-  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentYM = currentYearMonth();
 
   // เดือนที่มีข้อมูลเงินเดือน (union ของทุกคน)
   const months = useMemo(() => {
@@ -73,16 +73,15 @@ export default function PoolFlowModal({
       });
     });
     const arr = [...set].sort().reverse();
-    if (!arr.includes(currentYearMonth)) arr.unshift(currentYearMonth);
+    if (!arr.includes(currentYM)) arr.unshift(currentYM);
     return arr;
-  }, [salaryData, currentYearMonth]);
+  }, [salaryData, currentYM]);
 
   // เดือนคงที่ตลอดอายุของ modal: ใช้ initialMonth ที่ caller ส่งมา
   // (เช่น SalaryView ส่ง selectedMonth ของ dropdown) — fallback เป็นเดือน
   // ปัจจุบัน. ไม่มี dropdown ให้เปลี่ยนในตัว modal เพราะ caller คุมไว้แล้ว
   const selectedMonth =
-    initialMonth ||
-    (months.includes(currentYearMonth) ? currentYearMonth : months[0]);
+    initialMonth || (months.includes(currentYM) ? currentYM : months[0]);
 
   // pool groups ที่มีอยู่ (เฉพาะ role ที่ poolGroup ไม่ว่าง)
   const poolGroups = useMemo(() => {

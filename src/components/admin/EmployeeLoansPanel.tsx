@@ -12,14 +12,10 @@ import {
 import { useMemo, useState } from "react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { loanRemaining } from "../../firebase/employeeLoans";
+import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
-
-function currentYearMonth() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
 
 function monthLabel(ym: string) {
   const [y, mo] = String(ym || "").split("-");

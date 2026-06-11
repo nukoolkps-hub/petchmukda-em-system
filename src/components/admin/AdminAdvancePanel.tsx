@@ -13,6 +13,7 @@ import { useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useAdvancesByStatusAndMonth } from "../../firebase/hooks/useFirestore";
 import { uploadAdvanceSlip } from "../../firebase/storage";
+import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -20,11 +21,6 @@ import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
 
 type AdvanceFilter = "pending" | "approved" | "rejected";
-
-function currentYearMonth() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
 
 function generateMonthOptions(): string[] {
   const now = new Date();

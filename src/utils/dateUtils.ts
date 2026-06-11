@@ -50,12 +50,25 @@ export function fmtShort(d: string): string {
 }
 
 const WEEKDAYS_TH = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+const WEEKDAYS_TH_SHORT = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
 
 /* "2026-06-12" → "วันศุกร์ ที่ 12 มิถุนายน 2569" */
 export function fmtDateWithWeekday(d: string): string {
   if (!d) return "-";
   const dt = new Date(`${d}T00:00:00`);
   return `วัน${WEEKDAYS_TH[dt.getDay()]} ที่ ${fmtDate(d)}`;
+}
+
+/* "2026-06-13" → "ส. 13 มิ.ย. 2569" — สั้นพร้อมวันในสัปดาห์ */
+export function fmtShortWithWeekday(d: string): string {
+  if (!d) return "-";
+  const dt = new Date(`${d}T00:00:00`);
+  return `${WEEKDAYS_TH_SHORT[dt.getDay()]} ${fmtShort(d)}`;
+}
+
+/* "YYYY-MM" ของวันนี้ — ใช้ join key salary/advance/loan */
+export function currentYearMonth(): string {
+  return TODAY.slice(0, 7);
 }
 
 export function isPast(e: string): boolean {

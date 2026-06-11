@@ -33,6 +33,7 @@ import {
   isLineWebview,
   openInExternalBrowser,
 } from "../../print/webviewHelpers";
+import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import {
@@ -60,13 +61,12 @@ export default function SalaryView({
   storeCalendar,
   showToast,
 }) {
-  const now = new Date();
-  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentYM = currentYearMonth();
   const employeeInfo =
     employeeDirectory.find((employee) => employee.id === profileEmployeeId) ||
     employeeDirectory.find((employee) => employee.name === profile?.name);
   const salaryEmployeeId = employeeInfo?.id || profileEmployeeId || "";
-  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth);
+  const [selectedMonth, setSelectedMonth] = useState(currentYM);
   const months = useMemo(
     () =>
       Object.keys(salaryData[salaryEmployeeId] || {})
@@ -307,10 +307,10 @@ export default function SalaryView({
             {waitingConfirm && " ยังไม่ได้ยืนยันยอด"}
           </div>
           {!waitingConfirm &&
-            months.includes(currentYearMonth) &&
-            selectedMonth !== currentYearMonth && (
+            months.includes(currentYM) &&
+            selectedMonth !== currentYM && (
               <button
-                onClick={() => setSelectedMonth(currentYearMonth)}
+                onClick={() => setSelectedMonth(currentYM)}
                 className="px-5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25] inline-flex items-center gap-1.5"
               >
                 <IconArrowLeft size={14} strokeWidth={2.5} />
