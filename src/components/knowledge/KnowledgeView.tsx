@@ -2,7 +2,10 @@
    layout: collapsible accordion ทุก section (mobile-first)
    เปิดทีละ section + remember last opened ใน sessionStorage           */
 
-import { ChevronDown as IconChevronDown, Gem as IconGem } from "lucide-react";
+import {
+  Brain as IconBrain,
+  ChevronDown as IconChevronDown,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { COLORS } from "../../constants";
 import { KNOWLEDGE_SECTIONS } from "../../content/knowledge";
@@ -32,7 +35,7 @@ export default function KnowledgeView({ isAdmin, showToast }: Props) {
       {/* header */}
       <div className="flex items-center gap-3 mb-4 px-1">
         <div className="w-10 h-10 rounded-[11px] bg-gold-pale flex items-center justify-center shrink-0">
-          <IconGem size={20} strokeWidth={2.4} color={COLORS.maroon} />
+          <IconBrain size={20} strokeWidth={2.4} color={COLORS.maroon} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-extrabold text-lg text-txt leading-tight">

@@ -1,9 +1,9 @@
 /* ─── Navigation Configuration ───────────────────────────────── */
 
 import {
+  Brain as IconBrain,
   Banknote as IconCash,
   FilePlus as IconFilePlus,
-  Gem as IconGem,
   Home as IconHome,
   Shield as IconShield,
 } from "lucide-react";
@@ -83,7 +83,7 @@ export function getNavItems(options: {
       path: "/knowledge",
       label: "ความรู้ต่างๆ",
       icon: (a) => (
-        <IconGem
+        <IconBrain
           size={22}
           strokeWidth={a ? 2.5 : 2}
           fill={a ? `${COLORS.gold}30` : "none"}
