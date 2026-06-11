@@ -648,7 +648,13 @@ export function computeCoverageEarningsForMonth(
 
    Forecast แสดงเฉพาะ primary ตาม rotation (deterministic) — ไม่รวม
    substitute/leave เพราะการลาในอนาคตยังไม่รู้ + เป็น schedule สำหรับ
-   "เตรียมพร้อม" ล่วงหน้า                                                */
+   "เตรียมพร้อม" ล่วงหน้า
+
+   ⚠️ Forecast เป็น period-level (สัปดาห์/เดือน) — ไม่ filter ด้วย
+   storeCalendar รายวัน เพราะ "ใครได้สัปดาห์นี้" ไม่เปลี่ยนตาม
+   เสาร์-เปิดพิเศษ/วันธรรมดาปิดพิเศษ (คนรับผิดชอบยังคงเดิม แค่บางวัน
+   อาจไม่มี assignment) · ถ้าทั้งสัปดาห์ร้านปิด — assignment รายวัน
+   จะว่าง แต่ผู้รับผิดชอบใน forecast ยังเป็นคนเดิม (intentional)        */
 
 /** primary ของทุก duty ในวันที่ระบุ — รับ pool ที่ resolve แล้ว
  *  (dutyId → ordered empIds). ใช้ pickPrimary ตัวเดียวกับ computeAllDuties
