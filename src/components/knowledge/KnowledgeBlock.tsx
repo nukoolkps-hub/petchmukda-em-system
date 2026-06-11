@@ -11,6 +11,7 @@ import {
 import type { KnowledgeBlock } from "../../content/knowledge/types";
 import Calculator from "./Calculator";
 import ChangePriceTable from "./ChangePriceTable";
+import LiveExample from "./LiveExample";
 import Secret from "./Secret";
 
 interface Props {
@@ -236,5 +237,8 @@ export default function KnowledgeBlockView({ block }: Props) {
 
     case "change-price-table":
       return <ChangePriceTable />;
+
+    case "live-example":
+      return <LiveExample title={block.title} compute={block.compute} />;
   }
 }
