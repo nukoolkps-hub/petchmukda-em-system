@@ -198,7 +198,7 @@ export default function DutyCard({
                 key={emp.id}
                 className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold ${
                   isCurrent
-                    ? "bg-maroon text-gold-lt"
+                    ? "bg-maroon text-white"
                     : "bg-cream text-txt-mid border border-bdr"
                 }`}
               >

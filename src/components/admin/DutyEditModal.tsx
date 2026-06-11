@@ -392,7 +392,7 @@ function CoverageFields({
                 onClick={() => toggleCandidate(emp.id)}
                 className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold cursor-pointer font-[inherit] border transition-all active:scale-[0.96] ${
                   on
-                    ? "bg-maroon text-gold-lt border-maroon"
+                    ? "bg-maroon text-white border-maroon"
                     : "bg-white text-txt-mid border-bdr hover:border-maroon"
                 }`}
               >
