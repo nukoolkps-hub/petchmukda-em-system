@@ -141,8 +141,6 @@ export default function LeaveApp() {
     poolAdjustments,
     setPoolAdjustment,
     updateStoreCalendar: updateStoreCalendarAction,
-    goldPrice,
-    updateGoldPrice: updateGoldPriceAction,
     employeeLoans,
     addEmployeeLoan,
     updateEmployeeLoan,
@@ -472,7 +470,12 @@ export default function LeaveApp() {
               />
 
               {/* KNOWLEDGE — บทเรียน (ใช้ร่วม admin + employee) */}
-              <Route path="/knowledge" element={<KnowledgeView />} />
+              <Route
+                path="/knowledge"
+                element={
+                  <KnowledgeView isAdmin={isAdmin} showToast={showToast} />
+                }
+              />
 
               {/* ADMIN */}
               <Route
@@ -512,9 +515,6 @@ export default function LeaveApp() {
                       onSetPayrollConfirm={setPayrollConfirm}
                       storeCalendar={storeCalendar}
                       onUpdateStoreCalendar={updateStoreCalendarAction}
-                      goldPrice={goldPrice}
-                      onUpdateGoldPrice={updateGoldPriceAction}
-                      adminName={authUser?.displayName || "Admin"}
                       showToast={showToast}
                     />
                   ) : (
