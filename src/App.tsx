@@ -227,7 +227,8 @@ export default function LeaveApp() {
   });
 
   /* ─── Admin section state (lifted up so the Sidebar can drive it on desktop) */
-  const [adminSection, setAdminSection] = useState<AdminSectionId>("summary");
+  const [adminSection, setAdminSection] =
+    useState<AdminSectionId>("calendar-view");
   const [adminUnsavedDirty, setAdminUnsavedDirty] = useState(false);
   // กล่องเตือนในแอป (แทน window.confirm ที่เพี้ยนใน mobile webview)
   const [pendingSection, setPendingSection] = useState<AdminSectionId | null>(
