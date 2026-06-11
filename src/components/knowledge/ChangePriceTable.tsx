@@ -80,13 +80,8 @@ export default function ChangePriceTable() {
                 <td className="px-2.5 py-1.5 text-txt font-semibold">
                   {w.label}
                 </td>
-                <td className="px-2.5 py-1.5 text-right">
-                  <div className="font-extrabold text-maroon">
-                    {formatThaiNumber(breakdown.total)}
-                  </div>
-                  <div className="text-[10px] text-txt-soft/80 mt-0.5">
-                    จริง {formatThaiNumber(Math.round(breakdown.raw))} ฿
-                  </div>
+                <td className="px-2.5 py-1.5 text-right font-extrabold text-maroon">
+                  {formatThaiNumber(breakdown.total)}
                 </td>
               </tr>
             );
