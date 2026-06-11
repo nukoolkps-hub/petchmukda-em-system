@@ -1,4 +1,4 @@
-/* ─── KnowledgeView — รวมทุก section "บทเรียน" ─────────────────────
+/* ─── KnowledgeView — รวมทุก section "ความรู้ต่างๆ" ─────────────────────
    layout: collapsible accordion ทุก section (mobile-first)
    เปิดทีละ section + remember last opened ใน sessionStorage           */
 

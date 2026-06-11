@@ -1,4 +1,4 @@
-/* ─── GoldPriceHeader — ราคาทองคำแท่งวันนี้ (บนสุดของบทเรียน) ──────
+/* ─── GoldPriceHeader — ราคาทองคำแท่งวันนี้ (บนสุดของความรู้ต่างๆ) ──────
    subscribe /config/goldPrice real-time — โชว์ทั้งราคารับซื้อ + ขายออก
    admin เห็นปุ่ม refresh (เรียก Cloud Function fetchGoldPriceNow)        */
 
