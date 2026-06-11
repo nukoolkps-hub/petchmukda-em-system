@@ -31,7 +31,17 @@ export type KnowledgeBlock =
   | { type: "h3"; text: string }
   | { type: "p"; text: string; muted?: boolean }
   | { type: "list"; items: string[]; ordered?: boolean }
-  | { type: "table"; columns: string[]; rows: string[][]; note?: string }
+  | {
+      type: "table";
+      columns: string[];
+      rows: string[][];
+      note?: string;
+      /** จัดวางคอลัมน์ (parallel array) — default ทุกคอลัมน์ = "left" */
+      colAlign?: ("left" | "center" | "right")[];
+      /** กำหนดความกว้างคอลัมน์ explicit (เช่น ["60%", "40%"]) — ใช้กับ
+       *  ตาราง 2+ ใบที่อยู่ติดกัน เพื่อให้คอลัมน์ตรงกัน (table-fixed) */
+      colWidths?: string[];
+    }
   | { type: "formula"; label?: string; formula: string; result?: string }
   | {
       type: "example";
