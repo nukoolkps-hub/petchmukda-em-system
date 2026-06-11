@@ -18,7 +18,7 @@ interface Props {
 export default function MathText({
   children,
   // font-mono — operators ใน monospace มี stroke หนา + uniform width
-  //             มองง่ายกว่า Bai Jamjuree ที่ stroke บาง
+  //             มองง่ายกว่า Prompt (font หลัก) ที่ stroke บางเกินไป
   // 1.3em — ขยายเล็กน้อย · tracking-wider — เว้นช่องระหว่างเครื่องหมายกับเลข
   opClassName = "text-[1.3em] font-mono font-black text-maroon tracking-wider",
 }: Props) {
