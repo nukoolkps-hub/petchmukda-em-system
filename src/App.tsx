@@ -469,7 +469,7 @@ export default function LeaveApp() {
                 }
               />
 
-              {/* KNOWLEDGE — บทเรียน (ใช้ร่วม admin + employee) */}
+              {/* KNOWLEDGE — ความรู้ต่างๆ (ใช้ร่วม admin + employee) */}
               <Route
                 path="/knowledge"
                 element={

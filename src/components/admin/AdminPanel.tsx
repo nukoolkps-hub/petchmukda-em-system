@@ -211,7 +211,7 @@ export default function AdminPanel({
         />
       )}
 
-      {/* ── KNOWLEDGE section (บทเรียน) ── */}
+      {/* ── KNOWLEDGE section (ความรู้ต่างๆ) ── */}
       {section === "knowledge" && (
         <KnowledgeView isAdmin showToast={showToast} />
       )}
