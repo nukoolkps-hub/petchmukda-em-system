@@ -4,6 +4,7 @@
    - ค่า real-time sync ไปทุกหน้า (calculators + change-price-table)   */
 
 import {
+  AlertTriangle as IconAlert,
   Coins as IconCoins,
   RefreshCw as IconRefresh,
   Save as IconSave,
@@ -148,6 +149,19 @@ export default function GoldPricePanel({
         <div className="mt-2 text-[10px] text-txt-soft/80 italic text-center">
           ระบบดึงอัตโนมัติทุก 15 นาที · กดปุ่มเพื่อดึงทันที
         </div>
+        {goldPrice.lastFetchError &&
+          goldPrice.lastFetchErrorAt > goldPrice.updatedAt && (
+            <div className="mt-2 px-3 py-2 rounded-[8px] bg-red/10 border border-red/30 flex items-start gap-2">
+              <IconAlert
+                size={13}
+                strokeWidth={2.5}
+                className="text-red shrink-0 mt-px"
+              />
+              <div className="text-[11px] text-red leading-relaxed break-all">
+                <strong>ดึงราคาล่าสุดไม่สำเร็จ:</strong> {goldPrice.lastFetchError}
+              </div>
+            </div>
+          )}
       </div>
 
       {/* edit card */}
