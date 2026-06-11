@@ -1,36 +1,41 @@
 # 💎 ห้างเพชรทองมุกดา — ระบบพนักงาน
 
-ระบบจัดการพนักงานครบวงจร — การลา · เงินเดือน · ค่าคอม Pool · เบิกเงินล่วงหน้า · หนังสือรับรอง · LINE Bot
+ระบบจัดการพนักงานครบวงจร — การลา · เงินเดือน · ค่าคอมกองกลาง · เบิกเงินล่วงหน้า · กู้เงินผ่อนคืน · หน้าที่หมุนเวียน · LINE Bot
 
-> ⚡ **Production-ready** — Firebase + LINE Login + Cloud Functions + Custom Admin Claims
+> ⚡ **Production-ready** — React 19 + TypeScript + Firebase + LINE Login + Cloud Functions
+
+---
+
+## 🛠 Tech Stack
+
+- **Frontend:** React 19 + TypeScript + Vite 8 + Tailwind CSS 4
+- **Backend:** Firebase Cloud Functions (Node 22, TypeScript)
+- **Database:** Firestore (named DB `petchmukda-bot`)
+- **Auth:** Firebase Auth (LINE Login + Dev mode)
+- **Storage:** Firebase Storage
+- **Icons:** `lucide-react` (ห้ามใช้ emoji เป็น icon ใน UI)
+- **PDF:** pdfmake 0.3.x + Sarabun font (self-hosted)
+- **Routing:** react-router-dom v7 (HashRouter)
+- **Lint:** Biome
 
 ---
 
 ## 🚀 Quick Start
 
-### Mode 1: Demo (in-memory) — เริ่มได้ทันที
-
 ```bash
 npm install
-npm run dev
+npm run dev          # Vite + Firebase Emulators (auth/firestore/functions/storage)
 ```
 
-เปิด `http://localhost:5173` — ใช้ PIN `111111` เข้า admin
+เปิด `http://localhost:5173` — emulator mode ใช้บัญชี dev สำหรับทดสอบ
 
-### Mode 2: Firebase
-
+ขั้นตอนอื่นๆ:
 ```bash
-# 1. ตั้ง Firebase (ดู FIREBASE_SETUP.md)
-cp .env.example .env.local
-# npm run dev ใช้ mock Firebase config + emulators
-# production build ใช้ production config ใน src/firebase/firebaseConfig.json
-
-# 2. ติดตั้ง + รัน
-npm install
-npm run dev
-
-# 3. Seed data ครั้งแรก (browser console)
-import('/src/firebase/seed.js').then(m => m.runSeed())
+npm run build         # production build (output: dist/)
+npm run typecheck     # tsc + check client/server algorithm sync
+npm run check         # Biome lint + format (--write)
+npm run check:duty-sync   # ตรวจ rotation algorithm client/server ตรงกัน
+npm run build:functions   # compile Cloud Functions
 ```
 
 ---
@@ -38,137 +43,130 @@ import('/src/firebase/seed.js').then(m => m.runSeed())
 ## 📂 โครงสร้างโปรเจกต์
 
 ```
-muktha/
-├── src/
-│   ├── App.jsx                    ← Main app (data-mode aware)
-│   ├── constants.js               ← COLORS palette, BUSINESS_RULES
-│   ├── dev-seed/
-│   │   └── seedData.ts            ← Initial demo employee data
-│   │
-│   ├── data/                      ← 🆕 Data abstraction
-│   │   ├── useAppData.js          ← Auto-pick: in-memory or Firebase
-│   │   ├── useInMemoryAppData.js  ← Demo mode
-│   │   └── useFirebaseAppData.js  ← Production mode
-│   │
-│   ├── firebase/                  ← 🆕 Firebase integration
-│   │   ├── config.js
-│   │   ├── auth.js                ← Google + LINE + Email
-│   │   ├── admin.js               ← Admin operations
-│   │   ├── employees.js           ← CRUD
-│   │   ├── leaves.js
-│   │   ├── salaries.js
-│   │   ├── advances.js
-│   │   ├── roles.js
-│   │   ├── payrollConfirms.js
-│   │   ├── seed.js                ← Migration script
-│   │   └── hooks/
-│   │       ├── useAuth.js         ← w/ admin custom claim
-│   │       └── useFirestore.js    ← Real-time hooks
-│   │
-│   ├── utils/
-│   │   ├── dateUtils.js
-│   │   ├── format.js
-│   │   ├── leaveUtils.js
-│   │   ├── salaryUtils.js
-│   │   ├── validators.js          ← 🆕 Input validation
-│   │   └── imageUtils.js          ← 🆕 Resize/compress
-│   │
-│   ├── components/
-│   │   ├── shared/                (Avatar, Diamond, ErrorBoundary, ...)
-│   │   ├── modals/
-│   │   ├── home/
-│   │   ├── admin/
-│   │   └── salary/
-│   │
-│   └── print/                     (printSalarySlip, printSalaryCertificate)
+src/
+├── App.tsx                          # Orchestrator (routes + hooks + modals)
+├── constants.ts                     # COLORS · BUSINESS_RULES · THAI_BANKS
+├── main.tsx                         # Entry + AuthProvider + AuthGate
 │
-├── backend/                       ← 🆕 Express + LINE Login + Firebase Admin
-│   ├── server.js
-│   ├── package.json
-│   └── .env.example
+├── contexts/
+│   └── AuthContext.tsx              # Auth state provider
 │
-├── functions/                     ← 🆕 Firebase Cloud Functions
-│   ├── index.js
-│   └── package.json
+├── data/
+│   ├── useAppData.ts                # ทาง entry สำหรับ component (เรียก useFirebaseAppData)
+│   └── useFirebaseAppData.ts        # subscription + CRUD ทุก collection
 │
-├── firebase.json                  ← 🆕 Firebase project config
-├── firestore.rules                ← 🆕 Security rules
-├── firestore.indexes.json         ← 🆕 Indexes
-├── .env.example                   ← 🆕 Frontend env template
+├── firebase/
+│   ├── config.ts                    # initApp + named DB + emulator detect
+│   ├── auth.ts                      # LINE Login + dev mode
+│   ├── employees.ts · leaves.ts     # CRUD ต่อ collection
+│   ├── salaries.ts · advances.ts
+│   ├── roles.ts · duties.ts
+│   ├── employeeLoans.ts · poolSnapshots.ts
+│   ├── poolAdjustments.ts · payrollConfirms.ts
+│   ├── dutyAssignments.ts           # server-computed snapshot reader
+│   ├── storeCalendar.ts             # ปฏิทินเปิด-ปิดร้าน
+│   └── hooks/
+│       ├── useAuth.ts
+│       └── useFirestore.ts          # real-time hooks ต่อ collection
 │
-├── README.md
-├── FIREBASE_SETUP.md              ← 🔥 Firebase setup guide
-└── MIGRATION_GUIDE.md             ← 🔄 Migration guide
+├── hooks/                           # custom hooks (useProfile · useLeaveForm · useClickOutside · …)
+├── utils/
+│   ├── dutyUtils.ts                 # ⚠️ มี sync check กับ functions/src/duty/dutyUtils.ts
+│   ├── leaveUtils.ts                # นับวันลา (calendar-aware)
+│   ├── salaryUtils.ts               # calculateSalary + computePoolSharesForGroup
+│   ├── storeCalendar.ts             # isStoreClosed · isQuotaCountableDay
+│   ├── sanitizeRichText.ts          # XSS whitelist sanitizer
+│   ├── payrollLock.ts               # กฎปิดรอบ 7 วันหลังยืนยันยอด
+│   └── dateUtils.ts · format.ts · …
+│
+├── components/
+│   ├── admin/                       # AdminPanel + sub-panels
+│   ├── home/                        # HomeTab · TeamCalendar · RequestTab
+│   ├── salary/                      # SalaryView · SalaryAdminEdit
+│   ├── modals/                      # PoolFlowModal · ManualModal · …
+│   ├── shared/                      # AvatarCircle · BaseModal · ModalHeader · ToggleSwitch · …
+│   └── layout/                      # Sidebar · BottomNav · MobileHeader · adminNavConfig
+│
+└── print/                           # printSalarySlip + pdfBuilders + pdfFonts (Sarabun)
+
+functions/src/
+├── index.ts                         # barrel exports
+├── advance/                         # notifications + cleanup
+├── auth/                            # bootstrapAdmin · devAuth · lineAuth · setAdmin
+├── dailySummary/                    # สรุปวันละครั้ง → LINE
+├── duty/                            # dutyUtils + recompute snapshot ⚠️ mirror ของ src/utils/dutyUtils.ts
+├── line/                            # webhook + commands (เชื่อมพนักงาน · ทดสอบแจ้งเตือน · ฯลฯ)
+├── maintenance/                     # cleanupOldSlips · cleanupOldTips · cleanupOldAdvances
+└── payroll/                         # onLeaveCreated trigger
+
+scripts/
+└── check-duty-sync.mjs              # CI script เทียบ function body client/server
+
+public/fonts/Sarabun-*.ttf           # Self-host Thai font (CSP block CDN)
+firestore.rules · storage.rules
+firebase.json · firestore.indexes.json
 ```
 
 ---
 
 ## 🎯 Features
 
-### Core
-- 📅 ระบบลา — ลากิจ/ลาป่วย พร้อมโควต้า
-- 💰 เงินเดือน — คำนวณตามชิ้น × rate + Pool
-- 🤝 Pool ค่าคอม — สูตร Excel จากเปอร์เซ็นต์ฐานและตัวคูณหักวันลา
-- 💸 เบิกล่วงหน้า — สูงสุด 50% ของฐาน
-- 🖨 พิมพ์เอกสาร — สลิป + หนังสือรับรอง
-- 💬 LINE Bot — แจ้งเตือน + Flex Message
+### ระบบหลัก
+- 📅 **ระบบลา** — ลากิจ/ลาป่วย · โควต้า 2 วัน/เดือน (วันธรรมดา) · ลาวันอาทิตย์หัก × 1.5
+- 💰 **ระบบเงินเดือน** — เรท/ชิ้น × จำนวน + กองกลาง (Pool) + โบนัสขยัน
+- 🤝 **กองกลาง (Pool)** — แบ่งค่าคอมตามสูตร Excel · เกณฑ์เข้า Pool ≥ 80% ของ top · `computePoolSharesForGroup` (single source of truth)
+- 💸 **เบิกล่วงหน้า** — เพดาน 50% ของฐาน · admin approve/reject · LINE แจ้งผล
+- 💳 **กู้เงินผ่อนคืน** — หักจากเงินเดือนรายเดือนจนครบ
+- 🖨 **พิมพ์เอกสาร** — สลิปเงินเดือน (PDF + Thai font Sarabun)
 
-### 🆕 Production Features
-- 🔥 **Firestore real-time** — sync ข้อมูลข้ามเครื่องทันที
-- 🔐 **Multi-auth** — Google / LINE / Email
-- 👑 **Custom Claims** — Admin role ผ่าน Firebase
-- ☁️ **Cloud Functions** — auto-tasks
-- 🖼 **Image processing** — resize ก่อน upload (Firestore 1MB limit safe)
-- ✅ **Validation** — bank account, LINE ID, numbers
-- 🛡 **ErrorBoundary** — fail gracefully
-- 🎯 **useMemo** — perf optimization
+### ระบบหน้าที่ (Rotation Stability A+B+C)
+- 🔄 **หน้าที่หมุนเวียน** — admin ตั้งครั้งเดียว · ระบบหมุนรายสัปดาห์/รายเดือนอัตโนมัติ
+- 🤝 **แทนคนลา (coverage)** — เลือก "คนเคยแทนน้อยสุดก่อน" (ยุติธรรม) · ตั้งเงินตอบแทนต่อครั้งได้
+- 🛡 **Stable hash slot** — เพิ่ม/ลบหน้าที่ตัวอื่น ไม่กระทบ slot ของหน้าที่นี้
+- 🔒 **Primary cache per period** — pool เปลี่ยนกลางสัปดาห์ ตารางไม่เด้ง
+- 📅 **ปฏิทินดูล่วงหน้า** — พนักงานวางแผนได้ถึงสิ้นปี
+
+### ระบบปิด-ปิดร้าน (Store Calendar)
+- 🏪 **เสาร์ปิด default** + admin เปิดบางเสาร์เป็นกรณีพิเศษ
+- 🔒 admin ปิดวันธรรมดาบางวันได้ (อบรม · หยุดยาว)
+- ✅ ปฏิทินหน้าแรกของพนักงาน + ฝั่ง admin sync real-time
+- 📊 ลาวันปิด = ไม่นับ · ลาเสาร์เปิดพิเศษ = นับเข้าโควต้า
+
+### ระบบตำแหน่ง (Role)
+- 👥 จัดกลุ่มพนักงานเป็นตำแหน่ง · บางตำแหน่งแชร์กองกลาง (poolGroup)
+- 📝 **หน้าที่หลัก** ของตำแหน่ง — rich text editor (เล็ก/กลาง/ใหญ่ · bold · bullet)
+- 🛡 XSS sanitize on-write (single source of truth — ปลอดภัยทุก surface)
+
+### ระบบยืนยันยอด (Payroll Lock)
+- 🔐 admin "ยืนยันยอด" รายเดือน · เริ่ม grace period 7 วัน
+- 🔒 หลัง 7 วัน → เดือนนั้นถูกล็อกถาวร (ลา/ยอด/เบิก แก้ไม่ได้แม้ admin)
+- ⚠️ UI สะท้อน rules ตรงกัน — กดปุ่มลบใบลาเดือนที่ปิดรอบ = ปุ่มเป็นไอคอนกุญแจ disabled
+
+### LINE Bot
+- 📩 **คำสั่ง:** `ทดสอบแจ้งเตือน` · `คำสั่ง` · `ไอดีกลุ่ม` · `ไอดีฉัน` · `เชื่อมพนักงาน`
+- 📰 **สรุปประจำวัน 07:30** — Google Calendar + คนหยุด + เคล็ดลับ Claude API
+- 🔔 แจ้งเตือนเบิกเงิน (approved/rejected) เข้า LINE 1:1
 
 ---
 
 ## 🔐 Authentication Flow
 
-### Google Sign-in
-```jsx
-import { signInWithGoogle } from "./firebase/auth";
-await signInWithGoogle();
+```
+กดปุ่ม LINE Login → redirect ไป LINE
+  → callback กลับ + code
+  → Cloud Function lineAuth แลก code → LINE profile
+  → เช็ค ADMIN_LINE_USER_ID → ให้ admin claim ถ้าตรง
+  → เช็ค employee.lineUserId → สร้าง Firebase custom token
+  → signInWithCustomToken → เข้าระบบ
 ```
 
-### LINE Login (ผ่าน Cloud Functions)
-```jsx
-import { startLineLogin, completeLineLogin } from "./firebase/auth";
+### Admin Setup (LINE)
+1. Add LINE bot เป็นเพื่อน
+2. ส่ง `ไอดีฉัน` ใน 1:1 chat → bot ส่ง LINE user ID กลับ
+3. ใส่ user ID ลง `/config/secrets` ที่ field `ADMIN_LINE_USER_ID`
+4. Login ผ่านปุ่ม "Login ด้วย LINE" — ระบบใส่ admin claim ให้อัตโนมัติ
 
-// Login page
-<button onClick={() => startLineLogin({
-  channelId: import.meta.env.VITE_LINE_LOGIN_CHANNEL_ID,
-  redirectUri: window.location.origin + "/callback",
-})}>เข้าสู่ระบบด้วย LINE</button>
-
-// Callback page (/callback)
-useEffect(() => {
-  completeLineLogin().catch(alert);
-}, []);
-```
-
-### PIN (เดิม) — ใน demo mode
-ใส่ PIN `111111` → เข้า Admin
-
----
-
-## 🛠 LINE Admin Setup (Firebase mode)
-
-Admin uses the normal `Login ด้วย LINE` button, but does not need an employee
-document. The backend treats the configured `ADMIN_LINE_USER_ID` as an
-admin-only identity and writes the Firebase `admin` custom claim at login.
-
-### First admin
-1. Add the LINE bot as a friend.
-2. Send `ไอดีฉัน` in a private chat with the bot.
-3. Put the returned user ID in Cloud Functions env or Firestore
-   `/config/secrets` as `ADMIN_LINE_USER_ID`.
-4. Deploy/restart Functions, then log in with `Login ด้วย LINE`.
-
-Employee LINE accounts still require provisioning through the LINE webhook
-employee-linking flow before they can log in.
+Employee LINE — admin ใช้คำสั่ง `เชื่อมพนักงาน` ใน LINE webhook (ดู `functions/src/line/commands/setupEmployee.ts`)
 
 ---
 
@@ -176,130 +174,114 @@ employee-linking flow before they can log in.
 
 | ไฟล์ | คำอธิบาย |
 |---|---|
-| [README.md](./README.md) | **คู่มือหลัก** (ไฟล์นี้) |
-| [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) | 🔥 ตั้งค่า Firebase ตั้งแต่ศูนย์ |
-| [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) | 🔄 Migration details |
-| [firestore.rules](./firestore.rules) | 🛡 Security rules |
-| [backend/.env.example](./backend/.env.example) | 💬 Backend env |
-| [functions/index.js](./functions/index.js) | ☁️ Cloud Functions |
+| [README.md](./README.md) | คู่มือหลัก (ไฟล์นี้) |
+| [CLAUDE.md](./CLAUDE.md) | คู่มือ codebase สำหรับ AI assistant + business rules |
+| [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) | ตั้งค่า Firebase ตั้งแต่ศูนย์ |
+| [docs/reference.md](./docs/reference.md) | สารบัญ reference + สถาปัตยกรรมกองกลาง |
+| [docs/reference/business-rules.md](./docs/reference/business-rules.md) | สูตรเงินเดือน · กองกลาง · วันลา · ปฏิทินเปิด-ปิด |
+| [docs/reference/firebase-collections.md](./docs/reference/firebase-collections.md) | Firestore schema + security rules |
+| [docs/reference/line-integration.md](./docs/reference/line-integration.md) | LINE Bot commands · webhook · auth |
+| [docs/reference/ui-components.md](./docs/reference/ui-components.md) | Component tree + shared components |
+| [firestore.rules](./firestore.rules) | Security rules (มี mirror ของ payroll lock + monthLocked) |
 
 ---
 
 ## ⚙️ Environment Variables
 
-### Frontend (`.env.development.local`, `.env.production.local`)
+### Frontend (Vite — baked in build time)
 ```env
-# Local dev can set this true; production should set false or omit it.
-VITE_USE_EMULATORS=true
 VITE_LINE_LOGIN_CHANNEL_ID=...
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_FIREBASE_MEASUREMENT_ID=...
+VITE_FIRESTORE_DATABASE_ID=petchmukda-bot
 ```
 
-`VITE_*` values are baked into the Vite bundle at build time, so production
-Hosting deploys need `VITE_LINE_LOGIN_CHANNEL_ID` available before
-`npm run build`.
+Production deploy ผ่าน GitHub Actions อ่านจาก GitHub Secrets (ดู `.github/workflows/deploy.yml`)
 
-Firebase web config is checked in at `src/firebase/firebaseConfig.json`.
+### Cloud Functions (runtime — Firestore doc)
 
-### Cloud Functions
-
-Production LINE runtime config lives in Firestore:
-
-```text
-config/secrets
-```
-
+`/config/secrets`:
 ```env
 LINE_CHANNEL_ACCESS_TOKEN=...
 LINE_CHANNEL_SECRET=...
 ADMIN_LINE_USER_ID=U...
-
 LINE_LOGIN_CHANNEL_ID=...
 LINE_LOGIN_CHANNEL_SECRET=...
+ANTHROPIC_API_KEY=...   # สำหรับ daily summary tip
 ```
 
-Cloud Functions read this document with the Admin SDK. Client Firestore rules
-explicitly deny access to `/config/*`.
-
-In local emulator mode, the login screen has separate `Seed Demo` and
-`Seed LINE Config` actions. `Seed LINE Config` copies any non-empty LINE values
-from `functions/.env` into `config/secrets`. Runtime Functions still read only
-Firestore.
-
-`functions/.env` can also keep non-LINE function settings:
-
-```env
-FIRESTORE_DATABASE_ID=petchmukda-bot
-ADMIN_BOOTSTRAP_SECRET=...
-```
-
-Local emulator demo seed data does not touch `config/secrets`. Use
-`Seed LINE Config` when you want local LINE credentials from `functions/.env`.
+Client Firestore rules deny ทุก `/config/*` ยกเว้น `notifications` (admin only) + `storeCalendar` (read = signed-in, write = admin)
 
 ---
 
 ## 🚢 Deployment
 
-### Frontend
-| Platform | Command |
-|---|---|
-| **Vercel** | `vercel deploy` |
-| **Netlify** | drag-drop หรือ Git |
-| **Firebase Hosting** | `firebase deploy --only hosting` |
-| **Cloudflare Pages** | Git integration |
+ทุกอย่าง auto deploy ผ่าน GitHub Actions เมื่อ push เข้า `main`:
+- **Hosting** (`deploy-hosting`)
+- **Functions** (`deploy-functions`) — รัน `check-duty-sync` ก่อน build (กัน algorithm client/server diverge)
+- **Firestore Rules** (`deploy-firestore-rules`)
+- **Storage Rules** (`deploy-storage-rules`)
 
-### Backend
-| Platform | Notes |
-|---|---|
-| **Railway** | ⭐ ดีที่สุด — รองรับ static files + .env |
-| **Render** | Free 750hr/เดือน |
-| **Fly.io** | Performance ดี + เอเชีย |
+ผู้พัฒนาทำงานผ่าน Claude Code on the web — ไม่มี local clone
 
-### Cloud Functions
-```bash
-firebase deploy --only functions
-```
+URL: https://petchmukda-bot.web.app
 
 ---
 
-## 🧪 Testing
+## 🧪 Local Development
 
 ```bash
-npm run dev                              # Frontend
-cd backend && npm install && npm run dev # Backend
-firebase emulators:start                 # Firebase Emulators
+npm run dev               # Vite + Firebase Emulators (auto)
+npm run emulators         # Emulators เฉยๆ
+npm run typecheck         # tsc + duty-sync check
+npm run check             # Biome lint + format
 ```
+
+Emulator detect ผ่าน hostname (`localhost` / `127.0.0.1`) — ไม่ต้องตั้ง env
+
+---
+
+## 🛡 Rotation Algorithm Sync Check
+
+`src/utils/dutyUtils.ts` (client) และ `functions/src/duty/dutyUtils.ts` (server) มีอัลกอริทึมเลือก primary ที่ต้องเหมือนกันเป๊ะ — ถ้า drift → forecast ฝั่ง admin ไม่ตรงกับ snapshot จริง
+
+`scripts/check-duty-sync.mjs` เทียบ function body 5 ตัวหลังตัด comment/whitespace:
+- `hashDutyId` · `pickPrimary` · `assignPrimaries` · `isSunday` · `applicableDuties`
+
+รันใน `npm run typecheck` + workflow `deploy-functions` ก่อน build · diverge = CI แดง
 
 ---
 
 ## 📈 Limits (Firebase Free Tier)
 
-| Resource | Limit |
-|---|---|
-| Firestore reads | 50,000/day |
-| Firestore writes | 20,000/day |
-| Firestore storage | 1 GB |
-| Auth users | unlimited |
-| Cloud Functions | 2M invocations/month |
-| Document size | 1 MB max (รวม base64 image) |
+| Resource | Limit | สถานะ |
+|---|---|---|
+| Firestore reads | 50,000/day | ใช้ snapshot pattern · ปกติ < 5k/day |
+| Firestore writes | 20,000/day | ปกติ < 500/day |
+| Document size | 1 MB max | image resize ก่อน upload |
+| Cloud Functions | 2M invocations/month | ใช้ < 10k/month |
 
-> 💡 สำหรับร้านเล็ก (พนักงาน < 50 คน) free tier เพียงพอ
+ร้านขนาดพนักงาน < 50 คน — Free tier ยืนยาวมาก
 
 ---
 
 ## 🎯 Roadmap
 
-- [x] ✅ Refactor monolith → 30+ modular files
-- [x] ✅ Magic numbers → `BUSINESS_RULES`
-- [x] ✅ ErrorBoundary
-- [x] ✅ useMemo optimization
-- [x] ✅ Input validation
-- [x] ✅ Firebase integration layer
-- [x] ✅ Image resize utility
-- [x] ✅ LINE Login backend
-- [x] ✅ Admin Custom Claims
-- [x] ✅ Cloud Functions
-- [ ] ⏳ TypeScript migration
-- [ ] ⏳ Unit tests (Vitest)
-- [ ] ⏳ E2E tests (Playwright)
-- [ ] ⏳ PWA support (offline mode)
-- [ ] ⏳ i18n
+- [x] Firebase real-time sync
+- [x] LINE Login + Admin custom claim
+- [x] Cloud Functions (advance notify · daily summary · duty recompute)
+- [x] Pool commission system (single source of truth)
+- [x] Duty rotation (A+B+C: stable hash · period cache · auto-anchor)
+- [x] Coverage duty (แทนคนลา + เงินตอบแทน)
+- [x] Store calendar (วันเปิด-ปิดร้าน + override)
+- [x] Rich text "หน้าที่หลัก" ของตำแหน่ง (sanitize on-write)
+- [x] Payroll lock (7-day grace · rules mirror)
+- [ ] PWA / offline mode
+- [ ] Unit tests (Vitest)
+- [ ] E2E tests (Playwright)
+- [ ] i18n (อังกฤษ)
