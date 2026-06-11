@@ -519,8 +519,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "เลือกวิธี",
             defaultValue: 60,
             options: [
-              { value: 60, label: "ตามน้ำหนัก (60%)" },
-              { value: 999, label: "มีการตรวจ % — กรอก %จริง" },
+              { value: 60, label: "ทั่วไป (60%)" },
+              { value: 999, label: "มีตรวจ %" },
             ],
           },
           {
@@ -605,7 +605,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             defaultValue: 30,
             options: [
               { value: 30, label: "ทั่วไป (30%)" },
-              { value: 999, label: "มีการตรวจ % — กรอก %จริง" },
+              { value: 999, label: "มีตรวจ %" },
             ],
           },
           {
