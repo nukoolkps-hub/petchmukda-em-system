@@ -15,6 +15,7 @@ import {
   Package as IconPackage,
   Percent as IconPercent,
   Receipt as IconReceipt,
+  Repeat as IconRepeat,
   Scissors as IconScissors,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
@@ -65,10 +66,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── 2. ค่าแรง + ค่าเปลี่ยน ── */
+  /* ── 2. ค่าแรง ── */
   {
     id: "labor-cost",
-    title: "ค่าแรง + ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น (ทอง 96.5%)",
+    title: "ค่าแรง เริ่มต้น (ทอง 96.5%)",
     Icon: IconTag,
     blocks: [
       {
@@ -90,8 +91,6 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["2 บาท ขึ้นไป", "บาทละ 1,050"],
         ],
       },
-      { type: "h3", text: "ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น (อิงราคาทองวันนี้)" },
-      { type: "change-price-table" },
       { type: "h3", text: "ค่าแรงเพิ่มจากป้าย MD" },
       {
         type: "table",
@@ -107,6 +106,20 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         tone: "info",
         text: "1 MD ที่เพิ่มขึ้น มีค่าเท่ากับ 100 บาท",
       },
+    ],
+  },
+
+  /* ── 2.5 ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น ── */
+  {
+    id: "change-price",
+    title: "ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น (ทอง 96.5%)",
+    Icon: IconRepeat,
+    blocks: [
+      {
+        type: "p",
+        text: "ค่าเปลี่ยนระหว่างน้ำหนักเท่ากัน — อิงราคาทองวันนี้ อัปเดตอัตโนมัติ",
+      },
+      { type: "change-price-table" },
     ],
   },
 
