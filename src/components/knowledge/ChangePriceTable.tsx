@@ -54,11 +54,19 @@ export default function ChangePriceTable() {
       </div>
 
       {/* table */}
-      <table className="w-full text-xs">
+      <table className="w-full text-sm table-fixed">
+        <colgroup>
+          <col style={{ width: "60%" }} />
+          <col style={{ width: "40%" }} />
+        </colgroup>
         <thead className="bg-maroon text-white">
           <tr>
-            <th className="px-3 py-2 text-left font-bold">น้ำหนัก</th>
-            <th className="px-3 py-2 text-right font-bold">ค่าเปลี่ยน (฿)</th>
+            <th className="px-2.5 py-1.5 text-left font-bold text-xs">
+              น้ำหนัก
+            </th>
+            <th className="px-2.5 py-1.5 text-right font-bold text-xs">
+              ค่าเปลี่ยน (฿)
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -69,15 +77,15 @@ export default function ChangePriceTable() {
                 key={w.id}
                 className="border-b border-bdr/40 last:border-0 odd:bg-cream/40"
               >
-                <td className="px-3 py-2 text-txt font-semibold">{w.label}</td>
-                <td className="px-3 py-2 text-right">
+                <td className="px-2.5 py-1.5 text-txt font-semibold">
+                  {w.label}
+                </td>
+                <td className="px-2.5 py-1.5 text-right">
                   <div className="font-extrabold text-maroon">
-                    {formatThaiNumber(Math.round(breakdown.total))}
+                    {formatThaiNumber(breakdown.total)}
                   </div>
                   <div className="text-[10px] text-txt-soft/80 mt-0.5">
-                    เนื้อทอง {formatThaiNumber(Math.round(breakdown.goldPart))}
-                    {" + "}
-                    ค่าแรง {formatThaiNumber(Math.round(breakdown.laborPart))}
+                    จริง {formatThaiNumber(Math.round(breakdown.raw))} ฿
                   </div>
                 </td>
               </tr>
@@ -89,7 +97,7 @@ export default function ChangePriceTable() {
       {/* formula footer */}
       <div className="px-3 py-2 bg-cream/60 border-t border-bdr/40 text-[10px] text-txt-soft leading-relaxed">
         <span className="font-bold">สูตร:</span> (ราคาทอง × 0.0656 × น้ำหนักกรัม ×
-        3.1%) + (ค่าแรงเริ่มต้น × 85%)
+        3.1%) + (ค่าแรงเริ่มต้น × 85%) · ปัดขึ้นถึงทวีคูณ 50 ฿
       </div>
     </div>
   );
