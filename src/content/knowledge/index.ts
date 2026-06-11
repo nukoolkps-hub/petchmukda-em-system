@@ -561,6 +561,77 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ],
         ],
       },
+      {
+        type: "live-example",
+        title: "ตัวอย่าง — นาก 1 สลึง (3.79 กรัม)",
+        compute: ({ sell }) => {
+          const grams = 3.79;
+          const general = sell * 0.3 * 0.0656 * grams;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ราคาทองคำแท่งบาทละ ${fmt(sell)} ฿`,
+              `น้ำหนัก ${grams} กรัม`,
+              "กรณี: ทั่วไป (30%)",
+            ],
+            steps: [
+              {
+                calc: `${fmt(sell)} × 30% = ${fmt(sell * 0.3)}`,
+                meaning: "ราคาทองหลังหัก 70%",
+              },
+              {
+                calc: `${fmt(sell * 0.3)} × 0.0656 × ${grams} = ${fmt(general)} ฿`,
+                meaning: "ราคารับซื้อนาก",
+              },
+            ],
+          };
+        },
+      },
+      {
+        type: "calculator",
+        title: "ราคารับซื้อนาก",
+        inputs: [
+          {
+            id: "gold",
+            label: "ราคาทองคำแท่ง 96.5%",
+            defaultValue: 50000,
+            suffix: "฿",
+            goldPriceDefault: true,
+          },
+          {
+            id: "mode",
+            label: "เลือกวิธี",
+            defaultValue: 30,
+            options: [
+              { value: 30, label: "ทั่วไป (30%)" },
+              { value: 999, label: "มีการตรวจ % — กรอก %จริง" },
+            ],
+          },
+          {
+            id: "realPct",
+            label: "% จริง (ถ้าตรวจ)",
+            defaultValue: 60,
+            suffix: "%",
+          },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
+        ],
+        compute: ({ gold, mode, realPct, grams }) => {
+          const factor = mode === 999 ? (realPct - 15) / 100 : 0.3;
+          const buy = gold * factor * 0.0656 * grams;
+          return [
+            {
+              label: "ราคารับซื้อ",
+              value: buy,
+              format: "currency",
+              hint:
+                mode === 999
+                  ? `${gold} × (${realPct}−15)% × 0.0656 × ${grams}`
+                  : `${gold} × 30% × 0.0656 × ${grams}`,
+            },
+          ];
+        },
+      },
     ],
   },
 
