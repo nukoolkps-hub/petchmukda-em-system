@@ -94,11 +94,6 @@ export default function ChangePriceTable() {
         </tbody>
       </table>
 
-      {/* formula footer */}
-      <div className="px-3 py-2 bg-cream/60 border-t border-bdr/40 text-[10px] text-txt-soft leading-relaxed">
-        <span className="font-bold">สูตร:</span> (ราคาทอง × 0.0656 × น้ำหนักกรัม ×
-        3.1%) + (ค่าแรงเริ่มต้น × 85%) · ปัดขึ้นถึงทวีคูณ 50 ฿
-      </div>
     </div>
   );
 }
