@@ -24,7 +24,19 @@ import {
   Wallet as IconWallet,
   Weight as IconWeight,
 } from "lucide-react";
+import {
+  CHANGE_PRICE_WEIGHTS,
+  computeChangePriceBreakdown,
+} from "../../utils/changePriceUtils";
 import type { KnowledgeSection } from "./types";
+
+/** ช่วยหาค่าเปลี่ยน "นน. เท่ากัน เริ่มต้น" ของน้ำหนักใดน้ำหนักหนึ่ง
+ *  (ปัดทวีคูณ 50 แล้ว) — ใช้ในตัวอย่าง "การคำนวณค่าเปลี่ยน เพิ่มขึ้น" */
+function changePriceFor(weightId: string, sellPrice: number): number {
+  const w = CHANGE_PRICE_WEIGHTS.find((it) => it.id === weightId);
+  if (!w) return 0;
+  return computeChangePriceBreakdown(w, sellPrice).total;
+}
 
 export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 1. มาตรฐานน้ำหนัก ── */
@@ -323,7 +335,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "live-example",
         title: "ตัวอย่าง #1 — 1 สลึง เพิ่มเป็น 2 สลึง (MD-03)",
         compute: ({ sell }) => {
-          const oldChange = 1050;
+          const oldChange = changePriceFor("1-saleung", sell);
           const newLabor = 750;
           const md = 300;
           const goldPart = sell / 4;
@@ -332,12 +344,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return {
             given: [
-              `ค่าเปลี่ยน 1 สลึง = ${fmt(oldChange)} ฿`,
+              `ค่าเปลี่ยน 1 สลึง (จากตาราง) = ${fmt(oldChange)} ฿`,
               `ราคาทองคำแท่งบาทละ ${fmt(sell)} ฿`,
             ],
             steps: [
               {
-                calc: `(${fmt(sell)} ÷ 4) + (${newLabor} + ${md}) + ${oldChange} = ${fmt(total)} ฿`,
+                calc: `(${fmt(sell)} ÷ 4) + (${newLabor} + ${md}) + ${fmt(oldChange)} = ${fmt(total)} ฿`,
                 meaning: "ราคาค่าเปลี่ยน",
               },
             ],
@@ -353,7 +365,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "live-example",
         title: "ตัวอย่าง #2 — 1 บาท เพิ่มเป็น 2 บาท (MD-03)",
         compute: ({ sell }) => {
-          const oldChange = 2400;
+          const oldChange = changePriceFor("1-baht", sell);
           const newLabor = 1050;
           const md = 300;
           const total = sell + (newLabor + md) + (oldChange + md);
@@ -361,12 +373,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return {
             given: [
-              `ค่าเปลี่ยน 1 บาท = ${fmt(oldChange)} ฿`,
+              `ค่าเปลี่ยน 1 บาท (จากตาราง) = ${fmt(oldChange)} ฿`,
               `ราคาทองคำแท่งบาทละ ${fmt(sell)} ฿`,
             ],
             steps: [
               {
-                calc: `${fmt(sell)} + (${newLabor} + ${md}) + (${oldChange} + ${md}) = ${fmt(total)} ฿`,
+                calc: `${fmt(sell)} + (${newLabor} + ${md}) + (${fmt(oldChange)} + ${md}) = ${fmt(total)} ฿`,
                 meaning: "ราคาค่าเปลี่ยน",
               },
             ],
