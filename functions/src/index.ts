@@ -30,13 +30,6 @@ export { setAdmin } from "./auth/setAdmin.js";
 // Daily summary — ภารกิจ + คนหยุด + เคล็ดลับ → ส่งเข้า LINE 07:30 ทุกวัน
 // (manual test: Cloud Scheduler "Force run" หรือ LINE command "ทดสอบแจ้งเตือน")
 export { sendDailySummary } from "./dailySummary/sendDailySummary.js";
-// LINE webhook
-export { lineWebhook } from "./line/webhook.js";
-
-// Maintenance
-export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";
-export { cleanupOldTips } from "./maintenance/cleanupOldTips.js";
-
 // Duty assignments — server-side compute เพื่อ sync admin/พนักงาน
 // (ฝั่งพนักงานอ่าน employees/leaves ของเพื่อนไม่ได้ → compute ไม่ครบ)
 // callable: trigger หลัง CRUD · scheduled: refresh ตอนวันเปลี่ยน
@@ -44,3 +37,14 @@ export {
 	recomputeDutyAssignments,
 	recomputeDutyAssignmentsDaily,
 } from "./duty/recompute.js";
+// Gold price — ดึงจาก goldprice.mukdagold.com/api/price2 (สมาคมค้าทองคำ)
+// scheduled ทุก 15 นาที + manual trigger จากปุ่มใน admin panel
+export {
+	fetchGoldPriceNow,
+	fetchGoldPriceScheduled,
+} from "./goldPrice/fetchGoldPrice.js";
+// LINE webhook
+export { lineWebhook } from "./line/webhook.js";
+// Maintenance
+export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";
+export { cleanupOldTips } from "./maintenance/cleanupOldTips.js";
