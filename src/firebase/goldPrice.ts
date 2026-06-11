@@ -5,7 +5,8 @@
    - updatedBy:     ชื่อ admin ที่ update ล่าสุด                        */
 
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { db } from "./config";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "./config";
 
 export interface GoldPrice {
   pricePerBaht: number;
@@ -44,6 +45,25 @@ export function subscribeGoldPrice(
       onError?.(err);
     },
   );
+}
+
+export interface FetchGoldPriceResult {
+  ok: boolean;
+  stored: boolean;
+  price: number;
+  reason?: string;
+  sourceDate?: string;
+  sourceTime?: string;
+}
+
+/** เรียก Cloud Function fetchGoldPriceNow — admin click "ดึงราคาตอนนี้" */
+export async function triggerFetchGoldPriceNow(): Promise<FetchGoldPriceResult> {
+  const callable = httpsCallable<unknown, FetchGoldPriceResult>(
+    functions,
+    "fetchGoldPriceNow",
+  );
+  const res = await callable({});
+  return res.data;
 }
 
 export async function updateGoldPrice(

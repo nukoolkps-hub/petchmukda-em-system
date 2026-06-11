@@ -5,11 +5,14 @@
 
 import {
   Coins as IconCoins,
+  RefreshCw as IconRefresh,
   Save as IconSave,
   TrendingUp as IconTrend,
+  Zap as IconZap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { THAI_MONTH_NAMES } from "../../constants";
+import { triggerFetchGoldPriceNow } from "../../firebase/goldPrice";
 import type { GoldPrice } from "../../types";
 import { formatThaiNumber } from "../../utils/format";
 
@@ -42,6 +45,9 @@ export default function GoldPricePanel({
     String(goldPrice.pricePerBaht || ""),
   );
   const [saving, setSaving] = useState(false);
+  const [fetching, setFetching] = useState(false);
+
+  const isAutoSource = goldPrice.updatedBy.startsWith("auto");
 
   // sync draft เมื่อ goldPrice เปลี่ยน (เช่น admin ตัวอื่น update)
   useEffect(() => {
@@ -67,6 +73,25 @@ export default function GoldPricePanel({
     }
   }
 
+  async function handleFetchNow() {
+    if (fetching) return;
+    setFetching(true);
+    try {
+      const res = await triggerFetchGoldPriceNow();
+      if (res.stored) {
+        showToast?.(`ดึงราคาใหม่: ฿${formatThaiNumber(res.price)}/บาท`);
+      } else {
+        showToast?.(`ราคาไม่เปลี่ยน (${formatThaiNumber(res.price)} ฿/บาท)`);
+      }
+    } catch (err) {
+      console.error("[GoldPrice] fetch failed:", err);
+      const msg = err instanceof Error ? err.message : "ดึงราคาไม่สำเร็จ";
+      showToast?.(msg);
+    } finally {
+      setFetching(false);
+    }
+  }
+
   return (
     <div>
       {/* header */}
@@ -86,16 +111,42 @@ export default function GoldPricePanel({
 
       {/* current price card */}
       <div className="bg-white rounded-[14px] border border-bdr p-4 mb-4 shadow-[0_2px_8px_rgba(90,30,10,0.04)]">
-        <div className="text-[11px] text-txt-soft font-semibold uppercase tracking-wide">
-          ราคาปัจจุบัน
-        </div>
-        <div className="mt-1 text-2xl font-extrabold text-maroon">
-          ฿{formatThaiNumber(goldPrice.pricePerBaht)}
-          <span className="text-sm font-bold text-txt-soft">/บาท</span>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] text-txt-soft font-semibold uppercase tracking-wide">
+              ราคาปัจจุบัน
+            </div>
+            <div className="mt-1 text-2xl font-extrabold text-maroon">
+              ฿{formatThaiNumber(goldPrice.pricePerBaht)}
+              <span className="text-sm font-bold text-txt-soft">/บาท</span>
+            </div>
+          </div>
+          {isAutoSource && (
+            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-lt border border-green/40 text-green text-[10px] font-bold">
+              <IconZap size={10} strokeWidth={3} />
+              อัตโนมัติ
+            </span>
+          )}
         </div>
         <div className="mt-2 text-xs text-txt-soft">
           อัปเดต {fmtUpdatedAt(goldPrice.updatedAt)}
           {goldPrice.updatedBy ? ` · โดย ${goldPrice.updatedBy}` : ""}
+        </div>
+        <button
+          type="button"
+          onClick={handleFetchNow}
+          disabled={fetching}
+          className="mt-3 w-full px-3 py-2 rounded-[10px] bg-gold-pale border border-gold/40 text-maroon font-bold text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
+        >
+          <IconRefresh
+            size={12}
+            strokeWidth={2.5}
+            className={fetching ? "animate-spin" : ""}
+          />
+          {fetching ? "กำลังดึงราคา..." : "ดึงราคาตอนนี้ (สมาคมค้าทองคำ)"}
+        </button>
+        <div className="mt-2 text-[10px] text-txt-soft/80 italic text-center">
+          ระบบดึงอัตโนมัติทุก 15 นาที · กดปุ่มเพื่อดึงทันที
         </div>
       </div>
 
