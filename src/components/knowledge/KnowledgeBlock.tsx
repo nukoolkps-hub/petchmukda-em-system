@@ -9,6 +9,8 @@ import {
   AlertTriangle as IconWarn,
 } from "lucide-react";
 import type { KnowledgeBlock } from "../../content/knowledge/types";
+import Calculator from "./Calculator";
+import Secret from "./Secret";
 
 interface Props {
   block: KnowledgeBlock;
@@ -218,5 +220,17 @@ export default function KnowledgeBlockView({ block }: Props) {
           ))}
         </ol>
       );
+
+    case "calculator":
+      return (
+        <Calculator
+          title={block.title}
+          inputs={block.inputs}
+          compute={block.compute}
+        />
+      );
+
+    case "secret":
+      return <Secret label={block.label} value={block.value} />;
   }
 }

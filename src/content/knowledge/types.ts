@@ -5,6 +5,23 @@
 
 import type { LucideIcon } from "lucide-react";
 
+export interface CalcField {
+  id: string;
+  label: string;
+  defaultValue?: number;
+  suffix?: string;
+  /** dropdown — ถ้าใส่ จะ render เป็น select แทน number input */
+  options?: { value: number; label: string }[];
+}
+
+export interface CalcOutput {
+  label: string;
+  value: number;
+  format?: "currency" | "number";
+  /** sub-line อธิบายเพิ่ม (เช่น "ราคาทองคำ 99.99% ต่อกรัม") */
+  hint?: string;
+}
+
 export type KnowledgeBlock =
   | { type: "h3"; text: string }
   | { type: "p"; text: string; muted?: boolean }
@@ -19,7 +36,14 @@ export type KnowledgeBlock =
     }
   | { type: "image"; src: string; alt: string; caption?: string }
   | { type: "callout"; tone: "info" | "warn" | "note"; text: string }
-  | { type: "steps"; items: string[] };
+  | { type: "steps"; items: string[] }
+  | {
+      type: "calculator";
+      title: string;
+      inputs: CalcField[];
+      compute: (values: Record<string, number>) => CalcOutput[];
+    }
+  | { type: "secret"; label: string; value: string };
 
 export interface KnowledgeSection {
   id: string;
