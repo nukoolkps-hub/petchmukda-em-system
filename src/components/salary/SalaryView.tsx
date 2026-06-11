@@ -252,16 +252,16 @@ export default function SalaryView({
     });
   }
 
-  // เดือนนี้ admin ยืนยันยอดแล้วหรือยัง — ถ้ายัง แสดง "รอยืนยันยอด" กันสับสน
-  // (ตัวเลขก่อนยืนยันยังเปลี่ยนได้ ยังไม่ใช่ยอดจริง)
+  // เดือนนี้ admin ยืนยันยอดแล้วหรือยัง — ถ้ายัง ยังโชว์เงินเดือนรวมคร่าวๆ
+  // ได้ (preview) แต่ banner เตือนชัดว่า "ยอดอาจเปลี่ยน" + ปิดปุ่มพิมพ์ +
+  // PoolFlowModal ล็อกด้วย isConfirmed prop (ปิดแผนผังจนกว่าจะ confirm)
   const isMonthConfirmed = !!payrollConfirms?.[selectedMonth]?.confirmedAt;
   const selectedMonthLabel = (() => {
     const [y, mo] = selectedMonth.split("-");
     return `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
   })();
 
-  if (!isMonthConfirmed || !data || !salaryCalculation) {
-    const waitingConfirm = !isMonthConfirmed;
+  if (!data || !salaryCalculation) {
     return (
       <div>
         <div className="flex items-center justify-between gap-2 mb-3.5">
@@ -290,33 +290,22 @@ export default function SalaryView({
           </div>
         </div>
         <div className="text-center text-txt-soft py-[50px] px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr">
-          <div
-            className={`flex justify-center mb-3 ${waitingConfirm ? "text-amber" : "text-gold"}`}
-          >
-            {waitingConfirm ? (
-              <IconClock size={48} strokeWidth={1.8} />
-            ) : (
-              <IconBanknote size={48} strokeWidth={1.8} />
-            )}
+          <div className="flex justify-center mb-3 text-gold">
+            <IconBanknote size={48} strokeWidth={1.8} />
           </div>
-          <div className="font-bold text-txt mb-1">
-            {waitingConfirm ? "รอยืนยันยอด" : "ยังไม่มีข้อมูลเงินเดือน"}
-          </div>
+          <div className="font-bold text-txt mb-1">ยังไม่มีข้อมูลเงินเดือน</div>
           <div className="text-sm text-txt-soft mb-5">
             เดือน {selectedMonthLabel}
-            {waitingConfirm && " ยังไม่ได้ยืนยันยอด"}
           </div>
-          {!waitingConfirm &&
-            months.includes(currentYM) &&
-            selectedMonth !== currentYM && (
-              <button
-                onClick={() => setSelectedMonth(currentYM)}
-                className="px-5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25] inline-flex items-center gap-1.5"
-              >
-                <IconArrowLeft size={14} strokeWidth={2.5} />
-                กลับไปเดือนปัจจุบัน
-              </button>
-            )}
+          {months.includes(currentYM) && selectedMonth !== currentYM && (
+            <button
+              onClick={() => setSelectedMonth(currentYM)}
+              className="px-5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25] inline-flex items-center gap-1.5"
+            >
+              <IconArrowLeft size={14} strokeWidth={2.5} />
+              กลับไปเดือนปัจจุบัน
+            </button>
+          )}
         </div>
       </div>
     );
@@ -358,6 +347,21 @@ export default function SalaryView({
           />
         </div>
       </div>
+
+      {/* รอยืนยันยอด — แสดงเงินรวมคร่าวๆ ก่อน แต่เตือนว่ายังเปลี่ยนได้ */}
+      {!isMonthConfirmed && (
+        <div className="mb-2.5 px-3.5 py-2.5 rounded-[12px] bg-amber/10 border border-amber/30 flex items-start gap-2">
+          <IconClock
+            size={16}
+            strokeWidth={2.4}
+            className="text-amber shrink-0 mt-0.5"
+          />
+          <div className="text-xs text-txt leading-snug">
+            <b>ตัวเลขประมาณการ</b> — admin ยังไม่ได้ยืนยันยอด ตัวเลขอาจ เปลี่ยนแปลงได้ ·
+            พิมพ์สลิป/ใบรับรอง + แผนผังเงินเดือน เปิดได้หลังยืนยันยอด
+          </div>
+        </div>
+      )}
 
       {/* Bank info card */}
       <div className="bg-white rounded-[14px] px-4 py-3.5 mb-2.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)] flex items-center gap-3">
@@ -443,10 +447,19 @@ export default function SalaryView({
             <button
               type="button"
               onClick={handlePrintSlip}
-              title="พิมพ์ / บันทึก PDF"
-              className="px-3.5 py-2 rounded-lg bg-white text-maroon text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] border-[#7B1C1C50] shrink-0"
+              disabled={!isMonthConfirmed}
+              title={isMonthConfirmed ? "พิมพ์ / บันทึก PDF" : "รอยืนยันยอด"}
+              className={`px-3.5 py-2 rounded-lg text-sm font-bold font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] shrink-0 ${
+                isMonthConfirmed
+                  ? "bg-white text-maroon border-[#7B1C1C50] cursor-pointer"
+                  : "bg-bdr/30 text-txt-soft border-bdr cursor-not-allowed"
+              }`}
             >
-              <PrintIcon />
+              {isMonthConfirmed ? (
+                <PrintIcon />
+              ) : (
+                <IconClock size={14} strokeWidth={2.4} />
+              )}
               พิมพ์
             </button>
           </div>
@@ -458,10 +471,19 @@ export default function SalaryView({
             <button
               type="button"
               onClick={handlePrintCert}
-              title="พิมพ์ / บันทึก PDF"
-              className="px-3.5 py-2 rounded-lg bg-white text-maroon text-sm font-bold cursor-pointer font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] border-[#7B1C1C50] shrink-0"
+              disabled={!isMonthConfirmed}
+              title={isMonthConfirmed ? "พิมพ์ / บันทึก PDF" : "รอยืนยันยอด"}
+              className={`px-3.5 py-2 rounded-lg text-sm font-bold font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] shrink-0 ${
+                isMonthConfirmed
+                  ? "bg-white text-maroon border-[#7B1C1C50] cursor-pointer"
+                  : "bg-bdr/30 text-txt-soft border-bdr cursor-not-allowed"
+              }`}
             >
-              <PrintIcon />
+              {isMonthConfirmed ? (
+                <PrintIcon />
+              ) : (
+                <IconClock size={14} strokeWidth={2.4} />
+              )}
               พิมพ์
             </button>
           </div>
