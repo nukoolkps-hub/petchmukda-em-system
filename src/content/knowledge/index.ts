@@ -153,6 +153,41 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { calc: "4,644 × 1.28 = 5,944", meaning: "ราคาขายต่อชิ้น" },
         ],
       },
+      {
+        type: "calculator",
+        title: "ราคาขายทอง 99.99%",
+        inputs: [
+          {
+            id: "gold",
+            label: "ราคาทองคำแท่ง (บาท/บาท)",
+            defaultValue: 50000,
+            suffix: "฿",
+          },
+          { id: "labor", label: "ค่าแรง", defaultValue: 1250, suffix: "฿" },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 1.28, suffix: "ก." },
+        ],
+        compute: ({ gold, labor, grams }) => {
+          const gold9999 = gold * 1.035;
+          const perGram = gold9999 * 0.0656;
+          const sellPerGram = perGram + labor;
+          const total = sellPerGram * grams;
+          return [
+            { label: "ราคาทองคำ 99.99%", value: gold9999, format: "currency" },
+            { label: "ราคา 99.99% ต่อกรัม", value: perGram, format: "currency" },
+            {
+              label: "ราคาขายต่อกรัม (+ ค่าแรง)",
+              value: sellPerGram,
+              format: "currency",
+            },
+            {
+              label: "ราคาขายต่อชิ้น",
+              value: total,
+              format: "currency",
+              hint: `${sellPerGram.toFixed(2)} × ${grams} กรัม`,
+            },
+          ];
+        },
+      },
       { type: "h3", text: "ราคาขายทอง 96.5%" },
       {
         type: "table",
@@ -170,11 +205,55 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["ตามน้ำหนัก", "(ราคาทอง × 0.0656 × น้ำหนักสินค้า) + ค่าแรง = ราคาขาย"],
         ],
       },
+      {
+        type: "calculator",
+        title: "ราคาขายทอง 96.5% ตามน้ำหนัก",
+        inputs: [
+          {
+            id: "gold",
+            label: "ราคาทองคำแท่ง (บาท/บาท)",
+            defaultValue: 50000,
+            suffix: "฿",
+          },
+          { id: "labor", label: "ค่าแรง", defaultValue: 1050, suffix: "฿" },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
+        ],
+        compute: ({ gold, labor, grams }) => {
+          const goldPart = gold * 0.0656 * grams;
+          const total = goldPart + labor;
+          return [
+            {
+              label: "ราคาทองตามน้ำหนัก",
+              value: goldPart,
+              format: "currency",
+              hint: `${gold} × 0.0656 × ${grams}`,
+            },
+            { label: "ราคาขาย (+ ค่าแรง)", value: total, format: "currency" },
+          ];
+        },
+      },
       { type: "h3", text: "ราคาขายเงิน" },
       {
         type: "formula",
         label: "ตามน้ำหนัก",
         formula: "(ราคาเงินต่อกรัม × น้ำหนักสินค้า) + ค่าแรง = ราคาขาย",
+      },
+      {
+        type: "calculator",
+        title: "ราคาขายเงิน",
+        inputs: [
+          { id: "rate", label: "ราคาเงิน/กรัม", defaultValue: 30, suffix: "฿" },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
+          { id: "labor", label: "ค่าแรง", defaultValue: 200, suffix: "฿" },
+        ],
+        compute: ({ rate, grams, labor }) => [
+          { label: "ราคาเงินตามน้ำหนัก", value: rate * grams, format: "currency" },
+          {
+            label: "ราคาขาย (+ ค่าแรง)",
+            value: rate * grams + labor,
+            format: "currency",
+          },
+        ],
       },
       { type: "h3", text: "การอ่านป้ายสินค้า" },
       {
@@ -270,6 +349,47 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["ตามน้ำหนัก", "(ราคาทอง − 5-7%) × 0.0656 × น้ำหนัก = ราคารับซื้อ"],
         ],
       },
+      {
+        type: "calculator",
+        title: "ราคารับซื้อทอง 96.5%",
+        inputs: [
+          {
+            id: "gold",
+            label: "ราคาทองคำแท่ง (บาท/บาท)",
+            defaultValue: 50000,
+            suffix: "฿",
+          },
+          {
+            id: "discount",
+            label: "หัก %",
+            defaultValue: 5,
+            options: [
+              { value: 5, label: "หัก 5%" },
+              { value: 6, label: "หัก 6%" },
+              { value: 7, label: "หัก 7%" },
+            ],
+          },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
+        ],
+        compute: ({ gold, discount, grams }) => {
+          const base = gold * (1 - discount / 100);
+          const buy = base * 0.0656 * grams;
+          return [
+            {
+              label: "ราคาทองหลังหัก %",
+              value: base,
+              format: "currency",
+              hint: `${gold} − ${discount}%`,
+            },
+            {
+              label: "ราคารับซื้อ",
+              value: buy,
+              format: "currency",
+              hint: `× 0.0656 × ${grams} ก.`,
+            },
+          ];
+        },
+      },
       { type: "h3", text: "ราคารับซื้อทอง 90" },
       {
         type: "table",
@@ -281,6 +401,49 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             "(ราคาทอง × (%จริง − 15)) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
           ],
         ],
+      },
+      {
+        type: "calculator",
+        title: "ราคารับซื้อทอง 90",
+        inputs: [
+          {
+            id: "gold",
+            label: "ราคาทองคำแท่ง (บาท/บาท)",
+            defaultValue: 50000,
+            suffix: "฿",
+          },
+          {
+            id: "mode",
+            label: "เลือกวิธี",
+            defaultValue: 60,
+            options: [
+              { value: 60, label: "ตามน้ำหนัก (60%)" },
+              { value: 999, label: "มีการตรวจ % — กรอก %จริง" },
+            ],
+          },
+          {
+            id: "realPct",
+            label: "% จริง (ถ้าตรวจ)",
+            defaultValue: 88,
+            suffix: "%",
+          },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
+        ],
+        compute: ({ gold, mode, realPct, grams }) => {
+          const factor = mode === 999 ? (realPct - 15) / 100 : 0.6;
+          const buy = gold * factor * 0.0656 * grams;
+          return [
+            {
+              label: "ราคารับซื้อ",
+              value: buy,
+              format: "currency",
+              hint:
+                mode === 999
+                  ? `${gold} × (${realPct}−15)% × 0.0656 × ${grams}`
+                  : `${gold} × 60% × 0.0656 × ${grams}`,
+            },
+          ];
+        },
       },
       { type: "h3", text: "ราคารับซื้อนาก" },
       {
@@ -375,6 +538,48 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           },
           { calc: "30 + 30 = 60 ฿", meaning: "ดอกเบี้ยที่ลูกค้าต้องเสียทั้งหมด" },
         ],
+      },
+      {
+        type: "calculator",
+        title: "ดอกเบี้ยจำนำ (รวมขั้นต่ำ 30 ฿)",
+        inputs: [
+          {
+            id: "principal",
+            label: "เงินจำนำ",
+            defaultValue: 1500,
+            suffix: "฿",
+          },
+          {
+            id: "months",
+            label: "ระยะเวลา (เดือนเต็ม)",
+            defaultValue: 1,
+            suffix: "ด.",
+          },
+          {
+            id: "extraDays",
+            label: "วันเศษ (0-31)",
+            defaultValue: 13,
+            suffix: "ว.",
+          },
+        ],
+        compute: ({ principal, months, extraDays }) => {
+          let total = 0;
+          for (let i = 0; i < months; i++) {
+            total += Math.max(30, principal * 0.015);
+          }
+          if (extraDays > 0) {
+            const rate = extraDays <= 15 ? 0.0075 : 0.015;
+            total += Math.max(30, principal * rate);
+          }
+          return [
+            { label: "ดอกเบี้ยรวมทั้งหมด", value: total, format: "currency" },
+            {
+              label: "ยอดที่ต้องจ่ายเพื่อไถ่",
+              value: principal + total,
+              format: "currency",
+            },
+          ];
+        },
       },
     ],
   },
@@ -473,6 +678,42 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { calc: "3,312.48 × 6 = 19,874.88 ฿", meaning: "รายจ่ายทั้งหมด" },
         ],
       },
+      {
+        type: "calculator",
+        title: "ผ่อนสินค้าด้วยบัตรเครดิต",
+        inputs: [
+          { id: "price", label: "ราคาขาย", defaultValue: 18000, suffix: "฿" },
+          {
+            id: "ratePct",
+            label: "ดอกเบี้ย/เดือน",
+            defaultValue: 1.2,
+            suffix: "%",
+          },
+          {
+            id: "months",
+            label: "จำนวนเดือนผ่อน",
+            defaultValue: 6,
+            suffix: "ด.",
+          },
+        ],
+        compute: ({ price, ratePct, months }) => {
+          const swiped = price * 1.03;
+          const interest = swiped * (ratePct / 100);
+          const perMonth = swiped / months + interest;
+          const total = perMonth * months;
+          return [
+            {
+              label: "ราคาที่ใช้รูดจริง",
+              value: swiped,
+              format: "currency",
+              hint: `${price} × 3%`,
+            },
+            { label: "ดอกเบี้ย/เดือน", value: interest, format: "currency" },
+            { label: "รายจ่าย/เดือน", value: perMonth, format: "currency" },
+            { label: "รายจ่ายทั้งหมด", value: total, format: "currency" },
+          ];
+        },
+      },
     ],
   },
 
@@ -492,6 +733,21 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         title: "ตัวอย่าง — รูด 50,000 ฿",
         given: ["จำนวนรูด 50,000 ฿", "จำนวนหัก 5%"],
         steps: [{ calc: "50,000 − 5% = 47,500 ฿", meaning: "ลูกค้าได้เงินคืน" }],
+      },
+      {
+        type: "calculator",
+        title: "รูดบัตรเป็นเงินสด",
+        inputs: [
+          { id: "amount", label: "ยอดรูดเต็ม", defaultValue: 50000, suffix: "฿" },
+        ],
+        compute: ({ amount }) => [
+          {
+            label: "ค่าธรรมเนียม (5%)",
+            value: amount * 0.05,
+            format: "currency",
+          },
+          { label: "ลูกค้าได้เงินคืน", value: amount * 0.95, format: "currency" },
+        ],
       },
     ],
   },
@@ -529,6 +785,39 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           },
           { calc: "2,433.28 × 7% = 170.33 ฿", meaning: "VAT ที่ต้องนำส่ง" },
         ],
+      },
+      {
+        type: "calculator",
+        title: "VAT ทองรูปพรรณ 96.5%",
+        inputs: [
+          {
+            id: "gold",
+            label: "ราคาทองคำแท่ง",
+            defaultValue: 66500,
+            suffix: "฿",
+          },
+          { id: "gamnet", label: "ค่ากำเหน็จ", defaultValue: 1000, suffix: "฿" },
+          {
+            id: "buyback",
+            label: "ราคารับซื้อคืน",
+            defaultValue: 65066.72,
+            suffix: "฿",
+          },
+        ],
+        compute: ({ gold, gamnet, buyback }) => {
+          const sellTotal = gold + gamnet;
+          const base = sellTotal - buyback;
+          const vat = Math.max(0, base) * 0.07;
+          return [
+            {
+              label: "ราคาขายรวม (ทอง + กำเหน็จ)",
+              value: sellTotal,
+              format: "currency",
+            },
+            { label: "ส่วนต่าง (ฐานภาษี)", value: base, format: "currency" },
+            { label: "VAT ที่ต้องนำส่ง (7%)", value: vat, format: "currency" },
+          ];
+        },
       },
     ],
   },
@@ -679,13 +968,13 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     Icon: IconSparkles,
     blocks: [
       { type: "h3", text: "ข้อมูล Login" },
+      { type: "p", text: "Website: i-Dealer" },
+      { type: "secret", label: "รหัสร้านค้า", value: "509699" },
+      { type: "secret", label: "รหัสผ่าน", value: "Aeonmd@10010gd" },
       {
-        type: "list",
-        items: [
-          "Website: i-Dealer",
-          "รหัสร้านค้า: 509699",
-          "รหัสผ่าน: Aeonmd@10010gd",
-        ],
+        type: "callout",
+        tone: "warn",
+        text: "รหัสซ่อนไว้ — แตะปุ่มตาเพื่อแสดง · ห้ามถ่ายภาพ/แชร์",
       },
       {
         type: "image",
