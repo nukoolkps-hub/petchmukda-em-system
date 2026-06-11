@@ -43,17 +43,17 @@ export default function LiveExample({ title, compute }: Props) {
         <div className="text-xs text-txt-soft font-semibold mb-1.5">
           วิธีคำนวณ
         </div>
-        <ol className="space-y-1.5 text-sm">
+        <ol className="space-y-1.5">
           {steps.map((step, i) => (
             <li
               key={`s-${i}`}
               className="flex items-start gap-2.5 p-2 rounded-[8px] bg-cream/60 border border-bdr/40"
             >
-              <span className="shrink-0 w-5 h-5 rounded-full bg-maroon text-white text-[10px] font-bold flex items-center justify-center mt-0.5">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-maroon text-white text-[10px] font-bold flex items-center justify-center mt-1">
                 {i + 1}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-txt leading-snug">
+                <div className="text-base font-bold text-txt leading-snug">
                   {step.calc}
                 </div>
                 <div className="text-xs text-txt-soft mt-0.5">
