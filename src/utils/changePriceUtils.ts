@@ -39,6 +39,12 @@ function goldByWeight(goldPricePerBaht: number, grams: number): number {
   return goldPricePerBaht * 0.0656 * grams;
 }
 
+/** ปัดขึ้นถึงทวีคูณ 50 บาทที่ใกล้สุด (เช่น 2,518 → 2,550 · 2,578 → 2,600) */
+export function ceilTo50(n: number): number {
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.ceil(n / 50) * 50;
+}
+
 /** ค่าเปลี่ยน นน. เท่ากัน — return ราคารวมแล้ว */
 export function computeChangePrice(
   weight: ChangePriceWeight,
@@ -49,12 +55,20 @@ export function computeChangePrice(
   return goldPart + laborPart;
 }
 
-/** breakdown ใช้แสดงใน tooltip / hint */
+/** breakdown ใช้แสดงใน tooltip / hint
+ *  - raw   = ผลคำนวณจริงตามสูตร
+ *  - total = ปัดขึ้นถึง 50 (ราคาที่ลูกค้าจ่ายจริง) */
 export function computeChangePriceBreakdown(
   weight: ChangePriceWeight,
   goldPricePerBaht: number,
-): { goldPart: number; laborPart: number; total: number } {
+): {
+  goldPart: number;
+  laborPart: number;
+  raw: number;
+  total: number;
+} {
   const goldPart = goldByWeight(goldPricePerBaht, weight.grams) * 0.031;
   const laborPart = weight.laborBase * 0.85;
-  return { goldPart, laborPart, total: goldPart + laborPart };
+  const raw = goldPart + laborPart;
+  return { goldPart, laborPart, raw, total: ceilTo50(raw) };
 }
