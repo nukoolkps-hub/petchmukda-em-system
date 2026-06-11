@@ -90,7 +90,7 @@ export default function KnowledgeBlockView({ block }: Props) {
                 {block.columns.map((col, i) => (
                   <th
                     key={`${col}-${i}`}
-                    className={`px-2.5 py-1.5 font-bold text-xs whitespace-nowrap ${alignClass(i)}`}
+                    className={`px-2.5 py-1.5 font-bold text-xs leading-tight ${alignClass(i)}`}
                   >
                     {col}
                   </th>
@@ -108,7 +108,7 @@ export default function KnowledgeBlockView({ block }: Props) {
                       key={`c-${ri}-${ci}`}
                       className={`px-2.5 py-1.5 text-txt border-b border-bdr/40 ${alignClass(ci)}`}
                     >
-                      {cell}
+                      <MathText>{cell}</MathText>
                     </td>
                   ))}
                 </tr>
