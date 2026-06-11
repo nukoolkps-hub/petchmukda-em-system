@@ -141,6 +141,8 @@ export default function LeaveApp() {
     poolAdjustments,
     setPoolAdjustment,
     updateStoreCalendar: updateStoreCalendarAction,
+    goldPrice,
+    updateGoldPrice: updateGoldPriceAction,
     employeeLoans,
     addEmployeeLoan,
     updateEmployeeLoan,
@@ -510,6 +512,9 @@ export default function LeaveApp() {
                       onSetPayrollConfirm={setPayrollConfirm}
                       storeCalendar={storeCalendar}
                       onUpdateStoreCalendar={updateStoreCalendarAction}
+                      goldPrice={goldPrice}
+                      onUpdateGoldPrice={updateGoldPriceAction}
+                      adminName={authUser?.displayName || "Admin"}
                       showToast={showToast}
                     />
                   ) : (

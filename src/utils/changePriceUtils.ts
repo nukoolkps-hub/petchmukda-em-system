@@ -1,0 +1,60 @@
+/* ─── ค่าเปลี่ยน น.น. เท่ากัน — สูตร + ตารางน้ำหนัก ────────────────────
+   สูตร (ทอง 96.5%):
+     ค่าเปลี่ยน = (ราคาทองคำไทย × 0.0656 × น้ำหนักกรัม × 3.1%)
+                + (ค่าแรงเริ่มต้น × 85%)
+
+   ส่วนแรก = "ราคาเนื้อทอง 96.5% ตามน้ำหนัก" × 3.1%
+   ส่วนหลัง = ค่าแรงเริ่มต้น หลังลด 15%                                    */
+
+export interface ChangePriceWeight {
+  id: string;
+  label: string; // "0.6 กรัม", "½ สลึง" ฯลฯ
+  grams: number;
+  laborBase: number; // ค่าแรงเริ่มต้นจากตารางใน knowledge
+  /** ถ้า true → คำนวณเป็น "ต่อบาท" (ใช้กับ 2 บาท+) — ผู้ใช้ต้องคูณน้ำหนักเอง */
+  perBaht?: boolean;
+}
+
+export const CHANGE_PRICE_WEIGHTS: ChangePriceWeight[] = [
+  { id: "0.6g", label: "0.6 กรัม", grams: 0.6, laborBase: 450 },
+  { id: "1g", label: "1 กรัม", grams: 1.0, laborBase: 550 },
+  { id: "half-saleung", label: "½ สลึง", grams: 1.895, laborBase: 650 },
+  { id: "1-saleung", label: "1 สลึง", grams: 3.79, laborBase: 750 },
+  { id: "2-saleung", label: "2 สลึง", grams: 7.58, laborBase: 850 },
+  { id: "3-saleung", label: "3 สลึง", grams: 11.37, laborBase: 950 },
+  { id: "1-baht", label: "1 บาท", grams: 15.16, laborBase: 1050 },
+  { id: "6-saleung", label: "6 สลึง", grams: 22.74, laborBase: 1900 },
+  // 2 บาท+ "บาทละ 1,050" → คิดเป็น "ต่อบาท" (ลูกค้าคูณน้ำหนักเอง)
+  {
+    id: "2-baht-plus",
+    label: "2 บาท ขึ้นไป (ต่อบาท)",
+    grams: 15.16,
+    laborBase: 1050,
+    perBaht: true,
+  },
+];
+
+/** ราคาเนื้อทอง 96.5% ตามน้ำหนัก (gram) — สูตรเดียวกับ "ราคาขายทอง 96.5%" */
+function goldByWeight(goldPricePerBaht: number, grams: number): number {
+  return goldPricePerBaht * 0.0656 * grams;
+}
+
+/** ค่าเปลี่ยน นน. เท่ากัน — return ราคารวมแล้ว */
+export function computeChangePrice(
+  weight: ChangePriceWeight,
+  goldPricePerBaht: number,
+): number {
+  const goldPart = goldByWeight(goldPricePerBaht, weight.grams) * 0.031;
+  const laborPart = weight.laborBase * 0.85;
+  return goldPart + laborPart;
+}
+
+/** breakdown ใช้แสดงใน tooltip / hint */
+export function computeChangePriceBreakdown(
+  weight: ChangePriceWeight,
+  goldPricePerBaht: number,
+): { goldPart: number; laborPart: number; total: number } {
+  const goldPart = goldByWeight(goldPricePerBaht, weight.grams) * 0.031;
+  const laborPart = weight.laborBase * 0.85;
+  return { goldPart, laborPart, total: goldPart + laborPart };
+}

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { KnowledgeBlock } from "../../content/knowledge/types";
 import Calculator from "./Calculator";
+import ChangePriceTable from "./ChangePriceTable";
 import Secret from "./Secret";
 
 interface Props {
@@ -232,5 +233,8 @@ export default function KnowledgeBlockView({ block }: Props) {
 
     case "secret":
       return <Secret label={block.label} value={block.value} />;
+
+    case "change-price-table":
+      return <ChangePriceTable />;
   }
 }

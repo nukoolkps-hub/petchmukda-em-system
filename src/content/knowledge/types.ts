@@ -43,7 +43,8 @@ export type KnowledgeBlock =
       inputs: CalcField[];
       compute: (values: Record<string, number>) => CalcOutput[];
     }
-  | { type: "secret"; label: string; value: string };
+  | { type: "secret"; label: string; value: string }
+  | { type: "change-price-table" };
 
 export interface KnowledgeSection {
   id: string;

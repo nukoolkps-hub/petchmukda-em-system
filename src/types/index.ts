@@ -188,6 +188,14 @@ export interface StoreCalendar {
   extraClosedWeekdays: string[]; // ["YYYY-MM-DD", ...]
 }
 
+/** ราคาทองคำไทย (อ้างอิงสมาคมค้าทองคำ · admin update วันละครั้ง)
+ *  doc เดียว: /config/goldPrice                                          */
+export interface GoldPrice {
+  pricePerBaht: number; // ฿/บาท (ราคาทองคำแท่ง)
+  updatedAt: number; // ms epoch
+  updatedBy: string; // ชื่อ admin
+}
+
 export interface PayrollConfirmEntry {
   confirmedAt: string;
   totalAmount: number;
@@ -309,6 +317,7 @@ export interface AppData {
   payrollConfirms: PayrollConfirms;
   poolAdjustments: PoolAdjustmentsByMonth;
   storeCalendar: StoreCalendar;
+  goldPrice: GoldPrice;
   loading: boolean;
   error: Error | null;
 

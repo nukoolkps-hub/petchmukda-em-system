@@ -248,6 +248,12 @@ service cloud.firestore {
       allow read:  if isSignedIn();
       allow write: if isAdmin();
     }
+    // ราคาทองคำไทย: ทุกคน signed-in อ่าน (ใช้ใน knowledge calculators +
+    // ตารางค่าเปลี่ยน) · admin update วันละครั้ง
+    match /config/goldPrice {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
     match /config/{document} {
       allow read, write: if false;
     }
