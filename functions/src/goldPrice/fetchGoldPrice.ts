@@ -1,14 +1,16 @@
 /**
- * fetchGoldPrice — ดึงราคาทองคำไทยจาก goldprice.mukdagold.com
+ * fetchGoldPrice — ดึงราคาทองคำแท่ง 96.5% (สมาคมค้าทองคำ) จากฮั่วเซงเฮง
  *
  * Schedule: ทุก 15 นาที (เวลาไทย) — เขียน /config/goldPrice ใน Firestore
- * Source:   /api/price2 (สมาคมค้าทองคำ — ใหม่)
- * Returns:  { buyPrice, sellPrice, priceChanged, date, time }
- *           ใช้ sellPrice = ราคาทองคำแท่งบาทละ (ราคาขาย)
+ * Source:   apicheckpricev3.huasengheng.com /api/values/getprice/
+ *           ตอบเป็น XML: <ArrayOfGoldPriceStruct> มี 3 แถว —
+ *           GoldType HSH (ราคาฮั่วเซงเฮง) / REF (ราคาสมาคม) / JEWEL (รูปพรรณ)
+ *           → ใช้แถว REF + field <Sell> = ราคาทองคำแท่งบาทละ (ขาย, สมาคม)
+ *           ตัวเลขมี comma ("63,950") → strip ก่อน parse
  *
  * Manual trigger: callable function fetchGoldPriceNow (admin only)
  *
- * กัน write churn: ถ้า sellPrice เท่าราคาเดิม → skip (ไม่เขียน)
+ * กัน write churn: ถ้า sellPrice + TimeUpdate เท่าเดิม → skip (ไม่เขียน)
  * Sanity check: 10,000 ≤ sellPrice ≤ 200,000 ฿/บาท
  */
 
@@ -16,17 +18,18 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getAppFirestore } from "../helpers/config.js";
 
-const SOURCE_URL = "https://goldprice.mukdagold.com/api/price2";
-const SOURCE_LABEL = "auto · สมาคมค้าทองคำ";
+const SOURCE_URL = "https://apicheckpricev3.huasengheng.com/api/values/getprice/";
+const SOURCE_LABEL = "auto · สมาคมค้าทองคำ (ฮั่วเซงเฮง)";
 const SANE_MIN = 10000;
 const SANE_MAX = 200000;
 
-interface GoldApiResponse {
-	buyPrice: number;
-	sellPrice: number;
-	priceChanged: number;
-	date: string; // "DD/MM/YYYY" (พ.ศ.)
-	time: string; // "HH:MM"
+interface GoldStruct {
+	goldType: string;
+	goldCode: string;
+	buy: number;
+	sell: number;
+	sellChange: number;
+	timeUpdate: string; // ISO "2026-06-11T17:00:28"
 }
 
 interface StoreResult {
@@ -36,24 +39,57 @@ interface StoreResult {
 	source: { date: string; time: string };
 }
 
+/** "63,950" → 63950 · ค่าว่าง/nil → NaN */
+function parsePrice(s: string | undefined): number {
+	if (!s) return Number.NaN;
+	return Number(s.replace(/,/g, ""));
+}
+
+function tagValue(block: string, tag: string): string {
+	const m = block.match(new RegExp(`<${tag}>([^<]*)</${tag}>`));
+	return m?.[1] ?? "";
+}
+
+/** parse XML <ArrayOfGoldPriceStruct> → struct list (regex — ไม่ต้องพึ่ง XML lib) */
+function parseGoldStructs(xml: string): GoldStruct[] {
+	const blocks = xml.match(/<GoldPriceStruct>[\s\S]*?<\/GoldPriceStruct>/g) || [];
+	return blocks.map((b) => ({
+		goldType: tagValue(b, "GoldType"),
+		goldCode: tagValue(b, "GoldCode"),
+		buy: parsePrice(tagValue(b, "Buy")),
+		sell: parsePrice(tagValue(b, "Sell")),
+		sellChange: parsePrice(tagValue(b, "SellChange")),
+		timeUpdate: tagValue(b, "TimeUpdate"),
+	}));
+}
+
 async function fetchAndStore(): Promise<StoreResult> {
 	const res = await fetch(SOURCE_URL);
 	if (!res.ok) {
 		throw new Error(`HTTP ${res.status} from ${SOURCE_URL}`);
 	}
-	const data = (await res.json()) as Partial<GoldApiResponse>;
-	const sellPrice = Number(data.sellPrice);
+	const xml = await res.text();
+	const structs = parseGoldStructs(xml);
 
+	// REF = ราคาอ้างอิงสมาคมค้าทองคำ (ไม่ใช่ราคา HSH เอง)
+	const ref = structs.find((s) => s.goldType === "REF");
+	if (!ref) {
+		throw new Error(
+			`GoldType REF not found (got: ${structs.map((s) => s.goldType).join(", ") || "none"})`,
+		);
+	}
+
+	const sellPrice = ref.sell;
 	if (
 		!Number.isFinite(sellPrice) ||
 		sellPrice < SANE_MIN ||
 		sellPrice > SANE_MAX
 	) {
-		throw new Error(`Invalid sellPrice: ${data.sellPrice}`);
+		throw new Error(`Invalid REF sellPrice: ${ref.sell}`);
 	}
 
-	const sourceDate = String(data.date || "");
-	const sourceTime = String(data.time || "");
+	// TimeUpdate ISO "2026-06-11T17:00:28" → date/time แยกเก็บ (ใช้เทียบ dirty)
+	const [sourceDate = "", sourceTime = ""] = ref.timeUpdate.split("T");
 
 	const db = getAppFirestore();
 	const docRef = db.collection("config").doc("goldPrice");
@@ -80,11 +116,11 @@ async function fetchAndStore(): Promise<StoreResult> {
 			pricePerBaht: sellPrice,
 			updatedAt: Date.now(),
 			updatedBy: SOURCE_LABEL,
-			source: "price2",
+			source: "hsh-ref",
 			sourceDate,
 			sourceTime,
-			buyPrice: Number(data.buyPrice) || 0,
-			priceChanged: Number(data.priceChanged) || 0,
+			buyPrice: Number.isFinite(ref.buy) ? ref.buy : 0,
+			priceChanged: Number.isFinite(ref.sellChange) ? ref.sellChange : 0,
 		},
 		{ merge: true },
 	);
