@@ -13,13 +13,65 @@ import {
   Trash2 as IconTrash,
   X as IconX,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { StoreCalendar } from "../../types";
 
 interface Props {
   storeCalendar: StoreCalendar;
   onUpdate: (cal: StoreCalendar) => Promise<void>;
   showToast?: (msg: string) => void;
+}
+
+/** Date input ที่แสดงผลเป็นไทย (วว/ดด/ปปปป พ.ศ.) — wrap native date input
+ *  เพื่อให้ใช้ปฏิทิน native ของ browser แต่หน้าตาเป็นรูปแบบไทย                */
+function ThaiDateInput({
+  value,
+  onChange,
+  className = "",
+}: {
+  value: string; // "YYYY-MM-DD" (ค.ศ.)
+  onChange: (next: string) => void;
+  className?: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const open = () => {
+    const el = ref.current;
+    if (!el) return;
+    // showPicker() — Chrome 99+, Safari 16+, Edge 99+ · fallback = focus + click
+    if (typeof el.showPicker === "function") {
+      try {
+        el.showPicker();
+        return;
+      } catch {
+        // user gesture จำเป็น — บางครั้งโยน NotAllowedError
+      }
+    }
+    el.focus();
+    el.click();
+  };
+  return (
+    <button
+      type="button"
+      onClick={open}
+      className={`relative flex items-center text-left ${className}`}
+    >
+      <span
+        className={
+          value ? "text-txt font-semibold" : "text-txt-soft font-normal"
+        }
+      >
+        {value ? fmtYmd(value) : "วว/ดด/ปปปป (พ.ศ.)"}
+      </span>
+      <input
+        ref={ref}
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label="เลือกวันที่"
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+      />
+    </button>
+  );
 }
 
 /** "2026-06-13" → "ส. 13 มิ.ย. 2569" */
@@ -337,11 +389,10 @@ export default function StoreCalendarPanel({
 
         {adding === "wd" && (
           <div className="px-3.5 py-3 border-b border-bdr bg-cream/40 flex gap-2 items-center">
-            <input
-              type="date"
+            <ThaiDateInput
               value={wdPick}
-              onChange={(e) => setWdPick(e.target.value)}
-              className="flex-1 px-2.5 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white"
+              onChange={setWdPick}
+              className="flex-1 px-2.5 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] bg-white"
             />
             <button
               type="button"
