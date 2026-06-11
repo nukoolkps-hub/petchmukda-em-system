@@ -13,6 +13,7 @@ import {
   Coins as IconCoins,
   CreditCard as IconCreditCard,
   Diamond as IconDiamond,
+  Gem as IconGem,
   HandCoins as IconHandCoins,
   MessageCircle as IconMessageCircle,
   Settings as IconSettings,
@@ -34,7 +35,8 @@ export type AdminSectionId =
   | "calendar-view"
   | "store-calendar"
   | "linebot-notifications"
-  | "linebot-commands";
+  | "linebot-commands"
+  | "knowledge";
 
 export type AdminGroupId =
   | "leave"
@@ -42,7 +44,8 @@ export type AdminGroupId =
   | "settings"
   | "duty"
   | "calendar"
-  | "linebot";
+  | "linebot"
+  | "knowledge";
 
 type AdminNavIcon = typeof IconChartBar;
 
@@ -125,6 +128,13 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { id: "roles", label: "พนักงาน", Icon: IconUsers },
       { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
     ],
+  },
+  {
+    id: "knowledge",
+    label: "บทเรียน",
+    defaultSection: "knowledge",
+    Icon: IconGem,
+    items: [{ id: "knowledge", label: "บทเรียน", Icon: IconGem }],
   },
 ];
 

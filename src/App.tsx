@@ -18,6 +18,7 @@ import AdminPanel from "./components/admin/AdminPanel";
 import HomeTab from "./components/home/HomeTab";
 import RequestTab from "./components/home/RequestTab";
 import SuccessScreen from "./components/home/SuccessScreen";
+import KnowledgeView from "./components/knowledge/KnowledgeView";
 import type { AdminSectionId } from "./components/layout/adminNavConfig";
 import BottomNav from "./components/layout/BottomNav";
 import DesktopHeader from "./components/layout/DesktopHeader";
@@ -467,6 +468,9 @@ export default function LeaveApp() {
                   )
                 }
               />
+
+              {/* KNOWLEDGE — บทเรียน (ใช้ร่วม admin + employee) */}
+              <Route path="/knowledge" element={<KnowledgeView />} />
 
               {/* ADMIN */}
               <Route

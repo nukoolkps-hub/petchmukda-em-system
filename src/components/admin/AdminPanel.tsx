@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { COLORS } from "../../constants";
 import TeamCalendar from "../home/TeamCalendar";
+import KnowledgeView from "../knowledge/KnowledgeView";
 import {
   ADMIN_NAV_GROUPS,
   type AdminNavGroup,
@@ -209,6 +210,9 @@ export default function AdminPanel({
           storeCalendar={storeCalendar}
         />
       )}
+
+      {/* ── KNOWLEDGE section (บทเรียน) ── */}
+      {section === "knowledge" && <KnowledgeView />}
 
       {/* ── STORE CALENDAR section (วันเปิด-ปิดร้าน) ── */}
       {section === "store-calendar" && (
