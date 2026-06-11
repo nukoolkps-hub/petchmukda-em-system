@@ -4,6 +4,7 @@
    commit + push → auto deploy                                       */
 
 import {
+  BadgePercent as IconBadgePercent,
   Banknote as IconBanknote,
   Calculator as IconCalculator,
   CreditCard as IconCreditCard,
@@ -91,19 +92,6 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       { type: "h3", text: "ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น (อิงราคาทองวันนี้)" },
       { type: "change-price-table" },
-      { type: "h3", text: "ส่วนลด" },
-      {
-        type: "list",
-        items: [
-          "ค่าแรง — ปกติลด 15% · HBD ลด 25%",
-          "ค่าเปลี่ยน — ปกติลด 5% · HBD ลด 5%",
-        ],
-      },
-      { type: "h3", text: "ส่วนลดสำหรับทอง 90" },
-      {
-        type: "list",
-        items: ["ต่างหูแผง 10%", "พระแผง 10%", "แหวนพลอย 10%", "กรอบพระ 10%"],
-      },
       { type: "h3", text: "ค่าแรงเพิ่มจากป้าย MD" },
       {
         type: "table",
@@ -118,6 +106,28 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "callout",
         tone: "info",
         text: "1 MD ที่เพิ่มขึ้น มีค่าเท่ากับ 100 บาท",
+      },
+    ],
+  },
+
+  /* ── ส่วนลด ── */
+  {
+    id: "discounts",
+    title: "ส่วนลด",
+    Icon: IconBadgePercent,
+    blocks: [
+      { type: "h3", text: "ส่วนลดค่าแรง + ค่าเปลี่ยน (ทอง 96.5%)" },
+      {
+        type: "list",
+        items: [
+          "ค่าแรง — ปกติลด 15% · HBD ลด 25%",
+          "ค่าเปลี่ยน — ปกติลด 5% · HBD ลด 5%",
+        ],
+      },
+      { type: "h3", text: "ส่วนลดสำหรับทอง 90" },
+      {
+        type: "list",
+        items: ["ต่างหูแผง 10%", "พระแผง 10%", "แหวนพลอย 10%", "กรอบพระ 10%"],
       },
     ],
   },
@@ -274,7 +284,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 4. ค่าเปลี่ยน ── */
   {
     id: "exchange",
-    title: "การคำนวณค่าเปลี่ยน (ทอง 96.5%)",
+    title: "การคำนวณค่าเปลี่ยน เพิ่มขึ้น - ลดลง (ทอง 96.5%)",
     Icon: IconExchange,
     blocks: [
       { type: "h3", text: "น้ำหนักเพิ่มขึ้น 0.6 กรัม ถึง 2 สลึง" },
