@@ -24,6 +24,7 @@ import {
   subscribeEmployeeByLineUserId,
   subscribeEmployees,
 } from "../employees";
+import { DEFAULT_GOLD_PRICE, subscribeGoldPrice } from "../goldPrice";
 import { subscribeLeaves, subscribeLeavesByEmployeeId } from "../leaves";
 import { subscribePayrollConfirms } from "../payrollConfirms";
 import {
@@ -352,6 +353,15 @@ export function useStoreCalendar() {
   return useScopedSubscription(
     () => subscribeStoreCalendar,
     EMPTY_STORE_CALENDAR,
+    [],
+  );
+}
+
+/** ราคาทองคำไทย — public read · admin write · doc เดียว /config/goldPrice */
+export function useGoldPrice() {
+  return useScopedSubscription(
+    () => subscribeGoldPrice,
+    DEFAULT_GOLD_PRICE,
     [],
   );
 }
