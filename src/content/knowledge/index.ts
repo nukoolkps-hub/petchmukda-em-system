@@ -37,6 +37,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["น้ำหนัก", "กรัม", "น้ำหนัก", "กรัม"],
+        colWidths: ["25%", "25%", "25%", "25%"],
+        colAlign: ["left", "right", "left", "right"],
         rows: [
           ["½ สลึง", "1.905", "5 บาท", "76.22"],
           ["1 สลึง", "3.811", "6 บาท", "91.464"],
@@ -51,6 +53,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["น้ำหนัก", "กรัม", "น้ำหนัก", "กรัม"],
+        colWidths: ["25%", "25%", "25%", "25%"],
+        colAlign: ["left", "right", "left", "right"],
         rows: [
           ["0.6 กรัม", "0.6", "3 บาท", "45.48"],
           ["1 กรัม", "1", "4 บาท", "60.64"],
@@ -79,6 +83,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["น้ำหนัก", "ค่าแรงเริ่มต้น (฿)"],
+        colWidths: ["60%", "40%"],
+        colAlign: ["left", "right"],
         rows: [
           ["0.6 กรัม", "450"],
           ["1 กรัม", "550"],
@@ -95,6 +101,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["ป้าย MD", "ราคาเพิ่มจากเริ่มต้น (฿)"],
+        colWidths: ["60%", "40%"],
+        colAlign: ["left", "right"],
         rows: [
           ["MD01", "+ 100"],
           ["MD02", "+ 200"],
@@ -214,6 +222,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["น้ำหนัก", "วิธีคำนวณ"],
+        colWidths: ["25%", "75%"],
+        colAlign: ["left", "left"],
         rows: [
           ["0.6 กรัม", "(ราคาทอง × 0.0656 × 0.6) + ค่าแรง = ราคาขาย"],
           ["1 กรัม", "(ราคาทอง × 0.0656 × 1) + ค่าแรง = ราคาขาย"],
@@ -408,6 +418,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["น้ำหนัก", "วิธีคำนวณ"],
+        colWidths: ["25%", "75%"],
+        colAlign: ["left", "left"],
         rows: [
           ["0.6 กรัม", "(ราคาทอง − 5-7%) × 0.0656 × 0.6 = ราคารับซื้อ"],
           ["1 กรัม", "(ราคาทอง − 5-7%) × 0.0656 × 1 = ราคารับซื้อ"],
@@ -467,6 +479,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["กรณี", "วิธีคำนวณ"],
+        colWidths: ["30%", "70%"],
+        colAlign: ["left", "left"],
         rows: [
           ["ตามน้ำหนัก", "(ราคาทอง × 60%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
           [
@@ -523,6 +537,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["กรณี", "วิธีคำนวณ"],
+        colWidths: ["30%", "70%"],
+        colAlign: ["left", "left"],
         rows: [
           ["ตามน้ำหนัก", "(ราคาทอง × 30%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
           [
@@ -607,6 +623,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["ประเภท", "อัตราหัก"],
+        colWidths: ["25%", "75%"],
+        colAlign: ["left", "left"],
         rows: [
           ["ทอง 96.5%", "หัก 15-20% จากราคารับซื้อทองคำแท่ง"],
           [
@@ -699,6 +717,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["น้ำหนัก", "แต้ม"],
+        colWidths: ["60%", "40%"],
+        colAlign: ["left", "right"],
         rows: [
           ["½ สลึง", "0.5"],
           ["1 สลึง", "1"],
@@ -713,6 +733,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["เปลี่ยนจาก → เป็น", "แต้ม"],
+        colWidths: ["60%", "40%"],
+        colAlign: ["left", "right"],
         rows: [
           ["1 บาท → 1 บาท", "1"],
           ["2 บาท → 3 บาท", "3"],
@@ -728,6 +750,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["แต้มที่ใช้", "ได้รับทองคำแท่ง"],
+        colWidths: ["40%", "60%"],
+        colAlign: ["left", "left"],
         rows: [
           ["20 แต้ม", "0.3 กรัม"],
           ["35 แต้ม", "0.6 กรัม"],
