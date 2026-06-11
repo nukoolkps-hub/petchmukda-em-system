@@ -157,7 +157,7 @@ interface StoreCalendar {
 - การลา: `countWeekdayLeaves(monthLeaves, calendar)` + `getOverQuotaDays(monthLeaves, calendar)` รับ calendar จาก root (App.tsx → ส่งผ่าน props ทุก consumer)
 - โบนัสขยัน: ใช้ `countWeekdayLeaves` ผลคำนวณเดียวกัน
 
-**UI Admin:** "วันเปิด-ปิดร้าน" ใน sidebar (กลุ่ม "หน้าที่") · เพิ่ม/ลบ → save ทันที + trigger recompute duty assignments
+**UI Admin:** "วันเปิด-ปิดร้าน" ใน sidebar (กลุ่ม "ปฏิทินการทำงาน") · เพิ่ม/ลบ → save ทันที + trigger recompute duty assignments
 
 Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/components/admin/StoreCalendarPanel.tsx`
 

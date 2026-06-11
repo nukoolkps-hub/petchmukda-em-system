@@ -6,6 +6,7 @@ import {
   CalendarClock as IconCalendarClock,
   CalendarDays as IconCalendarEvent,
   CalendarOff as IconCalendarOff,
+  CalendarRange as IconCalendarRange,
   Banknote as IconCashBanknote,
   BarChart3 as IconChartBar,
   ClipboardList as IconClipboardList,
@@ -39,6 +40,7 @@ export type AdminGroupId =
   | "payroll"
   | "settings"
   | "duty"
+  | "calendar"
   | "linebot";
 
 type AdminNavIcon = typeof IconChartBar;
@@ -87,6 +89,14 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     Icon: IconCalendarClock,
     items: [
       { id: "duty-schedule", label: "ตารางหน้าที่", Icon: IconCalendarClock },
+    ],
+  },
+  {
+    id: "calendar",
+    label: "ปฏิทินการทำงาน",
+    defaultSection: "store-calendar",
+    Icon: IconCalendarRange,
+    items: [
       {
         id: "store-calendar",
         label: "วันเปิด-ปิดร้าน",
