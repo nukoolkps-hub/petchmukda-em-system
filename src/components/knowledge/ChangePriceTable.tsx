@@ -61,9 +61,7 @@ export default function ChangePriceTable() {
         </colgroup>
         <thead className="bg-maroon text-white">
           <tr>
-            <th className="px-2.5 py-1.5 text-left font-bold text-xs">
-              น้ำหนัก
-            </th>
+            <th className="px-2.5 py-1.5 text-left font-bold text-xs">น้ำหนัก</th>
             <th className="px-2.5 py-1.5 text-right font-bold text-xs">
               ค่าเปลี่ยน (฿)
             </th>
@@ -88,7 +86,6 @@ export default function ChangePriceTable() {
           })}
         </tbody>
       </table>
-
     </div>
   );
 }

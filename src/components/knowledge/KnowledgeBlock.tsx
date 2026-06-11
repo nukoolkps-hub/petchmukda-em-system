@@ -12,6 +12,7 @@ import type { KnowledgeBlock } from "../../content/knowledge/types";
 import Calculator from "./Calculator";
 import ChangePriceTable from "./ChangePriceTable";
 import LiveExample from "./LiveExample";
+import MathText from "./MathText";
 import Secret from "./Secret";
 
 interface Props {
@@ -131,12 +132,12 @@ export default function KnowledgeBlockView({ block }: Props) {
               {block.label}
             </div>
           )}
-          <div className="text-base font-bold text-maroon leading-relaxed">
-            {block.formula}
+          <div className="text-sm font-bold text-maroon leading-relaxed">
+            <MathText>{block.formula}</MathText>
           </div>
           {block.result && (
-            <div className="text-base font-semibold text-txt-mid mt-1">
-              = {block.result}
+            <div className="text-sm font-semibold text-txt-mid mt-1">
+              <MathText>{`= ${block.result}`}</MathText>
             </div>
           )}
         </div>
@@ -164,18 +165,18 @@ export default function KnowledgeBlockView({ block }: Props) {
             <div className="text-xs text-txt-soft font-semibold mb-1.5">
               วิธีคำนวณ
             </div>
-            <ol className="space-y-1.5">
+            <ol className="space-y-1.5 text-sm">
               {block.steps.map((step, i) => (
                 <li
                   key={`s-${i}`}
                   className="flex items-start gap-2.5 p-2 rounded-[8px] bg-cream/60 border border-bdr/40"
                 >
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-maroon text-white text-[10px] font-bold flex items-center justify-center mt-1">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-maroon text-white text-[10px] font-bold flex items-center justify-center mt-0.5">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-base font-bold text-txt leading-snug">
-                      {step.calc}
+                    <div className="font-bold text-txt leading-snug">
+                      <MathText>{step.calc}</MathText>
                     </div>
                     <div className="text-xs text-txt-soft mt-0.5">
                       ({step.meaning})
