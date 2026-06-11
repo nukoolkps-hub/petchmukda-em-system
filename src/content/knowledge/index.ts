@@ -772,7 +772,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "table",
         columns: ["จาก", "แยกเป็น", "เพิ่มเงิน (+ MD แยกชิ้น)"],
-        colAlign: ["left", "left", "center"],
+        colWidths: ["20%", "50%", "30%"],
+        colAlign: ["left", "center", "right"],
         rows: [
           ["1 สลึง", "½ สลึง × 2 ชิ้น", "450 ฿"],
           ["2 สลึง", "1 สลึง × 2 ชิ้น", "550 ฿"],
