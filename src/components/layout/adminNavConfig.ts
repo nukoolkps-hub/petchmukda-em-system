@@ -110,6 +110,13 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     ],
   },
   {
+    id: "knowledge",
+    label: "ความรู้ต่างๆ",
+    defaultSection: "knowledge",
+    Icon: IconBrain,
+    items: [{ id: "knowledge", label: "ความรู้ต่างๆ", Icon: IconBrain }],
+  },
+  {
     id: "linebot",
     label: "LINE BOT",
     defaultSection: "linebot-notifications",
@@ -128,13 +135,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { id: "roles", label: "พนักงาน", Icon: IconUsers },
       { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
     ],
-  },
-  {
-    id: "knowledge",
-    label: "ความรู้ต่างๆ",
-    defaultSection: "knowledge",
-    Icon: IconBrain,
-    items: [{ id: "knowledge", label: "ความรู้ต่างๆ", Icon: IconBrain }],
   },
 ];
 
