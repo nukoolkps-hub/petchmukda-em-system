@@ -104,9 +104,9 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         colWidths: ["60%", "40%"],
         colAlign: ["left", "right"],
         rows: [
-          ["MD01", "+ 100"],
-          ["MD02", "+ 200"],
-          ["MD03", "+ 300"],
+          ["MD-01", "+ 100"],
+          ["MD-02", "+ 200"],
+          ["MD-03", "+ 300"],
         ],
       },
       {
@@ -321,7 +321,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "live-example",
-        title: "ตัวอย่าง #1 — 1 สลึง เพิ่มเป็น 2 สลึง (MD03)",
+        title: "ตัวอย่าง #1 — 1 สลึง เพิ่มเป็น 2 สลึง (MD-03)",
         compute: ({ sell }) => {
           const oldChange = 1050;
           const newLabor = 750;
@@ -351,7 +351,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "live-example",
-        title: "ตัวอย่าง #2 — 1 บาท เพิ่มเป็น 2 บาท (MD03)",
+        title: "ตัวอย่าง #2 — 1 บาท เพิ่มเป็น 2 บาท (MD-03)",
         compute: ({ sell }) => {
           const oldChange = 2400;
           const newLabor = 1050;
