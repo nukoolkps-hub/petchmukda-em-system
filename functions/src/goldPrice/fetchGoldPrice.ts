@@ -1,16 +1,22 @@
 /**
- * fetchGoldPrice — ดึงราคาทองคำแท่ง 96.5% (สมาคมค้าทองคำ) จากฮั่วเซงเฮง
+ * fetchGoldPrice — ดึงราคาทองคำแท่ง 96.5% (สมาคมค้าทองคำ)
  *
  * Schedule: ทุก 15 นาที (เวลาไทย) — เขียน /config/goldPrice ใน Firestore
- * Source:   apicheckpricev3.huasengheng.com /api/values/getprice/
- *           ตอบเป็น XML: <ArrayOfGoldPriceStruct> มี 3 แถว —
- *           GoldType HSH (ราคาฮั่วเซงเฮง) / REF (ราคาสมาคม) / JEWEL (รูปพรรณ)
- *           → ใช้แถว REF + field <Sell> = ราคาทองคำแท่งบาทละ (ขาย, สมาคม)
- *           ตัวเลขมี comma ("63,950") → strip ก่อน parse
+ *
+ * Source chain (ลองตามลำดับ — ตัวแรกที่สำเร็จชนะ):
+ * 1. ฮั่วเซงเฮง apicheckpricev3.huasengheng.com /api/values/getprice/
+ *    ตอบ XML <ArrayOfGoldPriceStruct> 3 แถว: HSH / REF / JEWEL
+ *    → ใช้แถว REF (ราคาอ้างอิงสมาคม) + <Sell> · ตัวเลขมี comma → strip
+ *    หมายเหตุ: เว็บ HSH มี bot protection — ต้องส่ง browser-like headers
+ * 2. goldprice.mukdagold.com /api/price2 (เว็บราคาทองของร้านเอง — สมาคม)
+ *    ตอบ JSON { buyPrice, sellPrice, priceChanged, date, time }
  *
  * Manual trigger: callable function fetchGoldPriceNow (admin only)
  *
- * กัน write churn: ถ้า sellPrice + TimeUpdate เท่าเดิม → skip (ไม่เขียน)
+ * Observability: fail ทั้ง 2 source → เขียน lastFetchError + lastFetchErrorAt
+ * ลง doc เดียวกัน (ไม่แตะ pricePerBaht) — admin เห็น warning ใน panel
+ *
+ * กัน write churn: ถ้า sellPrice + source timestamp เท่าเดิม → skip
  * Sanity check: 10,000 ≤ sellPrice ≤ 200,000 ฿/บาท
  */
 
@@ -18,18 +24,30 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getAppFirestore } from "../helpers/config.js";
 
-const SOURCE_URL = "https://apicheckpricev3.huasengheng.com/api/values/getprice/";
-const SOURCE_LABEL = "auto · สมาคมค้าทองคำ (ฮั่วเซงเฮง)";
+const HSH_URL = "https://apicheckpricev3.huasengheng.com/api/values/getprice/";
+const MUKDA_URL = "https://goldprice.mukdagold.com/api/price2";
 const SANE_MIN = 10000;
 const SANE_MAX = 200000;
 
-interface GoldStruct {
-	goldType: string;
-	goldCode: string;
-	buy: number;
-	sell: number;
-	sellChange: number;
-	timeUpdate: string; // ISO "2026-06-11T17:00:28"
+// บาง upstream (เช่น HSH) มี bot protection — default UA ของ node fetch
+// ("node") โดนปฏิเสธ 403 ได้ → ปลอมเป็นเบราว์เซอร์
+const BROWSER_HEADERS: Record<string, string> = {
+	"User-Agent":
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+	Accept: "application/xml, text/xml, application/json, */*",
+	"Accept-Language": "th-TH,th;q=0.9,en;q=0.8",
+};
+
+const FETCH_TIMEOUT_MS = 10000;
+
+interface PriceData {
+	sellPrice: number;
+	buyPrice: number;
+	priceChanged: number;
+	sourceDate: string;
+	sourceTime: string;
+	source: string; // "hsh-ref" | "mukda-price2"
+	label: string; // updatedBy ที่โชว์ใน UI
 }
 
 interface StoreResult {
@@ -37,6 +55,7 @@ interface StoreResult {
 	price: number;
 	reason?: string;
 	source: { date: string; time: string };
+	via: string;
 }
 
 /** "63,950" → 63950 · ค่าว่าง/nil → NaN */
@@ -50,26 +69,40 @@ function tagValue(block: string, tag: string): string {
 	return m?.[1] ?? "";
 }
 
-/** parse XML <ArrayOfGoldPriceStruct> → struct list (regex — ไม่ต้องพึ่ง XML lib) */
-function parseGoldStructs(xml: string): GoldStruct[] {
+function assertSane(sellPrice: number, context: string): void {
+	if (
+		!Number.isFinite(sellPrice) ||
+		sellPrice < SANE_MIN ||
+		sellPrice > SANE_MAX
+	) {
+		throw new Error(`Invalid sellPrice (${context}): ${sellPrice}`);
+	}
+}
+
+async function fetchWithTimeout(url: string): Promise<Response> {
+	const res = await fetch(url, {
+		headers: BROWSER_HEADERS,
+		signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+	});
+	if (!res.ok) {
+		throw new Error(`HTTP ${res.status} from ${url}`);
+	}
+	return res;
+}
+
+/** Source 1: ฮั่วเซงเฮง — XML, ใช้แถว GoldType=REF (ราคาสมาคม) */
+async function fetchFromHsh(): Promise<PriceData> {
+	const res = await fetchWithTimeout(HSH_URL);
+	const xml = await res.text();
+
 	const blocks = xml.match(/<GoldPriceStruct>[\s\S]*?<\/GoldPriceStruct>/g) || [];
-	return blocks.map((b) => ({
+	const structs = blocks.map((b) => ({
 		goldType: tagValue(b, "GoldType"),
-		goldCode: tagValue(b, "GoldCode"),
 		buy: parsePrice(tagValue(b, "Buy")),
 		sell: parsePrice(tagValue(b, "Sell")),
 		sellChange: parsePrice(tagValue(b, "SellChange")),
 		timeUpdate: tagValue(b, "TimeUpdate"),
 	}));
-}
-
-async function fetchAndStore(): Promise<StoreResult> {
-	const res = await fetch(SOURCE_URL);
-	if (!res.ok) {
-		throw new Error(`HTTP ${res.status} from ${SOURCE_URL}`);
-	}
-	const xml = await res.text();
-	const structs = parseGoldStructs(xml);
 
 	// REF = ราคาอ้างอิงสมาคมค้าทองคำ (ไม่ใช่ราคา HSH เอง)
 	const ref = structs.find((s) => s.goldType === "REF");
@@ -78,57 +111,126 @@ async function fetchAndStore(): Promise<StoreResult> {
 			`GoldType REF not found (got: ${structs.map((s) => s.goldType).join(", ") || "none"})`,
 		);
 	}
-
-	const sellPrice = ref.sell;
-	if (
-		!Number.isFinite(sellPrice) ||
-		sellPrice < SANE_MIN ||
-		sellPrice > SANE_MAX
-	) {
-		throw new Error(`Invalid REF sellPrice: ${ref.sell}`);
-	}
+	assertSane(ref.sell, "HSH REF");
 
 	// TimeUpdate ISO "2026-06-11T17:00:28" → date/time แยกเก็บ (ใช้เทียบ dirty)
 	const [sourceDate = "", sourceTime = ""] = ref.timeUpdate.split("T");
+	return {
+		sellPrice: ref.sell,
+		buyPrice: Number.isFinite(ref.buy) ? ref.buy : 0,
+		priceChanged: Number.isFinite(ref.sellChange) ? ref.sellChange : 0,
+		sourceDate,
+		sourceTime,
+		source: "hsh-ref",
+		label: "auto · สมาคมค้าทองคำ (ฮั่วเซงเฮง)",
+	};
+}
 
+/** Source 2 (fallback): เว็บราคาทองของร้านเอง — JSON สมาคม */
+async function fetchFromMukda(): Promise<PriceData> {
+	const res = await fetchWithTimeout(MUKDA_URL);
+	const data = (await res.json()) as {
+		buyPrice?: number;
+		sellPrice?: number;
+		priceChanged?: number;
+		date?: string;
+		time?: string;
+	};
+	const sellPrice = Number(data.sellPrice);
+	assertSane(sellPrice, "mukda price2");
+	return {
+		sellPrice,
+		buyPrice: Number(data.buyPrice) || 0,
+		priceChanged: Number(data.priceChanged) || 0,
+		sourceDate: String(data.date || ""),
+		sourceTime: String(data.time || ""),
+		source: "mukda-price2",
+		label: "auto · สมาคมค้าทองคำ (mukdagold)",
+	};
+}
+
+/** ลอง source ตามลำดับ — ตัวแรกที่สำเร็จชนะ · fail หมด → โยน error รวม */
+async function fetchFromAnySource(): Promise<PriceData> {
+	const errors: string[] = [];
+	for (const [name, fn] of [
+		["HSH", fetchFromHsh],
+		["mukda", fetchFromMukda],
+	] as const) {
+		try {
+			return await fn();
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : String(err);
+			errors.push(`${name}: ${msg}`);
+			console.warn(`[fetchGoldPrice] source ${name} failed: ${msg}`);
+		}
+	}
+	throw new Error(errors.join(" · "));
+}
+
+async function fetchAndStore(): Promise<StoreResult> {
 	const db = getAppFirestore();
 	const docRef = db.collection("config").doc("goldPrice");
+
+	let data: PriceData;
+	try {
+		data = await fetchFromAnySource();
+	} catch (err) {
+		// เก็บ error ลง doc (ไม่แตะ pricePerBaht) — panel โชว์ warning ให้ admin
+		const msg = err instanceof Error ? err.message : String(err);
+		await docRef.set(
+			{ lastFetchError: msg, lastFetchErrorAt: Date.now() },
+			{ merge: true },
+		);
+		throw err;
+	}
+
 	const snap = await docRef.get();
 	const current = (snap.exists ? snap.data() : {}) as Record<string, unknown>;
 
-	// ถ้าราคาเท่าของเดิม + GTA datestamp เดิม → skip
-	// (กัน Firestore write churn ตอน GTA ยังไม่ update ตลอดวัน)
+	// ถ้าราคาเท่าของเดิม + source timestamp เดิม → skip
+	// (กัน Firestore write churn ตอนสมาคมยังไม่ขยับราคา)
 	if (
-		current?.pricePerBaht === sellPrice &&
-		current?.sourceDate === sourceDate &&
-		current?.sourceTime === sourceTime
+		current?.pricePerBaht === data.sellPrice &&
+		current?.sourceDate === data.sourceDate &&
+		current?.sourceTime === data.sourceTime
 	) {
+		// เคลียร์ error เก่า (fetch รอบนี้สำเร็จแล้ว)
+		if (current?.lastFetchError) {
+			await docRef.set(
+				{ lastFetchError: "", lastFetchErrorAt: 0 },
+				{ merge: true },
+			);
+		}
 		return {
 			stored: false,
-			price: sellPrice,
+			price: data.sellPrice,
 			reason: "no change",
-			source: { date: sourceDate, time: sourceTime },
+			source: { date: data.sourceDate, time: data.sourceTime },
+			via: data.source,
 		};
 	}
 
 	await docRef.set(
 		{
-			pricePerBaht: sellPrice,
+			pricePerBaht: data.sellPrice,
 			updatedAt: Date.now(),
-			updatedBy: SOURCE_LABEL,
-			source: "hsh-ref",
-			sourceDate,
-			sourceTime,
-			buyPrice: Number.isFinite(ref.buy) ? ref.buy : 0,
-			priceChanged: Number.isFinite(ref.sellChange) ? ref.sellChange : 0,
+			updatedBy: data.label,
+			source: data.source,
+			sourceDate: data.sourceDate,
+			sourceTime: data.sourceTime,
+			buyPrice: data.buyPrice,
+			priceChanged: data.priceChanged,
+			lastFetchError: "",
+			lastFetchErrorAt: 0,
 		},
 		{ merge: true },
 	);
 
 	return {
 		stored: true,
-		price: sellPrice,
-		source: { date: sourceDate, time: sourceTime },
+		price: data.sellPrice,
+		source: { date: data.sourceDate, time: data.sourceTime },
+		via: data.source,
 	};
 }
 
@@ -140,11 +242,12 @@ export const fetchGoldPriceScheduled = onSchedule(
 			const result = await fetchAndStore();
 			console.log(
 				`[fetchGoldPrice] ${result.stored ? "stored" : "skipped"} ` +
-					`price=${result.price} source=${result.source.date} ${result.source.time}` +
+					`price=${result.price} via=${result.via} ` +
+					`source=${result.source.date} ${result.source.time}` +
 					(result.reason ? ` (${result.reason})` : ""),
 			);
 		} catch (err) {
-			console.error("[fetchGoldPrice] failed:", err);
+			console.error("[fetchGoldPrice] all sources failed:", err);
 		}
 	},
 );
@@ -164,6 +267,7 @@ export const fetchGoldPriceNow = onCall(async (request) => {
 			stored: result.stored,
 			price: result.price,
 			reason: result.reason,
+			via: result.via,
 			sourceDate: result.source.date,
 			sourceTime: result.source.time,
 		};

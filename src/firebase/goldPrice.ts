@@ -12,6 +12,8 @@ export interface GoldPrice {
   pricePerBaht: number;
   updatedAt: number;
   updatedBy: string;
+  lastFetchError: string;
+  lastFetchErrorAt: number;
 }
 
 const PATH = "config/goldPrice";
@@ -21,6 +23,8 @@ export const DEFAULT_GOLD_PRICE: GoldPrice = {
   pricePerBaht: 50000,
   updatedAt: 0,
   updatedBy: "",
+  lastFetchError: "",
+  lastFetchErrorAt: 0,
 };
 
 export function subscribeGoldPrice(
@@ -38,6 +42,10 @@ export function subscribeGoldPrice(
             : DEFAULT_GOLD_PRICE.pricePerBaht,
         updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : 0,
         updatedBy: typeof data.updatedBy === "string" ? data.updatedBy : "",
+        lastFetchError:
+          typeof data.lastFetchError === "string" ? data.lastFetchError : "",
+        lastFetchErrorAt:
+          typeof data.lastFetchErrorAt === "number" ? data.lastFetchErrorAt : 0,
       });
     },
     (err) => {

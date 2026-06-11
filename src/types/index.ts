@@ -193,7 +193,9 @@ export interface StoreCalendar {
 export interface GoldPrice {
   pricePerBaht: number; // ฿/บาท (ราคาทองคำแท่ง)
   updatedAt: number; // ms epoch
-  updatedBy: string; // ชื่อ admin
+  updatedBy: string; // ชื่อ admin หรือ "auto · ..." (Cloud Function)
+  lastFetchError: string; // error ล่าสุดจาก auto-fetch ("" = ไม่มี)
+  lastFetchErrorAt: number; // ms epoch (0 = ไม่มี)
 }
 
 export interface PayrollConfirmEntry {
