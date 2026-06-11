@@ -1,6 +1,8 @@
 /* ─── Salary Certificate — pdfmake document definition ───────
    หนังสือรับรองเงินเดือน — เป็น PDF text-searchable จริง          */
 
+import { THAI_MONTH_NAMES } from "../../constants";
+
 const COLORS = {
   maroon: "#7B1C1C",
   text: "#1A1A1A",
@@ -48,28 +50,13 @@ function formatThaiBahtText(n) {
 
 const formatNumber = (n) => Number(n || 0).toLocaleString("th-TH");
 
-const THAI_MONTHS = [
-  "มกราคม",
-  "กุมภาพันธ์",
-  "มีนาคม",
-  "เมษายน",
-  "พฤษภาคม",
-  "มิถุนายน",
-  "กรกฎาคม",
-  "สิงหาคม",
-  "กันยายน",
-  "ตุลาคม",
-  "พฤศจิกายน",
-  "ธันวาคม",
-];
-
 /* "YYYY-MM" → "มีนาคม พ.ศ. 2566" (คืน "" ถ้า format ไม่ถูก) */
 function formatThaiStartWork(yearMonth) {
   if (!yearMonth || !/^\d{4}-\d{2}$/.test(yearMonth)) return "";
   const [y, m] = yearMonth.split("-");
   const monthIndex = parseInt(m, 10) - 1;
   if (monthIndex < 0 || monthIndex > 11) return "";
-  return `${THAI_MONTHS[monthIndex]} พ.ศ. ${parseInt(y, 10) + 543}`;
+  return `${THAI_MONTH_NAMES[monthIndex]} พ.ศ. ${parseInt(y, 10) + 543}`;
 }
 
 /**

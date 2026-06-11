@@ -358,7 +358,7 @@ function DutyTodayCard({
               {myDuties.map((a) => (
                 <div
                   key={`${a.dutyId}-${a.targetEmpId || ""}`}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-[5px] rounded-[20px] bg-maroon text-gold-lt text-sm font-semibold"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-[5px] rounded-[20px] bg-maroon text-white text-sm font-semibold"
                 >
                   {a.dutyName}
                   {(a.reason === "substitute_for_leave" ||

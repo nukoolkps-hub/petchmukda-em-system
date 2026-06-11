@@ -1,3 +1,4 @@
+import { THAI_MONTH_NAMES } from "../constants";
 import { buildCertificateDocDef } from "./pdfBuilders/salaryCertificatePDF";
 import { openPDFBlob, printHTMLInIframe } from "./webviewHelpers";
 
@@ -29,21 +30,6 @@ function buildCertificateHTML(
     year: "numeric",
   });
 
-  const THAI_MONTHS = [
-    "มกราคม",
-    "กุมภาพันธ์",
-    "มีนาคม",
-    "เมษายน",
-    "พฤษภาคม",
-    "มิถุนายน",
-    "กรกฎาคม",
-    "สิงหาคม",
-    "กันยายน",
-    "ตุลาคม",
-    "พฤศจิกายน",
-    "ธันวาคม",
-  ];
-
   // เลขที่หนังสือ — caller ส่งมาเป็น "พทม. NNN/พ.ศ." (Firestore running counter)
   // fallback: ถ้าไม่มี (เช่น เน็ตล่ม) ใช้ date-time stamp กันใบไม่มีเลข
   const certRefNo =
@@ -58,7 +44,7 @@ function buildCertificateHTML(
     const [y, m] = ym.split("-").map(Number);
     const idx = m - 1;
     if (idx >= 0 && idx <= 11) {
-      startWork = `${THAI_MONTHS[idx]} พ.ศ. ${y + 543}`;
+      startWork = `${THAI_MONTH_NAMES[idx]} พ.ศ. ${y + 543}`;
       // diff in years + months
       let years = now.getFullYear() - y;
       let months = now.getMonth() - idx;

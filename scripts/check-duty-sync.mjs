@@ -7,7 +7,15 @@
    assignPrimaries) จากทั้ง 2 ไฟล์ → ตัด comment + normalize whitespace →
    เทียบกัน · ต่างกัน = exit 1 (fail CI)
 
-   รัน: node scripts/check-duty-sync.mjs                                  */
+   รัน: node scripts/check-duty-sync.mjs
+
+   ⚠️ ขอบเขต: ตรวจเฉพาะ "atomic helpers" ใน FUNCTIONS_TO_CHECK เท่านั้น
+   ไม่ตรวจ orchestration (computeAllDutiesForDay) เพราะออกแบบให้ต่างกัน
+   โดยตั้งใจ — server: coverage cascade + write-back cache ·
+   client: rotation only (caller ฝั่ง client เช่น employeeHasPoolExemptDuty
+   ส่ง leaves=[] · forecast ไม่เรียก coverage) · ถ้าเพิ่ม caller ใหม่ที่
+   ใช้ computeAllDutiesForDay ฝั่ง client ต้องระวัง — อาจได้ผลต่างจาก
+   server snapshot ตาม semantic ที่ document ไว้ในแต่ละไฟล์                */
 
 import { readFileSync } from "node:fs";
 

@@ -13,6 +13,7 @@ import { useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useAdvancesByStatusAndMonth } from "../../firebase/hooks/useFirestore";
 import { uploadAdvanceSlip } from "../../firebase/storage";
+import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -20,11 +21,6 @@ import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
 
 type AdvanceFilter = "pending" | "approved" | "rejected";
-
-function currentYearMonth() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
 
 function generateMonthOptions(): string[] {
   const now = new Date();
@@ -187,7 +183,7 @@ export default function AdminAdvancePanel({
               key={f.id}
               onClick={() => setFilter(f.id as AdvanceFilter)}
               className={`px-3 py-2 rounded-[10px] cursor-pointer font-[inherit] text-sm font-semibold whitespace-nowrap border-[1.5px] transition-all duration-100 active:scale-[0.96]
-                ${filter === f.id ? "bg-maroon text-gold-lt border-maroon" : "bg-cream text-txt-mid border-bdr"}`}
+                ${filter === f.id ? "bg-maroon text-white border-maroon" : "bg-cream text-txt-mid border-bdr"}`}
             >
               {f.label}
               {count > 0 && ` (${count})`}

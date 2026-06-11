@@ -441,30 +441,33 @@ export function computeAllDutiesForDay(
 
 /** employeeId เป็นคนที่ทำ monthly duty ที่ "ให้สิทธิ์กองกลาง" ในเดือน yearMonth
  *  ไหม → ใช้ตอน stamp poolThresholdExempt ลง salary snapshot
- *  ดู primary (คนที่ถูกกำหนดทั้งเดือน) ไม่ใช่ substitute · empty leaves      */
+ *  ดู primary (คนที่ถูกกำหนดทั้งเดือน) ไม่ใช่ substitute · empty leaves
+ *  ⚠️ ใช้ monthlyPrimariesForDay ตรงๆ ไม่ผ่าน computeAllDutiesForDay —
+ *  computeAllDutiesForDay จะ filter ผ่าน applicableDuties(calendar) ซึ่ง
+ *  ถ้าวันตัวแทนเป็นวันร้านปิด (เช่น ส.ค. 2569: วันที่ 15 = เสาร์) จะคืน []
+ *  → ทุกคนไม่ได้ exemption ทั้งเดือนแบบเงียบๆ (regression ตอนเพิ่ม calendar) */
 export function employeeHasPoolExemptDuty(
   employeeId: string,
   yearMonth: string, // "YYYY-MM"
   duties: Duty[],
   employees: Employee[],
 ): boolean {
-  const exemptIds = new Set(
-    duties
-      .filter(
-        (d) =>
-          d.kind !== "coverage" &&
-          d.period === "monthly" &&
-          d.grantsPoolEligibility,
-      )
-      .map((d) => d.id),
+  const exemptDuties = duties.filter(
+    (d) =>
+      d.kind !== "coverage" &&
+      d.period === "monthly" &&
+      d.grantsPoolEligibility,
   );
-  if (exemptIds.size === 0) return false;
-  // ใช้กลางเดือนเป็นตัวแทน + ไม่ใส่ leaves (ดู primary ตาม rotation)
-  const repDate = `${yearMonth}-15`;
-  const assignments = computeAllDutiesForDay(duties, repDate, employees, []);
-  return assignments.some(
-    (a) => exemptIds.has(a.dutyId) && a.primaryEmpId === employeeId,
+  if (exemptDuties.length === 0) return false;
+  // ใช้วันที่ 1 ของเดือนเป็นตัวแทน — monthly period = monthsBetween ขึ้นกับ
+  // เดือนเท่านั้น ไม่ขึ้นกับวันในเดือน · monthlyPrimariesForDay ไม่ filter
+  // calendar (skip applicableDuties) → ไม่กระทบเดือนที่วันตัวแทน = วันร้านปิด
+  const primaries = monthlyPrimariesForDay(
+    exemptDuties,
+    `${yearMonth}-01`,
+    employees,
   );
+  return primaries.has(employeeId);
 }
 
 /* ─── Coverage earnings (เงินค่าแทน) ────────────────────────────────
@@ -586,17 +589,21 @@ export function computeCoverageEarningsForMonth(
   // นับครั้งที่ employeeId ถูกเลือกในเดือนนี้ (per duty)
   const countByDuty = new Map<string, number>();
   const history = new Map<string, number>();
+  const monthlyPrimariesCache = new Map<string, Set<string>>();
   const start = new Date(`${yearStart}T00:00:00`);
   // replay ตั้งแต่ต้นปี — รอบในเดือน yearMonth นับเข้า count, รอบก่อนหน้านับเข้า history
   for (let d = new Date(start); ; d.setDate(d.getDate() + 1)) {
     const ymd = toYMD(d);
     if (ymd > monthEndYmd) break;
     const inMonth = ymd >= monthStart && ymd <= monthEndYmd;
-    const monthlyPrimaries = monthlyPrimariesForDay(
-      monthlyDuties,
-      ymd,
-      employees,
-    );
+    // memoize ตามเดือน — monthly period = monthsBetween ไม่ขึ้นกับวัน
+    // จึงคำนวณ ~12 ครั้ง/ปี แทน ~365 ครั้ง (×assignPrimaries ทุกครั้ง)
+    const ym = ymd.slice(0, 7);
+    let monthlyPrimaries = monthlyPrimariesCache.get(ym);
+    if (!monthlyPrimaries) {
+      monthlyPrimaries = monthlyPrimariesForDay(monthlyDuties, ymd, employees);
+      monthlyPrimariesCache.set(ym, monthlyPrimaries);
+    }
     const usedToday = new Set<string>();
     for (const duty of coverageDuties) {
       for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
@@ -645,7 +652,13 @@ export function computeCoverageEarningsForMonth(
 
    Forecast แสดงเฉพาะ primary ตาม rotation (deterministic) — ไม่รวม
    substitute/leave เพราะการลาในอนาคตยังไม่รู้ + เป็น schedule สำหรับ
-   "เตรียมพร้อม" ล่วงหน้า                                                */
+   "เตรียมพร้อม" ล่วงหน้า
+
+   ⚠️ Forecast เป็น period-level (สัปดาห์/เดือน) — ไม่ filter ด้วย
+   storeCalendar รายวัน เพราะ "ใครได้สัปดาห์นี้" ไม่เปลี่ยนตาม
+   เสาร์-เปิดพิเศษ/วันธรรมดาปิดพิเศษ (คนรับผิดชอบยังคงเดิม แค่บางวัน
+   อาจไม่มี assignment) · ถ้าทั้งสัปดาห์ร้านปิด — assignment รายวัน
+   จะว่าง แต่ผู้รับผิดชอบใน forecast ยังเป็นคนเดิม (intentional)        */
 
 /** primary ของทุก duty ในวันที่ระบุ — รับ pool ที่ resolve แล้ว
  *  (dutyId → ordered empIds). ใช้ pickPrimary ตัวเดียวกับ computeAllDuties

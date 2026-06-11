@@ -13,8 +13,10 @@ import {
   Trash2 as IconTrash,
   X as IconX,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { StoreCalendar } from "../../types";
+import { fmtShortWithWeekday } from "../../utils/dateUtils";
+import ThaiDateInput from "../shared/ThaiDateInput";
 
 interface Props {
   storeCalendar: StoreCalendar;
@@ -22,79 +24,8 @@ interface Props {
   showToast?: (msg: string) => void;
 }
 
-/** Date input ที่แสดงผลเป็นไทย (วว/ดด/ปปปป พ.ศ.) — wrap native date input
- *  เพื่อให้ใช้ปฏิทิน native ของ browser แต่หน้าตาเป็นรูปแบบไทย                */
-function ThaiDateInput({
-  value,
-  onChange,
-  className = "",
-}: {
-  value: string; // "YYYY-MM-DD" (ค.ศ.)
-  onChange: (next: string) => void;
-  className?: string;
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  const open = () => {
-    const el = ref.current;
-    if (!el) return;
-    // showPicker() — Chrome 99+, Safari 16+, Edge 99+ · fallback = focus + click
-    if (typeof el.showPicker === "function") {
-      try {
-        el.showPicker();
-        return;
-      } catch {
-        // user gesture จำเป็น — บางครั้งโยน NotAllowedError
-      }
-    }
-    el.focus();
-    el.click();
-  };
-  return (
-    <button
-      type="button"
-      onClick={open}
-      className={`relative flex items-center text-left ${className}`}
-    >
-      <span
-        className={
-          value ? "text-txt font-semibold" : "text-txt-soft font-normal"
-        }
-      >
-        {value ? fmtYmd(value) : "วว/ดด/ปปปป (พ.ศ.)"}
-      </span>
-      <input
-        ref={ref}
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        aria-label="เลือกวันที่"
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-      />
-    </button>
-  );
-}
-
-/** "2026-06-13" → "ส. 13 มิ.ย. 2569" */
-function fmtYmd(ymd: string): string {
-  const [y, m, d] = ymd.split("-").map(Number);
-  const dt = new Date(y, m - 1, d);
-  const dow = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."][dt.getDay()];
-  const monthShort = [
-    "ม.ค.",
-    "ก.พ.",
-    "มี.ค.",
-    "เม.ย.",
-    "พ.ค.",
-    "มิ.ย.",
-    "ก.ค.",
-    "ส.ค.",
-    "ก.ย.",
-    "ต.ค.",
-    "พ.ย.",
-    "ธ.ค.",
-  ][m - 1];
-  return `${dow} ${d} ${monthShort} ${y + 543}`;
-}
+/** alias สำหรับใช้ชื่อเดิมใน panel นี้ */
+const fmtYmd = fmtShortWithWeekday;
 
 /** สร้าง list ของเสาร์ใน 3 เดือนถัดไปจาก today */
 function buildSaturdayOptions(): { ymd: string; label: string }[] {

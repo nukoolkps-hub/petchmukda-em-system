@@ -43,6 +43,7 @@ import { useEffect, useMemo, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { buildLoanContext } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
+import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import { getPayrollLock } from "../../utils/payrollLock";
@@ -73,12 +74,11 @@ export default function SalaryAdminEdit({
   setUnsavedDirty,
   showToast,
 }) {
-  const now = new Date();
-  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentYM = currentYearMonth();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(
     employeeDirectory[0]?.id || "",
   );
-  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth);
+  const [selectedMonth, setSelectedMonth] = useState(currentYM);
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
   const [showPoolFlow, setShowPoolFlow] = useState(false);
@@ -99,9 +99,9 @@ export default function SalaryAdminEdit({
         set.add(m);
       });
     });
-    set.add(currentYearMonth);
+    set.add(currentYM);
     return [...set].sort().reverse();
-  }, [salaryData, currentYearMonth]);
+  }, [salaryData, currentYM]);
 
   const employeeInfo = employeeDirectory.find(
     (e) => e.id === selectedEmployeeId,
