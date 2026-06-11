@@ -15,6 +15,8 @@ export interface Duty {
 	rotationStartDate: string; // "YYYY-MM-DD"
 	coverageRoleId?: string;
 	candidateEmpIds?: string[];
+	/** (weekly) ข้ามวันอาทิตย์ — focus ขายแทน */
+	skipSundays?: boolean;
 	/** Primary cache (B) — pool เปลี่ยนกลาง period ไม่กระทบคนทำหน้าที่ */
 	cachedPrimary?: {
 		periodIndex: number;
@@ -22,6 +24,20 @@ export interface Duty {
 	} | null;
 	createdAt?: number;
 	updatedAt?: number;
+}
+
+/** วันอาทิตย์ของวันที่ ymd ("YYYY-MM-DD") — parse แบบ local-date เลี่ยง TZ
+ *  ⚠️ ต้องเหมือน src/utils/dutyUtils.ts เป๊ะ                              */
+export function isSunday(ymd: string): boolean {
+	const [y, m, d] = ymd.split("-").map(Number);
+	return new Date(y, m - 1, d).getDay() === 0;
+}
+
+/** filter หน้าที่ที่ "applicable วันนี้" — weekly + skipSundays + วันอาทิตย์
+ *  → ถูกตัดออก · ใช้ก่อนเข้า phase ใด                                    */
+export function applicableDuties(duties: Duty[], todayYmd: string): Duty[] {
+	if (!isSunday(todayYmd)) return duties;
+	return duties.filter((d) => !(d.period === "weekly" && d.skipSundays));
 }
 
 /** FNV-1a 32-bit hash (A) — stable slot per duty.id แทนตำแหน่งใน array
@@ -463,9 +479,13 @@ export function computeAllDutiesForDay(
 	leaves: LeaveEntry[],
 	coverageHistory?: Map<string, number>,
 ): DutyAssignment[] {
+	// ตัด weekly+skipSundays ออกตั้งแต่ต้น ถ้าวันนี้เป็นวันอาทิตย์
+	// (assignment ของหน้าที่นั้นจะไม่ปรากฏใน snapshot เลย → หน้าจอพนักงาน
+	// สะอาด ไม่ต้องโชว์ "พักวันอาทิตย์")
+	const todayDuties = applicableDuties(duties, todayYmd);
 	// แยก coverage ออกจาก rotation
-	const coverageDuties = duties.filter((d) => d.kind === "coverage");
-	const rotationDuties = duties.filter((d) => d.kind !== "coverage");
+	const coverageDuties = todayDuties.filter((d) => d.kind === "coverage");
+	const rotationDuties = todayDuties.filter((d) => d.kind !== "coverage");
 
 	// 1) coverage ก่อน — รู้ว่าใครถูกดึงไปแทนบัญชี
 	const { assignments: coverageAssignments, pulled } = computeCoverageForDay(
@@ -504,7 +524,9 @@ export function computeAllDutiesForDay(
 	for (const a of coverageAssignments)
 		byId.set(a.dutyId, [...(byId.get(a.dutyId) || []), a]);
 	const out: DutyAssignment[] = [];
-	for (const duty of duties) {
+	// ใช้ todayDuties (หลัง filter Sunday-off) เพื่อไม่ให้หน้าที่ที่ถูกข้าม
+	// โผล่ใน output เพราะอยู่ใน outer duties array
+	for (const duty of todayDuties) {
 		const list = byId.get(duty.id);
 		if (list) out.push(...list);
 	}

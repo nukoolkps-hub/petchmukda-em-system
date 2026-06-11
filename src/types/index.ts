@@ -154,6 +154,9 @@ export interface Duty {
   // ไม่ถึง 80% ของ top — เพราะติดทำหน้าที่ขายไม่ทันเพื่อน · ยกเว้นเกณฑ์ 80%
   // เท่านั้น (ยังเคารพ poolExclusion ที่ admin ปิด + เกณฑ์ 50% เงินเดือนพื้นฐาน)
   grantsPoolEligibility?: boolean;
+  /** (weekly เท่านั้น) ข้ามวันอาทิตย์ — ไม่ assign หน้าที่นี้ในวันอาทิตย์
+   *  เพื่อให้พนักงาน focus ขาย (วันอาทิตย์ลูกค้าเยอะ) · default = false  */
+  skipSundays?: boolean;
   rotationStartDate: string; // "YYYY-MM-DD"
   // ─── coverage (kind="coverage") ───────────────────────────────
   coverageRoleId?: string; // ตำแหน่งเป้าหมาย — เมื่อคนในตำแหน่งนี้ลา ต้องหาคนแทน

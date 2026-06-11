@@ -64,6 +64,10 @@ export default function DutyEditModal({
   const [grantsPoolEligibility, setGrantsPoolEligibility] = useState<boolean>(
     duty?.grantsPoolEligibility ?? false,
   );
+  // (weekly) ข้ามวันอาทิตย์ — focus ขาย · default = false (ทำทุกวัน)
+  const [skipSundays, setSkipSundays] = useState<boolean>(
+    duty?.skipSundays ?? false,
+  );
   // coverage — ตำแหน่งเป้าหมาย + รายชื่อคนแทน
   const [coverageRoleId, setCoverageRoleId] = useState<string>(
     duty?.coverageRoleId || "",
@@ -217,6 +221,8 @@ export default function DutyEditModal({
             includedCount={includedCount}
             grantsPoolEligibility={grantsPoolEligibility}
             setGrantsPoolEligibility={setGrantsPoolEligibility}
+            skipSundays={skipSundays}
+            setSkipSundays={setSkipSundays}
           />
         )}
       </div>
@@ -260,6 +266,8 @@ export default function DutyEditModal({
                         // toggle เฉพาะ monthly · weekly บังคับ false
                         grantsPoolEligibility:
                           period === "monthly" ? grantsPoolEligibility : false,
+                        // weekly เท่านั้น · monthly บังคับ false
+                        skipSundays: period === "weekly" ? skipSundays : false,
                         rotationStartDate: `${startMonth}-01`,
                       },
                 );
@@ -446,6 +454,8 @@ function RotationFields({
   includedCount,
   grantsPoolEligibility,
   setGrantsPoolEligibility,
+  skipSundays,
+  setSkipSundays,
 }: {
   roles: Role[];
   employeeDirectory: Employee[];
@@ -461,6 +471,8 @@ function RotationFields({
   includedCount: number;
   grantsPoolEligibility: boolean;
   setGrantsPoolEligibility: (v: boolean) => void;
+  skipSundays: boolean;
+  setSkipSundays: (v: boolean) => void;
 }) {
   return (
     <>
@@ -502,6 +514,26 @@ function RotationFields({
             <span className="block text-xs text-txt-soft mt-0.5">
               คนทำหน้าที่นี้ติดทั้งเดือน ขายไม่ทันเพื่อน → เข้ากองกลางได้ (ยังเคารพฝั่งที่ admin ปิด
               · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%)
+            </span>
+          </span>
+        </button>
+      )}
+
+      {/* weekly: ข้ามวันอาทิตย์ — focus ขาย */}
+      {period === "weekly" && (
+        <button
+          type="button"
+          onClick={() => setSkipSundays(!skipSundays)}
+          className="w-full text-left mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all duration-150 active:scale-[0.99]"
+        >
+          <ToggleSwitch enabled={skipSundays} />
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-txt">
+              ข้ามวันอาทิตย์ (ไม่ทำหน้าที่นี้)
+            </span>
+            <span className="block text-xs text-txt-soft mt-0.5">
+              วันอาทิตย์ลูกค้าเยอะ — ให้ทุกคน focus ขายแทน · หน้าที่นี้จะไม่โผล่ใน "หน้าที่วันนี้"
+              ของวันอาทิตย์
             </span>
           </span>
         </button>

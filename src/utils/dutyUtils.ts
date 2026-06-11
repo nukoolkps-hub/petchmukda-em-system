@@ -26,6 +26,19 @@ export function hashDutyId(id: string): number {
   return h >>> 0; // unsigned 32-bit
 }
 
+/** วันอาทิตย์ของวันที่ ymd ("YYYY-MM-DD") — parse แบบ local-date เลี่ยง TZ */
+export function isSunday(ymd: string): boolean {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay() === 0;
+}
+
+/** filter หน้าที่ที่ "applicable วันนี้" — weekly + skipSundays + วันอาทิตย์
+ *  → ถูกตัดออก · ใช้ก่อนเข้า phase ใด                                    */
+export function applicableDuties(duties: Duty[], todayYmd: string): Duty[] {
+  if (!isSunday(todayYmd)) return duties;
+  return duties.filter((d) => !(d.period === "weekly" && d.skipSundays));
+}
+
 /** เลือก primary ของหน้าที่ — single source of truth ของ A+B
  *  B · cache: ถ้า periodIndex ตรง + คนยังอยู่ใน pool + ยังไม่ถูกใช้รอบนี้
  *  A · hash base + skip-collision: hashDutyId เป็น slot เริ่มต้น แล้วเลื่อน
@@ -347,8 +360,10 @@ export function computeAllDutiesForDay(
   employees: Employee[],
   leaves: LeaveEntry[],
 ): DutyAssignment[] {
-  const monthlyDuties = duties.filter((d) => d.period === "monthly");
-  const weeklyDuties = duties.filter((d) => d.period === "weekly");
+  // ตัด weekly+skipSundays ออกถ้าวันนี้เป็นวันอาทิตย์ — ไม่โผล่ในผลลัพธ์เลย
+  const todayDuties = applicableDuties(duties, todayYmd);
+  const monthlyDuties = todayDuties.filter((d) => d.period === "monthly");
+  const weeklyDuties = todayDuties.filter((d) => d.period === "weekly");
 
   // assigned = คนที่เป็น primary แล้วในรอบนี้ — pickPrimary ใช้ skip-collision
   // (2 หน้าที่ pool เดียวกัน → คนละคน) · lockedByMonthly = monthly กันออก weekly
@@ -380,8 +395,9 @@ export function computeAllDutiesForDay(
   // primariesToday = primary ทั้งหมด (de-collide แล้ว) — substitute "ไม่ทับ"
   const primariesToday = new Set<string>(primaryByDuty.values());
 
-  // Phase 3: compute actual — ส่ง primary ที่คำนวณไว้ (ไม่ compute ซ้ำ)
-  return duties.map((duty) =>
+  // Phase 3: compute actual — ใช้ todayDuties (กรองแล้ว) เพื่อให้ Sunday-off
+  // ไม่โผล่ใน assignment array
+  return todayDuties.map((duty) =>
     computeDutyForDay(
       duty,
       todayYmd,

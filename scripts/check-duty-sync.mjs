@@ -13,7 +13,13 @@ import { readFileSync } from "node:fs";
 
 const CLIENT = "src/utils/dutyUtils.ts";
 const SERVER = "functions/src/duty/dutyUtils.ts";
-const FUNCTIONS_TO_CHECK = ["hashDutyId", "pickPrimary", "assignPrimaries"];
+const FUNCTIONS_TO_CHECK = [
+  "hashDutyId",
+  "pickPrimary",
+  "assignPrimaries",
+  "isSunday",
+  "applicableDuties",
+];
 
 /** ดึง body ของ function NAME(...) {...} ด้วยการนับวงเล็บปีกกา */
 function extractFunction(source, name) {
