@@ -751,7 +751,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "table",
         columns: ["แต้มที่ใช้", "ได้รับทองคำแท่ง"],
         colWidths: ["40%", "60%"],
-        colAlign: ["left", "left"],
+        colAlign: ["left", "right"],
         rows: [
           ["20 แต้ม", "0.3 กรัม"],
           ["35 แต้ม", "0.6 กรัม"],
