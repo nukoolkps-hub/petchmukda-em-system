@@ -831,6 +831,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         colWidths: ["25%", "75%"],
         colAlign: ["left", "left"],
         rows: [
+          ["ทอง 99.99%", "หัก 15-20% จากราคารับซื้อทองคำแท่ง"],
           ["ทอง 96.5%", "หัก 15-20% จากราคารับซื้อทองคำแท่ง"],
           [
             "ทอง 90",
@@ -841,6 +842,100 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             "หัก 80-85% จากราคารับซื้อทองคำแท่ง · หากมีการตรวจ % หักจาก % ที่ได้จากเครื่องตรวจ 25%",
           ],
         ],
+      },
+      {
+        type: "live-example",
+        title: "ตัวอย่าง — ทอง 96.5% หัก 17.5%",
+        compute: ({ buy }) => {
+          const rate = 0.175;
+          const pawn = buy * (1 - rate);
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ราคารับซื้อทองคำแท่งวันนี้ ${fmt(buy)} ฿/บาท`,
+              `อัตราหัก 17.5% (เฉลี่ย 15-20%)`,
+            ],
+            steps: [
+              {
+                calc: `${fmt(buy)} × (1 − 17.5%) = ${fmt(pawn)} ฿`,
+                meaning: "ราคาจำนำต่อบาท",
+              },
+            ],
+          };
+        },
+      },
+      {
+        type: "live-example",
+        title: "ตัวอย่าง — ทอง 90 หัก 45% (ทั่วไป)",
+        compute: ({ buy }) => {
+          const rate = 0.45;
+          const pawn = buy * (1 - rate);
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ราคารับซื้อทองคำแท่งวันนี้ ${fmt(buy)} ฿/บาท`,
+              `อัตราหัก 45% (เฉลี่ย 40-50%)`,
+            ],
+            steps: [
+              {
+                calc: `${fmt(buy)} × (1 − 45%) = ${fmt(pawn)} ฿`,
+                meaning: "ราคาจำนำต่อบาท",
+              },
+            ],
+          };
+        },
+      },
+      {
+        type: "live-example",
+        title: "ตัวอย่าง — ทอง 90 มีตรวจ % (%จริง 60%)",
+        compute: ({ buy }) => {
+          const realPct = 60;
+          const effective = realPct - 25;
+          const pawn = buy * (effective / 100);
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ราคารับซื้อทองคำแท่งวันนี้ ${fmt(buy)} ฿/บาท`,
+              `%จริง จากเครื่องตรวจ = ${realPct}%`,
+              `หัก 25% จาก %จริง → ใช้ ${effective}%`,
+            ],
+            steps: [
+              {
+                calc: `${realPct}% − 25% = ${effective}%`,
+                meaning: "อัตราที่ใช้คำนวณ",
+              },
+              {
+                calc: `${fmt(buy)} × ${effective}% = ${fmt(pawn)} ฿`,
+                meaning: "ราคาจำนำต่อบาท",
+              },
+            ],
+          };
+        },
+      },
+      {
+        type: "live-example",
+        title: "ตัวอย่าง — นาก หัก 82.5% (ทั่วไป)",
+        compute: ({ buy }) => {
+          const rate = 0.825;
+          const pawn = buy * (1 - rate);
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ราคารับซื้อทองคำแท่งวันนี้ ${fmt(buy)} ฿/บาท`,
+              `อัตราหัก 82.5% (เฉลี่ย 80-85%)`,
+            ],
+            steps: [
+              {
+                calc: `${fmt(buy)} × (1 − 82.5%) = ${fmt(pawn)} ฿`,
+                meaning: "ราคาจำนำต่อบาท",
+              },
+            ],
+          };
+        },
       },
       { type: "h3", text: "ดอกเบี้ยจำนำ" },
       {
