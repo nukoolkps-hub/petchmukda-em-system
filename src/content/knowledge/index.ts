@@ -917,7 +917,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             ],
             steps: [
               {
-                calc: `${fmt(buy)} × (1 − 17.5%) = ${fmt(pawn)} ฿`,
+                calc: `${fmt(buy)} × 82.5% = ${fmt(pawn)} ฿`,
                 meaning: "ราคาจำนำต่อบาท",
               },
             ],
@@ -939,7 +939,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             ],
             steps: [
               {
-                calc: `${fmt(buy)} × (1 − 45%) = ${fmt(pawn)} ฿`,
+                calc: `${fmt(buy)} × 55% = ${fmt(pawn)} ฿`,
                 meaning: "ราคาจำนำต่อบาท",
               },
             ],
@@ -989,7 +989,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             ],
             steps: [
               {
-                calc: `${fmt(buy)} × (1 − 82.5%) = ${fmt(pawn)} ฿`,
+                calc: `${fmt(buy)} × 17.5% = ${fmt(pawn)} ฿`,
                 meaning: "ราคาจำนำต่อบาท",
               },
             ],
