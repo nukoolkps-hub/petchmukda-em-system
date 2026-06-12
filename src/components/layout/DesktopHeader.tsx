@@ -38,11 +38,11 @@ export default function DesktopHeader({
         <div className="flex items-center gap-2.5">
           <button
             onClick={onShowManual}
-            title="กฏการคำนวณต่างๆ"
+            title="คู่มือการใช้งาน"
             className="flex items-center gap-2 px-3 py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-sm font-semibold shrink-0 whitespace-nowrap"
           >
             <IconBook2 size={18} color="#fff" strokeWidth={2.2} />
-            กฏการคำนวณต่างๆ
+            คู่มือการใช้งาน
           </button>
           <div className="text-sm text-gold-lt/50">
             {new Intl.DateTimeFormat("th-TH", {
