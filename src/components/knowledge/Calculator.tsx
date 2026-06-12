@@ -142,7 +142,7 @@ export default function Calculator({ title, inputs, compute }: Props) {
                 />
               )}
               {field.suffix && (
-                <span className="text-xs text-txt-soft font-semibold w-8">
+                <span className="text-xs text-txt-soft font-semibold whitespace-nowrap">
                   {field.suffix}
                 </span>
               )}
