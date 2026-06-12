@@ -376,7 +376,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "image",
-        src: "/knowledge/price-tag-diagram.jpg",
+        src: "/knowledge/price-tag-diagram.webp",
         alt: "ตัวอย่างป้ายสินค้า",
         caption: "ป้ายแสดงราคาขายต่อชิ้น (บน) และค่าแรงขายต่อชิ้น (ล่าง)",
       },
