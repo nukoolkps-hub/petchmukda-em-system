@@ -311,6 +311,50 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
+  /* ── 3c2. ราคาขายนาก ── */
+  {
+    id: "sell-price-nak",
+    title: "การคำนวณราคาขาย (นาก)",
+    Icon: IconStar,
+    blocks: [
+      {
+        type: "formula",
+        label: "ทั่วไป",
+        formula: "(ราคาทอง ÷ 2) + ค่าแรง = ราคาขาย",
+      },
+      {
+        type: "calculator",
+        title: "ราคาขายนาก",
+        inputs: [
+          {
+            id: "gold",
+            label: "ราคาทองคำแท่ง 96.5%",
+            defaultValue: 50000,
+            suffix: "฿",
+            goldPriceDefault: true,
+          },
+          { id: "labor", label: "ค่าแรง", defaultValue: 500, suffix: "฿" },
+        ],
+        compute: ({ gold, labor }) => {
+          const half = gold / 2;
+          return [
+            {
+              label: "ราคาทอง ÷ 2",
+              value: half,
+              format: "currency",
+              hint: `${gold} ÷ 2`,
+            },
+            {
+              label: "ราคาขาย (+ ค่าแรง)",
+              value: half + labor,
+              format: "currency",
+            },
+          ];
+        },
+      },
+    ],
+  },
+
   /* ── 3d. การอ่านป้ายสินค้า ── */
   {
     id: "price-tag",
