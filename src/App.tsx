@@ -30,6 +30,7 @@ import ManualModal from "./components/modals/ManualModal";
 import ProfileSetupModal from "./components/modals/ProfileSetupModal";
 import SalaryView from "./components/salary/SalaryView";
 import BaseModal from "./components/shared/BaseModal";
+import BootLoadingScreen from "./components/shared/BootLoadingScreen";
 import Diamond from "./components/shared/Diamond";
 import { COLORS } from "./constants";
 import { useAuth } from "./contexts/AuthContext";
@@ -38,36 +39,7 @@ import useLeaveForm from "./hooks/useLeaveForm";
 import useLineNotifications from "./hooks/useLineNotifications";
 import useProfile from "./hooks/useProfile";
 
-/* ─── Loading Screen ─────────────────────────────────────────────
-   ถ้าค้างเกิน 15 วิ → โชว์ปุ่ม "โหลดใหม่" — กันค้างหน้านี้ตอน
-   Firestore subscription ค้าง (LINE WebView ที่ WebChannel ล่ม)    */
-function LoadingScreen({ message = "กำลังโหลดข้อมูล..." }) {
-  const [slow, setSlow] = useState(false);
-  useEffect(() => {
-    // 8 วินาที ยังโหลดไม่เสร็จ → โผล่ปุ่ม "โหลดใหม่" · เคยตั้ง 15 วินาที
-    // แต่ user หลายคนแจ้งว่าเห็นค้างนานเกินไปก่อนมีปุ่ม
-    const id = setTimeout(() => setSlow(true), 8000);
-    return () => clearTimeout(id);
-  }, []);
-  return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-cream font-sans">
-      <div className="w-16 h-16 rounded-full bg-linear-to-br from-gold to-gold-lt flex items-center justify-center shadow-[0_6px_20px_rgba(201,151,58,0.31)] animate-[pulse_1.5s_ease-in-out_infinite]">
-        <Diamond size={32} color={COLORS.maroon} />
-      </div>
-      <div className="mt-4.5 text-sm font-semibold text-maroon">{message}</div>
-      <div className="mt-1.5 text-xs text-txt-soft">ห้างเพชรทองมุกดา</div>
-      {slow && (
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="mt-5 px-4 py-2 rounded-[10px] border-[1.5px] border-maroon/20 bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit]"
-        >
-          ค้างไม่ขึ้น? แตะเพื่อโหลดใหม่
-        </button>
-      )}
-    </div>
-  );
-}
+/* Loading Screen ใช้ตัวเดียวกับ AuthGate — `BootLoadingScreen` */
 
 function UnlinkedEmployeeScreen({ onSignOut }: { onSignOut: () => void }) {
   return (
@@ -307,7 +279,7 @@ export default function LeaveApp() {
 
   /* ─── Loading & Error states ───────────────────────────────── */
   if (loading || !adminChecked) {
-    return <LoadingScreen message="เชื่อมต่อ Firebase..." />;
+    return <BootLoadingScreen message="เชื่อมต่อ Firebase..." />;
   }
   if (error) {
     return (
