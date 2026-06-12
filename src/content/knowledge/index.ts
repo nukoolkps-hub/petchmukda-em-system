@@ -564,6 +564,36 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
+  /* ── 5a2. รับซื้อเงิน ── */
+  {
+    id: "buy-price-silver",
+    title: "การคำนวณราคารับซื้อ (เงิน)",
+    Icon: IconBanknote,
+    blocks: [
+      {
+        type: "formula",
+        label: "ทั่วไป",
+        formula: "ราคาเงินต่อกรัม × น้ำหนักสินค้า = ราคารับซื้อ",
+      },
+      {
+        type: "calculator",
+        title: "ราคารับซื้อเงิน",
+        inputs: [
+          { id: "rate", label: "ราคาเงิน/กรัม", defaultValue: 30, suffix: "฿" },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
+        ],
+        compute: ({ rate, grams }) => [
+          {
+            label: "ราคารับซื้อ",
+            value: rate * grams,
+            format: "currency",
+            hint: `${rate} × ${grams}`,
+          },
+        ],
+      },
+    ],
+  },
+
   /* ── 5b. รับซื้อทอง 90 ── */
   {
     id: "buy-price-90",
