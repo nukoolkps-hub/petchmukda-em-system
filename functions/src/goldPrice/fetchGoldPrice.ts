@@ -4,17 +4,18 @@
  * Schedule: ทุก 15 นาที (เวลาไทย) — เขียน /config/goldPrice ใน Firestore
  *
  * Source chain (ลองตามลำดับ — ตัวแรกที่สำเร็จชนะ):
- * 1. goldprice.mukdagold.com /api/price2 (เว็บราคาทองของร้านเอง — สมาคม)
- *    ตอบ JSON { buyPrice, sellPrice, priceChanged, date, time }
- * 2. ฮั่วเซงเฮง apicheckpricev3.huasengheng.com /api/values/getprice/
- *    ตอบ XML <ArrayOfGoldPriceStruct> 3 แถว: HSH / REF / JEWEL
- *    → ใช้แถว REF (ราคาอ้างอิงสมาคม) + <Sell> · ตัวเลขมี comma → strip
- *    หมายเหตุ: HSH บล็อก datacenter IP (403) — เป็น fallback เผื่อไว้เฉยๆ
+ * 1. สมาคมค้าทองคำ (ตรง) — goldtraders.or.th HTML scrape
+ *    parse span IDs: lblBLBuy (รับซื้อ) · lblBLSell (ขาย) ·
+ *    lblPriceUpdate (timestamp ของรอบราคา)
+ *    เป็นแหล่งจริง (publisher) — ไม่ขึ้นกับ middleman
+ * 2. goldprice.mukdagold.com /api/price2 — JSON · proxy ของสมาคมที่ร้านดู
+ * 3. ฮั่วเซงเฮง apicheckpricev3 — XML · แถว REF (ราคาอ้างอิงสมาคม)
+ *    (HSH บล็อก datacenter IP ตลอด → เก็บไว้เป็น fallback สุดท้าย)
  *
  * Manual trigger: callable function fetchGoldPriceNow (admin only)
  *
- * Observability: fail ทั้ง 2 source → เขียน lastFetchError + lastFetchErrorAt
- * ลง doc เดียวกัน (ไม่แตะ pricePerBaht) — admin เห็น warning ใน panel
+ * Observability: fail ทั้ง 3 source → เขียน lastFetchError + lastFetchErrorAt
+ * ลง doc เดียวกัน (ไม่แตะ pricePerBaht) — panel แสดง warning
  *
  * กัน write churn: ถ้า sellPrice + source timestamp เท่าเดิม → skip
  * Sanity check: 10,000 ≤ sellPrice ≤ 200,000 ฿/บาท
@@ -24,6 +25,7 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getAppFirestore } from "../helpers/config.js";
 
+const GTA_URL = "https://www.goldtraders.or.th/";
 const HSH_URL = "https://apicheckpricev3.huasengheng.com/api/values/getprice/";
 const MUKDA_URL = "https://goldprice.mukdagold.com/api/price2";
 const SANE_MIN = 10000;
@@ -126,6 +128,47 @@ async function fetchFromHsh(): Promise<PriceData> {
 	};
 }
 
+/** Source 1 (primary): สมาคมค้าทองคำ ตรง — scrape HTML page หลัก
+ *  parse span IDs ที่ stable มานานหลายปี:
+ *  - DetailPlace_uc_goldprices1_lblBLBuy  → รับซื้อ ทองคำแท่ง 96.5%
+ *  - DetailPlace_uc_goldprices1_lblBLSell → ขายออก ทองคำแท่ง 96.5%
+ *  - DetailPlace_uc_goldprices1_lblPriceUpdate → "DD/MM/YYYY HH:MM" */
+async function fetchFromGta(): Promise<PriceData> {
+	const res = await fetchWithTimeout(GTA_URL);
+	const html = await res.text();
+
+	function spanValue(idSuffix: string): string {
+		const m = html.match(
+			new RegExp(
+				`<span[^>]+id="DetailPlace_uc_goldprices1_${idSuffix}"[^>]*>([^<]+)</span>`,
+			),
+		);
+		return (m?.[1] ?? "").trim();
+	}
+
+	const buyText = spanValue("lblBLBuy");
+	const sellText = spanValue("lblBLSell");
+	const updateText = spanValue("lblPriceUpdate");
+
+	const sellPrice = Number(sellText.replace(/,/g, ""));
+	const buyPrice = Number(buyText.replace(/,/g, ""));
+	assertSane(sellPrice, "GTA lblBLSell");
+
+	// updateText อาจเป็น "DD/MM/YYYY HH:MM" หรือ "เวลา HH:MM น. (DD/MM/YYYY)"
+	// แยก date + time ออกมาเก็บใน sourceDate/sourceTime (dirty-check)
+	const dateMatch = updateText.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+	const timeMatch = updateText.match(/(\d{1,2}:\d{2})/);
+	return {
+		sellPrice,
+		buyPrice: Number.isFinite(buyPrice) ? buyPrice : 0,
+		priceChanged: 0,
+		sourceDate: dateMatch?.[1] ?? "",
+		sourceTime: timeMatch?.[1] ?? "",
+		source: "gta",
+		label: "auto · สมาคมค้าทองคำ (ตรง)",
+	};
+}
+
 /** Source 2 (fallback): เว็บราคาทองของร้านเอง — JSON สมาคม */
 async function fetchFromMukda(): Promise<PriceData> {
 	const res = await fetchWithTimeout(MUKDA_URL);
@@ -152,8 +195,9 @@ async function fetchFromMukda(): Promise<PriceData> {
 /** ลอง source ตามลำดับ — ตัวแรกที่สำเร็จชนะ · fail หมด → โยน error รวม */
 async function fetchFromAnySource(): Promise<PriceData> {
 	const errors: string[] = [];
-	// mukdagold เป็นตัวหลัก (HSH บล็อก datacenter IP — โดน 403 ตลอด)
+	// GTA (สมาคม) เป็นแหล่งจริง · mukda เป็น proxy · HSH สุดท้าย
 	for (const [name, fn] of [
+		["GTA", fetchFromGta],
 		["mukda", fetchFromMukda],
 		["HSH", fetchFromHsh],
 	] as const) {
