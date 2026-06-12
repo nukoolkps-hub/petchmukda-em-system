@@ -89,7 +89,7 @@ export default function KnowledgeView({ isAdmin, showToast }: Props) {
                 />
               </button>
               {isOpen && (
-                <div className="px-3.5 pb-4 pt-1 border-t border-bdr/50">
+                <div className="px-3.5 pb-4 pt-3 border-t border-bdr/50">
                   {section.blocks.map((block, i) => (
                     <KnowledgeBlockView key={`b-${i}`} block={block} />
                   ))}
