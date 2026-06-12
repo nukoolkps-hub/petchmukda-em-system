@@ -409,7 +409,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "live-example",
-        title: "ตัวอย่าง #1 — 1 สลึง เพิ่มเป็น 2 สลึง (MD-03)",
+        title: "ตัวอย่าง — 1 สลึง เพิ่มเป็น 2 สลึง (MD-03)",
         compute: ({ sell }) => {
           const oldChange = changePriceFor("1-saleung", sell);
           const newLabor = 750;
@@ -445,7 +445,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "live-example",
-        title: "ตัวอย่าง #2 — 1 บาท เพิ่มเป็น 2 บาท (MD-03)",
+        title: "ตัวอย่าง — 1 บาท เพิ่มเป็น 2 บาท (MD-03)",
         compute: ({ sell }) => {
           const oldChange = changePriceFor("1-baht", sell);
           const newLabor = 1050;
