@@ -5,8 +5,10 @@
 import {
   Brain as IconBrain,
   ChevronDown as IconChevronDown,
+  Search as IconSearch,
+  X as IconX,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../../constants";
 import { KNOWLEDGE_SECTIONS } from "../../content/knowledge";
 import GoldPriceHeader from "./GoldPriceHeader";
@@ -24,11 +26,21 @@ export default function KnowledgeView({ isAdmin, showToast }: Props) {
     if (typeof window === "undefined") return null;
     return sessionStorage.getItem(STORAGE_KEY);
   });
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     if (openId) sessionStorage.setItem(STORAGE_KEY, openId);
     else sessionStorage.removeItem(STORAGE_KEY);
   }, [openId]);
+
+  // filter section ตาม query (case-insensitive substring บน title)
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return KNOWLEDGE_SECTIONS;
+    return KNOWLEDGE_SECTIONS.filter((s) =>
+      s.title.toLowerCase().includes(q),
+    );
+  }, [query]);
 
   return (
     <div>
@@ -50,9 +62,40 @@ export default function KnowledgeView({ isAdmin, showToast }: Props) {
       {/* ราคาทองคำแท่งวันนี้ — real-time จาก /config/goldPrice */}
       <GoldPriceHeader isAdmin={isAdmin} showToast={showToast} />
 
+      {/* search */}
+      <div className="mb-3 relative">
+        <IconSearch
+          size={15}
+          strokeWidth={2.4}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft pointer-events-none"
+        />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="ค้นหาหัวข้อ..."
+          className="w-full pl-9 pr-9 py-2.5 rounded-[12px] border border-bdr bg-white text-sm text-txt font-[inherit] outline-none focus:border-maroon transition-colors"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            aria-label="ล้างคำค้น"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full text-txt-soft hover:bg-cream cursor-pointer flex items-center justify-center"
+          >
+            <IconX size={14} strokeWidth={2.4} />
+          </button>
+        )}
+      </div>
+
       {/* sections */}
       <div className="flex flex-col gap-2">
-        {KNOWLEDGE_SECTIONS.map((section) => {
+        {filtered.length === 0 && (
+          <div className="text-sm text-txt-soft text-center py-6 italic">
+            ไม่พบหัวข้อที่ตรงกับ "{query}"
+          </div>
+        )}
+        {filtered.map((section) => {
           const isOpen = openId === section.id;
           const Icon = section.Icon;
           return (
