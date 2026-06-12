@@ -5,6 +5,7 @@ import {
   FastForward as IconFastForward,
   Lock as IconLock,
   Plus as IconPlus,
+  ShieldCheck as IconShieldCheck,
   Trash2 as IconTrash,
   X as IconX,
 } from "lucide-react";
@@ -84,6 +85,7 @@ export default function LeaveListPanel({
         reason: addReason.trim(),
         submitted: TODAY,
         createdAt: Date.now(),
+        createdByAdmin: true,
       });
       showToast?.(`เพิ่มการลาให้ ${emp.name} แล้ว (${previewDays} วัน)`);
       resetForm();
@@ -307,12 +309,18 @@ export default function LeaveListPanel({
                 border={`2px solid ${COLORS.gold}40`}
               />
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-txt text-base mb-[3px] flex items-center gap-1.5">
+                <div className="font-bold text-txt text-base mb-[3px] flex items-center gap-1.5 flex-wrap">
                   {employeeInfo?.name || lv.employeeName}
                   {isFuture(lv.start) && (
                     <span className="text-xs font-bold px-1.5 py-px rounded-[10px] bg-gold-pale text-maroon border border-[#C9973A40] inline-flex items-center gap-0.5">
                       <IconFastForward size={10} strokeWidth={2.4} />
                       อนาคต
+                    </span>
+                  )}
+                  {lv.createdByAdmin && (
+                    <span className="text-xs font-extrabold tracking-wide px-1.5 py-px rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
+                      <IconShieldCheck size={10} strokeWidth={2.6} />
+                      ADMIN
                     </span>
                   )}
                 </div>

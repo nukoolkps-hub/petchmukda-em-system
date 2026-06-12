@@ -53,6 +53,8 @@ export interface LeaveEntry {
   reason?: string;
   submitted?: string;
   createdAt?: number;
+  /** true ถ้า admin เพิ่มให้พนักงาน (เช่น พนักงานลืมกดลา) — โผล่ badge "ADMIN" ในลิสต์ */
+  createdByAdmin?: boolean;
 }
 
 export interface LeaveType {

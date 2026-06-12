@@ -88,7 +88,8 @@ service cloud.firestore {
           "days",
           "reason",
           "submitted",
-          "createdAt"
+          "createdAt",
+          "createdByAdmin"
         ])
         && request.resource.data.employeeName ==
           get(/databases/$(database)/documents/employees/$(request.resource.data.employeeId)).data.name
@@ -101,7 +102,11 @@ service cloud.firestore {
           || (request.resource.data.reason is string && request.resource.data.reason.size() <= 500))
         && (!("submitted" in request.resource.data)
           || (request.resource.data.submitted is string && request.resource.data.submitted.size() <= 120))
-        && request.resource.data.createdAt is int;
+        && request.resource.data.createdAt is int
+        // createdByAdmin = true ตั้งได้แค่ admin · พนักงานต้องไม่ส่ง field นี้หรือต้องเป็น false
+        && (!("createdByAdmin" in request.resource.data)
+          || (request.resource.data.createdByAdmin is bool
+            && (!request.resource.data.createdByAdmin || isAdmin())));
     }
 
     function validAdvanceCreate() {
