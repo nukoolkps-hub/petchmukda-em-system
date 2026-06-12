@@ -6,6 +6,7 @@ import {
   CalendarDays as IconCalendar,
   ChevronRight as IconChevronRight,
   ClipboardList as IconClipboardList,
+  ShieldCheck as IconShieldCheck,
   Trash2 as IconTrash,
 } from "lucide-react";
 import { useState } from "react";
@@ -240,8 +241,14 @@ export default function RequestTab({
                     {lt?.Icon && <lt.Icon size={20} strokeWidth={2.2} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-txt text-base mb-0.5">
+                    <div className="font-bold text-txt text-base mb-0.5 flex items-center gap-1.5 flex-wrap">
                       {lt?.label}
+                      {h.createdByAdmin && (
+                        <span className="text-xs font-extrabold tracking-wide px-1.5 py-px rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
+                          <IconShieldCheck size={10} strokeWidth={2.6} />
+                          ADMIN
+                        </span>
+                      )}
                     </div>
                     <div className="text-sm text-txt-mid">
                       {fmtDate(h.start)}
