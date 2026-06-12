@@ -85,13 +85,17 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
         <div className="px-3.5 py-3 text-center">
           <div className="text-[11px] font-bold text-red">รับซื้อ</div>
           <div className="mt-0.5 text-xl font-extrabold text-red">
-            {gold.buyPrice > 0 ? formatThaiNumber(gold.buyPrice) : "—"}
+            {gold.updatedAt > 0 && gold.buyPrice > 0
+              ? formatThaiNumber(gold.buyPrice)
+              : "—"}
           </div>
         </div>
         <div className="px-3.5 py-3 text-center">
           <div className="text-[11px] font-bold text-green">ขายออก</div>
           <div className="mt-0.5 text-xl font-extrabold text-green">
-            {formatThaiNumber(gold.pricePerBaht)}
+            {gold.updatedAt > 0
+              ? formatThaiNumber(gold.pricePerBaht)
+              : "—"}
           </div>
         </div>
       </div>
