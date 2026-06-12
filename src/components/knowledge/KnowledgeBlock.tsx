@@ -58,7 +58,7 @@ export default function KnowledgeBlockView({ block }: Props) {
               key={`${item.slice(0, 16)}-${i}`}
               className="leading-relaxed flex items-start gap-2"
             >
-              <span className="mt-1 w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
               <span>{item}</span>
             </li>
           ))}
