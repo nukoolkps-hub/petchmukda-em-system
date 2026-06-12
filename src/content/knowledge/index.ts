@@ -131,20 +131,6 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── 2.5 ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น ── */
-  {
-    id: "change-price",
-    title: "ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น (ทอง 96.5%)",
-    Icon: IconRepeat,
-    blocks: [
-      {
-        type: "p",
-        text: "ค่าเปลี่ยนระหว่างน้ำหนักเท่ากัน — อิงราคาทองวันนี้ อัปเดตอัตโนมัติ",
-      },
-      { type: "change-price-table" },
-    ],
-  },
-
   /* ── 3a. ราคาขายทอง 99.99% ── */
   {
     id: "sell-price-9999",
@@ -344,6 +330,20 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
+  /* ── 3.5 ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น ── */
+  {
+    id: "change-price",
+    title: "ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น (ทอง 96.5%)",
+    Icon: IconRepeat,
+    blocks: [
+      {
+        type: "p",
+        text: "ค่าเปลี่ยนระหว่างน้ำหนักเท่ากัน — อิงราคาทองวันนี้ อัปเดตอัตโนมัติ",
+      },
+      { type: "change-price-table" },
+    ],
+  },
+
   /* ── 4. ค่าเปลี่ยน ── */
   {
     id: "exchange",
@@ -450,13 +450,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── 5. รับซื้อ ── */
+  /* ── 5a. รับซื้อทอง 96.5% ── */
   {
-    id: "buy-price",
-    title: "การคำนวณราคารับซื้อ",
+    id: "buy-price-965",
+    title: "การคำนวณราคารับซื้อ (ทอง 96.5%)",
     Icon: IconBanknote,
     blocks: [
-      { type: "h3", text: "ราคารับซื้อทอง 96.5%" },
       {
         type: "table",
         columns: ["น้ำหนัก", "วิธีคำนวณ"],
@@ -518,7 +517,15 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ];
         },
       },
-      { type: "h3", text: "ราคารับซื้อทอง 90" },
+    ],
+  },
+
+  /* ── 5b. รับซื้อทอง 90 ── */
+  {
+    id: "buy-price-90",
+    title: "การคำนวณราคารับซื้อ (ทอง 90)",
+    Icon: IconBanknote,
+    blocks: [
       {
         type: "table",
         columns: ["กรณี", "วิธีคำนวณ"],
@@ -577,7 +584,15 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ];
         },
       },
-      { type: "h3", text: "ราคารับซื้อนาก" },
+    ],
+  },
+
+  /* ── 5c. รับซื้อนาก ── */
+  {
+    id: "buy-price-nak",
+    title: "การคำนวณราคารับซื้อ (นาก)",
+    Icon: IconBanknote,
+    blocks: [
       {
         type: "table",
         columns: ["กรณี", "วิธีคำนวณ"],
