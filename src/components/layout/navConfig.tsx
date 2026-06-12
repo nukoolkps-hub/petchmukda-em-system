@@ -25,7 +25,7 @@ export function getNavItems(options: {
       {
         id: "admin",
         path: "/admin",
-        label: "Admin",
+        label: "ADMIN",
         icon: (a: boolean) => (
           <IconShield
             size={22}

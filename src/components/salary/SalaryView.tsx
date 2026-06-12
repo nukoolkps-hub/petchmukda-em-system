@@ -873,7 +873,7 @@ export default function SalaryView({
       )}
 
       <div className="text-center text-xs text-txt-soft mt-4">
-        ข้อมูลกำหนดโดย Admin
+        ข้อมูลกำหนดโดย ADMIN
       </div>
 
       {showCertModal && (

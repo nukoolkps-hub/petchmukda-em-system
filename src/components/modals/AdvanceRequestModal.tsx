@@ -205,9 +205,9 @@ export default function AdvanceRequestModal({
       <div className="bg-[#06C75510] rounded-[10px] px-3.5 py-2.5 mb-4 border border-[#06C75530] flex gap-2.5 items-center">
         <IconMessageCircle size={18} strokeWidth={2.2} color={COLORS.maroon} />
         <div className="text-xs text-txt-mid leading-normal">
-          คำขอจะถูกส่งไปยัง Admin ผ่าน <b className="text-[#06C755]">LINE</b> ทันที
+          คำขอจะถูกส่งไปยัง ADMIN ผ่าน <b className="text-[#06C755]">LINE</b> ทันที
           <br />
-          Admin จะโอนเงินและส่งสลิปกลับมาในแอป
+          ADMIN จะโอนเงินและส่งสลิปกลับมาในแอป
         </div>
       </div>
 

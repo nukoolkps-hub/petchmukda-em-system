@@ -259,7 +259,7 @@ export const fetchGoldPriceNow = onCall(async (request) => {
 		throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
 	}
 	if (!(request.auth.token as { admin?: boolean }).admin) {
-		throw new HttpsError("permission-denied", "Admin only");
+		throw new HttpsError("permission-denied", "ADMIN only");
 	}
 	try {
 		const result = await fetchAndStore();

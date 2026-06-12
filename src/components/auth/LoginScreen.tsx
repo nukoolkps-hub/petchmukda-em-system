@@ -32,7 +32,7 @@ const USE_EMULATORS =
 
 const DEV_LOGIN_ITEMS = [
   { role: "employee", label: "Employee", icon: IconUser },
-  { role: "admin", label: "Admin", icon: IconShield },
+  { role: "admin", label: "ADMIN", icon: IconShield },
   { role: "setup", label: "Setup", icon: IconUserCog },
 ] as const;
 
@@ -88,7 +88,7 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
       const { runDevSeed } = await import("../../firebase/seed");
       const count = await runDevSeed();
       setSeedMessage(
-        `Seed demo data สำเร็จ (${count} documents) — ใช้ปุ่ม Employee/Admin ได้ทันที`,
+        `Seed demo data สำเร็จ (${count} documents) — ใช้ปุ่ม Employee/ADMIN ได้ทันที`,
       );
     } catch (err: unknown) {
       console.error("[Seed Data] error:", err);
