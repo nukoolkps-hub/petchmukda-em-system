@@ -77,8 +77,13 @@ export default function Calculator({ title, inputs, compute }: Props) {
 
       {/* inputs */}
       <div className="p-3 space-y-2.5">
-        {inputs.map((field) => (
-          <div key={field.id} className="flex items-center gap-2.5">
+        {inputs.map((field) => {
+          const disabled = field.disabledWhen?.(values) ?? false;
+          return (
+          <div
+            key={field.id}
+            className={`flex items-center gap-2.5 ${disabled ? "opacity-50" : ""}`}
+          >
             <label
               htmlFor={`calc-${field.id}`}
               className="text-xs font-semibold text-txt-mid flex-1 min-w-0 leading-snug"
@@ -96,13 +101,14 @@ export default function Calculator({ title, inputs, compute }: Props) {
                 <select
                   id={`calc-${field.id}`}
                   value={values[field.id] ?? 0}
+                  disabled={disabled}
                   onChange={(e) =>
                     setValues((v) => ({
                       ...v,
                       [field.id]: Number(e.target.value),
                     }))
                   }
-                  className="w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt bg-white font-[inherit] outline-none cursor-pointer truncate"
+                  className={`w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt font-[inherit] outline-none truncate ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white cursor-pointer"}`}
                 >
                   {field.options.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -116,6 +122,7 @@ export default function Calculator({ title, inputs, compute }: Props) {
                   type="number"
                   inputMode="decimal"
                   value={Number.isNaN(values[field.id]) ? "" : values[field.id]}
+                  disabled={disabled}
                   onChange={(e) => {
                     // user แก้เอง → หยุด sync ราคา live ให้ field นี้
                     if (field.goldPriceDefault || field.buyPriceDefault) {
@@ -131,7 +138,7 @@ export default function Calculator({ title, inputs, compute }: Props) {
                           : Number(e.target.value),
                     }));
                   }}
-                  className="w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt text-right bg-white font-[inherit] outline-none"
+                  className={`w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt text-right font-[inherit] outline-none ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white"}`}
                 />
               )}
               {field.suffix && (
@@ -141,7 +148,8 @@ export default function Calculator({ title, inputs, compute }: Props) {
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* outputs */}
