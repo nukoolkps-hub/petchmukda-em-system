@@ -494,6 +494,66 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
+  /* ── 5a0. รับซื้อทอง 99.99% ── */
+  {
+    id: "buy-price-9999",
+    title: "การคำนวณราคารับซื้อ (ทอง 99.99%)",
+    Icon: IconSparkles,
+    blocks: [
+      {
+        type: "table",
+        columns: ["กรณี", "วิธีคำนวณ"],
+        colWidths: ["25%", "75%"],
+        colAlign: ["left", "left"],
+        rows: [
+          ["ทั่วไป", "(ราคาทอง − 5-7%) × 0.0656 × น้ำหนัก = ราคารับซื้อ"],
+        ],
+      },
+      {
+        type: "calculator",
+        title: "ราคารับซื้อทอง 99.99%",
+        inputs: [
+          {
+            id: "gold",
+            label: "ราคาทองคำแท่ง 96.5%",
+            defaultValue: 50000,
+            suffix: "฿",
+            goldPriceDefault: true,
+          },
+          {
+            id: "discount",
+            label: "หัก %",
+            defaultValue: 5,
+            options: [
+              { value: 5, label: "หัก 5%" },
+              { value: 6, label: "หัก 6%" },
+              { value: 7, label: "หัก 7%" },
+            ],
+          },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 1, suffix: "ก." },
+        ],
+        compute: ({ gold, discount, grams }) => {
+          const base = gold * (1 - discount / 100);
+          const buy = base * 0.0656 * grams;
+          return [
+            {
+              label: "ราคาทองหลังหัก %",
+              value: base,
+              format: "currency",
+              hint: `${gold} − ${discount}%`,
+            },
+            {
+              label: "ราคารับซื้อ",
+              value: buy,
+              format: "currency",
+              hint: `× 0.0656 × ${grams} ก.`,
+            },
+          ];
+        },
+      },
+    ],
+  },
+
   /* ── 5a. รับซื้อทอง 96.5% ── */
   {
     id: "buy-price-965",
