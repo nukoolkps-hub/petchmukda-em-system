@@ -141,7 +141,8 @@ service cloud.firestore {
     match /leaves/{leaveId} {
       allow read:   if isAdmin() || isEmployeeOwner(resource.data.employeeId);
       // สร้าง/แก้/ลบ ของเดือนที่ปิดรอบแล้ว (locked) ไม่ได้ — แม้แต่ admin
-      allow create: if isEmployeeOwner(request.resource.data.employeeId)
+      // admin สร้างให้พนักงานคนอื่นได้ (ลืมกดลา) · พนักงานสร้างของตัวเองได้
+      allow create: if (isAdmin() || isEmployeeOwner(request.resource.data.employeeId))
         && validLeaveCreate()
         && !monthLocked(request.resource.data.start[0:7]);
       allow update: if isAdmin() && !monthLocked(resource.data.start[0:7]);
