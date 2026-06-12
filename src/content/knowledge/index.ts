@@ -276,42 +276,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── 3c. ราคาขายเงิน ── */
-  {
-    id: "sell-price-silver",
-    title: "การคำนวณราคาขาย (เงิน)",
-    Icon: IconCoins,
-    blocks: [
-      {
-        type: "formula",
-        label: "ทั่วไป",
-        formula: "(ราคาเงินต่อกรัม × น้ำหนักสินค้า) + ค่าแรง = ราคาขาย",
-      },
-      {
-        type: "calculator",
-        title: "ราคาขายเงิน",
-        inputs: [
-          { id: "rate", label: "ราคาเงิน/กรัม", defaultValue: 30, suffix: "฿" },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
-          { id: "labor", label: "ค่าแรง", defaultValue: 200, suffix: "฿" },
-        ],
-        compute: ({ rate, grams, labor }) => [
-          {
-            label: "ราคาเงินตามน้ำหนัก",
-            value: rate * grams,
-            format: "currency",
-          },
-          {
-            label: "ราคาขาย (+ ค่าแรง)",
-            value: rate * grams + labor,
-            format: "currency",
-          },
-        ],
-      },
-    ],
-  },
-
-  /* ── 3c2. ราคาขายนาก ── */
+  /* ── 3c. ราคาขายนาก ── */
   {
     id: "sell-price-nak",
     title: "การคำนวณราคาขาย (นาก)",
@@ -351,6 +316,41 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             },
           ];
         },
+      },
+    ],
+  },
+
+  /* ── 3c2. ราคาขายเงิน ── */
+  {
+    id: "sell-price-silver",
+    title: "การคำนวณราคาขาย (เงิน)",
+    Icon: IconCoins,
+    blocks: [
+      {
+        type: "formula",
+        label: "ทั่วไป",
+        formula: "(ราคาเงินต่อกรัม × น้ำหนักสินค้า) + ค่าแรง = ราคาขาย",
+      },
+      {
+        type: "calculator",
+        title: "ราคาขายเงิน",
+        inputs: [
+          { id: "rate", label: "ราคาเงิน/กรัม", defaultValue: 30, suffix: "฿" },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
+          { id: "labor", label: "ค่าแรง", defaultValue: 200, suffix: "฿" },
+        ],
+        compute: ({ rate, grams, labor }) => [
+          {
+            label: "ราคาเงินตามน้ำหนัก",
+            value: rate * grams,
+            format: "currency",
+          },
+          {
+            label: "ราคาขาย (+ ค่าแรง)",
+            value: rate * grams + labor,
+            format: "currency",
+          },
+        ],
       },
     ],
   },
@@ -564,36 +564,6 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── 5a2. รับซื้อเงิน ── */
-  {
-    id: "buy-price-silver",
-    title: "การคำนวณราคารับซื้อ (เงิน)",
-    Icon: IconBanknote,
-    blocks: [
-      {
-        type: "formula",
-        label: "ทั่วไป",
-        formula: "ราคาเงินต่อกรัม × น้ำหนักสินค้า = ราคารับซื้อ",
-      },
-      {
-        type: "calculator",
-        title: "ราคารับซื้อเงิน",
-        inputs: [
-          { id: "rate", label: "ราคาเงิน/กรัม", defaultValue: 30, suffix: "฿" },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
-        ],
-        compute: ({ rate, grams }) => [
-          {
-            label: "ราคารับซื้อ",
-            value: rate * grams,
-            format: "currency",
-            hint: `${rate} × ${grams}`,
-          },
-        ],
-      },
-    ],
-  },
-
   /* ── 5b. รับซื้อทอง 90 ── */
   {
     id: "buy-price-90",
@@ -609,7 +579,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["ทั่วไป", "(ราคาทอง × 60%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
           [
             "มีการตรวจ %",
-            "(ราคาทอง × (%จริง − 15)) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
+            "(ราคาทอง × (%จริง − 10)) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
           ],
         ],
       },
@@ -643,7 +613,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
         ],
         compute: ({ gold, mode, realPct, grams }) => {
-          const factor = mode === 999 ? (realPct - 15) / 100 : 0.6;
+          const factor = mode === 999 ? (realPct - 10) / 100 : 0.6;
           const buy = gold * factor * 0.0656 * grams;
           return [
             {
@@ -652,7 +622,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               format: "currency",
               hint:
                 mode === 999
-                  ? `${gold} × (${realPct}−15)% × 0.0656 × ${grams}`
+                  ? `${gold} × (${realPct}−10)% × 0.0656 × ${grams}`
                   : `${gold} × 60% × 0.0656 × ${grams}`,
             },
           ];
@@ -676,7 +646,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["ทั่วไป", "(ราคาทอง × 30%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
           [
             "มีการตรวจ %",
-            "(ราคาทอง × (%จริง − 15)) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
+            "(ราคาทอง × (%จริง − 10)) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
           ],
         ],
       },
@@ -737,7 +707,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
         ],
         compute: ({ gold, mode, realPct, grams }) => {
-          const factor = mode === 999 ? (realPct - 15) / 100 : 0.3;
+          const factor = mode === 999 ? (realPct - 10) / 100 : 0.3;
           const buy = gold * factor * 0.0656 * grams;
           return [
             {
@@ -746,11 +716,41 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               format: "currency",
               hint:
                 mode === 999
-                  ? `${gold} × (${realPct}−15)% × 0.0656 × ${grams}`
+                  ? `${gold} × (${realPct}−10)% × 0.0656 × ${grams}`
                   : `${gold} × 30% × 0.0656 × ${grams}`,
             },
           ];
         },
+      },
+    ],
+  },
+
+  /* ── 5d. รับซื้อเงิน ── */
+  {
+    id: "buy-price-silver",
+    title: "การคำนวณราคารับซื้อ (เงิน)",
+    Icon: IconBanknote,
+    blocks: [
+      {
+        type: "formula",
+        label: "ทั่วไป",
+        formula: "ราคาเงินต่อกรัม × น้ำหนักสินค้า = ราคารับซื้อ",
+      },
+      {
+        type: "calculator",
+        title: "ราคารับซื้อเงิน",
+        inputs: [
+          { id: "rate", label: "ราคาเงิน/กรัม", defaultValue: 30, suffix: "฿" },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
+        ],
+        compute: ({ rate, grams }) => [
+          {
+            label: "ราคารับซื้อ",
+            value: rate * grams,
+            format: "currency",
+            hint: `${rate} × ${grams}`,
+          },
+        ],
       },
     ],
   },
