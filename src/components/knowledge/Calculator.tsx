@@ -108,7 +108,7 @@ export default function Calculator({ title, inputs, compute }: Props) {
                       [field.id]: Number(e.target.value),
                     }))
                   }
-                  className={`w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt font-[inherit] outline-none truncate ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white cursor-pointer"}`}
+                  className={`w-[142px] px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt font-[inherit] outline-none truncate ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white cursor-pointer"}`}
                 >
                   {field.options.map((opt) => (
                     <option key={opt.value} value={opt.value}>
