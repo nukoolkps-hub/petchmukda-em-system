@@ -407,12 +407,6 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "formula",
         formula: "ราคาทองของน้ำหนักที่เพิ่ม + ค่าแรงของน้ำหนักที่เพิ่ม (MD) + ค่าเปลี่ยนทองเก่า",
       },
-      { type: "h3", text: "น้ำหนักเพิ่มขึ้น 1 บาท ขึ้นไป" },
-      {
-        type: "formula",
-        formula:
-          "ราคาทองของน้ำหนักที่เพิ่ม + ค่าแรงของน้ำหนักที่เพิ่ม (MD) + ค่าเปลี่ยนทองเก่า (MD)",
-      },
       {
         type: "live-example",
         title: "ตัวอย่าง #1 — 1 สลึง เพิ่มเป็น 2 สลึง (MD-03)",
@@ -442,6 +436,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "callout",
         tone: "note",
         text: "เพิ่มค่า MD เฉพาะค่าแรง (เคสน้ำหนักเพิ่มไม่เกิน 2 สลึง)",
+      },
+      { type: "h3", text: "น้ำหนักเพิ่มขึ้น 1 บาท ขึ้นไป" },
+      {
+        type: "formula",
+        formula:
+          "ราคาทองของน้ำหนักที่เพิ่ม + ค่าแรงของน้ำหนักที่เพิ่ม (MD) + ค่าเปลี่ยนทองเก่า (MD)",
       },
       {
         type: "live-example",
