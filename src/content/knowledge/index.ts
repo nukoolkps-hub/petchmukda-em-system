@@ -285,7 +285,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "formula",
         label: "ทั่วไป",
-        formula: "(ราคาทอง ÷ 2) + ค่าแรง = ราคาขาย",
+        formula: "(ราคาทอง ÷ 2) × 0.0656 × น้ำหนักสินค้า + ค่าแรง = ราคาขาย",
       },
       {
         type: "calculator",
@@ -298,10 +298,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             goldPriceDefault: true,
           },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
           { id: "labor", label: "ค่าแรง", defaultValue: 500, suffix: "฿" },
         ],
-        compute: ({ gold, labor }) => {
+        compute: ({ gold, grams, labor }) => {
           const half = gold / 2;
+          const goldPart = half * 0.0656 * grams;
           return [
             {
               label: "ราคาทอง ÷ 2",
@@ -310,8 +312,14 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               hint: `${gold} ÷ 2`,
             },
             {
+              label: "ราคาทองตามน้ำหนัก",
+              value: goldPart,
+              format: "currency",
+              hint: `${half} × 0.0656 × ${grams}`,
+            },
+            {
               label: "ราคาขาย (+ ค่าแรง)",
-              value: half + labor,
+              value: goldPart + labor,
               format: "currency",
             },
           ];
@@ -703,7 +711,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         colWidths: ["30%", "70%"],
         colAlign: ["left", "left"],
         rows: [
-          ["ทั่วไป", "(ราคาทอง × 30%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
+          ["ทั่วไป", "(ราคาทอง × 25%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
           [
             "มีการตรวจ %",
             "(ราคาทอง × (%จริง − 10)) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
@@ -715,22 +723,22 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         title: "ตัวอย่าง — นาก 1 สลึง (3.79 กรัม)",
         compute: ({ sell }) => {
           const grams = 3.79;
-          const general = sell * 0.3 * 0.0656 * grams;
+          const general = sell * 0.25 * 0.0656 * grams;
           const fmt = (n: number) =>
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return {
             given: [
               `ราคาทองคำแท่งบาทละ ${fmt(sell)} ฿`,
               `น้ำหนัก ${grams} กรัม`,
-              "กรณี: ทั่วไป (30%)",
+              "กรณี: ทั่วไป (25%)",
             ],
             steps: [
               {
-                calc: `${fmt(sell)} × 30% = ${fmt(sell * 0.3)}`,
-                meaning: "ราคาทองหลังหัก 70%",
+                calc: `${fmt(sell)} × 25% = ${fmt(sell * 0.25)}`,
+                meaning: "ราคาทองหลังหัก 75%",
               },
               {
-                calc: `${fmt(sell * 0.3)} × 0.0656 × ${grams} = ${fmt(general)} ฿`,
+                calc: `${fmt(sell * 0.25)} × 0.0656 × ${grams} = ${fmt(general)} ฿`,
                 meaning: "ราคารับซื้อนาก",
               },
             ],
@@ -751,9 +759,9 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           {
             id: "mode",
             label: "เลือกวิธี",
-            defaultValue: 30,
+            defaultValue: 25,
             options: [
-              { value: 30, label: "ทั่วไป (30%)" },
+              { value: 25, label: "ทั่วไป (25%)" },
               { value: 999, label: "มีตรวจ %" },
             ],
           },
@@ -767,7 +775,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
         ],
         compute: ({ gold, mode, realPct, grams }) => {
-          const factor = mode === 999 ? (realPct - 10) / 100 : 0.3;
+          const factor = mode === 999 ? (realPct - 10) / 100 : 0.25;
           const buy = gold * factor * 0.0656 * grams;
           return [
             {
@@ -777,7 +785,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               hint:
                 mode === 999
                   ? `${gold} × (${realPct}−10)% × 0.0656 × ${grams}`
-                  : `${gold} × 30% × 0.0656 × ${grams}`,
+                  : `${gold} × 25% × 0.0656 × ${grams}`,
             },
           ];
         },
