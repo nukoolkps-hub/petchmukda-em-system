@@ -291,7 +291,7 @@ export default function LeaveApp() {
       return;
     }
     setShowAdvanceModal(false);
-    showToast("ส่งคำขอผ่าน LINE แล้ว — รอ Admin โอนเงิน");
+    showToast("ส่งคำขอผ่าน LINE แล้ว — รอ ADMIN โอนเงิน");
   }
 
   // ถ้าอยู่ใน salary route แต่ถูกปิดสิทธิ์ → redirect ไป home

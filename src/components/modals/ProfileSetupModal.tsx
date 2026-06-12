@@ -158,7 +158,7 @@ export default function ProfileSetupModal({
           className="mb-2.5 shadow-maroon-glow"
         />
         <div className="text-base font-bold text-txt">{name || "ชื่อของคุณ"}</div>
-        <div className="text-sm text-txt-soft mt-0.5">ตำแหน่งกำหนดโดย Admin</div>
+        <div className="text-sm text-txt-soft mt-0.5">ตำแหน่งกำหนดโดย ADMIN</div>
       </div>
 
       <div className="w-full h-px bg-bdr mb-5" />

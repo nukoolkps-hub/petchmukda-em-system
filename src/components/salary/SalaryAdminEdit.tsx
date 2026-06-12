@@ -532,17 +532,17 @@ export default function SalaryAdminEdit({
               const labels = {
                 sell: {
                   Icon: IconDiamond,
-                  title: "ปิดฝั่งขายโดย Admin",
+                  title: "ปิดฝั่งขายโดย ADMIN",
                   desc: "ไม่ได้กองกลางฝั่งขาย · ฝั่งรับซื้อยังใช้กฎ 80% ปกติ",
                 },
                 buy: {
                   Icon: IconShoppingBag,
-                  title: "ปิดฝั่งรับซื้อโดย Admin",
+                  title: "ปิดฝั่งรับซื้อโดย ADMIN",
                   desc: "ไม่ได้กองกลางฝั่งรับซื้อ · ฝั่งขายยังใช้กฎ 80% ปกติ",
                 },
                 both: {
                   Icon: IconLock,
-                  title: "ปิดทั้งคู่โดย Admin",
+                  title: "ปิดทั้งคู่โดย ADMIN",
                   desc: "ไม่ได้กองกลางทั้ง 2 ฝั่ง · ได้แค่ขาย-พิเศษ",
                 },
               };
@@ -1039,7 +1039,7 @@ export default function SalaryAdminEdit({
                 <div className="leading-relaxed">
                   <div className="font-bold">ค่าคอมจะถูกคำนวณจากกองกลาง</div>
                   <div className="text-txt-soft">
-                    หลังจากที่ Admin บันทึกชิ้นของทุกคนแล้ว
+                    หลังจากที่ ADMIN บันทึกชิ้นของทุกคนแล้ว
                   </div>
                 </div>
               </div>
