@@ -34,6 +34,7 @@ export default function AdminPanel({
   allLeaves,
   employeeDirectory,
   onDelete,
+  onAddLeave,
   onUpdateRole,
   onDeleteEmployee,
   onReorderEmployees,
@@ -310,6 +311,8 @@ export default function AdminPanel({
           employeeDirectory={employeeDirectory}
           payrollConfirms={payrollConfirms}
           onDelete={onDelete}
+          onAddLeave={onAddLeave}
+          showToast={showToast}
         />
       )}
 

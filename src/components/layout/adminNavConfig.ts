@@ -85,7 +85,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     Icon: IconCalendarEvent,
     items: [
       { id: "summary", label: "สรุปลา", Icon: IconChartBar },
-      { id: "leaves", label: "รายการลา", Icon: IconClipboardList },
+      { id: "leaves", label: "เพิ่ม - ลด การลา", Icon: IconClipboardList },
     ],
   },
   {

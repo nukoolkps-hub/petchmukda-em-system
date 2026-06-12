@@ -4,33 +4,97 @@ import {
   Cross as IconCross,
   FastForward as IconFastForward,
   Lock as IconLock,
+  Plus as IconPlus,
   Trash2 as IconTrash,
+  X as IconX,
 } from "lucide-react";
 import { useState } from "react";
-import { COLORS, LEAVE_TYPES } from "../../constants";
-import type { Employee, LeaveEntry, PayrollConfirms } from "../../types";
-import { fmtDateWithWeekday, isFuture } from "../../utils/dateUtils";
+import { COLORS, LEAVE_TYPES, TODAY } from "../../constants";
+import type {
+  Employee,
+  LeaveEntry,
+  LeaveKind,
+  PayrollConfirms,
+} from "../../types";
+import { countWorkdays, fmtDateWithWeekday, isFuture } from "../../utils/dateUtils";
 import { isMonthLocked, monthOf } from "../../utils/payrollLock";
 import ConfirmModal from "../modals/ConfirmModal";
 import AvatarCircle from "../shared/AvatarCircle";
+import ThaiDateInput from "../shared/ThaiDateInput";
 
 interface LeaveListPanelProps {
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
   payrollConfirms: PayrollConfirms;
   onDelete: (id: string | number) => void;
+  onAddLeave: (
+    leave: Omit<LeaveEntry, "id">,
+  ) => Promise<string | number | void>;
+  showToast?: (msg: string) => void;
 }
 
-/* ─── Admin: Leave List (รายการลาทั้งหมด + filter + ลบ) ─────────── */
+/* ─── Admin: Leave List (เพิ่ม + รายการ + filter + ลบ) ─────────── */
 export default function LeaveListPanel({
   allLeaves,
   employeeDirectory,
   payrollConfirms,
   onDelete,
+  onAddLeave,
+  showToast,
 }: LeaveListPanelProps) {
   const [employeeFilter, setFilterEmp] = useState("");
   const [filterType, setFilterType] = useState("");
   const [confirmLeave, setConfirmLeave] = useState<any>(null);
+
+  /* ─── Add-leave form (collapsible) ─── */
+  const [addOpen, setAddOpen] = useState(false);
+  const [addEmpId, setAddEmpId] = useState("");
+  const [addType, setAddType] = useState<LeaveKind>("personal");
+  const [addStart, setAddStart] = useState("");
+  const [addEnd, setAddEnd] = useState("");
+  const [addReason, setAddReason] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  function resetForm() {
+    setAddEmpId("");
+    setAddType("personal");
+    setAddStart("");
+    setAddEnd("");
+    setAddReason("");
+  }
+
+  const previewDays =
+    addStart && addEnd ? countWorkdays(addStart, addEnd) : 0;
+  const canSubmit =
+    !!addEmpId && !!addStart && !!addEnd && addStart <= addEnd && !saving;
+
+  async function handleAdd() {
+    if (!canSubmit) return;
+    const emp = employeeDirectory.find((e) => e.id === addEmpId);
+    if (!emp) return;
+    setSaving(true);
+    try {
+      await onAddLeave({
+        employeeId: emp.id,
+        employeeName: emp.name,
+        type: addType,
+        start: addStart,
+        end: addEnd,
+        days: previewDays,
+        reason: addReason.trim(),
+        submitted: TODAY,
+        createdAt: Date.now(),
+      });
+      showToast?.(`เพิ่มการลาให้ ${emp.name} แล้ว (${previewDays} วัน)`);
+      resetForm();
+      setAddOpen(false);
+    } catch (err) {
+      console.error("[LeaveList] addLeave failed:", err);
+      showToast?.(err instanceof Error ? err.message : "เพิ่มการลาไม่สำเร็จ");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   // รายการลาทั้งหมด (รวมอนาคต) — admin ต้องเห็นทุกใบไม่ใช่แค่ที่ผ่านมาแล้ว
   // filter ด้วย employeeId (ไม่ใช่ชื่อ) — กันชื่อซ้ำ/เปลี่ยนชื่อ
@@ -49,6 +113,131 @@ export default function LeaveListPanel({
 
   return (
     <div>
+      {/* เพิ่มการลา — collapsible (สำหรับพนักงานที่ลืมกดลา) */}
+      <div className="mb-3.5 rounded-[14px] border border-bdr bg-white overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setAddOpen((v) => !v)}
+          aria-expanded={addOpen}
+          className={`w-full flex items-center gap-2 px-3.5 py-2.5 cursor-pointer font-[inherit] text-left active:scale-[0.995] transition-transform duration-100 ${addOpen ? "bg-maroon text-white" : "bg-gold-pale/40 text-maroon"}`}
+        >
+          <IconPlus
+            size={16}
+            strokeWidth={2.5}
+            color={addOpen ? COLORS.gold : COLORS.maroon}
+          />
+          <span className="flex-1 text-sm font-extrabold">
+            เพิ่มการลาให้พนักงาน
+          </span>
+          <IconChevronDown
+            size={14}
+            strokeWidth={2.5}
+            className={`shrink-0 transition-transform duration-200 ${addOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {addOpen && (
+          <div className="p-3.5 border-t border-bdr/40 flex flex-col gap-2.5">
+            <div className="relative">
+              <select
+                value={addEmpId}
+                onChange={(e) => setAddEmpId(e.target.value)}
+                className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
+              >
+                <option value="">— เลือกพนักงาน —</option>
+                {employeeDirectory.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name}
+                  </option>
+                ))}
+              </select>
+              <IconChevronDown
+                size={14}
+                strokeWidth={2.4}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+              />
+            </div>
+            <div className="relative">
+              <select
+                value={addType}
+                onChange={(e) => setAddType(e.target.value as LeaveKind)}
+                className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
+              >
+                {LEAVE_TYPES.map((lt) => (
+                  <option key={lt.id} value={lt.id}>
+                    {lt.label}
+                  </option>
+                ))}
+              </select>
+              <IconChevronDown
+                size={14}
+                strokeWidth={2.4}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+              />
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <div className="text-[11px] text-txt-soft font-semibold mb-1">
+                  ตั้งแต่
+                </div>
+                <ThaiDateInput
+                  value={addStart}
+                  onChange={(v) => {
+                    setAddStart(v);
+                    if (!addEnd || addEnd < v) setAddEnd(v);
+                  }}
+                />
+              </div>
+              <div className="flex-1">
+                <div className="text-[11px] text-txt-soft font-semibold mb-1">
+                  ถึง
+                </div>
+                <ThaiDateInput
+                  value={addEnd}
+                  onChange={setAddEnd}
+                />
+              </div>
+            </div>
+            <input
+              type="text"
+              value={addReason}
+              onChange={(e) => setAddReason(e.target.value)}
+              placeholder="เหตุผล (ถ้ามี) — เช่น 'ลืมกดลา'"
+              className="w-full px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
+            />
+            {addStart && addEnd && (
+              <div className="text-xs text-txt-mid bg-cream/50 rounded-[8px] px-3 py-2">
+                จำนวนวันลา (ไม่นับวันเสาร์):{" "}
+                <span className="font-extrabold text-maroon">
+                  {previewDays} วัน
+                </span>
+              </div>
+            )}
+            <div className="flex gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setAddOpen(false);
+                }}
+                className="flex-1 px-3 py-2.5 rounded-[10px] border border-bdr bg-white text-txt-mid text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
+              >
+                <IconX size={13} strokeWidth={2.5} className="inline mr-1" />
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={handleAdd}
+                disabled={!canSubmit}
+                className="flex-2 px-3 py-2.5 rounded-[10px] bg-maroon text-white text-sm font-extrabold cursor-pointer font-[inherit] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-transform inline-flex items-center justify-center gap-1.5"
+              >
+                <IconPlus size={14} strokeWidth={2.5} />
+                {saving ? "กำลังบันทึก..." : "เพิ่มการลา"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-2 mb-3.5">
         <div className="relative flex-1">
           <select

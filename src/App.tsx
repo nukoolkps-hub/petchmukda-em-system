@@ -490,6 +490,7 @@ export default function LeaveApp() {
                       allLeaves={allLeaves}
                       employeeDirectory={employeeDirectory}
                       onDelete={leaveForm.handleDelete}
+                      onAddLeave={addLeaveAction}
                       onUpdateRole={handleUpdateRole}
                       onDeleteEmployee={handleDeleteEmployee}
                       onReorderEmployees={reorderEmployees}
