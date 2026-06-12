@@ -355,18 +355,35 @@ function DutyTodayCard({
               ของคุณวันนี้
             </div>
             <div className="flex flex-wrap gap-2">
-              {myDuties.map((a) => (
-                <div
-                  key={`${a.dutyId}-${a.targetEmpId || ""}`}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-[5px] rounded-[20px] bg-maroon text-white text-sm font-semibold"
-                >
-                  {a.dutyName}
-                  {(a.reason === "substitute_for_leave" ||
-                    a.reason === "coverage") && (
-                    <span className="text-xs opacity-80">(แทน)</span>
-                  )}
-                </div>
-              ))}
+              {myDuties.map((a) => {
+                const primary = a.primaryEmpId
+                  ? empById.get(a.primaryEmpId)
+                  : null;
+                const isSub =
+                  a.reason === "substitute_for_leave" ||
+                  a.reason === "double_up";
+                const isCov = a.kind === "coverage";
+                return (
+                  <div
+                    key={`${a.dutyId}-${a.targetEmpId || ""}`}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-[5px] rounded-[20px] bg-maroon text-white text-sm font-semibold"
+                  >
+                    {a.dutyName}
+                    {isCov ? (
+                      <span className="text-xs opacity-80">
+                        แทน {a.targetName || "—"}
+                      </span>
+                    ) : (
+                      isSub &&
+                      primary && (
+                        <span className="text-xs opacity-80">
+                          แทน {primary.nickname || primary.name}
+                        </span>
+                      )
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
