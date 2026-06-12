@@ -17,6 +17,9 @@ export interface CalcField {
   goldPriceDefault?: boolean;
   /** ตั้งค่าเริ่มต้นเป็นราคารับซื้อทองคำแท่งสมาคม live (gold.buyPrice) */
   buyPriceDefault?: boolean;
+  /** disable field แบบ conditional — เช่น ช่อง "%จริง" ปิดเมื่อเลือกโหมด
+   *  "ทั่วไป" · UI จะเทาลง + กรอกแก้ไม่ได้ */
+  disabledWhen?: (values: Record<string, number>) => boolean;
 }
 
 export interface CalcOutput {
