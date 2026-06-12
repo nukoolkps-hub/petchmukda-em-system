@@ -820,11 +820,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
 
   /* ── 7. จำนำ ── */
   {
-    id: "pawn",
-    title: "การคำนวณจำนำ + ดอกเบี้ย",
+    id: "pawn-price",
+    title: "การคำนวณราคาจำนำ",
     Icon: IconLandmark,
     blocks: [
-      { type: "h3", text: "ราคาจำนำ" },
       {
         type: "table",
         columns: ["ประเภท", "อัตราหัก"],
@@ -937,7 +936,15 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           };
         },
       },
-      { type: "h3", text: "ดอกเบี้ยจำนำ" },
+    ],
+  },
+
+  /* ── 7b. ดอกเบี้ยจำนำ ── */
+  {
+    id: "pawn-interest",
+    title: "การคำนวณดอกเบี้ยจำนำ",
+    Icon: IconPercent,
+    blocks: [
       {
         type: "list",
         items: [
