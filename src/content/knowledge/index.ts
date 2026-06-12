@@ -7,8 +7,10 @@ import {
   BadgePercent as IconBadgePercent,
   Banknote as IconBanknote,
   Calculator as IconCalculator,
+  Coins as IconCoins,
   CreditCard as IconCreditCard,
   ArrowRightLeft as IconExchange,
+  Eye as IconEye,
   Gauge as IconGauge,
   Gem as IconGem,
   Landmark as IconLandmark,
@@ -143,13 +145,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── 3. ราคาขาย ── */
+  /* ── 3a. ราคาขายทอง 99.99% ── */
   {
-    id: "sell-price",
-    title: "การคำนวณราคาขาย",
-    Icon: IconShoppingBag,
+    id: "sell-price-9999",
+    title: "การคำนวณราคาขาย (ทอง 99.99%)",
+    Icon: IconSparkles,
     blocks: [
-      { type: "h3", text: "ราคาขายทอง 99.99%" },
       {
         type: "formula",
         label: "ตามน้ำหนัก (ต่อกรัม)",
@@ -230,7 +231,15 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ];
         },
       },
-      { type: "h3", text: "ราคาขายทอง 96.5%" },
+    ],
+  },
+
+  /* ── 3b. ราคาขายทอง 96.5% ── */
+  {
+    id: "sell-price-965",
+    title: "การคำนวณราคาขาย (ทอง 96.5%)",
+    Icon: IconShoppingBag,
+    blocks: [
       {
         type: "table",
         columns: ["น้ำหนัก", "วิธีคำนวณ"],
@@ -278,7 +287,15 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ];
         },
       },
-      { type: "h3", text: "ราคาขายเงิน" },
+    ],
+  },
+
+  /* ── 3c. ราคาขายเงิน ── */
+  {
+    id: "sell-price-silver",
+    title: "การคำนวณราคาขาย (เงิน)",
+    Icon: IconCoins,
+    blocks: [
       {
         type: "formula",
         label: "ทั่วไป",
@@ -293,7 +310,11 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { id: "labor", label: "ค่าแรง", defaultValue: 200, suffix: "฿" },
         ],
         compute: ({ rate, grams, labor }) => [
-          { label: "ราคาเงินตามน้ำหนัก", value: rate * grams, format: "currency" },
+          {
+            label: "ราคาเงินตามน้ำหนัก",
+            value: rate * grams,
+            format: "currency",
+          },
           {
             label: "ราคาขาย (+ ค่าแรง)",
             value: rate * grams + labor,
@@ -301,7 +322,15 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           },
         ],
       },
-      { type: "h3", text: "การอ่านป้ายสินค้า" },
+    ],
+  },
+
+  /* ── 3d. การอ่านป้ายสินค้า ── */
+  {
+    id: "price-tag",
+    title: "การอ่านป้ายสินค้า",
+    Icon: IconEye,
+    blocks: [
       {
         type: "p",
         text: "ป้ายสินค้าแสดงราคาขายต่อชิ้น และค่าแรงขายต่อชิ้น — ใช้ประกอบการคำนวณ",
