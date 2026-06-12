@@ -46,23 +46,25 @@ export function ceilTo50(n: number): number {
 }
 
 /** ราคาขายทอง 96.5% เริ่มต้น (ที่ค่าแรงเริ่มต้น) ตามน้ำหนัก
- *  ใช้สูตร shortcut สำหรับน้ำหนัก 1/2 สลึง, 1 สลึง, 2 สลึง, 1 บาท
- *  (ราคาทอง ÷ N + ค่าแรง) · นอกนั้น precise = (ราคาทอง × 0.0656 × grams) + ค่าแรง */
-const SELL_SHORTCUT_DIVISORS: Record<string, number> = {
-  "half-saleung": 8,
-  "1-saleung": 4,
-  "2-saleung": 2,
-  "1-baht": 1,
+ *  ใช้สูตร shortcut (ราคาทอง × multiplier + ค่าแรง) สำหรับน้ำหนักที่อยู่ใน
+ *  ตาราง · นอกนั้น precise = (ราคาทอง × 0.0656 × grams) + ค่าแรง */
+const SELL_SHORTCUT_MULTIPLIERS: Record<string, number> = {
+  "half-saleung": 1 / 8, // 0.125 → ราคาทอง ÷ 8
+  "1-saleung": 1 / 4, // 0.25 → ราคาทอง ÷ 4
+  "2-saleung": 1 / 2, // 0.5 → ราคาทอง ÷ 2
+  "3-saleung": 0.75, // ราคาทอง × 0.75
+  "1-baht": 1, // ราคาทอง (ไม่ต้องหาร)
+  "6-saleung": 1.5, // ราคาทอง × 1.5
 };
 
 export function computeSellPrice96(
   weight: ChangePriceWeight,
   goldPricePerBaht: number,
 ): { goldPart: number; laborPart: number; total: number } {
-  const divisor = SELL_SHORTCUT_DIVISORS[weight.id];
+  const multiplier = SELL_SHORTCUT_MULTIPLIERS[weight.id];
   const goldPart =
-    divisor !== undefined
-      ? goldPricePerBaht / divisor
+    multiplier !== undefined
+      ? goldPricePerBaht * multiplier
       : goldByWeight(goldPricePerBaht, weight.grams);
   const laborPart = weight.laborBase;
   return { goldPart, laborPart, total: goldPart + laborPart };

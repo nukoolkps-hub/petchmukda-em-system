@@ -198,6 +198,41 @@ interface Item {
 | LINE_CHANNEL_ACCESS_TOKEN | Messaging API Access Token |
 | LINE_CHANNEL_SECRET | Messaging API Channel Secret |
 
+### config/storeCalendar
+
+ปฏิทินวันเปิด-ปิดร้าน (admin-managed) · ดู `CLAUDE.md` → "ปฏิทินเปิด-ปิดร้าน"
+
+| Field | Type | Description |
+|---|---|---|
+| extraOpenSaturdays | string[] | `YYYY-MM-DD` เสาร์เปิดพิเศษ |
+| extraClosedWeekdays | string[] | `YYYY-MM-DD` จ-ศ ปิดพิเศษ |
+| updatedAt | number | ms epoch |
+
+### config/goldPrice
+
+ราคาทองคำสมาคม 96.5% · ดึงอัตโนมัติทุก 15 นาทีโดย Cloud Function `fetchGoldPriceScheduled` (`functions/src/goldPrice/fetchGoldPrice.ts`) · subscribe ทั่วระบบความรู้ต่างๆ (live tables + calculator + live-example)
+
+| Field | Type | Description |
+|---|---|---|
+| pricePerBaht | number | ราคาขาย ฿/บาท (sellPrice ของสมาคม) |
+| buyPrice | number | ราคารับซื้อ ฿/บาท |
+| priceChanged | number | เปลี่ยนแปลงจากรอบก่อน (informational) |
+| updatedAt | number | ms epoch ที่ doc ถูกเขียน |
+| updatedBy | string | `auto · สมาคมค้าทองคำ (mukdagold)` / `(ฮั่วเซงเฮง)` · admin manual |
+| source | string | `mukda-price2` / `hsh-ref` (debug) |
+| sourceDate / sourceTime | string | timestamp จาก source (เทียบ dirty-check skip write) |
+| lastFetchError | string | ข้อความ error ครั้งล่าสุด (`""` = ไม่มี) |
+| lastFetchErrorAt | number | ms epoch ของ error |
+
+**Source chain** (Cloud Function ลองตามลำดับ): mukdagold `/api/price2` → HSH `apicheckpricev3` REF
+- ราคาเดียวกัน (proxy ของสมาคม) · HSH เป็น fallback
+- **Sanity check:** 10,000 ≤ pricePerBaht ≤ 200,000
+- **Skip write ถ้า no-change** (`sellPrice + sourceDate + sourceTime` เท่าเดิม)
+
+**Manual trigger:** Cloud Function `fetchGoldPriceNow` (onCall, admin only) — ปุ่ม refresh ใน `GoldPriceHeader`
+
+**Read:** ทุก signed-in (ผ่าน `useGoldPrice()` hook) · **Write:** Cloud Function (Admin SDK) + admin จาก UI (`triggerFetchGoldPriceNow`)
+
 ## Security Rules Summary
 
 | Collection | Read | Write |
@@ -213,7 +248,10 @@ interface Item {
 | roles | all signed-in | admin only |
 | payrollConfirms | all signed-in | admin (เดือนปิดรอบ → ยืนยันใหม่ไม่ได้) |
 | certCounters/{พ.ศ.} | all signed-in | all signed-in (count ต้อง +1 เท่านั้น) |
-| config/* | blocked | blocked (Functions ใช้ Admin SDK) |
+| config/storeCalendar | all signed-in | admin only |
+| config/goldPrice | all signed-in | admin only (+ Cloud Function ผ่าน Admin SDK) |
+| config/notifications | admin only | admin only |
+| config/* (อื่นๆ) | blocked | blocked (Functions ใช้ Admin SDK) |
 
 **Peer data สำหรับกองกลาง (Pool):**
 salary doc มี field อ่อนไหว (`note`, `customDeductions`,
