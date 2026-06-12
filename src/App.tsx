@@ -44,7 +44,9 @@ import useProfile from "./hooks/useProfile";
 function LoadingScreen({ message = "กำลังโหลดข้อมูล..." }) {
   const [slow, setSlow] = useState(false);
   useEffect(() => {
-    const id = setTimeout(() => setSlow(true), 15000);
+    // 8 วินาที ยังโหลดไม่เสร็จ → โผล่ปุ่ม "โหลดใหม่" · เคยตั้ง 15 วินาที
+    // แต่ user หลายคนแจ้งว่าเห็นค้างนานเกินไปก่อนมีปุ่ม
+    const id = setTimeout(() => setSlow(true), 8000);
     return () => clearTimeout(id);
   }, []);
   return (

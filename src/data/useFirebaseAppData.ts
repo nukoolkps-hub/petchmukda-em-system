@@ -108,17 +108,13 @@ export default function useFirebaseAppData({
     return merged;
   }, [isAdmin, salResult.data, poolSnapResult.data]);
 
-  // Aggregate loading/error states
-  const loading =
-    employeeResult.loading ||
-    leavesResult.loading ||
-    salResult.loading ||
-    advResult.loading ||
-    rolesResult.loading ||
-    pcResult.loading ||
-    poolSnapResult.loading ||
-    poolAdjResult.loading ||
-    loansResult.loading;
+  // Block loading screen เฉพาะ subscription ที่ "ขาดไม่ได้" สำหรับ render shell:
+  // - employees → ต้องรู้ currentEmployee เพื่อ route + แสดง profile/header
+  // ที่เหลือ (leaves/salaries/advances/roles/payrollConfirms/poolSnapshots/...)
+  // ปล่อยให้ subscribe ใน background — view ของแต่ละ tab handle empty state เอง
+  // เหตุผล: ถ้ารอครบทุก sub บน Safari iOS / cold start WebChannel จะค้าง 10-30+
+  // วินาที โดยไม่จำเป็น (sub ที่ช้าหนึ่งตัวก็ block หมด)
+  const loading = employeeResult.loading;
   const error =
     employeeResult.error ||
     leavesResult.error ||
