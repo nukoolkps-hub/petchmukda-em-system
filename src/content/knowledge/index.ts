@@ -18,6 +18,7 @@ import {
   Percent as IconPercent,
   Receipt as IconReceipt,
   Repeat as IconRepeat,
+  Replace as IconReplace,
   Scissors as IconScissors,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
@@ -1176,6 +1177,27 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "callout",
         tone: "info",
         text: "MD แยกชิ้น: MD-XX = XX × 100 ฿ (เช่น MD-03 = 300, MD-08 = 800) — บวกเพิ่มต่อชิ้นตามที่ระบุ",
+      },
+    ],
+  },
+
+  /* ── 9b. การเปลี่ยนฟรี ── */
+  {
+    id: "free-exchange",
+    title: "การเปลี่ยนฟรี",
+    Icon: IconReplace,
+    blocks: [
+      {
+        type: "callout",
+        tone: "warn",
+        text: "เปลี่ยนฟรีได้ ภายใน 7 วัน ต้องมีใบรับประกันจากทางร้าน เท่านั้น",
+      },
+      {
+        type: "list",
+        items: [
+          "หากเปลี่ยน MD เท่ากัน หรือ ถูกกว่า ไม่ต้องเพิ่มเงิน",
+          "หากเปลี่ยน MD มากกว่า ต้องเพิ่มเงิน เท่ากับ MD เส้นใหม่",
+        ],
       },
     ],
   },
