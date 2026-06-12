@@ -46,12 +46,24 @@ export function ceilTo50(n: number): number {
 }
 
 /** ราคาขายทอง 96.5% เริ่มต้น (ที่ค่าแรงเริ่มต้น) ตามน้ำหนัก
- *  = (ราคาทอง × 0.0656 × grams) + ค่าแรงเริ่มต้น */
+ *  ใช้สูตร shortcut สำหรับน้ำหนัก 1/2 สลึง, 1 สลึง, 2 สลึง, 1 บาท
+ *  (ราคาทอง ÷ N + ค่าแรง) · นอกนั้น precise = (ราคาทอง × 0.0656 × grams) + ค่าแรง */
+const SELL_SHORTCUT_DIVISORS: Record<string, number> = {
+  "half-saleung": 8,
+  "1-saleung": 4,
+  "2-saleung": 2,
+  "1-baht": 1,
+};
+
 export function computeSellPrice96(
   weight: ChangePriceWeight,
   goldPricePerBaht: number,
 ): { goldPart: number; laborPart: number; total: number } {
-  const goldPart = goldByWeight(goldPricePerBaht, weight.grams);
+  const divisor = SELL_SHORTCUT_DIVISORS[weight.id];
+  const goldPart =
+    divisor !== undefined
+      ? goldPricePerBaht / divisor
+      : goldByWeight(goldPricePerBaht, weight.grams);
   const laborPart = weight.laborBase;
   return { goldPart, laborPart, total: goldPart + laborPart };
 }
