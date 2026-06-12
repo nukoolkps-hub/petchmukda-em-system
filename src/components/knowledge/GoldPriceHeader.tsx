@@ -3,7 +3,7 @@
    admin เห็นปุ่ม refresh (เรียก Cloud Function fetchGoldPriceNow)        */
 
 import { Coins as IconCoins, RefreshCw as IconRefresh } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { triggerFetchGoldPriceNow } from "../../firebase/goldPrice";
 import { useGoldPrice } from "../../firebase/hooks/useFirestore";
 import { fmtThaiDateTime } from "../../utils/dateUtils";
@@ -15,8 +15,10 @@ interface Props {
 }
 
 export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
-  const { data: gold } = useGoldPrice();
+  const { data: gold, loading } = useGoldPrice();
   const [fetching, setFetching] = useState(false);
+  // auto-retry หนึ่งครั้งต่อ session — กัน infinite loop ถ้า fetch fail ซ้ำ
+  const autoRetried = useRef(false);
 
   async function handleFetchNow() {
     if (fetching) return;
@@ -35,6 +37,19 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
       setFetching(false);
     }
   }
+
+  // Auto-retry: ถ้า admin เปิดหน้ามาเจอ default state (updatedAt = 0)
+  // → trigger fetchGoldPriceNow อัตโนมัติ 1 ครั้ง (silent · ไม่มี toast)
+  // กัน user ต้องกดเองทุกครั้งที่ doc ยังไม่มีข้อมูล
+  useEffect(() => {
+    if (!isAdmin || loading) return;
+    if (gold.updatedAt > 0) return; // doc มีข้อมูลแล้ว ไม่ต้อง retry
+    if (autoRetried.current) return; // ลองไปแล้วในรอบนี้
+    autoRetried.current = true;
+    triggerFetchGoldPriceNow().catch((err) => {
+      console.warn("[GoldPriceHeader] auto-retry failed:", err);
+    });
+  }, [isAdmin, loading, gold.updatedAt]);
 
   return (
     <div className="mb-3 rounded-[14px] overflow-hidden border border-gold/40 bg-white shadow-[0_2px_8px_rgba(90,30,10,0.04)]">
