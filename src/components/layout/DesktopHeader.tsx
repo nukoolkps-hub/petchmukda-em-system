@@ -26,13 +26,13 @@ export default function DesktopHeader({
           <div className="text-white font-bold text-2xl">
             {tab === "home" ? "หน้าแรก" : PAGE_TITLES[tab]}
           </div>
-          {tab === "home" && profile && (
-            <div className="text-gold-lt/55 text-sm mt-0.5">
-              สวัสดีค่ะ คุณ{profile.name}
-            </div>
-          )}
-          {isAdmin && (
+          {/* subtitle — แสดงทุก tab เพื่อให้ banner สูงเท่ากันเสมอ ไม่ขยับตอนสลับ sidebar */}
+          {isAdmin ? (
             <div className="text-gold-lt/55 text-sm mt-0.5">ผู้ดูแลระบบ</div>
+          ) : (
+            <div className="text-gold-lt/55 text-sm mt-0.5">
+              สวัสดีค่ะ คุณ{profile?.name || ""}
+            </div>
           )}
         </div>
         <div className="flex items-center gap-2.5">
