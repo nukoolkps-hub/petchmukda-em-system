@@ -285,7 +285,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "formula",
         label: "ทั่วไป",
-        formula: "(ราคาทอง ÷ 2) + ค่าแรง = ราคาขาย",
+        formula: "(ราคาทอง ÷ 2) × 0.0656 × น้ำหนักสินค้า + ค่าแรง = ราคาขาย",
       },
       {
         type: "calculator",
@@ -298,10 +298,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             goldPriceDefault: true,
           },
+          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
           { id: "labor", label: "ค่าแรง", defaultValue: 500, suffix: "฿" },
         ],
-        compute: ({ gold, labor }) => {
+        compute: ({ gold, grams, labor }) => {
           const half = gold / 2;
+          const goldPart = half * 0.0656 * grams;
           return [
             {
               label: "ราคาทอง ÷ 2",
@@ -310,8 +312,14 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               hint: `${gold} ÷ 2`,
             },
             {
+              label: "ราคาทองตามน้ำหนัก",
+              value: goldPart,
+              format: "currency",
+              hint: `${half} × 0.0656 × ${grams}`,
+            },
+            {
               label: "ราคาขาย (+ ค่าแรง)",
-              value: half + labor,
+              value: goldPart + labor,
               format: "currency",
             },
           ];
