@@ -154,14 +154,15 @@ function buildCertificateHTML(
       font-size:11pt;color:#777;text-align:center;}
     @page{size:A4 portrait;margin:8mm;}
     @media print{
-      html,body{width:210mm;height:297mm;}
       body{background:#fff;padding:0;line-height:1.4;}
+      /* doc flow ตามเนื้อหาจริง ไม่บังคับ min-height (เก่าใช้ 281mm = A4
+         portrait → ถ้า user ตั้งกระดาษ A5 จะ overflow ไปหน้า 2 เปล่า) */
       .doc{border:1px solid #333 !important;
-        min-height:281mm !important;max-width:194mm !important;margin:0 auto !important;
+        max-width:194mm !important;margin:0 auto !important;
         page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
-      /* บีบช่องไฟให้ natural < 1 หน้า แล้ว .body{flex:1} เติมเต็มหน้า
-         (ดันลายเซ็นลงล่าง · ช่องว่างกระจายใต้เนื้อความ) */
+      /* บีบช่องไฟให้ natural · ลายเซ็นวางตามเนื้อหา (ไม่ดันล่างแล้ว เพื่อ
+         ไม่ overflow page อื่นเมื่อ user เลือกกระดาษเล็กกว่า A4) */
       .title{margin:14px 0 4px;}
       .title-en{margin-bottom:16px;}
       .body{line-height:1.7;}
