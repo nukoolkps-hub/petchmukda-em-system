@@ -357,7 +357,7 @@ export default function SalaryView({
             className="text-amber shrink-0 mt-0.5"
           />
           <div className="text-xs text-txt leading-snug">
-            <b>ตัวเลขประมาณการ</b> — admin ยังไม่ได้ยืนยันยอด ตัวเลขอาจ เปลี่ยนแปลงได้ ·
+            <b>ตัวเลขประมาณการ</b> — ADMIN ยังไม่ได้ยืนยันยอด ตัวเลขอาจ เปลี่ยนแปลงได้ ·
             พิมพ์สลิป/ใบรับรอง + แผนผังเงินเดือน เปิดได้หลังยืนยันยอด
           </div>
         </div>

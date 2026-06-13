@@ -25,7 +25,7 @@ interface BotCommand {
 const COMMANDS: BotCommand[] = [
   {
     command: "ไอดีฉัน",
-    description: "ดู LINE User ID ของตัวเอง — ใช้ส่งให้ admin เพื่อเชื่อมบัญชี",
+    description: "ดู LINE User ID ของตัวเอง — ใช้ส่งให้ ADMIN เพื่อเชื่อมบัญชี",
     scope: "แชทส่วนตัว",
   },
   {
@@ -84,9 +84,9 @@ export default function LineBotCommandsPanel() {
         รวมคำสั่งทั้งหมดที่ bot ตอบ — แยกตาม scope ที่ใช้ได้.{" "}
         <span className="inline-flex items-center gap-1 ml-1">
           <IconLock size={11} strokeWidth={2.6} className="text-maroon" />
-          <span className="text-xs font-bold text-maroon">admin only</span>
+          <span className="text-xs font-bold text-maroon">ADMIN only</span>
         </span>{" "}
-        = ใช้ได้เฉพาะ admin
+        = ใช้ได้เฉพาะ ADMIN
       </p>
 
       <CommandGroup
