@@ -92,7 +92,14 @@ export type KnowledgeBlock =
       title: string;
       /** สี header การ์ด · default "maroon" (สำหรับทอง) · "silver" สำหรับเงิน */
       tone?: "maroon" | "silver";
-      compute: (gold: { sell: number; buy: number; silverBuy: number }) => {
+      compute: (gold: {
+        sell: number;
+        buy: number;
+        silverBuy: number;
+        /** ค่าแรงเริ่มต้นน้ำหนัก 1 บาท (จาก labor cost table · sync live)
+         *  · ใช้ใน VAT example แทน hardcode ค่ากำเหน็จ */
+        laborBaht: number;
+      }) => {
         given: string[];
         steps: { calc: string; meaning: string }[];
       };
