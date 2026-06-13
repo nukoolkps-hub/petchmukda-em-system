@@ -32,13 +32,27 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
 
   async function handleFetchNow() {
     if (fetching) return;
+    const before = {
+      buy: goldRef.current.buyPrice,
+      sell: goldRef.current.pricePerBaht,
+    };
     setFetching(true);
     try {
       const res = await triggerFetchGoldPriceNow();
-      if (res.stored) {
-        showToast?.(`ดึงราคาใหม่: ${formatThaiNumber(res.price)} ฿/บาท`);
+      // รอ Firestore subscription update local state (ปกติ <500ms)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const after = {
+        buy: goldRef.current.buyPrice,
+        sell: goldRef.current.pricePerBaht,
+      };
+      const changed =
+        res.stored || before.buy !== after.buy || before.sell !== after.sell;
+      const buyDisplay = after.buy > 0 ? formatThaiNumber(after.buy) : "—";
+      const display = `รับซื้อ ${buyDisplay} / ขายออก ${formatThaiNumber(after.sell)} ฿/บาท`;
+      if (changed) {
+        showToast?.(`ดึงราคาใหม่: ${display}`);
       } else {
-        showToast?.(`ราคาไม่เปลี่ยน (${formatThaiNumber(res.price)} ฿/บาท)`);
+        showToast?.(`ราคาไม่เปลี่ยน (${display})`);
       }
     } catch (err) {
       console.error("[GoldPriceHeader] fetch failed:", err);
