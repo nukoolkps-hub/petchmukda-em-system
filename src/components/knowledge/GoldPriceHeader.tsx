@@ -3,8 +3,7 @@
    admin เห็นปุ่ม refresh (เรียก Cloud Function fetchGoldPriceNow)        */
 
 import {
-  Coins as IconCoins,
-  Gem as IconGem,
+  CircleDollarSign as IconCircleDollar,
   RefreshCw as IconRefresh,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -122,8 +121,8 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
       <div className="mb-3 rounded-[14px] overflow-hidden border border-gold/40 bg-white shadow-[0_2px_8px_rgba(90,30,10,0.04)]">
         {/* header bar */}
         <div className="px-3.5 py-2 bg-maroon flex items-center gap-2">
-          <IconCoins
-            size={14}
+          <IconCircleDollar
+            size={15}
             strokeWidth={2.5}
             className="text-gold-lt shrink-0"
           />
@@ -177,8 +176,8 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
         <div className="mb-3 rounded-[14px] overflow-hidden border border-silver-lt/60 bg-white shadow-[0_2px_8px_rgba(58,58,64,0.06)]">
           {/* header bar — silver tone (graphite-gray) */}
           <div className="px-3.5 py-2 bg-silver flex items-center gap-2">
-            <IconGem
-              size={14}
+            <IconCircleDollar
+              size={15}
               strokeWidth={2.5}
               className="text-silver-lt shrink-0"
             />
