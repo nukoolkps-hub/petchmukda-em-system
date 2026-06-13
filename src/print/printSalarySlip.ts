@@ -185,14 +185,11 @@ function buildSalarySlipHTML(
       font-size:9pt;color:#999;text-align:center;}
     @page{size:A4 portrait;margin:8mm;}
     @media print{
-      html,body{width:210mm;height:297mm;}
       body{background:#fff;padding:0;line-height:1.4;}
-      /* slip สูงเต็มหน้า A4 (281mm = 297 − margin 8mm×2) + flex column
-         เพื่อดันลายเซ็น/footer ลงล่างสุด — ช่องว่างกระจายเป็นช่องไฟ
-         ไม่กองล่าง. เนื้อหาเยอะ slip ก็ยืดเกิน → ขึ้นหน้า 2 อัตโนมัติ */
+      /* slip flow ตามเนื้อหาจริง · ไม่บังคับ min-height (เก่าใช้ 281mm =
+         A4 portrait → ถ้า user ตั้งกระดาษ A5 จะ overflow ไปหน้า 2 เปล่า) */
       .slip{border:1px solid #333 !important;max-width:194mm !important;
         margin:0 auto !important;padding:24px 38px 20px !important;
-        min-height:281mm;display:flex;flex-direction:column;
         page-break-inside:avoid;break-inside:avoid;}
       .slip *{page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
@@ -205,9 +202,9 @@ function buildSalarySlipHTML(
       table td{padding:4px 2px;}
       .subtotal{padding:6px 2px;}
       .net{margin-top:14px;padding:12px 20px;}
-      /* ลายเซ็น: ดันลงล่างสุด (margin-top:auto) — ช่องว่างที่เหลือไปอยู่
-         เหนือลายเซ็น ไม่กองล่างหน้า */
-      .signatures{margin-top:auto;padding-top:14px;gap:48px;}
+      /* ลายเซ็น: ระยะคงที่จากเนื้อหา ไม่บังคับดันลงล่าง (เลิก margin-top:auto)
+         เพื่อให้ slip flow ตามเนื้อหาจริง ไม่ overflow A5 */
+      .signatures{padding-top:14px;gap:48px;}
       .sig-line{margin-top:46px;padding-top:7px;}
       .footer{margin-top:14px;}
     }
