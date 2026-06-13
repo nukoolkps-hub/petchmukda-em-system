@@ -133,6 +133,21 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
             <div className="flex-1 text-white text-xs font-extrabold">
               ราคาเงินแท่ง 99.99% วันนี้ (ชายนิ่งโกลล์)
             </div>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={handleFetchNow}
+                disabled={fetching}
+                aria-label="ดึงราคาตอนนี้"
+                className="shrink-0 w-7 h-7 rounded-[8px] bg-white/15 text-white cursor-pointer flex items-center justify-center disabled:opacity-50 active:scale-[0.92] transition-transform"
+              >
+                <IconRefresh
+                  size={13}
+                  strokeWidth={2.5}
+                  className={fetching ? "animate-spin" : ""}
+                />
+              </button>
+            )}
           </div>
 
           {/* prices — เงิน (กรัมละ) */}
