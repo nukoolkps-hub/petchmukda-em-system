@@ -26,7 +26,7 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
     try {
       const res = await triggerFetchGoldPriceNow();
       if (res.stored) {
-        showToast?.(`ดึงราคาใหม่: ฿${formatThaiNumber(res.price)}/บาท`);
+        showToast?.(`ดึงราคาใหม่: ${formatThaiNumber(res.price)} ฿/บาท`);
       } else {
         showToast?.(`ราคาไม่เปลี่ยน (${formatThaiNumber(res.price)} ฿/บาท)`);
       }

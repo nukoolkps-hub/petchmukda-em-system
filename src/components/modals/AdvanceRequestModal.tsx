@@ -75,7 +75,7 @@ export default function AdvanceRequestModal({
       return;
     }
     if (amountValue > remaining) {
-      setErr(`เกินวงเงินคงเหลือ (สูงสุด ฿${formatThaiNumber(remaining)})`);
+      setErr(`เกินวงเงินคงเหลือ (สูงสุด ${formatThaiNumber(remaining)} ฿)`);
       return;
     }
     if (!reason.trim()) {
@@ -128,20 +128,20 @@ export default function AdvanceRequestModal({
             วงเงินสูงสุด (50% ของเงินเดือน)
           </span>
           <span className="text-sm font-bold text-maroon">
-            ฿{formatThaiNumber(maxAdvance)}
+            {formatThaiNumber(maxAdvance)} ฿
           </span>
         </div>
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-sm text-txt-mid">เบิกไปแล้วเดือนนี้</span>
           <span className="text-sm font-bold text-txt-mid">
-            ฿{formatThaiNumber(alreadyRequested)}
+            {formatThaiNumber(alreadyRequested)} ฿
           </span>
         </div>
         <div className="h-px bg-gold/25 my-1.5" />
         <div className="flex justify-between items-center">
           <span className="text-sm font-bold text-txt">คงเหลือเบิกได้</span>
           <span className="text-lg font-extrabold text-green">
-            ฿{formatThaiNumber(remaining)}
+            {formatThaiNumber(remaining)} ฿
           </span>
         </div>
       </div>
@@ -176,7 +176,7 @@ export default function AdvanceRequestModal({
               onClick={() => setAmount(String(v))}
               className="flex-1 py-1.5 px-1 rounded-[9px] border border-bdr bg-white text-maroon text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
             >
-              ฿{formatThaiNumber(v)}
+              {formatThaiNumber(v)} ฿
             </button>
           ))}
       </div>

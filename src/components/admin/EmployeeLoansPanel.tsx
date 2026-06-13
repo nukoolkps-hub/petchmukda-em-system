@@ -160,7 +160,7 @@ export default function EmployeeLoansPanel({
                 <div className="text-[11px] text-txt-soft flex justify-between">
                   <span>เริ่มหัก {monthLabel(loan.startMonth)}</span>
                   <span>
-                    ผ่อนแล้ว ฿{formatThaiNumber(paid)} ({pct}%)
+                    ผ่อนแล้ว {formatThaiNumber(paid)} ฿ ({pct}%)
                   </span>
                 </div>
               </div>
@@ -246,7 +246,7 @@ function Stat({
       <div
         className={`text-sm font-extrabold ${highlight ? "text-maroon" : "text-txt"}`}
       >
-        ฿{formatThaiNumber(value)}
+        {formatThaiNumber(value)} ฿
       </div>
     </div>
   );
@@ -410,7 +410,7 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
           ผ่อนประมาณ <b className="text-maroon">{estMonths} เดือน</b> จนครบ
           {monthlyNum > 0 &&
             principalNum % monthlyNum !== 0 &&
-            ` (เดือนสุดท้าย ฿${formatThaiNumber(principalNum % monthlyNum)})`}
+            ` (เดือนสุดท้าย ${formatThaiNumber(principalNum % monthlyNum)} ฿)`}
         </div>
       )}
 

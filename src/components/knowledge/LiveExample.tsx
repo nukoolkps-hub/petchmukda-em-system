@@ -60,7 +60,7 @@ export default function LiveExample({ title, compute }: Props) {
                   <MathText>{step.calc}</MathText>
                 </div>
                 <div className="text-xs text-txt-soft mt-0.5">
-                  ({step.meaning})
+                  (<MathText>{step.meaning}</MathText>)
                 </div>
               </div>
             </li>
