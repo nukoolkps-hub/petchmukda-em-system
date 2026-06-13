@@ -111,6 +111,7 @@ function buildCertificateHTML(
 <html lang="th">
 <head>
   <meta charset="utf-8"/>
+  <meta name="viewport" content="width=800, initial-scale=1"/>
   <title>หนังสือรับรองเงินเดือน — ${employeeName}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap"/>
   <style>
