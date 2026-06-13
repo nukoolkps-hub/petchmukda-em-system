@@ -70,14 +70,21 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 **Section** = `{ id, title, Icon, blocks[] }` อยู่ใน `src/content/knowledge/index.ts` (hardcode — เปลี่ยนน้อย + commit-driven)
 
 **Block types** (rendered by `KnowledgeBlock` switch):
-- **Static:** `h3` · `p` · `list` · `table` (มี `colWidths`/`colAlign`) · `formula` · `example` · `image` · `callout` · `steps`
-- **Live (subscribe goldPrice):** `change-price-table` · `sell-price-96-table` · `buy-price-96-table` — ใช้ `CHANGE_PRICE_WEIGHTS` (single source ของน้ำหนัก+ค่าแรง) + `computeXxx96` (สูตร shortcut เช่น ½ สลึง = ราคาทอง÷8)
-- **Live with compute fn:** `live-example` (โจทย์+ขั้นตอนคำนวณจากราคาวันนี้) · `calculator` (input form + live output · `goldPriceDefault`/`buyPriceDefault`/`disabledWhen`)
-- **Other:** `secret` (PIN/รหัส dot mask) · `calculator` option ใช้ shortcut ใน `computeSellPrice96` ผ่าน `SELL_SHORTCUT_DIVISORS`
+- **Static:** `h3` · `p` · `list` · `table` (มี `colWidths`/`colAlign`) · `formula` · `example` · `image` · `callout` (รองรับ `\n` multi-line) · `steps`
+- **Live (subscribe goldPrice):** `change-price-table` · `sell-price-96-table` · `buy-price-96-table` (ใช้ `gold.buyPrice` · fallback pricePerBaht) — ใช้ `CHANGE_PRICE_WEIGHTS` (single source ของน้ำหนัก+ค่าแรง) + `SHORTCUT_MULTIPLIERS` shared sell/buy (เช่น ½ สลึง = ราคาทอง × 0.125)
+- **Admin-editable live tables:** `labor-cost-table` · `block-cost-table` · `loyalty-points-redeem-table` — admin กด "แก้ไข" ในตาราง · sync ทุก signed-in ผ่าน `/config/{laborCost,blockCost,loyaltyPoints}`
+- **Live with compute fn:** `live-example` (โจทย์+ขั้นตอนคำนวณจากราคาวันนี้ · receives sell/buy/silverBuy/laborBaht/labor) · `calculator` (input form + live output · `goldPriceDefault`/`buyPriceDefault`/`silverSell+BuyPriceDefault`/`disabledWhen`/`hidden`/`readOnly`/`unit`)
+- **Other:** `secret` (PIN/รหัส dot mask)
+
+**Calculator UX:**
+- input ใช้ `type="text" inputMode="decimal"` · format ด้วย comma (1,234,567) ตอน blur · raw ขณะ focus เพื่อรองรับ "3.79" decimal
+- `rawTexts` state preserve text ขณะพิมพ์ (กัน "3." กลายเป็น "3" ตอน parse)
+- default value ใส่เฉพาะ gold/silver price + option dropdowns · field อื่น (labor, grams, etc.) ว่าง · user กรอกเอง
+- badge "ราคาวันนี้" แสดงเมื่อ value == live (ทั้งตอนยังไม่แตะ + ตอนแก้กลับมาเท่าราคาวันนี้) · เขียว = sell · แดง = buy
 
 **Typography กฎทอง ของ "ความรู้ต่างๆ":**
 - **ตัวอักษร = Prompt font** (default ทั่วระบบ — ห้ามใส่ `font-mono` บน wrapper ของ text)
-- **MathText = font-mono** (เฉพาะเครื่องหมายคำนวณ +/−/×/÷/=)
+- **MathText = font-mono** (เฉพาะเครื่องหมายคำนวณ +/−/×/÷/=) · รองรับ `**bold**` markdown → `<strong>` extrabold maroon
 - ทุกที่ที่อาจมี operator ใน UI ต้อง wrap `<MathText>` (กระจายในทุก block type) — operator regex ไม่จับ ASCII `-` (เพื่อไม่ชน "MD-XX" / "0.05 ก. - 10 บ.") · ถ้าจำเป็นต้องลบใน formula ให้ใช้ U+2212 "−"
 
 **MathText spec:** wrap +/−/×/÷/= ใน span `font-mono 1.3em font-black text-maroon` · ใช้ใน blocks:
@@ -100,7 +107,10 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
                                        ├── payrollConfirms (all signed-in)
                                        ├── poolSnapshots  (all signed-in — peer pool fields)
                                        ├── storeCalendar  (all signed-in — `/config/storeCalendar`)
-                                       └── goldPrice      (all signed-in — `/config/goldPrice` · ราคาทอง live)
+                                       ├── goldPrice      (all signed-in — `/config/goldPrice` · ราคาทอง+เงิน live)
+                                       ├── laborCost      (all signed-in — `/config/laborCost` · admin-edit ค่าแรงเริ่มต้น)
+                                       ├── blockCost      (all signed-in — `/config/blockCost` · admin-edit ค่าบล็อก+ค่าประกัน)
+                                       └── loyaltyPoints  (all signed-in — `/config/loyaltyPoints` · admin-edit แต้มแลกทอง)
 ```
 
 **Scope ของ subscription แตกต่างกัน:**
@@ -164,14 +174,16 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `functions/src/maintenance/cleanupOldTips.ts` | ลบ `recentTips` ที่เก่ากว่า 60 วัน (กัน collection โต) |
 | `functions/src/goldPrice/fetchGoldPrice.ts` | ดึงราคาทองคำสมาคมทุก 15 นาที (scheduled) + manual trigger (onCall) — source chain: mukdagold → HSH |
 | `src/firebase/goldPrice.ts` | `/config/goldPrice` doc — subscribe/update + `triggerFetchGoldPriceNow` callable |
-| `src/utils/changePriceUtils.ts` | สูตรค่าเปลี่ยน นน. เท่ากัน + ราคาขาย/รับซื้อ 96.5% · `CHANGE_PRICE_WEIGHTS` (single source ของน้ำหนัก + ค่าแรง) · `ceilTo50` |
+| `src/firebase/laborCost.ts` / `blockCost.ts` / `loyaltyPoints.ts` | `/config/{laborCost,blockCost,loyaltyPoints}` docs — admin-editable inline ในความรู้ต่างๆ · sync ทุก live table + calc |
+| `src/utils/changePriceUtils.ts` | สูตรค่าเปลี่ยน นน. เท่ากัน + ราคาขาย/รับซื้อ 96.5% · `CHANGE_PRICE_WEIGHTS` + `SHORTCUT_MULTIPLIERS` (shared sell+buy) · `computeBuyPrice96` ใช้ `gold.buyPrice` (fallback sell) · `ceilTo50` |
 | `src/content/knowledge/index.ts` | เนื้อหา "ความรู้ต่างๆ" hardcode 20+ sections (มาตรฐานน้ำหนัก, ค่าแรง, ขาย, รับซื้อ, จำนำ, VAT, ฯลฯ) |
-| `src/content/knowledge/types.ts` | block types: h3 · p · list · table (`colWidths`/`colAlign`) · formula · example · live-example · calculator · change-price-table · sell-price-96-table · buy-price-96-table · secret · callout · image · steps |
+| `src/content/knowledge/types.ts` | block types: h3 · p · list · table (`colWidths`/`colAlign`) · formula · example · live-example · calculator · change-price-table · sell-price-96-table · buy-price-96-table · labor-cost-table · block-cost-table · loyalty-points-redeem-table · secret · callout · image · steps |
 | `src/components/knowledge/KnowledgeView.tsx` | Accordion render + search box (filter section.title) |
-| `src/components/knowledge/KnowledgeBlock.tsx` | Block dispatch — render แต่ละ block type |
-| `src/components/knowledge/Calculator.tsx` | Live calculator block — `goldPriceDefault`/`buyPriceDefault` sync ราคา live, `disabledWhen` conditional disable |
-| `src/components/knowledge/LiveExample.tsx` / `MathText.tsx` | example อิงราคาวันนี้ · wrap +/−/×/÷/= ใน font-mono |
-| `src/components/knowledge/GoldPriceHeader.tsx` / `ChangePriceTable.tsx` / `SellPrice96Table.tsx` / `BuyPrice96Table.tsx` | Live tables ใน "ความรู้ต่างๆ" |
+| `src/components/knowledge/KnowledgeBlock.tsx` | Block dispatch — render แต่ละ block type · callout รองรับ multi-line ผ่าน `whitespace-pre-line` |
+| `src/components/knowledge/Calculator.tsx` | Live calculator block — `goldPriceDefault`/`buyPriceDefault`/`silverSell+BuyPriceDefault` sync ราคา live · `disabledWhen` conditional disable · comma thousand-separator + decimal preserve (rawTexts state) · badge "ราคาวันนี้" สีแยกขายเขียว/รับซื้อแดง · แสดงเมื่อ value = live |
+| `src/components/knowledge/LiveExample.tsx` / `MathText.tsx` | example อิงราคาวันนี้ (sell/buy/silverBuy/labor) · wrap +/−/×/÷/= ใน font-mono · MathText รองรับ `**bold**` |
+| `src/components/knowledge/GoldPriceHeader.tsx` / `ChangePriceTable.tsx` / `SellPrice96Table.tsx` / `BuyPrice96Table.tsx` | Live tables ใน "ความรู้ต่างๆ" · BuyPrice96Table ใช้ `gold.buyPrice` (ไม่ใช่ pricePerBaht) · GoldPriceHeader มีปุ่ม refresh ทั้งทอง+เงิน (toast แสดงราคาก่อน/หลัง) |
+| `src/components/knowledge/LaborCostTable.tsx` / `BlockCostTable.tsx` / `LoyaltyPointsRedeemTable.tsx` | Admin-editable live tables — inline edit + sync ทุก signed-in |
 | `firestore.rules` | Firestore security rules |
 | `storage.rules` | Storage security rules |
 
