@@ -24,7 +24,7 @@ export default function SellPrice96Table() {
     <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
       <div className="px-3 py-2 bg-gold-pale text-maroon text-xs font-extrabold inline-flex items-center gap-1.5 w-full border-b border-gold/30">
         <IconBag size={13} strokeWidth={2.5} />
-        ราคาขาย 96.5% เริ่มต้นวันนี้ — ที่ค่าแรงเริ่มต้น
+        ราคาขายทองรูปพรรณ 96.5% เริ่มต้นวันนี้ — ที่ค่าแรงเริ่มต้น
       </div>
       <table className="w-full text-sm table-fixed">
         <colgroup>
