@@ -88,7 +88,7 @@ export default function AdvanceHistoryModal({
               {monthTotal > 0 && (
                 <div className="text-xs text-txt-soft">
                   เบิกแล้ว{" "}
-                  <b className="text-green">฿{formatThaiNumber(monthTotal)}</b>
+                  <b className="text-green">{formatThaiNumber(monthTotal)} ฿</b>
                 </div>
               )}
             </div>
@@ -105,7 +105,7 @@ export default function AdvanceHistoryModal({
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="text-lg font-extrabold text-txt">
-                        ฿{formatThaiNumber(r.amount)}
+                        {formatThaiNumber(r.amount)} ฿
                       </div>
                       <span
                         className={`text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1 ${s.cls}`}

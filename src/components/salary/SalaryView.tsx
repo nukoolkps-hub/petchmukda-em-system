@@ -515,20 +515,20 @@ export default function SalaryView({
           <div className="text-sm text-gold-lt/65">เงินสุทธิที่ได้รับ</div>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-4xl font-extrabold text-gold-lt tracking-[-0.02em]">
-              ฿{formatThaiNumber(salaryCalculation?.netSalary ?? 0)}
+              {formatThaiNumber(salaryCalculation?.netSalary ?? 0)} ฿
             </span>
           </div>
           <div className="flex gap-3.5 mt-3.5 pt-3.5 border-t border-gold-lt/12">
             <div>
               <div className="text-xs text-gold-lt/50">รวมรายรับ</div>
               <div className="text-base font-bold text-[#7EE8B5]">
-                +฿{formatThaiNumber(salaryCalculation.earnings)}
+                + {formatThaiNumber(salaryCalculation.earnings)} ฿
               </div>
             </div>
             <div>
               <div className="text-xs text-gold-lt/50">รวมรายหัก</div>
               <div className="text-base font-bold text-[#FCA5A5]">
-                −฿{formatThaiNumber(salaryCalculation.deductions)}
+                − {formatThaiNumber(salaryCalculation.deductions)} ฿
               </div>
             </div>
           </div>
@@ -578,7 +578,7 @@ export default function SalaryView({
                         </span>
                       ) : thisMonth > 0 ? (
                         <span className="text-xs font-semibold text-red shrink-0">
-                          เดือนนี้หัก −฿{formatThaiNumber(thisMonth)}
+                          เดือนนี้หัก − {formatThaiNumber(thisMonth)} ฿
                         </span>
                       ) : null}
                     </div>
@@ -590,14 +590,14 @@ export default function SalaryView({
                     </div>
                     <div className="flex justify-between text-xs text-txt-soft">
                       <span>
-                        ผ่อนเดือนละ ฿{formatThaiNumber(loan.monthlyDeduction)}
+                        ผ่อนเดือนละ {formatThaiNumber(loan.monthlyDeduction)} ฿
                       </span>
                       <span>
                         คงเหลือ{" "}
                         <b className="text-maroon">
-                          ฿{formatThaiNumber(remaining)}
+                          {formatThaiNumber(remaining)} ฿
                         </b>{" "}
-                        / ฿{formatThaiNumber(loan.principal)}
+                        / {formatThaiNumber(loan.principal)} ฿
                       </span>
                     </div>
                   </div>
@@ -638,7 +638,7 @@ export default function SalaryView({
                     />
                   ),
                   main: "ค่าคอม",
-                  sub: `${salaryCalculation.singleRatePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.singlePieceRate)}`,
+                  sub: `${salaryCalculation.singleRatePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.singlePieceRate)} ฿`,
                   value: salaryCalculation.singleRateCommission,
                 },
               ]
@@ -657,8 +657,8 @@ export default function SalaryView({
                         poolShare.excludedNormalPieces > 0
                           ? `${poolShare.grossSellPoolPieces} − ${poolShare.excludedNormalPieces} = ${poolShare.totalSellPoolPieces}`
                           : poolShare.totalSellPoolPieces
-                      } ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`
-                    : `${salaryCalculation.normalSalePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.normalSalePieceRate)}`,
+                      } ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ${formatThaiNumber(salaryCalculation.normalSalePieceRate)} ฿`
+                    : `${salaryCalculation.normalSalePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.normalSalePieceRate)} ฿`,
                   value: salaryCalculation.normalSaleCommission,
                 },
                 {
@@ -670,7 +670,7 @@ export default function SalaryView({
                     />
                   ),
                   main: "ค่าคอมขาย (พิเศษ)",
-                  sub: `${salaryCalculation.specialSalePieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.specialSalePieceRate)}`,
+                  sub: `${salaryCalculation.specialSalePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.specialSalePieceRate)} ฿`,
                   value: salaryCalculation.specialSaleCommission,
                 },
                 {
@@ -687,8 +687,8 @@ export default function SalaryView({
                         poolShare.excludedBuyPieces > 0
                           ? `${poolShare.grossBuyPoolPieces} − ${poolShare.excludedBuyPieces} = ${poolShare.totalBuyPoolPieces}`
                           : poolShare.totalBuyPoolPieces
-                      } ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`
-                    : `${salaryCalculation.buyPieces} ชิ้น × ฿${formatThaiNumber(salaryCalculation.buyPieceRate)}`,
+                      } ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ${formatThaiNumber(salaryCalculation.buyPieceRate)} ฿`
+                    : `${salaryCalculation.buyPieces} ชิ้น × ${formatThaiNumber(salaryCalculation.buyPieceRate)} ฿`,
                   value: salaryCalculation.buyCommission,
                 },
               ]),
@@ -697,7 +697,7 @@ export default function SalaryView({
               <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
             ),
             main: "โบนัสเชิญชวนสมัครบัตร",
-            sub: `${salaryCalculation.invitePieces} ใบ × ฿${formatThaiNumber(salaryCalculation.invitePieceRate)}`,
+            sub: `${salaryCalculation.invitePieces} ใบ × ${formatThaiNumber(salaryCalculation.invitePieceRate)} ฿`,
             value: salaryCalculation.inviteCommission,
           },
           {
@@ -705,7 +705,7 @@ export default function SalaryView({
               <IconRefresh size={16} strokeWidth={2.2} color={COLORS.gold} />
             ),
             main: "โบนัสย้ายข้อมูลบัตร",
-            sub: `${salaryCalculation.transferPieces} ใบ × ฿${formatThaiNumber(salaryCalculation.transferPieceRate)}`,
+            sub: `${salaryCalculation.transferPieces} ใบ × ${formatThaiNumber(salaryCalculation.transferPieceRate)} ฿`,
             value: salaryCalculation.transferCommission,
           },
           {
@@ -713,7 +713,7 @@ export default function SalaryView({
             main: "โบนัสแห่งความขยัน(ไม่หยุด)",
             sub:
               salaryCalculation.leaveDays <= 2
-                ? `ลาวันธรรมดา ${salaryCalculation.leaveDays} วัน → ${salaryCalculation.bonusDays} วัน × ฿${formatThaiNumber(Math.round(salaryCalculation.dailySalaryRate))}`
+                ? `ลาวันธรรมดา ${salaryCalculation.leaveDays} วัน → ${salaryCalculation.bonusDays} วัน × ${formatThaiNumber(Math.round(salaryCalculation.dailySalaryRate))} ฿`
                 : `ลาวันธรรมดา ${salaryCalculation.leaveDays} วัน — ไม่ได้รับโบนัส`,
             value: salaryCalculation.attendanceBonus,
           },
@@ -744,14 +744,14 @@ export default function SalaryView({
                 )}
               </div>
               <span className="text-base font-semibold text-green whitespace-nowrap">
-                +฿{formatThaiNumber(row.value)}
+                + {formatThaiNumber(row.value)} ฿
               </span>
             </div>
           ))}
         <div className="flex justify-between items-center pt-3 border-t-[1.5px] border-cream-dk mt-2">
           <span className="text-sm font-bold text-txt">รวมรายรับ</span>
           <span className="text-lg font-extrabold text-green">
-            ฿{formatThaiNumber(salaryCalculation.earnings)}
+            {formatThaiNumber(salaryCalculation.earnings)} ฿
           </span>
         </div>
       </div>
@@ -843,7 +843,7 @@ export default function SalaryView({
                 )}
               </div>
               <span className="text-base font-semibold text-red whitespace-nowrap">
-                −฿{formatThaiNumber(row.value)}
+                − {formatThaiNumber(row.value)} ฿
               </span>
             </div>
           ))}
@@ -857,7 +857,7 @@ export default function SalaryView({
           <div className="flex justify-between items-center pt-3 border-t-[1.5px] border-cream-dk mt-2">
             <span className="text-sm font-bold text-txt">รวมรายหัก</span>
             <span className="text-lg font-extrabold text-red">
-              ฿{formatThaiNumber(salaryCalculation.deductions)}
+              {formatThaiNumber(salaryCalculation.deductions)} ฿
             </span>
           </div>
         )}

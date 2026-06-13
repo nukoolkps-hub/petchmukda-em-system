@@ -43,7 +43,7 @@ export default function ChangePriceTable() {
             </span>
           ) : (
             <span className="text-base font-extrabold text-maroon">
-              ฿{formatThaiNumber(gold.pricePerBaht)}/บาท
+              {formatThaiNumber(gold.pricePerBaht)} ฿/บาท
             </span>
           )}
         </div>

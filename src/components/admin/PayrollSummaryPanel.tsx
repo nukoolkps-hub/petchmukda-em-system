@@ -448,13 +448,13 @@ export default function PayrollSummaryPanel({
           <div
             className={`text-3xl font-extrabold text-gold-lt tracking-[-0.02em] mb-2 transition-opacity duration-200 ${advanceDataBlocked ? "opacity-40" : ""}`}
           >
-            ฿{formatThaiNumber(totalPayout)}
+            {formatThaiNumber(totalPayout)} ฿
           </div>
           {totalAdvance > 0 && !advanceDataBlocked && (
             <div className="text-sm text-gold-lt/60 pt-2 border-t border-gold-lt/15 flex items-center gap-1.5">
               <IconBanknote size={14} strokeWidth={2.4} className="shrink-0" />
               <span>
-                หักเบิกล่วงหน้าไปแล้ว: <b>฿{formatThaiNumber(totalAdvance)}</b> (
+                หักเบิกล่วงหน้าไปแล้ว: <b>{formatThaiNumber(totalAdvance)} ฿</b> (
                 {filtered.filter((r) => r.advanceTotal > 0).length} คน)
               </span>
             </div>
@@ -497,7 +497,7 @@ export default function PayrollSummaryPanel({
                   <div className="flex-1">
                     <div className="font-bold text-sm text-txt">ปิดรอบแล้ว</div>
                     <div className="text-xs text-txt-soft mt-0.5">
-                      ยอด ฿{formatThaiNumber(confirmed.totalAmount)} ·{" "}
+                      ยอด {formatThaiNumber(confirmed.totalAmount)} ฿ ·{" "}
                       {confirmed.employeeCount} คน · แก้ไขไม่ได้แล้ว
                     </div>
                   </div>
@@ -556,11 +556,11 @@ export default function PayrollSummaryPanel({
                   <div className="text-sm text-txt-mid px-3 py-2 bg-white rounded-lg mb-2 border border-dashed border-amber/25 leading-normal">
                     <div>
                       ตอนยืนยัน: <b>{confirmed.employeeCount} คน</b> ·{" "}
-                      <b>฿{formatThaiNumber(confirmed.totalAmount)}</b>
+                      <b>{formatThaiNumber(confirmed.totalAmount)} ฿</b>
                     </div>
                     <div>
                       ตอนนี้: <b>{empCountForMonth} คน</b> ·{" "}
-                      <b>฿{formatThaiNumber(totalForMonth)}</b>
+                      <b>{formatThaiNumber(totalForMonth)} ฿</b>
                     </div>
                   </div>
                   <button
@@ -576,7 +576,7 @@ export default function PayrollSummaryPanel({
                 </>
               ) : (
                 <div className="text-sm text-txt-mid px-2.5 py-1.5 bg-white rounded-lg">
-                  ยอด <b>฿{formatThaiNumber(confirmed.totalAmount)}</b> ·{" "}
+                  ยอด <b>{formatThaiNumber(confirmed.totalAmount)} ฿</b> ·{" "}
                   {confirmed.employeeCount} คน
                   <div className="text-xs text-txt-soft mt-1.5 flex items-center gap-1.5">
                     <IconLock
@@ -704,11 +704,11 @@ export default function PayrollSummaryPanel({
                     <div
                       className={`text-lg font-extrabold ${lostBase ? "text-red" : "text-maroon"}`}
                     >
-                      ฿{formatThaiNumber(salaryCalculation.netSalary)}
+                      {formatThaiNumber(salaryCalculation.netSalary)} ฿
                     </div>
                     {advanceTotal > 0 && (
                       <div className="text-xs text-txt-soft mt-px">
-                        (หักเบิก ฿{formatThaiNumber(advanceTotal)})
+                        (หักเบิก {formatThaiNumber(advanceTotal)} ฿)
                       </div>
                     )}
                   </div>
@@ -779,7 +779,7 @@ export default function PayrollSummaryPanel({
           <div className="text-sm text-txt-mid text-center mb-2 leading-[1.9]">
             ยอดรวม{" "}
             <b className="text-maroon">
-              ฿{formatThaiNumber(pendingConfirm.total)}
+              {formatThaiNumber(pendingConfirm.total)} ฿
             </b>
             <br />
             จำนวน <b>{pendingConfirm.count} คน</b>

@@ -35,7 +35,7 @@ export default function KnowledgeBlockView({ block }: Props) {
         <p
           className={`text-sm leading-relaxed mb-2.5 ${block.muted ? "text-txt-soft" : "text-txt"}`}
         >
-          {block.text}
+          <MathText>{block.text}</MathText>
         </p>
       );
 
@@ -45,7 +45,7 @@ export default function KnowledgeBlockView({ block }: Props) {
           <ol className="list-decimal list-outside pl-5 mb-2.5 space-y-1 text-sm text-txt">
             {block.items.map((item, i) => (
               <li key={`${item.slice(0, 16)}-${i}`} className="leading-relaxed">
-                {item}
+                <MathText>{item}</MathText>
               </li>
             ))}
           </ol>
@@ -59,7 +59,9 @@ export default function KnowledgeBlockView({ block }: Props) {
               className="leading-relaxed flex items-start gap-2"
             >
               <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-              <span>{item}</span>
+              <span>
+                <MathText>{item}</MathText>
+              </span>
             </li>
           ))}
         </ul>
@@ -134,11 +136,11 @@ export default function KnowledgeBlockView({ block }: Props) {
               {block.label}
             </div>
           )}
-          <div className="text-sm font-bold text-maroon leading-relaxed font-mono">
+          <div className="text-sm font-bold text-maroon leading-relaxed">
             <MathText>{block.formula}</MathText>
           </div>
           {block.result && (
-            <div className="text-sm font-semibold text-txt-mid mt-1 font-mono">
+            <div className="text-sm font-semibold text-txt-mid mt-1">
               <MathText>{`= ${block.result}`}</MathText>
             </div>
           )}
@@ -156,7 +158,7 @@ export default function KnowledgeBlockView({ block }: Props) {
             <div className="text-xs text-txt-soft font-semibold mb-1.5">
               โจทย์
             </div>
-            <ul className="mb-2.5 space-y-0.5 text-sm text-txt font-mono">
+            <ul className="mb-2.5 space-y-0.5 text-sm text-txt">
               {block.given.map((g, i) => (
                 <li key={`g-${i}`} className="flex items-start gap-2">
                   <span className="text-gold mt-0.5">·</span>
@@ -183,7 +185,7 @@ export default function KnowledgeBlockView({ block }: Props) {
                       <MathText>{step.calc}</MathText>
                     </div>
                     <div className="text-xs text-txt-soft mt-0.5">
-                      ({step.meaning})
+                      (<MathText>{step.meaning}</MathText>)
                     </div>
                   </div>
                 </li>
@@ -225,7 +227,9 @@ export default function KnowledgeBlockView({ block }: Props) {
           className={`mb-3 px-3 py-2 rounded-[10px] border flex items-start gap-2 ${palette}`}
         >
           <Icon size={16} strokeWidth={2.4} className="shrink-0 mt-0.5" />
-          <div className="text-sm leading-snug">{block.text}</div>
+          <div className="text-sm leading-snug">
+            <MathText>{block.text}</MathText>
+          </div>
         </div>
       );
     }

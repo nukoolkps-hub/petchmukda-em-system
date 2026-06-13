@@ -311,7 +311,7 @@ export default function AdminAdvancePanel({
                 <div className="flex items-center justify-between px-3 py-2.5 bg-gold-pale rounded-[10px] mb-2.5 border border-[#C9973A30]">
                   <span className="text-sm text-txt-mid">จำนวนเงินที่ขอเบิก</span>
                   <span className="text-xl font-extrabold text-maroon">
-                    ฿{formatThaiNumber(request.amount)}
+                    {formatThaiNumber(request.amount)} ฿
                   </span>
                 </div>
 

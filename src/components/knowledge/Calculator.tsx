@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CalcField, CalcOutput } from "../../content/knowledge/types";
 import { useGoldPrice } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
+import MathText from "./MathText";
 
 interface Props {
   title: string;
@@ -17,7 +18,7 @@ interface Props {
 
 function formatOutput(value: number, format: CalcOutput["format"]): string {
   if (!Number.isFinite(value)) return "—";
-  if (format === "currency") return `฿${formatThaiNumber(Math.round(value))}`;
+  if (format === "currency") return `${formatThaiNumber(Math.round(value))} ฿`;
   return formatThaiNumber(Math.round(value * 100) / 100);
 }
 
@@ -88,7 +89,7 @@ export default function Calculator({ title, inputs, compute }: Props) {
               htmlFor={`calc-${field.id}`}
               className="text-xs font-semibold text-txt-mid flex-1 min-w-0 leading-snug"
             >
-              {field.label}
+              <MathText>{field.label}</MathText>
               {(field.goldPriceDefault || field.buyPriceDefault) &&
                 !touched.has(field.id) && (
                   <span className="ml-1 text-[10px] text-green font-bold">
@@ -161,10 +162,10 @@ export default function Calculator({ title, inputs, compute }: Props) {
               className="flex items-baseline justify-between gap-3 py-1.5"
             >
               <div className="text-xs text-txt-soft flex-1 min-w-0">
-                {out.label}
+                <MathText>{out.label}</MathText>
                 {out.hint && (
                   <div className="text-[10px] text-txt-soft/80 italic mt-0.5">
-                    {out.hint}
+                    <MathText>{out.hint}</MathText>
                   </div>
                 )}
               </div>

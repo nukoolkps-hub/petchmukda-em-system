@@ -813,7 +813,7 @@ export default function SalaryAdminEdit({
               <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
               <div className="font-bold text-sm text-txt">ค่าคอม</div>
               <div className="ml-auto text-sm font-bold text-gold">
-                +฿{formatThaiNumber(salaryCalculation.singleRateCommission)}
+                + {formatThaiNumber(salaryCalculation.singleRateCommission)} ฿
               </div>
             </div>
             <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
@@ -825,7 +825,7 @@ export default function SalaryAdminEdit({
                 <div className="text-xs text-txt-soft">
                   Rate:{" "}
                   <b className="text-maroon">
-                    ฿{formatThaiNumber(employeeInfo?.singlePieceRate || 0)}/ชิ้น
+                    {formatThaiNumber(employeeInfo?.singlePieceRate || 0)} ฿/ชิ้น
                   </b>
                 </div>
               </div>
@@ -844,7 +844,7 @@ export default function SalaryAdminEdit({
                 </div>
                 <div className="text-sm text-txt-soft font-semibold">=</div>
                 <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                  ฿{formatThaiNumber(salaryCalculation.singleRateCommission)}
+                  {formatThaiNumber(salaryCalculation.singleRateCommission)} ฿
                 </div>
               </div>
             </div>
@@ -949,7 +949,7 @@ export default function SalaryAdminEdit({
                 <div className="text-xs text-txt-soft">
                   Rate:{" "}
                   <b className="text-maroon">
-                    ฿{formatThaiNumber(employeeInfo?.specialSalePieceRate || 0)}
+                    {formatThaiNumber(employeeInfo?.specialSalePieceRate || 0)} ฿
                     /ชิ้น
                   </b>
                 </div>
@@ -998,7 +998,7 @@ export default function SalaryAdminEdit({
                     <div className="text-xs text-txt-soft">
                       Rate:{" "}
                       <b className="text-maroon">
-                        ฿{formatThaiNumber(employeeInfo?.buyPieceRate || 0)}/ชิ้น
+                        {formatThaiNumber(employeeInfo?.buyPieceRate || 0)} ฿/ชิ้น
                       </b>
                     </div>
                   </div>
@@ -1053,7 +1053,7 @@ export default function SalaryAdminEdit({
             <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
             <div className="font-bold text-sm text-txt">โบนัสบัตรสมาชิก</div>
             <div className="ml-auto text-sm font-bold text-maroon">
-              +฿{formatThaiNumber(salaryCalculation.memberBonusTotal)}
+              + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
             </div>
           </div>
 
@@ -1071,7 +1071,7 @@ export default function SalaryAdminEdit({
               <div className="text-xs text-txt-soft">
                 Rate:{" "}
                 <b className="text-maroon">
-                  ฿{formatThaiNumber(employeeInfo?.invitePieceRate || 0)}/ใบ
+                  {formatThaiNumber(employeeInfo?.invitePieceRate || 0)} ฿/ใบ
                 </b>
               </div>
             </div>
@@ -1091,7 +1091,7 @@ export default function SalaryAdminEdit({
               </div>
               <div className="text-sm text-txt-soft font-semibold">=</div>
               <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                ฿{formatThaiNumber(salaryCalculation.inviteCommission)}
+                {formatThaiNumber(salaryCalculation.inviteCommission)} ฿
               </div>
             </div>
           </div>
@@ -1110,7 +1110,7 @@ export default function SalaryAdminEdit({
               <div className="text-xs text-txt-soft">
                 Rate:{" "}
                 <b className="text-maroon">
-                  ฿{formatThaiNumber(employeeInfo?.transferPieceRate || 0)}/ใบ
+                  {formatThaiNumber(employeeInfo?.transferPieceRate || 0)} ฿/ใบ
                 </b>
               </div>
             </div>
@@ -1130,7 +1130,7 @@ export default function SalaryAdminEdit({
               </div>
               <div className="text-sm text-txt-soft font-semibold">=</div>
               <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                ฿{formatThaiNumber(salaryCalculation.transferCommission)}
+                {formatThaiNumber(salaryCalculation.transferCommission)} ฿
               </div>
             </div>
           </div>
@@ -1142,7 +1142,7 @@ export default function SalaryAdminEdit({
             <div className="w-1.5 h-4.5 rounded-sm bg-green" />
             <div className="font-bold text-sm text-txt">รายรับ</div>
             <div className="ml-auto text-sm font-bold text-green">
-              +฿{formatThaiNumber(salaryCalculation.earnings)}
+              + {formatThaiNumber(salaryCalculation.earnings)} ฿
             </div>
           </div>
 
@@ -1157,7 +1157,7 @@ export default function SalaryAdminEdit({
                 </span>
               </div>
               <div className="text-base font-bold text-txt mt-px">
-                ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)}
+                {formatThaiNumber(employeeInfo?.baseSalary || 0)} ฿
               </div>
             </div>
           </div>
@@ -1171,7 +1171,7 @@ export default function SalaryAdminEdit({
                   รวมค่าคอมตามจำนวนชิ้น
                 </div>
                 <div className="text-base font-bold text-green mt-px">
-                  +฿{formatThaiNumber(pieceCommissionTotal)}
+                  + {formatThaiNumber(pieceCommissionTotal)} ฿
                 </div>
               </div>
             </div>
@@ -1190,7 +1190,7 @@ export default function SalaryAdminEdit({
                         {formatThaiNumber(b.rate)}
                       </span>
                       <span className="font-semibold text-txt-mid">
-                        +฿{formatThaiNumber(b.amount)}
+                        + {formatThaiNumber(b.amount)} ฿
                       </span>
                     </div>
                   ))}
@@ -1212,7 +1212,7 @@ export default function SalaryAdminEdit({
                     เงินค่าแทน (แทนคนลาเดือนนี้)
                   </div>
                   <div className="text-base font-bold text-green mt-px">
-                    +฿{formatThaiNumber(salaryCalculation.coveragePay || 0)}
+                    + {formatThaiNumber(salaryCalculation.coveragePay || 0)} ฿
                   </div>
                 </div>
               </div>
@@ -1229,7 +1229,7 @@ export default function SalaryAdminEdit({
                           {formatThaiNumber(b.rate)}
                         </span>
                         <span className="font-semibold text-txt-mid">
-                          +฿{formatThaiNumber(b.subtotal)}
+                          + {formatThaiNumber(b.subtotal)} ฿
                         </span>
                       </div>
                     ))}
@@ -1247,7 +1247,7 @@ export default function SalaryAdminEdit({
                   รวมโบนัสบัตรสมาชิก
                 </div>
                 <div className="text-base font-bold text-green mt-px">
-                  +฿{formatThaiNumber(salaryCalculation.memberBonusTotal)}
+                  + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
                 </div>
               </div>
             </div>
@@ -1265,7 +1265,7 @@ export default function SalaryAdminEdit({
                         {formatThaiNumber(b.rate)}
                       </span>
                       <span className="font-semibold text-txt-mid">
-                        +฿{formatThaiNumber(b.amount)}
+                        + {formatThaiNumber(b.amount)} ฿
                       </span>
                     </div>
                   ))}
@@ -1308,7 +1308,7 @@ export default function SalaryAdminEdit({
               </span>
             </div>
             <div className="text-txt-mid">
-              เรท/วัน = ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)} ÷ 30 ={" "}
+              เรท/วัน = {formatThaiNumber(employeeInfo?.baseSalary || 0)} ฿ ÷ 30 ={" "}
               <b>
                 ฿
                 {formatThaiNumber(
@@ -1396,7 +1396,7 @@ export default function SalaryAdminEdit({
             <div className="w-1.5 h-4.5 rounded-sm bg-red" />
             <div className="font-bold text-sm text-txt">รายการหัก</div>
             <div className="ml-auto text-sm font-bold text-red">
-              −฿{formatThaiNumber(salaryCalculation.deductions)}
+              − {formatThaiNumber(salaryCalculation.deductions)} ฿
             </div>
           </div>
           {/* Social security — read-only (กำหนดในข้อมูลพนักงาน) */}
@@ -1410,7 +1410,7 @@ export default function SalaryAdminEdit({
                 </span>
               </div>
               <div className="text-base font-bold text-txt mt-px">
-                −฿{formatThaiNumber(salaryCalculation.socialSecurity || 0)}
+                − {formatThaiNumber(salaryCalculation.socialSecurity || 0)} ฿
               </div>
             </div>
           </div>
@@ -1424,7 +1424,7 @@ export default function SalaryAdminEdit({
               </span>
             </div>
             <div>
-              เรท/วัน = ฿{formatThaiNumber(employeeInfo?.baseSalary || 0)} ÷ 30 ={" "}
+              เรท/วัน = {formatThaiNumber(employeeInfo?.baseSalary || 0)} ฿ ÷ 30 ={" "}
               <b>
                 ฿
                 {formatThaiNumber(
@@ -1507,7 +1507,7 @@ export default function SalaryAdminEdit({
                         })}{" "}
                         · {r.reason || "-"}
                       </span>
-                      <b>฿{formatThaiNumber(r.amount)}</b>
+                      <b>{formatThaiNumber(r.amount)} ฿</b>
                     </div>
                   );
                 })}
@@ -1537,12 +1537,12 @@ export default function SalaryAdminEdit({
                     className="flex justify-between items-center py-[3px]"
                   >
                     <span>{loan?.note || "เงินกู้"}</span>
-                    <b>฿{formatThaiNumber(b.amount)}</b>
+                    <b>{formatThaiNumber(b.amount)} ฿</b>
                   </div>
                 );
               })}
               <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-                หักเดือนนี้: −฿{formatThaiNumber(salaryCalculation.loanDeduction)}
+                หักเดือนนี้: − {formatThaiNumber(salaryCalculation.loanDeduction)} ฿
               </div>
             </div>
           )}
@@ -1630,13 +1630,13 @@ export default function SalaryAdminEdit({
             )}
           </div>
           <div className="text-2xl font-extrabold text-gold-lt mt-0.5">
-            ฿{formatThaiNumber(salaryCalculation.netSalary)}
+            {formatThaiNumber(salaryCalculation.netSalary)} ฿
           </div>
         </div>
         <div className="text-right text-sm leading-[1.7] text-[#E8C87A99]">
-          รายรับ +฿{formatThaiNumber(salaryCalculation.earnings)}
+          รายรับ + {formatThaiNumber(salaryCalculation.earnings)} ฿
           <br />
-          รายหัก −฿{formatThaiNumber(salaryCalculation.deductions)}
+          รายหัก − {formatThaiNumber(salaryCalculation.deductions)} ฿
         </div>
       </div>
 
