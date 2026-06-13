@@ -55,6 +55,11 @@
   --color-gold: #c9973a;
   --color-gold-lt: #e8c87a;
   --color-gold-pale: #f5e6c8;
+  /* silver — สำหรับการ์ดเงิน + accent ที่ไม่ใช่ทอง · ใช้ tone graphite-gray
+     (เทียบ #4c4c50 ที่ mukdagold ใช้ในการ์ดราคาเงิน) */
+  --color-silver: #5a5a60;
+  --color-silver-dk: #3a3a40;
+  --color-silver-lt: #b8b8c0;
   --color-cream: #fdf8f0;
   --color-cream-dk: #f0e4cc;
   --color-txt: #2d1a0e;
