@@ -260,6 +260,12 @@ service cloud.firestore {
       allow read:  if isSignedIn();
       allow write: if isAdmin();
     }
+    // ค่าแรงเริ่มต้น (ทอง 96.5%): ทุกคน signed-in อ่าน (ใช้ใน knowledge
+    // labor table + live sell price + change price calc) · admin แก้
+    match /config/laborCost {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
     match /config/{document} {
       allow read, write: if false;
     }

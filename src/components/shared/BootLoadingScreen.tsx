@@ -21,7 +21,22 @@ export default function BootLoadingScreen({
     const id = setInterval(() => {
       setProgress((p) => Math.min(95, p + (95 - p) * 0.06));
     }, 80);
-    return () => clearInterval(id);
+    // หลัง 10 วินาที ถ้ายังโหลดไม่เสร็จ (component ยัง mount) → auto-reload
+    // กัน user ค้างหน้านี้นานเกินไป (Firebase/Firestore handshake stuck)
+    // ใช้ sessionStorage กัน loop — ถ้า reload แล้วยัง stuck รอเอง
+    const RELOAD_KEY = "boot-auto-reloaded";
+    const reloadTimer = setTimeout(() => {
+      if (sessionStorage.getItem(RELOAD_KEY)) return; // เคย reload แล้วในรอบนี้
+      sessionStorage.setItem(RELOAD_KEY, "1");
+      window.location.reload();
+    }, 10000);
+    return () => {
+      clearInterval(id);
+      clearTimeout(reloadTimer);
+      // โหลดสำเร็จ (component unmount) → ล้าง flag เพื่อให้ครั้งหน้า auto-reload
+      // ทำงานได้อีก
+      sessionStorage.removeItem(RELOAD_KEY);
+    };
   }, []);
 
   return (

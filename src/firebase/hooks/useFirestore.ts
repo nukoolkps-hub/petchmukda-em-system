@@ -25,6 +25,7 @@ import {
   subscribeEmployees,
 } from "../employees";
 import { DEFAULT_GOLD_PRICE, subscribeGoldPrice } from "../goldPrice";
+import { EMPTY_LABOR_COST, subscribeLaborCost } from "../laborCost";
 import { subscribeLeaves, subscribeLeavesByEmployeeId } from "../leaves";
 import { subscribePayrollConfirms } from "../payrollConfirms";
 import {
@@ -362,6 +363,16 @@ export function useGoldPrice() {
   return useScopedSubscription(
     () => subscribeGoldPrice,
     DEFAULT_GOLD_PRICE,
+    [],
+  );
+}
+
+/** ค่าแรงเริ่มต้น (ทอง 96.5%) — public read · admin write · doc เดียว
+ *  /config/laborCost · override CHANGE_PRICE_WEIGHTS.laborBase */
+export function useLaborCost() {
+  return useScopedSubscription(
+    () => subscribeLaborCost,
+    EMPTY_LABOR_COST,
     [],
   );
 }
