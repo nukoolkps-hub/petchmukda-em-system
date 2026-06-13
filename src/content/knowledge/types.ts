@@ -32,7 +32,7 @@ export interface CalcOutput {
 
 export type KnowledgeBlock =
   | { type: "h3"; text: string }
-  | { type: "p"; text: string; muted?: boolean }
+  | { type: "p"; text: string; muted?: boolean; adminOnly?: boolean }
   | { type: "list"; items: string[]; ordered?: boolean }
   | {
       type: "table";

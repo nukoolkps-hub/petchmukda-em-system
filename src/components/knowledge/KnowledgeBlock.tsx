@@ -42,6 +42,8 @@ export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props)
       );
 
     case "p":
+      // adminOnly: ซ่อนสำหรับพนักงาน (เช่น คำอธิบาย "ADMIN กดแก้ไข...")
+      if (block.adminOnly && !isAdmin) return null;
       return (
         <p
           className={`text-sm leading-relaxed mb-2.5 ${block.muted ? "text-txt-soft" : "text-txt"}`}
