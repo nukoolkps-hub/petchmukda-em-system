@@ -80,7 +80,7 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
         )}
       </div>
 
-      {/* prices */}
+      {/* prices — ทองคำ (บาทละ) */}
       <div className="grid grid-cols-2 divide-x divide-bdr/50">
         <div className="px-3.5 py-3 text-center">
           <div className="text-[11px] font-bold text-red">รับซื้อ</div>
@@ -100,10 +100,46 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
         </div>
       </div>
 
+      {/* silver — เฉพาะถ้ามีข้อมูล */}
+      {gold.updatedAt > 0 &&
+        (gold.silverBuyPerGram > 0 || gold.silverSellPerGram > 0) && (
+          <div className="border-t border-bdr/50 bg-cream/30">
+            <div className="px-3.5 py-1.5 text-[10px] font-bold text-txt-soft text-center">
+              ราคาเงินแท่ง / กรัม
+            </div>
+            <div className="grid grid-cols-2 divide-x divide-bdr/50 pb-2">
+              <div className="px-3.5 text-center">
+                <div className="text-[10px] font-bold text-red">รับซื้อ</div>
+                <div className="text-sm font-extrabold text-red">
+                  {gold.silverBuyPerGram > 0
+                    ? gold.silverBuyPerGram.toLocaleString("th-TH", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : "—"}
+                </div>
+              </div>
+              <div className="px-3.5 text-center">
+                <div className="text-[10px] font-bold text-green">
+                  ขายออก <span className="text-txt-soft">(รวม VAT 7%)</span>
+                </div>
+                <div className="text-sm font-extrabold text-green">
+                  {gold.silverSellPerGram > 0
+                    ? gold.silverSellPerGram.toLocaleString("th-TH", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : "—"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       {/* updated at */}
       <div className="px-3.5 py-1.5 bg-cream/60 border-t border-bdr/40 text-[10px] text-txt-soft text-center italic">
         อัปเดต {fmtThaiDateTime(gold.updatedAt)}
-        {gold.updatedBy ? ` · ${gold.updatedBy}` : ""} · บาทละ (฿)
+        {gold.updatedBy ? ` · ${gold.updatedBy}` : ""} · ทอง: บาทละ (฿)
       </div>
     </div>
   );

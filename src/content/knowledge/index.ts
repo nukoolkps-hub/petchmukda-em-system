@@ -351,7 +351,13 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "calculator",
         title: "ราคาขายเงิน",
         inputs: [
-          { id: "rate", label: "ราคาเงิน/กรัม", defaultValue: 30, suffix: "฿" },
+          {
+            id: "rate",
+            label: "ราคาเงิน/กรัม",
+            defaultValue: 30,
+            suffix: "฿",
+            silverSellPriceDefault: true,
+          },
           { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
           { id: "labor", label: "ค่าแรง", defaultValue: 200, suffix: "฿" },
         ],
@@ -868,7 +874,13 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "calculator",
         title: "ราคารับซื้อเงิน",
         inputs: [
-          { id: "rate", label: "ราคาเงิน/กรัม", defaultValue: 30, suffix: "฿" },
+          {
+            id: "rate",
+            label: "ราคาเงิน/กรัม",
+            defaultValue: 30,
+            suffix: "฿",
+            silverBuyPriceDefault: true,
+          },
           { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
         ],
         compute: ({ rate, grams }) => [

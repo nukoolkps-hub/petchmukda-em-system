@@ -33,7 +33,11 @@ function formatOutput(
 export default function Calculator({ title, inputs, compute }: Props) {
   const { data: gold } = useGoldPrice();
   const hasLiveField = inputs.some(
-    (f) => f.goldPriceDefault || f.buyPriceDefault,
+    (f) =>
+      f.goldPriceDefault ||
+      f.buyPriceDefault ||
+      f.silverSellPriceDefault ||
+      f.silverBuyPriceDefault,
   );
 
   const [values, setValues] = useState<Record<string, number>>(() => {
@@ -44,7 +48,7 @@ export default function Calculator({ title, inputs, compute }: Props) {
   // field ที่ผู้ใช้พิมพ์แก้เองแล้ว — จะหยุด sync ราคา live ให้ field นั้น
   const [touched, setTouched] = useState<Set<string>>(() => new Set());
 
-  // ช่อง "ราคาทอง" / "ราคารับซื้อ" → sync กับราคา live จนกว่า user จะแก้เอง
+  // ช่อง "ราคาทอง" / "ราคารับซื้อ" / "ราคาเงิน" → sync กับราคา live
   useEffect(() => {
     if (!hasLiveField) return;
     setValues((prev) => {
@@ -55,7 +59,11 @@ export default function Calculator({ title, inputs, compute }: Props) {
           ? gold.pricePerBaht
           : f.buyPriceDefault
             ? gold.buyPrice
-            : null;
+            : f.silverSellPriceDefault
+              ? gold.silverSellPerGram
+              : f.silverBuyPriceDefault
+                ? gold.silverBuyPerGram
+                : null;
         if (live && live > 0 && !touched.has(f.id) && next[f.id] !== live) {
           next[f.id] = live;
           changed = true;
@@ -63,7 +71,15 @@ export default function Calculator({ title, inputs, compute }: Props) {
       }
       return changed ? next : prev;
     });
-  }, [hasLiveField, gold.pricePerBaht, gold.buyPrice, inputs, touched]);
+  }, [
+    hasLiveField,
+    gold.pricePerBaht,
+    gold.buyPrice,
+    gold.silverSellPerGram,
+    gold.silverBuyPerGram,
+    inputs,
+    touched,
+  ]);
 
   const outputs = useMemo(() => {
     try {
