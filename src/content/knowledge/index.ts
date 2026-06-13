@@ -1430,7 +1430,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         ordered: true,
         items: [
           'หา "ราคาขายทองรูปพรรณรวมค่ากำเหน็จ" (ราคาวันที่คุณซื้อ)',
-          'หา "ราคารับซื้อคืนทองรูปพรรณ" (ราคาประกาศของสมาคมค้าทองคำในวันที่คุณขาย)',
+          'หา "ราคารับซื้อคืนทองรูปพรรณ" (ราคาประกาศของสมาคมค้าทองคำในวันที่คุณขาย) หรือ นำราคารับซื้อทองคำแท่ง คูณ 98%',
           "คำนวณส่วนต่าง — ราคาขาย (รวมค่ากำเหน็จ) − ราคารับซื้อคืน = ฐานภาษี",
           "คำนวณ VAT — ฐานภาษี × 7% = VAT ที่ร้านทองต้องนำส่ง",
         ],
@@ -1441,7 +1441,9 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         compute: ({ sell, buy }) => {
           const gamnet = 1000;
           const total = sell + gamnet;
-          const diff = total - buy;
+          // ราคารับซื้อคืน (VAT) = ราคารับซื้อทองคำแท่ง × 98%
+          const buyback = buy * 0.98;
+          const diff = total - buyback;
           const vat = Math.max(0, diff) * 0.07;
           const fmt = (n: number) =>
             n.toLocaleString("th-TH", {
@@ -1452,11 +1454,11 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               `ราคาทองคำแท่ง ${fmt(sell)} ฿`,
               `ค่ากำเหน็จ ${fmt(gamnet)} ฿`,
               `รวม ${fmt(total)} ฿`,
-              `ราคารับซื้อคืน (สมาคม) ${fmt(buy)} ฿`,
+              `ราคารับซื้อคืน (VAT) = ${fmt(buy)} × 98% = ${fmt(buyback)} ฿`,
             ],
             steps: [
               {
-                calc: `${fmt(total)} − ${fmt(buy)} = ${fmt(diff)} ฿`,
+                calc: `${fmt(total)} − ${fmt(buyback)} = ${fmt(diff)} ฿`,
                 meaning: "ส่วนต่าง (ฐานภาษี)",
               },
               {
