@@ -64,7 +64,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["4 บาท", "60.976", "", ""],
         ],
       },
-      { type: "h3", tone: "silver", text: "น้ำหนักเงินแท่ง" },
+      { type: "h3", tone: "silver-text", text: "น้ำหนักเงินแท่ง" },
       {
         type: "table",
         tone: "silver",
@@ -94,20 +94,6 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["1 บาท", "15.16", "9 บาท", "136.44"],
           ["6 สลึง", "22.74", "10 บาท", "151.6"],
           ["2 บาท", "30.32", "", ""],
-        ],
-      },
-      { type: "h3", tone: "silver", text: "น้ำหนักเงินแท่ง" },
-      {
-        type: "table",
-        tone: "gradient",
-        columns: ["น้ำหนัก", "กรัม", "น้ำหนัก", "กรัม"],
-        colWidths: ["25%", "25%", "25%", "25%"],
-        colAlign: ["left", "right", "left", "right"],
-        rows: [
-          ["½ สลึง", "1.905", "5 บาท", "76.22"],
-          ["1 สลึง", "3.811", "10 บาท", "152.44"],
-          ["1 บาท", "15.244", "20 บาท", "304.88"],
-          ["2 บาท", "30.488", "1 กิโล", "1,000"],
         ],
       },
       {
