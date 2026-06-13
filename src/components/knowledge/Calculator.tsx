@@ -68,6 +68,9 @@ export default function Calculator({
   // field ที่กำลัง focus → แสดง raw number (ไม่มี comma) เพื่อให้พิมพ์ทศนิยมได้
   // เมื่อ blur → แสดง formatted (1,234,567) อ่านง่าย
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  // raw text ตอนกำลังพิมพ์ — preserve "3." ระหว่างพิมพ์ทศนิยม (Number("3.")=3
+  // จะทำให้ค่าสูญหายระหว่างพิมพ์) · clear เมื่อ blur
+  const [rawTexts, setRawTexts] = useState<Record<string, string>>({});
 
   // ช่อง "ราคาทอง" / "ราคารับซื้อ" / "ราคาเงิน" → sync กับราคา live
   useEffect(() => {
@@ -231,17 +234,33 @@ export default function Calculator({
                     type="text"
                     inputMode="decimal"
                     value={
-                      Number.isNaN(values[field.id])
-                        ? ""
-                        : focusedField === field.id
-                          ? String(values[field.id])
+                      focusedField === field.id &&
+                      rawTexts[field.id] !== undefined
+                        ? rawTexts[field.id]
+                        : Number.isNaN(values[field.id])
+                          ? ""
                           : values[field.id].toLocaleString("th-TH", {
                               maximumFractionDigits: 4,
                             })
                     }
                     disabled={disabled}
-                    onFocus={() => setFocusedField(field.id)}
-                    onBlur={() => setFocusedField(null)}
+                    onFocus={() => {
+                      setFocusedField(field.id);
+                      setRawTexts((r) => ({
+                        ...r,
+                        [field.id]: Number.isNaN(values[field.id])
+                          ? ""
+                          : String(values[field.id]),
+                      }));
+                    }}
+                    onBlur={() => {
+                      setFocusedField(null);
+                      setRawTexts((r) => {
+                        const next = { ...r };
+                        delete next[field.id];
+                        return next;
+                      });
+                    }}
                     onChange={(e) => {
                       // user แก้เอง → หยุด sync ราคา live ให้ field นี้
                       if (
@@ -256,6 +275,8 @@ export default function Calculator({
                       }
                       // strip commas + non-numeric (ยกเว้นจุดทศนิยม + ลบ)
                       const raw = e.target.value.replace(/,/g, "");
+                      // เก็บ raw text เพื่อให้พิมพ์ "3." ต่อ "79" ได้
+                      setRawTexts((r) => ({ ...r, [field.id]: raw }));
                       setValues((v) => ({
                         ...v,
                         [field.id]:
