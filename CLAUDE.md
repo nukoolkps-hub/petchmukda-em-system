@@ -75,7 +75,18 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 - **Live with compute fn:** `live-example` (โจทย์+ขั้นตอนคำนวณจากราคาวันนี้) · `calculator` (input form + live output · `goldPriceDefault`/`buyPriceDefault`/`disabledWhen`)
 - **Other:** `secret` (PIN/รหัส dot mask) · `calculator` option ใช้ shortcut ใน `computeSellPrice96` ผ่าน `SELL_SHORTCUT_DIVISORS`
 
-**Math operators ใหญ่ขึ้น:** `MathText` wrap +/−/×/÷/= ใน span `font-mono 1.3em font-black text-maroon` · ใช้กับ `formula` + `example.step.calc` + `live-example.step.calc` + `table` cells
+**Typography กฎทอง ของ "ความรู้ต่างๆ":**
+- **ตัวอักษร = Prompt font** (default ทั่วระบบ — ห้ามใส่ `font-mono` บน wrapper ของ text)
+- **MathText = font-mono** (เฉพาะเครื่องหมายคำนวณ +/−/×/÷/=)
+- ทุกที่ที่อาจมี operator ใน UI ต้อง wrap `<MathText>` (กระจายในทุก block type) — operator regex ไม่จับ ASCII `-` (เพื่อไม่ชน "MD-XX" / "0.05 ก. - 10 บ.") · ถ้าจำเป็นต้องลบใน formula ให้ใช้ U+2212 "−"
+
+**MathText spec:** wrap +/−/×/÷/= ใน span `font-mono 1.3em font-black text-maroon` · ใช้ใน blocks:
+- `formula` (+ `formula.result`)
+- `table` cells
+- `example.step.calc` / `example.step.meaning` / `example.given`
+- `live-example.step.calc` / `live-example.step.meaning` / `live-example.given`
+- `callout.text` · `p.text` · `list.items`
+- `Calculator`: `field.label` / `out.label` / `out.hint`
 
 ### Data Flow
 
