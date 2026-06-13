@@ -1484,6 +1484,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             defaultValue: 66500,
             suffix: "฿",
             goldPriceDefault: true,
+            readOnly: true,
           },
           { id: "labor", label: "ค่าแรง", defaultValue: 1050, suffix: "฿" },
           {
