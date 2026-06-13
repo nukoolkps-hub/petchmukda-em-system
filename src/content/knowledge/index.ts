@@ -104,7 +104,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         ],
         compute: ({ baht }) => [
           {
-            label: "ทองแท่ง",
+            label: "ทองแท่ง / เงินแท่ง",
             value: baht * 15.244,
             format: "number",
             decimals: 3,
