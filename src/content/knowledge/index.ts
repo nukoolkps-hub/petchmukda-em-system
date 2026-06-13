@@ -953,7 +953,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "เลือกวิธี",
             defaultValue: 25,
             options: [
-              { value: 25, label: "ตามน้ำหนักชั่ง (25%)" },
+              { value: 25, label: "ทั่วไป (25%)" },
               { value: 999, label: "มีตรวจ %" },
             ],
           },
