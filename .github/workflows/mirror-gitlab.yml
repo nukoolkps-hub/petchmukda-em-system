@@ -26,8 +26,8 @@ jobs:
           GITLAB_REPO: ${{ vars.GITLAB_REPO }}
         run: |
           if [ -z "$GITLAB_TOKEN" ] || [ -z "$GITLAB_REPO" ]; then
-            echo "::error::ยังไม่ได้ตั้ง secret GITLAB_TOKEN และ/หรือ variable GITLAB_REPO"
-            exit 1
+            echo "::warning::ข้าม mirror — ยังไม่ได้ตั้ง secret GITLAB_TOKEN และ/หรือ variable GITLAB_REPO"
+            exit 0
           fi
           # mirror ทุก branch (จาก remote-tracking ของ origin) + ทุก tag
           # --force เพื่อให้ GitLab ตามทันแม้มี rebase/force-push บน GitHub
