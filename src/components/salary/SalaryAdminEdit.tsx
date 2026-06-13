@@ -1310,10 +1310,10 @@ export default function SalaryAdminEdit({
               เรท/วัน = {formatThaiNumber(employeeInfo?.baseSalary || 0)} ฿ ÷ 30
               ={" "}
               <b>
-                ฿
                 {formatThaiNumber(
                   Math.round(salaryCalculation.dailySalaryRate || 0),
-                )}
+                )}{" "}
+                ฿
               </b>
             </div>
             <div className="text-txt-mid">
@@ -1322,12 +1322,11 @@ export default function SalaryAdminEdit({
             </div>
             {salaryCalculation.leaveDays <= 2 ? (
               <div className="text-green font-bold mt-1 pt-1 border-t border-dashed border-[#1A6B3A40]">
-                ได้โบนัส (2 − {salaryCalculation.leaveDays}) × ฿
+                ได้โบนัส (2 − {salaryCalculation.leaveDays}) ×{" "}
                 {formatThaiNumber(
                   Math.round(salaryCalculation.dailySalaryRate || 0),
                 )}{" "}
-                = +฿
-                {formatThaiNumber(salaryCalculation.attendanceBonus)}
+                ฿ = + {formatThaiNumber(salaryCalculation.attendanceBonus)} ฿
               </div>
             ) : (
               <div className="text-txt-soft mt-1 pt-1 border-t border-dashed border-bdr">
@@ -1427,46 +1426,46 @@ export default function SalaryAdminEdit({
               เรท/วัน = {formatThaiNumber(employeeInfo?.baseSalary || 0)} ฿ ÷ 30
               ={" "}
               <b>
-                ฿
                 {formatThaiNumber(
                   Math.round(salaryCalculation.dailySalaryRate || 0),
-                )}
+                )}{" "}
+                ฿
               </b>
             </div>
             {overInfo.weekdays > 0 && (
               <div>
-                วันธรรมดา {overInfo.weekdays} วัน × ฿
+                วันธรรมดา {overInfo.weekdays} วัน ×{" "}
                 {formatThaiNumber(
                   Math.round(salaryCalculation.dailySalaryRate || 0),
                 )}{" "}
-                ={" "}
+                ฿ ={" "}
                 <b>
-                  ฿
                   {formatThaiNumber(
                     Math.round(
                       overInfo.weekdays *
                         (salaryCalculation.dailySalaryRate || 0),
                     ),
-                  )}
+                  )}{" "}
+                  ฿
                 </b>
               </div>
             )}
             {overInfo.sundays > 0 && (
               <div>
-                วันอาทิตย์ {overInfo.sundays} วัน × ฿
+                วันอาทิตย์ {overInfo.sundays} วัน ×{" "}
                 {formatThaiNumber(
                   Math.round(salaryCalculation.dailySalaryRate || 0),
                 )}{" "}
-                × 1.5 ={" "}
+                ฿ × 1.5 ={" "}
                 <b>
-                  ฿
                   {formatThaiNumber(
                     Math.round(
                       overInfo.sundays *
                         (salaryCalculation.dailySalaryRate || 0) *
                         1.5,
                     ),
-                  )}
+                  )}{" "}
+                  ฿
                 </b>
               </div>
             )}
@@ -1475,8 +1474,8 @@ export default function SalaryAdminEdit({
             )}
             {overTotalDays > 0 && (
               <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-                หักเดือนนี้: −฿
-                {formatThaiNumber(salaryCalculation.overQuotaDeduction)}
+                หักเดือนนี้: −{" "}
+                {formatThaiNumber(salaryCalculation.overQuotaDeduction)} ฿
               </div>
             )}
           </div>
@@ -1513,8 +1512,8 @@ export default function SalaryAdminEdit({
                   );
                 })}
                 <div className="text-red font-bold mt-1 pt-1 border-t border-dashed border-[#C9973A50]">
-                  หักเดือนนี้: −฿
-                  {formatThaiNumber(salaryCalculation.advanceDeduction)}
+                  หักเดือนนี้: −{" "}
+                  {formatThaiNumber(salaryCalculation.advanceDeduction)} ฿
                 </div>
               </>
             )}
