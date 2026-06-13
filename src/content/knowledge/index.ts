@@ -285,7 +285,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "sell-price-96-table" },
       {
         type: "calculator",
-        title: "ราคาขายทอง 96.5% ตามน้ำหนักชั่ง",
+        title: "ราคาขายทองรูปพรรณ 96.5% ตามน้ำหนักชั่ง",
         inputs: [
           {
             id: "gold",
