@@ -180,7 +180,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             given: [
               `ราคาทองคำแท่งบาทละ ${fmt(sell)} ฿`,
               `ค่าแรง ${fmt(labor)} ฿`,
-              `ทองหนัก ${grams} กรัม`,
+              `น้ำหนักสินค้า ${grams} กรัม`,
             ],
             steps: [
               {
