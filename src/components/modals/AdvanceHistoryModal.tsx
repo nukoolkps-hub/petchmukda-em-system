@@ -6,6 +6,7 @@ import {
   Inbox as IconInbox,
   XCircle as IconXCircle,
 } from "lucide-react";
+import { useState } from "react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
@@ -20,6 +21,8 @@ export default function AdvanceHistoryModal({
   monthLabel?: string;
   onClose: () => void;
 }) {
+  // expandedId: id ของ advance ที่กำลังกาง "สลิป" inline (ไม่เปิด tab ใหม่)
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const list = [...(advanceRequests || [])].sort(
     (a, b) =>
       new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime(),
@@ -129,21 +132,27 @@ export default function AdvanceHistoryModal({
                       </div>
                       {slipPreview && (
                         <button
-                          onClick={() => {
-                            const w = window.open("", "_blank");
-                            if (w) {
-                              w.document.write(
-                                `<img src="${slipPreview}" style="max-width:100%"/>`,
-                              );
-                            }
-                          }}
+                          onClick={() =>
+                            setExpandedId((prev) =>
+                              prev === r.id ? null : r.id,
+                            )
+                          }
                           className="px-3 py-1 rounded-lg border border-gold/40 bg-gold-pale text-maroon text-xs font-semibold cursor-pointer font-[inherit] inline-flex items-center gap-1"
                         >
                           <IconFileText size={12} strokeWidth={2.4} />
-                          ดูสลิป
+                          {expandedId === r.id ? "ซ่อนสลิป" : "ดูสลิป"}
                         </button>
                       )}
                     </div>
+                    {slipPreview && expandedId === r.id && (
+                      <div className="mt-2.5 pt-2.5 border-t border-bdr/60">
+                        <img
+                          src={slipPreview}
+                          alt="สลิปการโอน"
+                          className="w-full rounded-lg border border-bdr"
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
