@@ -1546,7 +1546,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "image",
-        src: "/knowledge/vrx5.jpg",
+        src: "/knowledge/vrx5.webp",
         alt: "เครื่อง Vray VR-X5",
       },
       {
@@ -1569,19 +1569,19 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "h3", text: "รูปประกอบ" },
       {
         type: "image",
-        src: "/knowledge/ups.jpg",
+        src: "/knowledge/ups.webp",
         alt: "เครื่องสำรองไฟ (UPS)",
         caption: "1. เปิดเครื่องสำรองไฟ",
       },
       {
         type: "image",
-        src: "/knowledge/ups-switch.jpg",
+        src: "/knowledge/ups-switch.webp",
         alt: "สวิตช์ด้านหลังเครื่อง",
         caption: "2. เปิดสวิตช์ด้านหลัง",
       },
       {
         type: "image",
-        src: "/knowledge/vray-icon.jpg",
+        src: "/knowledge/vray-icon.webp",
         alt: "ไอคอนโปรแกรม Vray XRF",
         caption: "3. เข้าโปรแกรม Vray XRF",
       },
