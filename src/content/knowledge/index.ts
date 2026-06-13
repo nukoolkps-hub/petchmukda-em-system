@@ -483,8 +483,9 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return {
             given: [
-              `ค่าเปลี่ยน 1 สลึง (จากตาราง) = ${fmt(oldChange)} ฿`,
               `ราคาขายออกทองคำแท่งวันนี้ ${fmt(sell)} ฿/บาท`,
+              `ค่าเปลี่ยน 1 สลึง (จากตาราง) = ${fmt(oldChange)} ฿`,
+              `ค่าแรงเริ่มต้น 1 สลึง (จากตาราง) = ${fmt(newLabor)} ฿`,
             ],
             steps: [
               {
@@ -519,8 +520,9 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return {
             given: [
-              `ค่าเปลี่ยน 1 บาท (จากตาราง) = ${fmt(oldChange)} ฿`,
               `ราคาขายออกทองคำแท่งวันนี้ ${fmt(sell)} ฿/บาท`,
+              `ค่าเปลี่ยน 1 บาท (จากตาราง) = ${fmt(oldChange)} ฿`,
+              `ค่าแรงเริ่มต้น 1 บาท (จากตาราง) = ${fmt(newLabor)} ฿`,
             ],
             steps: [
               {
