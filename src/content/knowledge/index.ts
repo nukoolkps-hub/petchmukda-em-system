@@ -859,16 +859,23 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         ],
         compute: ({ gold, mode, realPct, grams }) => {
           const factor = mode === 999 ? (realPct - 10) / 100 : 0.25;
-          const buy = gold * factor * 0.0656 * grams;
+          const base = gold * factor;
+          const buy = base * 0.0656 * grams;
           return [
+            {
+              label: "ราคาทองหลังหัก %",
+              value: base,
+              format: "currency",
+              hint:
+                mode === 999
+                  ? `${gold} × (${realPct}−10)%`
+                  : `${gold} × 25%`,
+            },
             {
               label: "ราคารับซื้อ",
               value: buy,
               format: "currency",
-              hint:
-                mode === 999
-                  ? `${gold} × (${realPct}−10)% × 0.0656 × ${grams}`
-                  : `${gold} × 25% × 0.0656 × ${grams}`,
+              hint: `× 0.0656 × ${grams} ก.`,
             },
           ];
         },
