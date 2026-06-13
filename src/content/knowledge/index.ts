@@ -941,7 +941,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["1 กิโล", "200"],
         ],
       },
-      { type: "h3", tone: "silver", text: "เงินแท่ง" },
+      { type: "h3", tone: "silver-text", text: "เงินแท่ง" },
       {
         type: "table",
         tone: "silver",
