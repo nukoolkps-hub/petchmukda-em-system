@@ -63,6 +63,9 @@ export default function Calculator({
   });
   // field ที่ผู้ใช้พิมพ์แก้เองแล้ว — จะหยุด sync ราคา live ให้ field นั้น
   const [touched, setTouched] = useState<Set<string>>(() => new Set());
+  // field ที่กำลัง focus → แสดง raw number (ไม่มี comma) เพื่อให้พิมพ์ทศนิยมได้
+  // เมื่อ blur → แสดง formatted (1,234,567) อ่านง่าย
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // ช่อง "ราคาทอง" / "ราคารับซื้อ" / "ราคาเงิน" → sync กับราคา live
   useEffect(() => {
@@ -220,12 +223,20 @@ export default function Calculator({
                 ) : (
                   <input
                     id={`calc-${field.id}`}
-                    type="number"
+                    type="text"
                     inputMode="decimal"
                     value={
-                      Number.isNaN(values[field.id]) ? "" : values[field.id]
+                      Number.isNaN(values[field.id])
+                        ? ""
+                        : focusedField === field.id
+                          ? String(values[field.id])
+                          : values[field.id].toLocaleString("th-TH", {
+                              maximumFractionDigits: 4,
+                            })
                     }
                     disabled={disabled}
+                    onFocus={() => setFocusedField(field.id)}
+                    onBlur={() => setFocusedField(null)}
                     onChange={(e) => {
                       // user แก้เอง → หยุด sync ราคา live ให้ field นี้
                       if (field.goldPriceDefault || field.buyPriceDefault) {
@@ -233,15 +244,17 @@ export default function Calculator({
                           t.has(field.id) ? t : new Set(t).add(field.id),
                         );
                       }
+                      // strip commas + non-numeric (ยกเว้นจุดทศนิยม + ลบ)
+                      const raw = e.target.value.replace(/,/g, "");
                       setValues((v) => ({
                         ...v,
                         [field.id]:
-                          e.target.value === ""
+                          raw === "" || raw === "-" || raw === "."
                             ? Number.NaN
-                            : Number(e.target.value),
+                            : Number(raw),
                       }));
                     }}
-                    className={`w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt text-right font-[inherit] outline-none ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white"}`}
+                    className={`w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt text-right font-[inherit] outline-none tabular-nums ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white"}`}
                   />
                 )}
                 {field.suffix && (
