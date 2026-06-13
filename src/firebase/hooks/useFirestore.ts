@@ -27,6 +27,10 @@ import {
 } from "../employees";
 import { DEFAULT_GOLD_PRICE, subscribeGoldPrice } from "../goldPrice";
 import { EMPTY_LABOR_COST, subscribeLaborCost } from "../laborCost";
+import {
+  EMPTY_LOYALTY_POINTS,
+  subscribeLoyaltyPoints,
+} from "../loyaltyPoints";
 import { subscribeLeaves, subscribeLeavesByEmployeeId } from "../leaves";
 import { subscribePayrollConfirms } from "../payrollConfirms";
 import {
@@ -378,4 +382,14 @@ export function useLaborCost() {
  *  /config/blockCost · override DEFAULT_BLOCK_COST_VALUES */
 export function useBlockCost() {
   return useScopedSubscription(() => subscribeBlockCost, EMPTY_BLOCK_COST, []);
+}
+
+/** แต้มสะสมแลกทองคำแท่ง — public read · admin write · doc เดียว
+ *  /config/loyaltyPoints · override DEFAULT_LOYALTY_POINTS_VALUES */
+export function useLoyaltyPoints() {
+  return useScopedSubscription(
+    () => subscribeLoyaltyPoints,
+    EMPTY_LOYALTY_POINTS,
+    [],
+  );
 }

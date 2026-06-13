@@ -272,6 +272,12 @@ service cloud.firestore {
       allow read:  if isSignedIn();
       allow write: if isAdmin();
     }
+    // แต้มสะสมแลกทองคำแท่ง: ทุกคน signed-in อ่าน
+    // (ใช้ใน knowledge loyalty points redeem table) · admin แก้
+    match /config/loyaltyPoints {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
     match /config/{document} {
       allow read, write: if false;
     }
