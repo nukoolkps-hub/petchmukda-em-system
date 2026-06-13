@@ -255,6 +255,34 @@ interface Item {
 
 **Read:** ทุก signed-in · **Write:** admin only
 
+### config/blockCost
+
+ค่าบล็อก + ค่าส่ง + ค่าประกัน (ทองคำแท่ง + เงินแท่ง) · admin แก้ inline ใน "ความรู้ต่างๆ" → section "ค่าบล็อก" · sync ทันที (เก็บ string รองรับ format "300 / 350 / 450")
+
+| Field | Type | Description |
+|---|---|---|
+| values | `Record<string, string>` | key = rowId (e.g. `"gold-2baht"`, `"silver-1kilo"`, `"insurance-pct"`) · value = ค่า string (≤60 chars) |
+| updatedAt | number | ms epoch |
+| updatedBy | string | ชื่อ admin |
+
+**Merge logic:** `getBlockCostValue(overrides, key)` ใน `blockCost.ts` · key ที่ admin ไม่ override ใช้ default จาก `DEFAULT_BLOCK_COST_VALUES`
+
+**Read:** ทุก signed-in · **Write:** admin only
+
+### config/loyaltyPoints
+
+ตารางสะสมแต้มแลกทองคำแท่ง · admin แก้ทั้ง 2 column (แต้มที่ใช้ + ได้รับทอง) จากตารางในความรู้ต่างๆ section "แต้มสะสม"
+
+| Field | Type | Description |
+|---|---|---|
+| values | `Record<string, string>` | key = `"redeem-r{1-5}-{pts\|gold}"` · value = ค่า string (≤80 chars · รองรับ "1.905 กรัม (½ สลึง)") |
+| updatedAt | number | ms epoch |
+| updatedBy | string | ชื่อ admin |
+
+**Merge logic:** `getLoyaltyPointsValue(overrides, key)` ใน `loyaltyPoints.ts` · key ที่ admin ไม่ override ใช้ default จาก `DEFAULT_LOYALTY_POINTS_VALUES`
+
+**Read:** ทุก signed-in · **Write:** admin only
+
 ## Security Rules Summary
 
 | Collection | Read | Write |
@@ -272,6 +300,9 @@ interface Item {
 | certCounters/{พ.ศ.} | all signed-in | all signed-in (count ต้อง +1 เท่านั้น) |
 | config/storeCalendar | all signed-in | admin only |
 | config/goldPrice | all signed-in | admin only (+ Cloud Function ผ่าน Admin SDK) |
+| config/laborCost | all signed-in | admin only |
+| config/blockCost | all signed-in | admin only |
+| config/loyaltyPoints | all signed-in | admin only |
 | config/notifications | admin only | admin only |
 | config/* (อื่นๆ) | blocked | blocked (Functions ใช้ Admin SDK) |
 
