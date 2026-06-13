@@ -928,11 +928,11 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         rows: [
           [
             "ตามน้ำหนักชั่ง",
-            "(ราคารับซื้อเงินแท่ง × 25%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
+            "(ราคารับซื้อเงินแท่ง × 25%) × น้ำหนักสินค้า = ราคารับซื้อ",
           ],
           [
             "มีการตรวจ %",
-            "(ราคารับซื้อเงินแท่ง × (%จริง − 20)%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
+            "(ราคารับซื้อเงินแท่ง × (%จริง − 20)%) × น้ำหนักสินค้า = ราคารับซื้อ",
           ],
         ],
       },
@@ -945,7 +945,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             id: "rate",
             label: "ราคารับซื้อเงินแท่ง",
             defaultValue: 30,
-            suffix: "฿",
+            suffix: "฿/ก.",
             silverBuyPriceDefault: true,
           },
           {
@@ -968,7 +968,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         compute: ({ rate, mode, realPct, grams }) => {
           const factor = mode === 999 ? (realPct - 20) / 100 : 0.25;
           const base = rate * factor;
-          const buy = base * 0.0656 * grams;
+          const buy = base * grams;
           return [
             {
               label: "ราคารับซื้อเงินแท่งหลังหัก %",
@@ -981,7 +981,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคารับซื้อ",
               value: buy,
               format: "currency",
-              hint: `× 0.0656 × ${grams} ก.`,
+              hint: `× ${grams} ก.`,
             },
           ];
         },
