@@ -105,7 +105,9 @@ export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props)
               </colgroup>
             )}
             <thead>
-              <tr className="bg-maroon text-white">
+              <tr
+                className={`text-white ${block.tone === "silver" ? "bg-silver" : "bg-maroon"}`}
+              >
                 {block.columns.map((col, i) => (
                   <th
                     key={`${col}-${i}`}
