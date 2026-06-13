@@ -23,6 +23,7 @@ import Calculator from "./Calculator";
 import ChangePriceTable from "./ChangePriceTable";
 import LaborCostTable from "./LaborCostTable";
 import LiveExample from "./LiveExample";
+import LoyaltyPointsRedeemTable from "./LoyaltyPointsRedeemTable";
 import MathText from "./MathText";
 import Secret from "./Secret";
 import SellPrice96Table from "./SellPrice96Table";
@@ -339,6 +340,11 @@ export default function KnowledgeBlockView({
 
     case "block-cost-table":
       return <BlockCostTable isAdmin={isAdmin} showToast={showToast} />;
+
+    case "loyalty-points-redeem-table":
+      return (
+        <LoyaltyPointsRedeemTable isAdmin={isAdmin} showToast={showToast} />
+      );
 
     case "live-example":
       return (
