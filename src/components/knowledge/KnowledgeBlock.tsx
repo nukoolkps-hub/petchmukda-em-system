@@ -144,11 +144,11 @@ export default function KnowledgeBlockView({ block }: Props) {
               {block.label}
             </div>
           )}
-          <div className="text-sm font-bold text-maroon leading-relaxed font-mono">
+          <div className="text-sm font-bold text-maroon leading-relaxed">
             <MathText>{block.formula}</MathText>
           </div>
           {block.result && (
-            <div className="text-sm font-semibold text-txt-mid mt-1 font-mono">
+            <div className="text-sm font-semibold text-txt-mid mt-1">
               <MathText>{`= ${block.result}`}</MathText>
             </div>
           )}
@@ -166,7 +166,7 @@ export default function KnowledgeBlockView({ block }: Props) {
             <div className="text-xs text-txt-soft font-semibold mb-1.5">
               โจทย์
             </div>
-            <ul className="mb-2.5 space-y-0.5 text-sm text-txt font-mono">
+            <ul className="mb-2.5 space-y-0.5 text-sm text-txt">
               {block.given.map((g, i) => (
                 <li key={`g-${i}`} className="flex items-start gap-2">
                   <span className="text-gold mt-0.5">·</span>
