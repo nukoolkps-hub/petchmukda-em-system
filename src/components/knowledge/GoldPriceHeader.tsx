@@ -42,6 +42,22 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
     }
   }
 
+  // ปุ่ม refresh ใน header เงิน — ใช้ Cloud Function เดียวกัน
+  // แต่ toast แสดงข้อความ "ราคาเงิน" แทน
+  async function handleFetchSilver() {
+    if (fetching) return;
+    setFetching(true);
+    try {
+      await triggerFetchGoldPriceNow();
+      showToast?.("ดึงราคาเงินใหม่แล้ว");
+    } catch (err) {
+      console.error("[GoldPriceHeader] fetch silver failed:", err);
+      showToast?.(err instanceof Error ? err.message : "ดึงราคาไม่สำเร็จ");
+    } finally {
+      setFetching(false);
+    }
+  }
+
   // Auto-retry: ถ้า admin เปิดหน้ามาเจอ default state (updatedAt = 0)
   // → trigger fetchGoldPriceNow อัตโนมัติ 1 ครั้ง (silent · ไม่มี toast)
   // กัน user ต้องกดเองทุกครั้งที่ doc ยังไม่มีข้อมูล
@@ -136,9 +152,9 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
             {isAdmin && (
               <button
                 type="button"
-                onClick={handleFetchNow}
+                onClick={handleFetchSilver}
                 disabled={fetching}
-                aria-label="ดึงราคาตอนนี้"
+                aria-label="ดึงราคาเงินตอนนี้"
                 className="shrink-0 w-7 h-7 rounded-[8px] bg-white/15 text-white cursor-pointer flex items-center justify-center disabled:opacity-50 active:scale-[0.92] transition-transform"
               >
                 <IconRefresh
