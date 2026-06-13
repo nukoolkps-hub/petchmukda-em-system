@@ -929,7 +929,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         rows: [
           [
             "ตามน้ำหนักชั่ง",
-            "(ราคารับซื้อเงินแท่ง × 25%) × น้ำหนักสินค้า = ราคารับซื้อ",
+            "(ราคารับซื้อเงินแท่ง × 75%) × น้ำหนักสินค้า = ราคารับซื้อ",
           ],
           [
             "มีการตรวจ %",
@@ -952,9 +952,9 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           {
             id: "mode",
             label: "เลือกวิธี",
-            defaultValue: 25,
+            defaultValue: 75,
             options: [
-              { value: 25, label: "ทั่วไป (25%)" },
+              { value: 75, label: "ทั่วไป (75%)" },
               { value: 999, label: "มีตรวจ %" },
             ],
           },
@@ -967,7 +967,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
         ],
         compute: ({ rate, mode, realPct, grams }) => {
-          const factor = mode === 999 ? (realPct - 20) / 100 : 0.25;
+          const factor = mode === 999 ? (realPct - 20) / 100 : 0.75;
           const base = rate * factor;
           const buy = base * grams;
           return [
@@ -976,7 +976,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               value: base,
               format: "currency",
               hint:
-                mode === 999 ? `${rate} × (${realPct}−20)%` : `${rate} × 25%`,
+                mode === 999 ? `${rate} × (${realPct}−20)%` : `${rate} × 75%`,
             },
             {
               label: "ราคารับซื้อ",
