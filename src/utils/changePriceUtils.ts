@@ -44,9 +44,7 @@ export function getWeightsWithLabor(
     return CHANGE_PRICE_WEIGHTS;
   }
   return CHANGE_PRICE_WEIGHTS.map((w) =>
-    overrides[w.id] !== undefined
-      ? { ...w, laborBase: overrides[w.id] }
-      : w,
+    overrides[w.id] !== undefined ? { ...w, laborBase: overrides[w.id] } : w,
   );
 }
 

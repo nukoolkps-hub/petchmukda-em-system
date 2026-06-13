@@ -949,8 +949,8 @@ export default function SalaryAdminEdit({
                 <div className="text-xs text-txt-soft">
                   Rate:{" "}
                   <b className="text-maroon">
-                    {formatThaiNumber(employeeInfo?.specialSalePieceRate || 0)} ฿
-                    /ชิ้น
+                    {formatThaiNumber(employeeInfo?.specialSalePieceRate || 0)}{" "}
+                    ฿ /ชิ้น
                   </b>
                 </div>
               </div>
@@ -1308,7 +1308,8 @@ export default function SalaryAdminEdit({
               </span>
             </div>
             <div className="text-txt-mid">
-              เรท/วัน = {formatThaiNumber(employeeInfo?.baseSalary || 0)} ฿ ÷ 30 ={" "}
+              เรท/วัน = {formatThaiNumber(employeeInfo?.baseSalary || 0)} ฿ ÷ 30
+              ={" "}
               <b>
                 ฿
                 {formatThaiNumber(
@@ -1424,7 +1425,8 @@ export default function SalaryAdminEdit({
               </span>
             </div>
             <div>
-              เรท/วัน = {formatThaiNumber(employeeInfo?.baseSalary || 0)} ฿ ÷ 30 ={" "}
+              เรท/วัน = {formatThaiNumber(employeeInfo?.baseSalary || 0)} ฿ ÷ 30
+              ={" "}
               <b>
                 ฿
                 {formatThaiNumber(

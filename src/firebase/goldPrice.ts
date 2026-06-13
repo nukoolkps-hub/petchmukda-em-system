@@ -53,8 +53,7 @@ export function subscribeGoldPrice(
             ? data.buyPrice
             : 0,
         silverBuyPerGram:
-          typeof data.silverBuyPerGram === "number" &&
-          data.silverBuyPerGram > 0
+          typeof data.silverBuyPerGram === "number" && data.silverBuyPerGram > 0
             ? data.silverBuyPerGram
             : 0,
         silverSellPerGram:

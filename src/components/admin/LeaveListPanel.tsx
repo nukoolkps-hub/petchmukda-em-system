@@ -17,7 +17,11 @@ import type {
   LeaveKind,
   PayrollConfirms,
 } from "../../types";
-import { countWorkdays, fmtDateWithWeekday, isFuture } from "../../utils/dateUtils";
+import {
+  countWorkdays,
+  fmtDateWithWeekday,
+  isFuture,
+} from "../../utils/dateUtils";
 import { isMonthLocked, monthOf } from "../../utils/payrollLock";
 import ConfirmModal from "../modals/ConfirmModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -64,8 +68,7 @@ export default function LeaveListPanel({
     setAddReason("");
   }
 
-  const previewDays =
-    addStart && addEnd ? countWorkdays(addStart, addEnd) : 0;
+  const previewDays = addStart && addEnd ? countWorkdays(addStart, addEnd) : 0;
   const canSubmit =
     !!addEmpId && !!addStart && !!addEnd && addStart <= addEnd && !saving;
 
@@ -193,10 +196,7 @@ export default function LeaveListPanel({
                 <div className="text-[11px] text-txt-soft font-semibold mb-1">
                   ถึง
                 </div>
-                <ThaiDateInput
-                  value={addEnd}
-                  onChange={setAddEnd}
-                />
+                <ThaiDateInput value={addEnd} onChange={setAddEnd} />
               </div>
             </div>
             <input

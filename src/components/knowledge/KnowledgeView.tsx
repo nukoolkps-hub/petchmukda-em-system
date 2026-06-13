@@ -37,9 +37,7 @@ export default function KnowledgeView({ isAdmin, showToast }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return KNOWLEDGE_SECTIONS;
-    return KNOWLEDGE_SECTIONS.filter((s) =>
-      s.title.toLowerCase().includes(q),
-    );
+    return KNOWLEDGE_SECTIONS.filter((s) => s.title.toLowerCase().includes(q));
   }, [query]);
 
   return (
