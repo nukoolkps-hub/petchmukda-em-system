@@ -8,7 +8,7 @@ import MathText from "./MathText";
 
 interface Props {
   title: string;
-  compute: (gold: { sell: number; buy: number }) => {
+  compute: (gold: { sell: number; buy: number; silverBuy: number }) => {
     given: string[];
     steps: { calc: string; meaning: string }[];
   };
@@ -16,10 +16,11 @@ interface Props {
 
 export default function LiveExample({ title, compute }: Props) {
   const { data: gold } = useGoldPrice();
-  // ก่อน live data โหลด → ใช้ default ราคา 50,000 เพื่อกัน NaN ใน calc
+  // ก่อน live data โหลด → ใช้ default ราคา 50,000 / silver 30 ฿/กรัม กัน NaN
   const { given, steps } = compute({
     sell: gold.pricePerBaht || 50000,
     buy: gold.buyPrice || gold.pricePerBaht || 50000,
+    silverBuy: gold.silverBuyPerGram || 30,
   });
 
   return (
