@@ -1,5 +1,52 @@
 @import "tailwindcss";
 
+/* ─── Self-host Prompt font ─────────────────────────────────
+   เคย load จาก Google Fonts CDN — แต่ LINE WebView / iOS Safari
+   บางครั้ง load ช้า/ติดบล็อก ทำให้ fallback เป็น system font
+   ทำให้ Thai text ดูเหมือน mono · self-host ให้ load ทันที 100%   */
+@font-face {
+  font-family: "Prompt";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Prompt-400.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Prompt";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/Prompt-500.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Prompt";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/Prompt-600.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Prompt";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Prompt-700.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Sarabun-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Sarabun-Bold.ttf") format("truetype");
+}
+
 @theme {
   /* ─── Brand Colors (from constants.ts COLORS object) ──────────── */
   --color-maroon: #7b1c1c;
@@ -40,6 +87,10 @@ body {
   margin: 0;
   padding: 0;
   background: #fdf8f0;
+  /* Prompt font default ทุก element — กัน fallback เป็น system font เมื่อ
+     element อยู่นอก .leave-app-root (เช่น modal portal, BootLoadingScreen
+     หรือ React Fragment ที่ไม่มี wrapper ของตัวเอง) */
+  font-family: var(--font-sans);
 }
 
 /* iOS Safari: ปิด native styling ของ date/month input — ป้องกัน
