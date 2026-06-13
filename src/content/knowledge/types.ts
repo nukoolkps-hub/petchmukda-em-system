@@ -40,9 +40,10 @@ export type KnowledgeBlock =
   | {
       type: "h3";
       text: string;
-      /** สี header · default = none (text-maroon + bottom border)
-       *  · "maroon" = pill bg-maroon · "silver" = pill bg-silver */
-      tone?: "maroon" | "silver";
+      /** สี header · default = text-maroon + gold border line
+       *  · "maroon" = pill bg-maroon · "silver" = pill bg-silver
+       *  · "silver-text" = text-silver + silver border line (ไม่มี pill) */
+      tone?: "maroon" | "silver" | "silver-text";
     }
   | { type: "p"; text: string; muted?: boolean; adminOnly?: boolean }
   | { type: "list"; items: string[]; ordered?: boolean }

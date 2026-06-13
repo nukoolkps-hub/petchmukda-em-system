@@ -36,6 +36,7 @@ export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props)
   switch (block.type) {
     case "h3": {
       // tone "maroon"/"silver" → pill with bg + white text (เด่นขึ้น)
+      // tone "silver-text" → text-silver + silver border (ไม่มี pill bg)
       // default → text-maroon + bottom gold border (style เดิม)
       if (block.tone === "maroon" || block.tone === "silver") {
         const bg = block.tone === "silver" ? "bg-silver" : "bg-maroon";
@@ -43,6 +44,13 @@ export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props)
           <h3
             className={`text-sm font-extrabold text-white mt-4 mb-2 px-3 py-1.5 rounded-[8px] ${bg}`}
           >
+            {block.text}
+          </h3>
+        );
+      }
+      if (block.tone === "silver-text") {
+        return (
+          <h3 className="text-base font-extrabold text-silver mt-4 mb-2 pb-1.5 border-b-[1.5px] border-silver-lt/60">
             {block.text}
           </h3>
         );
