@@ -86,34 +86,23 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "calculator",
         title: "แปลงน้ำหนัก → กรัม",
         inputs: [
-          { id: "value", label: "จำนวน", defaultValue: 1 },
+          { id: "baht", label: "จำนวน", defaultValue: 1, suffix: "บาท" },
+        ],
+        compute: ({ baht }) => [
           {
-            id: "unit",
-            label: "หน่วย",
-            defaultValue: 1,
-            options: [
-              { value: 1, label: "บาท" },
-              { value: 0.25, label: "สลึง" },
-            ],
+            label: "ทองแท่ง",
+            value: baht * 15.244,
+            format: "number",
+            decimals: 3,
+            hint: `${baht} × 15.244 กรัม/บาท`,
+          },
+          {
+            label: "ทองรูปพรรณ",
+            value: baht * 15.16,
+            format: "number",
+            hint: `${baht} × 15.16 กรัม/บาท`,
           },
         ],
-        compute: ({ value, unit }) => {
-          const baht = value * unit;
-          return [
-            {
-              label: "ทองแท่ง",
-              value: baht * 15.244,
-              format: "number",
-              hint: `${baht} × 15.244 กรัม/บาท`,
-            },
-            {
-              label: "ทองรูปพรรณ",
-              value: baht * 15.16,
-              format: "number",
-              hint: `${baht} × 15.16 กรัม/บาท`,
-            },
-          ];
-        },
       },
     ],
   },

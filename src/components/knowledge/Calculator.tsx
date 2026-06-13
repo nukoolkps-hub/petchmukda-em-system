@@ -16,10 +16,18 @@ interface Props {
   compute: (values: Record<string, number>) => CalcOutput[];
 }
 
-function formatOutput(value: number, format: CalcOutput["format"]): string {
+function formatOutput(
+  value: number,
+  format: CalcOutput["format"],
+  decimals = 2,
+): string {
   if (!Number.isFinite(value)) return "—";
   if (format === "currency") return `${formatThaiNumber(Math.round(value))} ฿`;
-  return formatThaiNumber(Math.round(value * 100) / 100);
+  // number: ใช้ Intl กำหนด maximumFractionDigits ตาม decimals (default 2)
+  return value.toLocaleString("th-TH", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: decimals,
+  });
 }
 
 export default function Calculator({ title, inputs, compute }: Props) {
@@ -170,7 +178,7 @@ export default function Calculator({ title, inputs, compute }: Props) {
                 )}
               </div>
               <div className="text-base font-extrabold text-maroon whitespace-nowrap">
-                {formatOutput(out.value, out.format)}
+                {formatOutput(out.value, out.format, out.decimals)}
               </div>
             </div>
           ))}
