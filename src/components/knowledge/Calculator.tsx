@@ -169,6 +169,15 @@ export default function Calculator({
                     </option>
                   ))}
                 </select>
+              ) : field.readOnly ? (
+                // readOnly → render เป็นตัวเลขเฉยๆ ไม่มี input box (auto-calc)
+                <span className="w-28 px-2 py-1 text-sm font-bold text-txt text-right tabular-nums">
+                  {Number.isFinite(values[field.id])
+                    ? values[field.id].toLocaleString("th-TH", {
+                        maximumFractionDigits: 2,
+                      })
+                    : "—"}
+                </span>
               ) : (
                 <input
                   id={`calc-${field.id}`}
