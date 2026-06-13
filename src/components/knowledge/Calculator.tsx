@@ -167,7 +167,10 @@ export default function Calculator({
               ? rawLiveBadge * field.buyPriceMultiplier
               : rawLiveBadge;
           const showLiveBadge =
-            (field.goldPriceDefault || field.buyPriceDefault) &&
+            (field.goldPriceDefault ||
+              field.buyPriceDefault ||
+              field.silverSellPriceDefault ||
+              field.silverBuyPriceDefault) &&
             liveBadge !== null &&
             liveBadge > 0 &&
             Math.abs((values[field.id] ?? 0) - liveBadge) < 0.005;
@@ -241,7 +244,12 @@ export default function Calculator({
                     onBlur={() => setFocusedField(null)}
                     onChange={(e) => {
                       // user แก้เอง → หยุด sync ราคา live ให้ field นี้
-                      if (field.goldPriceDefault || field.buyPriceDefault) {
+                      if (
+                        field.goldPriceDefault ||
+                        field.buyPriceDefault ||
+                        field.silverSellPriceDefault ||
+                        field.silverBuyPriceDefault
+                      ) {
                         setTouched((t) =>
                           t.has(field.id) ? t : new Set(t).add(field.id),
                         );
