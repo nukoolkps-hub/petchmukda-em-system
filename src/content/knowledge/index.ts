@@ -484,8 +484,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           return {
             given: [
               `ราคาขายออกทองคำแท่งวันนี้ ${fmt(sell)} ฿/บาท`,
-              `ค่าเปลี่ยนเริ่มต้น 1 สลึง (จากตาราง) = ${fmt(oldChange)} ฿`,
               `ค่าแรงเริ่มต้น 1 สลึง (จากตาราง) = ${fmt(newLabor)} ฿`,
+              `ค่าเปลี่ยนเริ่มต้น 1 สลึง (จากตาราง) = ${fmt(oldChange)} ฿`,
             ],
             steps: [
               {
@@ -521,8 +521,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           return {
             given: [
               `ราคาขายออกทองคำแท่งวันนี้ ${fmt(sell)} ฿/บาท`,
-              `ค่าเปลี่ยนเริ่มต้น 1 บาท (จากตาราง) = ${fmt(oldChange)} ฿`,
               `ค่าแรงเริ่มต้น 1 บาท (จากตาราง) = ${fmt(newLabor)} ฿`,
+              `ค่าเปลี่ยนเริ่มต้น 1 บาท (จากตาราง) = ${fmt(oldChange)} ฿`,
             ],
             steps: [
               {
