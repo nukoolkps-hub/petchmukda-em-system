@@ -943,7 +943,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "rate",
-            label: "ราคารับซื้อเงินแท่ง",
+            label: "ราคารับซื้อเงินแท่ง 99.99%",
             defaultValue: 30,
             suffix: "฿/ก.",
             silverBuyPriceDefault: true,
