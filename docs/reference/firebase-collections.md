@@ -210,13 +210,18 @@ interface Item {
 
 ### config/goldPrice
 
-ราคาทองคำสมาคม 96.5% · ดึงอัตโนมัติทุก 15 นาทีโดย Cloud Function `fetchGoldPriceScheduled` (`functions/src/goldPrice/fetchGoldPrice.ts`) · subscribe ทั่วระบบความรู้ต่างๆ (live tables + calculator + live-example)
+ราคาทองคำสมาคม 96.5% + ราคาเงินแท่ง 99.99% (ชายนิ่งโกลล์) · ดึงอัตโนมัติทุก 15 นาทีโดย Cloud Function `fetchGoldPriceScheduled` (`functions/src/goldPrice/fetchGoldPrice.ts`) · subscribe ทั่วระบบความรู้ต่างๆ (live tables + calculator + live-example)
 
 | Field | Type | Description |
 |---|---|---|
-| pricePerBaht | number | ราคาขาย ฿/บาท (sellPrice ของสมาคม) |
-| buyPrice | number | ราคารับซื้อ ฿/บาท |
+| pricePerBaht | number | ราคาขายทอง 96.5% ฿/บาท (sellPrice ของสมาคม) |
+| buyPrice | number | ราคารับซื้อทอง 96.5% ฿/บาท |
 | priceChanged | number | เปลี่ยนแปลงจากรอบก่อน (informational) |
+| **silverBuyPerGram** | number | ราคาเงินแท่งรับซื้อ ฿/กรัม (จาก mukdagold `bidGPrice`) |
+| **silverSellPerGram** | number | ราคาเงินแท่งขายออก ฿/กรัม **รวม VAT 7%** (จาก mukdagold `askGPrice`) |
+| **silverBuyPerKg** | number | ราคาเงินแท่งรับซื้อ ฿/กิโล |
+| **silverSellPerKg** | number | ราคาเงินแท่งขายออก ฿/กิโล (รวม VAT) |
+| **silverUpdatedAt** | string | ISO timestamp จาก mukdagold silver API |
 | updatedAt | number | ms epoch ที่ doc ถูกเขียน |
 | updatedBy | string | `auto · สมาคมค้าทองคำ (mukdagold)` / `(ฮั่วเซงเฮง)` · admin manual |
 | source | string | `mukda-price2` / `hsh-ref` (debug) |
@@ -224,14 +229,31 @@ interface Item {
 | lastFetchError | string | ข้อความ error ครั้งล่าสุด (`""` = ไม่มี) |
 | lastFetchErrorAt | number | ms epoch ของ error |
 
-**Source chain** (Cloud Function ลองตามลำดับ): mukdagold `/api/price2` → HSH `apicheckpricev3` REF
-- ราคาเดียวกัน (proxy ของสมาคม) · HSH เป็น fallback
-- **Sanity check:** 10,000 ≤ pricePerBaht ≤ 200,000
-- **Skip write ถ้า no-change** (`sellPrice + sourceDate + sourceTime` เท่าเดิม)
+**Source chain** (Cloud Function ลองตามลำดับ):
+1. **Gold:** mukdagold `/api/price2` → HSH `apicheckpricev3` REF (fallback)
+2. **Silver:** mukdagold `/api/silver_price` (no fallback · fail = silent skip ไม่กระทบ gold)
+
+- ราคา gold เดียวกัน (proxy ของสมาคม) · HSH เป็น fallback
+- **Sanity check:** gold 10,000–200,000 ฿/บาท · silver 10–200 ฿/กรัม
+- **Skip write ถ้า no-change** ทั้ง gold (`sellPrice + sourceDate + sourceTime`) + silver (`silverBuyPerGram + silverSellPerGram`) เท่าเดิม
 
 **Manual trigger:** Cloud Function `fetchGoldPriceNow` (onCall, admin only) — ปุ่ม refresh ใน `GoldPriceHeader`
 
 **Read:** ทุก signed-in (ผ่าน `useGoldPrice()` hook) · **Write:** Cloud Function (Admin SDK) + admin จาก UI (`triggerFetchGoldPriceNow`)
+
+### config/laborCost
+
+ค่าแรงเริ่มต้น (ทอง 96.5%) override ของ `CHANGE_PRICE_WEIGHTS.laborBase` · admin แก้ได้จาก UI inline ที่ตาราง "ค่าแรง เริ่มต้น" ใน /knowledge (เฉพาะ ADMIN) → sync ทุก live table + calculator ทั่ว /knowledge ทันที
+
+| Field | Type | Description |
+|---|---|---|
+| values | `Record<string, number>` | key = weightId (e.g. `"0.6g"`, `"1-saleung"`, `"1-baht"`, `"2-baht-plus"`) · value = ค่าแรง (฿) |
+| updatedAt | number | ms epoch |
+| updatedBy | string | ชื่อ admin (เผื่ออนาคต) |
+
+**Merge logic:** `getWeightsWithLabor(overrides)` ใน `changePriceUtils.ts` · field ที่ admin ไม่ override ใช้ default จาก `CHANGE_PRICE_WEIGHTS`
+
+**Read:** ทุก signed-in · **Write:** admin only
 
 ## Security Rules Summary
 
