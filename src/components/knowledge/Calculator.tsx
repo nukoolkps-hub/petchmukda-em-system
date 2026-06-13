@@ -75,7 +75,14 @@ export default function Calculator({
           rawLive !== null && f.buyPriceMultiplier
             ? rawLive * f.buyPriceMultiplier
             : rawLive;
-        if (live && live > 0 && !touched.has(f.id) && next[f.id] !== live) {
+        // readOnly → ข้าม touched flag (sync ตลอด · user แก้ไม่ได้)
+        const skipTouch = f.readOnly;
+        if (
+          live &&
+          live > 0 &&
+          (skipTouch || !touched.has(f.id)) &&
+          next[f.id] !== live
+        ) {
           next[f.id] = live;
           changed = true;
         }
@@ -168,7 +175,8 @@ export default function Calculator({
                   type="number"
                   inputMode="decimal"
                   value={Number.isNaN(values[field.id]) ? "" : values[field.id]}
-                  disabled={disabled}
+                  disabled={disabled || field.readOnly}
+                  readOnly={field.readOnly}
                   onChange={(e) => {
                     // user แก้เอง → หยุด sync ราคา live ให้ field นี้
                     if (field.goldPriceDefault || field.buyPriceDefault) {
