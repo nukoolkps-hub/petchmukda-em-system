@@ -77,7 +77,7 @@ export type KnowledgeBlock =
        *  → ไม่ outdated เมื่อราคาทองขยับ */
       type: "live-example";
       title: string;
-      compute: (gold: { sell: number; buy: number }) => {
+      compute: (gold: { sell: number; buy: number; silverBuy: number }) => {
         given: string[];
         steps: { calc: string; meaning: string }[];
       };

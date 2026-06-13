@@ -1077,6 +1077,28 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           };
         },
       },
+      {
+        type: "live-example",
+        title: "ตัวอย่าง — เงิน หัก 32.5%",
+        compute: ({ silverBuy }) => {
+          const rate = 0.325;
+          const pawn = silverBuy * (1 - rate);
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ราคารับซื้อเงินแท่งวันนี้ ${fmt(silverBuy)} ฿/กรัม`,
+              `อัตราหัก 32.5% (เฉลี่ย 30-35%)`,
+            ],
+            steps: [
+              {
+                calc: `${fmt(silverBuy)} × 67.5% = ${fmt(pawn)} ฿`,
+                meaning: "ราคาจำนำต่อกรัม",
+              },
+            ],
+          };
+        },
+      },
     ],
   },
 
