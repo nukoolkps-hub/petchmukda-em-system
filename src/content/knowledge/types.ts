@@ -30,6 +30,10 @@ export interface CalcField {
   /** disable field แบบ conditional — เช่น ช่อง "%จริง" ปิดเมื่อเลือกโหมด
    *  "ทั่วไป" · UI จะเทาลง + กรอกแก้ไม่ได้ */
   disabledWhen?: (values: Record<string, number>) => boolean;
+  /** ซ่อน field จาก UI ทั้งหมด แต่ค่ายังอยู่ใน values (ใช้ใน compute) ·
+   *  ปกติคู่กับ readOnly + buyPriceDefault — input ที่ผู้ใช้ไม่ต้องเห็น
+   *  ค่ายัง sync live · compute เอาไปใช้แสดงผลใน output */
+  hidden?: boolean;
 }
 
 export interface CalcOutput {
