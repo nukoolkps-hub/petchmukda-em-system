@@ -67,7 +67,9 @@ export default function KnowledgeBlockView({ block }: Props) {
               className="leading-relaxed flex items-start gap-2"
             >
               <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
-              <span>
+              {/* whitespace-pre-line — รองรับ \n ใน item string เพื่อให้
+                  ทำ "ย่อหน้า" (บรรทัดที่ 2 แสดงต่อบรรทัดที่ 1 ใน bullet เดียว) */}
+              <span className="whitespace-pre-line">
                 <MathText>{item}</MathText>
               </span>
             </li>
