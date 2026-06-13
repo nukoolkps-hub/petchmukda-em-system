@@ -22,14 +22,16 @@ function formatOutput(
   value: number,
   format: CalcOutput["format"],
   decimals = 2,
+  unit?: string,
 ): string {
   if (!Number.isFinite(value)) return "—";
   if (format === "currency") return `${formatThaiNumber(Math.round(value))} ฿`;
   // number: ใช้ Intl กำหนด maximumFractionDigits ตาม decimals (default 2)
-  return value.toLocaleString("th-TH", {
+  const formatted = value.toLocaleString("th-TH", {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
   });
+  return unit ? `${formatted} ${unit}` : formatted;
 }
 
 export default function Calculator({
@@ -285,7 +287,7 @@ export default function Calculator({
                 )}
               </div>
               <div className="text-base font-extrabold text-maroon whitespace-nowrap">
-                {formatOutput(out.value, out.format, out.decimals)}
+                {formatOutput(out.value, out.format, out.decimals, out.unit)}
               </div>
             </div>
           ))}

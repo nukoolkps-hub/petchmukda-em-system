@@ -42,6 +42,8 @@ export interface CalcOutput {
   format?: "currency" | "number";
   /** ทศนิยมสูงสุด (เฉพาะ format="number") — default 2 */
   decimals?: number;
+  /** หน่วยต่อท้ายตัวเลข (เช่น "กรัม") — เฉพาะ format="number" */
+  unit?: string;
   /** sub-line อธิบายเพิ่ม (เช่น "ราคาทองคำ 99.99% ต่อกรัม") */
   hint?: string;
 }
