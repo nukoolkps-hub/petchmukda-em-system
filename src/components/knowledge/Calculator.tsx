@@ -165,7 +165,13 @@ export default function Calculator({
               >
                 <MathText>{field.label}</MathText>
                 {showLiveBadge && (
-                  <span className="ml-1 text-[10px] text-green font-bold">
+                  <span
+                    className={`ml-1 text-[10px] font-bold ${
+                      field.buyPriceDefault || field.silverBuyPriceDefault
+                        ? "text-red"
+                        : "text-green"
+                    }`}
+                  >
                     · ราคาวันนี้
                   </span>
                 )}
