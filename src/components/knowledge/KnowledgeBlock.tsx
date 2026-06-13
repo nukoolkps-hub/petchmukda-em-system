@@ -34,12 +34,25 @@ interface Props {
 
 export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props) {
   switch (block.type) {
-    case "h3":
+    case "h3": {
+      // tone "maroon"/"silver" → pill with bg + white text (เด่นขึ้น)
+      // default → text-maroon + bottom gold border (style เดิม)
+      if (block.tone === "maroon" || block.tone === "silver") {
+        const bg = block.tone === "silver" ? "bg-silver" : "bg-maroon";
+        return (
+          <h3
+            className={`text-sm font-extrabold text-white mt-4 mb-2 px-3 py-1.5 rounded-[8px] ${bg}`}
+          >
+            {block.text}
+          </h3>
+        );
+      }
       return (
         <h3 className="text-base font-extrabold text-maroon mt-4 mb-2 pb-1.5 border-b-[1.5px] border-gold/30">
           {block.text}
         </h3>
       );
+    }
 
     case "p":
       // adminOnly: ซ่อนสำหรับพนักงาน (เช่น คำอธิบาย "ADMIN กดแก้ไข...")
