@@ -1,6 +1,14 @@
 /* ─── Knowledge block renderer ────────────────────────────────────
    render block แต่ละชนิด (heading, paragraph, list, table, formula,
-   ตัวอย่าง, รูป, callout, steps) ตาม type discriminator              */
+   ตัวอย่าง, รูป, callout, steps) ตาม type discriminator
+
+   ┌─ Typography กฎทอง ───────────────────────────────────────────┐
+   │ ตัวอักษร     = Prompt font (default — ห้ามใส่ font-mono บน   │
+   │                 wrapper ของ text ใน "ความรู้ต่างๆ")           │
+   │ MathText    = font-mono (เฉพาะ + − × ÷ =)                    │
+   │ → ทุกข้อความที่อาจมี operator ต้อง wrap <MathText>           │
+   │   (p, list, table, formula, example, callout, calculator)    │
+   └──────────────────────────────────────────────────────────────┘ */
 
 import {
   ArrowRight as IconArrow,
