@@ -289,7 +289,7 @@ export default function KnowledgeBlockView({
           className={`mb-3 px-3 py-2 rounded-[10px] border flex items-start gap-2 ${palette}`}
         >
           <Icon size={16} strokeWidth={2.4} className="shrink-0 mt-0.5" />
-          <div className="text-sm leading-snug">
+          <div className="text-sm leading-snug whitespace-pre-line">
             <MathText>{block.text}</MathText>
           </div>
         </div>
