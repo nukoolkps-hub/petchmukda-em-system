@@ -1,0 +1,37 @@
+name: Mirror to GitLab (backup)
+
+# สำรองโค้ดไป GitLab อัตโนมัติทุกครั้งที่ push (ทุก branch + tag)
+# ต้องตั้งค่า 2 อย่างใน GitHub repo (ดูวิธีใน docs/ หรือถาม Claude):
+#   - Secret  GITLAB_TOKEN : GitLab Personal/Project Access Token (scope: write_repository)
+#   - Variable GITLAB_REPO : path repo เช่น "gitlab.com/your-username/petchmukda-em-system.git"
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["**"]
+  workflow_dispatch: {}
+
+jobs:
+  mirror:
+    name: Push branches + tags to GitLab
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # ดึงประวัติเต็ม + tags เพื่อ mirror ครบ
+
+      - name: Push to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_REPO: ${{ vars.GITLAB_REPO }}
+        run: |
+          if [ -z "$GITLAB_TOKEN" ] || [ -z "$GITLAB_REPO" ]; then
+            echo "::warning::ข้าม mirror — ยังไม่ได้ตั้ง secret GITLAB_TOKEN และ/หรือ variable GITLAB_REPO"
+            exit 0
+          fi
+          # mirror ทุก branch (จาก remote-tracking ของ origin) + ทุก tag
+          # --force เพื่อให้ GitLab ตามทันแม้มี rebase/force-push บน GitHub
+          git push --force \
+            "https://oauth2:${GITLAB_TOKEN}@${GITLAB_REPO}" \
+            "+refs/remotes/origin/*:refs/heads/*" \
+            "+refs/tags/*:refs/tags/*"
