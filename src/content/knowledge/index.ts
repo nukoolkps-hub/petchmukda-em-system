@@ -126,7 +126,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     blocks: [
       {
         type: "p",
-        text: "ราคาเริ่มต้นของค่าแรง สำหรับทองรูปพรรณ 96.5% — admin แก้ได้จาก Section ตั้งค่า → ค่าแรงเริ่มต้น (ทั้งระบบ sync ตามทันที)",
+        text: "ราคาเริ่มต้นของค่าแรง สำหรับทองรูปพรรณ 96.5% — ADMIN แตะปุ่มแก้ไขในตารางด้านล่างเพื่อปรับค่า (sync ทั้งระบบทันที)",
       },
       { type: "labor-cost-table" },
       { type: "h3", text: "ค่าแรงเพิ่มจากป้าย MD" },
