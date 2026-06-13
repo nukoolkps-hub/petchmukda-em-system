@@ -439,9 +439,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "live-example",
         title: "ตัวอย่าง — 1 สลึง เพิ่มเป็น 2 สลึง (MD-03)",
-        compute: ({ sell }) => {
+        compute: ({ sell, labor }) => {
           const oldChange = changePriceFor("1-saleung", sell);
-          const newLabor = 750;
+          // ค่าแรงของน้ำหนักที่เพิ่ม = 1 สลึง (2 − 1 สลึง) · default 750
+          const newLabor = labor["1-saleung"] || 750;
           const md = 300;
           const goldPart = sell / 4;
           const total = goldPart + (newLabor + md) + oldChange;
@@ -475,9 +476,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "live-example",
         title: "ตัวอย่าง — 1 บาท เพิ่มเป็น 2 บาท (MD-03)",
-        compute: ({ sell }) => {
+        compute: ({ sell, labor }) => {
           const oldChange = changePriceFor("1-baht", sell);
-          const newLabor = 1050;
+          // ค่าแรงของน้ำหนักที่เพิ่ม = 1 บาท (2 − 1 บาท) · default 1050
+          const newLabor = labor["1-baht"] || 1050;
           const md = 300;
           const total = sell + (newLabor + md) + (oldChange + md);
           const fmt = (n: number) =>

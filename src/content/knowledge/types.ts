@@ -96,9 +96,11 @@ export type KnowledgeBlock =
         sell: number;
         buy: number;
         silverBuy: number;
-        /** ค่าแรงเริ่มต้นน้ำหนัก 1 บาท (จาก labor cost table · sync live)
-         *  · ใช้ใน VAT example แทน hardcode ค่ากำเหน็จ */
+        /** ค่าแรง 1 บาท จาก labor cost table · sync live · ใช้ใน VAT example */
         laborBaht: number;
+        /** ค่าแรงรายน้ำหนัก (key = weightId เช่น "1-saleung", "1-baht")
+         *  ใช้แทน hardcode ค่าแรงในตัวอย่าง · admin แก้ตาราง → sync ทันที */
+        labor: Record<string, number>;
       }) => {
         given: string[];
         steps: { calc: string; meaning: string }[];

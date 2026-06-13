@@ -16,6 +16,7 @@ interface Props {
     buy: number;
     silverBuy: number;
     laborBaht: number;
+    labor: Record<string, number>;
   }) => {
     given: string[];
     steps: { calc: string; meaning: string }[];
@@ -24,16 +25,19 @@ interface Props {
 
 export default function LiveExample({ title, tone = "maroon", compute }: Props) {
   const { data: gold } = useGoldPrice();
-  const { data: labor } = useLaborCost();
-  // ค่าแรง 1 บาท จากตาราง labor cost · default 1050 ถ้ายังไม่ load
-  const weights = getWeightsWithLabor(labor.values);
-  const labor1Baht = weights.find((w) => w.id === "1-baht")?.laborBase || 1050;
+  const { data: laborData } = useLaborCost();
+  // ค่าแรงทั้งตาราง · default fallback ถ้ายังไม่ load
+  const weights = getWeightsWithLabor(laborData.values);
+  const laborRecord: Record<string, number> = {};
+  for (const w of weights) laborRecord[w.id] = w.laborBase;
+  const labor1Baht = laborRecord["1-baht"] || 1050;
   // ก่อน live data โหลด → ใช้ default ราคา 50,000 / silver 30 ฿/กรัม กัน NaN
   const { given, steps } = compute({
     sell: gold.pricePerBaht || 50000,
     buy: gold.buyPrice || gold.pricePerBaht || 50000,
     silverBuy: gold.silverBuyPerGram || 30,
     laborBaht: labor1Baht,
+    labor: laborRecord,
   });
 
   const isSilver = tone === "silver";
