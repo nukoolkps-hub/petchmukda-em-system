@@ -133,7 +133,7 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
               className="text-silver-lt shrink-0"
             />
             <div className="flex-1 text-white text-xs font-extrabold">
-              ราคาเงินแท่ง วันนี้ (สมาคม)
+              ราคาเงินแท่ง 99.99% (ชายนิ่งโกลล์)
             </div>
           </div>
 
