@@ -487,7 +487,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     title: "ส่วนลด",
     Icon: IconBadgePercent,
     blocks: [
-      { type: "h3", text: "ส่วนลดค่าแรง (ทอง 99.99%)" },
+      { type: "h3", text: "ส่วนลด (ทอง 99.99%)" },
       {
         type: "list",
         items: [
