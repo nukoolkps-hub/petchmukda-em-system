@@ -22,8 +22,9 @@ jobs:
 
       - name: Push to GitLab
         env:
-          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          GITLAB_REPO: ${{ vars.GITLAB_REPO }}
+          # อ่านได้ทั้งจาก Secrets หรือ Variables (เผื่อตั้งคนละที่)
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN || vars.GITLAB_TOKEN }}
+          GITLAB_REPO: ${{ vars.GITLAB_REPO || secrets.GITLAB_REPO }}
         run: |
           if [ -z "$GITLAB_TOKEN" ] || [ -z "$GITLAB_REPO" ]; then
             echo "::warning::ข้าม mirror — ยังไม่ได้ตั้ง secret GITLAB_TOKEN และ/หรือ variable GITLAB_REPO"
