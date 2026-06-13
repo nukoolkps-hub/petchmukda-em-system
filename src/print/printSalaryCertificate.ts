@@ -1,6 +1,6 @@
 import { THAI_MONTH_NAMES } from "../constants";
 import { buildCertificateDocDef } from "./pdfBuilders/salaryCertificatePDF";
-import { openPDFBlob, printHTMLInIframe } from "./webviewHelpers";
+import { openPDFBlob, printHTML } from "./webviewHelpers";
 
 /* ─── Print Salary Certificate (หนังสือรับรองเงินเดือน) ─────────
    2 modes:
@@ -253,7 +253,7 @@ function buildCertificateHTML(
 export function printSalaryCertificate(args) {
   const html = buildCertificateHTML(args, { includePrintControls: true });
   if (!html) return;
-  printHTMLInIframe(html);
+  printHTML(html);
 }
 
 /**
