@@ -1500,8 +1500,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             buyPriceDefault: true,
             // ใช้ buy × 98% เหมือนวิธีในตัวอย่าง (โจทย์)
             buyPriceMultiplier: 0.98,
-            // auto-calc · user แก้ไม่ได้ (sync ตลอด)
-            readOnly: true,
+            // ซ่อนจาก input section · แสดงเป็น output ใต้ "ราคาขายรวม" แทน
+            hidden: true,
           },
         ],
         compute: ({ gold, labor, buyback }) => {
@@ -1513,6 +1513,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาขายรวม (ทอง + ค่าแรง)",
               value: sellTotal,
               format: "currency",
+            },
+            {
+              label: "ราคารับซื้อคืน (VAT)",
+              value: buyback,
+              format: "currency",
+              hint: "ราคารับซื้อทองคำแท่ง × 98%",
             },
             { label: "ส่วนต่าง (ฐานภาษี)", value: base, format: "currency" },
             { label: "VAT ที่ต้องนำส่ง (7%)", value: vat, format: "currency" },

@@ -131,6 +131,8 @@ export default function Calculator({
       {/* inputs */}
       <div className="p-3 space-y-2.5">
         {inputs.map((field) => {
+          // hidden field — ค่ายังอยู่ใน values แต่ไม่ render UI
+          if (field.hidden) return null;
           const disabled = field.disabledWhen?.(values) ?? false;
           return (
           <div
