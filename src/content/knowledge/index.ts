@@ -100,7 +100,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "calculator",
         title: "แปลงน้ำหนัก → กรัม",
         inputs: [
-          { id: "baht", label: "จำนวน", defaultValue: 1, suffix: "บาท" },
+          { id: "baht", label: "จำนวน", suffix: "บาท" },
         ],
         compute: ({ baht }) => [
           {
@@ -214,8 +214,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             goldPriceDefault: true,
           },
-          { id: "labor", label: "ค่าแรง", defaultValue: 1250, suffix: "฿" },
-          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 1.28, suffix: "ก." },
+          { id: "labor", label: "ค่าแรง", suffix: "฿" },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
         ],
         compute: ({ gold, labor, grams }) => {
           const gold9999 = gold * 1.036;
@@ -291,8 +291,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             goldPriceDefault: true,
           },
-          { id: "labor", label: "ค่าแรง", defaultValue: 1050, suffix: "฿" },
-          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
+          { id: "labor", label: "ค่าแรง", suffix: "฿" },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
         ],
         compute: ({ gold, labor, grams }) => {
           const goldPart = gold * 0.0656 * grams;
@@ -340,8 +340,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             goldPriceDefault: true,
           },
-          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
-          { id: "labor", label: "ค่าแรง", defaultValue: 500, suffix: "฿" },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
+          { id: "labor", label: "ค่าแรง", suffix: "฿" },
         ],
         compute: ({ gold, grams, labor }) => {
           const half = gold / 2;
@@ -396,8 +396,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             silverSellPriceDefault: true,
           },
-          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 15, suffix: "ก." },
-          { id: "labor", label: "ค่าแรง", defaultValue: 200, suffix: "฿" },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
+          { id: "labor", label: "ค่าแรง", suffix: "฿" },
         ],
         compute: ({ rate, grams, labor }) => {
           const silverPart = rate * grams;
@@ -642,7 +642,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               { value: 7, label: "หัก 7%" },
             ],
           },
-          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 1, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
         ],
         compute: ({ gold, discount, grams }) => {
           const base = gold * (1 - discount / 100);
@@ -712,7 +712,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               { value: 7, label: "หัก 7%" },
             ],
           },
-          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
         ],
         compute: ({ gold, discount, grams }) => {
           const base = gold * (1 - discount / 100);
@@ -778,11 +778,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           {
             id: "realPct",
             label: "% จริง (ถ้าตรวจ)",
-            defaultValue: 78,
             suffix: "%",
             disabledWhen: ({ mode }) => mode !== 999,
           },
-          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
         ],
         compute: ({ gold, mode, realPct, grams }) => {
           const factor = mode === 999 ? (realPct - 10) / 100 : 0.6;
@@ -872,11 +871,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           {
             id: "realPct",
             label: "% จริง (ถ้าตรวจ)",
-            defaultValue: 35,
             suffix: "%",
             disabledWhen: ({ mode }) => mode !== 999,
           },
-          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
         ],
         compute: ({ gold, mode, realPct, grams }) => {
           const factor = mode === 999 ? (realPct - 10) / 100 : 0.25;
@@ -925,7 +923,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             silverBuyPriceDefault: true,
           },
-          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 15, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
         ],
         compute: ({ rate, grams }) => [
           {
@@ -1140,19 +1138,16 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           {
             id: "principal",
             label: "เงินจำนำ",
-            defaultValue: 1500,
             suffix: "฿",
           },
           {
             id: "months",
             label: "ระยะเวลา (เดือนเต็ม)",
-            defaultValue: 1,
             suffix: "ด.",
           },
           {
             id: "extraDays",
             label: "วันเศษ (0-31)",
-            defaultValue: 13,
             suffix: "ว.",
           },
         ],
@@ -1331,17 +1326,15 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "calculator",
         title: "ผ่อนสินค้าด้วยบัตรเครดิต",
         inputs: [
-          { id: "price", label: "ราคาขาย", defaultValue: 18000, suffix: "฿" },
+          { id: "price", label: "ราคาขาย", suffix: "฿" },
           {
             id: "ratePct",
             label: "ดอกเบี้ย/เดือน",
-            defaultValue: 1.2,
             suffix: "%",
           },
           {
             id: "months",
             label: "จำนวนเดือนผ่อน",
-            defaultValue: 6,
             suffix: "ด.",
           },
         ],
@@ -1404,7 +1397,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "calculator",
         title: "รูดบัตรเป็นเงินสด",
         inputs: [
-          { id: "amount", label: "ยอดรูดเต็ม", defaultValue: 50000, suffix: "฿" },
+          { id: "amount", label: "ยอดรูดเต็ม", suffix: "฿" },
         ],
         compute: ({ amount }) => [
           {
@@ -1485,11 +1478,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             goldPriceDefault: true,
           },
-          { id: "labor", label: "ค่าแรง", defaultValue: 1050, suffix: "฿" },
+          { id: "labor", label: "ค่าแรง", suffix: "฿" },
           {
             id: "weight",
             label: "น้ำหนักสินค้า",
-            defaultValue: 15.16,
             suffix: "ก.",
           },
           {
