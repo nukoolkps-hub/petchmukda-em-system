@@ -22,7 +22,6 @@ import type {
   StoreCalendar,
 } from "../../types";
 import { isRichTextEmpty } from "../../utils/sanitizeRichText";
-import GoldPriceHeader from "../knowledge/GoldPriceHeader";
 import DutyForecastModal from "../modals/DutyForecastModal";
 import RoleMainDutiesModal from "../modals/RoleMainDutiesModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -71,8 +70,6 @@ export default function HomeTab({
 
   return (
     <>
-      {/* ── ราคาทอง + เงิน (live) ── พนักงานเห็นทันทีเมื่อเปิดหน้าหลัก */}
-      <GoldPriceHeader />
 
       {/* ── ปุ่ม "หน้าที่หลัก" ── โชว์เมื่อ admin ตั้ง mainDuties ของตำแหน่งไว้ */}
       {hasMainDuties && myRole && (
