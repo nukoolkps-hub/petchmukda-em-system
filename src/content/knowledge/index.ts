@@ -158,7 +158,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 3a. ราคาขายทอง 99.99% ── */
   {
     id: "sell-price-9999",
-    title: "การคำนวณราคาขาย (ทองรูปพรรณ 99.99%)",
+    title: "การคำนวณราคาขาย (ทอง 99.99%)",
     Icon: IconSparkles,
     blocks: [
       {
@@ -207,7 +207,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "calculator",
-        title: "ราคาขายทองรูปพรรณ 99.99%",
+        title: "ราคาขายทอง 99.99%",
         inputs: [
           {
             id: "gold",
@@ -260,7 +260,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 3b. ราคาขายทอง 96.5% ── */
   {
     id: "sell-price-965",
-    title: "การคำนวณราคาขาย (ทองรูปพรรณ 96.5%)",
+    title: "การคำนวณราคาขาย (ทอง 96.5%)",
     Icon: IconShoppingBag,
     blocks: [
       {
@@ -284,7 +284,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "sell-price-96-table" },
       {
         type: "calculator",
-        title: "ราคาขายทองรูปพรรณ 96.5% ตามน้ำหนักชั่ง",
+        title: "ราคาขายทอง 96.5% ตามน้ำหนักชั่ง",
         inputs: [
           {
             id: "gold",
@@ -549,7 +549,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     title: "ส่วนลด",
     Icon: IconBadgePercent,
     blocks: [
-      { type: "h3", text: "ส่วนลด (ทองรูปพรรณ 99.99%)" },
+      { type: "h3", text: "ส่วนลด (ทอง 99.99%)" },
       {
         type: "list",
         items: [
@@ -564,7 +564,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         tone: "warn",
         text: "ทองคำแท่ง ไม่ได้ร่วมรายการ ส่วนลด",
       },
-      { type: "h3", text: "ส่วนลด (ทองรูปพรรณ 96.5%)" },
+      { type: "h3", text: "ส่วนลด (ทอง 96.5%)" },
       {
         type: "list",
         items: ["ปกติ ลด 15% (ค่าแรงขาย)", "HBD ลด 25% (ค่าแรงขาย)"],
@@ -574,12 +574,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         tone: "warn",
         text: "ทองคำแท่ง ไม่ได้ร่วมรายการ ส่วนลด",
       },
-      { type: "h3", text: "ส่วนลดค่าเปลี่ยน (ทองรูปพรรณ 96.5%)" },
+      { type: "h3", text: "ส่วนลดค่าเปลี่ยน (ทอง 96.5%)" },
       {
         type: "list",
         items: ["ปกติ ลด 5%", "HBD ลด 5%"],
       },
-      { type: "h3", text: "ส่วนลด (ทองรูปพรรณ 90)" },
+      { type: "h3", text: "ส่วนลด (ทอง 90)" },
       {
         type: "list",
         items: [
@@ -611,7 +611,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 5a0. รับซื้อทอง 99.99% ── */
   {
     id: "buy-price-9999",
-    title: "การคำนวณราคารับซื้อ (ทองรูปพรรณ 99.99%)",
+    title: "การคำนวณราคารับซื้อ (ทอง 99.99%)",
     Icon: IconSparkles,
     blocks: [
       {
@@ -625,7 +625,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "calculator",
-        title: "ราคารับซื้อทองรูปพรรณ 99.99%",
+        title: "ราคารับซื้อทอง 99.99%",
         inputs: [
           {
             id: "gold",
@@ -671,7 +671,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 5a. รับซื้อทอง 96.5% ── */
   {
     id: "buy-price-965",
-    title: "การคำนวณราคารับซื้อ (ทองรูปพรรณ 96.5%)",
+    title: "การคำนวณราคารับซื้อ (ทอง 96.5%)",
     Icon: IconBanknote,
     blocks: [
       {
@@ -679,7 +679,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         tone: "warn",
         text: "ทองแท่ง (MD) 96.5% ไม่หัก % รับซื้อ ให้เต็มตาม ราคารับซื้อทองคำแท่ง 96.5%\nหากเป็นของที่อื่น น้ำหนักสินค้า 0.05 - 1 บาท หัก 100 บาท/แท่ง และ 2 บาทขึ้นไป หัก 100 ฿/บาท",
       },
-      { type: "h3", text: "วิธีการคำนวณราคารับซื้อทองรูปพรรณ" },
+      { type: "h3", text: "วิธีการคำนวณราคารับซื้อ" },
       {
         type: "table",
         columns: ["น้ำหนัก", "วิธีคำนวณ"],
@@ -701,7 +701,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "buy-price-96-table" },
       {
         type: "calculator",
-        title: "ราคารับซื้อทองรูปพรรณ 96.5%",
+        title: "ราคารับซื้อทอง 96.5%",
         inputs: [
           {
             id: "gold",
@@ -747,7 +747,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 5b. รับซื้อทอง 90 ── */
   {
     id: "buy-price-90",
-    title: "การคำนวณราคารับซื้อ (ทองรูปพรรณ 90)",
+    title: "การคำนวณราคารับซื้อ (ทอง 90)",
     Icon: IconBanknote,
     blocks: [
       {
@@ -765,7 +765,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "calculator",
-        title: "ราคารับซื้อทองรูปพรรณ 90",
+        title: "ราคารับซื้อทอง 90",
         inputs: [
           {
             id: "gold",
