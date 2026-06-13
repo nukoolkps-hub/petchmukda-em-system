@@ -222,13 +222,26 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           const perGram = gold9999 * 0.0656;
           const sellPerGram = perGram + labor;
           const total = sellPerGram * grams;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return [
-            { label: "ราคาทองคำ 99.99%", value: gold9999, format: "currency" },
-            { label: "ราคา 99.99% ต่อกรัม", value: perGram, format: "currency" },
+            {
+              label: "ราคาทองคำ 99.99%",
+              value: gold9999,
+              format: "currency",
+              hint: `${gold} × 1.036`,
+            },
+            {
+              label: "ราคา 99.99% ต่อกรัม",
+              value: perGram,
+              format: "currency",
+              hint: `${fmt(gold9999)} × 0.0656`,
+            },
             {
               label: "ราคาขายต่อกรัม (+ ค่าแรง)",
               value: sellPerGram,
               format: "currency",
+              hint: `${fmt(perGram)} + ${labor}`,
             },
             {
               label: "ราคาขายต่อชิ้น",
@@ -284,6 +297,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         compute: ({ gold, labor, grams }) => {
           const goldPart = gold * 0.0656 * grams;
           const total = goldPart + labor;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return [
             {
               label: "ราคาทองตามน้ำหนักสินค้า",
@@ -291,7 +306,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               format: "currency",
               hint: `${gold} × 0.0656 × ${grams}`,
             },
-            { label: "ราคาขาย (+ ค่าแรง)", value: total, format: "currency" },
+            {
+              label: "ราคาขาย (+ ค่าแรง)",
+              value: total,
+              format: "currency",
+              hint: `${fmt(goldPart)} + ${labor}`,
+            },
           ];
         },
       },
@@ -326,6 +346,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         compute: ({ gold, grams, labor }) => {
           const half = gold / 2;
           const goldPart = half * 0.0656 * grams;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return [
             {
               label: "ราคาขายออกทองคำแท่ง × 0.50",
@@ -343,6 +365,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาขาย (+ ค่าแรง)",
               value: goldPart + labor,
               format: "currency",
+              hint: `${fmt(goldPart)} + ${labor}`,
             },
           ];
         },
@@ -376,18 +399,25 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 15, suffix: "ก." },
           { id: "labor", label: "ค่าแรง", defaultValue: 200, suffix: "฿" },
         ],
-        compute: ({ rate, grams, labor }) => [
-          {
-            label: "ราคาเงินตามน้ำหนักสินค้า",
-            value: rate * grams,
-            format: "currency",
-          },
-          {
-            label: "ราคาขาย (+ ค่าแรง)",
-            value: rate * grams + labor,
-            format: "currency",
-          },
-        ],
+        compute: ({ rate, grams, labor }) => {
+          const silverPart = rate * grams;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return [
+            {
+              label: "ราคาเงินตามน้ำหนักสินค้า",
+              value: silverPart,
+              format: "currency",
+              hint: `${rate} × ${grams}`,
+            },
+            {
+              label: "ราคาขาย (+ ค่าแรง)",
+              value: silverPart + labor,
+              format: "currency",
+              hint: `${fmt(silverPart)} + ${labor}`,
+            },
+          ];
+        },
       },
     ],
   },
@@ -1135,12 +1165,25 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             const rate = extraDays <= 15 ? 0.0075 : 0.015;
             total += Math.max(30, principal * rate);
           }
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          const extraRate = extraDays <= 15 ? "0.75%" : "1.5%";
+          const hintExtra =
+            extraDays > 0
+              ? ` + (${principal} × ${extraRate}, ขั้นต่ำ 30 ฿) วันเศษ`
+              : "";
           return [
-            { label: "ดอกเบี้ยรวมทั้งหมด", value: total, format: "currency" },
+            {
+              label: "ดอกเบี้ยรวมทั้งหมด",
+              value: total,
+              format: "currency",
+              hint: `(${principal} × 1.5%, ขั้นต่ำ 30 ฿) × ${months} ด.${hintExtra}`,
+            },
             {
               label: "ยอดที่ต้องจ่ายเพื่อไถ่",
               value: principal + total,
               format: "currency",
+              hint: `${principal} + ${fmt(total)}`,
             },
           ];
         },
@@ -1380,8 +1423,14 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "ค่าธรรมเนียม (5%)",
             value: amount * 0.05,
             format: "currency",
+            hint: `${amount} × 5%`,
           },
-          { label: "ลูกค้าได้เงินคืน", value: amount * 0.95, format: "currency" },
+          {
+            label: "ลูกค้าได้เงินคืน",
+            value: amount * 0.95,
+            format: "currency",
+            hint: `${amount} × 95%`,
+          },
         ],
       },
     ],
@@ -1465,11 +1514,14 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           const sellTotal = gold + labor;
           const base = sellTotal - buyback;
           const vat = Math.max(0, base) * 0.07;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return [
             {
               label: "ราคาขายรวม (ทอง + ค่าแรง)",
               value: sellTotal,
               format: "currency",
+              hint: `${gold} + ${labor}`,
             },
             {
               label: "ราคารับซื้อคืน (VAT)",
@@ -1477,8 +1529,18 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               format: "currency",
               hint: "ราคารับซื้อทองคำแท่ง × 98%",
             },
-            { label: "ส่วนต่าง (ฐานภาษี)", value: base, format: "currency" },
-            { label: "VAT ที่ต้องนำส่ง (7%)", value: vat, format: "currency" },
+            {
+              label: "ส่วนต่าง (ฐานภาษี)",
+              value: base,
+              format: "currency",
+              hint: `${fmt(sellTotal)} − ${fmt(buyback)}`,
+            },
+            {
+              label: "VAT ที่ต้องนำส่ง (7%)",
+              value: vat,
+              format: "currency",
+              hint: `${fmt(Math.max(0, base))} × 7%`,
+            },
           ];
         },
       },
