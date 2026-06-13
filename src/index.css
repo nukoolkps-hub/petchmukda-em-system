@@ -302,6 +302,9 @@ input[type="number"] {
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: rgba(201, 151, 58, 0.3) transparent;
+    /* กัน layout shift ของ header — ถ้า content เปลี่ยน scrollbar
+       ปรากฏ/หาย แล้ว width ของ content จะขยับ → header ตามไปด้วย */
+    scrollbar-gutter: stable;
   }
 
   .leave-sidebar-nav::-webkit-scrollbar {
