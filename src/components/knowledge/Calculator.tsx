@@ -134,6 +134,26 @@ export default function Calculator({
           // hidden field — ค่ายังอยู่ใน values แต่ไม่ render UI
           if (field.hidden) return null;
           const disabled = field.disabledWhen?.(values) ?? false;
+          // คำนวณ live value ตอนนี้ (เทียบกับค่าใน values เพื่อแสดง "ราคาวันนี้")
+          // ถ้า user แก้ค่าให้ตรงราคาวันนี้พอดี → badge กลับมาแสดงอีก
+          const rawLiveBadge = field.goldPriceDefault
+            ? gold.pricePerBaht
+            : field.buyPriceDefault
+              ? gold.buyPrice
+              : field.silverSellPriceDefault
+                ? gold.silverSellPerGram
+                : field.silverBuyPriceDefault
+                  ? gold.silverBuyPerGram
+                  : null;
+          const liveBadge =
+            rawLiveBadge !== null && field.buyPriceMultiplier
+              ? rawLiveBadge * field.buyPriceMultiplier
+              : rawLiveBadge;
+          const showLiveBadge =
+            (field.goldPriceDefault || field.buyPriceDefault) &&
+            liveBadge !== null &&
+            liveBadge > 0 &&
+            Math.abs((values[field.id] ?? 0) - liveBadge) < 0.005;
           return (
             <div
               key={field.id}
@@ -144,12 +164,11 @@ export default function Calculator({
                 className="text-xs font-semibold text-txt-mid flex-1 min-w-0 leading-snug"
               >
                 <MathText>{field.label}</MathText>
-                {(field.goldPriceDefault || field.buyPriceDefault) &&
-                  !touched.has(field.id) && (
-                    <span className="ml-1 text-[10px] text-green font-bold">
-                      · ราคาวันนี้
-                    </span>
-                  )}
+                {showLiveBadge && (
+                  <span className="ml-1 text-[10px] text-green font-bold">
+                    · ราคาวันนี้
+                  </span>
+                )}
               </label>
               <div className="flex items-center gap-1.5">
                 {field.options ? (
