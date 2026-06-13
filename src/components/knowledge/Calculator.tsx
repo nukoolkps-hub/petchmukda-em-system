@@ -22,14 +22,16 @@ function formatOutput(
   value: number,
   format: CalcOutput["format"],
   decimals = 2,
+  unit?: string,
 ): string {
   if (!Number.isFinite(value)) return "—";
   if (format === "currency") return `${formatThaiNumber(Math.round(value))} ฿`;
   // number: ใช้ Intl กำหนด maximumFractionDigits ตาม decimals (default 2)
-  return value.toLocaleString("th-TH", {
+  const formatted = value.toLocaleString("th-TH", {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals,
   });
+  return unit ? `${formatted} ${unit}` : formatted;
 }
 
 export default function Calculator({
@@ -165,7 +167,10 @@ export default function Calculator({
               ? rawLiveBadge * field.buyPriceMultiplier
               : rawLiveBadge;
           const showLiveBadge =
-            (field.goldPriceDefault || field.buyPriceDefault) &&
+            (field.goldPriceDefault ||
+              field.buyPriceDefault ||
+              field.silverSellPriceDefault ||
+              field.silverBuyPriceDefault) &&
             liveBadge !== null &&
             liveBadge > 0 &&
             Math.abs((values[field.id] ?? 0) - liveBadge) < 0.005;
@@ -239,7 +244,12 @@ export default function Calculator({
                     onBlur={() => setFocusedField(null)}
                     onChange={(e) => {
                       // user แก้เอง → หยุด sync ราคา live ให้ field นี้
-                      if (field.goldPriceDefault || field.buyPriceDefault) {
+                      if (
+                        field.goldPriceDefault ||
+                        field.buyPriceDefault ||
+                        field.silverSellPriceDefault ||
+                        field.silverBuyPriceDefault
+                      ) {
                         setTouched((t) =>
                           t.has(field.id) ? t : new Set(t).add(field.id),
                         );
@@ -285,7 +295,7 @@ export default function Calculator({
                 )}
               </div>
               <div className="text-base font-extrabold text-maroon whitespace-nowrap">
-                {formatOutput(out.value, out.format, out.decimals)}
+                {formatOutput(out.value, out.format, out.decimals, out.unit)}
               </div>
             </div>
           ))}
