@@ -927,7 +927,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["1 กิโล", "200"],
         ],
       },
-      { type: "h3", text: "เงินแท่ง" },
+      { type: "h3", tone: "silver", text: "เงินแท่ง" },
       {
         type: "table",
         tone: "silver",
@@ -954,7 +954,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["1 กิโล", "200"],
         ],
       },
-      { type: "h3", text: "ค่าประกัน" },
+      { type: "h3", tone: "silver", text: "ค่าประกัน" },
       {
         type: "list",
         items: ["1.5% ของราคาสินค้า", "ประกันราคาสินค้ามากสุด 200,000 บาท"],
