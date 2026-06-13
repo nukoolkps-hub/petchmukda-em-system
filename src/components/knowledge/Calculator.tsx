@@ -62,7 +62,7 @@ export default function Calculator({
       let changed = false;
       const next = { ...prev };
       for (const f of inputs) {
-        const live = f.goldPriceDefault
+        const rawLive = f.goldPriceDefault
           ? gold.pricePerBaht
           : f.buyPriceDefault
             ? gold.buyPrice
@@ -71,6 +71,10 @@ export default function Calculator({
               : f.silverBuyPriceDefault
                 ? gold.silverBuyPerGram
                 : null;
+        const live =
+          rawLive !== null && f.buyPriceMultiplier
+            ? rawLive * f.buyPriceMultiplier
+            : rawLive;
         if (live && live > 0 && !touched.has(f.id) && next[f.id] !== live) {
           next[f.id] = live;
           changed = true;

@@ -1485,9 +1485,11 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           {
             id: "buyback",
             label: "ราคารับซื้อคืน (VAT)",
-            defaultValue: 65066.72,
+            defaultValue: 63994,
             suffix: "฿",
             buyPriceDefault: true,
+            // ใช้ buy × 98% เหมือนวิธีในตัวอย่าง (โจทย์)
+            buyPriceMultiplier: 0.98,
           },
         ],
         compute: ({ gold, labor, buyback }) => {
