@@ -184,8 +184,7 @@ export default function Calculator({
                   type="number"
                   inputMode="decimal"
                   value={Number.isNaN(values[field.id]) ? "" : values[field.id]}
-                  disabled={disabled || field.readOnly}
-                  readOnly={field.readOnly}
+                  disabled={disabled}
                   onChange={(e) => {
                     // user แก้เอง → หยุด sync ราคา live ให้ field นี้
                     if (field.goldPriceDefault || field.buyPriceDefault) {
