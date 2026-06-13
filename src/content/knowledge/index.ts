@@ -1393,6 +1393,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           },
         ],
         compute: ({ price, ratePct, months }) => {
+          // กัน months = 0 → division by zero (Infinity) · ถือว่ายังไม่กรอก
+          if (!(months > 0)) return [];
           const swiped = price * 1.03;
           const interest = swiped * (ratePct / 100);
           const perMonth = swiped / months + interest;
