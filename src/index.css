@@ -89,8 +89,9 @@ body {
   background: #fdf8f0;
   /* Prompt font default ทุก element — กัน fallback เป็น system font เมื่อ
      element อยู่นอก .leave-app-root (เช่น modal portal, BootLoadingScreen
-     หรือ React Fragment ที่ไม่มี wrapper ของตัวเอง) */
-  font-family: var(--font-sans);
+     หรือ React Fragment ที่ไม่มี wrapper ของตัวเอง)
+     !important — กัน Tailwind preflight / browser reset เขียนทับ */
+  font-family: var(--font-sans) !important;
 }
 
 /* iOS Safari: ปิด native styling ของ date/month input — ป้องกัน
