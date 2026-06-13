@@ -209,7 +209,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคาขายออกทองคำแท่ง",
             defaultValue: 50000,
             suffix: "฿",
             goldPriceDefault: true,
@@ -286,7 +286,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคาขายออกทองคำแท่ง",
             defaultValue: 50000,
             suffix: "฿",
             goldPriceDefault: true,
@@ -335,7 +335,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคาขายออกทองคำแท่ง",
             defaultValue: 50000,
             suffix: "฿",
             goldPriceDefault: true,
@@ -627,7 +627,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคาขายออกทองคำแท่ง",
             defaultValue: 50000,
             suffix: "฿",
             goldPriceDefault: true,
@@ -697,7 +697,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคาขายออกทองคำแท่ง",
             defaultValue: 50000,
             suffix: "฿",
             goldPriceDefault: true,
@@ -761,7 +761,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคาขายออกทองคำแท่ง",
             defaultValue: 50000,
             suffix: "฿",
             goldPriceDefault: true,
@@ -855,7 +855,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคาขายออกทองคำแท่ง",
             defaultValue: 50000,
             suffix: "฿",
             goldPriceDefault: true,
@@ -1480,7 +1480,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคาขายออกทองคำแท่ง",
             defaultValue: 66500,
             suffix: "฿",
             goldPriceDefault: true,
