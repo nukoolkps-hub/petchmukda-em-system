@@ -20,6 +20,9 @@ export interface CalcField {
   /** ตัวคูณกับ live buy price (ใช้คู่ buyPriceDefault) — เช่น 0.98 สำหรับ
    *  "ราคารับซื้อคืน (VAT)" = buy × 98% */
   buyPriceMultiplier?: number;
+  /** read-only — user แก้ไม่ได้ · sync live ตลอดเวลา (กัน touched flag)
+   *  ใช้กับ field ที่คำนวณ auto จากค่าอื่น (เช่น VAT buyback) */
+  readOnly?: boolean;
   /** ตั้งค่าเริ่มต้นเป็นราคาเงินขายออก/กรัม live (gold.silverSellPerGram รวม VAT) */
   silverSellPriceDefault?: boolean;
   /** ตั้งค่าเริ่มต้นเป็นราคารับซื้อเงิน/กรัม live (gold.silverBuyPerGram) */

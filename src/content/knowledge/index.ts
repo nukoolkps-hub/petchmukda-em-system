@@ -1490,6 +1490,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             buyPriceDefault: true,
             // ใช้ buy × 98% เหมือนวิธีในตัวอย่าง (โจทย์)
             buyPriceMultiplier: 0.98,
+            // auto-calc · user แก้ไม่ได้ (sync ตลอด)
+            readOnly: true,
           },
         ],
         compute: ({ gold, labor, buyback }) => {
