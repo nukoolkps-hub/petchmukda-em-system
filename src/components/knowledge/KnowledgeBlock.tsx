@@ -35,11 +35,20 @@ interface Props {
 export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props) {
   switch (block.type) {
     case "h3": {
-      // tone "maroon"/"silver" → pill with bg + white text (เด่นขึ้น)
+      // tone "maroon"/"silver"/"gradient" → pill with bg + white text (เด่นขึ้น)
       // tone "silver-text" → text-silver + silver border (ไม่มี pill bg)
       // default → text-maroon + bottom gold border (style เดิม)
-      if (block.tone === "maroon" || block.tone === "silver") {
-        const bg = block.tone === "silver" ? "bg-silver" : "bg-maroon";
+      if (
+        block.tone === "maroon" ||
+        block.tone === "silver" ||
+        block.tone === "gradient"
+      ) {
+        const bg =
+          block.tone === "silver"
+            ? "bg-silver"
+            : block.tone === "gradient"
+              ? "bg-linear-to-r from-maroon via-silver-dk to-silver"
+              : "bg-maroon";
         return (
           <h3
             className={`text-sm font-extrabold text-white mt-4 mb-2 px-3 py-1.5 rounded-[8px] ${bg}`}

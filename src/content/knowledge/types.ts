@@ -42,8 +42,9 @@ export type KnowledgeBlock =
       text: string;
       /** สี header · default = text-maroon + gold border line
        *  · "maroon" = pill bg-maroon · "silver" = pill bg-silver
+       *  · "gradient" = pill bg-maroon เหลือบ silver
        *  · "silver-text" = text-silver + silver border line (ไม่มี pill) */
-      tone?: "maroon" | "silver" | "silver-text";
+      tone?: "maroon" | "silver" | "gradient" | "silver-text";
     }
   | { type: "p"; text: string; muted?: boolean; adminOnly?: boolean }
   | { type: "list"; items: string[]; ordered?: boolean }
