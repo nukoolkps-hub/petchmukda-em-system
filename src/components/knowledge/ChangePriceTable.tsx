@@ -4,10 +4,10 @@
 
 import { Coins as IconCoins, RefreshCw as IconRefresh } from "lucide-react";
 import { THAI_MONTH_NAMES } from "../../constants";
-import { useGoldPrice } from "../../firebase/hooks/useFirestore";
+import { useGoldPrice, useLaborCost } from "../../firebase/hooks/useFirestore";
 import {
-  CHANGE_PRICE_WEIGHTS,
   computeChangePriceBreakdown,
+  getWeightsWithLabor,
 } from "../../utils/changePriceUtils";
 import { formatThaiNumber } from "../../utils/format";
 
@@ -24,6 +24,8 @@ function fmtUpdatedAt(ms: number): string {
 
 export default function ChangePriceTable() {
   const { data: gold, loading } = useGoldPrice();
+  const { data: labor } = useLaborCost();
+  const weights = getWeightsWithLabor(labor.values);
 
   return (
     <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
@@ -68,7 +70,7 @@ export default function ChangePriceTable() {
           </tr>
         </thead>
         <tbody>
-          {CHANGE_PRICE_WEIGHTS.map((w) => {
+          {weights.map((w) => {
             const breakdown = computeChangePriceBreakdown(w, gold.pricePerBaht);
             return (
               <tr

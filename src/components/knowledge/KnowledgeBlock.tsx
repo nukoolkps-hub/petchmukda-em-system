@@ -20,6 +20,7 @@ import type { KnowledgeBlock } from "../../content/knowledge/types";
 import BuyPrice96Table from "./BuyPrice96Table";
 import Calculator from "./Calculator";
 import ChangePriceTable from "./ChangePriceTable";
+import LaborCostTable from "./LaborCostTable";
 import LiveExample from "./LiveExample";
 import MathText from "./MathText";
 import Secret from "./Secret";
@@ -281,6 +282,9 @@ export default function KnowledgeBlockView({ block }: Props) {
 
     case "buy-price-96-table":
       return <BuyPrice96Table />;
+
+    case "labor-cost-table":
+      return <LaborCostTable />;
 
     case "live-example":
       return <LiveExample title={block.title} compute={block.compute} />;

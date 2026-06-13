@@ -34,6 +34,22 @@ export const CHANGE_PRICE_WEIGHTS: ChangePriceWeight[] = [
   },
 ];
 
+/** merge default labor (จาก CHANGE_PRICE_WEIGHTS) + overrides (จาก
+ *  /config/laborCost · admin แก้) · field ที่ admin ไม่ได้ overrride ใช้ default
+ *  ใช้กับ live tables (ChangePriceTable, SellPrice96Table) + LaborCostTable */
+export function getWeightsWithLabor(
+  overrides: Record<string, number> | undefined,
+): ChangePriceWeight[] {
+  if (!overrides || Object.keys(overrides).length === 0) {
+    return CHANGE_PRICE_WEIGHTS;
+  }
+  return CHANGE_PRICE_WEIGHTS.map((w) =>
+    overrides[w.id] !== undefined
+      ? { ...w, laborBase: overrides[w.id] }
+      : w,
+  );
+}
+
 /** ราคาเนื้อทอง 96.5% ตามน้ำหนัก (gram) — สูตรเดียวกับ "ราคาขายทอง 96.5%" */
 function goldByWeight(goldPricePerBaht: number, grams: number): number {
   return goldPricePerBaht * 0.0656 * grams;

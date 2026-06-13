@@ -36,7 +36,8 @@ export type AdminSectionId =
   | "store-calendar"
   | "linebot-notifications"
   | "linebot-commands"
-  | "knowledge";
+  | "knowledge"
+  | "labor-cost";
 
 export type AdminGroupId =
   | "leave"
@@ -134,6 +135,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { id: "roles", label: "พนักงาน", Icon: IconUsers },
       { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
+      { id: "labor-cost", label: "ค่าแรงเริ่มต้น", Icon: IconTag },
     ],
   },
 ];
