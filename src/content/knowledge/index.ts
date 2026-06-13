@@ -216,8 +216,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿/บ.",
             goldPriceDefault: true,
           },
-          { id: "labor", label: "ค่าแรง", suffix: "฿" },
           { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
+          { id: "labor", label: "ค่าแรง", suffix: "฿" },
         ],
         compute: ({ gold, labor, grams }) => {
           const gold9999 = gold * 1.036;
@@ -294,8 +294,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿/บ.",
             goldPriceDefault: true,
           },
-          { id: "labor", label: "ค่าแรง", suffix: "฿" },
           { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
+          { id: "labor", label: "ค่าแรง", suffix: "฿" },
         ],
         compute: ({ gold, labor, grams }) => {
           const goldPart = gold * 0.0656 * grams;
@@ -1536,12 +1536,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿/บ.",
             goldPriceDefault: true,
           },
-          { id: "labor", label: "ค่าแรง", suffix: "฿" },
           {
             id: "weight",
             label: "น้ำหนักสินค้า",
             suffix: "ก.",
           },
+          { id: "labor", label: "ค่าแรง", suffix: "฿" },
           {
             id: "buyback",
             label: "ราคารับซื้อทองคำแท่ง × 98%",
