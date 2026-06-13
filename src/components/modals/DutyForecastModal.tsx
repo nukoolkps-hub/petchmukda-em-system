@@ -201,7 +201,7 @@ export default function DutyForecastModal({
 
         {!hasData ? (
           <div className="text-center text-txt-soft py-10 px-6">
-            ยังไม่มีข้อมูลตาราง — ลองรีเฟรชหลัง admin ตั้งค่าหน้าที่
+            ยังไม่มีข้อมูลตาราง — ลองรีเฟรชหลัง ADMIN ตั้งค่าหน้าที่
           </div>
         ) : months.length === 0 ? (
           <div className="text-center text-txt-soft py-10 px-6">

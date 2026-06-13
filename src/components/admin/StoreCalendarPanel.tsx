@@ -178,7 +178,7 @@ export default function StoreCalendarPanel({
           <div className="flex-1">
             <div className="font-bold text-maroon text-sm">เสาร์เปิดพิเศษ</div>
             <div className="text-xs text-txt-soft mt-0.5">
-              เสาร์ที่ admin ให้เปิดร้าน — คิดเหมือนวันธรรมดา
+              เสาร์ที่ ADMIN ให้เปิดร้าน — คิดเหมือนวันธรรมดา
             </div>
           </div>
           {adding !== "sat" && (

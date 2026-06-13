@@ -104,7 +104,7 @@ export default function LineBotNotificationsPanel({
         <ToggleRow
           icon={IconBanknote}
           title="คำขอเบิกเงินล่วงหน้า"
-          description="แจ้ง admin เมื่อพนักงานยื่นเบิกเงินใหม่"
+          description="แจ้ง ADMIN เมื่อพนักงานยื่นเบิกเงินใหม่"
           enabled={isOn("advanceRequestEnabled")}
           disabled={loading}
           onToggle={() => toggle("advanceRequestEnabled")}
@@ -112,7 +112,7 @@ export default function LineBotNotificationsPanel({
         <ToggleRow
           icon={IconCheckCircle}
           title="ผลอนุมัติคำขอเบิกเงิน"
-          description="แจ้งพนักงานเมื่อ admin อนุมัติหรือปฏิเสธคำขอ"
+          description="แจ้งพนักงานเมื่อ ADMIN อนุมัติหรือปฏิเสธคำขอ"
           enabled={isOn("advanceApprovalEnabled")}
           disabled={loading}
           onToggle={() => toggle("advanceApprovalEnabled")}
