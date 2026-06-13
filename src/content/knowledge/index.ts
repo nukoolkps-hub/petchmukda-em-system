@@ -675,6 +675,11 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     Icon: IconBanknote,
     blocks: [
       {
+        type: "callout",
+        tone: "warn",
+        text: "ทองแท่ง (MD) 96.5% ไม่หัก % รับซื้อ ให้เต็มตาม ราคารับซื้อทองคำแท่ง 96.5%\nหากเป็นของที่อื่น น้ำหนักสินค้า 0.05 - 1 บาท หัก 100 บาท/แท่ง และ 2 บาทขึ้นไป หัก 100 ฿/บาท",
+      },
+      {
         type: "table",
         columns: ["น้ำหนัก", "วิธีคำนวณ"],
         colWidths: ["25%", "75%"],
