@@ -1599,7 +1599,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "image",
-        src: "/knowledge/calibrate-progress.jpg",
+        src: "/knowledge/calibrate-progress.webp",
         alt: "หน้าจอกำลัง Calibrate",
         caption: "7-8. กดปุ่มที่ 3 และรอ ~150 วินาที",
       },
