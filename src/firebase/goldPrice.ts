@@ -11,6 +11,10 @@ import { db, functions } from "./config";
 export interface GoldPrice {
   pricePerBaht: number;
   buyPrice: number;
+  /** ราคาเงิน/กรัม รับซื้อ (bidGPrice จาก mukdagold) */
+  silverBuyPerGram: number;
+  /** ราคาเงิน/กรัม ขายออก รวม VAT 7% (askGPrice จาก mukdagold) */
+  silverSellPerGram: number;
   updatedAt: number;
   updatedBy: string;
   lastFetchError: string;
@@ -23,6 +27,8 @@ const PATH = "config/goldPrice";
 export const DEFAULT_GOLD_PRICE: GoldPrice = {
   pricePerBaht: 50000,
   buyPrice: 0,
+  silverBuyPerGram: 0,
+  silverSellPerGram: 0,
   updatedAt: 0,
   updatedBy: "",
   lastFetchError: "",
@@ -45,6 +51,16 @@ export function subscribeGoldPrice(
         buyPrice:
           typeof data.buyPrice === "number" && data.buyPrice > 0
             ? data.buyPrice
+            : 0,
+        silverBuyPerGram:
+          typeof data.silverBuyPerGram === "number" &&
+          data.silverBuyPerGram > 0
+            ? data.silverBuyPerGram
+            : 0,
+        silverSellPerGram:
+          typeof data.silverSellPerGram === "number" &&
+          data.silverSellPerGram > 0
+            ? data.silverSellPerGram
             : 0,
         updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : 0,
         updatedBy: typeof data.updatedBy === "string" ? data.updatedBy : "",

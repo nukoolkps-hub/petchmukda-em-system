@@ -25,8 +25,12 @@ import { getAppFirestore } from "../helpers/config.js";
 
 const HSH_URL = "https://apicheckpricev3.huasengheng.com/api/values/getprice/";
 const MUKDA_URL = "https://goldprice.mukdagold.com/api/price2";
+const MUKDA_SILVER_URL = "https://goldprice.mukdagold.com/api/silver_price";
 const SANE_MIN = 10000;
 const SANE_MAX = 200000;
+// sanity ราคาเงิน/กรัม — 10 ≤ x ≤ 200 บาท (ปัจจุบันแถวๆ 20-50 ฿/กรัม)
+const SANE_MIN_SILVER = 10;
+const SANE_MAX_SILVER = 200;
 
 // บาง upstream (เช่น HSH) มี bot protection — default UA ของ node fetch
 // ("node") โดนปฏิเสธ 403 ได้ → ปลอมเป็นเบราว์เซอร์
@@ -148,6 +152,50 @@ async function fetchFromMukda(): Promise<PriceData> {
 	};
 }
 
+interface SilverData {
+	silverBuyPerGram: number;
+	silverSellPerGram: number; // รวม VAT 7% ตามที่หน้าเว็บแสดง
+	silverBuyPerKg: number;
+	silverSellPerKg: number;
+	silverTime: string; // ISO
+}
+
+/** ราคาเงินแท่งจาก mukdagold · /api/silver_price */
+async function fetchSilverFromMukda(): Promise<SilverData> {
+	const res = await fetchWithTimeout(MUKDA_SILVER_URL);
+	const data = (await res.json()) as {
+		bidGPrice?: number;
+		askGPrice?: number;
+		bidKgPrice?: number;
+		askKgPrice?: number;
+		time?: string;
+	};
+	const silverBuyPerGram = Number(data.bidGPrice);
+	const silverSellPerGram = Number(data.askGPrice);
+	// sanity — ราคาเงิน/กรัม ปกติ 20-50 ฿ · กัน garbage
+	if (
+		!Number.isFinite(silverBuyPerGram) ||
+		silverBuyPerGram < SANE_MIN_SILVER ||
+		silverBuyPerGram > SANE_MAX_SILVER
+	) {
+		throw new Error(`Invalid silver buy price: ${silverBuyPerGram}`);
+	}
+	if (
+		!Number.isFinite(silverSellPerGram) ||
+		silverSellPerGram < SANE_MIN_SILVER ||
+		silverSellPerGram > SANE_MAX_SILVER
+	) {
+		throw new Error(`Invalid silver sell price: ${silverSellPerGram}`);
+	}
+	return {
+		silverBuyPerGram,
+		silverSellPerGram,
+		silverBuyPerKg: Number(data.bidKgPrice) || 0,
+		silverSellPerKg: Number(data.askKgPrice) || 0,
+		silverTime: String(data.time || ""),
+	};
+}
+
 /** ลอง source ตามลำดับ — ตัวแรกที่สำเร็จชนะ · fail หมด → โยน error รวม */
 async function fetchFromAnySource(): Promise<PriceData> {
 	const errors: string[] = [];
@@ -185,15 +233,28 @@ async function fetchAndStore(): Promise<StoreResult> {
 		throw err;
 	}
 
+	// ดึงราคาเงินคู่กัน · fail ไม่ blocking ราคาทอง (silent skip)
+	let silver: SilverData | null = null;
+	try {
+		silver = await fetchSilverFromMukda();
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		console.warn(`[fetchGoldPrice] silver fetch failed: ${msg}`);
+	}
+
 	const snap = await docRef.get();
 	const current = (snap.exists ? snap.data() : {}) as Record<string, unknown>;
 
-	// ถ้าราคาเท่าของเดิม + source timestamp เดิม → skip
-	// (กัน Firestore write churn ตอนสมาคมยังไม่ขยับราคา)
+	// ถ้าราคาเท่าของเดิม + source timestamp เดิม + ราคาเงินไม่เปลี่ยน → skip
+	const silverUnchanged =
+		!silver ||
+		(current?.silverBuyPerGram === silver.silverBuyPerGram &&
+			current?.silverSellPerGram === silver.silverSellPerGram);
 	if (
 		current?.pricePerBaht === data.sellPrice &&
 		current?.sourceDate === data.sourceDate &&
-		current?.sourceTime === data.sourceTime
+		current?.sourceTime === data.sourceTime &&
+		silverUnchanged
 	) {
 		// เคลียร์ error เก่า (fetch รอบนี้สำเร็จแล้ว)
 		if (current?.lastFetchError) {
@@ -223,6 +284,14 @@ async function fetchAndStore(): Promise<StoreResult> {
 			priceChanged: data.priceChanged,
 			lastFetchError: "",
 			lastFetchErrorAt: 0,
+			// ราคาเงิน — merge only if fetched สำเร็จ (กัน wipe ค่าเดิม)
+			...(silver && {
+				silverBuyPerGram: silver.silverBuyPerGram,
+				silverSellPerGram: silver.silverSellPerGram,
+				silverBuyPerKg: silver.silverBuyPerKg,
+				silverSellPerKg: silver.silverSellPerKg,
+				silverUpdatedAt: silver.silverTime,
+			}),
 		},
 		{ merge: true },
 	);
