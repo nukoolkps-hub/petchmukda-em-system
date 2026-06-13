@@ -23,6 +23,12 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
   const [fetching, setFetching] = useState(false);
   // auto-retry หนึ่งครั้งต่อ session — กัน infinite loop ถ้า fetch fail ซ้ำ
   const autoRetried = useRef(false);
+  // ref ติดตาม gold state ล่าสุด — ใช้ใน handleFetchSilver
+  // อ่านราคาเงินใหม่หลัง Firestore subscription update
+  const goldRef = useRef(gold);
+  useEffect(() => {
+    goldRef.current = gold;
+  }, [gold]);
 
   async function handleFetchNow() {
     if (fetching) return;
@@ -43,13 +49,29 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
   }
 
   // ปุ่ม refresh ใน header เงิน — ใช้ Cloud Function เดียวกัน
-  // แต่ toast แสดงข้อความ "ราคาเงิน" แทน
+  // toast แสดงราคาเงินก่อน/หลัง · format เหมือนทอง
   async function handleFetchSilver() {
     if (fetching) return;
+    const before = {
+      buy: goldRef.current.silverBuyPerGram,
+      sell: goldRef.current.silverSellPerGram,
+    };
     setFetching(true);
     try {
       await triggerFetchGoldPriceNow();
-      showToast?.("ดึงราคาเงินใหม่แล้ว");
+      // รอ Firestore subscription update local state (ปกติ <500ms)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const after = {
+        buy: goldRef.current.silverBuyPerGram,
+        sell: goldRef.current.silverSellPerGram,
+      };
+      const changed = before.buy !== after.buy || before.sell !== after.sell;
+      const display = `รับซื้อ ${fmtSilver(after.buy)} / ขายออก ${fmtSilver(after.sell)} ฿/กรัม`;
+      if (changed) {
+        showToast?.(`ดึงราคาเงินใหม่: ${display}`);
+      } else {
+        showToast?.(`ราคาเงินไม่เปลี่ยน (${display})`);
+      }
     } catch (err) {
       console.error("[GoldPriceHeader] fetch silver failed:", err);
       showToast?.(err instanceof Error ? err.message : "ดึงราคาไม่สำเร็จ");
