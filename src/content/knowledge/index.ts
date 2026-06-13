@@ -285,7 +285,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "sell-price-96-table" },
       {
         type: "calculator",
-        title: "ราคาขายทอง 96.5% ตามน้ำหนักชั่ง",
+        title: "ราคาขายทองรูปพรรณ 96.5% ตามน้ำหนักชั่ง",
         inputs: [
           {
             id: "gold",
@@ -680,7 +680,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         tone: "warn",
         text: "ทองแท่ง (MD) 96.5% ไม่หัก % รับซื้อ ให้เต็มตาม ราคารับซื้อทองคำแท่ง 96.5%\nหากเป็นของที่อื่น น้ำหนักสินค้า 0.05 - 1 บาท หัก 100 บาท/แท่ง และ 2 บาทขึ้นไป หัก 100 ฿/บาท",
       },
-      { type: "h3", text: "วิธีการคำนวณราคารับซื้อ" },
+      { type: "h3", text: "วิธีการคำนวณราคารับซื้อทองรูปพรรณ" },
       {
         type: "table",
         columns: ["น้ำหนัก", "วิธีคำนวณ"],
@@ -702,7 +702,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "buy-price-96-table" },
       {
         type: "calculator",
-        title: "ราคารับซื้อทอง 96.5%",
+        title: "ราคารับซื้อทองรูปพรรณ 96.5% ตามน้ำหนักชั่ง",
         inputs: [
           {
             id: "gold",
