@@ -73,7 +73,7 @@ export default function LiveExample({
               className="leading-relaxed flex items-start gap-2"
             >
               <span
-                className={`mt-2 w-1.5 h-1.5 rounded-full ${dotBg} shrink-0`}
+                className={`mt-[0.5em] w-2 h-2 rounded-full ${dotBg} shrink-0`}
               />
               <span>
                 <MathText>{g}</MathText>
