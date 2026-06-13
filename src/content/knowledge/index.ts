@@ -301,7 +301,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return [
             {
-              label: "ราคาทองตามน้ำหนักสินค้า",
+              label: "ราคาขายออกทองคำแท่งตามน้ำหนักสินค้า",
               value: goldPart,
               format: "currency",
               hint: `${gold} × 0.0656 × ${grams}`,
@@ -356,7 +356,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               hint: `${gold} × 0.50`,
             },
             {
-              label: "ราคาทองตามน้ำหนักสินค้า",
+              label: "ราคาขายออกทองคำแท่งตามน้ำหนักสินค้า",
               value: goldPart,
               format: "currency",
               hint: `${half} × 0.0656 × ${grams}`,
@@ -449,7 +449,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     blocks: [
       {
         type: "p",
-        text: "ค่าเปลี่ยนระหว่างน้ำหนักเท่ากัน — อิงราคาทองวันนี้ อัปเดตอัตโนมัติ",
+        text: "ค่าเปลี่ยนระหว่างน้ำหนักเท่ากัน — อิงราคาขายออกทองคำแท่งวันนี้ อัปเดตอัตโนมัติ",
       },
       { type: "change-price-table" },
     ],
@@ -464,7 +464,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "h3", text: "น้ำหนักเพิ่มขึ้น 0.6 กรัม ถึง 2 สลึง" },
       {
         type: "formula",
-        formula: "ราคาทองของน้ำหนักที่เพิ่ม + ค่าแรงของน้ำหนักที่เพิ่ม (MD) + ค่าเปลี่ยนทองเก่า",
+        formula: "ราคาขายออกทองคำแท่งของน้ำหนักที่เพิ่ม + ค่าแรงของน้ำหนักที่เพิ่ม (MD) + ค่าเปลี่ยนทองเก่า",
       },
       {
         type: "live-example",
@@ -501,7 +501,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "formula",
         formula:
-          "ราคาทองของน้ำหนักที่เพิ่ม + ค่าแรงของน้ำหนักที่เพิ่ม (MD) + ค่าเปลี่ยนทองเก่า (MD)",
+          "ราคาขายออกทองคำแท่งของน้ำหนักที่เพิ่ม + ค่าแรงของน้ำหนักที่เพิ่ม (MD) + ค่าเปลี่ยนทองเก่า (MD)",
       },
       {
         type: "live-example",
@@ -627,10 +627,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคารับซื้อทองคำแท่ง 96.5%",
             defaultValue: 50000,
             suffix: "฿",
-            goldPriceDefault: true,
+            buyPriceDefault: true,
           },
           {
             id: "discount",
@@ -649,7 +649,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           const buy = base * 0.0656 * grams;
           return [
             {
-              label: "ราคาทองหลังหัก %",
+              label: "ราคารับซื้อทองคำแท่งหลังหัก %",
               value: base,
               format: "currency",
               hint: `${gold} − ${discount}%`,
@@ -697,10 +697,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคารับซื้อทองคำแท่ง 96.5%",
             defaultValue: 50000,
             suffix: "฿",
-            goldPriceDefault: true,
+            buyPriceDefault: true,
           },
           {
             id: "discount",
@@ -719,7 +719,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           const buy = base * 0.0656 * grams;
           return [
             {
-              label: "ราคาทองหลังหัก %",
+              label: "ราคารับซื้อทองคำแท่งหลังหัก %",
               value: base,
               format: "currency",
               hint: `${gold} − ${discount}%`,
@@ -761,10 +761,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคารับซื้อทองคำแท่ง 96.5%",
             defaultValue: 50000,
             suffix: "฿",
-            goldPriceDefault: true,
+            buyPriceDefault: true,
           },
           {
             id: "mode",
@@ -855,10 +855,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            label: "ราคารับซื้อทองคำแท่ง 96.5%",
             defaultValue: 50000,
             suffix: "฿",
-            goldPriceDefault: true,
+            buyPriceDefault: true,
           },
           {
             id: "mode",
@@ -884,7 +884,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           const buy = base * 0.0656 * grams;
           return [
             {
-              label: "ราคาทองหลังหัก %",
+              label: "ราคารับซื้อทองคำแท่งหลังหัก %",
               value: base,
               format: "currency",
               hint:
