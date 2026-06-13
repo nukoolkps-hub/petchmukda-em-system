@@ -920,6 +920,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         tone: "warn",
         text: "เงินแท่ง (MD) 99.99% ไม่หัก % รับซื้อ ให้เต็มตาม ราคารับซื้อเงินแท่ง 99.99%\nหากเป็นของที่อื่น น้ำหนักสินค้า ½ สลึง - 1 บาท หัก 100 บาท/แท่ง และ 2 บาทขึ้นไป หัก 100 ฿/บาท",
       },
+      { type: "h3", tone: "silver-text", text: "วิธีการคำนวณราคารับซื้อเงิน" },
       {
         type: "table",
         tone: "silver",
