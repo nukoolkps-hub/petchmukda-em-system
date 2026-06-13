@@ -1456,7 +1456,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             });
           return {
             given: [
-              `ราคาทองคำแท่ง ${fmt(sell)} ฿`,
+              `ราคาขายออกทองคำแท่ง บาทละ ${fmt(sell)} ฿`,
               `ค่าแรง ${fmt(laborBaht)} ฿`,
               `รวม ${fmt(total)} ฿`,
               `ราคารับซื้อคืน (VAT) ${fmt(buyback)} ฿`,
