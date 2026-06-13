@@ -183,18 +183,16 @@ function buildSalarySlipHTML(
     .sig-name{font-size:10.5pt;color:#666;margin-top:2px;}
     .footer{margin-top:24px;padding-top:10px;border-top:1px solid #E0E0E0;
       font-size:9pt;color:#999;text-align:center;}
-    @page{size:A4 portrait;margin:8mm;}
+    @page{size:auto;margin:8mm;}
     @media print{
       body{background:#fff;padding:0;line-height:1.4;}
-      /* slip flow ตามเนื้อหาจริง · ไม่บังคับ min-height (เก่าใช้ 281mm =
-         A4 portrait → ถ้า user ตั้งกระดาษ A5 จะ overflow ไปหน้า 2 เปล่า) */
-      .slip{border:1px solid #333 !important;max-width:194mm !important;
+      /* slip flow ตามเนื้อหาจริง · max-width:100% เพื่อพอดีกับกระดาษที่
+         user เลือก (A4 หรือ A5) */
+      .slip{border:1px solid #333 !important;max-width:100% !important;
         margin:0 auto !important;padding:24px 38px 20px !important;
         page-break-inside:avoid;break-inside:avoid;}
       .slip *{page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
-      /* ── ช่องไฟเนื้อหา (เฉพาะตอนพิมพ์) — คุมให้ natural < 1 หน้า
-         แล้ว min-height + margin-top:auto เติมช่องว่างที่เหลือให้เต็มหน้า ── */
       .letterhead{padding-bottom:8px;margin-bottom:10px;}
       .doc-period{margin-bottom:12px;}
       .meta{margin-bottom:10px;padding:9px 16px;gap:5px 28px;}
@@ -202,11 +200,31 @@ function buildSalarySlipHTML(
       table td{padding:4px 2px;}
       .subtotal{padding:6px 2px;}
       .net{margin-top:14px;padding:12px 20px;}
-      /* ลายเซ็น: ระยะคงที่จากเนื้อหา ไม่บังคับดันลงล่าง (เลิก margin-top:auto)
-         เพื่อให้ slip flow ตามเนื้อหาจริง ไม่ overflow A5 */
       .signatures{padding-top:14px;gap:48px;}
       .sig-line{margin-top:46px;padding-top:7px;}
       .footer{margin-top:14px;}
+    }
+    /* กระดาษเล็กกว่า A4 (เช่น A5) → ย่อ font + margin เพื่อให้พอดี 1 หน้า */
+    @media print and (max-width:165mm){
+      .slip{padding:14px 18px 12px !important;}
+      .letterhead{padding-bottom:6px;margin-bottom:6px;}
+      .company{font-size:13pt;margin-bottom:2px;}
+      .addr{font-size:8pt;line-height:1.4;}
+      .doc-title{font-size:12pt;margin-bottom:2px;}
+      .doc-period{font-size:9pt;margin-bottom:8px;}
+      .meta{font-size:9pt;margin-bottom:8px;padding:6px 10px;gap:3px 16px;}
+      .sec-label{font-size:9pt;margin:8px 0 0;padding-bottom:3px;}
+      table{font-size:9pt;}
+      table td{padding:2px 2px;}
+      .subtotal{font-size:9pt;padding:4px 2px;}
+      .net{margin-top:8px;padding:8px 14px;}
+      .net .lbl{font-size:10pt;}
+      .net .amt{font-size:15pt;}
+      .warn{font-size:8pt;padding:6px 10px;margin-bottom:8px;}
+      .signatures{padding-top:8px;gap:24px;}
+      .sig-line{margin-top:28px;padding-top:4px;font-size:9pt;}
+      .sig-name{font-size:7.5pt;}
+      .footer{font-size:7pt;margin-top:8px;padding-top:6px;}
     }
     .print-btn{
       position:fixed;bottom:20px;right:20px;

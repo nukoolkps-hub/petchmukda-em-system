@@ -152,17 +152,15 @@ function buildCertificateHTML(
       color:#999;opacity:0.7;font-size:11pt;text-align:center;line-height:1.4;}
     .validity{margin-top:26px;padding-top:12px;border-top:1px solid #E0E0E0;
       font-size:11pt;color:#777;text-align:center;}
-    @page{size:A4 portrait;margin:8mm;}
+    @page{size:auto;margin:8mm;}
     @media print{
       body{background:#fff;padding:0;line-height:1.4;}
-      /* doc flow ตามเนื้อหาจริง ไม่บังคับ min-height (เก่าใช้ 281mm = A4
-         portrait → ถ้า user ตั้งกระดาษ A5 จะ overflow ไปหน้า 2 เปล่า) */
+      /* doc flow ตามเนื้อหาจริง · max-width ใช้ % แทน mm เพื่อให้พอดี
+         ขนาดกระดาษที่ user เลือก (A4 หรือ A5) */
       .doc{border:1px solid #333 !important;
-        max-width:194mm !important;margin:0 auto !important;
+        max-width:100% !important;margin:0 auto !important;
         page-break-inside:avoid;break-inside:avoid;}
       .no-print{display:none !important;}
-      /* บีบช่องไฟให้ natural · ลายเซ็นวางตามเนื้อหา (ไม่ดันล่างแล้ว เพื่อ
-         ไม่ overflow page อื่นเมื่อ user เลือกกระดาษเล็กกว่า A4) */
       .title{margin:14px 0 4px;}
       .title-en{margin-bottom:16px;}
       .body{line-height:1.7;}
@@ -170,6 +168,25 @@ function buildCertificateHTML(
       .signatures{margin-top:24px;}
       .sig-line{margin-top:58px;}
       .validity{margin-top:16px;}
+    }
+    /* กระดาษเล็กกว่า A4 (เช่น A5 = 148mm) → ย่อ font + margin เพื่อให้
+       เนื้อหาพอดี 1 หน้า · ใช้ max-width:165mm จับ A5 portrait แต่ไม่จับ A4 */
+    @media print and (max-width:165mm){
+      .doc{padding:18px 22px 14px !important;}
+      .letterhead{padding-bottom:8px;margin-bottom:4px;}
+      .company{font-size:14pt;margin-bottom:3px;}
+      .addr{font-size:8pt;line-height:1.4;}
+      .ref-no{font-size:10pt;margin-top:8px;}
+      .title{font-size:14pt;letter-spacing:0.05em;margin:8px 0 2px;}
+      .title-en{font-size:8pt;margin-bottom:8px;}
+      .body{font-size:11pt;line-height:1.45;}
+      .body p{margin-bottom:6px;text-indent:1.8em;}
+      .date-line{font-size:11pt;margin-top:12px;padding-right:20px;}
+      .signatures{margin-top:14px;gap:18px;}
+      .sig-line{margin-top:30px;padding-top:5px;font-size:11pt;}
+      .sig-name{font-size:9pt;}
+      .stamp{width:60px;height:60px;font-size:8pt;margin:8px auto 0;}
+      .validity{font-size:8pt;margin-top:8px;padding-top:6px;}
     }
     .print-btn{
       position:fixed;bottom:20px;right:20px;
