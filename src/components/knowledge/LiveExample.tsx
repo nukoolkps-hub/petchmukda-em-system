@@ -33,11 +33,13 @@ export default function LiveExample({ title, compute }: Props) {
       </div>
       <div className="p-3 bg-white">
         <div className="text-xs text-txt-soft font-semibold mb-1.5">โจทย์</div>
-        <ul className="mb-2.5 space-y-0.5 text-sm text-txt">
+        <ul className="mb-2.5 space-y-0.5 text-sm text-txt font-mono">
           {given.map((g, i) => (
             <li key={`g-${i}`} className="flex items-start gap-2">
               <span className="text-gold mt-0.5">·</span>
-              <span>{g}</span>
+              <span>
+                <MathText>{g}</MathText>
+              </span>
             </li>
           ))}
         </ul>
