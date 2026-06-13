@@ -263,6 +263,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     title: "การคำนวณราคาขาย (ทอง 96.5%)",
     Icon: IconShoppingBag,
     blocks: [
+      { type: "h3", text: "วิธีการคำนวณราคาขายทองรูปพรรณ 96.5%" },
       {
         type: "table",
         columns: ["น้ำหนัก", "วิธีคำนวณ"],
