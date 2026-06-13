@@ -1455,7 +1455,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               `ราคาทองคำแท่ง ${fmt(sell)} ฿`,
               `ค่าแรง ${fmt(laborBaht)} ฿`,
               `รวม ${fmt(total)} ฿`,
-              `ราคารับซื้อคืน (VAT) = ${fmt(buy)} × 98% = ${fmt(buyback)} ฿`,
+              `ราคารับซื้อคืน (VAT) ${fmt(buyback)} ฿`,
             ],
             steps: [
               {
