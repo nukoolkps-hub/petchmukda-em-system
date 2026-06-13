@@ -906,11 +906,10 @@ export default function SalaryAdminEdit({
                     <div className="text-xs text-txt-soft">
                       Rate:{" "}
                       <b className="text-maroon">
-                        ฿
                         {formatThaiNumber(
                           employeeInfo?.normalSalePieceRate || 0,
-                        )}
-                        /ชิ้น
+                        )}{" "}
+                        ฿/ชิ้น
                       </b>
                     </div>
                   </div>
@@ -950,7 +949,7 @@ export default function SalaryAdminEdit({
                   Rate:{" "}
                   <b className="text-maroon">
                     {formatThaiNumber(employeeInfo?.specialSalePieceRate || 0)}{" "}
-                    ฿ /ชิ้น
+                    ฿/ชิ้น
                   </b>
                 </div>
               </div>
