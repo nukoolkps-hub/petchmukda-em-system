@@ -49,7 +49,16 @@ export default function Calculator({
 
   const [values, setValues] = useState<Record<string, number>>(() => {
     const init: Record<string, number> = {};
-    for (const f of inputs) init[f.id] = f.defaultValue ?? 0;
+    for (const f of inputs) {
+      // option fields ต้องมี default (dropdown ต้องเลือกอะไรสักอย่าง)
+      // gold/silver fields ที่มี live flag จะถูก sync ทับใน useEffect ด้านล่าง
+      // field อื่นๆ ไม่มี defaultValue → ปล่อยว่าง (NaN) ให้ user กรอกเอง
+      if (f.defaultValue !== undefined) {
+        init[f.id] = f.defaultValue;
+      } else {
+        init[f.id] = Number.NaN;
+      }
+    }
     return init;
   });
   // field ที่ผู้ใช้พิมพ์แก้เองแล้ว — จะหยุด sync ราคา live ให้ field นั้น
@@ -107,9 +116,12 @@ export default function Calculator({
     }
   }, [compute, values]);
 
-  const allFilled = inputs.every(
-    (f) => values[f.id] !== undefined && !Number.isNaN(values[f.id]),
-  );
+  const allFilled = inputs.every((f) => {
+    // ข้าม hidden + disabled field (ไม่นับเป็น input ที่ user ต้องกรอก)
+    if (f.hidden) return true;
+    if (f.disabledWhen?.(values)) return true;
+    return values[f.id] !== undefined && !Number.isNaN(values[f.id]);
+  });
 
   const isSilver = tone === "silver";
   const cardBorder = isSilver ? "border-silver-lt/60" : "border-gold/40";
