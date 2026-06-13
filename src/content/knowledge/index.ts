@@ -307,7 +307,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "formula",
         label: "ทั่วไป",
-        formula: "(ราคาทอง ÷ 2) × 0.0656 × น้ำหนักสินค้า + ค่าแรง = ราคาขาย",
+        formula: "(ราคาทอง × 0.50) × 0.0656 × น้ำหนักสินค้า + ค่าแรง = ราคาขาย",
       },
       {
         type: "calculator",
@@ -328,10 +328,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           const goldPart = half * 0.0656 * grams;
           return [
             {
-              label: "ราคาทอง ÷ 2",
+              label: "ราคาทอง × 0.50",
               value: half,
               format: "currency",
-              hint: `${gold} ÷ 2`,
+              hint: `${gold} × 0.50`,
             },
             {
               label: "ราคาทองตามน้ำหนัก",
