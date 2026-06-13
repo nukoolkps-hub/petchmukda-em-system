@@ -12,6 +12,8 @@ import MathText from "./MathText";
 
 interface Props {
   title: string;
+  /** สี header การ์ด · default "gold" · "silver" สำหรับเงิน */
+  tone?: "gold" | "silver";
   inputs: CalcField[];
   compute: (values: Record<string, number>) => CalcOutput[];
 }
@@ -30,7 +32,12 @@ function formatOutput(
   });
 }
 
-export default function Calculator({ title, inputs, compute }: Props) {
+export default function Calculator({
+  title,
+  tone = "gold",
+  inputs,
+  compute,
+}: Props) {
   const { data: gold } = useGoldPrice();
   const hasLiveField = inputs.some(
     (f) =>
@@ -93,9 +100,19 @@ export default function Calculator({ title, inputs, compute }: Props) {
     (f) => values[f.id] !== undefined && !Number.isNaN(values[f.id]),
   );
 
+  const isSilver = tone === "silver";
+  const cardBorder = isSilver ? "border-silver-lt/60" : "border-gold/40";
+  const headerBg = isSilver
+    ? "bg-silver-lt/30 text-silver-dk border-b border-silver-lt/60"
+    : "bg-gold-pale text-maroon border-b border-gold/30";
+
   return (
-    <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
-      <div className="px-3 py-2 bg-gold-pale text-maroon text-xs font-extrabold inline-flex items-center gap-1.5 w-full border-b border-gold/30">
+    <div
+      className={`mb-3 rounded-[12px] border-[1.5px] ${cardBorder} overflow-hidden bg-white`}
+    >
+      <div
+        className={`px-3 py-2 ${headerBg} text-xs font-extrabold inline-flex items-center gap-1.5 w-full`}
+      >
         <IconCalc size={13} strokeWidth={2.5} />
         เครื่องคิดเลข — {title}
       </div>
