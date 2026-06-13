@@ -2,7 +2,11 @@
    subscribe /config/goldPrice real-time — โชว์ทั้งราคารับซื้อ + ขายออก
    admin เห็นปุ่ม refresh (เรียก Cloud Function fetchGoldPriceNow)        */
 
-import { Coins as IconCoins, RefreshCw as IconRefresh } from "lucide-react";
+import {
+  Coins as IconCoins,
+  Gem as IconGem,
+  RefreshCw as IconRefresh,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { triggerFetchGoldPriceNow } from "../../firebase/goldPrice";
 import { useGoldPrice } from "../../firebase/hooks/useFirestore";
@@ -51,96 +55,119 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
     });
   }, [isAdmin, loading, gold.updatedAt]);
 
+  const fmtSilver = (n: number) =>
+    n.toLocaleString("th-TH", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  const hasSilver =
+    gold.updatedAt > 0 &&
+    (gold.silverBuyPerGram > 0 || gold.silverSellPerGram > 0);
+
   return (
-    <div className="mb-3 rounded-[14px] overflow-hidden border border-gold/40 bg-white shadow-[0_2px_8px_rgba(90,30,10,0.04)]">
-      {/* header bar */}
-      <div className="px-3.5 py-2 bg-maroon flex items-center gap-2">
-        <IconCoins
-          size={14}
-          strokeWidth={2.5}
-          className="text-gold-lt shrink-0"
-        />
-        <div className="flex-1 text-white text-xs font-extrabold">
-          ราคาทองคำแท่ง 96.5% วันนี้ (สมาคม)
+    <>
+      {/* ── ทองคำแท่ง ── */}
+      <div className="mb-3 rounded-[14px] overflow-hidden border border-gold/40 bg-white shadow-[0_2px_8px_rgba(90,30,10,0.04)]">
+        {/* header bar */}
+        <div className="px-3.5 py-2 bg-maroon flex items-center gap-2">
+          <IconCoins
+            size={14}
+            strokeWidth={2.5}
+            className="text-gold-lt shrink-0"
+          />
+          <div className="flex-1 text-white text-xs font-extrabold">
+            ราคาทองคำแท่ง 96.5% วันนี้ (สมาคม)
+          </div>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={handleFetchNow}
+              disabled={fetching}
+              aria-label="ดึงราคาตอนนี้"
+              className="shrink-0 w-7 h-7 rounded-[8px] bg-white/15 text-white cursor-pointer flex items-center justify-center disabled:opacity-50 active:scale-[0.92] transition-transform"
+            >
+              <IconRefresh
+                size={13}
+                strokeWidth={2.5}
+                className={fetching ? "animate-spin" : ""}
+              />
+            </button>
+          )}
         </div>
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={handleFetchNow}
-            disabled={fetching}
-            aria-label="ดึงราคาตอนนี้"
-            className="shrink-0 w-7 h-7 rounded-[8px] bg-white/15 text-white cursor-pointer flex items-center justify-center disabled:opacity-50 active:scale-[0.92] transition-transform"
-          >
-            <IconRefresh
-              size={13}
+
+        {/* prices — ทองคำ (บาทละ) */}
+        <div className="grid grid-cols-2 divide-x divide-bdr/50">
+          <div className="px-3.5 py-3 text-center">
+            <div className="text-[11px] font-bold text-red">รับซื้อ</div>
+            <div className="mt-0.5 text-xl font-extrabold text-red">
+              {gold.updatedAt > 0 && gold.buyPrice > 0
+                ? formatThaiNumber(gold.buyPrice)
+                : "—"}
+            </div>
+          </div>
+          <div className="px-3.5 py-3 text-center">
+            <div className="text-[11px] font-bold text-green">ขายออก</div>
+            <div className="mt-0.5 text-xl font-extrabold text-green">
+              {gold.updatedAt > 0
+                ? formatThaiNumber(gold.pricePerBaht)
+                : "—"}
+            </div>
+          </div>
+        </div>
+
+        {/* updated at */}
+        <div className="px-3.5 py-1.5 bg-cream/60 border-t border-bdr/40 text-[10px] text-txt-soft text-center italic">
+          อัปเดต {fmtThaiDateTime(gold.updatedAt)}
+          {gold.updatedBy ? ` · ${gold.updatedBy}` : ""} · บาทละ (฿)
+        </div>
+      </div>
+
+      {/* ── เงินแท่ง — แสดงเฉพาะเมื่อมีข้อมูล silver > 0 ── */}
+      {hasSilver && (
+        <div className="mb-3 rounded-[14px] overflow-hidden border border-gold/40 bg-white shadow-[0_2px_8px_rgba(90,30,10,0.04)]">
+          {/* header bar */}
+          <div className="px-3.5 py-2 bg-maroon flex items-center gap-2">
+            <IconGem
+              size={14}
               strokeWidth={2.5}
-              className={fetching ? "animate-spin" : ""}
+              className="text-gold-lt shrink-0"
             />
-          </button>
-        )}
-      </div>
-
-      {/* prices — ทองคำ (บาทละ) */}
-      <div className="grid grid-cols-2 divide-x divide-bdr/50">
-        <div className="px-3.5 py-3 text-center">
-          <div className="text-[11px] font-bold text-red">รับซื้อ</div>
-          <div className="mt-0.5 text-xl font-extrabold text-red">
-            {gold.updatedAt > 0 && gold.buyPrice > 0
-              ? formatThaiNumber(gold.buyPrice)
-              : "—"}
-          </div>
-        </div>
-        <div className="px-3.5 py-3 text-center">
-          <div className="text-[11px] font-bold text-green">ขายออก</div>
-          <div className="mt-0.5 text-xl font-extrabold text-green">
-            {gold.updatedAt > 0
-              ? formatThaiNumber(gold.pricePerBaht)
-              : "—"}
-          </div>
-        </div>
-      </div>
-
-      {/* silver — เฉพาะถ้ามีข้อมูล */}
-      {gold.updatedAt > 0 &&
-        (gold.silverBuyPerGram > 0 || gold.silverSellPerGram > 0) && (
-          <div className="border-t border-bdr/50 bg-cream/30">
-            <div className="px-3.5 py-1.5 text-[10px] font-bold text-txt-soft text-center">
-              ราคาเงินแท่ง / กรัม
+            <div className="flex-1 text-white text-xs font-extrabold">
+              ราคาเงินแท่ง วันนี้ (สมาคม)
             </div>
-            <div className="grid grid-cols-2 divide-x divide-bdr/50 pb-2">
-              <div className="px-3.5 text-center">
-                <div className="text-[10px] font-bold text-red">รับซื้อ</div>
-                <div className="text-sm font-extrabold text-red">
-                  {gold.silverBuyPerGram > 0
-                    ? gold.silverBuyPerGram.toLocaleString("th-TH", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    : "—"}
-                </div>
+          </div>
+
+          {/* prices — เงิน (กรัมละ) */}
+          <div className="grid grid-cols-2 divide-x divide-bdr/50">
+            <div className="px-3.5 py-3 text-center">
+              <div className="text-[11px] font-bold text-red">รับซื้อ</div>
+              <div className="mt-0.5 text-xl font-extrabold text-red">
+                {gold.silverBuyPerGram > 0
+                  ? fmtSilver(gold.silverBuyPerGram)
+                  : "—"}
               </div>
-              <div className="px-3.5 text-center">
-                <div className="text-[10px] font-bold text-green">
-                  ขายออก <span className="text-txt-soft">(รวม VAT 7%)</span>
-                </div>
-                <div className="text-sm font-extrabold text-green">
-                  {gold.silverSellPerGram > 0
-                    ? gold.silverSellPerGram.toLocaleString("th-TH", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    : "—"}
-                </div>
+            </div>
+            <div className="px-3.5 py-3 text-center">
+              <div className="text-[11px] font-bold text-green">
+                ขายออก{" "}
+                <span className="text-[9px] text-txt-soft font-semibold">
+                  (รวม VAT 7%)
+                </span>
+              </div>
+              <div className="mt-0.5 text-xl font-extrabold text-green">
+                {gold.silverSellPerGram > 0
+                  ? fmtSilver(gold.silverSellPerGram)
+                  : "—"}
               </div>
             </div>
           </div>
-        )}
 
-      {/* updated at */}
-      <div className="px-3.5 py-1.5 bg-cream/60 border-t border-bdr/40 text-[10px] text-txt-soft text-center italic">
-        อัปเดต {fmtThaiDateTime(gold.updatedAt)}
-        {gold.updatedBy ? ` · ${gold.updatedBy}` : ""} · ทอง: บาทละ (฿)
-      </div>
-    </div>
+          {/* updated at */}
+          <div className="px-3.5 py-1.5 bg-cream/60 border-t border-bdr/40 text-[10px] text-txt-soft text-center italic">
+            กรัมละ (฿)
+          </div>
+        </div>
+      )}
+    </>
   );
 }
