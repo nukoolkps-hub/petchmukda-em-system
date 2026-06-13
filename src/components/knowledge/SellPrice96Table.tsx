@@ -33,31 +33,31 @@ export default function SellPrice96Table() {
         </colgroup>
         <thead className="bg-maroon text-white">
           <tr>
-            <th className="px-2.5 py-1.5 text-left font-bold text-xs">
-              น้ำหนัก
-            </th>
+            <th className="px-2.5 py-1.5 text-left font-bold text-xs">น้ำหนัก</th>
             <th className="px-2.5 py-1.5 text-right font-bold text-xs">
               ราคาขาย (฿)
             </th>
           </tr>
         </thead>
         <tbody>
-          {weights.filter((w) => !w.perBaht).map((w, i) => {
-            const r = computeSellPrice96(w, gold.pricePerBaht);
-            return (
-              <tr
-                key={w.id}
-                className={`border-b border-bdr/40 ${i % 2 === 0 ? "bg-cream/40" : ""}`}
-              >
-                <td className="px-2.5 py-1.5 text-txt font-semibold">
-                  {w.label}
-                </td>
-                <td className="px-2.5 py-1.5 text-right font-extrabold text-maroon">
-                  {formatThaiNumber(Math.round(r.total))}
-                </td>
-              </tr>
-            );
-          })}
+          {weights
+            .filter((w) => !w.perBaht)
+            .map((w, i) => {
+              const r = computeSellPrice96(w, gold.pricePerBaht);
+              return (
+                <tr
+                  key={w.id}
+                  className={`border-b border-bdr/40 ${i % 2 === 0 ? "bg-cream/40" : ""}`}
+                >
+                  <td className="px-2.5 py-1.5 text-txt font-semibold">
+                    {w.label}
+                  </td>
+                  <td className="px-2.5 py-1.5 text-right font-extrabold text-maroon">
+                    {formatThaiNumber(Math.round(r.total))}
+                  </td>
+                </tr>
+              );
+            })}
           {/* 2 บาท — (ราคาทอง + ค่าแรง 1 บาท) × 2 · ค่าแรง/บาท ใช้ override */}
           <tr className="border-b border-bdr/40 last:border-0 bg-white">
             <td className="px-2.5 py-1.5 text-txt font-semibold">2 บาท</td>

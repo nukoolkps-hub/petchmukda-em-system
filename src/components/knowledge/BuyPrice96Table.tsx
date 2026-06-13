@@ -28,15 +28,9 @@ export default function BuyPrice96Table() {
         <thead className="bg-maroon text-white">
           <tr>
             <th className="px-2 py-1.5 text-left font-bold text-xs">น้ำหนัก</th>
-            <th className="px-2 py-1.5 text-right font-bold text-xs">
-              หัก 5%
-            </th>
-            <th className="px-2 py-1.5 text-right font-bold text-xs">
-              หัก 6%
-            </th>
-            <th className="px-2 py-1.5 text-right font-bold text-xs">
-              หัก 7%
-            </th>
+            <th className="px-2 py-1.5 text-right font-bold text-xs">หัก 5%</th>
+            <th className="px-2 py-1.5 text-right font-bold text-xs">หัก 6%</th>
+            <th className="px-2 py-1.5 text-right font-bold text-xs">หัก 7%</th>
           </tr>
         </thead>
         <tbody>

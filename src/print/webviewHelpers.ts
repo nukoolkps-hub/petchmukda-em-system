@@ -66,7 +66,9 @@ export function printHTMLInNewWindow(html: string) {
   const win = window.open("", "_blank");
   if (!win) {
     // popup blocked — fallback ไปใช้ iframe (อาจมี issue บน iOS แต่ดีกว่าไม่พิมพ์)
-    console.warn("[printHTMLInNewWindow] window.open blocked → fallback iframe");
+    console.warn(
+      "[printHTMLInNewWindow] window.open blocked → fallback iframe",
+    );
     printHTMLInIframe(html);
     return;
   }

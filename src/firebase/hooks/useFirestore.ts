@@ -11,6 +11,7 @@ import {
   subscribeApprovedAdvancesByMonth,
   subscribePendingAdvances,
 } from "../advances";
+import { EMPTY_BLOCK_COST, subscribeBlockCost } from "../blockCost";
 import { subscribeDuties } from "../duties";
 import {
   type DutyAssignmentsSnapshot,
@@ -370,9 +371,11 @@ export function useGoldPrice() {
 /** ค่าแรงเริ่มต้น (ทอง 96.5%) — public read · admin write · doc เดียว
  *  /config/laborCost · override CHANGE_PRICE_WEIGHTS.laborBase */
 export function useLaborCost() {
-  return useScopedSubscription(
-    () => subscribeLaborCost,
-    EMPTY_LABOR_COST,
-    [],
-  );
+  return useScopedSubscription(() => subscribeLaborCost, EMPTY_LABOR_COST, []);
+}
+
+/** ค่าบล็อก + ค่าประกัน — public read · admin write · doc เดียว
+ *  /config/blockCost · override DEFAULT_BLOCK_COST_VALUES */
+export function useBlockCost() {
+  return useScopedSubscription(() => subscribeBlockCost, EMPTY_BLOCK_COST, []);
 }

@@ -13,9 +13,7 @@ interface Props {
   message?: string;
 }
 
-export default function BootLoadingScreen({
-  message = "กำลังโหลด...",
-}: Props) {
+export default function BootLoadingScreen({ message = "กำลังโหลด..." }: Props) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     const id = setInterval(() => {

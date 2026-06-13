@@ -135,83 +135,85 @@ export default function Calculator({
           if (field.hidden) return null;
           const disabled = field.disabledWhen?.(values) ?? false;
           return (
-          <div
-            key={field.id}
-            className={`flex items-center gap-2.5 ${disabled ? "opacity-50" : ""}`}
-          >
-            <label
-              htmlFor={`calc-${field.id}`}
-              className="text-xs font-semibold text-txt-mid flex-1 min-w-0 leading-snug"
+            <div
+              key={field.id}
+              className={`flex items-center gap-2.5 ${disabled ? "opacity-50" : ""}`}
             >
-              <MathText>{field.label}</MathText>
-              {(field.goldPriceDefault || field.buyPriceDefault) &&
-                !touched.has(field.id) && (
-                  <span className="ml-1 text-[10px] text-green font-bold">
-                    · ราคาวันนี้
+              <label
+                htmlFor={`calc-${field.id}`}
+                className="text-xs font-semibold text-txt-mid flex-1 min-w-0 leading-snug"
+              >
+                <MathText>{field.label}</MathText>
+                {(field.goldPriceDefault || field.buyPriceDefault) &&
+                  !touched.has(field.id) && (
+                    <span className="ml-1 text-[10px] text-green font-bold">
+                      · ราคาวันนี้
+                    </span>
+                  )}
+              </label>
+              <div className="flex items-center gap-1.5">
+                {field.options ? (
+                  <select
+                    id={`calc-${field.id}`}
+                    value={values[field.id] ?? 0}
+                    disabled={disabled}
+                    onChange={(e) =>
+                      setValues((v) => ({
+                        ...v,
+                        [field.id]: Number(e.target.value),
+                      }))
+                    }
+                    className={`w-[142px] px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt font-[inherit] outline-none truncate ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white cursor-pointer"}`}
+                  >
+                    {field.options.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : field.readOnly ? (
+                  // readOnly → render เป็นตัวเลขเฉยๆ ไม่มี input box (auto-calc)
+                  <span className="w-28 px-2 py-1 text-sm font-bold text-txt text-right tabular-nums">
+                    {Number.isFinite(values[field.id])
+                      ? values[field.id].toLocaleString("th-TH", {
+                          maximumFractionDigits: 2,
+                        })
+                      : "—"}
+                  </span>
+                ) : (
+                  <input
+                    id={`calc-${field.id}`}
+                    type="number"
+                    inputMode="decimal"
+                    value={
+                      Number.isNaN(values[field.id]) ? "" : values[field.id]
+                    }
+                    disabled={disabled}
+                    onChange={(e) => {
+                      // user แก้เอง → หยุด sync ราคา live ให้ field นี้
+                      if (field.goldPriceDefault || field.buyPriceDefault) {
+                        setTouched((t) =>
+                          t.has(field.id) ? t : new Set(t).add(field.id),
+                        );
+                      }
+                      setValues((v) => ({
+                        ...v,
+                        [field.id]:
+                          e.target.value === ""
+                            ? Number.NaN
+                            : Number(e.target.value),
+                      }));
+                    }}
+                    className={`w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt text-right font-[inherit] outline-none ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white"}`}
+                  />
+                )}
+                {field.suffix && (
+                  <span className="text-xs text-txt-soft font-semibold w-6 text-center whitespace-nowrap">
+                    {field.suffix}
                   </span>
                 )}
-            </label>
-            <div className="flex items-center gap-1.5">
-              {field.options ? (
-                <select
-                  id={`calc-${field.id}`}
-                  value={values[field.id] ?? 0}
-                  disabled={disabled}
-                  onChange={(e) =>
-                    setValues((v) => ({
-                      ...v,
-                      [field.id]: Number(e.target.value),
-                    }))
-                  }
-                  className={`w-[142px] px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt font-[inherit] outline-none truncate ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white cursor-pointer"}`}
-                >
-                  {field.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              ) : field.readOnly ? (
-                // readOnly → render เป็นตัวเลขเฉยๆ ไม่มี input box (auto-calc)
-                <span className="w-28 px-2 py-1 text-sm font-bold text-txt text-right tabular-nums">
-                  {Number.isFinite(values[field.id])
-                    ? values[field.id].toLocaleString("th-TH", {
-                        maximumFractionDigits: 2,
-                      })
-                    : "—"}
-                </span>
-              ) : (
-                <input
-                  id={`calc-${field.id}`}
-                  type="number"
-                  inputMode="decimal"
-                  value={Number.isNaN(values[field.id]) ? "" : values[field.id]}
-                  disabled={disabled}
-                  onChange={(e) => {
-                    // user แก้เอง → หยุด sync ราคา live ให้ field นี้
-                    if (field.goldPriceDefault || field.buyPriceDefault) {
-                      setTouched((t) =>
-                        t.has(field.id) ? t : new Set(t).add(field.id),
-                      );
-                    }
-                    setValues((v) => ({
-                      ...v,
-                      [field.id]:
-                        e.target.value === ""
-                          ? Number.NaN
-                          : Number(e.target.value),
-                    }));
-                  }}
-                  className={`w-28 px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt text-right font-[inherit] outline-none ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white"}`}
-                />
-              )}
-              {field.suffix && (
-                <span className="text-xs text-txt-soft font-semibold w-6 text-center whitespace-nowrap">
-                  {field.suffix}
-                </span>
-              )}
+              </div>
             </div>
-          </div>
           );
         })}
       </div>

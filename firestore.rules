@@ -266,6 +266,12 @@ service cloud.firestore {
       allow read:  if isSignedIn();
       allow write: if isAdmin();
     }
+    // ค่าบล็อก + ค่าประกัน (ทองคำแท่ง / เงินแท่ง): ทุกคน signed-in อ่าน
+    // (ใช้ใน knowledge block cost table) · admin แก้
+    match /config/blockCost {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
     match /config/{document} {
       allow read, write: if false;
     }

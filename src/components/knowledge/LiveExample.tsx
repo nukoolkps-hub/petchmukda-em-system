@@ -23,7 +23,11 @@ interface Props {
   };
 }
 
-export default function LiveExample({ title, tone = "maroon", compute }: Props) {
+export default function LiveExample({
+  title,
+  tone = "maroon",
+  compute,
+}: Props) {
   const { data: gold } = useGoldPrice();
   const { data: laborData } = useLaborCost();
   // ค่าแรงทั้งตาราง · default fallback ถ้ายังไม่ load
