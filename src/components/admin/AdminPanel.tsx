@@ -13,7 +13,6 @@ import AdminAdvancePanel from "./AdminAdvancePanel";
 import DutySchedulePanel from "./DutySchedulePanel";
 import EmployeeAdminPanel from "./EmployeeAdminPanel";
 import EmployeeLoansPanel from "./EmployeeLoansPanel";
-import LaborCostPanel from "./LaborCostPanel";
 import LeaveListPanel from "./LeaveListPanel";
 import LeaveSummaryPanel from "./LeaveSummaryPanel";
 import LineBotCommandsPanel from "./LineBotCommandsPanel";
@@ -217,9 +216,6 @@ export default function AdminPanel({
       {section === "knowledge" && (
         <KnowledgeView isAdmin showToast={showToast} />
       )}
-
-      {/* ── LABOR COST section (ค่าแรงเริ่มต้น 96.5%) ── */}
-      {section === "labor-cost" && <LaborCostPanel showToast={showToast} />}
 
       {/* ── STORE CALENDAR section (วันเปิด-ปิดร้าน) ── */}
       {section === "store-calendar" && (

@@ -28,9 +28,11 @@ import SellPrice96Table from "./SellPrice96Table";
 
 interface Props {
   block: KnowledgeBlock;
+  isAdmin?: boolean;
+  showToast?: (msg: string) => void;
 }
 
-export default function KnowledgeBlockView({ block }: Props) {
+export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props) {
   switch (block.type) {
     case "h3":
       return (
@@ -284,7 +286,7 @@ export default function KnowledgeBlockView({ block }: Props) {
       return <BuyPrice96Table />;
 
     case "labor-cost-table":
-      return <LaborCostTable />;
+      return <LaborCostTable isAdmin={isAdmin} showToast={showToast} />;
 
     case "live-example":
       return <LiveExample title={block.title} compute={block.compute} />;
