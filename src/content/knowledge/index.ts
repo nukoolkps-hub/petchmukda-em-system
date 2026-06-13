@@ -1487,20 +1487,27 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           },
           { id: "labor", label: "ค่าแรง", defaultValue: 1050, suffix: "฿" },
           {
+            id: "weight",
+            label: "น้ำหนักสินค้า",
+            defaultValue: 15.16,
+            suffix: "ก.",
+          },
+          {
             id: "buyback",
-            label: "ราคารับซื้อคืน (VAT)",
+            label: "ราคารับซื้อทองคำแท่ง × 98%",
             defaultValue: 63994,
             suffix: "฿",
             buyPriceDefault: true,
-            // ใช้ buy × 98% เหมือนวิธีในตัวอย่าง (โจทย์)
             buyPriceMultiplier: 0.98,
-            // ซ่อนจาก input section · แสดงเป็น output ใต้ "ราคาขายรวม" แทน
+            // ซ่อนจาก input section · ใช้คำนวณภายใน
             hidden: true,
           },
         ],
-        compute: ({ gold, labor, buyback }) => {
-          const sellTotal = gold + labor;
-          const base = sellTotal - buyback;
+        compute: ({ gold, labor, weight, buyback }) => {
+          const goldPart = gold * 0.0656 * weight;
+          const sellTotal = goldPart + labor;
+          const buybackVat = buyback * 0.0656 * weight;
+          const base = sellTotal - buybackVat;
           const vat = Math.max(0, base) * 0.07;
           const fmt = (n: number) =>
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
@@ -1509,19 +1516,19 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาขายรวม (ทอง + ค่าแรง)",
               value: sellTotal,
               format: "currency",
-              hint: `${gold} + ${labor}`,
+              hint: `(${gold} × 0.0656 × ${weight}) + ${labor}`,
             },
             {
               label: "ราคารับซื้อคืน (VAT)",
-              value: buyback,
+              value: buybackVat,
               format: "currency",
-              hint: "ราคารับซื้อทองคำแท่ง × 98%",
+              hint: `(ราคารับซื้อทองคำแท่ง × 98%) × 0.0656 × ${weight}`,
             },
             {
               label: "ส่วนต่าง (ฐานภาษี)",
               value: base,
               format: "currency",
-              hint: `${fmt(sellTotal)} − ${fmt(buyback)}`,
+              hint: `${fmt(sellTotal)} − ${fmt(buybackVat)}`,
             },
             {
               label: "VAT ที่ต้องนำส่ง (7%)",
