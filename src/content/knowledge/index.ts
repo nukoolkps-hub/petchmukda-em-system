@@ -384,7 +384,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "formula",
         label: "ตามน้ำหนักชั่ง",
-        formula: "(ราคาเงินต่อกรัม × น้ำหนักสินค้า) + ค่าแรง = ราคาขาย",
+        formula: "(ราคาขายออกเงินแท่ง × น้ำหนักสินค้า) + ค่าแรง = ราคาขาย",
       },
       {
         type: "calculator",
@@ -393,9 +393,9 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "rate",
-            label: "ราคาเงิน/กรัม",
+            label: "ราคาขายออกเงินแท่ง 99.99%",
             defaultValue: 30,
-            suffix: "฿",
+            suffix: "฿/ก.",
             silverSellPriceDefault: true,
           },
           { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
