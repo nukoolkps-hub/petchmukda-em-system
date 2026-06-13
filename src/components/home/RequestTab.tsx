@@ -195,7 +195,6 @@ export default function RequestTab({
         onClick={onSubmit}
         className="w-full p-[17px] mt-1.5 border-none rounded-2xl text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-linear-135 from-maroon to-maroon-lt text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
       >
-        <Diamond size={18} color={COLORS.goldLight} />
         ยื่นคำขอลา
       </button>
 

@@ -13,7 +13,6 @@ import { validateBankAccount, validateRequired } from "../../utils/validators";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankPicker from "../shared/BankPicker";
 import BaseModal from "../shared/BaseModal";
-import Diamond from "../shared/Diamond";
 
 /* ─── Profile Setup Modal (first run / edit) ───────────────────── */
 export default function ProfileSetupModal({
@@ -387,7 +386,6 @@ export default function ProfileSetupModal({
         disabled={saving || imageBusy}
         className={`w-full p-4 mt-2 border-none rounded-[14px] text-lg font-bold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.25)] flex items-center justify-center gap-2 ${saving || imageBusy ? "bg-bdr text-txt-soft cursor-not-allowed" : "bg-maroon text-white cursor-pointer"}`}
       >
-        <Diamond size={16} color={COLORS.goldLight} />
         {saving ? "กำลังบันทึก..." : initial ? "บันทึกการเปลี่ยนแปลง" : "เริ่มใช้งาน"}
       </button>
       {initial && onClose && (

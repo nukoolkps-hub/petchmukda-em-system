@@ -7,7 +7,6 @@ import { useState } from "react";
 import { BUSINESS_RULES, COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
-import Diamond from "../shared/Diamond";
 
 /* ─── Advance Request Modal ────────────────────────────────────── */
 export default function AdvanceRequestModal({
@@ -228,14 +227,6 @@ export default function AdvanceRequestModal({
                 : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
             }`}
         >
-          <Diamond
-            size={14}
-            color={
-              payrollLocked || remaining <= 0
-                ? COLORS.textSoft
-                : COLORS.goldLight
-            }
-          />
           {payrollLocked
             ? "วันทำเงินเดือน — เบิกไม่ได้"
             : remaining <= 0
