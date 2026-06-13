@@ -178,7 +178,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return {
             given: [
-              `ราคาขายออกทองคำแท่ง บาทละ ${fmt(sell)} ฿`,
+              `ราคาขายออกทองคำแท่งวันนี้ ${fmt(sell)} ฿/บาท`,
               `ค่าแรง ${fmt(labor)} ฿`,
               `น้ำหนักสินค้า ${grams} กรัม`,
             ],
@@ -481,7 +481,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           return {
             given: [
               `ค่าเปลี่ยน 1 สลึง (จากตาราง) = ${fmt(oldChange)} ฿`,
-              `ราคาขายออกทองคำแท่ง บาทละ ${fmt(sell)} ฿`,
+              `ราคาขายออกทองคำแท่งวันนี้ ${fmt(sell)} ฿/บาท`,
             ],
             steps: [
               {
@@ -517,7 +517,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           return {
             given: [
               `ค่าเปลี่ยน 1 บาท (จากตาราง) = ${fmt(oldChange)} ฿`,
-              `ราคาขายออกทองคำแท่ง บาทละ ${fmt(sell)} ฿`,
+              `ราคาขายออกทองคำแท่งวันนี้ ${fmt(sell)} ฿/บาท`,
             ],
             steps: [
               {
@@ -832,7 +832,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return {
             given: [
-              `ราคารับซื้อทองคำแท่ง บาทละ ${fmt(buy)} ฿`,
+              `ราคารับซื้อทองคำแท่งวันนี้ ${fmt(buy)} ฿/บาท`,
               `น้ำหนักสินค้า ${grams} กรัม`,
               "กรณี: ทั่วไป (25%)",
             ],
@@ -1456,7 +1456,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             });
           return {
             given: [
-              `ราคาขายออกทองคำแท่ง บาทละ ${fmt(sell)} ฿`,
+              `ราคาขายออกทองคำแท่งวันนี้ ${fmt(sell)} ฿/บาท`,
               `ค่าแรง ${fmt(laborBaht)} ฿`,
               `รวม ${fmt(total)} ฿`,
               `ราคารับซื้อคืน (VAT) ${fmt(buyback)} ฿`,
