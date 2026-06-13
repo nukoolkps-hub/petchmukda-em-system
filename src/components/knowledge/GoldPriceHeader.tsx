@@ -124,13 +124,13 @@ export default function GoldPriceHeader({ isAdmin, showToast }: Props) {
 
       {/* ── เงินแท่ง — แสดงเฉพาะเมื่อมีข้อมูล silver > 0 ── */}
       {hasSilver && (
-        <div className="mb-3 rounded-[14px] overflow-hidden border border-gold/40 bg-white shadow-[0_2px_8px_rgba(90,30,10,0.04)]">
-          {/* header bar */}
-          <div className="px-3.5 py-2 bg-maroon flex items-center gap-2">
+        <div className="mb-3 rounded-[14px] overflow-hidden border border-silver-lt/60 bg-white shadow-[0_2px_8px_rgba(58,58,64,0.06)]">
+          {/* header bar — silver tone (graphite-gray) */}
+          <div className="px-3.5 py-2 bg-silver flex items-center gap-2">
             <IconGem
               size={14}
               strokeWidth={2.5}
-              className="text-gold-lt shrink-0"
+              className="text-silver-lt shrink-0"
             />
             <div className="flex-1 text-white text-xs font-extrabold">
               ราคาเงินแท่ง วันนี้ (สมาคม)
