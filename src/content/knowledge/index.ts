@@ -930,6 +930,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "h3", text: "เงินแท่ง" },
       {
         type: "table",
+        tone: "silver",
         columns: ["น้ำหนัก", "ค่าบล็อก (฿)"],
         colWidths: ["55%", "45%"],
         colAlign: ["left", "right"],
@@ -943,6 +944,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "table",
+        tone: "silver",
         columns: ["น้ำหนัก (ค่าส่ง)", "ค่าส่ง (฿)"],
         colWidths: ["55%", "45%"],
         colAlign: ["left", "right"],

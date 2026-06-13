@@ -50,6 +50,8 @@ export type KnowledgeBlock =
       /** กำหนดความกว้างคอลัมน์ explicit (เช่น ["60%", "40%"]) — ใช้กับ
        *  ตาราง 2+ ใบที่อยู่ติดกัน เพื่อให้คอลัมน์ตรงกัน (table-fixed) */
       colWidths?: string[];
+      /** สี header แถวบนสุด · default "maroon" · "silver" สำหรับตารางเงิน */
+      tone?: "maroon" | "silver";
     }
   | { type: "formula"; label?: string; formula: string; result?: string }
   | {
