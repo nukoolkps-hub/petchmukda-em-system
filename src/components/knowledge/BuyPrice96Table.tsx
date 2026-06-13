@@ -1,6 +1,8 @@
 /* ─── BuyPrice96Table — ตารางราคารับซื้อทอง 96.5% เริ่มต้นวันนี้ ──────
    subscribe goldPrice live · render 3 column (น้ำหนัก / รับซื้อ หัก 5%
-   / รับซื้อ หัก 7%) — สูตร: (ราคาทอง × (1−x%)) × 0.0656 × grams         */
+   / รับซื้อ หัก 7%) — สูตร: (ราคารับซื้อทองคำแท่ง × (1−x%)) × shortcut
+   ใช้ gold.buyPrice (ราคารับซื้อทองคำแท่ง สมาคม) · fallback เป็น
+   pricePerBaht ถ้า buyPrice ยังไม่ populate                              */
 
 import { Banknote as IconBank } from "lucide-react";
 import { useGoldPrice } from "../../firebase/hooks/useFirestore";
@@ -12,6 +14,8 @@ import { formatThaiNumber } from "../../utils/format";
 
 export default function BuyPrice96Table() {
   const { data: gold } = useGoldPrice();
+  // ราคารับซื้อทองคำแท่ง = gold.buyPrice · fallback เป็น sell ถ้ายังไม่มีค่า
+  const buyBase = gold.buyPrice > 0 ? gold.buyPrice : gold.pricePerBaht;
   return (
     <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
       <div className="px-3 py-2 bg-gold-pale text-maroon text-xs font-extrabold inline-flex items-center gap-1.5 w-full border-b border-gold/30">
@@ -46,7 +50,7 @@ export default function BuyPrice96Table() {
                   className="px-2 py-1.5 text-right font-extrabold text-maroon"
                 >
                   {formatThaiNumber(
-                    Math.round(computeBuyPrice96(w, gold.pricePerBaht, pct)),
+                    Math.round(computeBuyPrice96(w, buyBase, pct)),
                   )}
                 </td>
               ))}
