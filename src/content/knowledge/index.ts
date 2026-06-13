@@ -1429,18 +1429,17 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "list",
         ordered: true,
         items: [
-          'หา "ราคาขายทองรูปพรรณรวมค่ากำเหน็จ" (ราคาวันที่คุณซื้อ)',
+          'หา "ราคาขายทองรูปพรรณรวมค่าแรง" (ราคาวันที่คุณซื้อ)',
           'หา "ราคารับซื้อคืนทองรูปพรรณ" (ราคาประกาศของสมาคมค้าทองคำในวันที่คุณขาย) หรือ นำราคารับซื้อทองคำแท่ง คูณ 98%',
-          "คำนวณส่วนต่าง — ราคาขาย (รวมค่ากำเหน็จ) − ราคารับซื้อคืน = ฐานภาษี",
+          "คำนวณส่วนต่าง — ราคาขาย (รวมค่าแรง) − ราคารับซื้อคืน = ฐานภาษี",
           "คำนวณ VAT — ฐานภาษี × 7% = VAT ที่ร้านทองต้องนำส่ง",
         ],
       },
       {
         type: "live-example",
         title: "ตัวอย่าง",
-        compute: ({ sell, buy }) => {
-          const gamnet = 1000;
-          const total = sell + gamnet;
+        compute: ({ sell, buy, laborBaht }) => {
+          const total = sell + laborBaht;
           // ราคารับซื้อคืน (VAT) = ราคารับซื้อทองคำแท่ง × 98%
           const buyback = buy * 0.98;
           const diff = total - buyback;
@@ -1452,7 +1451,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           return {
             given: [
               `ราคาทองคำแท่ง ${fmt(sell)} ฿`,
-              `ค่ากำเหน็จ ${fmt(gamnet)} ฿`,
+              `ค่าแรง ${fmt(laborBaht)} ฿`,
               `รวม ${fmt(total)} ฿`,
               `ราคารับซื้อคืน (VAT) = ${fmt(buy)} × 98% = ${fmt(buyback)} ฿`,
             ],
@@ -1480,7 +1479,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             goldPriceDefault: true,
           },
-          { id: "gamnet", label: "ค่ากำเหน็จ", defaultValue: 1000, suffix: "฿" },
+          { id: "labor", label: "ค่าแรง", defaultValue: 1050, suffix: "฿" },
           {
             id: "buyback",
             label: "ราคารับซื้อคืน",
@@ -1489,13 +1488,13 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             buyPriceDefault: true,
           },
         ],
-        compute: ({ gold, gamnet, buyback }) => {
-          const sellTotal = gold + gamnet;
+        compute: ({ gold, labor, buyback }) => {
+          const sellTotal = gold + labor;
           const base = sellTotal - buyback;
           const vat = Math.max(0, base) * 0.07;
           return [
             {
-              label: "ราคาขายรวม (ทอง + กำเหน็จ)",
+              label: "ราคาขายรวม (ทอง + ค่าแรง)",
               value: sellTotal,
               format: "currency",
             },

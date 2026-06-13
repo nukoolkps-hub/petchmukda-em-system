@@ -3,14 +3,20 @@
    → โจทย์ใน demo จะตรงกับราคาในเครื่องคิดเลขที่ default ราคาวันนี้    */
 
 import { ArrowRight as IconArrow } from "lucide-react";
-import { useGoldPrice } from "../../firebase/hooks/useFirestore";
+import { useGoldPrice, useLaborCost } from "../../firebase/hooks/useFirestore";
+import { getWeightsWithLabor } from "../../utils/changePriceUtils";
 import MathText from "./MathText";
 
 interface Props {
   title: string;
   /** สี header การ์ด · default "maroon" (สำหรับทอง) · "silver" สำหรับเงิน */
   tone?: "maroon" | "silver";
-  compute: (gold: { sell: number; buy: number; silverBuy: number }) => {
+  compute: (gold: {
+    sell: number;
+    buy: number;
+    silverBuy: number;
+    laborBaht: number;
+  }) => {
     given: string[];
     steps: { calc: string; meaning: string }[];
   };
@@ -18,11 +24,16 @@ interface Props {
 
 export default function LiveExample({ title, tone = "maroon", compute }: Props) {
   const { data: gold } = useGoldPrice();
+  const { data: labor } = useLaborCost();
+  // ค่าแรง 1 บาท จากตาราง labor cost · default 1050 ถ้ายังไม่ load
+  const weights = getWeightsWithLabor(labor.values);
+  const labor1Baht = weights.find((w) => w.id === "1-baht")?.laborBase || 1050;
   // ก่อน live data โหลด → ใช้ default ราคา 50,000 / silver 30 ฿/กรัม กัน NaN
   const { given, steps } = compute({
     sell: gold.pricePerBaht || 50000,
     buy: gold.buyPrice || gold.pricePerBaht || 50000,
     silverBuy: gold.silverBuyPerGram || 30,
+    laborBaht: labor1Baht,
   });
 
   const isSilver = tone === "silver";
