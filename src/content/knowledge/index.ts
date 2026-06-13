@@ -909,9 +909,26 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     Icon: IconBanknote,
     blocks: [
       {
-        type: "formula",
-        label: "ตามน้ำหนักชั่ง",
-        formula: "ราคาเงินต่อกรัม × น้ำหนักสินค้า = ราคารับซื้อ",
+        type: "callout",
+        tone: "warn",
+        text: "เงินแท่ง (MD) 99.99% ไม่หัก % รับซื้อ ให้เต็มตาม ราคารับซื้อเงินแท่ง 99.99%",
+      },
+      {
+        type: "table",
+        tone: "silver",
+        columns: ["กรณี", "วิธีคำนวณ"],
+        colWidths: ["30%", "70%"],
+        colAlign: ["left", "left"],
+        rows: [
+          [
+            "ตามน้ำหนักชั่ง",
+            "(ราคารับซื้อเงินแท่ง × 25%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
+          ],
+          [
+            "มีการตรวจ %",
+            "(ราคารับซื้อเงินแท่ง × (%จริง − 20)%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ",
+          ],
+        ],
       },
       {
         type: "calculator",
@@ -920,21 +937,48 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           {
             id: "rate",
-            label: "ราคาเงิน/กรัม",
+            label: "ราคารับซื้อเงินแท่ง",
             defaultValue: 30,
             suffix: "฿",
             silverBuyPriceDefault: true,
           },
+          {
+            id: "mode",
+            label: "เลือกวิธี",
+            defaultValue: 25,
+            options: [
+              { value: 25, label: "ตามน้ำหนักชั่ง (25%)" },
+              { value: 999, label: "มีตรวจ %" },
+            ],
+          },
+          {
+            id: "realPct",
+            label: "% จริง (ถ้าตรวจ)",
+            suffix: "%",
+            disabledWhen: ({ mode }) => mode !== 999,
+          },
           { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
         ],
-        compute: ({ rate, grams }) => [
-          {
-            label: "ราคารับซื้อ",
-            value: rate * grams,
-            format: "currency",
-            hint: `${rate} × ${grams}`,
-          },
-        ],
+        compute: ({ rate, mode, realPct, grams }) => {
+          const factor = mode === 999 ? (realPct - 20) / 100 : 0.25;
+          const base = rate * factor;
+          const buy = base * 0.0656 * grams;
+          return [
+            {
+              label: "ราคารับซื้อเงินแท่งหลังหัก %",
+              value: base,
+              format: "currency",
+              hint:
+                mode === 999 ? `${rate} × (${realPct}−20)%` : `${rate} × 25%`,
+            },
+            {
+              label: "ราคารับซื้อ",
+              value: buy,
+              format: "currency",
+              hint: `× 0.0656 × ${grams} ก.`,
+            },
+          ];
+        },
       },
     ],
   },
