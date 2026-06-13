@@ -3,7 +3,8 @@
    • window.open("_blank")  → ปุ่ม "พิมพ์" เดิมเปิดไม่ขึ้น
    • a[download] click      → ปุ่ม "PDF" เดิม save ไฟล์ไม่ได้
    วิธีหลีกเลี่ยง:
-   • พิมพ์ → ใช้ iframe ซ่อน แล้วเรียก print() ใน iframe
+   • พิมพ์ → ใช้ iframe ซ่อน แล้วเรียก print() ใน iframe (LINE webview)
+            หรือ window.open() ใหม่ tab → print ที่นั่น (browser ปกติ)
    • PDF  → ถ้าอยู่ใน LINE → navigate ไป blob URL (เปิดดูใน PDF viewer)
             ถ้าเบราว์เซอร์ปกติ → ใช้ a[download] save ไฟล์เหมือนเดิม      */
 
@@ -20,7 +21,10 @@ export function openInExternalBrowser() {
   window.location.href = `${origin}${pathname}?openExternalBrowser=1${hash}`;
 }
 
-/** พิมพ์ HTML ผ่าน iframe ซ่อน */
+/** พิมพ์ HTML ผ่าน iframe ซ่อน + เรียก print จาก parent
+    เหตุผล: iOS Safari ถ้า script ใน iframe เรียก window.print() บางครั้ง
+    print top window แทน iframe → ออกมาเป็นหน้า SalaryView ทั้งหน้า ไม่ใช่
+    สลิป · เรียก iframe.contentWindow.print() จาก parent แก้ได้ */
 export function printHTMLInIframe(html: string) {
   document.getElementById("salary-print-iframe")?.remove();
 
@@ -31,6 +35,17 @@ export function printHTMLInIframe(html: string) {
   iframe.setAttribute("aria-hidden", "true");
   document.body.appendChild(iframe);
 
+  iframe.onload = () => {
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (err) {
+        console.warn("[printHTMLInIframe] print failed:", err);
+      }
+    }, 500);
+  };
+
   const doc = iframe.contentDocument || iframe.contentWindow?.document;
   if (!doc) {
     iframe.remove();
@@ -40,9 +55,35 @@ export function printHTMLInIframe(html: string) {
   doc.write(html);
   doc.close();
 
-  // HTML มี script auto-เรียก window.print() อยู่แล้วเมื่อโหลดเสร็จ
   // เก็บ iframe ไว้นานพอให้ print dialog ทำงานเสร็จ แล้วลบทิ้ง
   setTimeout(() => iframe.remove(), 60_000);
+}
+
+/** พิมพ์ HTML ผ่าน window.open() ใหม่ tab — เสถียรกว่า iframe บน mobile
+    Safari · ใช้กับ browser ปกติ (ไม่ใช่ LINE webview)
+    flow: ใหม่ tab → load HTML → auto print → user ปิด tab เอง */
+export function printHTMLInNewWindow(html: string) {
+  const win = window.open("", "_blank");
+  if (!win) {
+    // popup blocked — fallback ไปใช้ iframe (อาจมี issue บน iOS แต่ดีกว่าไม่พิมพ์)
+    console.warn("[printHTMLInNewWindow] window.open blocked → fallback iframe");
+    printHTMLInIframe(html);
+    return;
+  }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  // HTML inside มี auto-print script (window.print() onload) ทำให้ dialog
+  // เด้งขึ้นใน tab ใหม่ที่ context ของ tab นั้นจริงๆ
+}
+
+/** พิมพ์ HTML — เลือก method ตาม environment อัตโนมัติ */
+export function printHTML(html: string) {
+  if (isLineWebview()) {
+    printHTMLInIframe(html);
+    return;
+  }
+  printHTMLInNewWindow(html);
 }
 
 /** เปิด PDF จาก URL (เช่นสลิป official ใน Storage) — รองรับ LINE webview */

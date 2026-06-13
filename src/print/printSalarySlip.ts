@@ -1,6 +1,6 @@
 import { THAI_MONTH_NAMES } from "../constants";
 import { buildSalarySlipDocDef } from "./pdfBuilders/salarySlipPDF";
-import { openPDFBlob, printHTMLInIframe } from "./webviewHelpers";
+import { openPDFBlob, printHTML } from "./webviewHelpers";
 
 /* ─── Print Salary Slip ──────────────────────────────────────────
    2 modes:
@@ -334,7 +334,7 @@ function buildSalarySlipHTML(
 export function printSalarySlip(args) {
   const html = buildSalarySlipHTML(args, { includePrintControls: true });
   if (!html) return;
-  printHTMLInIframe(html);
+  printHTML(html);
 }
 
 /**
