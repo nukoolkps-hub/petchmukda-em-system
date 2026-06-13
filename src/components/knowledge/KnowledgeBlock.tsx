@@ -176,7 +176,7 @@ export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props)
             <ul className="mb-2.5 space-y-0.5 text-sm text-txt">
               {block.given.map((g, i) => (
                 <li key={`g-${i}`} className="flex items-start gap-2">
-                  <span className="text-gold mt-0.5">·</span>
+                  <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
                   <span>
                     <MathText>{g}</MathText>
                   </span>
