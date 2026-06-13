@@ -1587,13 +1587,13 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "image",
-        src: "/knowledge/machine-open.jpg",
+        src: "/knowledge/machine-open.webp",
         alt: "เปิดฝาเครื่อง",
         caption: "4. เปิดฝาด้านบน",
       },
       {
         type: "image",
-        src: "/knowledge/calibrate-sample.jpg",
+        src: "/knowledge/calibrate-sample.webp",
         alt: "Calibrate Sample",
         caption: "5. นำ Calibrate Sample มาวาง",
       },
