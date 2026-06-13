@@ -487,6 +487,16 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     title: "ส่วนลด",
     Icon: IconBadgePercent,
     blocks: [
+      { type: "h3", text: "ส่วนลดค่าแรง (ทอง 99.99%)" },
+      {
+        type: "list",
+        items: [
+          "ปกติ ลด 15% (ค่าแรงขาย/กรัม)",
+          "HBD ลด 25% (ค่าแรงขาย/กรัม)",
+          "ปกติ ลด 15% (ค่าแรงขาย)",
+          "HBD ลด 25% (ค่าแรงขาย)",
+        ],
+      },
       { type: "h3", text: "ส่วนลดค่าแรง (ทอง 96.5%)" },
       {
         type: "list",
