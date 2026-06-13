@@ -17,6 +17,9 @@ export interface CalcField {
   goldPriceDefault?: boolean;
   /** ตั้งค่าเริ่มต้นเป็นราคารับซื้อทองคำแท่งสมาคม live (gold.buyPrice) */
   buyPriceDefault?: boolean;
+  /** ตัวคูณกับ live buy price (ใช้คู่ buyPriceDefault) — เช่น 0.98 สำหรับ
+   *  "ราคารับซื้อคืน (VAT)" = buy × 98% */
+  buyPriceMultiplier?: number;
   /** ตั้งค่าเริ่มต้นเป็นราคาเงินขายออก/กรัม live (gold.silverSellPerGram รวม VAT) */
   silverSellPriceDefault?: boolean;
   /** ตั้งค่าเริ่มต้นเป็นราคารับซื้อเงิน/กรัม live (gold.silverBuyPerGram) */
