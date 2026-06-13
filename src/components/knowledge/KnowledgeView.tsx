@@ -43,7 +43,7 @@ export default function KnowledgeView({ isAdmin, showToast }: Props) {
   }, [query]);
 
   return (
-    <div>
+    <div className="font-sans">
       {/* header */}
       <div className="flex items-center gap-3 mb-4 px-1">
         <div className="w-10 h-10 rounded-[11px] bg-gold-pale flex items-center justify-center shrink-0">
