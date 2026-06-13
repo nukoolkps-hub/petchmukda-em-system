@@ -474,7 +474,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           // ค่าแรงของน้ำหนักที่เพิ่ม = 1 สลึง (2 − 1 สลึง) · default 750
           const newLabor = labor["1-saleung"] || 750;
           const md = 300;
-          const goldPart = sell / 4;
+          const goldPart = sell * 0.25;
           const total = goldPart + (newLabor + md) + oldChange;
           const fmt = (n: number) =>
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
@@ -485,7 +485,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             ],
             steps: [
               {
-                calc: `(${fmt(sell)} ÷ 4) + (${newLabor} + ${md}) + ${fmt(oldChange)} = ${fmt(total)} ฿`,
+                calc: `(${fmt(sell)} × 0.25) + (${newLabor} + ${md}) + ${fmt(oldChange)} = ${fmt(total)} ฿`,
                 meaning: "ราคาค่าเปลี่ยน",
               },
             ],
