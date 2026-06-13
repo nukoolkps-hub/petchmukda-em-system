@@ -303,21 +303,20 @@ export default function Calculator({
       {allFilled && outputs.length > 0 && (
         <div className="px-3 pb-3 pt-1 border-t border-gold/20 bg-cream/40 space-y-1.5">
           {outputs.map((out, i) => (
-            <div
-              key={`out-${i}`}
-              className="flex items-baseline justify-between gap-3 py-1.5"
-            >
-              <div className="text-xs text-txt-soft flex-1 min-w-0">
-                <MathText>{out.label}</MathText>
-                {out.hint && (
-                  <div className="text-[10px] text-txt-soft/80 italic mt-0.5">
-                    <MathText>{out.hint}</MathText>
-                  </div>
-                )}
+            <div key={`out-${i}`} className="py-1.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs text-txt-soft flex-1 min-w-0">
+                  <MathText>{out.label}</MathText>
+                </div>
+                <div className="text-base font-extrabold text-maroon whitespace-nowrap">
+                  {formatOutput(out.value, out.format, out.decimals, out.unit)}
+                </div>
               </div>
-              <div className="text-base font-extrabold text-maroon whitespace-nowrap">
-                {formatOutput(out.value, out.format, out.decimals, out.unit)}
-              </div>
+              {out.hint && (
+                <div className="text-[10px] text-txt-soft/80 italic mt-0.5">
+                  <MathText>{out.hint}</MathText>
+                </div>
+              )}
             </div>
           ))}
         </div>
