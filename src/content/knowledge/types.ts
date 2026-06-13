@@ -95,6 +95,7 @@ export type KnowledgeBlock =
   | { type: "sell-price-96-table" }
   | { type: "buy-price-96-table" }
   | { type: "labor-cost-table" }
+  | { type: "block-cost-table" }
   | {
       /** เหมือน example แต่ "โจทย์" + steps คำนวณจากราคาทองวันนี้
        *  → ไม่ outdated เมื่อราคาทองขยับ */

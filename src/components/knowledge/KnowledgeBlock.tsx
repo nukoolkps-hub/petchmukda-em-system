@@ -17,6 +17,7 @@ import {
   AlertTriangle as IconWarn,
 } from "lucide-react";
 import type { KnowledgeBlock } from "../../content/knowledge/types";
+import BlockCostTable from "./BlockCostTable";
 import BuyPrice96Table from "./BuyPrice96Table";
 import Calculator from "./Calculator";
 import ChangePriceTable from "./ChangePriceTable";
@@ -32,7 +33,11 @@ interface Props {
   showToast?: (msg: string) => void;
 }
 
-export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props) {
+export default function KnowledgeBlockView({
+  block,
+  isAdmin,
+  showToast,
+}: Props) {
   switch (block.type) {
     case "h3": {
       // tone "maroon"/"silver"/"gradient" → pill with bg + white text (เด่นขึ้น)
@@ -331,6 +336,9 @@ export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props)
 
     case "labor-cost-table":
       return <LaborCostTable isAdmin={isAdmin} showToast={showToast} />;
+
+    case "block-cost-table":
+      return <BlockCostTable isAdmin={isAdmin} showToast={showToast} />;
 
     case "live-example":
       return (

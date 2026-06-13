@@ -535,10 +535,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "h3", text: "ส่วนลด (ทอง 96.5%)" },
       {
         type: "list",
-        items: [
-          "ปกติ ลด 15% (ค่าแรงขาย)",
-          "HBD ลด 25% (ค่าแรงขาย)",
-        ],
+        items: ["ปกติ ลด 15% (ค่าแรงขาย)", "HBD ลด 25% (ค่าแรงขาย)"],
       },
       {
         type: "callout",
@@ -564,18 +561,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "h3", text: "ส่วนลด (นาก)" },
       {
         type: "list",
-        items: [
-          "ปกติ ลด 15% (ค่าแรงขาย)",
-          "HBD ลด 25% (ค่าแรงขาย)",
-        ],
+        items: ["ปกติ ลด 15% (ค่าแรงขาย)", "HBD ลด 25% (ค่าแรงขาย)"],
       },
       { type: "h3", tone: "silver-text", text: "ส่วนลด (เงิน)" },
       {
         type: "list",
-        items: [
-          "ปกติ ลด 15% (ค่าแรงขาย)",
-          "HBD ลด 25% (ค่าแรงขาย)",
-        ],
+        items: ["ปกติ ลด 15% (ค่าแรงขาย)", "HBD ลด 25% (ค่าแรงขาย)"],
       },
       {
         type: "callout",
@@ -867,9 +858,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               value: base,
               format: "currency",
               hint:
-                mode === 999
-                  ? `${gold} × (${realPct}−10)%`
-                  : `${gold} × 25%`,
+                mode === 999 ? `${gold} × (${realPct}−10)%` : `${gold} × 25%`,
             },
             {
               label: "ราคารับซื้อ",
@@ -926,62 +915,13 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     title: "ค่าบล็อก (ทองคำแท่ง / เงินแท่ง)",
     Icon: IconPackage,
     blocks: [
-      { type: "h3", text: "ทองคำแท่ง" },
       {
-        type: "table",
-        columns: ["น้ำหนัก", "ค่าบล็อก (฿)"],
-        colWidths: ["55%", "45%"],
-        colAlign: ["left", "right"],
-        rows: [
-          ["0.05 กรัม – 1 บาท", "300 / 350 / 450"],
-          ["2 บาท", "500 / 600 / 900"],
-          ["5 บาท", "1,000"],
-          ["10 บาท", "1,000"],
-          ["1 กิโล", "6,500"],
-        ],
+        type: "p",
+        adminOnly: true,
+        muted: true,
+        text: 'ADMIN กดปุ่ม "แก้ไข" บน header เพื่อปรับค่าบล็อก / ค่าส่ง / ค่าประกัน — sync ทุกคนทันที',
       },
-      {
-        type: "table",
-        columns: ["น้ำหนัก (ค่าส่ง)", "ค่าส่ง (฿)"],
-        colWidths: ["55%", "45%"],
-        colAlign: ["left", "right"],
-        rows: [
-          ["0.05 กรัม – 10 บาท", "60"],
-          ["1 กิโล", "200"],
-        ],
-      },
-      { type: "h3", tone: "silver-text", text: "เงินแท่ง" },
-      {
-        type: "table",
-        tone: "silver",
-        columns: ["น้ำหนัก", "ค่าบล็อก (฿)"],
-        colWidths: ["55%", "45%"],
-        colAlign: ["left", "right"],
-        rows: [
-          ["½ สลึง – 1 บาท", "350"],
-          ["5 บาท", "500"],
-          ["10 บาท", "700"],
-          ["20 บาท", "1,000"],
-          ["1 กิโล", "2,000"],
-        ],
-      },
-      {
-        type: "table",
-        tone: "silver",
-        columns: ["น้ำหนัก (ค่าส่ง)", "ค่าส่ง (฿)"],
-        colWidths: ["55%", "45%"],
-        colAlign: ["left", "right"],
-        rows: [
-          ["1 บาท – 10 บาท", "60"],
-          ["20 บาท", "100"],
-          ["1 กิโล", "200"],
-        ],
-      },
-      { type: "h3", tone: "gradient", text: "ค่าประกัน" },
-      {
-        type: "list",
-        items: ["1.5% ของราคาสินค้า", "ประกันราคาสินค้ามากสุด 200,000 บาท"],
-      },
+      { type: "block-cost-table" },
     ],
   },
 
