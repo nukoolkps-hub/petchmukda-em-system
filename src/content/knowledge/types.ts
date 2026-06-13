@@ -64,6 +64,8 @@ export type KnowledgeBlock =
   | {
       type: "calculator";
       title: string;
+      /** สี header การ์ด · default "gold" (gold-pale) · "silver" สำหรับเงิน */
+      tone?: "gold" | "silver";
       inputs: CalcField[];
       compute: (values: Record<string, number>) => CalcOutput[];
     }
@@ -77,6 +79,8 @@ export type KnowledgeBlock =
        *  → ไม่ outdated เมื่อราคาทองขยับ */
       type: "live-example";
       title: string;
+      /** สี header การ์ด · default "maroon" (สำหรับทอง) · "silver" สำหรับเงิน */
+      tone?: "maroon" | "silver";
       compute: (gold: { sell: number; buy: number; silverBuy: number }) => {
         given: string[];
         steps: { calc: string; meaning: string }[];

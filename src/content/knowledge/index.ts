@@ -350,6 +350,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "calculator",
         title: "ราคาขายเงิน",
+        tone: "silver",
         inputs: [
           {
             id: "rate",
@@ -873,6 +874,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "calculator",
         title: "ราคารับซื้อเงิน",
+        tone: "silver",
         inputs: [
           {
             id: "rate",
@@ -1080,6 +1082,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "live-example",
         title: "ตัวอย่าง — เงิน หัก 32.5%",
+        tone: "silver",
         compute: ({ silverBuy }) => {
           const rate = 0.325;
           const pawn = silverBuy * (1 - rate);

@@ -270,6 +270,7 @@ export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props)
       return (
         <Calculator
           title={block.title}
+          tone={block.tone}
           inputs={block.inputs}
           compute={block.compute}
         />
@@ -291,6 +292,12 @@ export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props)
       return <LaborCostTable isAdmin={isAdmin} showToast={showToast} />;
 
     case "live-example":
-      return <LiveExample title={block.title} compute={block.compute} />;
+      return (
+        <LiveExample
+          title={block.title}
+          tone={block.tone}
+          compute={block.compute}
+        />
+      );
   }
 }

@@ -8,13 +8,15 @@ import MathText from "./MathText";
 
 interface Props {
   title: string;
+  /** สี header การ์ด · default "maroon" (สำหรับทอง) · "silver" สำหรับเงิน */
+  tone?: "maroon" | "silver";
   compute: (gold: { sell: number; buy: number; silverBuy: number }) => {
     given: string[];
     steps: { calc: string; meaning: string }[];
   };
 }
 
-export default function LiveExample({ title, compute }: Props) {
+export default function LiveExample({ title, tone = "maroon", compute }: Props) {
   const { data: gold } = useGoldPrice();
   // ก่อน live data โหลด → ใช้ default ราคา 50,000 / silver 30 ฿/กรัม กัน NaN
   const { given, steps } = compute({
@@ -23,12 +25,23 @@ export default function LiveExample({ title, compute }: Props) {
     silverBuy: gold.silverBuyPerGram || 30,
   });
 
+  const isSilver = tone === "silver";
+  const headerBg = isSilver ? "bg-silver" : "bg-maroon";
+  const stepBg = isSilver ? "bg-silver" : "bg-maroon";
+  const borderColor = isSilver ? "border-silver/25" : "border-maroon/25";
+  const tagColor = isSilver ? "text-silver-lt" : "text-gold-lt";
+  const dotBg = isSilver ? "bg-silver" : "bg-gold";
+
   return (
-    <div className="mb-3 rounded-[12px] border-[1.5px] border-maroon/25 overflow-hidden">
-      <div className="px-3 py-2 bg-maroon text-white text-xs font-bold inline-flex items-center gap-1.5 w-full">
+    <div
+      className={`mb-3 rounded-[12px] border-[1.5px] ${borderColor} overflow-hidden`}
+    >
+      <div
+        className={`px-3 py-2 ${headerBg} text-white text-xs font-bold inline-flex items-center gap-1.5 w-full`}
+      >
         <IconArrow size={12} strokeWidth={2.5} />
         {title}
-        <span className="ml-auto text-[10px] font-bold text-gold-lt">
+        <span className={`ml-auto text-[10px] font-bold ${tagColor}`}>
           อิงราคาวันนี้
         </span>
       </div>
@@ -37,7 +50,9 @@ export default function LiveExample({ title, compute }: Props) {
         <ul className="mb-2.5 space-y-0.5 text-sm text-txt">
           {given.map((g, i) => (
             <li key={`g-${i}`} className="flex items-start gap-2">
-              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+              <span
+                className={`mt-2 w-1.5 h-1.5 rounded-full ${dotBg} shrink-0`}
+              />
               <span>
                 <MathText>{g}</MathText>
               </span>
@@ -53,7 +68,9 @@ export default function LiveExample({ title, compute }: Props) {
               key={`s-${i}`}
               className="flex items-start gap-2.5 p-2 rounded-[8px] bg-cream/60 border border-bdr/40"
             >
-              <span className="shrink-0 w-5 h-5 rounded-full bg-maroon text-white text-[10px] font-bold flex items-center justify-center mt-0.5">
+              <span
+                className={`shrink-0 w-5 h-5 rounded-full ${stepBg} text-white text-[10px] font-bold flex items-center justify-center mt-0.5`}
+              >
                 {i + 1}
               </span>
               <div className="flex-1 min-w-0">
