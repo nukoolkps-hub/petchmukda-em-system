@@ -62,9 +62,12 @@ export default function LiveExample({ title, tone = "maroon", compute }: Props) 
       </div>
       <div className="p-3 bg-white">
         <div className="text-xs text-txt-soft font-semibold mb-1.5">โจทย์</div>
-        <ul className="mb-2.5 space-y-0.5 text-sm text-txt">
+        <ul className="mb-2.5 space-y-1 text-sm text-txt">
           {given.map((g, i) => (
-            <li key={`g-${i}`} className="flex items-start gap-2">
+            <li
+              key={`g-${i}`}
+              className="leading-relaxed flex items-start gap-2"
+            >
               <span
                 className={`mt-2 w-1.5 h-1.5 rounded-full ${dotBg} shrink-0`}
               />

@@ -161,7 +161,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     blocks: [
       {
         type: "formula",
-        label: "ตามน้ำหนัก (ต่อกรัม)",
+        label: "ตามน้ำหนักสินค้า (ต่อกรัม)",
         formula: "(ราคาทอง + 3.6%) × 0.0656 + ค่าแรง = ราคาขาย/กรัม",
       },
       {
@@ -215,7 +215,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             goldPriceDefault: true,
           },
           { id: "labor", label: "ค่าแรง", defaultValue: 1250, suffix: "฿" },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 1.28, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 1.28, suffix: "ก." },
         ],
         compute: ({ gold, labor, grams }) => {
           const gold9999 = gold * 1.036;
@@ -279,14 +279,14 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             goldPriceDefault: true,
           },
           { id: "labor", label: "ค่าแรง", defaultValue: 1050, suffix: "฿" },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
         ],
         compute: ({ gold, labor, grams }) => {
           const goldPart = gold * 0.0656 * grams;
           const total = goldPart + labor;
           return [
             {
-              label: "ราคาทองตามน้ำหนัก",
+              label: "ราคาทองตามน้ำหนักสินค้า",
               value: goldPart,
               format: "currency",
               hint: `${gold} × 0.0656 × ${grams}`,
@@ -320,7 +320,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             goldPriceDefault: true,
           },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
           { id: "labor", label: "ค่าแรง", defaultValue: 500, suffix: "฿" },
         ],
         compute: ({ gold, grams, labor }) => {
@@ -334,7 +334,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               hint: `${gold} × 0.50`,
             },
             {
-              label: "ราคาทองตามน้ำหนัก",
+              label: "ราคาทองตามน้ำหนักสินค้า",
               value: goldPart,
               format: "currency",
               hint: `${half} × 0.0656 × ${grams}`,
@@ -373,12 +373,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             silverSellPriceDefault: true,
           },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 15, suffix: "ก." },
           { id: "labor", label: "ค่าแรง", defaultValue: 200, suffix: "฿" },
         ],
         compute: ({ rate, grams, labor }) => [
           {
-            label: "ราคาเงินตามน้ำหนัก",
+            label: "ราคาเงินตามน้ำหนักสินค้า",
             value: rate * grams,
             format: "currency",
           },
@@ -597,7 +597,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         colWidths: ["25%", "75%"],
         colAlign: ["left", "left"],
         rows: [
-          ["ทั่วไป", "(ราคาทอง − 5-7%) × 0.0656 × น้ำหนัก = ราคารับซื้อ"],
+          ["ทั่วไป", "(ราคาทอง − 5-7%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
         ],
       },
       {
@@ -621,7 +621,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               { value: 7, label: "หัก 7%" },
             ],
           },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 1, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 1, suffix: "ก." },
         ],
         compute: ({ gold, discount, grams }) => {
           const base = gold * (1 - discount / 100);
@@ -665,8 +665,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           ["3 สลึง", "(ราคาทอง − 5-7%) × 0.0656 × 11.37 = ราคารับซื้อ"],
           ["1 บาท", "(ราคาทอง − 5-7%) × 0.0656 × 15.16 = ราคารับซื้อ"],
           ["6 สลึง", "(ราคาทอง − 5-7%) × 0.0656 × 22.74 = ราคารับซื้อ"],
-          ["2 บาท ขึ้นไป", "(ราคาทอง − 5-7%) × 0.0656 × จำนวนน้ำหนัก = ราคารับซื้อ"],
-          ["ทั่วไป", "(ราคาทอง − 5-7%) × 0.0656 × น้ำหนัก = ราคารับซื้อ"],
+          ["2 บาท ขึ้นไป", "(ราคาทอง − 5-7%) × 0.0656 × จำนวนน้ำหนักสินค้า = ราคารับซื้อ"],
+          ["ทั่วไป", "(ราคาทอง − 5-7%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
         ],
       },
       { type: "buy-price-96-table" },
@@ -691,7 +691,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               { value: 7, label: "หัก 7%" },
             ],
           },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
         ],
         compute: ({ gold, discount, grams }) => {
           const base = gold * (1 - discount / 100);
@@ -761,7 +761,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "%",
             disabledWhen: ({ mode }) => mode !== 999,
           },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
         ],
         compute: ({ gold, mode, realPct, grams }) => {
           const factor = mode === 999 ? (realPct - 10) / 100 : 0.6;
@@ -812,7 +812,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           return {
             given: [
               `ราคาทองคำแท่งบาทละ ${fmt(sell)} ฿`,
-              `น้ำหนัก ${grams} กรัม`,
+              `น้ำหนักสินค้า ${grams} กรัม`,
               "กรณี: ทั่วไป (25%)",
             ],
             steps: [
@@ -855,7 +855,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "%",
             disabledWhen: ({ mode }) => mode !== 999,
           },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 3.79, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 3.79, suffix: "ก." },
         ],
         compute: ({ gold, mode, realPct, grams }) => {
           const factor = mode === 999 ? (realPct - 10) / 100 : 0.25;
@@ -899,7 +899,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             suffix: "฿",
             silverBuyPriceDefault: true,
           },
-          { id: "grams", label: "น้ำหนัก", defaultValue: 15, suffix: "ก." },
+          { id: "grams", label: "น้ำหนักสินค้า", defaultValue: 15, suffix: "ก." },
         ],
         compute: ({ rate, grams }) => [
           {

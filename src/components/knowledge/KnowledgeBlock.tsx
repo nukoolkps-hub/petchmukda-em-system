@@ -211,9 +211,12 @@ export default function KnowledgeBlockView({ block, isAdmin, showToast }: Props)
             <div className="text-xs text-txt-soft font-semibold mb-1.5">
               โจทย์
             </div>
-            <ul className="mb-2.5 space-y-0.5 text-sm text-txt">
+            <ul className="mb-2.5 space-y-1 text-sm text-txt">
               {block.given.map((g, i) => (
-                <li key={`g-${i}`} className="flex items-start gap-2">
+                <li
+                  key={`g-${i}`}
+                  className="leading-relaxed flex items-start gap-2"
+                >
                   <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
                   <span>
                     <MathText>{g}</MathText>
