@@ -9,8 +9,9 @@ import MathText from "./MathText";
 
 interface Props {
   title: string;
-  /** สี header การ์ด · default "maroon" (สำหรับทอง) · "silver" สำหรับเงิน */
-  tone?: "maroon" | "silver";
+  /** สี header การ์ด · default "maroon" (สำหรับทอง) · "silver" สำหรับเงิน ·
+   *  "nak" สำหรับนาก (rose-gold) */
+  tone?: "maroon" | "silver" | "nak";
   compute: (gold: {
     sell: number;
     buy: number;
@@ -45,11 +46,32 @@ export default function LiveExample({
   });
 
   const isSilver = tone === "silver";
-  const headerBg = isSilver ? "bg-silver" : "bg-maroon";
-  const stepBg = isSilver ? "bg-silver" : "bg-maroon";
-  const borderColor = isSilver ? "border-silver/25" : "border-maroon/25";
-  const tagColor = isSilver ? "text-silver-lt" : "text-gold-lt";
-  const dotBg = isSilver ? "bg-silver" : "bg-gold";
+  const isNak = tone === "nak";
+  const headerBg = isSilver
+    ? "bg-silver"
+    : isNak
+      ? "bg-rose-gold"
+      : "bg-maroon";
+  const stepBg = isSilver
+    ? "bg-silver"
+    : isNak
+      ? "bg-rose-gold"
+      : "bg-maroon";
+  const borderColor = isSilver
+    ? "border-silver/25"
+    : isNak
+      ? "border-rose-gold/25"
+      : "border-maroon/25";
+  const tagColor = isSilver
+    ? "text-silver-lt"
+    : isNak
+      ? "text-rose-gold-lt"
+      : "text-gold-lt";
+  const dotBg = isSilver
+    ? "bg-silver"
+    : isNak
+      ? "bg-rose-gold"
+      : "bg-gold";
 
   return (
     <div

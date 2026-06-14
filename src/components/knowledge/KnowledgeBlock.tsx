@@ -43,20 +43,23 @@ export default function KnowledgeBlockView({
 }: Props) {
   switch (block.type) {
     case "h3": {
-      // tone "maroon"/"silver"/"gradient" → pill with bg + white text (เด่นขึ้น)
-      // tone "silver-text" → text-silver + silver border (ไม่มี pill bg)
+      // tone "maroon"/"silver"/"nak"/"gradient" → pill with bg + white text (เด่นขึ้น)
+      // tone "silver-text" / "nak-text" → text + border line (ไม่มี pill bg)
       // default → text-maroon + bottom gold border (style เดิม)
       if (
         block.tone === "maroon" ||
         block.tone === "silver" ||
+        block.tone === "nak" ||
         block.tone === "gradient"
       ) {
         const bg =
           block.tone === "silver"
             ? "bg-silver"
-            : block.tone === "gradient"
-              ? "bg-linear-to-r from-maroon via-silver-dk to-silver"
-              : "bg-maroon";
+            : block.tone === "nak"
+              ? "bg-rose-gold"
+              : block.tone === "gradient"
+                ? "bg-linear-to-r from-maroon via-silver-dk to-silver"
+                : "bg-maroon";
         return (
           <h3
             className={`text-sm font-extrabold text-white mt-4 mb-2 px-3 py-1.5 rounded-[8px] ${bg}`}
@@ -68,6 +71,13 @@ export default function KnowledgeBlockView({
       if (block.tone === "silver-text") {
         return (
           <h3 className="text-base font-extrabold text-silver mt-4 mb-2 pb-1.5 border-b-[1.5px] border-silver-lt/60">
+            {block.text}
+          </h3>
+        );
+      }
+      if (block.tone === "nak-text") {
+        return (
+          <h3 className="text-base font-extrabold text-rose-gold mt-4 mb-2 pb-1.5 border-b-[1.5px] border-rose-gold-lt/60">
             {block.text}
           </h3>
         );
@@ -147,9 +157,11 @@ export default function KnowledgeBlockView({
                 className={`text-white ${
                   block.tone === "silver"
                     ? "bg-silver"
-                    : block.tone === "gradient"
-                      ? "bg-linear-to-r from-maroon via-silver-dk to-silver"
-                      : "bg-maroon"
+                    : block.tone === "nak"
+                      ? "bg-rose-gold"
+                      : block.tone === "gradient"
+                        ? "bg-linear-to-r from-maroon via-silver-dk to-silver"
+                        : "bg-maroon"
                 }`}
               >
                 {block.columns.map((col, i) => (
