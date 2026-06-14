@@ -1185,8 +1185,8 @@ export default function SalaryAdminEdit({
                     >
                       <span>
                         {b.label} ·{" "}
-                        {formatThaiNumber(Number(b.pieces.toFixed(1)))} ชิ้น × ฿
-                        {formatThaiNumber(b.rate)}
+                        {formatThaiNumber(Number(b.pieces.toFixed(1)))} ชิ้น ×{" "}
+                        {formatThaiNumber(b.rate)} ฿
                       </span>
                       <span className="font-semibold text-txt-mid">
                         + {formatThaiNumber(b.amount)} ฿
@@ -1224,8 +1224,8 @@ export default function SalaryAdminEdit({
                         className="flex justify-between text-[11px] text-txt-soft"
                       >
                         <span>
-                          {b.dutyName} · {b.count} ครั้ง × ฿
-                          {formatThaiNumber(b.rate)}
+                          {b.dutyName} · {b.count} ครั้ง ×{" "}
+                          {formatThaiNumber(b.rate)} ฿
                         </span>
                         <span className="font-semibold text-txt-mid">
                           + {formatThaiNumber(b.subtotal)} ฿
@@ -1260,8 +1260,8 @@ export default function SalaryAdminEdit({
                       className="flex justify-between text-[11px] text-txt-soft"
                     >
                       <span>
-                        {b.label} · {formatThaiNumber(b.pieces)} ใบ × ฿
-                        {formatThaiNumber(b.rate)}
+                        {b.label} · {formatThaiNumber(b.pieces)} ใบ ×{" "}
+                        {formatThaiNumber(b.rate)} ฿
                       </span>
                       <span className="font-semibold text-txt-mid">
                         + {formatThaiNumber(b.amount)} ฿
