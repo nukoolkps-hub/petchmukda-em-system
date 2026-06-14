@@ -1548,7 +1548,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     Icon: IconGauge,
     blocks: [
       {
-        type: "p",
+        type: "callout",
+        tone: "warn",
         text: "ก่อนใช้งานเครื่องตรวจเปอร์เซ็นต์ Vray VR-X5 ทุกวัน ควร Calibrate ก่อน 1 ครั้ง",
       },
       {
