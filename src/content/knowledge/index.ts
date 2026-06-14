@@ -1202,6 +1202,35 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           };
         },
       },
+      {
+        type: "live-example",
+        title: "ตัวอย่าง — เงิน มีตรวจ % (%จริง 80%)",
+        tone: "silver",
+        compute: ({ silverBuy }) => {
+          const realPct = 80;
+          const effective = realPct - 35;
+          const pawn = silverBuy * (effective / 100);
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return {
+            given: [
+              `ราคารับซื้อเงินแท่งวันนี้ ${fmt(silverBuy)} ฿/กรัม`,
+              `%จริง จากเครื่องตรวจ = ${realPct}%`,
+              `หัก 35% จาก %จริง → ใช้ ${effective}%`,
+            ],
+            steps: [
+              {
+                calc: `${realPct}% − 35% = ${effective}%`,
+                meaning: "อัตราที่ใช้คำนวณ",
+              },
+              {
+                calc: `${fmt(silverBuy)} × ${effective}% = ${fmt(pawn)} ฿`,
+                meaning: "ราคาจำนำต่อกรัม",
+              },
+            ],
+          };
+        },
+      },
     ],
   },
 
