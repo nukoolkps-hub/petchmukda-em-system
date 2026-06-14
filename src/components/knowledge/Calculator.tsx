@@ -13,7 +13,7 @@ import MathText from "./MathText";
 interface Props {
   title: string;
   /** สี header การ์ด · default "gold" · "silver" สำหรับเงิน */
-  tone?: "gold" | "silver";
+  tone?: "gold" | "silver" | "nak";
   inputs: CalcField[];
   compute: (values: Record<string, number>) => CalcOutput[];
   /** ค่าจากภายนอก (เช่น ตัวช่วยปฏิทินกรอกให้) — sync เข้า internal state
@@ -149,10 +149,17 @@ export default function Calculator({
   });
 
   const isSilver = tone === "silver";
-  const cardBorder = isSilver ? "border-silver-lt/60" : "border-gold/40";
+  const isNak = tone === "nak";
+  const cardBorder = isSilver
+    ? "border-silver-lt/60"
+    : isNak
+      ? "border-rose-gold-lt/60"
+      : "border-gold/40";
   const headerBg = isSilver
     ? "bg-silver-lt/30 text-silver-dk border-b border-silver-lt/60"
-    : "bg-gold-pale text-maroon border-b border-gold/30";
+    : isNak
+      ? "bg-rose-gold-lt/30 text-rose-gold-dk border-b border-rose-gold-lt/60"
+      : "bg-gold-pale text-maroon border-b border-gold/30";
 
   return (
     <div

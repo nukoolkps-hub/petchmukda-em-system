@@ -60,6 +60,11 @@
   --color-silver: #5a5a60;
   --color-silver-dk: #3a3a40;
   --color-silver-lt: #b8b8c0;
+  /* nak (rose gold) — สำหรับการ์ดนาก (ทองผสมทองแดง) · pinkish-coppery tone
+     ที่สื่อสีจริงของนาก · contrast ผ่าน WCAG AA บน white + cream */
+  --color-rose-gold: #b76e79;
+  --color-rose-gold-dk: #8e535d;
+  --color-rose-gold-lt: #e5c7cb;
   --color-cream: #fdf8f0;
   --color-cream-dk: #f0e4cc;
   --color-txt: #2d1a0e;

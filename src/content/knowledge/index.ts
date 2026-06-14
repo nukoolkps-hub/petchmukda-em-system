@@ -383,6 +383,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "calculator",
         title: "ราคาขายนาก",
+        tone: "nak",
         inputs: [
           {
             id: "gold",
@@ -641,7 +642,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           "Italy 18k (ค่าแรงขาย/กรัม)\nปกติ ลด 15% HBD ลด 25%",
         ],
       },
-      { type: "h3", text: "ส่วนลด (นาก)" },
+      { type: "h3", tone: "nak-text", text: "ส่วนลด (นาก)" },
       {
         type: "list",
         items: ["ปกติ ลด 15% (ค่าแรงขาย)", "HBD ลด 25% (ค่าแรงขาย)"],
@@ -883,6 +884,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "live-example",
         title: "ตัวอย่าง — นาก 1 สลึง (3.79 กรัม)",
+        tone: "nak",
         compute: ({ buy }) => {
           const grams = 3.79;
           const general = buy * 0.25 * 0.0656 * grams;
@@ -910,6 +912,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "calculator",
         title: "ราคารับซื้อนาก",
+        tone: "nak",
         inputs: [
           {
             id: "gold",
@@ -1160,6 +1163,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "live-example",
         title: "ตัวอย่าง — นาก หัก 82.5% (ทั่วไป)",
+        tone: "nak",
         compute: ({ buy }) => {
           const rate = 0.825;
           const pawn = buy * (1 - rate);

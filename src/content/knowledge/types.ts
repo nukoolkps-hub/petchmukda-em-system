@@ -54,9 +54,11 @@ export type KnowledgeBlock =
       text: string;
       /** สี header · default = text-maroon + gold border line
        *  · "maroon" = pill bg-maroon · "silver" = pill bg-silver
+       *  · "nak" = pill bg-rose-gold (สำหรับ section นาก)
        *  · "gradient" = pill bg-maroon เหลือบ silver
-       *  · "silver-text" = text-silver + silver border line (ไม่มี pill) */
-      tone?: "maroon" | "silver" | "gradient" | "silver-text";
+       *  · "silver-text" = text-silver + silver border line (ไม่มี pill)
+       *  · "nak-text" = text-rose-gold + rose-gold border line (ไม่มี pill) */
+      tone?: "maroon" | "silver" | "nak" | "gradient" | "silver-text" | "nak-text";
     }
   | { type: "p"; text: string; muted?: boolean; adminOnly?: boolean }
   | { type: "list"; items: string[]; ordered?: boolean }
@@ -71,8 +73,9 @@ export type KnowledgeBlock =
        *  ตาราง 2+ ใบที่อยู่ติดกัน เพื่อให้คอลัมน์ตรงกัน (table-fixed) */
       colWidths?: string[];
       /** สี header แถวบนสุด · default "maroon" · "silver" สำหรับตารางเงิน ·
+       *  "nak" สำหรับตารางนาก (rose-gold) ·
        *  "gradient" = maroon เหลือบ silver (ทองเหลือบเงิน) */
-      tone?: "maroon" | "silver" | "gradient";
+      tone?: "maroon" | "silver" | "nak" | "gradient";
     }
   | { type: "formula"; label?: string; formula: string; result?: string }
   | {
@@ -87,8 +90,9 @@ export type KnowledgeBlock =
   | {
       type: "calculator";
       title: string;
-      /** สี header การ์ด · default "gold" (gold-pale) · "silver" สำหรับเงิน */
-      tone?: "gold" | "silver";
+      /** สี header การ์ด · default "gold" (gold-pale) · "silver" สำหรับเงิน ·
+       *  "nak" สำหรับนาก (rose-gold pale) */
+      tone?: "gold" | "silver" | "nak";
       inputs: CalcField[];
       compute: (values: Record<string, number>) => CalcOutput[];
     }
@@ -106,8 +110,9 @@ export type KnowledgeBlock =
        *  → ไม่ outdated เมื่อราคาทองขยับ */
       type: "live-example";
       title: string;
-      /** สี header การ์ด · default "maroon" (สำหรับทอง) · "silver" สำหรับเงิน */
-      tone?: "maroon" | "silver";
+      /** สี header การ์ด · default "maroon" (สำหรับทอง) · "silver" สำหรับเงิน ·
+       *  "nak" สำหรับนาก (rose-gold) */
+      tone?: "maroon" | "silver" | "nak";
       compute: (gold: {
         sell: number;
         buy: number;
