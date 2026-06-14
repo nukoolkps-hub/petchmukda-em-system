@@ -1271,7 +1271,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "callout",
-        tone: "info",
+        tone: "note",
         text: "MD แยกชิ้น: MD-XX = XX × 100 ฿ (เช่น MD-03 = 300, MD-08 = 800) — บวกเพิ่มต่อชิ้นตามที่ระบุ",
       },
     ],
