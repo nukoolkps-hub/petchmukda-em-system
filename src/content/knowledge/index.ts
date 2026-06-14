@@ -1187,6 +1187,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { calc: "30 + 30 = 60 ฿", meaning: "ดอกเบี้ยที่ลูกค้าต้องเสียทั้งหมด" },
         ],
       },
+      { type: "date-diff-helper" },
       {
         type: "calculator",
         title: "ดอกเบี้ยจำนำ (รวมขั้นต่ำ 30 ฿)",

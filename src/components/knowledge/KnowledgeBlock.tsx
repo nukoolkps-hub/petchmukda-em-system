@@ -21,6 +21,7 @@ import BlockCostTable from "./BlockCostTable";
 import BuyPrice96Table from "./BuyPrice96Table";
 import Calculator from "./Calculator";
 import ChangePriceTable from "./ChangePriceTable";
+import DateDiffHelper from "./DateDiffHelper";
 import LaborCostTable from "./LaborCostTable";
 import LiveExample from "./LiveExample";
 import LoyaltyPointsRedeemTable from "./LoyaltyPointsRedeemTable";
@@ -345,6 +346,9 @@ export default function KnowledgeBlockView({
       return (
         <LoyaltyPointsRedeemTable isAdmin={isAdmin} showToast={showToast} />
       );
+
+    case "date-diff-helper":
+      return <DateDiffHelper />;
 
     case "live-example":
       return (
