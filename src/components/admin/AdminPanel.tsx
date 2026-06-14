@@ -10,6 +10,7 @@ import {
 } from "../layout/adminNavConfig";
 import SalaryAdminEdit from "../salary/SalaryAdminEdit";
 import AdminAdvancePanel from "./AdminAdvancePanel";
+import BackupPanel from "./BackupPanel";
 import DutySchedulePanel from "./DutySchedulePanel";
 import EmployeeAdminPanel from "./EmployeeAdminPanel";
 import EmployeeLoansPanel from "./EmployeeLoansPanel";
@@ -233,6 +234,8 @@ export default function AdminPanel({
 
       {/* ── LINE BOT > COMMANDS section ── */}
       {section === "linebot-commands" && <LineBotCommandsPanel />}
+
+      {section === "backup" && <BackupPanel showToast={showToast} />}
 
       {/* ── PAYROLL SUMMARY section ── */}
       {section === "payroll" && (

@@ -45,6 +45,11 @@ export {
 } from "./goldPrice/fetchGoldPrice.js";
 // LINE webhook
 export { lineWebhook } from "./line/webhook.js";
+// Backup
+export {
+	backupFirestoreScheduled,
+	triggerFirestoreBackupNow,
+} from "./backup/backupToGitHub.js";
 // Maintenance
 export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";
 export { cleanupOldTips } from "./maintenance/cleanupOldTips.js";
