@@ -321,7 +321,55 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── 3c. ราคาขายนาก ── */
+  /* ── 3c. ราคาขายทอง 90 ── */
+  {
+    id: "sell-price-90",
+    title: "การคำนวณราคาขาย (ทอง 90)",
+    Icon: IconStar,
+    blocks: [
+      {
+        type: "formula",
+        label: "ตามน้ำหนักชั่ง",
+        formula: "ราคาขายออกทองคำแท่ง × 0.0656 × น้ำหนักสินค้า + ค่าแรง = ราคาขาย",
+      },
+      {
+        type: "calculator",
+        title: "ราคาขายทอง 90",
+        inputs: [
+          {
+            id: "gold",
+            label: "ราคาขายออกทองคำแท่ง 96.5%",
+            defaultValue: 50000,
+            suffix: "฿/บ.",
+            goldPriceDefault: true,
+          },
+          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
+          { id: "labor", label: "ค่าแรง", suffix: "฿" },
+        ],
+        compute: ({ gold, grams, labor }) => {
+          const goldPart = gold * 0.0656 * grams;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return [
+            {
+              label: "ราคาขายออกทองคำแท่งตามน้ำหนักสินค้า",
+              value: goldPart,
+              format: "currency",
+              hint: `${gold} × 0.0656 × ${grams}`,
+            },
+            {
+              label: "ราคาขาย (+ ค่าแรง)",
+              value: goldPart + labor,
+              format: "currency",
+              hint: `${fmt(goldPart)} + ${labor}`,
+            },
+          ];
+        },
+      },
+    ],
+  },
+
+  /* ── 3c1b. ราคาขายนาก ── */
   {
     id: "sell-price-nak",
     title: "การคำนวณราคาขาย (นาก)",
@@ -363,54 +411,6 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               value: goldPart,
               format: "currency",
               hint: `${half} × 0.0656 × ${grams}`,
-            },
-            {
-              label: "ราคาขาย (+ ค่าแรง)",
-              value: goldPart + labor,
-              format: "currency",
-              hint: `${fmt(goldPart)} + ${labor}`,
-            },
-          ];
-        },
-      },
-    ],
-  },
-
-  /* ── 3c1b. ราคาขายทอง 90 ── */
-  {
-    id: "sell-price-90",
-    title: "การคำนวณราคาขาย (ทอง 90)",
-    Icon: IconStar,
-    blocks: [
-      {
-        type: "formula",
-        label: "ตามน้ำหนักชั่ง",
-        formula: "ราคาขายออกทองคำแท่ง × 0.0656 × น้ำหนักสินค้า + ค่าแรง = ราคาขาย",
-      },
-      {
-        type: "calculator",
-        title: "ราคาขายทอง 90",
-        inputs: [
-          {
-            id: "gold",
-            label: "ราคาขายออกทองคำแท่ง 96.5%",
-            defaultValue: 50000,
-            suffix: "฿/บ.",
-            goldPriceDefault: true,
-          },
-          { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
-          { id: "labor", label: "ค่าแรง", suffix: "฿" },
-        ],
-        compute: ({ gold, grams, labor }) => {
-          const goldPart = gold * 0.0656 * grams;
-          const fmt = (n: number) =>
-            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
-          return [
-            {
-              label: "ราคาขายออกทองคำแท่งตามน้ำหนักสินค้า",
-              value: goldPart,
-              format: "currency",
-              hint: `${gold} × 0.0656 × ${grams}`,
             },
             {
               label: "ราคาขาย (+ ค่าแรง)",
