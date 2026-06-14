@@ -66,8 +66,8 @@ export default function DateDiffHelper({ onComputed, hint }: Props = {}) {
   }, [onComputed, result]);
 
   return (
-    <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
-      <div className="px-3 py-2 bg-gold-pale text-maroon text-xs font-extrabold inline-flex items-center gap-1.5 w-full border-b border-gold/30">
+    <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 bg-white">
+      <div className="px-3 py-2 bg-gold-pale text-maroon text-xs font-extrabold inline-flex items-center gap-1.5 w-full border-b border-gold/30 rounded-t-[10px]">
         <IconCalendar size={13} strokeWidth={2.5} />
         ตัวช่วย — คำนวณช่วงเวลาจากปฏิทิน
       </div>
