@@ -15,6 +15,7 @@ import {
   CreditCard as IconCreditCard,
   DatabaseBackup as IconDatabaseBackup,
   Diamond as IconDiamond,
+  Eraser as IconEraser,
   HandCoins as IconHandCoins,
   MessageCircle as IconMessageCircle,
   Settings as IconSettings,
@@ -38,6 +39,7 @@ export type AdminSectionId =
   | "linebot-notifications"
   | "linebot-commands"
   | "backup"
+  | "wipe-data"
   | "knowledge";
 
 export type AdminGroupId =
@@ -137,6 +139,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { id: "roles", label: "พนักงาน", Icon: IconUsers },
       { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
       { id: "backup", label: "Backup ข้อมูล", Icon: IconDatabaseBackup },
+      { id: "wipe-data", label: "ล้างข้อมูล", Icon: IconEraser },
     ],
   },
 ];
