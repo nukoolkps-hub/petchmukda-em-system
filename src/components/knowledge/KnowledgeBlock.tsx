@@ -225,7 +225,7 @@ export default function KnowledgeBlockView({
                   key={`g-${i}`}
                   className="leading-relaxed flex items-start gap-2"
                 >
-                  <span className="mt-[0.5em] w-2 h-2 rounded-full bg-gold shrink-0" />
+                  <span className="mt-[9px] w-2 h-2 rounded-full bg-gold shrink-0" />
                   <span>
                     <MathText>{g}</MathText>
                   </span>
@@ -306,7 +306,7 @@ export default function KnowledgeBlockView({
               key={`step-${i}`}
               className="flex items-start gap-2.5 text-sm text-txt"
             >
-              <span className="shrink-0 w-6 h-6 rounded-full bg-gold text-maroon text-xs font-bold flex items-center justify-center mt-px">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-maroon text-white text-xs font-bold flex items-center justify-center mt-px">
                 {i + 1}
               </span>
               <span className="flex-1 leading-relaxed pt-0.5">{step}</span>
