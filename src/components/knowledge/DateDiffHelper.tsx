@@ -82,6 +82,7 @@ export default function DateDiffHelper({ onComputed, hint }: Props = {}) {
           maxDate={end || undefined}
           disableSaturdays={false}
           size="sm"
+          inline
         />
 
         <label className="block text-xs font-semibold text-txt-mid mb-1.5">
@@ -93,6 +94,7 @@ export default function DateDiffHelper({ onComputed, hint }: Props = {}) {
           minDate={start || undefined}
           disableSaturdays={false}
           size="sm"
+          inline
         />
 
         {result !== null && (

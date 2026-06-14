@@ -515,6 +515,9 @@ export default function LeaveApp() {
               initial={profile}
               employeeId={currentEmployeeId}
               lockName
+              // บัญชีธนาคารกรอกครั้งแรกได้ครั้งเดียว · เมื่อมีค่าแล้ว
+              // ห้ามแก้ (ADMIN แก้ผ่าน EmployeeEditModal ได้)
+              lockBank={!!profile?.bank && !!profile?.bankAccountNumber}
               onSave={handleProfileSave}
               // ถ้ายังไม่กรอกบัญชี ห้ามปิดจนกว่าจะกรอก (onClose = undefined)
               onClose={
