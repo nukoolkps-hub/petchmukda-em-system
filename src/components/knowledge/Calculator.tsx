@@ -16,6 +16,9 @@ interface Props {
   tone?: "gold" | "silver";
   inputs: CalcField[];
   compute: (values: Record<string, number>) => CalcOutput[];
+  /** ค่าจากภายนอก (เช่น ตัวช่วยปฏิทินกรอกให้) — sync เข้า internal state
+   *  เมื่อ value/key ใน object เปลี่ยน · user แก้ต่อได้ตามปกติ */
+  presetValues?: Record<string, number>;
 }
 
 function formatOutput(
@@ -39,6 +42,7 @@ export default function Calculator({
   tone = "gold",
   inputs,
   compute,
+  presetValues,
 }: Props) {
   const { data: gold } = useGoldPrice();
   const hasLiveField = inputs.some(
@@ -115,6 +119,19 @@ export default function Calculator({
     inputs,
     touched,
   ]);
+
+  // sync presetValues (จาก parent · เช่น date helper) เข้า state เมื่อค่าเปลี่ยน
+  // ใช้ stringify เพื่อ detect การเปลี่ยนของ object content (กัน re-run ไม่จำเป็น)
+  const presetKey = presetValues
+    ? Object.entries(presetValues)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(",")
+    : "";
+  useEffect(() => {
+    if (!presetValues) return;
+    setValues((prev) => ({ ...prev, ...presetValues }));
+    // biome-ignore lint/correctness/useExhaustiveDependencies: ใช้ presetKey เป็น stable signal แทน object identity
+  }, [presetKey]);
 
   const outputs = useMemo(() => {
     try {

@@ -4,7 +4,14 @@
    = 1 เดือนเต็ม) · user copy ตัวเลขลงเครื่องคิดเลขด้านล่างเอง           */
 
 import { Calendar as IconCalendar } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+interface Props {
+  /** callback ส่ง result กลับให้ parent · ใช้กับ auto-fill calculator */
+  onComputed?: (months: number, days: number) => void;
+  /** override ข้อความใต้กล่อง (เช่น "ระบบจะเติมให้ในเครื่องคิดเลขด้านล่างอัตโนมัติ") */
+  hint?: string;
+}
 
 /** คำนวณช่วงเวลาระหว่าง 2 วันที่เป็น "เดือนเต็ม + วันเศษ"
  *  กฎ: เดือนเต็มนับจาก วันที่เดิมในเดือนถัดไป (5 ม.ค. → 5 ก.พ. = 1 เดือน)
@@ -46,7 +53,7 @@ function todayYmd(): string {
   return `${y}-${m}-${day}`;
 }
 
-export default function DateDiffHelper() {
+export default function DateDiffHelper({ onComputed, hint }: Props = {}) {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState(todayYmd());
 
@@ -57,6 +64,12 @@ export default function DateDiffHelper() {
     if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
     return diffMonthsAndDays(s, e);
   }, [start, end]);
+
+  // ส่งผลกลับให้ parent (ใช้กับ auto-fill calculator)
+  useEffect(() => {
+    if (!onComputed || !result || result.months < 0) return;
+    onComputed(result.months, result.days);
+  }, [onComputed, result]);
 
   return (
     <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
@@ -123,7 +136,8 @@ export default function DateDiffHelper() {
         )}
 
         <div className="text-[10px] text-txt-soft/80 italic text-center">
-          นำตัวเลขด้านบนใส่ใน "ระยะเวลา (เดือนเต็ม)" + "วันเศษ" ของเครื่องคิดเลข
+          {hint ??
+            'นำตัวเลขด้านบนใส่ใน "ระยะเวลา (เดือนเต็ม)" + "วันเศษ" ของเครื่องคิดเลข'}
         </div>
       </div>
     </div>

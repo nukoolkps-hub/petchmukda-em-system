@@ -1187,59 +1187,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           { calc: "30 + 30 = 60 ฿", meaning: "ดอกเบี้ยที่ลูกค้าต้องเสียทั้งหมด" },
         ],
       },
-      { type: "date-diff-helper" },
-      {
-        type: "calculator",
-        title: "ดอกเบี้ยจำนำ (รวมขั้นต่ำ 30 ฿)",
-        inputs: [
-          {
-            id: "principal",
-            label: "เงินจำนำ",
-            suffix: "฿",
-          },
-          {
-            id: "months",
-            label: "ระยะเวลา (เดือนเต็ม)",
-            suffix: "ด.",
-          },
-          {
-            id: "extraDays",
-            label: "วันเศษ (0-31)",
-            suffix: "ว.",
-          },
-        ],
-        compute: ({ principal, months, extraDays }) => {
-          let total = 0;
-          for (let i = 0; i < months; i++) {
-            total += Math.max(30, principal * 0.015);
-          }
-          if (extraDays > 0) {
-            const rate = extraDays <= 15 ? 0.0075 : 0.015;
-            total += Math.max(30, principal * rate);
-          }
-          const fmt = (n: number) =>
-            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
-          const extraRate = extraDays <= 15 ? "0.75%" : "1.5%";
-          const hintExtra =
-            extraDays > 0
-              ? ` + (${principal} × ${extraRate}, ขั้นต่ำ 30 ฿) วันเศษ`
-              : "";
-          return [
-            {
-              label: "ดอกเบี้ยรวมทั้งหมด",
-              value: total,
-              format: "currency",
-              hint: `(${principal} × 1.5%, ขั้นต่ำ 30 ฿) × ${months} ด.${hintExtra}`,
-            },
-            {
-              label: "ยอดที่ต้องจ่ายเพื่อไถ่",
-              value: principal + total,
-              format: "currency",
-              hint: `${principal} + ${fmt(total)}`,
-            },
-          ];
-        },
-      },
+      { type: "pawn-interest-card" },
     ],
   },
 
