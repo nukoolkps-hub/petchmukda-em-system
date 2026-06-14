@@ -146,11 +146,11 @@ export default function AdminPanel({
             <span className="truncate">{activeGroup.label}</span>
           </div>
           <div
-            className={
+            className={`min-h-[86px] ${
               activeGroup.items.length > 2
                 ? "grid grid-cols-2 gap-1.5"
                 : "flex flex-wrap gap-1.5"
-            }
+            }`}
           >
             {activeGroup.items.map((item) => {
               const Icon = item.Icon;

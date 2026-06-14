@@ -192,31 +192,35 @@ export default function AdminAdvancePanel({
         })}
       </div>
 
-      {showMonthFilter && (
-        <div className="flex items-center gap-2 mb-3.5 px-3 py-2.5 bg-cream rounded-xl border border-bdr">
-          <span className="text-sm font-semibold text-txt-mid whitespace-nowrap">
-            เดือน
-          </span>
-          <div className="relative">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-white font-[inherit] outline-none"
-            >
-              {generateMonthOptions().map((m) => (
-                <option key={m} value={m}>
-                  {formatMonthLabel(m)}
-                </option>
-              ))}
-            </select>
-            <IconChevronDown
-              size={12}
-              strokeWidth={2.4}
-              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-            />
-          </div>
+      {/* month filter — เก็บพื้นที่ไว้ (visibility:hidden) ตอน pending
+          เพื่อไม่ให้ list ด้านล่างกระตุก เวลาเปลี่ยน filter chip */}
+      <div
+        className={`flex items-center gap-2 mb-3.5 px-3 py-2.5 bg-cream rounded-xl border border-bdr ${showMonthFilter ? "" : "invisible"}`}
+        aria-hidden={!showMonthFilter}
+      >
+        <span className="text-sm font-semibold text-txt-mid whitespace-nowrap">
+          เดือน
+        </span>
+        <div className="relative">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            disabled={!showMonthFilter}
+            className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-white font-[inherit] outline-none"
+          >
+            {generateMonthOptions().map((m) => (
+              <option key={m} value={m}>
+                {formatMonthLabel(m)}
+              </option>
+            ))}
+          </select>
+          <IconChevronDown
+            size={12}
+            strokeWidth={2.4}
+            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+          />
         </div>
-      )}
+      </div>
 
       {loading && (
         <div className="text-center text-txt-soft py-[50px] text-base">
