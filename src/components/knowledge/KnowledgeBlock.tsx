@@ -26,6 +26,7 @@ import LaborCostTable from "./LaborCostTable";
 import LiveExample from "./LiveExample";
 import LoyaltyPointsRedeemTable from "./LoyaltyPointsRedeemTable";
 import MathText from "./MathText";
+import PawnInterestCard from "./PawnInterestCard";
 import Secret from "./Secret";
 import SellPrice96Table from "./SellPrice96Table";
 
@@ -349,6 +350,9 @@ export default function KnowledgeBlockView({
 
     case "date-diff-helper":
       return <DateDiffHelper />;
+
+    case "pawn-interest-card":
+      return <PawnInterestCard />;
 
     case "live-example":
       return (
