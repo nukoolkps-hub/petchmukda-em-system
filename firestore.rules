@@ -278,6 +278,12 @@ service cloud.firestore {
       allow read:  if isSignedIn();
       allow write: if isAdmin();
     }
+    // สถานะ backup → GitHub: admin อ่านได้ (โชว์ผลใน UI) ·
+    // Cloud Function เขียนผ่าน admin SDK (bypass rules) → client เขียนไม่ได้
+    match /config/backupStatus {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
     match /config/{document} {
       allow read, write: if false;
     }
