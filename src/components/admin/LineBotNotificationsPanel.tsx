@@ -96,7 +96,7 @@ export default function LineBotNotificationsPanel({
         <ToggleRow
           icon={IconClock}
           title="สรุปประจำวัน 07:30"
-          description="bot push ภารกิจ + คนหยุด + เคล็ดลับ เข้ากลุ่ม we r mukda ทุกเช้า"
+          description="bot push เข้า we r mukda (ภารกิจ + คนหยุด + เคล็ดลับ) ทุกเช้า · Various Tasks + KS Apartment ส่งเฉพาะวันที่มี event ใน Google Calendar"
           enabled={isOn("dailySummaryEnabled")}
           disabled={loading}
           onToggle={() => toggle("dailySummaryEnabled")}
