@@ -34,6 +34,23 @@ function keys(rowIndex: number) {
 
 const ALL_KEYS = ROW_INDICES.flatMap((i) => [keys(i).pts, keys(i).gold]);
 
+/** แยกตัวเลขนำหน้ากับ suffix (หน่วย/วงเล็บ) — เก็บ suffix ล็อกไว้
+ *  เช่น "1.905 กรัม (½ สลึง)" → { number: "1.905", suffix: " กรัม (½ สลึง)" }
+ */
+function splitNumeric(value: string): { number: string; suffix: string } {
+  const match = value.match(/^\s*([\d.,]+)\s*(.*)$/);
+  if (!match) return { number: "", suffix: "" };
+  const tail = match[2] ?? "";
+  return {
+    number: match[1] ?? "",
+    suffix: tail ? ` ${tail}` : "",
+  };
+}
+
+function fallbackSuffix(key: string): string {
+  return key.endsWith("-pts") ? " แต้ม" : " กรัม";
+}
+
 export default function LoyaltyPointsRedeemTable({
   isAdmin,
   showToast,
@@ -47,7 +64,8 @@ export default function LoyaltyPointsRedeemTable({
     if (!editing) return;
     const next: Record<string, string> = {};
     for (const k of ALL_KEYS) {
-      next[k] = getLoyaltyPointsValue(loyalty.values, k);
+      const current = getLoyaltyPointsValue(loyalty.values, k);
+      next[k] = splitNumeric(current).number;
     }
     setDraft(next);
   }, [editing, loyalty.values]);
@@ -57,8 +75,11 @@ export default function LoyaltyPointsRedeemTable({
     try {
       const values: Record<string, string> = {};
       for (const k of ALL_KEYS) {
-        const v = (draft[k] ?? "").trim();
-        if (v.length > 0) values[k] = v;
+        const num = (draft[k] ?? "").trim();
+        if (num.length === 0) continue;
+        const current = getLoyaltyPointsValue(loyalty.values, k);
+        const suffix = splitNumeric(current).suffix || fallbackSuffix(k);
+        values[k] = `${num}${suffix}`;
       }
       await updateLoyaltyPoints(values, "");
       showToast?.("บันทึกตารางแลกแต้มแล้ว");
@@ -74,25 +95,33 @@ export default function LoyaltyPointsRedeemTable({
   function handleReset() {
     const next: Record<string, string> = {};
     for (const k of ALL_KEYS) {
-      next[k] = DEFAULT_LOYALTY_POINTS_VALUES[k] ?? "";
+      const def = DEFAULT_LOYALTY_POINTS_VALUES[k] ?? "";
+      next[k] = splitNumeric(def).number;
     }
     setDraft(next);
   }
 
-  function renderCell(k: string) {
+  function renderEditableCell(k: string, alignRight: boolean) {
     const current = getLoyaltyPointsValue(loyalty.values, k);
-    if (editing) {
-      return (
+    const { suffix } = splitNumeric(current);
+    const suffixLabel = (suffix || fallbackSuffix(k)).trim();
+    return (
+      <div
+        className={`flex items-center gap-1.5 ${alignRight ? "justify-end" : ""}`}
+      >
         <input
           type="text"
+          inputMode="decimal"
           value={draft[k] ?? ""}
           onChange={(e) => setDraft((d) => ({ ...d, [k]: e.target.value }))}
-          maxLength={80}
-          className="w-full max-w-[180px] px-2 py-1 rounded-[7px] border-[1.5px] border-bdr text-sm font-bold text-maroon text-right font-[inherit] outline-none bg-white focus:border-maroon"
+          maxLength={12}
+          className={`w-20 px-2 py-1 rounded-[7px] border-[1.5px] border-bdr text-sm font-bold ${alignRight ? "text-maroon" : "text-txt"} text-right font-[inherit] outline-none bg-white focus:border-maroon`}
         />
-      );
-    }
-    return current || "—";
+        <span className="text-xs text-txt-soft font-semibold whitespace-nowrap">
+          {suffixLabel}
+        </span>
+      </div>
+    );
   }
 
   return (
@@ -138,22 +167,14 @@ export default function LoyaltyPointsRedeemTable({
                 <td
                   className={`px-2.5 py-1.5 font-semibold ${editing ? "" : "text-txt"}`}
                 >
-                  {editing ? (
-                    <input
-                      type="text"
-                      value={draft[k.pts] ?? ""}
-                      onChange={(e) =>
-                        setDraft((d) => ({ ...d, [k.pts]: e.target.value }))
-                      }
-                      maxLength={80}
-                      className="w-full max-w-[160px] px-2 py-1 rounded-[7px] border-[1.5px] border-bdr text-sm font-bold text-txt font-[inherit] outline-none bg-white focus:border-maroon"
-                    />
-                  ) : (
-                    getLoyaltyPointsValue(loyalty.values, k.pts) || "—"
-                  )}
+                  {editing
+                    ? renderEditableCell(k.pts, false)
+                    : getLoyaltyPointsValue(loyalty.values, k.pts) || "—"}
                 </td>
                 <td className="px-2.5 py-1.5 text-right font-extrabold text-maroon">
-                  {renderCell(k.gold)}
+                  {editing
+                    ? renderEditableCell(k.gold, true)
+                    : getLoyaltyPointsValue(loyalty.values, k.gold) || "—"}
                 </td>
               </tr>
             );
