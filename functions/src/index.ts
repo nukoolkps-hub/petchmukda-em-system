@@ -53,3 +53,6 @@ export {
 // Maintenance
 export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";
 export { cleanupOldTips } from "./maintenance/cleanupOldTips.js";
+// One-time start-fresh utility (admin-only callable · ลบข้อมูลพนักงาน +
+// transactional data ก่อนเริ่มใช้จริง · เก็บ config/roles/duties ไว้)
+export { wipeTestData } from "./maintenance/wipeTestData.js";

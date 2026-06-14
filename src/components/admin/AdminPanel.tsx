@@ -21,6 +21,7 @@ import LineBotNotificationsPanel from "./LineBotNotificationsPanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
 import RolesAdminPanel from "./RolesAdminPanel";
 import StoreCalendarPanel from "./StoreCalendarPanel";
+import WipeDataPanel from "./WipeDataPanel";
 
 function AdminNavBadge({ count }: { count: number }) {
   return (
@@ -236,6 +237,8 @@ export default function AdminPanel({
       {section === "linebot-commands" && <LineBotCommandsPanel />}
 
       {section === "backup" && <BackupPanel showToast={showToast} />}
+
+      {section === "wipe-data" && <WipeDataPanel showToast={showToast} />}
 
       {/* ── PAYROLL SUMMARY section ── */}
       {section === "payroll" && (
