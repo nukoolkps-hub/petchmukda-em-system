@@ -29,6 +29,13 @@ function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(2)} MB`;
 }
 
+function formatTrigger(raw: string): string {
+  if (!raw) return "—";
+  if (raw === "scheduled") return "อัตโนมัติ · รอบประจำสัปดาห์";
+  if (raw.startsWith("manual:")) return "เริ่มเองโดย admin";
+  return raw;
+}
+
 export default function BackupPanel({ showToast }: Props) {
   const [status, setStatus] = useState<BackupStatus>(EMPTY_BACKUP_STATUS);
   const [running, setRunning] = useState(false);
@@ -77,62 +84,91 @@ export default function BackupPanel({ showToast }: Props) {
         <div className="px-4 py-2.5 bg-gold-pale text-maroon text-sm font-extrabold border-b border-gold/30">
           สถานะ Backup ล่าสุด
         </div>
-        <div className="p-4 space-y-2.5 text-sm">
+        <div className="p-4 text-sm">
           {!isSetup ? (
-            <div className="text-txt-soft italic">
+            <div className="text-txt-soft italic text-center py-2">
               ยังไม่เคยรัน backup — กดปุ่ม "Backup ตอนนี้" ด้านล่างเพื่อทดสอบ
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-2">
-                {status.ok ? (
-                  <IconCheck size={16} className="text-green shrink-0" />
-                ) : (
-                  <IconAlert size={16} className="text-red shrink-0" />
-                )}
-                <span
-                  className={`font-bold ${status.ok ? "text-green" : "text-red"}`}
+              {/* ── header row: status badge ซ้าย · datetime ขวา ── */}
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${status.ok ? "bg-green/15" : "bg-red/15"}`}
                 >
-                  {status.ok ? "สำเร็จ" : "ไม่สำเร็จ"}
-                </span>
-                <span className="text-txt-soft ml-2 text-xs">
-                  ({status.triggeredBy || "—"})
-                </span>
+                  {status.ok ? (
+                    <IconCheck
+                      size={20}
+                      className="text-green"
+                      strokeWidth={2.6}
+                    />
+                  ) : (
+                    <IconAlert
+                      size={20}
+                      className="text-red"
+                      strokeWidth={2.6}
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div
+                    className={`font-extrabold text-base ${status.ok ? "text-green" : "text-red"}`}
+                  >
+                    {status.ok ? "สำเร็จ" : "ไม่สำเร็จ"}
+                  </div>
+                  <div className="text-[11px] text-txt-soft">
+                    {formatTrigger(status.triggeredBy)}
+                  </div>
+                </div>
+                {(status.lastSuccessAt > 0 || status.lastAttemptAt > 0) && (
+                  <div className="text-right shrink-0">
+                    <div className="text-[10px] text-txt-soft font-semibold">
+                      เมื่อ
+                    </div>
+                    <div className="text-xs font-bold text-txt-mid">
+                      {fmtThaiDateTime(
+                        status.ok ? status.lastSuccessAt : status.lastAttemptAt,
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {status.lastSuccessAt > 0 && (
-                <div className="text-txt-mid">
-                  <span className="text-txt-soft">Backup สำเร็จล่าสุด: </span>
-                  <b>{fmtThaiDateTime(status.lastSuccessAt)}</b>
-                </div>
-              )}
-              {status.lastAttemptAt > 0 && !status.ok && (
-                <div className="text-txt-mid">
-                  <span className="text-txt-soft">ลองล่าสุด: </span>
-                  <b>{fmtThaiDateTime(status.lastAttemptAt)}</b>
-                </div>
-              )}
-
+              {/* ── stats grid (success only) ── */}
               {status.ok && status.stored && (
                 <>
-                  <div className="text-txt-mid">
-                    <span className="text-txt-soft">ไฟล์: </span>
-                    <code className="text-xs bg-cream px-1.5 py-0.5 rounded">
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="p-2.5 rounded-[8px] bg-cream/60 border border-bdr/40 text-center">
+                      <div className="text-[10px] text-txt-soft font-semibold">
+                        จำนวน docs
+                      </div>
+                      <div className="text-base font-extrabold text-maroon mt-0.5">
+                        {status.totalDocs.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-[8px] bg-cream/60 border border-bdr/40 text-center">
+                      <div className="text-[10px] text-txt-soft font-semibold">
+                        ขนาดไฟล์
+                      </div>
+                      <div className="text-base font-extrabold text-maroon mt-0.5">
+                        {formatBytes(status.sizeBytes)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-3 text-xs text-txt-mid">
+                    <span className="text-txt-soft">ไฟล์ </span>
+                    <code className="text-[11px] bg-cream px-1.5 py-0.5 rounded break-all">
                       {status.path}
                     </code>
                   </div>
-                  <div className="text-txt-mid">
-                    <span className="text-txt-soft">จำนวน docs: </span>
-                    <b>{status.totalDocs.toLocaleString()}</b>
-                    <span className="text-txt-soft ml-3">ขนาด: </span>
-                    <b>{formatBytes(status.sizeBytes)}</b>
-                  </div>
+
                   {status.repo && (
                     <a
                       href={`https://github.com/${status.repo}/tree/${status.branch || "main"}/backups`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-maroon font-semibold text-xs hover:underline"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-maroon/5 border border-maroon/20 text-maroon font-bold text-xs hover:bg-maroon/10 transition-colors"
                     >
                       ดู backup history บน GitHub
                       <IconLink size={11} strokeWidth={2.5} />
@@ -142,7 +178,7 @@ export default function BackupPanel({ showToast }: Props) {
               )}
 
               {(status.reason || status.error) && !status.ok && (
-                <div className="mt-2 p-2.5 bg-red-lt/40 rounded-[8px] border border-red/30 text-xs text-red">
+                <div className="p-2.5 bg-red-lt/40 rounded-[8px] border border-red/30 text-xs text-red">
                   {status.reason || status.error}
                 </div>
               )}
