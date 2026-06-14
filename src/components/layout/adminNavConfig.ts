@@ -13,6 +13,7 @@ import {
   ClipboardList as IconClipboardList,
   Coins as IconCoins,
   CreditCard as IconCreditCard,
+  DatabaseBackup as IconDatabaseBackup,
   Diamond as IconDiamond,
   HandCoins as IconHandCoins,
   MessageCircle as IconMessageCircle,
@@ -36,6 +37,7 @@ export type AdminSectionId =
   | "store-calendar"
   | "linebot-notifications"
   | "linebot-commands"
+  | "backup"
   | "knowledge";
 
 export type AdminGroupId =
@@ -134,6 +136,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { id: "roles", label: "พนักงาน", Icon: IconUsers },
       { id: "positions", label: "ตำแหน่ง", Icon: IconTag },
+      { id: "backup", label: "Backup ข้อมูล", Icon: IconDatabaseBackup },
     ],
   },
 ];
