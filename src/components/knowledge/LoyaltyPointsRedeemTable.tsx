@@ -17,6 +17,7 @@ import {
   getLoyaltyPointsValue,
   updateLoyaltyPoints,
 } from "../../firebase/loyaltyPoints";
+import { findGoldWeightLabel } from "../../utils/goldWeights";
 
 interface Props {
   isAdmin?: boolean;
@@ -51,6 +52,15 @@ function fallbackSuffix(key: string): string {
   return key.endsWith("-pts") ? " แต้ม" : " กรัม";
 }
 
+/** สำหรับ field "gold" — derive suffix จากตัวเลขที่ใส่ → "กรัม" หรือ "กรัม (X สลึง)" */
+function deriveGoldSuffix(rawNumber: string): string {
+  const cleaned = rawNumber.replace(/,/g, "").trim();
+  if (!cleaned) return " กรัม";
+  const grams = Number.parseFloat(cleaned);
+  const label = findGoldWeightLabel(grams);
+  return label ? ` กรัม (${label})` : " กรัม";
+}
+
 export default function LoyaltyPointsRedeemTable({
   isAdmin,
   showToast,
@@ -77,8 +87,12 @@ export default function LoyaltyPointsRedeemTable({
       for (const k of ALL_KEYS) {
         const num = (draft[k] ?? "").trim();
         if (num.length === 0) continue;
-        const current = getLoyaltyPointsValue(loyalty.values, k);
-        const suffix = splitNumeric(current).suffix || fallbackSuffix(k);
+        // gold column: derive suffix จากเลขที่ใส่ ("(½ สลึง)" ฯลฯ)
+        // pts column: ใช้ suffix เดิม fallback " แต้ม"
+        const suffix = k.endsWith("-gold")
+          ? deriveGoldSuffix(num)
+          : splitNumeric(getLoyaltyPointsValue(loyalty.values, k)).suffix ||
+            fallbackSuffix(k);
         values[k] = `${num}${suffix}`;
       }
       await updateLoyaltyPoints(values, "");
@@ -102,9 +116,12 @@ export default function LoyaltyPointsRedeemTable({
   }
 
   function renderEditableCell(k: string, alignRight: boolean) {
+    const isGold = k.endsWith("-gold");
     const current = getLoyaltyPointsValue(loyalty.values, k);
-    const { suffix } = splitNumeric(current);
-    const suffixLabel = (suffix || fallbackSuffix(k)).trim();
+    const liveSuffix = isGold
+      ? deriveGoldSuffix(draft[k] ?? "")
+      : splitNumeric(current).suffix || fallbackSuffix(k);
+    const suffixLabel = liveSuffix.trim();
     return (
       <div
         className={`flex items-center gap-1.5 ${alignRight ? "justify-end" : ""}`}
