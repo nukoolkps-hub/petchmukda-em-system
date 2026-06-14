@@ -13,7 +13,7 @@ const COLORS = {
   netFill: "#FBF4F4",
 };
 
-const CONTENT_WIDTH = 515; // A4 (595.28) − pageMargins 40×2
+const CONTENT_WIDTH = 523; // A4 (595.28) − pageMargins 36×2
 
 const formatNumber = (value) => Number(value || 0).toLocaleString("th-TH");
 
@@ -126,12 +126,12 @@ export function buildSalarySlipDocDef({
   /* ─── pdfmake doc definition ──────────────────────────── */
   return {
     pageSize: "A4",
-    pageMargins: [40, 40, 40, 44],
+    pageMargins: [36, 32, 36, 28],
     defaultStyle: {
       font: "Sarabun",
-      fontSize: 12,
+      fontSize: 11,
       color: COLORS.text,
-      lineHeight: 1.3,
+      lineHeight: 1.2,
     },
     info: {
       title: `สลิปเงินเดือน — ${employeeName} ${monthLabel}`,
@@ -142,41 +142,41 @@ export function buildSalarySlipDocDef({
       /* ─── Letterhead ─── */
       {
         text: "บริษัท ห้างเพชรทองมุกดา จำกัด",
-        fontSize: 17,
+        fontSize: 16,
         bold: true,
         color: COLORS.maroon,
         alignment: "center",
       },
       {
         text: "100/10 หมู่ที่ 8 ต.อ้อมใหญ่ อ.สามพราน จ.นครปฐม 73160",
-        fontSize: 10,
+        fontSize: 9,
         color: COLORS.textSoft,
         alignment: "center",
-        margin: [0, 4, 0, 0],
+        margin: [0, 3, 0, 0],
       },
       {
         text: "เลขประจำตัวผู้เสียภาษี 0-7355-59006-56-8",
-        fontSize: 10,
+        fontSize: 9,
         color: COLORS.textSoft,
         alignment: "center",
-        margin: [0, 1, 0, 8],
+        margin: [0, 1, 0, 6],
       },
       doubleRule(),
 
       /* ─── Title ─── */
       {
         text: "สลิปเงินเดือน",
-        fontSize: 16,
+        fontSize: 15,
         bold: true,
         alignment: "center",
-        margin: [0, 14, 0, 2],
+        margin: [0, 8, 0, 2],
       },
       {
         text: `ประจำงวดเดือน ${monthLabel}`,
-        fontSize: 12,
+        fontSize: 11,
         color: COLORS.textSoft,
         alignment: "center",
-        margin: [0, 0, 0, 16],
+        margin: [0, 0, 0, 10],
       },
 
       /* ─── Employee info ─── */
@@ -185,27 +185,27 @@ export function buildSalarySlipDocDef({
           widths: ["auto", "*", "auto", "*"],
           body: [
             [
-              { text: "ชื่อ-นามสกุล:", fontSize: 12, color: COLORS.textSoft },
-              { text: employeeName, fontSize: 12, bold: true },
-              { text: "ตำแหน่ง:", fontSize: 12, color: COLORS.textSoft },
-              { text: employeePosition, fontSize: 12, bold: true },
+              { text: "ชื่อ-นามสกุล:", fontSize: 11, color: COLORS.textSoft },
+              { text: employeeName, fontSize: 11, bold: true },
+              { text: "ตำแหน่ง:", fontSize: 11, color: COLORS.textSoft },
+              { text: employeePosition, fontSize: 11, bold: true },
             ],
             [
-              { text: "ธนาคาร:", fontSize: 12, color: COLORS.textSoft },
-              { text: bank, fontSize: 12, bold: true },
-              { text: "เลขที่บัญชี:", fontSize: 12, color: COLORS.textSoft },
-              { text: bankAccountNumber, fontSize: 12, bold: true },
+              { text: "ธนาคาร:", fontSize: 11, color: COLORS.textSoft },
+              { text: bank, fontSize: 11, bold: true },
+              { text: "เลขที่บัญชี:", fontSize: 11, color: COLORS.textSoft },
+              { text: bankAccountNumber, fontSize: 11, bold: true },
             ],
             [
-              { text: "วันที่ออกสลิป:", fontSize: 12, color: COLORS.textSoft },
-              { text: printDate, fontSize: 12, bold: true },
-              { text: "รอบเงินเดือน:", fontSize: 12, color: COLORS.textSoft },
-              { text: monthLabel, fontSize: 12, bold: true },
+              { text: "วันที่ออกสลิป:", fontSize: 11, color: COLORS.textSoft },
+              { text: printDate, fontSize: 11, bold: true },
+              { text: "รอบเงินเดือน:", fontSize: 11, color: COLORS.textSoft },
+              { text: monthLabel, fontSize: 11, bold: true },
             ],
           ],
         },
         layout: metaLayout(),
-        margin: [0, 0, 0, 16],
+        margin: [0, 0, 0, 10],
       },
 
       /* ─── Earnings table ─── */
@@ -215,22 +215,22 @@ export function buildSalarySlipDocDef({
           widths: ["*", 120],
           body: [
             ...earnRows.map(([label, value]) => [
-              { text: label, fontSize: 12 },
-              { text: value, fontSize: 12, alignment: "right" },
+              { text: label, fontSize: 11 },
+              { text: value, fontSize: 11, alignment: "right" },
             ]),
             [
-              { text: "รวมรายรับ", bold: true, fontSize: 12 },
+              { text: "รวมรายรับ", bold: true, fontSize: 11 },
               {
                 text: formatNumber(salaryCalculation.earnings),
                 bold: true,
-                fontSize: 12,
+                fontSize: 11,
                 alignment: "right",
               },
             ],
           ],
         },
         layout: rowLayout(earnRows.length),
-        margin: [0, 0, 0, 14],
+        margin: [0, 0, 0, 8],
       },
 
       /* ─── Deductions table ─── */
@@ -242,31 +242,31 @@ export function buildSalarySlipDocDef({
                 widths: ["*", 120],
                 body: [
                   ...dedRows.map(([label, value]) => [
-                    { text: label, fontSize: 12 },
-                    { text: value, fontSize: 12, alignment: "right" },
+                    { text: label, fontSize: 11 },
+                    { text: value, fontSize: 11, alignment: "right" },
                   ]),
                   [
-                    { text: "รวมรายการหัก", bold: true, fontSize: 12 },
+                    { text: "รวมรายการหัก", bold: true, fontSize: 11 },
                     {
                       text: formatNumber(salaryCalculation.deductions),
                       bold: true,
-                      fontSize: 12,
+                      fontSize: 11,
                       alignment: "right",
                     },
                   ],
                 ],
               },
               layout: rowLayout(dedRows.length),
-              margin: [0, 0, 0, 14],
+              margin: [0, 0, 0, 8],
             },
           ]
         : [
             {
               text: "— ไม่มีรายการหัก —",
-              fontSize: 12,
+              fontSize: 11,
               color: COLORS.textSoft,
               alignment: "center",
-              margin: [0, 4, 0, 14],
+              margin: [0, 3, 0, 8],
             },
           ]),
 
@@ -278,18 +278,18 @@ export function buildSalarySlipDocDef({
             [
               {
                 text: "เงินสุทธิที่ได้รับ",
-                fontSize: 13,
+                fontSize: 12,
                 bold: true,
                 color: COLORS.maroon,
-                margin: [6, 6, 0, 6],
+                margin: [6, 4, 0, 4],
               },
               {
                 text: `฿${formatNumber(salaryCalculation.netSalary)}`,
-                fontSize: 20,
+                fontSize: 18,
                 bold: true,
                 color: COLORS.maroon,
                 alignment: "right",
-                margin: [0, 4, 6, 4],
+                margin: [0, 2, 6, 2],
               },
             ],
           ],
@@ -301,7 +301,7 @@ export function buildSalarySlipDocDef({
           vLineColor: () => COLORS.maroon,
           fillColor: () => COLORS.netFill,
         },
-        margin: [0, 0, 0, 36],
+        margin: [0, 0, 0, 16],
       },
 
       /* ─── Signatures ─── */
@@ -316,10 +316,10 @@ export function buildSalarySlipDocDef({
       /* ─── Footer ─── */
       {
         text: `เอกสารนี้จัดทำโดยระบบอัตโนมัติ · ออกเอกสารเมื่อ ${printDate}`,
-        fontSize: 9,
+        fontSize: 8,
         color: COLORS.textSoft,
         alignment: "center",
-        margin: [0, 24, 0, 0],
+        margin: [0, 14, 0, 0],
       },
     ],
   };
@@ -360,10 +360,10 @@ function sectionHeader(label: string) {
       widths: ["*", 120],
       body: [
         [
-          { text: label, fontSize: 12, bold: true },
+          { text: label, fontSize: 11, bold: true },
           {
             text: "จำนวนเงิน (บาท)",
-            fontSize: 12,
+            fontSize: 11,
             bold: true,
             alignment: "right",
           },
@@ -376,8 +376,8 @@ function sectionHeader(label: string) {
       hLineColor: () => COLORS.text,
       paddingLeft: () => 2,
       paddingRight: () => 2,
-      paddingTop: () => 2,
-      paddingBottom: () => 5,
+      paddingTop: () => 1,
+      paddingBottom: () => 3,
     },
     margin: [0, 0, 0, 0],
   };
@@ -400,21 +400,21 @@ function signatureCol(line: string, name: string) {
             lineColor: COLORS.text,
           },
         ],
-        margin: [0, 50, 0, 0],
+        margin: [0, 32, 0, 0],
       },
       {
         text: line,
-        fontSize: 12,
+        fontSize: 11,
         bold: true,
         alignment: "center",
-        margin: [0, 6, 0, 0],
+        margin: [0, 4, 0, 0],
       },
       {
         text: name,
-        fontSize: 10,
+        fontSize: 9,
         color: COLORS.textSoft,
         alignment: "center",
-        margin: [0, 2, 0, 0],
+        margin: [0, 1, 0, 0],
       },
     ],
   };
@@ -430,8 +430,8 @@ function metaLayout() {
     fillColor: () => "#FAFAFA",
     paddingLeft: () => 8,
     paddingRight: () => 8,
-    paddingTop: () => 4,
-    paddingBottom: () => 4,
+    paddingTop: () => 3,
+    paddingBottom: () => 3,
   };
 }
 
@@ -448,7 +448,7 @@ function rowLayout(itemCount: number) {
       i === itemCount ? "#999999" : COLORS.borderLight,
     paddingLeft: () => 2,
     paddingRight: () => 2,
-    paddingTop: () => 5,
-    paddingBottom: () => 5,
+    paddingTop: () => 3,
+    paddingBottom: () => 3,
   };
 }
