@@ -7,6 +7,7 @@
 
 import {
   AlertTriangle as IconAlert,
+  Check as IconCheck,
   Eraser as IconEraser,
   ShieldCheck as IconShield,
   Trash2 as IconTrash,
@@ -154,8 +155,9 @@ export default function WipeDataPanel({ showToast }: Props) {
       {/* result */}
       {result && (
         <div className="mt-4 p-3.5 rounded-[12px] bg-green-lt/40 border-[1.5px] border-green/40">
-          <div className="font-extrabold text-green mb-2">
-            ✓ ล้างข้อมูลสำเร็จ · ลบทั้งหมด {result.totalDeleted} docs
+          <div className="font-extrabold text-green mb-2 inline-flex items-center gap-1.5">
+            <IconCheck size={16} strokeWidth={2.6} />
+            ล้างข้อมูลสำเร็จ · ลบทั้งหมด {result.totalDeleted} docs
           </div>
           <ul className="space-y-1 text-xs text-txt">
             {Object.entries(result.stats)

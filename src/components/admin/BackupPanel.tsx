@@ -5,9 +5,11 @@
 
 import {
   AlertTriangle as IconAlert,
+  CalendarClock as IconCalendarClock,
   Check as IconCheck,
   DatabaseBackup as IconDB,
   ExternalLink as IconLink,
+  Lock as IconLock,
   RefreshCw as IconRefresh,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -204,7 +206,10 @@ export default function BackupPanel({ showToast }: Props) {
 
       {/* schedule + setup info */}
       <div className="mt-4 p-3 rounded-[10px] bg-cream/60 border border-bdr/60 text-xs text-txt-mid leading-relaxed">
-        <div className="font-bold text-maroon mb-1.5">📅 รอบ backup อัตโนมัติ</div>
+        <div className="font-bold text-maroon mb-1.5 inline-flex items-center gap-1.5">
+          <IconCalendarClock size={13} strokeWidth={2.5} />
+          รอบ backup อัตโนมัติ
+        </div>
         <div className="mb-2.5">
           ทุกวัน <b>อาทิตย์ ตี 3</b> (Asia/Bangkok) — Cloud Function รันเอง
           ไม่ต้องกด
@@ -212,8 +217,9 @@ export default function BackupPanel({ showToast }: Props) {
 
         {!isConfigured && (
           <>
-            <div className="font-bold text-red mb-1.5 mt-3">
-              ⚠️ ยังไม่ได้ตั้งค่า — ทำตาม 3 ขั้นตอนนี้ก่อน:
+            <div className="font-bold text-red mb-1.5 mt-3 inline-flex items-center gap-1.5">
+              <IconAlert size={13} strokeWidth={2.5} />
+              ยังไม่ได้ตั้งค่า — ทำตาม 3 ขั้นตอนนี้ก่อน:
             </div>
             <ol className="list-decimal list-outside pl-5 space-y-1.5">
               <li>
@@ -253,7 +259,10 @@ export default function BackupPanel({ showToast }: Props) {
           </>
         )}
 
-        <div className="font-bold text-maroon mt-3 mb-1">🔒 ปลอดภัยอย่างไร</div>
+        <div className="font-bold text-maroon mt-3 mb-1 inline-flex items-center gap-1.5">
+          <IconLock size={13} strokeWidth={2.5} />
+          ปลอดภัยอย่างไร
+        </div>
         <ul className="list-disc list-outside pl-5 space-y-0.5">
           <li>Backup ไม่รวม <code>config/secrets</code> (LINE token, API key)</li>
           <li>Repo ต้องตั้ง Private — ข้อมูลพนักงาน/บัญชี/เงินเดือนอยู่ในนั้น</li>
