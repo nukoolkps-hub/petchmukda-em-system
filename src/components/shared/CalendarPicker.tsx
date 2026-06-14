@@ -25,6 +25,9 @@ interface Props {
   disableSaturdays?: boolean;
   /** ขนาด · "md" (default · ใช้ในฟอร์มลา) · "sm" (compact · ใช้ในกล่องตัวช่วย) */
   size?: "md" | "sm";
+  /** ปฏิทินแสดงแบบ inline (push siblings ลง) แทน popup overlay
+   *  · ใช้ใน knowledge/calc ที่ popup จะทับ section ถัดไปแล้วดูเหมือนถูกตัด */
+  inline?: boolean;
   error?: string;
 }
 
@@ -36,6 +39,7 @@ export default function CalendarPicker({
   maxDate,
   disableSaturdays = true,
   size = "md",
+  inline = false,
   error,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -136,7 +140,13 @@ export default function CalendarPicker({
         </div>
       )}
       {open && (
-        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-[400] bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]">
+        <div
+          className={
+            inline
+              ? "mt-1.5 bg-white rounded-2xl px-4 pt-4.5 pb-3.5 border border-bdr animate-[calFade_0.18s_ease]"
+              : "absolute top-[calc(100%+6px)] left-0 right-0 z-[400] bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]"
+          }
+        >
           <div className="flex items-center justify-between mb-3.5">
             <button
               type="button"

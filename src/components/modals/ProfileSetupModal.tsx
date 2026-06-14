@@ -19,6 +19,7 @@ export default function ProfileSetupModal({
   initial,
   employeeId,
   lockName = false,
+  lockBank = false,
   onSave,
   onClose,
 }) {
@@ -349,6 +350,7 @@ export default function ProfileSetupModal({
             value={bank}
             onChange={(name) => setBank(name)}
             error={!!bankErr}
+            disabled={lockBank}
           />
         </div>
 
@@ -358,10 +360,24 @@ export default function ProfileSetupModal({
         </label>
         <input
           value={bankAccountNumber}
-          onChange={(e) => setBankAcc(e.target.value)}
+          onChange={(e) => !lockBank && setBankAcc(e.target.value)}
+          readOnly={lockBank}
           placeholder="เช่น 123-4-56789-0"
-          className={`w-full px-4 py-3 rounded-xl text-base outline-none font-[inherit] box-border text-txt bg-white tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"}`}
+          className={`w-full px-4 py-3 rounded-xl text-base outline-none font-[inherit] box-border text-txt tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"} ${lockBank ? "bg-cream-dk cursor-not-allowed opacity-80" : "bg-white"}`}
         />
+
+        {lockBank && (
+          <div className="text-xs text-txt-soft mt-2 px-2.5 py-2 bg-cream/60 rounded-lg border border-bdr/60 inline-flex items-start gap-1.5">
+            <IconAlertTriangle
+              size={13}
+              strokeWidth={2.4}
+              className="text-maroon shrink-0 mt-px"
+            />
+            <span>
+              บัญชีธนาคารบันทึกไว้แล้ว — หากต้องการแก้ไข ติดต่อ ADMIN เท่านั้น
+            </span>
+          </div>
+        )}
 
         {bankErr && (
           <div className="text-red text-sm mt-1.5">

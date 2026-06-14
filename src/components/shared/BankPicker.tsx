@@ -19,6 +19,7 @@ interface BankPickerProps {
   onChange: (name: string) => void;
   error?: boolean;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 export default function BankPicker({
@@ -26,6 +27,7 @@ export default function BankPicker({
   onChange,
   error = false,
   placeholder = "— เลือกธนาคาร —",
+  disabled = false,
 }: BankPickerProps) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -38,12 +40,14 @@ export default function BankPicker({
     <div className="relative" ref={wrapRef}>
       <button
         type="button"
-        onClick={() => setOpen((p) => !p)}
+        onClick={() => !disabled && setOpen((p) => !p)}
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className={`w-full py-3 pr-10 pl-3 rounded-xl text-base outline-none font-[inherit] box-border cursor-pointer border-[1.5px] flex items-center gap-2.5 text-left
+        className={`w-full py-3 pr-10 pl-3 rounded-xl text-base outline-none font-[inherit] box-border border-[1.5px] flex items-center gap-2.5 text-left
           ${error ? "border-red" : "border-bdr"}
-          ${selected ? "text-txt bg-gold-pale/30 font-semibold" : "text-txt-soft bg-white font-normal"}`}
+          ${disabled ? "bg-cream-dk cursor-not-allowed opacity-80" : "cursor-pointer"}
+          ${selected && !disabled ? "text-txt bg-gold-pale/30 font-semibold" : selected ? "text-txt font-semibold" : "text-txt-soft bg-white font-normal"}`}
       >
         {selected ? (
           <>
