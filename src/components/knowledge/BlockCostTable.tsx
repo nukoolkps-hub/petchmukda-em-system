@@ -44,7 +44,7 @@ const GOLD_SHIP_ROWS: RowSpec[] = [
 ];
 
 const SILVER_BLOCK_ROWS: RowSpec[] = [
-  { id: "silver-half-1baht", label: "½ สลึง – 1 บาท" },
+  { id: "silver-half-1baht", label: "1 สลึง – 1 บาท" },
   { id: "silver-5baht", label: "5 บาท" },
   { id: "silver-10baht", label: "10 บาท" },
   { id: "silver-20baht", label: "20 บาท" },
@@ -52,7 +52,7 @@ const SILVER_BLOCK_ROWS: RowSpec[] = [
 ];
 
 const SILVER_SHIP_ROWS: RowSpec[] = [
-  { id: "silver-ship-1baht-10baht", label: "1 บาท – 10 บาท" },
+  { id: "silver-ship-1baht-10baht", label: "1 สลึง – 10 บาท" },
   { id: "silver-ship-20baht", label: "20 บาท" },
   { id: "silver-ship-1kilo", label: "1 กิโล" },
 ];
