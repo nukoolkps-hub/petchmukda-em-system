@@ -33,6 +33,17 @@ const WEIGHT_OPTIONS = [
 
 const MD_PER_UNIT_BAHT = 100;
 
+/** ตัวคูณตามจำนวนบาทของน้ำหนัก · "2 บาท ขึ้นไป" คูณตามจำนวน ·
+ *  ½ สลึง / 1 สลึง / 2 สลึง / 3 สลึง / 1 บาท / 6 สลึง = ×1 */
+function bahtMultiplier(weight: string): number {
+  const match = weight.match(/^(\d+)\s*บาท$/);
+  if (match) {
+    const n = Number.parseInt(match[1], 10);
+    if (n >= 2) return n;
+  }
+  return 1;
+}
+
 function parseMd(raw: string): number | null {
   const cleaned = raw.replace(/[^\d]/g, "");
   if (!cleaned) return null;
@@ -62,11 +73,17 @@ export default function FreeExchangeHelper() {
     if (!weightsMatch) return null;
     if (mdBoughtNum === null || mdExchangeNum === null) return null;
     const diff = mdExchangeNum - mdBoughtNum;
+    const multiplier = bahtMultiplier(weightBought);
     if (diff <= 0) {
-      return { needToPay: false, amount: 0, diff };
+      return { needToPay: false, amount: 0, diff, multiplier };
     }
-    return { needToPay: true, amount: diff * MD_PER_UNIT_BAHT, diff };
-  }, [weightsMatch, mdBoughtNum, mdExchangeNum]);
+    return {
+      needToPay: true,
+      amount: diff * MD_PER_UNIT_BAHT * multiplier,
+      diff,
+      multiplier,
+    };
+  }, [weightsMatch, weightBought, mdBoughtNum, mdExchangeNum]);
 
   function renderSelect(
     value: string,
@@ -218,7 +235,11 @@ export default function FreeExchangeHelper() {
                     </span>
                   </div>
                   <div className="text-[11px] font-semibold text-maroon/80 mt-0.5">
-                    <MathText>{`(MD ${mdExchangeNum} − MD ${mdBoughtNum}) × 100 = ${result.amount.toLocaleString("th-TH")} ฿`}</MathText>
+                    <MathText>
+                      {result.multiplier > 1
+                        ? `(MD ${mdExchangeNum} − MD ${mdBoughtNum}) × 100 × ${result.multiplier} บาท = ${result.amount.toLocaleString("th-TH")} ฿`
+                        : `(MD ${mdExchangeNum} − MD ${mdBoughtNum}) × 100 = ${result.amount.toLocaleString("th-TH")} ฿`}
+                    </MathText>
                   </div>
                 </div>
               </div>
