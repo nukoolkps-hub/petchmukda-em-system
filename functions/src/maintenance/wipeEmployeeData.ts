@@ -4,15 +4,15 @@
  * สำหรับเคส: admin อยากเอาพนักงานเก่าออก แต่ไม่ต้องการล้างทั้งระบบ
  *
  * แต่ละคน — ลบ:
- *   - employees/{id}/months/* (สลิปทุกเดือนของคนนั้น) ผ่าน subcollection
+ *   - salaries/{id}/months/* (สลิปทุกเดือนของคนนั้น) ผ่าน subcollection
  *   - employees/{id} (doc ตัวเอง)
  *   - leaves ที่ employeeId == id
  *   - advances ที่ employeeId == id
  *   - employeeLoans ที่ employeeId == id
- *   - certCounters/{id} (ถ้ามี)
  *   - poolSnapshots/{ym} — ลบ key employeeId ออก (merge FieldValue.delete)
  *
- * ไม่แตะ: /config/* · /roles · /duties · payrollConfirms (summary รายเดือน)
+ * ไม่แตะ: /config/* · /roles · /duties · payrollConfirms (summary รายเดือน) ·
+ *   certCounters (running number รายปี พ.ศ. — ไม่ผูกกับพนักงาน)
  *
  * Guard:
  *   - admin custom claim
@@ -84,7 +84,6 @@ interface PerEmployeeStats {
 	leaves: number;
 	advances: number;
 	loans: number;
-	certCounter: number;
 	poolSnapshotMonthsTouched: number;
 	employeeDoc: number;
 }
@@ -96,6 +95,9 @@ interface WipeEmployeeResult {
 }
 
 export const wipeEmployeeData = onCall(
+	// ลูปลบแบบ sequential ต่อพนักงาน (หลาย round-trip/คน) — ตั้ง timeout สูง
+	// กันค้างกลางทางตอนเลือกหลายคน (default 60s ไม่พอเมื่อ ~20+ คน)
+	{ timeoutSeconds: 540 },
 	async (req): Promise<WipeEmployeeResult> => {
 		const isAdmin = req.auth?.token?.admin === true;
 		if (!isAdmin) {
@@ -129,7 +131,8 @@ export const wipeEmployeeData = onCall(
 		let totalDeleted = 0;
 
 		for (const id of ids) {
-			const months = await deleteSubcollection(db, `employees/${id}`, "months");
+			// สลิปอยู่ที่ salaries/{id}/months — ไม่ใช่ employees/{id}/months
+			const months = await deleteSubcollection(db, `salaries/${id}`, "months");
 			const leaves = await deleteQueryByField(db, "leaves", "employeeId", id);
 			const advances = await deleteQueryByField(
 				db,
@@ -143,13 +146,6 @@ export const wipeEmployeeData = onCall(
 				"employeeId",
 				id,
 			);
-			const certRef = db.doc(`certCounters/${id}`);
-			const certSnap = await certRef.get();
-			let certCounter = 0;
-			if (certSnap.exists) {
-				await certRef.delete();
-				certCounter = 1;
-			}
 			const poolSnapshotMonthsTouched = await purgeEmployeeFromPoolSnapshots(
 				db,
 				id,
@@ -168,13 +164,11 @@ export const wipeEmployeeData = onCall(
 				leaves,
 				advances,
 				loans,
-				certCounter,
 				poolSnapshotMonthsTouched,
 				employeeDoc,
 			};
 			stats.push(s);
-			totalDeleted +=
-				months + leaves + advances + loans + certCounter + employeeDoc;
+			totalDeleted += months + leaves + advances + loans + employeeDoc;
 		}
 
 		console.log("[wipeEmployeeData] complete", { stats, totalDeleted });
