@@ -54,22 +54,23 @@ export default function PawnInterestCard() {
           const fmt = (n: number) =>
             n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           const extraRate = extraDays <= 15 ? "0.75%" : "1.5%";
+          const principalStr = fmt(principal);
           const hintExtra =
             extraDays > 0
-              ? ` + (${principal} × ${extraRate}, ขั้นต่ำ 30 ฿) วันเศษ`
+              ? ` + (${principalStr} × ${extraRate}, ขั้นต่ำ 30 ฿) วันเศษ`
               : "";
           return [
             {
               label: "ดอกเบี้ยรวมทั้งหมด",
               value: total,
               format: "currency",
-              hint: `(${principal} × 1.5%, ขั้นต่ำ 30 ฿) × ${months} ด.${hintExtra}`,
+              hint: `(${principalStr} × 1.5%, ขั้นต่ำ 30 ฿) × ${months} ด.${hintExtra}`,
             },
             {
               label: "ยอดที่ต้องจ่ายเพื่อไถ่",
               value: principal + total,
               format: "currency",
-              hint: `${principal} + ${fmt(total)}`,
+              hint: `${principalStr} + ${fmt(total)}`,
             },
           ];
         }}
