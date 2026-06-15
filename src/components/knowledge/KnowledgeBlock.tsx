@@ -103,10 +103,18 @@ export default function KnowledgeBlockView({
     case "list":
       if (block.ordered) {
         return (
-          <ol className="list-decimal list-outside pl-5 mb-2.5 space-y-1 text-sm text-txt">
+          <ol className="mb-2.5 space-y-1.5 text-sm text-txt">
             {block.items.map((item, i) => (
-              <li key={`${item.slice(0, 16)}-${i}`} className="leading-relaxed">
-                <MathText>{item}</MathText>
+              <li
+                key={`${item.slice(0, 16)}-${i}`}
+                className="leading-relaxed flex items-start gap-2"
+              >
+                <span className="shrink-0 mt-[2px] w-5 h-5 rounded-full bg-maroon text-white text-[11px] font-extrabold flex items-center justify-center">
+                  {i + 1}
+                </span>
+                <span className="flex-1 pt-px">
+                  <MathText>{item}</MathText>
+                </span>
               </li>
             ))}
           </ol>
