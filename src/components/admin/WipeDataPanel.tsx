@@ -1,9 +1,9 @@
-/* ─── WipeDataPanel — One-time start-fresh utility ───────────────
-   ลบข้อมูลพนักงาน + transactional data ก่อนใช้จริง · เก็บ config/roles/duties
+/* ─── WipeDataPanel — Start-fresh utilities ───────────────────────
+   2 mode:
+   - "ล้างข้อมูลทั้งหมด" — ล้างทั้งระบบ (สำหรับเริ่มใช้จริง)
+   - "ล้างข้อมูลรายคน"   — เลือกพนักงาน 1+ คน · ลบเฉพาะข้อมูลของคนนั้น
 
-   2-step confirm:
-   1. กดปุ่ม "ล้างข้อมูลทั้งหมด" → modal เปิด
-   2. พิมพ์ "ล้างข้อมูล" ในช่อง input + กดยืนยัน → call Cloud Function     */
+   ทั้งสอง mode ใช้ 2-step confirm: ปุ่ม → modal พิมพ์ "ล้างข้อมูล" → ยืนยัน */
 
 import {
   AlertTriangle as IconAlert,
@@ -12,12 +12,18 @@ import {
   History as IconHistory,
   ShieldCheck as IconShield,
   Trash2 as IconTrash,
+  UserMinus as IconUserMinus,
   X as IconX,
 } from "lucide-react";
 import { useState } from "react";
-import { wipeTestData } from "../../firebase/wipeTestData";
+import {
+  wipeEmployeeData,
+  wipeTestData,
+} from "../../firebase/wipeTestData";
+import type { Employee } from "../../types";
 
 interface Props {
+  employeeDirectory?: Employee[];
   showToast?: (msg: string) => void;
 }
 
@@ -43,29 +49,115 @@ const COLLECTIONS_KEPT: string[] = [
 
 const CONFIRM_TOKEN = "ล้างข้อมูล";
 
-export default function WipeDataPanel({ showToast }: Props) {
-  const [showModal, setShowModal] = useState(false);
+type WipeMode = "all" | "selected";
+
+export default function WipeDataPanel({
+  employeeDirectory,
+  showToast,
+}: Props) {
+  const [mode, setMode] = useState<WipeMode | null>(null);
   const [typed, setTyped] = useState("");
   const [running, setRunning] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<{
-    stats: Record<string, number>;
+    label: string;
     totalDeleted: number;
+    breakdown: { name: string; count: number }[];
   } | null>(null);
 
   const canConfirm = typed.trim() === CONFIRM_TOKEN;
+  const employees = employeeDirectory ?? [];
+  const sortedEmployees = [...employees].sort((a, b) =>
+    (a.name || "").localeCompare(b.name || "", "th"),
+  );
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    setSelectedIds(new Set(employees.map((e) => e.id)));
+  }
+  function clearAll() {
+    setSelectedIds(new Set());
+  }
+
+  function openAllModal() {
+    setMode("all");
+    setTyped("");
+  }
+  function openSelectedModal() {
+    if (selectedIds.size === 0) return;
+    setMode("selected");
+    setTyped("");
+  }
+  function closeModal() {
+    if (running) return;
+    setMode(null);
+    setTyped("");
+  }
 
   async function handleConfirm() {
-    if (!canConfirm || running) return;
+    if (!canConfirm || running || !mode) return;
     setRunning(true);
     try {
-      const res = await wipeTestData();
-      if (res.ok) {
-        setResult({ stats: res.stats, totalDeleted: res.totalDeleted });
-        showToast?.(`ล้างข้อมูลสำเร็จ · ลบทั้งหมด ${res.totalDeleted} docs`);
-        setShowModal(false);
-        setTyped("");
+      if (mode === "all") {
+        const res = await wipeTestData();
+        if (res.ok) {
+          setResult({
+            label: "ล้างข้อมูลทั้งระบบสำเร็จ",
+            totalDeleted: res.totalDeleted,
+            breakdown: Object.entries(res.stats)
+              .filter(([_, c]) => c > 0)
+              .map(([name, count]) => ({ name, count })),
+          });
+          showToast?.(
+            `ล้างข้อมูลสำเร็จ · ลบทั้งหมด ${res.totalDeleted} docs`,
+          );
+          setMode(null);
+          setTyped("");
+        } else {
+          showToast?.("ล้างข้อมูลไม่สำเร็จ");
+        }
       } else {
-        showToast?.("ล้างข้อมูลไม่สำเร็จ");
+        const ids = Array.from(selectedIds);
+        const res = await wipeEmployeeData(ids);
+        if (res.ok) {
+          // sum รายฟิลด์ข้ามทุกคนเพื่อสรุปแบบเดียวกัน
+          const totals: Record<string, number> = {};
+          for (const s of res.stats) {
+            totals.months = (totals.months || 0) + s.months;
+            totals.leaves = (totals.leaves || 0) + s.leaves;
+            totals.advances = (totals.advances || 0) + s.advances;
+            totals.loans = (totals.loans || 0) + s.loans;
+            totals.certCounter =
+              (totals.certCounter || 0) + s.certCounter;
+            totals.poolSnapshotMonthsTouched =
+              (totals.poolSnapshotMonthsTouched || 0) +
+              s.poolSnapshotMonthsTouched;
+            totals.employees = (totals.employees || 0) + s.employeeDoc;
+          }
+          setResult({
+            label: `ล้างข้อมูลพนักงาน ${res.stats.length} คนสำเร็จ`,
+            totalDeleted: res.totalDeleted,
+            breakdown: Object.entries(totals)
+              .filter(([_, c]) => c > 0)
+              .map(([name, count]) => ({ name, count })),
+          });
+          showToast?.(
+            `ล้างข้อมูลพนักงาน ${res.stats.length} คน · ${res.totalDeleted} docs`,
+          );
+          setMode(null);
+          setTyped("");
+          setSelectedIds(new Set());
+        } else {
+          showToast?.("ล้างข้อมูลไม่สำเร็จ");
+        }
       }
     } catch (err) {
       console.error("[WipeDataPanel] wipe failed:", err);
@@ -180,10 +272,10 @@ export default function WipeDataPanel({ showToast }: Props) {
         </div>
       </div>
 
-      {/* run button */}
+      {/* run button — ล้างทั้งหมด */}
       <button
         type="button"
-        onClick={() => setShowModal(true)}
+        onClick={openAllModal}
         disabled={running}
         className="w-full px-4 py-3 rounded-[12px] bg-red text-white font-extrabold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
       >
@@ -191,31 +283,109 @@ export default function WipeDataPanel({ showToast }: Props) {
         ล้างข้อมูลทั้งหมด
       </button>
 
+      {/* ─── per-employee wipe section ─── */}
+      <div className="mt-6 mb-2 flex items-center gap-2">
+        <IconUserMinus size={18} strokeWidth={2.4} className="text-maroon" />
+        <h3 className="text-base font-extrabold text-maroon">
+          ล้างข้อมูลรายคน
+        </h3>
+      </div>
+      <div className="mb-3 text-xs text-txt-mid leading-relaxed">
+        เลือกพนักงานที่ต้องการลบ — ลบเฉพาะข้อมูลของคนนั้น (สลิป · ใบลา ·
+        เบิกเงิน · เงินกู้ · ตัวนับใบรับรอง · entries ใน pool snapshots) ·
+        ไม่กระทบพนักงานคนอื่นและ config
+      </div>
+
+      <div className="mb-3 rounded-[12px] border-[1.5px] border-bdr/60 bg-white overflow-hidden">
+        <div className="px-3.5 py-2 bg-cream/60 border-b border-bdr/40 flex items-center gap-2 text-sm">
+          <span className="font-bold text-maroon flex-1">
+            พนักงานทั้งหมด ({employees.length} คน)
+          </span>
+          <button
+            type="button"
+            onClick={selectAll}
+            disabled={employees.length === 0}
+            className="text-[11px] px-2 py-0.5 rounded border border-bdr bg-white text-txt-mid font-bold cursor-pointer font-[inherit] disabled:opacity-40"
+          >
+            เลือกทั้งหมด
+          </button>
+          <button
+            type="button"
+            onClick={clearAll}
+            disabled={selectedIds.size === 0}
+            className="text-[11px] px-2 py-0.5 rounded border border-bdr bg-white text-txt-mid font-bold cursor-pointer font-[inherit] disabled:opacity-40"
+          >
+            ล้างการเลือก
+          </button>
+        </div>
+        {sortedEmployees.length === 0 ? (
+          <div className="p-4 text-center text-txt-soft italic text-sm">
+            ยังไม่มีพนักงานในระบบ
+          </div>
+        ) : (
+          <ul className="max-h-72 overflow-y-auto divide-y divide-bdr/40">
+            {sortedEmployees.map((e) => {
+              const checked = selectedIds.has(e.id);
+              return (
+                <li key={e.id}>
+                  <label className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-cream/40">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleSelect(e.id)}
+                      className="w-4 h-4 accent-red cursor-pointer"
+                    />
+                    <span className="text-sm font-semibold text-txt flex-1 truncate">
+                      {e.name || "(ไม่มีชื่อ)"}
+                    </span>
+                    {e.role && (
+                      <span className="text-[11px] text-txt-soft">
+                        {e.role}
+                      </span>
+                    )}
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={openSelectedModal}
+        disabled={running || selectedIds.size === 0}
+        className="w-full px-4 py-3 rounded-[12px] bg-maroon text-white font-extrabold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        <IconUserMinus size={16} strokeWidth={2.5} />
+        {selectedIds.size === 0
+          ? "เลือกพนักงานก่อน"
+          : `ล้างข้อมูลพนักงาน ${selectedIds.size} คน`}
+      </button>
+
       {/* result */}
       {result && (
         <div className="mt-4 p-3.5 rounded-[12px] bg-green-lt/40 border-[1.5px] border-green/40">
           <div className="font-extrabold text-green mb-2 inline-flex items-center gap-1.5">
             <IconCheck size={16} strokeWidth={2.6} />
-            ล้างข้อมูลสำเร็จ · ลบทั้งหมด {result.totalDeleted} docs
+            {result.label} · ลบทั้งหมด {result.totalDeleted} docs
           </div>
           <ul className="space-y-1 text-xs text-txt">
-            {Object.entries(result.stats)
-              .filter(([_, count]) => count > 0)
-              .map(([name, count]) => (
-                <li key={name} className="flex justify-between">
-                  <code className="bg-cream px-1 rounded">{name}</code>
-                  <b className="text-maroon">{count.toLocaleString()}</b>
-                </li>
-              ))}
+            {result.breakdown.map(({ name, count }) => (
+              <li key={name} className="flex justify-between">
+                <code className="bg-cream px-1 rounded">{name}</code>
+                <b className="text-maroon">{count.toLocaleString()}</b>
+              </li>
+            ))}
           </ul>
         </div>
       )}
 
       {/* confirm modal */}
-      {showModal && (
+      {mode && (
         <div
           className="fixed inset-0 z-[600] bg-black/60 flex items-center justify-center p-4"
-          onClick={() => !running && setShowModal(false)}
+          onClick={closeModal}
         >
           <div
             className="w-full max-w-md bg-white rounded-[16px] overflow-hidden shadow-2xl"
@@ -223,10 +393,14 @@ export default function WipeDataPanel({ showToast }: Props) {
           >
             <div className="px-4 py-3 bg-red text-white flex items-center gap-2">
               <IconAlert size={18} strokeWidth={2.5} />
-              <div className="font-extrabold flex-1">ยืนยันการล้างข้อมูล</div>
+              <div className="font-extrabold flex-1">
+                {mode === "all"
+                  ? "ยืนยันล้างข้อมูลทั้งหมด"
+                  : `ยืนยันล้างข้อมูล ${selectedIds.size} คน`}
+              </div>
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
+                onClick={closeModal}
                 disabled={running}
                 className="p-1 rounded hover:bg-white/15 cursor-pointer"
               >
@@ -234,9 +408,19 @@ export default function WipeDataPanel({ showToast }: Props) {
               </button>
             </div>
             <div className="p-4 space-y-3">
+              {mode === "selected" && (
+                <div className="rounded-[8px] border border-bdr/60 bg-cream/40 max-h-40 overflow-y-auto p-2 text-xs">
+                  {sortedEmployees
+                    .filter((e) => selectedIds.has(e.id))
+                    .map((e) => (
+                      <div key={e.id} className="py-0.5 text-txt font-semibold">
+                        · {e.name || "(ไม่มีชื่อ)"}
+                      </div>
+                    ))}
+                </div>
+              )}
               <div className="text-sm text-txt leading-relaxed">
-                การลบนี้ <b>ไม่สามารถ undo ได้</b> ·{" "}
-                พิมพ์{" "}
+                การลบนี้ <b>ไม่สามารถ undo ได้</b> · พิมพ์{" "}
                 <code className="bg-cream px-1.5 py-0.5 rounded font-bold text-maroon">
                   {CONFIRM_TOKEN}
                 </code>{" "}
@@ -254,7 +438,7 @@ export default function WipeDataPanel({ showToast }: Props) {
               <div className="flex gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={closeModal}
                   disabled={running}
                   className="flex-1 px-4 py-2.5 rounded-[10px] border border-bdr bg-white text-txt-mid font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform disabled:opacity-40"
                 >
