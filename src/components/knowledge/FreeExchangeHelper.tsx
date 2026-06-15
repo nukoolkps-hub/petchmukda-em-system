@@ -109,7 +109,7 @@ export default function FreeExchangeHelper() {
               htmlFor="fe-weight-bought"
               className="block text-[11px] font-bold text-txt-mid mb-1"
             >
-              น้ำหนักเส้นที่เพิ่งซื้อ
+              น้ำหนักสินค้าที่เพิ่งซื้อ
             </label>
             {renderSelect(weightBought, setWeightBought, "เลือก…")}
           </div>
@@ -118,7 +118,7 @@ export default function FreeExchangeHelper() {
               htmlFor="fe-weight-exchange"
               className="block text-[11px] font-bold text-txt-mid mb-1"
             >
-              น้ำหนักเส้นที่ขอเปลี่ยน
+              น้ำหนักสินค้าที่ขอเปลี่ยน
             </label>
             {renderSelect(weightExchange, setWeightExchange, "เลือก…")}
           </div>
