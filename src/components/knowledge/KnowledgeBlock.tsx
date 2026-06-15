@@ -26,6 +26,7 @@ import LaborCostTable from "./LaborCostTable";
 import LiveExample from "./LiveExample";
 import LoyaltyPointsRedeemTable from "./LoyaltyPointsRedeemTable";
 import MathText from "./MathText";
+import FreeExchangeHelper from "./FreeExchangeHelper";
 import PawnInterestCard from "./PawnInterestCard";
 import Secret from "./Secret";
 import SellPrice96Table from "./SellPrice96Table";
@@ -373,6 +374,9 @@ export default function KnowledgeBlockView({
 
     case "pawn-interest-card":
       return <PawnInterestCard />;
+
+    case "free-exchange-helper":
+      return <FreeExchangeHelper />;
 
     case "live-example":
       return (
