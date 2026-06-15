@@ -105,6 +105,7 @@ export type KnowledgeBlock =
   | { type: "loyalty-points-redeem-table" }
   | { type: "date-diff-helper" }
   | { type: "pawn-interest-card" }
+  | { type: "free-exchange-helper" }
   | {
       /** เหมือน example แต่ "โจทย์" + steps คำนวณจากราคาทองวันนี้
        *  → ไม่ outdated เมื่อราคาทองขยับ */

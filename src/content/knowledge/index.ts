@@ -1385,6 +1385,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           "หากเปลี่ยน MD มากกว่า **ต้องเพิ่มเงิน** เท่ากับ MD เส้นใหม่",
         ],
       },
+      { type: "free-exchange-helper" },
     ],
   },
 
