@@ -115,7 +115,7 @@ export default function FreeExchangeHelper() {
     <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
       <div className="px-3 py-2 bg-gold-pale text-maroon text-xs font-extrabold inline-flex items-center gap-1.5 w-full border-b border-gold/30">
         <IconExchange size={13} strokeWidth={2.5} />
-        ตัวช่วยคำนวณ — เปลี่ยนฟรี (ทองรูปพรรณ 96.5%)
+        ตัวช่วย — คำนวณการเปลี่ยนฟรี (ทองรูปพรรณ 96.5%)
       </div>
 
       <div className="p-3 space-y-3">
