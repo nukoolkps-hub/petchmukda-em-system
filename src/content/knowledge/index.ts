@@ -168,7 +168,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "formula",
         label: "ตามน้ำหนักสินค้า (ต่อกรัม)",
-        formula: "(ราคาขายออกทองคำแท่ง + 3.6%) × 0.0656 + ค่าแรง = ราคาขาย/กรัม",
+        formula: "(ราคาขายออกทองคำแท่ง × 103.6%) × 0.0656 + ค่าแรง = ราคาขาย/กรัม",
       },
       {
         type: "live-example",
@@ -190,7 +190,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             ],
             steps: [
               {
-                calc: `${fmt(sell)} + 3.6% = ${fmt(gold9999)}`,
+                calc: `${fmt(sell)} × 103.6% = ${fmt(gold9999)}`,
                 meaning: "ราคาทองคำ 99.99%",
               },
               {
@@ -235,7 +235,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาทองคำ 99.99%",
               value: gold9999,
               format: "currency",
-              hint: `${fmt(gold)} × 1.036`,
+              hint: `${fmt(gold)} × 103.6%`,
             },
             {
               label: "ราคา 99.99% ต่อกรัม",
@@ -299,7 +299,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             goldPriceDefault: true,
           },
           { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
-          { id: "labor", label: "ค่าแรง", suffix: "฿" },
+          { id: "labor", label: "ค่าแรง/ค่าบล็อก", suffix: "฿" },
         ],
         compute: ({ gold, labor, grams }) => {
           const goldPart = gold * 0.0656 * grams;
@@ -438,7 +438,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "formula",
         label: "ตามน้ำหนักชั่ง",
-        formula: "(ราคาขายออกเงินแท่ง × น้ำหนักสินค้า) + ค่าแรง = ราคาขาย",
+        formula: "(ราคาขายออกเงินแท่ง × น้ำหนักสินค้า) + ค่าแรง/ค่าบล็อก = ราคาขาย",
       },
       {
         type: "calculator",
@@ -453,7 +453,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             silverSellPriceDefault: true,
           },
           { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
-          { id: "labor", label: "ค่าแรง", suffix: "฿" },
+          { id: "labor", label: "ค่าแรง/ค่าบล็อก", suffix: "฿" },
         ],
         compute: ({ rate, grams, labor }) => {
           const silverPart = rate * grams;
