@@ -25,7 +25,6 @@ export interface PerEmployeeWipeStats {
   leaves: number;
   advances: number;
   loans: number;
-  certCounter: number;
   poolSnapshotMonthsTouched: number;
   employeeDoc: number;
 }

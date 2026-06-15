@@ -128,26 +128,33 @@ export default function WipeDataPanel({
         const ids = Array.from(selectedIds);
         const res = await wipeEmployeeData(ids);
         if (res.ok) {
-          // sum รายฟิลด์ข้ามทุกคนเพื่อสรุปแบบเดียวกัน
-          const totals: Record<string, number> = {};
+          // sum รายฟิลด์ข้ามทุกคน → label ไทยอ่านง่าย
+          let months = 0;
+          let leaves = 0;
+          let advances = 0;
+          let loans = 0;
+          let poolTouched = 0;
+          let employees = 0;
           for (const s of res.stats) {
-            totals.months = (totals.months || 0) + s.months;
-            totals.leaves = (totals.leaves || 0) + s.leaves;
-            totals.advances = (totals.advances || 0) + s.advances;
-            totals.loans = (totals.loans || 0) + s.loans;
-            totals.certCounter =
-              (totals.certCounter || 0) + s.certCounter;
-            totals.poolSnapshotMonthsTouched =
-              (totals.poolSnapshotMonthsTouched || 0) +
-              s.poolSnapshotMonthsTouched;
-            totals.employees = (totals.employees || 0) + s.employeeDoc;
+            months += s.months;
+            leaves += s.leaves;
+            advances += s.advances;
+            loans += s.loans;
+            poolTouched += s.poolSnapshotMonthsTouched;
+            employees += s.employeeDoc;
           }
+          const breakdown = [
+            { name: "พนักงาน", count: employees },
+            { name: "สลิปเงินเดือน", count: months },
+            { name: "ใบลา", count: leaves },
+            { name: "เบิกเงินล่วงหน้า", count: advances },
+            { name: "เงินกู้", count: loans },
+            { name: "Pool snapshots (เดือนที่แก้)", count: poolTouched },
+          ].filter((b) => b.count > 0);
           setResult({
             label: `ล้างข้อมูลพนักงาน ${res.stats.length} คนสำเร็จ`,
             totalDeleted: res.totalDeleted,
-            breakdown: Object.entries(totals)
-              .filter(([_, c]) => c > 0)
-              .map(([name, count]) => ({ name, count })),
+            breakdown,
           });
           showToast?.(
             `ล้างข้อมูลพนักงาน ${res.stats.length} คน · ${res.totalDeleted} docs`,
@@ -291,9 +298,9 @@ export default function WipeDataPanel({
         </h3>
       </div>
       <div className="mb-3 text-xs text-txt-mid leading-relaxed">
-        เลือกพนักงานที่ต้องการลบ — ลบเฉพาะข้อมูลของคนนั้น (สลิป · ใบลา ·
-        เบิกเงิน · เงินกู้ · ตัวนับใบรับรอง · entries ใน pool snapshots) ·
-        ไม่กระทบพนักงานคนอื่นและ config
+        เลือกพนักงานที่ต้องการลบ — ลบเฉพาะข้อมูลของคนนั้น (สลิปเงินเดือน ·
+        ใบลา · เบิกเงิน · เงินกู้ · entries ใน pool snapshots) · ไม่กระทบ
+        พนักงานคนอื่นและ config
       </div>
 
       <div className="mb-3 rounded-[12px] border-[1.5px] border-bdr/60 bg-white overflow-hidden">

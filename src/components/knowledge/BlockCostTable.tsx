@@ -12,7 +12,7 @@ import {
   Truck as IconTruck,
   X as IconX,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { COLORS } from "../../constants";
 import {
   DEFAULT_BLOCK_COST_VALUES,
@@ -92,14 +92,16 @@ function EditableBlockSubCard({
   const ROW_IDS = useMemo(() => rows.map((r) => r.id), [rows]);
   const isSilver = tone === "silver";
 
-  useEffect(() => {
-    if (!editing) return;
+  // init draft จาก live values "ตอนกดแก้" เท่านั้น — ไม่ผูก blockValues ใน
+  // effect (ถ้าผูก: snapshot tick ระหว่างพิมพ์จะ reset ค่าที่ admin กำลังกรอก)
+  function startEditing() {
     const next: Record<string, string> = {};
     for (const id of ROW_IDS) {
       next[id] = blockValues[id] ?? DEFAULT_BLOCK_COST_VALUES[id] ?? "";
     }
     setDraft(next);
-  }, [editing, blockValues, ROW_IDS]);
+    setEditing(true);
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -140,7 +142,7 @@ function EditableBlockSubCard({
         {isAdmin && !editing && (
           <button
             type="button"
-            onClick={() => setEditing(true)}
+            onClick={startEditing}
             className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-[7px] bg-maroon text-white text-[11px] font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform"
           >
             <IconPencil size={10} strokeWidth={2.5} color={COLORS.gold} />
@@ -247,11 +249,14 @@ function PlainSubTable({
   tone,
   icon: Icon,
   title,
+  valueHeader,
 }: {
   rows: RowSpec[];
   tone: "gold" | "silver" | "gradient";
   icon: typeof IconPackage;
   title: string;
+  /** หัวคอลัมน์ค่า · default = title (สั้นกว่าเพื่อไม่ซ้ำชื่อ section) */
+  valueHeader: string;
 }) {
   const headerBg =
     tone === "silver"
@@ -286,7 +291,7 @@ function PlainSubTable({
                 น้ำหนัก
               </th>
               <th className="px-2.5 py-1.5 text-right font-bold text-xs">
-                {title} (฿)
+                {valueHeader} (฿)
               </th>
             </tr>
           </thead>
@@ -344,18 +349,21 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
         tone="gold"
         icon={IconTruck}
         title="ค่าส่ง ทองคำแท่ง"
+        valueHeader="ค่าส่ง"
       />
       <PlainSubTable
         rows={SILVER_SHIP_ROWS}
         tone="silver"
         icon={IconTruck}
         title="ค่าส่ง เงินแท่ง"
+        valueHeader="ค่าส่ง"
       />
       <PlainSubTable
         rows={INSURANCE_ROWS}
         tone="gradient"
         icon={IconShield}
         title="ค่าประกัน"
+        valueHeader="ค่าประกัน"
       />
     </>
   );
