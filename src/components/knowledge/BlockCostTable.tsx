@@ -193,34 +193,97 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
   }
 
   return (
-    <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
-      {/* header + edit button */}
-      <div className="px-3 py-2 bg-gold-pale text-maroon text-xs font-extrabold inline-flex items-center gap-1.5 w-full border-b border-gold/30">
-        <IconPackage size={13} strokeWidth={2.5} />
-        <span className="flex-1">ค่าบล็อก — ที่ ADMIN ตั้งไว้ (ค่าส่ง + ค่าประกัน hardcode)</span>
-        {isAdmin && !editing && (
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-[7px] bg-maroon text-white text-[11px] font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform"
-          >
-            <IconPencil size={10} strokeWidth={2.5} color={COLORS.gold} />
-            แก้ไข
-          </button>
+    <>
+      {/* ─── admin-editable frame · เฉพาะค่าบล็อก ทอง + เงิน ─── */}
+      <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
+        <div className="px-3 py-2 bg-gold-pale text-maroon text-xs font-extrabold inline-flex items-center gap-1.5 w-full border-b border-gold/30">
+          <IconPackage size={13} strokeWidth={2.5} />
+          <span className="flex-1">ค่าบล็อก — ที่ ADMIN ตั้งไว้</span>
+          {isAdmin && !editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-[7px] bg-maroon text-white text-[11px] font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform"
+            >
+              <IconPencil size={10} strokeWidth={2.5} color={COLORS.gold} />
+              แก้ไข
+            </button>
+          )}
+        </div>
+
+        <div className="p-2.5 space-y-1">
+          <div className="text-[11px] text-txt-soft font-bold pt-1 pb-0.5">
+            ทองคำแท่ง
+          </div>
+          {renderSubTable(GOLD_BLOCK_ROWS, {
+            tone: "gold",
+            icon: IconPackage,
+            title: "ค่าบล็อก",
+            valueHeader: "ค่าบล็อก (฿)",
+            editable: true,
+          })}
+
+          <div className="text-[11px] text-silver font-bold pt-2 pb-0.5">
+            เงินแท่ง
+          </div>
+          {renderSubTable(SILVER_BLOCK_ROWS, {
+            tone: "silver",
+            icon: IconPackage,
+            title: "ค่าบล็อก",
+            valueHeader: "ค่าบล็อก (฿)",
+            editable: true,
+          })}
+        </div>
+
+        {/* action bar — ADMIN only เมื่อ editing */}
+        {editing && (
+          <div className="px-3 py-2.5 bg-cream/40 border-t border-bdr/40 flex gap-2 items-center">
+            <button
+              type="button"
+              onClick={handleReset}
+              disabled={saving}
+              title="คืนค่า default"
+              className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[8px] border border-bdr bg-white text-txt-mid text-xs font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform disabled:opacity-40"
+            >
+              <IconReset size={11} strokeWidth={2.5} />
+              คืนค่า default
+            </button>
+            <div className="flex-1" />
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              disabled={saving}
+              className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[8px] border border-bdr bg-white text-txt-mid text-xs font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform disabled:opacity-40"
+            >
+              <IconX size={11} strokeWidth={2.5} />
+              ยกเลิก
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-maroon text-white text-xs font-extrabold cursor-pointer font-[inherit] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.96] transition-transform"
+            >
+              <IconSave size={11} strokeWidth={2.5} color={COLORS.gold} />
+              {saving ? "กำลังบันทึก..." : "บันทึก"}
+            </button>
+          </div>
+        )}
+
+        {/* updated info */}
+        {block.updatedAt > 0 && !editing && (
+          <div className="px-3 py-1.5 bg-cream/60 border-t border-bdr/40 text-[10px] text-txt-soft text-center italic">
+            อัปเดต {new Date(block.updatedAt).toLocaleString("th-TH")}
+            {block.updatedBy ? ` · โดย ${block.updatedBy}` : ""}
+          </div>
         )}
       </div>
 
-      <div className="p-2.5 space-y-1">
-        <div className="text-[11px] text-txt-soft font-bold pt-1 pb-0.5">
-          ทองคำแท่ง
+      {/* ─── ค่าส่ง + ค่าประกัน · plain (hardcode) · ไม่มี admin frame ─── */}
+      <div className="mb-3 space-y-1">
+        <div className="text-[11px] text-txt-soft font-bold pb-0.5">
+          ทองคำแท่ง · ค่าส่ง
         </div>
-        {renderSubTable(GOLD_BLOCK_ROWS, {
-          tone: "gold",
-          icon: IconPackage,
-          title: "ค่าบล็อก",
-          valueHeader: "ค่าบล็อก (฿)",
-          editable: true,
-        })}
         {renderSubTable(GOLD_SHIP_ROWS, {
           tone: "gold",
           icon: IconTruck,
@@ -230,15 +293,8 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
         })}
 
         <div className="text-[11px] text-silver font-bold pt-2 pb-0.5">
-          เงินแท่ง
+          เงินแท่ง · ค่าส่ง
         </div>
-        {renderSubTable(SILVER_BLOCK_ROWS, {
-          tone: "silver",
-          icon: IconPackage,
-          title: "ค่าบล็อก",
-          valueHeader: "ค่าบล็อก (฿)",
-          editable: true,
-        })}
         {renderSubTable(SILVER_SHIP_ROWS, {
           tone: "silver",
           icon: IconTruck,
@@ -278,49 +334,6 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
           </table>
         </div>
       </div>
-
-      {/* action bar — ADMIN only เมื่อ editing */}
-      {editing && (
-        <div className="px-3 py-2.5 bg-cream/40 border-t border-bdr/40 flex gap-2 items-center">
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={saving}
-            title="คืนค่า default"
-            className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[8px] border border-bdr bg-white text-txt-mid text-xs font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform disabled:opacity-40"
-          >
-            <IconReset size={11} strokeWidth={2.5} />
-            คืนค่า default
-          </button>
-          <div className="flex-1" />
-          <button
-            type="button"
-            onClick={() => setEditing(false)}
-            disabled={saving}
-            className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[8px] border border-bdr bg-white text-txt-mid text-xs font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform disabled:opacity-40"
-          >
-            <IconX size={11} strokeWidth={2.5} />
-            ยกเลิก
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-maroon text-white text-xs font-extrabold cursor-pointer font-[inherit] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.96] transition-transform"
-          >
-            <IconSave size={11} strokeWidth={2.5} color={COLORS.gold} />
-            {saving ? "กำลังบันทึก..." : "บันทึก"}
-          </button>
-        </div>
-      )}
-
-      {/* updated info */}
-      {block.updatedAt > 0 && !editing && (
-        <div className="px-3 py-1.5 bg-cream/60 border-t border-bdr/40 text-[10px] text-txt-soft text-center italic">
-          อัปเดต {new Date(block.updatedAt).toLocaleString("th-TH")}
-          {block.updatedBy ? ` · โดย ${block.updatedBy}` : ""}
-        </div>
-      )}
-    </div>
+    </>
   );
 }
