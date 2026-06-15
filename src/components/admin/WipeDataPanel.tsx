@@ -9,6 +9,7 @@ import {
   AlertTriangle as IconAlert,
   Check as IconCheck,
   Eraser as IconEraser,
+  History as IconHistory,
   ShieldCheck as IconShield,
   Trash2 as IconTrash,
   X as IconX,
@@ -139,6 +140,44 @@ export default function WipeDataPanel({ showToast }: Props) {
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* recovery safety net */}
+      <div className="mb-4 rounded-[12px] border-[1.5px] border-amber/40 bg-amber-lt/30 overflow-hidden">
+        <div className="px-3.5 py-2 bg-amber-lt/60 text-amber text-sm font-extrabold inline-flex items-center gap-1.5 w-full">
+          <IconHistory size={14} strokeWidth={2.5} />
+          ถ้าเผลอกดล้าง — กู้คืนยังไง?
+        </div>
+        <div className="p-3.5 text-sm text-txt leading-relaxed space-y-2.5">
+          <div>
+            <b className="text-amber">1. PITR</b> (Point-in-Time Recovery —
+            แนะนำ): rollback database ทั้งฐานกลับไปเวลาก่อนกดล้าง · มีเวลา
+            7 วันให้กู้
+            <ul className="mt-1.5 ml-3 space-y-0.5 text-xs text-txt-mid">
+              <li>
+                Firebase Console → Firestore →{" "}
+                <code className="bg-white px-1 rounded">
+                  Schedules and recovery
+                </code>{" "}
+                tab
+              </li>
+              <li>
+                คลิก <b>"Restore database from PITR"</b> → เลือก timestamp
+                ก่อนกดล้าง → restore เป็น DB ใหม่ → overwrite
+              </li>
+            </ul>
+          </div>
+          <div>
+            <b className="text-amber">2. Daily Backup</b> (Firebase managed):
+            snapshot รายวัน · เก็บไว้ 7-14 วัน · restore ผ่าน Console
+            เหมือนกัน
+          </div>
+          <div>
+            <b className="text-amber">3. GitHub Backup</b> (JSON ใน repo):
+            data ครบ แต่ตอนนี้ยังไม่มี restore function · ถ้าเผลอเกิน 14 วัน
+            ค่อยใช้
+          </div>
+        </div>
       </div>
 
       {/* run button */}
