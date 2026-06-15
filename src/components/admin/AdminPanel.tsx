@@ -238,7 +238,12 @@ export default function AdminPanel({
 
       {section === "backup" && <BackupPanel showToast={showToast} />}
 
-      {section === "wipe-data" && <WipeDataPanel showToast={showToast} />}
+      {section === "wipe-data" && (
+        <WipeDataPanel
+          employeeDirectory={employeeDirectory}
+          showToast={showToast}
+        />
+      )}
 
       {/* ── PAYROLL SUMMARY section ── */}
       {section === "payroll" && (
