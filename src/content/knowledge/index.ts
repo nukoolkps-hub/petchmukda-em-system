@@ -1062,7 +1062,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "p",
         adminOnly: true,
         muted: true,
-        text: 'ADMIN กดปุ่ม "แก้ไข" บน header เพื่อปรับค่าบล็อก / ค่าส่ง / ค่าประกัน — sync ทุกคนทันที',
+        text: 'ADMIN กดปุ่ม "แก้ไข" บน header เพื่อปรับค่าบล็อก — sync ทุกคนทันที · ค่าส่ง + ค่าประกัน hardcode (แก้ใน code เท่านั้น)',
       },
       { type: "block-cost-table" },
     ],
