@@ -62,13 +62,11 @@ const INSURANCE_ROWS: RowSpec[] = [
   { id: "insurance-max", label: "เพดานราคาสินค้า (฿)" },
 ];
 
-const ALL_ROW_IDS = [
-  ...GOLD_BLOCK_ROWS,
-  ...GOLD_SHIP_ROWS,
-  ...SILVER_BLOCK_ROWS,
-  ...SILVER_SHIP_ROWS,
-  ...INSURANCE_ROWS,
-].map((r) => r.id);
+// admin แก้ได้เฉพาะ "ค่าบล็อก" (ทอง + เงิน) · ค่าส่ง + ค่าประกันใช้ค่า
+// hardcode (DEFAULT_BLOCK_COST_VALUES) เท่านั้น — ปรับโดยแก้โค้ด
+const EDITABLE_ROW_IDS = [...GOLD_BLOCK_ROWS, ...SILVER_BLOCK_ROWS].map(
+  (r) => r.id,
+);
 
 export default function BlockCostTable({ isAdmin, showToast }: Props) {
   const { data: block } = useBlockCost();
@@ -79,7 +77,7 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
   useEffect(() => {
     if (!editing) return;
     const next: Record<string, string> = {};
-    for (const id of ALL_ROW_IDS) {
+    for (const id of EDITABLE_ROW_IDS) {
       next[id] = getBlockCostValue(block.values, id);
     }
     setDraft(next);
@@ -89,7 +87,7 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
     setSaving(true);
     try {
       const values: Record<string, string> = {};
-      for (const id of ALL_ROW_IDS) {
+      for (const id of EDITABLE_ROW_IDS) {
         const v = (draft[id] ?? "").trim();
         if (v.length > 0) values[id] = v;
       }
@@ -106,13 +104,19 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
 
   function handleReset() {
     const next: Record<string, string> = {};
-    for (const id of ALL_ROW_IDS) {
+    for (const id of EDITABLE_ROW_IDS) {
       next[id] = DEFAULT_BLOCK_COST_VALUES[id] ?? "";
     }
     setDraft(next);
   }
 
-  function renderValueCell(id: string) {
+  /** editable=true → ใช้ค่า live + แสดง input ตอน editing
+   *  editable=false → แสดงค่า hardcode (DEFAULT_BLOCK_COST_VALUES) เสมอ */
+  function renderValueCell(id: string, editable: boolean) {
+    if (!editable) {
+      // ค่าส่ง + ค่าประกัน → hardcode เท่านั้น · ไม่ขึ้น input แม้ admin จะกดแก้
+      return DEFAULT_BLOCK_COST_VALUES[id] ?? "—";
+    }
     const current = getBlockCostValue(block.values, id);
     if (editing) {
       return (
@@ -135,6 +139,8 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
       icon: typeof IconPackage;
       title: string;
       valueHeader: string;
+      /** true = แก้ผ่าน UI ได้ (ค่าบล็อก) · false = hardcode (ค่าส่ง) */
+      editable: boolean;
     },
   ) {
     const isSilver = options.tone === "silver";
@@ -176,7 +182,7 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
                   {r.label}
                 </td>
                 <td className="px-2.5 py-1.5 text-right font-extrabold text-maroon">
-                  {renderValueCell(r.id)}
+                  {renderValueCell(r.id, options.editable)}
                 </td>
               </tr>
             ))}
@@ -191,7 +197,7 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
       {/* header + edit button */}
       <div className="px-3 py-2 bg-gold-pale text-maroon text-xs font-extrabold inline-flex items-center gap-1.5 w-full border-b border-gold/30">
         <IconPackage size={13} strokeWidth={2.5} />
-        <span className="flex-1">ค่าบล็อก + ค่าประกัน — ที่ ADMIN ตั้งไว้</span>
+        <span className="flex-1">ค่าบล็อก — ที่ ADMIN ตั้งไว้ (ค่าส่ง + ค่าประกัน hardcode)</span>
         {isAdmin && !editing && (
           <button
             type="button"
@@ -213,12 +219,14 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
           icon: IconPackage,
           title: "ค่าบล็อก",
           valueHeader: "ค่าบล็อก (฿)",
+          editable: true,
         })}
         {renderSubTable(GOLD_SHIP_ROWS, {
           tone: "gold",
           icon: IconTruck,
           title: "ค่าส่ง",
           valueHeader: "ค่าส่ง (฿)",
+          editable: false,
         })}
 
         <div className="text-[11px] text-silver font-bold pt-2 pb-0.5">
@@ -229,12 +237,14 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
           icon: IconPackage,
           title: "ค่าบล็อก",
           valueHeader: "ค่าบล็อก (฿)",
+          editable: true,
         })}
         {renderSubTable(SILVER_SHIP_ROWS, {
           tone: "silver",
           icon: IconTruck,
           title: "ค่าส่ง",
           valueHeader: "ค่าส่ง (฿)",
+          editable: false,
         })}
 
         <div className="text-[11px] text-txt-soft font-bold pt-2 pb-0.5">
@@ -260,7 +270,7 @@ export default function BlockCostTable({ isAdmin, showToast }: Props) {
                     {r.label}
                   </td>
                   <td className="px-2.5 py-1.5 text-right font-extrabold text-maroon">
-                    {renderValueCell(r.id)}
+                    {renderValueCell(r.id, false)}
                   </td>
                 </tr>
               ))}
