@@ -102,23 +102,27 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           { id: "baht", label: "จำนวน", suffix: "บาท" },
         ],
-        compute: ({ baht }) => [
+        compute: ({ baht }) => {
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return [
           {
             label: "ทองแท่ง / เงินแท่ง",
             value: baht * 15.244,
             format: "number",
             decimals: 3,
             unit: "กรัม",
-            hint: `${baht} × 15.244 กรัม/บาท`,
+            hint: `${fmt(baht)} × 15.244 กรัม/บาท`,
           },
           {
             label: "ทองรูปพรรณ",
             value: baht * 15.16,
             format: "number",
             unit: "กรัม",
-            hint: `${baht} × 15.16 กรัม/บาท`,
+            hint: `${fmt(baht)} × 15.16 กรัม/บาท`,
           },
-        ],
+        ];
+        },
       },
     ],
   },
@@ -231,7 +235,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาทองคำ 99.99%",
               value: gold9999,
               format: "currency",
-              hint: `${gold} × 1.036`,
+              hint: `${fmt(gold)} × 1.036`,
             },
             {
               label: "ราคา 99.99% ต่อกรัม",
@@ -243,7 +247,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาขายต่อกรัม (+ ค่าแรง)",
               value: sellPerGram,
               format: "currency",
-              hint: `${fmt(perGram)} + ${labor}`,
+              hint: `${fmt(perGram)} + ${fmt(labor)}`,
             },
             {
               label: "ราคาขายต่อชิ้น",
@@ -307,13 +311,13 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาขายออกทองคำแท่งตามน้ำหนักสินค้า",
               value: goldPart,
               format: "currency",
-              hint: `${gold} × 0.0656 × ${grams}`,
+              hint: `${fmt(gold)} × 0.0656 × ${grams}`,
             },
             {
               label: "ราคาขาย (+ ค่าแรง)",
               value: total,
               format: "currency",
-              hint: `${fmt(goldPart)} + ${labor}`,
+              hint: `${fmt(goldPart)} + ${fmt(labor)}`,
             },
           ];
         },
@@ -355,13 +359,13 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาขายออกทองคำแท่งตามน้ำหนักสินค้า",
               value: goldPart,
               format: "currency",
-              hint: `${gold} × 0.0656 × ${grams}`,
+              hint: `${fmt(gold)} × 0.0656 × ${grams}`,
             },
             {
               label: "ราคาขาย (+ ค่าแรง)",
               value: goldPart + labor,
               format: "currency",
-              hint: `${fmt(goldPart)} + ${labor}`,
+              hint: `${fmt(goldPart)} + ${fmt(labor)}`,
             },
           ];
         },
@@ -405,19 +409,19 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาขายออกทองคำแท่ง × 0.50",
               value: half,
               format: "currency",
-              hint: `${gold} × 0.50`,
+              hint: `${fmt(gold)} × 0.50`,
             },
             {
               label: "ราคาขายออกทองคำแท่งตามน้ำหนักสินค้า",
               value: goldPart,
               format: "currency",
-              hint: `${half} × 0.0656 × ${grams}`,
+              hint: `${fmt(half)} × 0.0656 × ${grams}`,
             },
             {
               label: "ราคาขาย (+ ค่าแรง)",
               value: goldPart + labor,
               format: "currency",
-              hint: `${fmt(goldPart)} + ${labor}`,
+              hint: `${fmt(goldPart)} + ${fmt(labor)}`,
             },
           ];
         },
@@ -460,13 +464,13 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาเงินตามน้ำหนักสินค้า",
               value: silverPart,
               format: "currency",
-              hint: `${rate} × ${grams}`,
+              hint: `${fmt(rate)} × ${grams}`,
             },
             {
               label: "ราคาขาย (+ ค่าแรง)",
               value: silverPart + labor,
               format: "currency",
-              hint: `${fmt(silverPart)} + ${labor}`,
+              hint: `${fmt(silverPart)} + ${fmt(labor)}`,
             },
           ];
         },
@@ -701,12 +705,14 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         compute: ({ gold, discount, grams }) => {
           const base = gold * (1 - discount / 100);
           const buy = base * 0.0656 * grams;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return [
             {
               label: "ราคารับซื้อทองคำแท่งหลังหัก %",
               value: base,
               format: "currency",
-              hint: `${gold} − ${discount}%`,
+              hint: `${fmt(gold)} − ${discount}%`,
             },
             {
               label: "ราคารับซื้อ",
@@ -777,12 +783,14 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         compute: ({ gold, discount, grams }) => {
           const base = gold * (1 - discount / 100);
           const buy = base * 0.0656 * grams;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
           return [
             {
               label: "ราคารับซื้อทองคำแท่งหลังหัก %",
               value: base,
               format: "currency",
-              hint: `${gold} − ${discount}%`,
+              hint: `${fmt(gold)} − ${discount}%`,
             },
             {
               label: "ราคารับซื้อ",
@@ -1438,7 +1446,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาที่ใช้รูดจริง",
               value: swiped,
               format: "currency",
-              hint: `${price} + 3%`,
+              hint: `${fmt(price)} + 3%`,
             },
             {
               label: "ดอกเบี้ย/เดือน",
@@ -1487,20 +1495,24 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         inputs: [
           { id: "amount", label: "ยอดรูดเต็ม", suffix: "฿" },
         ],
-        compute: ({ amount }) => [
-          {
-            label: "ค่าธรรมเนียม (5%)",
-            value: amount * 0.05,
-            format: "currency",
-            hint: `${amount} × 5%`,
-          },
-          {
-            label: "ลูกค้าได้เงินคืน",
-            value: amount * 0.95,
-            format: "currency",
-            hint: `${amount} × 95%`,
-          },
-        ],
+        compute: ({ amount }) => {
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return [
+            {
+              label: "ค่าธรรมเนียม (5%)",
+              value: amount * 0.05,
+              format: "currency",
+              hint: `${fmt(amount)} × 5%`,
+            },
+            {
+              label: "ลูกค้าได้เงินคืน",
+              value: amount * 0.95,
+              format: "currency",
+              hint: `${fmt(amount)} × 95%`,
+            },
+          ];
+        },
       },
     ],
   },
@@ -1596,7 +1608,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
               label: "ราคาขายรวม (ทอง + ค่าแรง)",
               value: sellTotal,
               format: "currency",
-              hint: `(${gold} × 0.0656 × ${weight}) + ${labor}`,
+              hint: `(${fmt(gold)} × 0.0656 × ${weight}) + ${fmt(labor)}`,
             },
             {
               label: "ราคารับซื้อคืน (VAT)",
