@@ -19,6 +19,13 @@ import Diamond from "../shared/Diamond";
 import GoldDivider from "../shared/GoldDivider";
 import LeaveTypeCard from "./LeaveTypeCard";
 
+/** "YYYY-MM-DD" → "YYYY-MM-<last day>" (cap ลาป่วยข้ามเดือน) */
+function endOfMonthYmd(ymd: string): string {
+  const [y, m] = ymd.split("-").map((s) => parseInt(s, 10));
+  const last = new Date(y, m, 0).getDate();
+  return `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
+}
+
 interface RequestTabProps {
   profile: any;
   allLeaves: LeaveEntry[];
@@ -115,7 +122,20 @@ export default function RequestTab({
               key={lt.id}
               lt={lt}
               selected={form.type}
-              onClick={() => setForm({ ...form, type: lt.id })}
+              onClick={() =>
+                setForm((f) => ({
+                  ...f,
+                  type: lt.id,
+                  // เปลี่ยนเป็นลาป่วย → ถ้า range คร่อมเดือน ล้าง endDate ทิ้ง
+                  endDate:
+                    lt.id === "sick" &&
+                    f.startDate &&
+                    f.endDate &&
+                    f.startDate.slice(0, 7) !== f.endDate.slice(0, 7)
+                      ? ""
+                      : f.endDate,
+                }))
+              }
               balance={balance[lt.id] || 15}
               used={used[lt.id] || 0}
             />
@@ -135,7 +155,13 @@ export default function RequestTab({
           setForm((f) => ({
             ...f,
             startDate: v,
-            endDate: f.endDate && f.endDate < v ? "" : f.endDate,
+            // ล้าง endDate ถ้า: ก่อน startDate ใหม่ · ลาป่วยและคนละเดือนกับ startDate
+            endDate:
+              f.endDate &&
+              (f.endDate < v ||
+                (f.type === "sick" && f.endDate.slice(0, 7) !== v.slice(0, 7)))
+                ? ""
+                : f.endDate,
           }))
         }
         minDate={TODAY}
@@ -146,6 +172,12 @@ export default function RequestTab({
         value={form.endDate}
         onChange={(v) => setForm((f) => ({ ...f, endDate: v }))}
         minDate={form.startDate || TODAY}
+        maxDate={
+          // ลาป่วยห้ามข้ามเดือน → cap ที่วันสุดท้ายของเดือน startDate
+          form.type === "sick" && form.startDate
+            ? endOfMonthYmd(form.startDate)
+            : undefined
+        }
         error={errors.endDate}
       />
       {days > 0 && (
