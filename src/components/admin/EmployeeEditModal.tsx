@@ -12,17 +12,14 @@ import {
   Lightbulb as IconLightbulb,
   Lock as IconLock,
   MessageCircle as IconMessageCircle,
-  Minus as IconMinus,
   Package as IconPackage,
   Pencil as IconPencil,
   Plus as IconPlus,
   RefreshCw as IconRefresh,
-  RotateCcw as IconRevert,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
   Ticket as IconTicket,
   Trash2 as IconTrash,
-  TrendingUp as IconTrendingUp,
   User as IconUser,
   X as IconX,
 } from "lucide-react";
@@ -37,7 +34,11 @@ import {
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
+import AnnualRaiseSection from "./AnnualRaiseSection";
 import { clearEmployeeDraft } from "./employeeEditFields";
+import RecurringItemsEditor, {
+  type RecurringItem,
+} from "./RecurringItemsEditor";
 
 type EditingRole = Record<string, any>;
 
@@ -677,223 +678,28 @@ export default function EmployeeEditModal({
               </div>
             </div>
 
-            {/* Annual Raises — การขึ้นเงินเดือนประจำปี
-                (raiseSource / effectiveBase / raiseHistory คำนวณข้างบน · memo) */}
-            {(() => {
-              const startWM = currentStartWorkMonth;
-              const autoAmount = currentAutoRaiseAmount;
-              const effective = effectiveBase;
-              const history = raiseHistory;
-
-              function updateRaises(next: Record<string, number>) {
+            {/* Annual Raises — การขึ้นเงินเดือนประจำปี (extracted component) */}
+            <AnnualRaiseSection
+              startWorkMonth={currentStartWorkMonth}
+              effectiveBase={effectiveBase}
+              history={raiseHistory}
+              currentRaises={currentRaises}
+              draftAutoAmount={editingAnnualRaiseAmount}
+              savedAutoAmount={employee.annualRaiseAmount ?? ""}
+              draftRaises={editingAnnualRaises}
+              onChangeAutoAmount={(raw) =>
+                setEditingRole((prev) => ({
+                  ...prev,
+                  [`${employee.id}:annualRaiseAmount`]: raw,
+                }))
+              }
+              onChangeRaises={(next) =>
                 setEditingRole((prev) => ({
                   ...prev,
                   [`${employee.id}:annualRaises`]: next,
-                }));
+                }))
               }
-
-              return (
-                <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <IconTrendingUp
-                      size={12}
-                      strokeWidth={2.4}
-                      className="text-maroon"
-                    />
-                    <label className="text-xs text-maroon font-bold flex-1">
-                      การขึ้นเงินเดือนประจำปี
-                    </label>
-                  </div>
-
-                  {/* เงินเดือนปัจจุบัน (effective) */}
-                  <div className="mb-2.5 px-2.5 py-2 rounded-[8px] bg-white border border-bdr/40 flex items-baseline justify-between">
-                    <span className="text-[11px] text-txt-soft">
-                      เงินเดือนพื้นฐานปัจจุบัน
-                    </span>
-                    <span className="text-base font-extrabold text-maroon tabular-nums">
-                      {effective.toLocaleString("th-TH")}{" "}
-                      <span className="text-[10px] text-txt-soft font-normal">
-                        ฿
-                      </span>
-                    </span>
-                  </div>
-
-                  {/* AUTO raise amount — ตั้งครั้งเดียว · apply ทุก Jan */}
-                  <div className="mb-2.5 p-2.5 rounded-[8px] bg-white border border-bdr/40">
-                    <div className="text-[11px] font-bold text-maroon mb-1.5">
-                      ขึ้นเงินเดือนประจำปี (AUTO ทุก Jan)
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
-                          ฿
-                        </span>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          min="0"
-                          placeholder="0"
-                          value={
-                            editingAnnualRaiseAmount !== undefined
-                              ? editingAnnualRaiseAmount
-                              : (employee.annualRaiseAmount ?? "")
-                          }
-                          onChange={(e) =>
-                            setEditingRole((prev) => ({
-                              ...prev,
-                              [`${employee.id}:annualRaiseAmount`]:
-                                e.target.value,
-                            }))
-                          }
-                          className={`w-full py-[9px] pr-3 pl-7 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] tabular-nums ${editingAnnualRaiseAmount !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
-                        />
-                      </div>
-                      <span className="text-xs text-txt-soft shrink-0">
-                        บาท/ปี
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-txt-soft mt-1.5 leading-relaxed">
-                      ตั้งครั้งเดียว · apply ทุกปี Jan ที่ทำงานครบรอบ · 0 = ไม่ขึ้นแบบ auto
-                      (กำหนดเฉพาะปีพิเศษได้ในประวัติ)
-                    </div>
-                  </div>
-
-                  {/* ประวัติการขึ้น — card per year พร้อมแก้ไข */}
-                  {history.length > 0 ? (
-                    <div>
-                      <div className="text-[11px] font-bold text-maroon mb-1.5">
-                        ประวัติการขึ้นเงินเดือน
-                      </div>
-                      <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-0.5">
-                        {history.map(({ year, amount, isOverride }) => {
-                          // กำลังแก้ไขปีนี้อยู่ใน draft (เพิ่งกด "แก้ไข" หรือกำลังพิมพ์)
-                          // — แสดง input · นอกนั้น display read-only (ทั้ง auto + saved override)
-                          const editingThisYear =
-                            editingAnnualRaises !== undefined &&
-                            editingAnnualRaises[String(year)] !== undefined;
-                          return (
-                            <div
-                              key={`raise-${year}`}
-                              className="p-2.5 rounded-[10px] bg-white border border-bdr/60"
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <span className="text-xs font-extrabold text-txt-mid w-14 shrink-0">
-                                  ปี {year + 543}
-                                </span>
-                                {editingThisYear ? (
-                                  <>
-                                    <div className="relative flex-1">
-                                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                                        +฿
-                                      </span>
-                                      <input
-                                        type="number"
-                                        inputMode="decimal"
-                                        min="0"
-                                        value={currentRaises[String(year)] ?? 0}
-                                        onChange={(e) => {
-                                          const raw = e.target.value;
-                                          const next = { ...currentRaises };
-                                          if (raw === "") {
-                                            next[String(year)] = 0;
-                                          } else {
-                                            const v = Number(raw);
-                                            next[String(year)] =
-                                              Number.isFinite(v) && v >= 0
-                                                ? v
-                                                : 0;
-                                          }
-                                          updateRaises(next);
-                                        }}
-                                        className="w-full py-1.5 pr-2 pl-7 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] border-gold/60 bg-white tabular-nums"
-                                      />
-                                    </div>
-                                    <span className="text-[10px] text-txt-soft shrink-0">
-                                      ฿
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const next = { ...currentRaises };
-                                        delete next[String(year)];
-                                        updateRaises(next);
-                                      }}
-                                      title="ลบที่กำหนดเอง · กลับมาใช้จำนวน auto"
-                                      className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-[6px] border border-bdr bg-cream text-txt-mid text-[10px] font-bold cursor-pointer font-[inherit] hover:bg-white active:scale-[0.96]"
-                                    >
-                                      <IconRevert size={10} strokeWidth={2.5} />
-                                      คืนค่า auto
-                                    </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="flex-1 text-sm font-extrabold text-maroon text-right tabular-nums">
-                                      {amount > 0
-                                        ? `+${amount.toLocaleString("th-TH")} ฿`
-                                        : "—"}
-                                    </span>
-                                    {amount === 0 && (
-                                      <span className="text-[10px] text-txt-soft italic shrink-0">
-                                        ไม่ขึ้น
-                                      </span>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        updateRaises({
-                                          ...currentRaises,
-                                          [String(year)]: amount,
-                                        })
-                                      }
-                                      className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-[6px] border border-gold/40 bg-cream text-maroon text-[10px] font-bold cursor-pointer font-[inherit] active:scale-[0.96]"
-                                    >
-                                      <IconPencil size={10} strokeWidth={2.4} />
-                                      แก้ไข
-                                    </button>
-                                    {/* saved override ที่ไม่ได้ edit อยู่ → ปุ่ม "↻ คืนค่า auto" ใช้ revert ได้ตรงๆ */}
-                                    {isOverride && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const next = { ...currentRaises };
-                                          delete next[String(year)];
-                                          updateRaises(next);
-                                        }}
-                                        title="ลบที่กำหนดเอง · กลับมาใช้จำนวน auto"
-                                        className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-[6px] border border-bdr bg-cream text-txt-mid text-[10px] font-bold cursor-pointer font-[inherit] hover:bg-white active:scale-[0.96]"
-                                      >
-                                        <IconRevert
-                                          size={10}
-                                          strokeWidth={2.5}
-                                        />
-                                        คืนค่า auto
-                                      </button>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-                              <div className="text-[9px] text-txt-soft mt-1 text-right">
-                                {isOverride
-                                  ? "(กำหนดเอง · ปีพิเศษ)"
-                                  : "(ตามค่า auto)"}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : !startWM ? (
-                    <div className="text-[11px] text-txt-soft italic text-center py-2">
-                      ตั้ง "วันที่เริ่มงาน" ก่อนเพื่อพิจารณาขึ้นเงินเดือน
-                    </div>
-                  ) : (
-                    <div className="text-[11px] text-txt-soft italic text-center py-2">
-                      ยังทำงานไม่ครบ 1 ปี · เริ่มขึ้นได้ปีหน้า (Jan)
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            />
 
             {/* Disable Salary toggle */}
             {(() => {
@@ -1408,150 +1214,3 @@ function TabButton({
   );
 }
 
-/* ─── รายการประจำเดือน (รายรับ + รายจ่าย) — admin เพิ่ม/ลบได้
-       items ใส่ครั้งเดียว เด่นทุกๆ เดือนใน calculateSalary ────────── */
-type RecurringItem = {
-  id: string;
-  type: "income" | "deduction";
-  label: string;
-  amount: number;
-};
-
-function RecurringItemsEditor({
-  items,
-  onChange,
-}: {
-  items: RecurringItem[];
-  onChange: (next: RecurringItem[]) => void;
-}) {
-  const incomes = items.filter((i) => i.type === "income");
-  const deductions = items.filter((i) => i.type === "deduction");
-
-  const addItem = (type: "income" | "deduction") => {
-    const id = `${type}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
-    onChange([...items, { id, type, label: "", amount: 0 }]);
-  };
-
-  const updateItem = (id: string, patch: Partial<RecurringItem>) => {
-    onChange(items.map((it) => (it.id === id ? { ...it, ...patch } : it)));
-  };
-
-  const removeItem = (id: string) => {
-    onChange(items.filter((it) => it.id !== id));
-  };
-
-  return (
-    <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-      <label className="text-xs text-maroon font-bold mb-3 flex items-center gap-1.5">
-        <IconPlus size={12} strokeWidth={2.4} />
-        รายการประจำเดือน
-        <span className="font-normal text-txt-soft">(ใช้ทุกเดือน จนกว่าจะลบ)</span>
-      </label>
-
-      {/* รายรับ */}
-      <div className="mb-3.5">
-        <div className="text-xs font-bold text-green mb-2 inline-flex items-center gap-1">
-          <IconPlus size={12} strokeWidth={2.6} />
-          รายรับ
-        </div>
-        <div className="flex flex-col gap-2">
-          {incomes.map((item) => (
-            <RecurringItemRow
-              key={item.id}
-              item={item}
-              tint="green"
-              onLabel={(v) => updateItem(item.id, { label: v })}
-              onAmount={(v) => updateItem(item.id, { amount: v })}
-              onRemove={() => removeItem(item.id)}
-            />
-          ))}
-          <button
-            type="button"
-            onClick={() => addItem("income")}
-            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-dashed border-green/60 bg-green-lt/40 text-green text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
-          >
-            <IconPlus size={14} strokeWidth={2.4} />
-            เพิ่มรายการรายรับ
-          </button>
-        </div>
-      </div>
-
-      <div className="h-px bg-gold/25 my-3" />
-
-      {/* รายจ่าย */}
-      <div>
-        <div className="text-xs font-bold text-red mb-2 inline-flex items-center gap-1">
-          <IconMinus size={12} strokeWidth={2.6} />
-          รายจ่าย
-        </div>
-        <div className="flex flex-col gap-2">
-          {deductions.map((item) => (
-            <RecurringItemRow
-              key={item.id}
-              item={item}
-              tint="red"
-              onLabel={(v) => updateItem(item.id, { label: v })}
-              onAmount={(v) => updateItem(item.id, { amount: v })}
-              onRemove={() => removeItem(item.id)}
-            />
-          ))}
-          <button
-            type="button"
-            onClick={() => addItem("deduction")}
-            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-dashed border-red/50 bg-red-lt/40 text-red text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
-          >
-            <IconPlus size={14} strokeWidth={2.4} />
-            เพิ่มรายการรายจ่าย
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RecurringItemRow({
-  item,
-  tint,
-  onLabel,
-  onAmount,
-  onRemove,
-}: {
-  item: RecurringItem;
-  tint: "green" | "red";
-  onLabel: (v: string) => void;
-  onAmount: (v: number) => void;
-  onRemove: () => void;
-}) {
-  const borderCls =
-    tint === "green"
-      ? "border-green/40 bg-green-lt/30"
-      : "border-red/30 bg-red-lt/30";
-  return (
-    <div
-      className={`flex gap-1.5 items-center p-1.5 rounded-[8px] border ${borderCls}`}
-    >
-      <input
-        type="text"
-        value={item.label}
-        onChange={(e) => onLabel(e.target.value)}
-        placeholder="ชื่อรายการ"
-        className="flex-1 min-w-0 py-1.5 px-2 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-txt bg-white border border-bdr"
-      />
-      <input
-        type="number"
-        value={item.amount || ""}
-        onChange={(e) => onAmount(parseFloat(e.target.value) || 0)}
-        placeholder="0"
-        className="shrink-0 w-[100px] py-1.5 px-2 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-txt bg-white border border-bdr text-right"
-      />
-      <button
-        type="button"
-        aria-label="ลบรายการ"
-        onClick={onRemove}
-        className="shrink-0 w-7 h-7 rounded-[6px] border border-bdr bg-white text-txt-soft cursor-pointer flex items-center justify-center"
-      >
-        <IconTrash size={12} strokeWidth={2.4} />
-      </button>
-    </div>
-  );
-}
