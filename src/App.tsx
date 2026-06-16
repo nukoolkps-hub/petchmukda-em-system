@@ -537,6 +537,7 @@ export default function LeaveApp() {
               advanceRequests={myAdvanceRequests}
               onSubmit={handleSubmitAdvance}
               onClose={() => setShowAdvanceModal(false)}
+              showToast={showToast}
             />
           )}
 
