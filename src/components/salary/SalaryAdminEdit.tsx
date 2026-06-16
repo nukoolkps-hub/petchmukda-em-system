@@ -1622,7 +1622,7 @@ export default function SalaryAdminEdit({
             onClick={cancelAll}
             className="flex-1 py-3 rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
           >
-            ยกเลิกการแก้ไข
+            ยกเลิก
           </button>
           <button
             onClick={saveAll}
@@ -1634,7 +1634,7 @@ export default function SalaryAdminEdit({
             ) : (
               <IconCheck size={14} strokeWidth={2.5} />
             )}
-            {locked ? "ปิดรอบแล้ว" : saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
+            {locked ? "ปิดรอบแล้ว" : saving ? "กำลังบันทึก..." : "บันทึก"}
           </button>
         </div>
       )}
