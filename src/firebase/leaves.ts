@@ -9,7 +9,6 @@ import {
   orderBy,
   query,
   updateDoc,
-  where,
 } from "firebase/firestore";
 import type { LeaveEntry } from "../types";
 import { COLLECTIONS, db } from "./config";
@@ -33,24 +32,6 @@ export function subscribeLeaves(
       console.error("[Leaves] subscribe error:", err);
       onError?.(err);
     },
-  );
-}
-
-/* ─── Subscribe leaves for specific employee ───────────────── */
-export function subscribeLeavesByEmployeeId(
-  employeeId: string,
-  onChange: (leaves: LeaveEntry[]) => void,
-  onError?: (err: Error) => void,
-) {
-  return onSnapshot(
-    query(ref, where("employeeId", "==", employeeId), orderBy("start", "desc")),
-    (snap) => {
-      const list = snap.docs.map(
-        (d) => ({ id: d.id, ...d.data() }) as LeaveEntry,
-      );
-      onChange(list);
-    },
-    onError,
   );
 }
 

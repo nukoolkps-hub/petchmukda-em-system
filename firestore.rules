@@ -141,10 +141,11 @@ service cloud.firestore {
     }
 
     // ─── Leaves ──────────────────────────────────────────────────
-    // อ่าน/สร้าง/ลบ: admin หรือเจ้าของ employee document
+    // อ่าน: ทุกคน signed-in (ปฏิทินทีม + กันลาทับวันเพื่อน)
+    // สร้าง/ลบ: admin หรือเจ้าของ employee document
     // แก้ไข: admin only
     match /leaves/{leaveId} {
-      allow read:   if isAdmin() || isEmployeeOwner(resource.data.employeeId);
+      allow read:   if isSignedIn();
       // สร้าง/แก้/ลบ ของเดือนที่ปิดรอบแล้ว (locked) ไม่ได้ — แม้แต่ admin
       // admin สร้างให้พนักงานคนอื่นได้ (ลืมกดลา) · พนักงานสร้างของตัวเองได้
       allow create: if (isAdmin() || isEmployeeOwner(request.resource.data.employeeId))
