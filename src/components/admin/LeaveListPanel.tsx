@@ -9,8 +9,13 @@ import {
   Trash2 as IconTrash,
   X as IconX,
 } from "lucide-react";
-import { useState } from "react";
-import { COLORS, LEAVE_TYPES, TODAY } from "../../constants";
+import { useMemo, useState } from "react";
+import {
+  COLORS,
+  LEAVE_TYPES,
+  THAI_MONTH_NAMES,
+  TODAY,
+} from "../../constants";
 import type {
   Employee,
   LeaveEntry,
@@ -49,7 +54,17 @@ export default function LeaveListPanel({
 }: LeaveListPanelProps) {
   const [employeeFilter, setFilterEmp] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [filterMonth, setFilterMonth] = useState(""); // "" = ทุกเดือน
   const [confirmLeave, setConfirmLeave] = useState<any>(null);
+
+  // เดือนที่มีใบลา (YYYY-MM · ใหม่→เก่า) — ใช้เป็น option ใน month filter
+  const availableMonths = useMemo(
+    () =>
+      Array.from(
+        new Set(allLeaves.map((lv) => lv.start.slice(0, 7))),
+      ).sort((a, b) => b.localeCompare(a)),
+    [allLeaves],
+  );
 
   /* ─── Add-leave form (collapsible) ─── */
   const [addOpen, setAddOpen] = useState(false);
@@ -91,7 +106,9 @@ export default function LeaveListPanel({
         createdAt: Date.now(),
         createdByAdmin: true,
       });
-      showToast?.(`เพิ่มการลาให้ ${emp.name} แล้ว (${previewDays} วัน)`);
+      showToast?.(
+        `เพิ่มการลาให้ ${emp.nickname || emp.name} แล้ว (${previewDays} วัน)`,
+      );
       resetForm();
       setAddOpen(false);
     } catch (err) {
@@ -107,6 +124,7 @@ export default function LeaveListPanel({
   const filteredLeaves = allLeaves
     .filter((lv) => !employeeFilter || lv.employeeId === employeeFilter)
     .filter((lv) => !filterType || lv.type === filterType)
+    .filter((lv) => !filterMonth || lv.start.startsWith(filterMonth))
     .sort((a, b) => b.start.localeCompare(a.start));
 
   // เดือนที่ปิดรอบแล้ว — precompute ครั้งเดียวจาก payrollConfirms (กี่เดือน
@@ -152,7 +170,7 @@ export default function LeaveListPanel({
                 <option value="">— เลือกพนักงาน —</option>
                 {employeeDirectory.map((emp) => (
                   <option key={emp.id} value={emp.id}>
-                    {emp.name}
+                    {emp.nickname || emp.name}
                   </option>
                 ))}
               </select>
@@ -241,19 +259,23 @@ export default function LeaveListPanel({
         )}
       </div>
 
-      <div className="flex gap-2 mb-3.5">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-2 mb-3.5">
+        <div className="relative">
           <select
-            value={employeeFilter}
-            onChange={(e) => setFilterEmp(e.target.value)}
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value)}
             className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
           >
-            <option value="">พนักงานทั้งหมด</option>
-            {employeeDirectory.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.name}
-              </option>
-            ))}
+            <option value="">ทุกเดือน</option>
+            {availableMonths.map((ym) => {
+              const [y, mo] = ym.split("-");
+              return (
+                <option key={ym} value={ym}>
+                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
+                  {parseInt(y, 10) + 543}
+                </option>
+              );
+            })}
           </select>
           <IconChevronDown
             size={14}
@@ -261,24 +283,45 @@ export default function LeaveListPanel({
             className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
           />
         </div>
-        <div className="relative flex-1">
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
-          >
-            <option value="">ประเภททั้งหมด</option>
-            {LEAVE_TYPES.map((lt) => (
-              <option key={lt.id} value={lt.id}>
-                {lt.label}
-              </option>
-            ))}
-          </select>
-          <IconChevronDown
-            size={14}
-            strokeWidth={2.4}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-          />
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <select
+              value={employeeFilter}
+              onChange={(e) => setFilterEmp(e.target.value)}
+              className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
+            >
+              <option value="">พนักงานทั้งหมด</option>
+              {employeeDirectory.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.nickname || emp.name}
+                </option>
+              ))}
+            </select>
+            <IconChevronDown
+              size={14}
+              strokeWidth={2.4}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+            />
+          </div>
+          <div className="relative flex-1">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
+            >
+              <option value="">ประเภททั้งหมด</option>
+              {LEAVE_TYPES.map((lt) => (
+                <option key={lt.id} value={lt.id}>
+                  {lt.label}
+                </option>
+              ))}
+            </select>
+            <IconChevronDown
+              size={14}
+              strokeWidth={2.4}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+            />
+          </div>
         </div>
       </div>
       {filteredLeaves.length === 0 && (
@@ -311,7 +354,10 @@ export default function LeaveListPanel({
               />
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-txt text-base mb-[3px] flex items-center gap-1.5 flex-wrap">
-                  {employeeInfo?.name || lv.employeeName}
+                  {employeeInfo?.nickname ||
+                    lv.employeeNickname ||
+                    employeeInfo?.name ||
+                    lv.employeeName}
                   {isFuture(lv.start) && (
                     <span className="text-xs font-bold px-1.5 py-px rounded-[10px] bg-gold-pale text-maroon border border-[#C9973A40] inline-flex items-center gap-0.5">
                       <IconFastForward size={10} strokeWidth={2.4} />
