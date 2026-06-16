@@ -36,6 +36,7 @@ import {
   employeeHasPoolExemptDuty,
 } from "../utils/dutyUtils";
 import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
+import { getEffectiveBaseSalary } from "../utils/salaryUtils";
 import {
   isMonthLocked,
   monthOf,
@@ -243,7 +244,9 @@ export default function useFirebaseAppData({
           poolThresholdExempt,
           coveragePay: coverage.total,
           coveragePayBreakdown: coverage.breakdown,
-          baseSalary: employee.baseSalary ?? 0,
+          // snapshot effective base ของปีในเดือนนั้น — รวม raises ที่ได้รับมาแล้ว
+          // → past months frozen ตามค่าตอน save · raise ในอนาคตไม่กระทบเดือนเก่า
+          baseSalary: getEffectiveBaseSalary(employee, yearMonth),
           singlePieceRate: employee.singlePieceRate ?? 0,
           normalSalePieceRate: employee.normalSalePieceRate ?? 0,
           specialSalePieceRate: employee.specialSalePieceRate ?? 0,

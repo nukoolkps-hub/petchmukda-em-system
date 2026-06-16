@@ -12,6 +12,83 @@ const {
   LEAVE_DEDUCTION_FREE_DAYS,
 } = BUSINESS_RULES;
 
+/* ─── Annual Raise Helpers ───────────────────────────────────────
+   เงินเดือนปัจจุบัน = baseSalary (ตอนเริ่มทำงาน) + Σ raises ที่ year ≤ ปี
+   ที่ต้องการคำนวณ · raise มีผลตั้งแต่ Jan ของปีนั้น                          */
+
+interface RaiseSource {
+  baseSalary?: number;
+  annualRaises?: Record<string, number>;
+}
+
+/** เงินเดือนพื้นฐาน "ของเดือน YYYY-MM" — รวม raises ของปีนั้นและก่อนหน้า ·
+ *  ใช้ตอนคำนวณเงินเดือน live · admin ปรับ raise แล้วเดือนปัจจุบันเปลี่ยนทันที */
+export function getEffectiveBaseSalary(
+  source: RaiseSource | null | undefined,
+  yearMonthOrYear?: string,
+): number {
+  if (!source) return 0;
+  const base = source.baseSalary ?? 0;
+  const raises = source.annualRaises ?? {};
+  // default = ปีปัจจุบัน (ตามเครื่อง user)
+  const targetYear = (() => {
+    if (yearMonthOrYear) {
+      const ys = yearMonthOrYear.slice(0, 4);
+      const y = parseInt(ys, 10);
+      if (Number.isFinite(y)) return y;
+    }
+    return new Date().getFullYear();
+  })();
+  let sum = base;
+  for (const [yearStr, amount] of Object.entries(raises)) {
+    const y = parseInt(yearStr, 10);
+    if (Number.isFinite(y) && y <= targetYear) {
+      sum += Number(amount) || 0;
+    }
+  }
+  return Math.max(0, sum);
+}
+
+/** ตรวจว่าพนักงานทำงานครบ 1 ปีก่อน Jan 1 ของ raiseYear หรือไม่ ·
+ *  เกณฑ์: (raiseDate − startDate) ≥ 365 วัน · startWorkMonth = YYYY-MM
+ *  → treat เป็นวันที่ 1 ของเดือนนั้น                                       */
+export function isEligibleForRaiseYear(
+  startWorkMonth: string | undefined | null,
+  raiseYear: number,
+): boolean {
+  if (!startWorkMonth) return false;
+  const [ys, ms] = startWorkMonth.split("-");
+  const sy = parseInt(ys ?? "", 10);
+  const sm = parseInt(ms ?? "", 10);
+  if (!Number.isFinite(sy) || !Number.isFinite(sm)) return false;
+  const startMs = Date.UTC(sy, sm - 1, 1);
+  const raiseMs = Date.UTC(raiseYear, 0, 1);
+  const days = (raiseMs - startMs) / (1000 * 60 * 60 * 24);
+  return days >= 365;
+}
+
+/** ปีที่ admin ยังควรพิจารณาขึ้นเงินเดือน — ปีแรกที่ eligible แล้วยังไม่มี
+ *  entry ใน annualRaises · null ถ้าครบหมดแล้วหรือยังไม่เริ่มทำงาน          */
+export function nextRaiseYearToReview(
+  startWorkMonth: string | undefined | null,
+  annualRaises: Record<string, number> | undefined,
+  currentYear?: number,
+): number | null {
+  if (!startWorkMonth) return null;
+  const ys = startWorkMonth.slice(0, 4);
+  const startYear = parseInt(ys, 10);
+  if (!Number.isFinite(startYear)) return null;
+  const raises = annualRaises ?? {};
+  const now = currentYear ?? new Date().getFullYear();
+  // เริ่มสแกนจาก ปี startYear+1 → ถึงปีปัจจุบัน+1 (เผื่อ admin set ล่วงหน้าได้
+  // 1 ปี เช่น มิ.ย. 2026 ตั้ง raise สำหรับ Jan 2027)
+  for (let y = startYear + 1; y <= now + 1; y++) {
+    if (!isEligibleForRaiseYear(startWorkMonth, y)) continue;
+    if (raises[String(y)] === undefined) return y;
+  }
+  return null;
+}
+
 /* ─── Pool Share Helper (สูตรตาม Excel) ──────────────────────────
    ฝั่ง "ขาย"   = เกณฑ์ 80% ใช้ (ทั่วไป+พิเศษ) · กองกลางที่หารแบ่งใช้ "ทั่วไป" เท่านั้น
                   − poolAdjustment.excludedNormalPieces (สินค้าโปรโมชั่น ฯลฯ)
@@ -341,7 +418,14 @@ export function calculateSalary(
   // baseSalary ใช้ || (ไม่ใช่ ??) — ค่า 0 ถือว่า "ยังไม่ได้ตั้ง" (เงินเดือน
   // พื้นฐานไม่มีทางเป็น 0 จริง) จึง fallback ไปเรทปัจจุบัน กัน data เก่าที่เผลอ
   // เก็บ baseSalary:0 ไว้ทำให้แถวเงินเดือนพื้นฐานหาย
-  const baseSalaryAmount = salary.baseSalary || rates?.baseSalary || 0;
+  // — สำหรับ live fallback (เดือนที่ยังไม่มี snapshot) ใช้ effective base
+  //   salary ของปีนั้น (baseSalary + Σ annualRaises ≤ year) เพื่อสะท้อนการ
+  //   ขึ้นเงินเดือนประจำปีทันที
+  const liveEffectiveBase = getEffectiveBaseSalary(
+    rates,
+    loanContext?.yearMonth,
+  );
+  const baseSalaryAmount = salary.baseSalary || liveEffectiveBase || 0;
   const socialSecurityAmount =
     salary.socialSecurity ?? rates?.socialSecurity ?? 0;
   const dailySalaryRate = baseSalaryAmount / DAYS_PER_MONTH;

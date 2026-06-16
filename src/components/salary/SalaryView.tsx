@@ -40,6 +40,7 @@ import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import {
   calculateSalary,
   computePoolSharesForGroup,
+  getEffectiveBaseSalary,
 } from "../../utils/salaryUtils";
 import AdvanceHistoryModal from "../modals/AdvanceHistoryModal";
 import PoolFlowModal from "../modals/PoolFlowModal";
@@ -424,6 +425,11 @@ export default function SalaryView({
             />
           </summary>
           <div className="px-4 pb-3 pt-2 border-t border-bdr/40 space-y-1.5">
+            <RateRow
+              label="เงินเดือนปัจจุบัน"
+              value={getEffectiveBaseSalary(employeeInfo, selectedMonth)}
+              suffix="฿/เดือน"
+            />
             {employeeRole.poolGroup ? (
               <>
                 <RateRow

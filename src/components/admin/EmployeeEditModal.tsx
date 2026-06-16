@@ -21,12 +21,18 @@ import {
   Sparkles as IconSparkles,
   Ticket as IconTicket,
   Trash2 as IconTrash,
+  TrendingUp as IconTrendingUp,
   User as IconUser,
   X as IconX,
 } from "lucide-react";
 import { useState } from "react";
 import { COLORS } from "../../constants";
 import type { Employee, Role } from "../../types";
+import {
+  getEffectiveBaseSalary,
+  isEligibleForRaiseYear,
+  nextRaiseYearToReview,
+} from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
@@ -79,6 +85,9 @@ export default function EmployeeEditModal({
   const editingRecurringItems = editingRole[`${employee.id}:recurringItems`] as
     | RecurringItem[]
     | undefined;
+  const editingAnnualRaises = editingRole[`${employee.id}:annualRaises`] as
+    | Record<string, number>
+    | undefined;
   const dirty =
     editingNormalSalePieceRate !== undefined ||
     editingSpecialSalePieceRate !== undefined ||
@@ -94,7 +103,8 @@ export default function EmployeeEditModal({
     editingPoolExclusion !== undefined ||
     editingName !== undefined ||
     editingNickname !== undefined ||
-    editingRecurringItems !== undefined;
+    editingRecurringItems !== undefined ||
+    editingAnnualRaises !== undefined;
 
   const clearDraft = () =>
     setEditingRole((prev) => clearEmployeeDraft(prev, employee.id));
@@ -166,6 +176,19 @@ export default function EmployeeEditModal({
         }))
         .filter((it) => it.label || it.amount > 0); // ทิ้งรายการว่าง
       await onUpdateRole(employee.id, "recurringItems", cleaned);
+    }
+    if (editingAnnualRaises !== undefined) {
+      // sanitize: filter undefined keys + force numeric values · เก็บ 0 ไว้
+      // (admin ตัดสินใจ "ไม่ขึ้น" สำหรับปีนั้น) เป็น explicit record
+      const cleaned: Record<string, number> = {};
+      for (const [year, amount] of Object.entries(editingAnnualRaises)) {
+        const yr = parseInt(year, 10);
+        const amt = Number(amount);
+        if (Number.isFinite(yr) && Number.isFinite(amt) && amt >= 0) {
+          cleaned[String(yr)] = amt;
+        }
+      }
+      await onUpdateRole(employee.id, "annualRaises", cleaned);
     }
     if (editingSalaryDisabled !== undefined)
       await onUpdateRole(employee.id, "salaryDisabled", editingSalaryDisabled);
@@ -590,6 +613,168 @@ export default function EmployeeEditModal({
                 หน่วย: บาท/เดือน (หักทุกเดือนอัตโนมัติ)
               </div>
             </div>
+
+            {/* Annual Raises — การขึ้นเงินเดือนประจำปี */}
+            {(() => {
+              const currentRaises =
+                editingAnnualRaises !== undefined
+                  ? editingAnnualRaises
+                  : (employee.annualRaises ?? {});
+              const baseAmt =
+                editingBaseSalary !== undefined
+                  ? parseFloat(editingBaseSalary) || 0
+                  : (employee.baseSalary ?? 0);
+              const effective = getEffectiveBaseSalary({
+                baseSalary: baseAmt,
+                annualRaises: currentRaises,
+              });
+              const startWM =
+                editingStartWorkMonth !== undefined
+                  ? editingStartWorkMonth
+                  : employee.startWorkMonth || "";
+              const nextYear = nextRaiseYearToReview(
+                startWM || undefined,
+                currentRaises,
+              );
+              // เรียง raises จากใหม่ → เก่า
+              const raisesEntries = Object.entries(currentRaises)
+                .map(([y, a]) => [parseInt(y, 10), Number(a)] as [number, number])
+                .filter(([y]) => Number.isFinite(y))
+                .sort((a, b) => b[0] - a[0]);
+
+              function updateRaises(next: Record<string, number>) {
+                setEditingRole((prev) => ({
+                  ...prev,
+                  [`${employee.id}:annualRaises`]: next,
+                }));
+              }
+
+              return (
+                <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <IconTrendingUp
+                      size={12}
+                      strokeWidth={2.4}
+                      className="text-maroon"
+                    />
+                    <label className="text-xs text-maroon font-bold flex-1">
+                      การขึ้นเงินเดือนประจำปี
+                    </label>
+                  </div>
+
+                  {/* เงินเดือนปัจจุบัน (effective) */}
+                  <div className="mb-2 px-2.5 py-2 rounded-[8px] bg-white border border-bdr/40 flex items-baseline justify-between">
+                    <span className="text-[11px] text-txt-soft">
+                      เงินเดือนปัจจุบัน
+                    </span>
+                    <span className="text-base font-extrabold text-maroon tabular-nums">
+                      {effective.toLocaleString("th-TH")}{" "}
+                      <span className="text-[10px] text-txt-soft font-normal">
+                        ฿
+                      </span>
+                    </span>
+                  </div>
+                  {raisesEntries.length > 0 && (
+                    <div className="mb-2 text-[10px] text-txt-soft text-center italic">
+                      = {baseAmt.toLocaleString("th-TH")} (เริ่มต้น)
+                      {raisesEntries
+                        .slice()
+                        .reverse()
+                        .map(([y, a]) =>
+                          a > 0 ? ` + ${a.toLocaleString("th-TH")} (${y})` : "",
+                        )
+                        .join("")}
+                    </div>
+                  )}
+
+                  {/* List raises (newest first) */}
+                  {raisesEntries.length > 0 && (
+                    <div className="mb-2 space-y-1">
+                      {raisesEntries.map(([y, a]) => (
+                        <div
+                          key={`raise-${y}`}
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-[7px] bg-white border border-bdr/40"
+                        >
+                          <span className="text-[11px] font-bold text-txt-mid w-12 shrink-0">
+                            ปี {y}
+                          </span>
+                          <div className="relative flex-1">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                              +฿
+                            </span>
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min="0"
+                              value={a}
+                              onChange={(e) => {
+                                const v = Number(e.target.value);
+                                updateRaises({
+                                  ...currentRaises,
+                                  [String(y)]: Number.isFinite(v) ? v : 0,
+                                });
+                              }}
+                              className="w-full py-1 pr-2 pl-7 rounded-[6px] text-xs font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] border-bdr bg-white tabular-nums"
+                            />
+                          </div>
+                          {a === 0 && (
+                            <span className="text-[10px] text-txt-soft italic shrink-0">
+                              ไม่ขึ้น
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = { ...currentRaises };
+                              delete next[String(y)];
+                              updateRaises(next);
+                            }}
+                            className="shrink-0 p-1 rounded text-txt-soft hover:text-red cursor-pointer"
+                            title="ลบรายการ"
+                          >
+                            <IconTrash size={11} strokeWidth={2.4} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add next year button */}
+                  {nextYear ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateRaises({ ...currentRaises, [String(nextYear)]: 0 })
+                      }
+                      className="w-full px-3 py-2 rounded-[8px] border-[1.5px] border-dashed border-gold/60 bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                    >
+                      <IconPlus size={12} strokeWidth={2.5} />
+                      เพิ่มการขึ้นเงินเดือน ปี {nextYear}
+                    </button>
+                  ) : !startWM ? (
+                    <div className="text-[11px] text-txt-soft italic text-center py-1">
+                      ตั้ง "วันที่เริ่มงาน" ก่อนเพื่อพิจารณาขึ้นเงินเดือน
+                    </div>
+                  ) : !isEligibleForRaiseYear(
+                      startWM,
+                      new Date().getFullYear() + 1,
+                    ) ? (
+                    <div className="text-[11px] text-txt-soft italic text-center py-1">
+                      ยังทำงานไม่ครบ 1 ปี · เริ่มขึ้นได้ปีหน้า (Jan)
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-txt-soft italic text-center py-1">
+                      พิจารณาครบทุกปีแล้ว
+                    </div>
+                  )}
+
+                  <div className="text-[10px] text-txt-soft mt-2 leading-relaxed">
+                    มีผลตั้งแต่เดือนมกราคมของปีนั้น · ใส่ 0 = ไม่ขึ้นปีนั้น
+                    (ตัดสินใจแล้ว · ไม่กลับมาถามอีก)
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Disable Salary toggle */}
             {(() => {
