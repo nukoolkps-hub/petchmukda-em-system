@@ -677,7 +677,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         colWidths: ["25%", "75%"],
         colAlign: ["left", "left"],
         rows: [
-          ["ตามน้ำหนักชั่ง", "(ราคารับซื้อทองคำแท่ง − 5-7%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
+          ["ตามน้ำหนักชั่ง", "(ราคารับซื้อทองคำแท่ง − 3-5%) × 0.0656 × น้ำหนักสินค้า = ราคารับซื้อ"],
         ],
       },
       {
@@ -696,9 +696,9 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
             label: "หัก %",
             defaultValue: 5,
             options: [
+              { value: 3, label: "หัก 3%" },
+              { value: 4, label: "หัก 4%" },
               { value: 5, label: "หัก 5%" },
-              { value: 6, label: "หัก 6%" },
-              { value: 7, label: "หัก 7%" },
             ],
           },
           { id: "grams", label: "น้ำหนักสินค้า", suffix: "ก." },
