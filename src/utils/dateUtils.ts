@@ -11,6 +11,12 @@ export function addDaysYmd(ymd: string, n: number): string {
   return toYMD(new Date(y, m - 1, d + n));
 }
 
+/** "วันนี้" ค.ศ. "YYYY-MM-DD" — เรียกตอน use เพื่อไม่ stale ข้ามเที่ยงคืน
+ *  (`TODAY` ใน constants ค้างค่าตอน module import) */
+export function todayYmd(): string {
+  return toYMD(new Date());
+}
+
 export function countWorkdays(s: string, e: string): number {
   if (!s || !e) return 0;
   const S = new Date(`${s}T00:00:00`),

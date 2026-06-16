@@ -97,7 +97,9 @@ export default function LeaveListPanel({
       await onAddLeave({
         employeeId: emp.id,
         employeeName: emp.name,
-        employeeNickname: emp.nickname,
+        // ?? null กัน Firestore reject undefined (config.ts ไม่ได้เปิด
+        // ignoreUndefinedProperties · พนักงานที่ไม่ตั้งชื่อเล่นจะกลายเป็น undefined)
+        employeeNickname: emp.nickname ?? null,
         type: addType,
         start: addStart,
         end: addEnd,
@@ -122,10 +124,16 @@ export default function LeaveListPanel({
 
   // รายการลาทั้งหมด (รวมอนาคต) — admin ต้องเห็นทุกใบไม่ใช่แค่ที่ผ่านมาแล้ว
   // filter ด้วย employeeId (ไม่ใช่ชื่อ) — กันชื่อซ้ำ/เปลี่ยนชื่อ
+  // overlap check แทน startsWith — ใบลาคร่อมเดือน (พ.ค. 30 → มิ.ย. 2)
+  // ต้องเห็นทั้งสองเดือน · admin จะได้ลบ/แก้ได้ทั้งสองมุมมอง
   const filteredLeaves = allLeaves
     .filter((lv) => !employeeFilter || lv.employeeId === employeeFilter)
     .filter((lv) => !filterType || lv.type === filterType)
-    .filter((lv) => lv.start.startsWith(effectiveMonth))
+    .filter(
+      (lv) =>
+        lv.start.slice(0, 7) <= effectiveMonth &&
+        lv.end.slice(0, 7) >= effectiveMonth,
+    )
     .sort((a, b) => b.start.localeCompare(a.start));
 
   // เดือนที่ปิดรอบแล้ว — precompute ครั้งเดียวจาก payrollConfirms (กี่เดือน
