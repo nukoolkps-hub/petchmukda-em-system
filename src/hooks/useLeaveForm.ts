@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import type { LeaveEntry } from "../types";
-import { addDaysYmd, countWorkdays, fmtShort, todayYmd } from "../utils/dateUtils";
+import {
+  addDaysYmd,
+  countWorkdays,
+  fmtShort,
+  todayYmd,
+} from "../utils/dateUtils";
 
 interface UseLeaveFormOptions {
   profileName: string | null;

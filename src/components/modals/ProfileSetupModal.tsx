@@ -409,11 +409,7 @@ export default function ProfileSetupModal({
           disabled={saving || imageBusy}
           className={`flex-1 p-4 border-none rounded-[14px] text-lg font-bold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.25)] flex items-center justify-center gap-2 ${saving || imageBusy ? "bg-bdr text-txt-soft cursor-not-allowed" : "bg-maroon text-white cursor-pointer"}`}
         >
-          {saving
-            ? "กำลังบันทึก..."
-            : initial
-              ? "บันทึกการเปลี่ยนแปลง"
-              : "เริ่มใช้งาน"}
+          {saving ? "กำลังบันทึก..." : initial ? "บันทึกการเปลี่ยนแปลง" : "เริ่มใช้งาน"}
         </button>
       </div>
     </BaseModal>

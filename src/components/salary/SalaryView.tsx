@@ -40,10 +40,10 @@ import {
   computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
 import AdvanceHistoryModal from "../modals/AdvanceHistoryModal";
-import MonthChevronNav from "../shared/MonthChevronNav";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
+import MonthChevronNav from "../shared/MonthChevronNav";
 
 /* ─── Salary View (employee — read only) ───────────────────────── */
 export default function SalaryView({
