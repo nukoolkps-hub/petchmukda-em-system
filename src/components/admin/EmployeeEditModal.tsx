@@ -636,11 +636,14 @@ export default function EmployeeEditModal({
                 startWM || undefined,
                 currentRaises,
               );
-              // เรียง raises จากใหม่ → เก่า
-              const raisesEntries = Object.entries(currentRaises)
+              // เรียงจาก ใหม่ → เก่า · ทุกปีในประวัติยกเว้นปีถัดไปที่กำลังกรอก
+              const history = Object.entries(currentRaises)
                 .map(([y, a]) => [parseInt(y, 10), Number(a)] as [number, number])
-                .filter(([y]) => Number.isFinite(y))
+                .filter(([y]) => Number.isFinite(y) && y !== nextYear)
                 .sort((a, b) => b[0] - a[0]);
+              // ค่าใน input ของปีถัดไป — undefined = ยังไม่กรอก
+              const pendingRaw =
+                nextYear !== null ? currentRaises[String(nextYear)] : undefined;
 
               function updateRaises(next: Record<string, number>) {
                 setEditingRole((prev) => ({
@@ -674,104 +677,93 @@ export default function EmployeeEditModal({
                       </span>
                     </span>
                   </div>
-                  {raisesEntries.length > 0 && (
-                    <div className="mb-2 text-[10px] text-txt-soft text-center italic">
-                      = {baseAmt.toLocaleString("th-TH")} (เริ่มต้น)
-                      {raisesEntries
-                        .slice()
-                        .reverse()
-                        .map(([y, a]) =>
-                          a > 0 ? ` + ${a.toLocaleString("th-TH")} (${y})` : "",
-                        )
-                        .join("")}
+
+                  {/* ประวัติการขึ้น — read-only */}
+                  {history.length > 0 && (
+                    <div className="mb-2">
+                      <div className="text-[10px] text-txt-soft font-bold mb-1">
+                        ประวัติการขึ้นเงินเดือน
+                      </div>
+                      <div className="rounded-[7px] bg-white border border-bdr/40 divide-y divide-bdr/30 max-h-40 overflow-y-auto">
+                        {history.map(([y, a]) => (
+                          <div
+                            key={`hist-${y}`}
+                            className="flex items-center justify-between px-2.5 py-1.5 text-xs"
+                          >
+                            <span className="font-bold text-txt-mid">
+                              ปี {y}
+                            </span>
+                            {a > 0 ? (
+                              <span className="font-extrabold text-maroon tabular-nums">
+                                +{a.toLocaleString("th-TH")} ฿
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-txt-soft italic">
+                                ไม่ขึ้น
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
-                  {/* List raises (newest first) */}
-                  {raisesEntries.length > 0 && (
-                    <div className="mb-2 space-y-1">
-                      {raisesEntries.map(([y, a]) => (
-                        <div
-                          key={`raise-${y}`}
-                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-[7px] bg-white border border-bdr/40"
-                        >
-                          <span className="text-[11px] font-bold text-txt-mid w-12 shrink-0">
-                            ปี {y}
+                  {/* Input ปีถัดไป — เดียว */}
+                  {nextYear !== null ? (
+                    <div>
+                      <div className="text-[10px] text-txt-soft font-bold mb-1">
+                        การขึ้นเงินเดือนประจำปี (ปี {nextYear})
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
+                            ฿
                           </span>
-                          <div className="relative flex-1">
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                              +฿
-                            </span>
-                            <input
-                              type="number"
-                              inputMode="decimal"
-                              min="0"
-                              value={a}
-                              onChange={(e) => {
-                                const v = Number(e.target.value);
-                                updateRaises({
-                                  ...currentRaises,
-                                  [String(y)]: Number.isFinite(v) ? v : 0,
-                                });
-                              }}
-                              className="w-full py-1 pr-2 pl-7 rounded-[6px] text-xs font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] border-bdr bg-white tabular-nums"
-                            />
-                          </div>
-                          {a === 0 && (
-                            <span className="text-[10px] text-txt-soft italic shrink-0">
-                              ไม่ขึ้น
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => {
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            placeholder="ใส่จำนวนเงิน"
+                            value={pendingRaw ?? ""}
+                            onChange={(e) => {
+                              const raw = e.target.value;
                               const next = { ...currentRaises };
-                              delete next[String(y)];
+                              if (raw === "") {
+                                delete next[String(nextYear)];
+                              } else {
+                                const v = Number(raw);
+                                next[String(nextYear)] = Number.isFinite(v) && v >= 0 ? v : 0;
+                              }
                               updateRaises(next);
                             }}
-                            className="shrink-0 p-1 rounded text-txt-soft hover:text-red cursor-pointer"
-                            title="ลบรายการ"
-                          >
-                            <IconTrash size={11} strokeWidth={2.4} />
-                          </button>
+                            className="w-full py-[9px] pr-3 pl-7 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] border-gold/60 bg-white tabular-nums"
+                          />
                         </div>
-                      ))}
+                        <span className="text-xs text-txt-soft shrink-0">
+                          บาท
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-txt-soft mt-1.5 leading-relaxed">
+                        มีผลตั้งแต่ Jan {nextYear} · ใส่ 0 = ตัดสินใจไม่ขึ้นปีนั้น
+                        (ไม่กลับมาถามอีก)
+                      </div>
                     </div>
-                  )}
-
-                  {/* Add next year button */}
-                  {nextYear ? (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateRaises({ ...currentRaises, [String(nextYear)]: 0 })
-                      }
-                      className="w-full px-3 py-2 rounded-[8px] border-[1.5px] border-dashed border-gold/60 bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5 active:scale-[0.98]"
-                    >
-                      <IconPlus size={12} strokeWidth={2.5} />
-                      เพิ่มการขึ้นเงินเดือน ปี {nextYear}
-                    </button>
                   ) : !startWM ? (
-                    <div className="text-[11px] text-txt-soft italic text-center py-1">
+                    <div className="text-[11px] text-txt-soft italic text-center py-2">
                       ตั้ง "วันที่เริ่มงาน" ก่อนเพื่อพิจารณาขึ้นเงินเดือน
                     </div>
                   ) : !isEligibleForRaiseYear(
                       startWM,
                       new Date().getFullYear() + 1,
                     ) ? (
-                    <div className="text-[11px] text-txt-soft italic text-center py-1">
+                    <div className="text-[11px] text-txt-soft italic text-center py-2">
                       ยังทำงานไม่ครบ 1 ปี · เริ่มขึ้นได้ปีหน้า (Jan)
                     </div>
                   ) : (
-                    <div className="text-[11px] text-txt-soft italic text-center py-1">
+                    <div className="text-[11px] text-txt-soft italic text-center py-2">
                       พิจารณาครบทุกปีแล้ว
                     </div>
                   )}
-
-                  <div className="text-[10px] text-txt-soft mt-2 leading-relaxed">
-                    มีผลตั้งแต่เดือนมกราคมของปีนั้น · ใส่ 0 = ไม่ขึ้นปีนั้น
-                    (ตัดสินใจแล้ว · ไม่กลับมาถามอีก)
-                  </div>
                 </div>
               );
             })()}
