@@ -1716,4 +1716,3 @@ export default function SalaryAdminEdit({
     </div>
   );
 }
-

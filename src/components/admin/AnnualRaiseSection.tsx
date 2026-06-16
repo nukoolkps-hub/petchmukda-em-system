@@ -144,7 +144,9 @@ export default function AnnualRaiseSection({
                             className="w-full py-1.5 pr-2 pl-7 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] border-gold/60 bg-white tabular-nums"
                           />
                         </div>
-                        <span className="text-[10px] text-txt-soft shrink-0">฿</span>
+                        <span className="text-[10px] text-txt-soft shrink-0">
+                          ฿
+                        </span>
                         <button
                           type="button"
                           onClick={() => {
