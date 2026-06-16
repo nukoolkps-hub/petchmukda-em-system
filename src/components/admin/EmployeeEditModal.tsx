@@ -560,7 +560,7 @@ export default function EmployeeEditModal({
                   strokeWidth={2.4}
                   className="inline mr-1 -mt-px"
                 />
-                เงินเดือนพื้นฐาน
+                เงินเดือนพื้นฐานเริ่มต้น
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
@@ -676,7 +676,7 @@ export default function EmployeeEditModal({
                   {/* เงินเดือนปัจจุบัน (effective) */}
                   <div className="mb-2.5 px-2.5 py-2 rounded-[8px] bg-white border border-bdr/40 flex items-baseline justify-between">
                     <span className="text-[11px] text-txt-soft">
-                      เงินเดือนปัจจุบัน
+                      เงินเดือนพื้นฐานปัจจุบัน
                     </span>
                     <span className="text-base font-extrabold text-maroon tabular-nums">
                       {effective.toLocaleString("th-TH")}{" "}
