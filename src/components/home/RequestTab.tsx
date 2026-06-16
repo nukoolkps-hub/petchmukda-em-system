@@ -25,13 +25,6 @@ const SICK_LEAVE_MAX_AHEAD_DAYS = 14;
 /** วันสุดท้ายที่เลือกได้สำหรับลาป่วย = วันนี้ + 14 วัน */
 const SICK_LEAVE_MAX_DATE = addDaysYmd(TODAY, SICK_LEAVE_MAX_AHEAD_DAYS);
 
-/** "YYYY-MM-DD" → "YYYY-MM-<last day>" (cap ลาป่วยข้ามเดือน) */
-function endOfMonthYmd(ymd: string): string {
-  const [y, m] = ymd.split("-").map((s) => parseInt(s, 10));
-  const last = new Date(y, m, 0).getDate();
-  return `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
-}
-
 interface RequestTabProps {
   profile: any;
   allLeaves: LeaveEntry[];
@@ -173,16 +166,12 @@ export default function RequestTab({
               onClick={() =>
                 setForm((f) => {
                   if (lt.id !== "sick") return { ...f, type: lt.id };
-                  // เปลี่ยนเป็นลาป่วย → ล้างวันที่เกินกฎ (ล่วงหน้า > 2 อาทิตย์
-                  // หรือ endDate คร่อมเดือน startDate)
-                  const startOk =
-                    !f.startDate || f.startDate <= SICK_LEAVE_MAX_DATE;
-                  const nextStart = startOk ? f.startDate : "";
-                  const endOk =
-                    !f.endDate ||
-                    (f.endDate <= SICK_LEAVE_MAX_DATE &&
-                      !!nextStart &&
-                      f.endDate.slice(0, 7) === nextStart.slice(0, 7));
+                  // เปลี่ยนเป็นลาป่วย → ล้างวันที่ล่วงหน้าเกิน 2 อาทิตย์
+                  const nextStart =
+                    !f.startDate || f.startDate <= SICK_LEAVE_MAX_DATE
+                      ? f.startDate
+                      : "";
+                  const endOk = !f.endDate || f.endDate <= SICK_LEAVE_MAX_DATE;
                   return {
                     type: lt.id,
                     startDate: nextStart,
@@ -209,13 +198,8 @@ export default function RequestTab({
           setForm((f) => ({
             ...f,
             startDate: v,
-            // ล้าง endDate ถ้า: ก่อน startDate ใหม่ · ลาป่วยและคนละเดือนกับ startDate
-            endDate:
-              f.endDate &&
-              (f.endDate < v ||
-                (f.type === "sick" && f.endDate.slice(0, 7) !== v.slice(0, 7)))
-                ? ""
-                : f.endDate,
+            // ล้าง endDate ถ้าก่อน startDate ใหม่
+            endDate: f.endDate && f.endDate < v ? "" : f.endDate,
           }))
         }
         minDate={TODAY}
@@ -228,15 +212,8 @@ export default function RequestTab({
         value={form.endDate}
         onChange={(v) => setForm((f) => ({ ...f, endDate: v }))}
         minDate={form.startDate || TODAY}
-        maxDate={
-          // ลาป่วย → cap ที่ตัวที่เร็วกว่าระหว่าง "สิ้นเดือน startDate" กับ
-          // "วันนี้ + 14 วัน" (ห้ามข้ามเดือน + ล่วงหน้าไม่เกิน 2 อาทิตย์)
-          form.type === "sick" && form.startDate
-            ? endOfMonthYmd(form.startDate) < SICK_LEAVE_MAX_DATE
-              ? endOfMonthYmd(form.startDate)
-              : SICK_LEAVE_MAX_DATE
-            : undefined
-        }
+        // ลาป่วย → เลือกล่วงหน้าได้ไม่เกิน 2 อาทิตย์
+        maxDate={form.type === "sick" ? SICK_LEAVE_MAX_DATE : undefined}
         error={errors.endDate}
       />
       {days > 0 && (
