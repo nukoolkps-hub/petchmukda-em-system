@@ -29,9 +29,11 @@ export interface Employee {
   poolExclusion?: "sell" | "buy" | "both" | "" | null;
   displayOrder?: number; // ลำดับการเรียง card admin ลากย้ายได้ — sync ทุกคน
   recurringItems?: RecurringItem[]; // รายรับ/รายจ่ายประจำเดือน (ใช้ทุกเดือน)
-  /** การขึ้นเงินเดือนประจำปี · key = ปี ค.ศ. string เช่น "2026" · value = บาท
-   *  (0 = admin ตัดสินใจไม่ขึ้นปีนั้น) · มีผลตั้งแต่ Jan ของปีนั้นเป็นต้นไป ·
-   *  eligible ถ้าทำงานครบ 1 ปีนับจาก startWorkMonth (≥ 365 วัน) */
+  /** การขึ้นเงินเดือนประจำปี · จำนวนคงที่ AUTO ทุกปี Jan · 0 = ไม่ขึ้น auto
+   *  (admin ตั้งครั้งเดียว · apply ทุกปีที่ทำงานครบรอบ ≥ 1 ปี) */
+  annualRaiseAmount?: number;
+  /** override ราคารายปี · key = ปี ค.ศ. string เช่น "2026" · value = บาท
+   *  (มีผล override จำนวน auto สำหรับปีนั้น · เช่น ปีพิเศษ/ปีไม่ขึ้น) */
   annualRaises?: Record<string, number>;
   balance?: LeaveBalance;
   used?: LeaveBalance;
