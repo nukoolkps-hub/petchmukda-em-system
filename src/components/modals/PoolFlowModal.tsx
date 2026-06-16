@@ -11,9 +11,8 @@ import {
   Users as IconUsers,
 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
-import { THAI_MONTH_NAMES } from "../../constants";
 import type { Employee, Role } from "../../types";
-import { currentYearMonth } from "../../utils/dateUtils";
+import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { computePoolSharesForGroup } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
@@ -193,10 +192,7 @@ export default function PoolFlowModal({
     return labels;
   }, [groupEmployeeIds, isAdmin, employeeDirectory, currentEmployee]);
 
-  const monthLabel = (() => {
-    const [y, mo] = selectedMonth.split("-");
-    return `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
-  })();
+  const monthLabel = formatYmThai(selectedMonth);
 
   const sample = groupEmployeeIds.length ? shares[groupEmployeeIds[0]] : null;
   const hasSell =

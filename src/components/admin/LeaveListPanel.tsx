@@ -126,22 +126,31 @@ export default function LeaveListPanel({
   // filter ด้วย employeeId (ไม่ใช่ชื่อ) — กันชื่อซ้ำ/เปลี่ยนชื่อ
   // overlap check แทน startsWith — ใบลาคร่อมเดือน (พ.ค. 30 → มิ.ย. 2)
   // ต้องเห็นทั้งสองเดือน · admin จะได้ลบ/แก้ได้ทั้งสองมุมมอง
-  const filteredLeaves = allLeaves
-    .filter((lv) => !employeeFilter || lv.employeeId === employeeFilter)
-    .filter((lv) => !filterType || lv.type === filterType)
-    .filter(
-      (lv) =>
-        lv.start.slice(0, 7) <= effectiveMonth &&
-        lv.end.slice(0, 7) >= effectiveMonth,
-    )
-    .sort((a, b) => b.start.localeCompare(a.start));
+  // memo: กัน re-filter ตอนพิมพ์ในฟอร์มเพิ่มลา (filter inputs ไม่เปลี่ยน)
+  const filteredLeaves = useMemo(
+    () =>
+      allLeaves
+        .filter((lv) => !employeeFilter || lv.employeeId === employeeFilter)
+        .filter((lv) => !filterType || lv.type === filterType)
+        .filter(
+          (lv) =>
+            lv.start.slice(0, 7) <= effectiveMonth &&
+            lv.end.slice(0, 7) >= effectiveMonth,
+        )
+        .sort((a, b) => b.start.localeCompare(a.start)),
+    [allLeaves, employeeFilter, filterType, effectiveMonth],
+  );
 
   // เดือนที่ปิดรอบแล้ว — precompute ครั้งเดียวจาก payrollConfirms (กี่เดือน
   // ก็ไม่กี่ key) แทนการเรียก isMonthLocked() ต่อแถวต่อ render
-  const lockedMonths = new Set(
-    Object.keys(payrollConfirms || {}).filter((ym) =>
-      isMonthLocked(payrollConfirms[ym]),
-    ),
+  const lockedMonths = useMemo(
+    () =>
+      new Set(
+        Object.keys(payrollConfirms || {}).filter((ym) =>
+          isMonthLocked(payrollConfirms[ym]),
+        ),
+      ),
+    [payrollConfirms],
   );
 
   return (

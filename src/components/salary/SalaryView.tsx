@@ -24,7 +24,7 @@ import {
   Ticket as IconTicket,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { COLORS } from "../../constants";
 import { buildLoanContext, loanRemaining } from "../../firebase/employeeLoans";
 import { printSalaryCertificate } from "../../print/printSalaryCertificate";
 import { printSalarySlip } from "../../print/printSalarySlip";
@@ -32,7 +32,7 @@ import {
   isLineWebview,
   openInExternalBrowser,
 } from "../../print/webviewHelpers";
-import { currentYearMonth } from "../../utils/dateUtils";
+import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import {
@@ -257,10 +257,7 @@ export default function SalaryView({
   // ได้ (preview) แต่ banner เตือนชัดว่า "ยอดอาจเปลี่ยน" + ปิดปุ่มพิมพ์ +
   // PoolFlowModal ล็อกด้วย isConfirmed prop (ปิดแผนผังจนกว่าจะ confirm)
   const isMonthConfirmed = !!payrollConfirms?.[selectedMonth]?.confirmedAt;
-  const selectedMonthLabel = (() => {
-    const [y, mo] = selectedMonth.split("-");
-    return `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
-  })();
+  const selectedMonthLabel = formatYmThai(selectedMonth);
 
   if (!data || !salaryCalculation) {
     return (
@@ -956,12 +953,10 @@ export default function SalaryView({
 
       {showHistory &&
         (() => {
-          const [y, mo] = selectedMonth.split("-");
-          const label = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
           return (
             <AdvanceHistoryModal
               advanceRequests={monthAdvances}
-              monthLabel={label}
+              monthLabel={formatYmThai(selectedMonth)}
               onClose={() => setShowHistory(false)}
             />
           );

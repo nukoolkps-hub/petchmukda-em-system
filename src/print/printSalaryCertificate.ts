@@ -1,4 +1,5 @@
 import { THAI_MONTH_NAMES } from "../constants";
+import { formatTenure } from "../utils/dateUtils";
 import { buildCertificateDocDef } from "./pdfBuilders/salaryCertificatePDF";
 import { openPDFBlob, printHTML } from "./webviewHelpers";
 
@@ -36,28 +37,17 @@ function buildCertificateHTML(
     refNo ||
     `พทม. ${String(now.getDate()).padStart(2, "0")}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}/${now.getFullYear() + 543}`;
 
-  // เริ่มงาน + อายุงาน — คำนวณจาก employeeInfo.startWorkMonth ("YYYY-MM")
+  // เริ่มงาน + อายุงาน — formatTenure() ใช้ที่เดียวกับ EmployeeEditModal
   const ym = employeeInfo?.startWorkMonth;
   let startWork = startDate || "มีนาคม พ.ศ. 2566";
-  let yearsOfService = "";
   if (ym && /^\d{4}-\d{2}$/.test(ym)) {
     const [y, m] = ym.split("-").map(Number);
     const idx = m - 1;
     if (idx >= 0 && idx <= 11) {
       startWork = `${THAI_MONTH_NAMES[idx]} พ.ศ. ${y + 543}`;
-      // diff in years + months
-      let years = now.getFullYear() - y;
-      let months = now.getMonth() - idx;
-      if (months < 0) {
-        years -= 1;
-        months += 12;
-      }
-      if (years <= 0 && months <= 0) yearsOfService = "เพิ่งเริ่มงาน";
-      else if (years <= 0) yearsOfService = `${months} เดือน`;
-      else if (months === 0) yearsOfService = `${years} ปี`;
-      else yearsOfService = `${years} ปี ${months} เดือน`;
     }
   }
+  const yearsOfService = formatTenure(ym);
 
   const formatNumber = (n) => Number(n || 0).toLocaleString("th-TH");
   // แปลงตัวเลขเงินเป็นภาษาไทย (basic — รองรับ 0-9,999,999)

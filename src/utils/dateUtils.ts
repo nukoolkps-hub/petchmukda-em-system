@@ -1,5 +1,9 @@
 /* ─── Date helpers ─────────────────────────────────────────────── */
-import { THAI_MONTH_NAMES, TODAY } from "../constants";
+import {
+  THAI_MONTH_NAMES,
+  THAI_SHORT_WEEKDAY_NAMES,
+  TODAY,
+} from "../constants";
 
 export function toYMD(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -15,6 +19,32 @@ export function addDaysYmd(ymd: string, n: number): string {
  *  (`TODAY` ใน constants ค้างค่าตอน module import) */
 export function todayYmd(): string {
   return toYMD(new Date());
+}
+
+/** "YYYY-MM" (ค.ศ.) → "มิถุนายน 2569" (เดือน + พ.ศ.) · "" ถ้า input ผิดรูป */
+export function formatYmThai(ym: string): string {
+  if (!ym || !/^\d{4}-\d{2}$/.test(ym)) return "";
+  const [y, m] = ym.split("-").map((s) => parseInt(s, 10));
+  return `${THAI_MONTH_NAMES[m - 1]} ${y + 543}`;
+}
+
+/** ระยะเวลาทำงาน: "X ปี Y เดือน" / "Y เดือน" / "X ปี" / "เพิ่งเริ่มงาน"
+ *  startWorkMonth: "YYYY-MM" (ค.ศ.) · null/invalid → "" (caller ซ่อนไป)
+ *  ใช้ทั้ง EmployeeEditModal label + ใบรับรองเงินเดือน — เก็บสูตรที่เดียว */
+export function formatTenure(startWorkMonth?: string | null): string {
+  if (!startWorkMonth || !/^\d{4}-\d{2}$/.test(startWorkMonth)) return "";
+  const [y, m] = startWorkMonth.split("-").map(Number);
+  const now = new Date();
+  let years = now.getFullYear() - y;
+  let months = now.getMonth() - (m - 1);
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+  if (years <= 0 && months <= 0) return "เพิ่งเริ่มงาน";
+  if (years <= 0) return `${months} เดือน`;
+  if (months <= 0) return `${years} ปี`;
+  return `${years} ปี ${months} เดือน`;
 }
 
 export function countWorkdays(s: string, e: string): number {
@@ -62,7 +92,6 @@ export function fmtShort(d: string): string {
 }
 
 const WEEKDAYS_TH = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
-const WEEKDAYS_TH_SHORT = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
 
 /* "2026-06-12" → "วันศุกร์ ที่ 12 มิถุนายน 2569" */
 export function fmtDateWithWeekday(d: string): string {
@@ -75,7 +104,7 @@ export function fmtDateWithWeekday(d: string): string {
 export function fmtShortWithWeekday(d: string): string {
   if (!d) return "-";
   const dt = new Date(`${d}T00:00:00`);
-  return `${WEEKDAYS_TH_SHORT[dt.getDay()]} ${fmtShort(d)}`;
+  return `${THAI_SHORT_WEEKDAY_NAMES[dt.getDay()]}. ${fmtShort(d)}`;
 }
 
 /* "YYYY-MM" ของวันนี้ — ใช้ join key salary/advance/loan */

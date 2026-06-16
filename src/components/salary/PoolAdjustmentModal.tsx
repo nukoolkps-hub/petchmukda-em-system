@@ -10,7 +10,7 @@ import {
   Trash2 as IconTrash,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { THAI_MONTH_NAMES } from "../../constants";
+import { formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
 
@@ -78,8 +78,7 @@ export default function PoolAdjustmentModal({
     setItems(normalizeItems(adjustment?.items, firstGroup));
   }, [yearMonth]);
 
-  const [y, mo] = yearMonth.split("-");
-  const monthLabel = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+  const monthLabel = formatYmThai(yearMonth);
 
   // dirty = items ของ user ต่างจาก server
   const compareKey = (arr: Item[]) =>
