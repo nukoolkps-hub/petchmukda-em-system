@@ -50,16 +50,17 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
 
   const displayError = error || localError;
 
-  function handleLineLogin() {
+  async function handleLineLogin() {
     if (!LINE_CHANNEL_ID) {
       setLocalError("ยังไม่ได้ตั้งค่า VITE_LINE_LOGIN_CHANNEL_ID ใน .env.local");
       return;
     }
     try {
-      startLineLogin({
+      // state ออกโดย server (prepareLineLogin) เพื่อ CSRF defense ที่แข็งกว่า
+      // client-only UUID — ไม่ต้องส่ง state จากตรงนี้
+      await startLineLogin({
         channelId: LINE_CHANNEL_ID,
         redirectUri: `${window.location.origin}/callback`,
-        state: crypto.randomUUID(),
       });
     } catch (err: unknown) {
       setLocalError((err as Error).message || "ไม่สามารถเปิด LINE Login ได้");

@@ -105,9 +105,15 @@ export function parseLineAuthPayload(value: unknown): LineAuthPayload {
 		invalid("Invalid redirectUri");
 	}
 
+	const state = requiredString(data, "state");
+	// state จาก server (prepareLineLogin) เป็น base64url ของ 32 ไบต์ random
+	// → กัน payload bloat / state injection ของแปลกๆ ที่ยาวเกินจริง
+	if (state.length > 128) invalid("Invalid state");
+
 	return {
 		code: requiredString(data, "code"),
 		redirectUri,
+		state,
 	};
 }
 

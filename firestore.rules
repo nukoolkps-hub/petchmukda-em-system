@@ -310,5 +310,12 @@ service cloud.firestore {
       allow update: if isSignedIn()
         && request.resource.data.count == resource.data.count + 1;
     }
+
+    // ─── LINE Login OAuth state tokens (server-side CSRF defense) ──
+    // Issued by prepareLineLogin · consumed atomically by lineAuth ผ่าน
+    // Admin SDK ทั้งสองทาง → client ห้ามอ่าน/เขียนเลย (ไม่ใช่ขอ token แอบเอง)
+    match /loginStates/{state} {
+      allow read, write: if false;
+    }
   }
 }
