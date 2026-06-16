@@ -5,17 +5,14 @@
 
 import {
   Award as IconAward,
-  BadgeCheck as IconBadgeCheck,
   BadgePercent as IconBadgePercent,
   Banknote as IconBanknote,
   Calculator as IconCalculator,
   Clock as IconClock,
-  Coins as IconCoins,
   CreditCard as IconCreditCard,
   ArrowRightLeft as IconExchange,
   Gauge as IconGauge,
   Gem as IconGem,
-  HandCoins as IconHandCoins,
   Hammer as IconHammer,
   Landmark as IconLandmark,
   Package as IconPackage,
@@ -27,7 +24,6 @@ import {
   Replace as IconReplace,
   Scissors as IconScissors,
   ShoppingBag as IconShoppingBag,
-  Star as IconStar,
   Tag as IconTag,
   Wallet as IconWallet,
   Weight as IconWeight,
@@ -168,7 +164,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "sell-price-9999",
     title: "การคำนวณราคาขาย (ทอง 99.99%)",
-    Icon: IconGem,
+    Icon: IconShoppingBag,
     blocks: [
       {
         type: "formula",
@@ -334,7 +330,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "sell-price-90",
     title: "การคำนวณราคาขาย (ทอง 90)",
-    Icon: IconBadgeCheck,
+    Icon: IconShoppingBag,
     blocks: [
       {
         type: "formula",
@@ -382,7 +378,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "sell-price-nak",
     title: "การคำนวณราคาขาย (นาก)",
-    Icon: IconStar,
+    Icon: IconShoppingBag,
     blocks: [
       {
         type: "formula",
@@ -438,7 +434,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "sell-price-silver",
     title: "การคำนวณราคาขาย (เงิน)",
-    Icon: IconCoins,
+    Icon: IconShoppingBag,
     blocks: [
       {
         type: "formula",
@@ -673,7 +669,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "buy-price-9999",
     title: "การคำนวณราคารับซื้อ (ทอง 99.99%)",
-    Icon: IconHandCoins,
+    Icon: IconBanknote,
     blocks: [
       {
         type: "table",
