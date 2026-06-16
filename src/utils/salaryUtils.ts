@@ -83,7 +83,8 @@ export function isEligibleForRaiseYear(
   return days >= 365;
 }
 
-/** รายการประวัติ raise · ทุกปีที่ eligible ตั้งแต่ startYear+1 → max(currentYear, eligible upcoming Jan)
+/** รายการประวัติ raise · ทุกปีที่ eligible ตั้งแต่ startYear+1 → currentYear
+ *  (ไม่รวมปีอนาคต · ประวัติ = ที่เกิดขึ้นแล้ว/กำลังเกิดในปีปัจจุบัน)
  *  ส่ง back per-row: { year, amount, source: "auto" | "override" } */
 export function buildRaiseHistory(
   source: RaiseSource | null | undefined,
@@ -93,10 +94,9 @@ export function buildRaiseHistory(
   const startYear = parseInt(source.startWorkMonth.slice(0, 4), 10);
   if (!Number.isFinite(startYear)) return [];
   const now = currentYear ?? new Date().getFullYear();
-  // ขยายไปอีก 1 ปี เผื่อ Jan ปีหน้าที่ admin ต้องวางแผน
   const overrides = source.annualRaises ?? {};
   const list: { year: number; amount: number; isOverride: boolean }[] = [];
-  for (let y = startYear + 1; y <= now + 1; y++) {
+  for (let y = startYear + 1; y <= now; y++) {
     if (!isEligibleForRaiseYear(source.startWorkMonth, y)) continue;
     const key = String(y);
     const isOverride = overrides[key] !== undefined;
