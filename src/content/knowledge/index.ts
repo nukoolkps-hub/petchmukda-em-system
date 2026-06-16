@@ -1776,8 +1776,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "image",
-        src: "/knowledge/stop-button.jpg",
-        alt: "ปุ่มหยุด",
+        src: "/knowledge/stop-button.webp",
+        alt: "ปุ่มที่ 2 สี่เหลี่ยม 2 อัน",
         caption: "8. กดปุ่มที่ 2 (สี่เหลี่ยม 2 อัน) เพื่อหยุด",
       },
     ],
