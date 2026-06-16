@@ -485,6 +485,9 @@ export default function EmployeeEditModal({
                         ({tenure})
                       </span>
                     )}
+                    <span className="font-normal text-txt-soft">
+                      (ใช้ในหนังสือรับรองเงินเดือน)
+                    </span>
                   </label>
                 );
               })()}
@@ -572,9 +575,6 @@ export default function EmployeeEditModal({
                   </div>
                 );
               })()}
-              <div className="text-xs text-txt-soft mt-[3px]">
-                ใช้ในหนังสือรับรองเงินเดือน
-              </div>
             </div>
           </>
         )}
