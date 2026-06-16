@@ -16,10 +16,7 @@ import {
   X as IconX,
 } from "lucide-react";
 import { useState } from "react";
-import {
-  wipeEmployeeData,
-  wipeTestData,
-} from "../../firebase/wipeTestData";
+import { wipeEmployeeData, wipeTestData } from "../../firebase/wipeTestData";
 import type { Employee } from "../../types";
 
 interface Props {
@@ -51,10 +48,7 @@ const CONFIRM_TOKEN = "ล้างข้อมูล";
 
 type WipeMode = "all" | "selected";
 
-export default function WipeDataPanel({
-  employeeDirectory,
-  showToast,
-}: Props) {
+export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
   const [mode, setMode] = useState<WipeMode | null>(null);
   const [typed, setTyped] = useState("");
   const [running, setRunning] = useState(false);
@@ -116,9 +110,7 @@ export default function WipeDataPanel({
               .filter(([_, c]) => c > 0)
               .map(([name, count]) => ({ name, count })),
           });
-          showToast?.(
-            `ล้างข้อมูลสำเร็จ · ลบทั้งหมด ${res.totalDeleted} docs`,
-          );
+          showToast?.(`ล้างข้อมูลสำเร็จ · ลบทั้งหมด ${res.totalDeleted} docs`);
           setMode(null);
           setTyped("");
         } else {
@@ -194,10 +186,8 @@ export default function WipeDataPanel({
           className="text-red shrink-0 mt-0.5"
         />
         <div className="text-sm text-red font-semibold leading-relaxed">
-          ปุ่มนี้ลบ <b>ข้อมูลพนักงาน + transactional data ทั้งหมด</b>{" "}
-          เพื่อเริ่มใช้จริงครั้งแรก ·{" "}
-          <b>ไม่สามารถ undo ได้</b> · แนะนำให้กด "Backup ตอนนี้"{" "}
-          ในหน้า Backup ก่อนเสมอ
+          ปุ่มนี้ลบ <b>ข้อมูลพนักงาน + transactional data ทั้งหมด</b> เพื่อเริ่มใช้จริงครั้งแรก ·{" "}
+          <b>ไม่สามารถ undo ได้</b> · แนะนำให้กด "Backup ตอนนี้" ในหน้า Backup ก่อนเสมอ
         </div>
       </div>
 
@@ -250,8 +240,7 @@ export default function WipeDataPanel({
         <div className="p-3.5 text-sm text-txt leading-relaxed space-y-2.5">
           <div>
             <b className="text-amber">1. PITR</b> (Point-in-Time Recovery —
-            แนะนำ): rollback database ทั้งฐานกลับไปเวลาก่อนกดล้าง · มีเวลา
-            7 วันให้กู้
+            แนะนำ): rollback database ทั้งฐานกลับไปเวลาก่อนกดล้าง · มีเวลา 7 วันให้กู้
             <ul className="mt-1.5 ml-3 space-y-0.5 text-xs text-txt-mid">
               <li>
                 Firebase Console → Firestore →{" "}
@@ -268,13 +257,11 @@ export default function WipeDataPanel({
           </div>
           <div>
             <b className="text-amber">2. Daily Backup</b> (Firebase managed):
-            snapshot รายวัน · เก็บไว้ 7-14 วัน · restore ผ่าน Console
-            เหมือนกัน
+            snapshot รายวัน · เก็บไว้ 7-14 วัน · restore ผ่าน Console เหมือนกัน
           </div>
           <div>
-            <b className="text-amber">3. GitHub Backup</b> (JSON ใน repo):
-            data ครบ แต่ตอนนี้ยังไม่มี restore function · ถ้าเผลอเกิน 14 วัน
-            ค่อยใช้
+            <b className="text-amber">3. GitHub Backup</b> (JSON ใน repo): data
+            ครบ แต่ตอนนี้ยังไม่มี restore function · ถ้าเผลอเกิน 14 วัน ค่อยใช้
           </div>
         </div>
       </div>
@@ -293,14 +280,11 @@ export default function WipeDataPanel({
       {/* ─── per-employee wipe section ─── */}
       <div className="mt-6 mb-2 flex items-center gap-2">
         <IconUserMinus size={18} strokeWidth={2.4} className="text-maroon" />
-        <h3 className="text-base font-extrabold text-maroon">
-          ล้างข้อมูลรายคน
-        </h3>
+        <h3 className="text-base font-extrabold text-maroon">ล้างข้อมูลรายคน</h3>
       </div>
       <div className="mb-3 text-xs text-txt-mid leading-relaxed">
-        เลือกพนักงานที่ต้องการลบ — ลบเฉพาะข้อมูลของคนนั้น (สลิปเงินเดือน ·
-        ใบลา · เบิกเงิน · เงินกู้ · entries ใน pool snapshots) · ไม่กระทบ
-        พนักงานคนอื่นและ config
+        เลือกพนักงานที่ต้องการลบ — ลบเฉพาะข้อมูลของคนนั้น (สลิปเงินเดือน · ใบลา · เบิกเงิน ·
+        เงินกู้ · entries ใน pool snapshots) · ไม่กระทบ พนักงานคนอื่นและ config
       </div>
 
       <div className="mb-3 rounded-[12px] border-[1.5px] border-bdr/60 bg-white overflow-hidden">

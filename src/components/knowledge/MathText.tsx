@@ -24,7 +24,10 @@ function renderWithOps(text: string, opClassName: string, keyPrefix: string) {
     if (OP_REGEX.test(part)) {
       OP_REGEX.lastIndex = 0;
       return (
-        <span key={`${keyPrefix}-${i}`} className={`mx-[0.15em] ${opClassName}`}>
+        <span
+          key={`${keyPrefix}-${i}`}
+          className={`mx-[0.15em] ${opClassName}`}
+        >
           {part}
         </span>
       );

@@ -27,11 +27,8 @@ import {
 } from "../employees";
 import { DEFAULT_GOLD_PRICE, subscribeGoldPrice } from "../goldPrice";
 import { EMPTY_LABOR_COST, subscribeLaborCost } from "../laborCost";
-import {
-  EMPTY_LOYALTY_POINTS,
-  subscribeLoyaltyPoints,
-} from "../loyaltyPoints";
 import { subscribeLeaves, subscribeLeavesByEmployeeId } from "../leaves";
+import { EMPTY_LOYALTY_POINTS, subscribeLoyaltyPoints } from "../loyaltyPoints";
 import { subscribePayrollConfirms } from "../payrollConfirms";
 import {
   type PoolAdjustmentsByMonth,

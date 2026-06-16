@@ -26,6 +26,7 @@ import DutyForecastModal from "../modals/DutyForecastModal";
 import RoleMainDutiesModal from "../modals/RoleMainDutiesModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import { MemphisCornerSticker } from "../shared/MemphisPattern";
+import PositionRateCard from "../shared/PositionRateCard";
 import TeamCalendar from "./TeamCalendar";
 
 interface HomeTabProps {
@@ -90,6 +91,9 @@ export default function HomeTab({
           onClose={() => setShowMainDuties(false)}
         />
       )}
+
+      {/* ── ตำแหน่ง + เงินเดือนพื้นฐาน + อัตราค่าคอม (ปัจจุบัน) ── */}
+      <PositionRateCard employee={currentEmployee} role={myRole} />
 
       {/* ── หน้าที่วันนี้ — เหนือ quota เพราะใช้เช็คทุกวัน ── */}
       {duties &&

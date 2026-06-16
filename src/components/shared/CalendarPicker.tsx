@@ -122,9 +122,7 @@ export default function CalendarPicker({
           />
         </div>
         <div className="flex-1 text-left">
-          <div className={labelClass}>
-            {has ? fmtShort(value) : "เลือกวันที่"}
-          </div>
+          <div className={labelClass}>{has ? fmtShort(value) : "เลือกวันที่"}</div>
         </div>
         <IconChevronDown
           size={isSm ? 14 : 16}

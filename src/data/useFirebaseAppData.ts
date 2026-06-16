@@ -36,12 +36,12 @@ import {
   employeeHasPoolExemptDuty,
 } from "../utils/dutyUtils";
 import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
-import { getEffectiveBaseSalary } from "../utils/salaryUtils";
 import {
   isMonthLocked,
   monthOf,
   PAYROLL_EDIT_GRACE_MS,
 } from "../utils/payrollLock";
+import { getEffectiveBaseSalary } from "../utils/salaryUtils";
 
 interface FirebaseAppDataOptions {
   authUid?: string;

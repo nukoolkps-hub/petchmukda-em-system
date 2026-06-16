@@ -43,9 +43,7 @@ export function subscribeBackupStatus(
   return onSnapshot(
     doc(db, "config/backupStatus"),
     (snap) => {
-      const data = snap.exists()
-        ? (snap.data() as Partial<BackupStatus>)
-        : {};
+      const data = snap.exists() ? (snap.data() as Partial<BackupStatus>) : {};
       onChange({
         ok: data.ok === true,
         stored: data.stored === true,

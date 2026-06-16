@@ -58,7 +58,13 @@ export type KnowledgeBlock =
        *  · "gradient" = pill bg-maroon เหลือบ silver
        *  · "silver-text" = text-silver + silver border line (ไม่มี pill)
        *  · "nak-text" = text-rose-gold + rose-gold border line (ไม่มี pill) */
-      tone?: "maroon" | "silver" | "nak" | "gradient" | "silver-text" | "nak-text";
+      tone?:
+        | "maroon"
+        | "silver"
+        | "nak"
+        | "gradient"
+        | "silver-text"
+        | "nak-text";
     }
   | { type: "p"; text: string; muted?: boolean; adminOnly?: boolean }
   | { type: "list"; items: string[]; ordered?: boolean }
