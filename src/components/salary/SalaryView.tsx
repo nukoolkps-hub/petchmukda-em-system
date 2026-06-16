@@ -407,7 +407,7 @@ export default function SalaryView({
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[10px] text-txt-soft font-semibold">
-                ตำแหน่ง · อัตราค่าคอม (ปัจจุบัน)
+                ตำแหน่ง · เงินเดือนพื้นฐาน · อัตราค่าคอม (ปัจจุบัน)
               </div>
               <div className="text-sm font-bold text-txt truncate">
                 {employeeRole.name}
