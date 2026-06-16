@@ -98,12 +98,11 @@ export function buildRaiseHistory(
   const list: { year: number; amount: number; isOverride: boolean }[] = [];
   for (let y = startYear + 1; y <= now; y++) {
     if (!isEligibleForRaiseYear(source.startWorkMonth, y)) continue;
-    const key = String(y);
-    const isOverride = overrides[key] !== undefined;
-    const amount = isOverride
-      ? Number(overrides[key]) || 0
-      : Number(source.annualRaiseAmount ?? 0) || 0;
-    list.push({ year: y, amount, isOverride });
+    list.push({
+      year: y,
+      amount: raiseAmountForYear(source, y),
+      isOverride: overrides[String(y)] !== undefined,
+    });
   }
   return list.sort((a, b) => b.year - a.year); // ใหม่ → เก่า
 }

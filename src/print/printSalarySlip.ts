@@ -1,4 +1,4 @@
-import { THAI_MONTH_NAMES } from "../constants";
+import { formatYmThai } from "../utils/dateUtils";
 import { buildSalarySlipDocDef } from "./pdfBuilders/salarySlipPDF";
 import { openPDFBlob, printHTML } from "./webviewHelpers";
 
@@ -24,8 +24,7 @@ function buildSalarySlipHTML(
   // includePrintControls=true → มีปุ่มพิมพ์ + auto-print script
   const includePrintControls = opts.includePrintControls !== false;
 
-  const [y, mo] = selectedMonth.split("-");
-  const monthLabel = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+  const monthLabel = formatYmThai(selectedMonth);
   const printDate = new Date().toLocaleDateString("th-TH", {
     day: "numeric",
     month: "long",

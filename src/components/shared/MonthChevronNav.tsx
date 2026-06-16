@@ -9,12 +9,10 @@ import {
   ChevronLeft as IconChevronLeft,
   ChevronRight as IconChevronRight,
 } from "lucide-react";
-import { useRef, useState } from "react";
-import {
-  THAI_MONTH_NAMES,
-  THAI_MONTH_SHORT_NAMES,
-} from "../../constants";
+import { useMemo, useRef, useState } from "react";
+import { THAI_MONTH_SHORT_NAMES } from "../../constants";
 import { useClickOutside } from "../../hooks/useClickOutside";
+import { formatYmThai } from "../../utils/dateUtils";
 
 interface Props {
   months: string[]; // "YYYY-MM" · เรียงใหม่→เก่า
@@ -37,22 +35,30 @@ export default function MonthChevronNav({
   const wrapRef = useRef<HTMLDivElement>(null);
   useClickOutside(wrapRef, () => setOpen(false), open);
 
-  const idx = months.indexOf(selected);
+  // safeIdx: ถ้า selected ไม่อยู่ใน months → ลูกศรซ้ายต้อง disable (อย่าเด้ง
+  // ไป months[0] เงียบๆ) · caller ที่ลืม pre-compute effectiveMonth จะปลอดภัย
+  const rawIdx = months.indexOf(selected);
+  const idx = rawIdx === -1 ? months.length : rawIdx;
   const hasOlder = idx < months.length - 1; // ‹ = เดือนเก่ากว่า
   const hasNewer = idx > 0; // › = เดือนใหม่กว่า
-  const [y, mo] = selected ? selected.split("-") : ["0", "0"];
 
-  // จัดกลุ่มเดือนตามปี (พ.ศ.) — คงลำดับใหม่→เก่า สำหรับ popover
-  const byYear: { year: number; items: string[] }[] = [];
-  for (const m of months) {
-    const yr = parseInt(m.slice(0, 4), 10);
-    let g = byYear.find((x) => x.year === yr);
-    if (!g) {
-      g = { year: yr, items: [] };
-      byYear.push(g);
+  // จัดกลุ่มเดือนตามปี (พ.ศ.) — popover-only data · memo บน months เพื่อไม่
+  // rebuild ต่อ render ใน 6 consumer panels
+  const byYear = useMemo(() => {
+    const out: { year: number; items: string[] }[] = [];
+    const byYearMap = new Map<number, string[]>();
+    for (const m of months) {
+      const yr = parseInt(m.slice(0, 4), 10);
+      let items = byYearMap.get(yr);
+      if (!items) {
+        items = [];
+        byYearMap.set(yr, items);
+        out.push({ year: yr, items });
+      }
+      items.push(m);
     }
-    g.items.push(m);
-  }
+    return out;
+  }, [months]);
 
   return (
     <div ref={wrapRef} className="relative flex items-center gap-1.5">
@@ -70,9 +76,7 @@ export default function MonthChevronNav({
         onClick={() => setOpen((v) => !v)}
         className={`px-3 rounded-[9px] border border-bdr bg-cream text-sm font-semibold text-txt min-w-[112px] text-center cursor-pointer font-[inherit] ${subtitle ? "py-1.5 leading-tight" : "h-8"}`}
       >
-        <div>
-          {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
-        </div>
+        <div>{formatYmThai(selected)}</div>
         {subtitle && (
           <div className="text-[11px] text-txt-soft font-normal mt-0.5">
             {subtitle}

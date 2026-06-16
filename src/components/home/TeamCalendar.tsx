@@ -5,7 +5,7 @@ import {
   Sparkles as IconSparkles,
   Store as IconStore,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   COLORS as colors,
   LEAVE_TYPES,
@@ -89,13 +89,18 @@ export default function TeamCalendar({
     ),
   ];
 
-  const leavesByDate: Record<string, LeaveEntry[]> = {};
-  leaveEntries.forEach((leaveEntry) => {
-    dateRange(leaveEntry.start, leaveEntry.end).forEach((dateKey) => {
-      if (!leavesByDate[dateKey]) leavesByDate[dateKey] = [];
-      leavesByDate[dateKey].push(leaveEntry);
-    });
-  });
+  // memo บน leaveEntries — กัน rebuild ตอนแตะวันหรือเปิด popover เลือกเดือน
+  // (ใบลาช่วงยาวจะ allocate array ทุกวันใน range ทุก render ถ้าไม่ memo)
+  const leavesByDate = useMemo(() => {
+    const out: Record<string, LeaveEntry[]> = {};
+    for (const leaveEntry of leaveEntries) {
+      for (const dateKey of dateRange(leaveEntry.start, leaveEntry.end)) {
+        if (!out[dateKey]) out[dateKey] = [];
+        out[dateKey].push(leaveEntry);
+      }
+    }
+    return out;
+  }, [leaveEntries]);
   const selectedDateLeaves = leavesByDate[selectedDate] || [];
 
   return (

@@ -7,7 +7,7 @@ import {
   XCircle as IconXCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { THAI_MONTH_NAMES } from "../../constants";
+import { formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
 
@@ -78,8 +78,7 @@ export default function AdvanceHistoryModal({
       )}
 
       {months.map((m) => {
-        const [y, mo] = m.split("-");
-        const monthLabel = `${THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} ${parseInt(y, 10) + 543}`;
+        const monthLabel = formatYmThai(m);
         const monthList = grouped[m];
         const monthTotal = monthList
           .filter((r) => r.status === "approved")
