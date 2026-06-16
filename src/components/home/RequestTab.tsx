@@ -4,6 +4,7 @@ import {
   AlertCircle as IconAlertCircle,
   AlertTriangle as IconAlertTriangle,
   CalendarDays as IconCalendar,
+  ChevronLeft as IconChevronLeft,
   ChevronRight as IconChevronRight,
   ClipboardList as IconClipboardList,
   ShieldCheck as IconShieldCheck,
@@ -72,18 +73,30 @@ export default function RequestTab({
   const [selectedHistMonth, setSelectedHistMonth] = useState("");
 
   /* ─── ประวัติการลา — แยกดูเป็นรายเดือน ────────────────────────── */
-  // เดือนทั้งหมดที่มีใบลา (YYYY-MM · เรียงใหม่→เก่า)
-  const historyMonths = useMemo(
-    () =>
-      Array.from(new Set(myLeaves.map((lv) => lv.start.slice(0, 7)))).sort(
-        (a, b) => b.localeCompare(a),
-      ),
-    [myLeaves],
-  );
-  // เดือนที่กำลังดู — default = เดือนล่าสุดที่มีใบลา · กันค่าค้างถ้าเดือนหาย
-  const effectiveHistMonth = historyMonths.includes(selectedHistMonth)
+  const currentMonth = TODAY.slice(0, 7);
+  // ช่วงเดือนที่เลื่อนดูได้ (ต่อเนื่อง · ใหม่→เก่า) — ครอบทั้งเดือนปัจจุบัน
+  // และทุกเดือนที่มีใบลา (รวมใบลาล่วงหน้าในอนาคต)
+  const navMonths = useMemo(() => {
+    const all = [currentMonth, ...myLeaves.map((lv) => lv.start.slice(0, 7))];
+    const maxYm = all.reduce((a, b) => (b > a ? b : a), all[0]);
+    const minYm = all.reduce((a, b) => (b < a ? b : a), all[0]);
+    const out: string[] = [];
+    let [y, m] = maxYm.split("-").map(Number);
+    const [minY, minM] = minYm.split("-").map(Number);
+    while (y > minY || (y === minY && m >= minM)) {
+      out.push(`${y}-${String(m).padStart(2, "0")}`);
+      m -= 1;
+      if (m === 0) {
+        m = 12;
+        y -= 1;
+      }
+    }
+    return out;
+  }, [myLeaves, currentMonth]);
+  // เดือนที่กำลังดู — default = เดือนปัจจุบัน (แม้ไม่มีใบลา) · กันค่าค้าง
+  const effectiveHistMonth = navMonths.includes(selectedHistMonth)
     ? selectedHistMonth
-    : historyMonths[0] || "";
+    : currentMonth;
   const monthLeaves = useMemo(
     () =>
       myLeaves
@@ -279,106 +292,131 @@ export default function RequestTab({
           />
           ประวัติการลาของคุณ
         </div>
-        {myLeaves.length === 0 ? (
+        {/* เลือกเดือนที่จะดู — ลูกศรซ้าย/ขวา (เลื่อนได้ต่อเนื่อง) */}
+        {(() => {
+          // navMonths เรียงใหม่→เก่า · ‹ = เดือนเก่ากว่า · › = เดือนใหม่กว่า
+          const idx = navMonths.indexOf(effectiveHistMonth);
+          const hasOlder = idx < navMonths.length - 1;
+          const hasNewer = idx > 0;
+          const [y, mo] = effectiveHistMonth.split("-");
+          return (
+            <div className="flex items-center justify-between gap-2 mb-3.5">
+              <button
+                type="button"
+                aria-label="เดือนก่อนหน้า"
+                disabled={!hasOlder}
+                onClick={() =>
+                  hasOlder && setSelectedHistMonth(navMonths[idx + 1])
+                }
+                className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <IconChevronLeft
+                  size={14}
+                  color={COLORS.textMedium}
+                  strokeWidth={2.5}
+                />
+              </button>
+              <div className="text-center">
+                <div className="text-sm font-bold text-maroon">
+                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
+                  {parseInt(y, 10) + 543}
+                </div>
+                <div className="text-xs text-txt-soft mt-0.5">
+                  {monthLeaves.length} รายการ
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-label="เดือนถัดไป"
+                disabled={!hasNewer}
+                onClick={() =>
+                  hasNewer && setSelectedHistMonth(navMonths[idx - 1])
+                }
+                className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <IconChevronRight
+                  size={14}
+                  color={COLORS.textMedium}
+                  strokeWidth={2.5}
+                />
+              </button>
+            </div>
+          );
+        })()}
+        {monthLeaves.length === 0 ? (
           <div className="text-center text-txt-soft py-7.5 text-sm bg-cream rounded-[14px] border border-dashed border-bdr">
-            ยังไม่มีประวัติการลา
+            ไม่มีใบลาในเดือนนี้
           </div>
         ) : (
-          <>
-            {/* เลือกเดือนที่จะดู */}
-            <div className="flex items-center gap-2 mb-3.5">
-              <select
-                value={effectiveHistMonth}
-                onChange={(e) => setSelectedHistMonth(e.target.value)}
-                className="flex-1 appearance-none cursor-pointer py-2.5 pl-3.5 pr-9 rounded-[12px] text-sm font-bold outline-none font-[inherit] text-maroon bg-white border-[1.5px] border-bdr bg-[length:16px] bg-[right_0.75rem_center] bg-no-repeat"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237B1C1C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-                }}
-              >
-                {historyMonths.map((ym) => {
-                  const [y, mo] = ym.split("-");
-                  return (
-                    <option key={ym} value={ym}>
-                      {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                      {parseInt(y, 10) + 543}
-                    </option>
-                  );
-                })}
-              </select>
-              <span className="text-sm text-txt-soft font-medium shrink-0">
-                {monthLeaves.length} รายการ
-              </span>
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {monthLeaves.map((h) => {
-                const lt = LEAVE_TYPES.find((t) => t.id === h.type);
-                return (
+          <div className="flex flex-col gap-2.5">
+            {monthLeaves.map((h) => {
+              const lt = LEAVE_TYPES.find((t) => t.id === h.type);
+              return (
+                <div
+                  key={h.id}
+                  onClick={() =>
+                    setHistDetail(histDetail === h.id ? null : h.id)
+                  }
+                  className="bg-white rounded-[14px] p-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3 cursor-pointer"
+                >
                   <div
-                    key={h.id}
-                    onClick={() =>
-                      setHistDetail(histDetail === h.id ? null : h.id)
-                    }
-                    className="bg-white rounded-[14px] p-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3 cursor-pointer"
+                    className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
+                    style={{
+                      background: lt?.colorLt || COLORS.creamDark,
+                      color: lt?.color || COLORS.textMedium,
+                    }}
                   >
-                    <div
-                      className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
-                      style={{
-                        background: lt?.colorLt || COLORS.creamDark,
-                        color: lt?.color || COLORS.textMedium,
-                      }}
-                    >
-                      {lt?.Icon && <lt.Icon size={20} strokeWidth={2.2} />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-txt text-base mb-0.5 flex items-center gap-1.5 flex-wrap">
-                        {lt?.label}
-                        {h.createdByAdmin && (
-                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-px rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
-                            <IconShieldCheck size={10} strokeWidth={2.6} />
-                            ADMIN
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm text-txt-mid">
-                        {fmtDate(h.start)}
-                        {h.start !== h.end ? ` – ${fmtDate(h.end)}` : ""} (
-                        {h.days} วันทำการ)
-                      </div>
-                      {histDetail === h.id && (
-                        <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex items-center gap-1.5">
-                          <IconCalendar size={12} strokeWidth={2.4} />
-                          วันที่ยื่น: {h.submitted}
-                        </div>
+                    {lt?.Icon && <lt.Icon size={20} strokeWidth={2.2} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-txt text-base mb-0.5 flex items-center gap-1.5 flex-wrap">
+                      {lt?.label}
+                      {h.createdByAdmin && (
+                        <span className="text-xs font-extrabold tracking-wide px-1.5 py-px rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
+                          <IconShieldCheck size={10} strokeWidth={2.6} />
+                          ADMIN
+                        </span>
                       )}
                     </div>
-                    {isFuture(h.start) && (
-                      <button
-                        type="button"
-                        aria-label="ลบใบลา"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setConfirmLeave(h);
-                        }}
-                        className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
-                      >
-                        <IconTrash
-                          size={16}
-                          color={COLORS.red}
-                          strokeWidth={2.2}
-                        />
-                      </button>
+                    <div className="text-sm text-txt-mid">
+                      {fmtDate(h.start)}
+                      {h.start !== h.end ? ` – ${fmtDate(h.end)}` : ""} (
+                      {h.days} วันทำการ)
+                    </div>
+                    {histDetail === h.id && (
+                      <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex items-center gap-1.5">
+                        <IconCalendar size={12} strokeWidth={2.4} />
+                        วันที่ยื่น: {h.submitted}
+                      </div>
                     )}
-                    <IconChevronRight
-                      size={14}
-                      color={COLORS.textSoft}
-                      strokeWidth={2}
-                      className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail === h.id ? "rotate-90" : "rotate-0"}`}
-                    />
                   </div>
-                );
-              })}
-            </div>
-          </>
+                  {isFuture(h.start) && (
+                    <button
+                      type="button"
+                      aria-label="ลบใบลา"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmLeave(h);
+                      }}
+                      className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
+                    >
+                      <IconTrash
+                        size={16}
+                        color={COLORS.red}
+                        strokeWidth={2.2}
+                      />
+                    </button>
+                  )}
+                  <IconChevronRight
+                    size={14}
+                    color={COLORS.textSoft}
+                    strokeWidth={2}
+                    className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail === h.id ? "rotate-90" : "rotate-0"}`}
+                  />
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
