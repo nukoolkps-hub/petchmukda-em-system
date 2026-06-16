@@ -239,10 +239,14 @@ export default function TeamCalendar({
                       const leaveType = LEAVE_TYPES.find(
                         (type) => type.id === leaveEntry.type,
                       );
+                      const displayName =
+                        employeeDirectory.find(
+                          (e) => e.name === leaveEntry.employeeName,
+                        )?.nickname || leaveEntry.employeeName;
                       return (
                         <div
                           key={leaveEntry.id}
-                          title={`${leaveEntry.employeeName} (${leaveType?.label || leaveEntry.type})`}
+                          title={`${displayName} (${leaveType?.label || leaveEntry.type})`}
                           className="w-2.5 h-2.5 rounded-full border border-white"
                           style={{
                             background: leaveType?.color || colors.gold,
