@@ -721,7 +721,7 @@ export default function EmployeeEditModal({
                     </div>
                     <div className="text-[10px] text-txt-soft mt-1.5 leading-relaxed">
                       ตั้งครั้งเดียว · apply ทุกปี Jan ที่ทำงานครบรอบ ·
-                      0 = ไม่ขึ้น auto (override รายปีได้ในประวัติ)
+                      0 = ไม่ขึ้นแบบ auto (กำหนดเฉพาะปีพิเศษได้ในประวัติ)
                     </div>
                   </div>
 
@@ -829,7 +829,9 @@ export default function EmployeeEditModal({
                                 )}
                               </div>
                               <div className="text-[9px] text-txt-soft mt-1 ml-14">
-                                {isOverride ? "(override · กำหนดเอง)" : "(auto)"}
+                                {isOverride
+                                  ? "(กำหนดเอง · ปีพิเศษ)"
+                                  : "(ตามค่า auto)"}
                               </div>
                             </div>
                           );
