@@ -48,6 +48,28 @@ attendanceBonus = bonusDays × dailyRate                        // dailyRate = b
 
 Source: `src/utils/salaryUtils.ts` → `calculateSalary()`
 
+### การขึ้นเงินเดือนประจำปี (Annual Raise)
+
+เงินเดือนพื้นฐานที่ "มีผลจริง" (effective) = `baseSalary` (เริ่มต้น) + ผลรวมการขึ้นเงินรายปีที่ถึงรอบแล้ว
+
+```
+getEffectiveBaseSalary(employee, yearMonth?)
+  = baseSalary
+  + Σ raise(y)   สำหรับปี y = startYear+1 … targetYear ที่ eligible
+```
+
+| Field (`Employee`) | ความหมาย |
+|---|---|
+| `baseSalary` | เงินเดือนพื้นฐาน **เริ่มต้น** (ตอนเริ่มงาน) |
+| `annualRaiseAmount` | จำนวนขึ้น AUTO ทุกเดือน ม.ค. (admin ตั้งครั้งเดียว · `0` = ไม่ขึ้น auto) |
+| `annualRaises[year]` | override รายปี (ค.ศ. string) · มี precedence เหนือ auto สำหรับปีนั้น |
+
+- **Eligibility:** ปี `y` จะขึ้นได้เมื่อทำงานครบ ≥ 365 วันก่อน 1 ม.ค. ปีนั้น (`isEligibleForRaiseYear`, อิง `startWorkMonth`)
+- **Effective base** ถูกใช้ใน `calculateSalary` (live) + snapshot ตอน `updateSalary` (เดือนที่ freeze ไว้ใช้ค่าตอนนั้น · เดือนปัจจุบัน/อนาคต live)
+- **UI:** admin แก้ใน `EmployeeEditModal` → section "การขึ้นเงินเดือนประจำปี" (auto amount + ประวัติ card รายปี + override) · พนักงานเห็น effective base ใน `PositionRateCard` (หน้าแรก)
+
+Source: `src/utils/salaryUtils.ts` → `getEffectiveBaseSalary()` / `isEligibleForRaiseYear()` / `buildRaiseHistory()`
+
 ## Pool Commission System ("กองกลาง")
 
 > UI ภาษาไทยเรียกระบบนี้ว่า **"กองกลาง"** · code/เอกสารเรียก `pool`
@@ -126,7 +148,19 @@ Source: `src/utils/salaryUtils.ts` → `computePoolSharesForGroup()` · snapshot
 - วันลาที่เกินโควต้าจะถูกหักจากเงินเดือน
 - **`leaveUtils` รับ `storeCalendar` param** — นับเฉพาะวันลาที่ตรงกับ "วันทำงาน" (ดู section "ปฏิทินเปิด-ปิดร้าน" ด้านล่าง)
 
-Source: `src/utils/leaveUtils.ts`
+### กฎตอนพนักงานยื่นลา (`useLeaveForm.validate()`)
+
+| กฎ | รายละเอียด | error |
+|---|---|---|
+| ห้ามทับใบเดิม | วันที่เลือกห้ามทับซ้อนกับใบลาเดิมของตัวเอง (interval overlap: `lv.start ≤ end && lv.end ≥ start`) | "วันที่เลือกทับกับใบลาเดิม (…)" |
+| ลาป่วยห้ามข้ามเดือน | `sick` ที่ `start` กับ `end` คนละเดือน → ให้ยื่นแยกเดือน | "ลาป่วยข้ามเดือนไม่ได้ — กรุณายื่นแยกเดือน" |
+| ลาป่วยล่วงหน้า ≤ 2 อาทิตย์ | `sick` เลือกวันได้ไม่เกิน `TODAY + 14` วัน | "ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์" |
+
+- ลากิจ (`personal`) ไม่มีข้อจำกัดข้ามเดือน/ล่วงหน้า (ลาล่วงหน้าได้)
+- **UI ป้องกันชั้นแรก:** `RequestTab` ปฏิทินวันที่สิ้นสุด cap `maxDate = min(สิ้นเดือน start, TODAY+14)` เมื่อเลือกลาป่วย · `validate()` เป็น defense layer
+- **ผู้ดูแล (admin)** เพิ่มใบลาให้พนักงานผ่าน `LeaveListPanel` ได้โดยไม่ติดกฎเหล่านี้ (override เคสลืมกดลา)
+
+Source: `src/utils/leaveUtils.ts` · `src/hooks/useLeaveForm.ts` · `src/components/home/RequestTab.tsx`
 
 ## ปฏิทินเปิด-ปิดร้าน (storeCalendar)
 

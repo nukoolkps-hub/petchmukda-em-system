@@ -211,6 +211,33 @@ export default function ManualModal({ onClose }) {
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
+                <IconCalendarClock size={16} strokeWidth={2.4} />
+                กฎการยื่นลา
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <ul>
+              <li>
+                <b>ลาวันเดิมซ้ำไม่ได้</b> — วันที่เลือกห้ามทับกับใบลาที่ยื่นไว้แล้ว
+              </li>
+              <li>
+                <b>ลาป่วยข้ามเดือนไม่ได้</b> — ถ้าป่วยคาบเกี่ยว 2 เดือน
+                ให้ยื่นแยกเป็น 2 ใบ (เดือนละใบ)
+              </li>
+              <li>
+                <b>ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์</b> — เลือกวันได้ไม่เกิน 14
+                วันนับจากวันนี้
+              </li>
+              <li>
+                <b>ลากิจ</b> ลาล่วงหน้าได้ (ไม่จำกัดเหมือนลาป่วย)
+              </li>
+            </ul>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
                 <IconStar size={16} strokeWidth={2.4} />
                 โบนัสแห่งความขยัน(ไม่หยุด)
               </span>

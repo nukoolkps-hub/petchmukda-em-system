@@ -17,7 +17,9 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | bank | string | ชื่อธนาคาร |
 | bankAccountNumber | string | เลขบัญชี |
 | lineUserId | string | LINE User ID (ใช้เป็น auth uid) |
-| baseSalary | number | เงินเดือนพื้นฐาน |
+| baseSalary | number | เงินเดือนพื้นฐาน **เริ่มต้น** (effective base = + annualRaises ที่ถึงรอบ) |
+| annualRaiseAmount | number | จำนวนขึ้นเงินเดือน AUTO ทุก ม.ค. (`0` = ไม่ขึ้น) |
+| annualRaises | `Record<year, number>` | override การขึ้นเงินรายปี (key = ค.ศ. string) |
 | singlePieceRate | number | rate ชิ้นเดี่ยว |
 | normalSalePieceRate | number | rate ขายปกติ |
 | specialSalePieceRate | number | rate ขายพิเศษ |
@@ -41,7 +43,22 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | end | string (YYYY-MM-DD) | วันสิ้นสุดลา |
 | days | number | จำนวนวัน |
 | reason | string | เหตุผล |
+| createdByAdmin | boolean | admin เพิ่มให้ (badge "ADMIN" ในลิสต์) |
 | createdAt | number (timestamp) | เวลาสร้าง |
+
+หมายเหตุ: **read = ทุก signed-in** — ปฏิทินทีมโชว์ใบลาของทุกคน + กันยื่นลาทับวัน · ไม่มีฟิลด์อ่อนไหวใน leave doc
+
+### loginStates/{state} (CSRF defense — LINE Login)
+
+| Field | Type | Description |
+|---|---|---|
+| createdAt | number | เวลาสร้าง state |
+| expiresAt | number | หมดอายุ (TTL 10 นาที) |
+
+- `prepareLineLogin` (callable) สร้าง random state ก่อน redirect ไป LINE · `lineAuth` ตรวจ + consume (single-use, transaction) ตอน callback
+- เขียน/อ่านผ่าน Admin SDK เท่านั้น (client rules = `false`)
+
+Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth.ts`
 
 ### salaries/{employeeId}/months/{YYYY-MM}
 
@@ -288,7 +305,8 @@ interface Item {
 | Collection | Read | Write |
 |---|---|---|
 | employees | admin / owner | admin (full), owner (profile + bank fields only) |
-| leaves | admin / owner | owner (create), owner (delete future-only), admin (update/delete any) |
+| leaves | **all signed-in** | owner (create), owner (delete future-only), admin (update/delete any) |
+| loginStates/{state} | blocked (client) | blocked (client) — เขียน/อ่านผ่าน Admin SDK เท่านั้น |
 | salaries/{empId}/months/{ym} | admin / owner | admin only |
 | collectionGroup `months` | admin only | blocked |
 | poolSnapshots/{YYYY-MM} | all signed-in | admin only |
