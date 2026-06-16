@@ -1800,6 +1800,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       { type: "h3", text: "รูปประกอบ" },
       {
         type: "image",
+        src: "/knowledge/print-power-button.webp",
+        alt: "ปุ่มเปิดเครื่องพิมพ์ Canon TS207",
+        caption: "1. กดปุ่ม เปิดเครื่องพิมพ์ (ไฟติดสีเขียว)",
+      },
+      {
+        type: "image",
         src: "/knowledge/print-button5.webp",
         alt: "ปุ่มที่ 5 รูปเครื่องพิมพ์",
         caption: "2. กดปุ่มที่ 5 (รูปเครื่องพิมพ์) นับจากทางซ้าย",
