@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { LeaveEntry } from "../types";
-import { countWorkdays } from "../utils/dateUtils";
+import { countWorkdays, fmtShort } from "../utils/dateUtils";
 
 interface UseLeaveFormOptions {
   profileName: string | null;
@@ -54,6 +54,19 @@ export default function useLeaveForm({
     if (form.startDate && form.endDate && form.endDate < form.startDate)
       e.endDate = "วันที่สิ้นสุดต้องไม่ก่อนวันเริ่มต้น";
     if (overLimit) e.over = `วันลาเกินสิทธิ์คงเหลือ (${remain} วัน)`;
+    // กันลาทับวันที่ลาไปแล้ว — เช็คทับซ้อนกับ leave อื่นของพนักงานคนเดียวกัน
+    if (form.startDate && form.endDate && form.endDate >= form.startDate) {
+      const conflict = myLeaves.find(
+        (lv) => lv.start <= form.endDate && lv.end >= form.startDate,
+      );
+      if (conflict) {
+        const range =
+          conflict.start === conflict.end
+            ? fmtShort(conflict.start)
+            : `${fmtShort(conflict.start)} → ${fmtShort(conflict.end)}`;
+        e.over = `วันที่เลือกทับกับใบลาเดิม (${range})`;
+      }
+    }
     return e;
   }
 
