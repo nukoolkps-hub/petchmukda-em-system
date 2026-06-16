@@ -72,13 +72,16 @@ export default function SalaryAdminEdit({
   storeCalendar,
   onReorderEmployees,
   setUnsavedDirty,
+  // เดือนที่ดู (controlled โดย AdminPanel) — share กับ section อื่น
+  selectedMonth,
+  onSelectMonth,
   showToast,
 }) {
   const currentYM = currentYearMonth();
+  const setSelectedMonth = onSelectMonth;
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(
     employeeDirectory[0]?.id || "",
   );
-  const [selectedMonth, setSelectedMonth] = useState(currentYM);
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
   const [showPoolFlow, setShowPoolFlow] = useState(false);
@@ -91,7 +94,8 @@ export default function SalaryAdminEdit({
   } | null>(null);
   const monthlyApprovedAdvances = useApprovedAdvancesByMonth(selectedMonth);
 
-  // เดือนที่เลือกได้: ทุกเดือนที่มีข้อมูลเงินเดือน + เดือนปัจจุบัน
+  // เดือนที่เลือกได้: ทุกเดือนที่มีข้อมูลเงินเดือน + เดือนปัจจุบัน + เดือนที่
+  // controlled ส่งมา (ให้ label ใน MonthChevronNav ขึ้นได้แม้ยังไม่มีข้อมูล)
   const monthOptions = useMemo(() => {
     const set = new Set<string>();
     Object.values(salaryData).forEach((byMonth) => {
@@ -100,8 +104,9 @@ export default function SalaryAdminEdit({
       });
     });
     set.add(currentYM);
+    set.add(selectedMonth);
     return [...set].sort().reverse();
-  }, [salaryData, currentYM]);
+  }, [salaryData, currentYM, selectedMonth]);
 
   const employeeInfo = employeeDirectory.find(
     (e) => e.id === selectedEmployeeId,

@@ -45,12 +45,12 @@ export default function PayrollSummaryPanel({
   onSetPayrollConfirm,
   onSaveSalary,
   onUpdateLoan,
+  // เดือนที่ดู (controlled โดย AdminPanel) — share กับ section อื่น
+  selectedMonth,
+  onSelectMonth,
   showToast,
 }) {
-  const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(
-    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
-  );
+  const setSelectedMonth = onSelectMonth;
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);

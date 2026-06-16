@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { COLORS } from "../../constants";
+import { todayYmd } from "../../utils/dateUtils";
 import TeamCalendar from "../home/TeamCalendar";
 import KnowledgeView from "../knowledge/KnowledgeView";
 import {
@@ -86,6 +87,10 @@ export default function AdminPanel({
   const [employeeEditingId, setEmployeeEditingId] = useState<string | null>(
     null,
   );
+  // เดือนที่ admin กำลังดู (YYYY-MM) — share ระหว่าง section การลา/เงินเดือน/
+  // จ่ายเงิน · admin เลือก ส.ค. ในแท็บค่าคอม → ไปแท็บจ่ายเงิน ยังเป็น ส.ค.
+  // default = เดือนปัจจุบัน (todayYmd() กัน stale ข้าม midnight)
+  const [adminMonth, setAdminMonth] = useState(() => todayYmd().slice(0, 7));
 
   // เตือนตอนปิดหน้า/refresh ถ้ามี unsaved
   useEffect(() => {
@@ -260,6 +265,8 @@ export default function AdminPanel({
           storeCalendar={storeCalendar}
           onUpdateLoan={onUpdateLoan}
           onSaveSalary={onSaveSalary}
+          selectedMonth={adminMonth}
+          onSelectMonth={setAdminMonth}
           showToast={showToast}
         />
       )}
@@ -303,6 +310,8 @@ export default function AdminPanel({
           storeCalendar={storeCalendar}
           onReorderEmployees={onReorderEmployees}
           setUnsavedDirty={setUnsavedDirty}
+          selectedMonth={adminMonth}
+          onSelectMonth={setAdminMonth}
           showToast={showToast}
         />
       )}
@@ -312,6 +321,8 @@ export default function AdminPanel({
         <LeaveSummaryPanel
           allLeaves={allLeaves}
           employeeDirectory={employeeDirectory}
+          selectedMonth={adminMonth}
+          onSelectMonth={setAdminMonth}
         />
       )}
 
@@ -323,6 +334,8 @@ export default function AdminPanel({
           payrollConfirms={payrollConfirms}
           onDelete={onDelete}
           onAddLeave={onAddLeave}
+          selectedMonth={adminMonth}
+          onSelectMonth={setAdminMonth}
           showToast={showToast}
         />
       )}

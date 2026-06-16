@@ -7,10 +7,10 @@ import {
   Cross as IconCross,
   Sun as IconSun,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { COLORS } from "../../constants";
 import type { Employee, LeaveEntry } from "../../types";
-import { fmtDateWithWeekday } from "../../utils/dateUtils";
+import { fmtDateWithWeekday, todayYmd } from "../../utils/dateUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import MonthChevronNav from "../shared/MonthChevronNav";
 
@@ -71,32 +71,40 @@ function sumDayType(leaves: LeaveEntry[]) {
 interface LeaveSummaryPanelProps {
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
+  /** เดือนที่ดู (YYYY-MM) — controlled โดย AdminPanel · share กับ section
+   *  อื่น (LeaveListPanel · SalaryAdminEdit · PayrollSummaryPanel) */
+  selectedMonth: string;
+  onSelectMonth: (month: string) => void;
 }
 
 /* ─── Admin: Leave Summary (รายเดือน + รายปี) ──────────────────── */
 export default function LeaveSummaryPanel({
   allLeaves,
   employeeDirectory,
+  selectedMonth,
+  onSelectMonth,
 }: LeaveSummaryPanelProps) {
-  const now0 = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(
-    `${now0.getFullYear()}-${String(now0.getMonth() + 1).padStart(2, "0")}`,
-  );
-  const [selYear, setSelYear] = useState(`${now0.getFullYear()}`);
+  const today = todayYmd();
+  const currentMonth = today.slice(0, 7);
+  const [selYear, setSelYear] = useState(today.slice(0, 4));
   // key = `${employeeName}:${type}` — chip ที่ถูกกดให้แสดงรายการวัน
   const [expandedChip, setExpandedChip] = useState<string | null>(null);
 
-  const currentMonth = `${now0.getFullYear()}-${String(now0.getMonth() + 1).padStart(2, "0")}`;
-  // navMonths = current month ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
-  // (admin เลื่อนถึงเดือนปัจจุบันได้แม้ยังไม่มีใบลา · ตรงกับ LeaveListPanel)
-  const months: string[] = [
-    ...new Set([
-      currentMonth,
-      ...(allLeaves.map((lv) => lv.start.slice(0, 7)) as string[]),
-    ]),
-  ]
-    .sort()
-    .reverse();
+  // navMonths = current ∪ selectedMonth ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
+  // (selectedMonth อยู่ใน list เสมอ → effectiveMonth = selectedMonth ตรงๆ)
+  const months: string[] = useMemo(
+    () =>
+      [
+        ...new Set([
+          currentMonth,
+          selectedMonth,
+          ...(allLeaves.map((lv) => lv.start.slice(0, 7)) as string[]),
+        ]),
+      ]
+        .sort()
+        .reverse(),
+    [allLeaves, currentMonth, selectedMonth],
+  );
   const effectiveMonth = months.includes(selectedMonth)
     ? selectedMonth
     : currentMonth;
@@ -118,7 +126,7 @@ export default function LeaveSummaryPanel({
           <MonthChevronNav
             months={months}
             selected={effectiveMonth}
-            onSelect={setSelectedMonth}
+            onSelect={onSelectMonth}
             popoverSide="right"
           />
         </div>

@@ -21,6 +21,7 @@ import {
   countWorkdays,
   fmtDateWithWeekday,
   isFuture,
+  todayYmd,
 } from "../../utils/dateUtils";
 import { isMonthLocked, monthOf } from "../../utils/payrollLock";
 import ConfirmModal from "../modals/ConfirmModal";
@@ -36,6 +37,10 @@ interface LeaveListPanelProps {
   onAddLeave: (
     leave: Omit<LeaveEntry, "id">,
   ) => Promise<string | number | void>;
+  /** เดือนที่ดู (YYYY-MM) — controlled โดย AdminPanel ผ่าน prop · admin
+   *  ที่เลือก ส.ค. ในแท็บค่าคอม → ไปแท็บนี้ ยังเป็น ส.ค. */
+  selectedMonth: string;
+  onSelectMonth: (month: string) => void;
   showToast?: (msg: string) => void;
 }
 
@@ -46,26 +51,29 @@ export default function LeaveListPanel({
   payrollConfirms,
   onDelete,
   onAddLeave,
+  selectedMonth,
+  onSelectMonth,
   showToast,
 }: LeaveListPanelProps) {
-  const currentMonth = TODAY.slice(0, 7);
+  const currentMonth = todayYmd().slice(0, 7);
   const [employeeFilter, setFilterEmp] = useState("");
   const [filterType, setFilterType] = useState("");
-  const [filterMonth, setFilterMonth] = useState(currentMonth);
   const [confirmLeave, setConfirmLeave] = useState<any>(null);
 
-  // navMonths = เดือนปัจจุบัน ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
-  // (กดลูกศรย้อนได้แม้เดือนปัจจุบันไม่มีใบลา · pattern เดียวกับ employee history)
+  // navMonths = เดือนปัจจุบัน ∪ เดือนที่ถูกเลือก ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
+  // selectedMonth อยู่ใน list เสมอ → effectiveMonth = selectedMonth ตรงๆ
   const navMonths = useMemo(
     () =>
       Array.from(
-        new Set([currentMonth, ...allLeaves.map((lv) => lv.start.slice(0, 7))]),
+        new Set([
+          currentMonth,
+          selectedMonth,
+          ...allLeaves.map((lv) => lv.start.slice(0, 7)),
+        ]),
       ).sort((a, b) => b.localeCompare(a)),
-    [allLeaves, currentMonth],
+    [allLeaves, currentMonth, selectedMonth],
   );
-  const effectiveMonth = navMonths.includes(filterMonth)
-    ? filterMonth
-    : currentMonth;
+  const effectiveMonth = selectedMonth;
 
   /* ─── Add-leave form (collapsible) ─── */
   const [addOpen, setAddOpen] = useState(false);
@@ -282,7 +290,7 @@ export default function LeaveListPanel({
           <MonthChevronNav
             months={navMonths}
             selected={effectiveMonth}
-            onSelect={setFilterMonth}
+            onSelect={onSelectMonth}
             popoverSide="right"
           />
         </div>
