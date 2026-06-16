@@ -26,7 +26,7 @@ import DutyForecastModal from "../modals/DutyForecastModal";
 import RoleMainDutiesModal from "../modals/RoleMainDutiesModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import { MemphisCornerSticker } from "../shared/MemphisPattern";
-import PositionRateCard from "../shared/PositionRateCard";
+import PositionRateCard from "./PositionRateCard";
 import TeamCalendar from "./TeamCalendar";
 
 interface HomeTabProps {
