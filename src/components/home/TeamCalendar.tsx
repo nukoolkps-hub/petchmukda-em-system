@@ -240,9 +240,11 @@ export default function TeamCalendar({
                         (type) => type.id === leaveEntry.type,
                       );
                       const displayName =
+                        leaveEntry.employeeNickname ||
                         employeeDirectory.find(
                           (e) => e.name === leaveEntry.employeeName,
-                        )?.nickname || leaveEntry.employeeName;
+                        )?.nickname ||
+                        leaveEntry.employeeName;
                       return (
                         <div
                           key={leaveEntry.id}
@@ -336,7 +338,9 @@ export default function TeamCalendar({
                   />
                   <div className="flex-1">
                     <div className="font-semibold text-txt text-base">
-                      {employeeInfo?.nickname || leaveEntry.employeeName}
+                      {leaveEntry.employeeNickname ||
+                        employeeInfo?.nickname ||
+                        leaveEntry.employeeName}
                     </div>
                     <div className="text-sm text-txt-mid mt-0.5 inline-flex items-center gap-1.5">
                       {leaveType?.Icon && (

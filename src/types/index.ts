@@ -51,6 +51,9 @@ export interface RecurringItem {
 export interface LeaveEntry {
   id: string | number;
   employeeName: string;
+  /** snapshot ของ employee.nickname ตอนสร้าง — ใช้แสดงในปฏิทินทีมฝั่งพนักงาน
+   *  (employee subscription scope = own only · ดูชื่อเล่นเพื่อนผ่าน peer doc ไม่ได้) */
+  employeeNickname?: string;
   employeeId: string;
   type: LeaveKind;
   start: string; // YYYY-MM-DD
