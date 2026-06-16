@@ -5,14 +5,16 @@ import {
   Sparkles as IconSparkles,
   Store as IconStore,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   COLORS as colors,
   LEAVE_TYPES,
   TODAY,
   THAI_MONTH_NAMES as thaiMonthNames,
+  THAI_MONTH_SHORT_NAMES,
   THAI_SHORT_WEEKDAY_NAMES as thaiShortDayNames,
 } from "../../constants";
+import { useClickOutside } from "../../hooks/useClickOutside";
 import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
 import { dateRange, toYMD as toDateKey } from "../../utils/dateUtils";
 import { isStoreClosed } from "../../utils/storeCalendar";
@@ -39,6 +41,12 @@ export default function TeamCalendar({
   const [visibleYear, setVisibleYear] = useState(now.getFullYear());
   const [visibleMonth, setVisibleMonth] = useState(now.getMonth());
   const [selectedDate, setSelectedDate] = useState<string>(TODAY);
+  // popover เลือกเดือน/ปีเมื่อแตะ label
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // ปีที่กำลังโชว์ใน popover · sync กับ visibleYear ตอนเปิด
+  const [pickerYear, setPickerYear] = useState(visibleYear);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  useClickOutside(pickerRef, () => setPickerOpen(false), pickerOpen);
 
   function showPreviousMonth() {
     if (visibleMonth === 0) {
@@ -100,7 +108,7 @@ export default function TeamCalendar({
               แตะวันเพื่อดูรายละเอียด
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div ref={pickerRef} className="relative flex items-center gap-2">
             <button
               onClick={showPreviousMonth}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
@@ -111,9 +119,16 @@ export default function TeamCalendar({
                 strokeWidth={2.5}
               />
             </button>
-            <span className="text-sm font-semibold text-txt min-w-[108px] text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setPickerYear(visibleYear);
+                setPickerOpen((v) => !v);
+              }}
+              className="text-sm font-semibold text-txt min-w-[108px] text-center px-2.5 py-1.5 rounded-lg border border-bdr bg-cream cursor-pointer font-[inherit]"
+            >
               {thaiMonthNames[visibleMonth]} {visibleYear + 543}
-            </span>
+            </button>
             <button
               onClick={showNextMonth}
               className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
@@ -124,6 +139,66 @@ export default function TeamCalendar({
                 strokeWidth={2.5}
               />
             </button>
+
+            {pickerOpen && (
+              <div className="absolute z-20 top-full right-0 mt-1.5 w-[208px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)]">
+                {/* year header */}
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <button
+                    type="button"
+                    aria-label="ปีก่อนหน้า"
+                    onClick={() => setPickerYear((y) => y - 1)}
+                    className="w-6 h-6 rounded-md border border-bdr bg-cream cursor-pointer flex items-center justify-center"
+                  >
+                    <IconChevronLeft
+                      size={11}
+                      color={colors.textMedium}
+                      strokeWidth={2.5}
+                    />
+                  </button>
+                  <span className="text-sm font-bold text-maroon">
+                    ปี {pickerYear + 543}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="ปีถัดไป"
+                    onClick={() => setPickerYear((y) => y + 1)}
+                    className="w-6 h-6 rounded-md border border-bdr bg-cream cursor-pointer flex items-center justify-center"
+                  >
+                    <IconChevronRight
+                      size={11}
+                      color={colors.textMedium}
+                      strokeWidth={2.5}
+                    />
+                  </button>
+                </div>
+                {/* months 3-col grid · short names */}
+                <div className="grid grid-cols-3 gap-1">
+                  {THAI_MONTH_SHORT_NAMES.map((label, i) => {
+                    const isSel =
+                      pickerYear === visibleYear && i === visibleMonth;
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => {
+                          setVisibleYear(pickerYear);
+                          setVisibleMonth(i);
+                          setPickerOpen(false);
+                        }}
+                        className={`py-2 px-1 rounded-[8px] text-sm font-semibold cursor-pointer font-[inherit] transition-colors ${
+                          isSel
+                            ? "bg-maroon text-white"
+                            : "bg-transparent text-txt-mid hover:bg-cream"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-7 mb-1.5">
