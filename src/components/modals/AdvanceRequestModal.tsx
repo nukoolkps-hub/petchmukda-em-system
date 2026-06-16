@@ -17,6 +17,16 @@ export default function AdvanceRequestModal({
   advanceRequests,
   onSubmit,
   onClose,
+  showToast,
+}: {
+  profile: any;
+  employee: any;
+  employeeId: string;
+  salaryData: any;
+  advanceRequests: any[];
+  onSubmit: (data: { amount: number; reason: string; month: string }) => void;
+  onClose: () => void;
+  showToast?: (msg: string) => void;
 }) {
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -63,22 +73,29 @@ export default function AdvanceRequestModal({
   const [reason, setReason] = useState("");
   const [err, setErr] = useState("");
 
+  function fail(message: string) {
+    setErr(message);
+    showToast?.(message);
+  }
+
   function submit() {
     if (payrollLocked) {
-      setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
+      fail("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
       return;
     }
     const amountValue = parseFloat(amount) || 0;
     if (amountValue <= 0) {
-      setErr("กรุณาระบุจำนวนเงิน");
+      fail("กรุณาระบุจำนวนเงินที่ต้องการเบิก");
       return;
     }
     if (amountValue > remaining) {
-      setErr(`เกินวงเงินคงเหลือ (สูงสุด ${formatThaiNumber(remaining)} ฿)`);
+      fail(
+        `เกินวงเงินคงเหลือ — เบิกได้สูงสุด ${formatThaiNumber(remaining)} ฿`,
+      );
       return;
     }
     if (!reason.trim()) {
-      setErr("กรุณาระบุเหตุผล");
+      fail("กรุณาระบุเหตุผลก่อนยื่นคำขอเบิก");
       return;
     }
     setErr("");
@@ -218,12 +235,26 @@ export default function AdvanceRequestModal({
           ยกเลิก
         </button>
         <button
-          onClick={submit}
-          disabled={payrollLocked || remaining <= 0}
+          type="button"
+          onClick={() => {
+            if (payrollLocked) {
+              showToast?.(
+                "วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้",
+              );
+              return;
+            }
+            if (remaining <= 0) {
+              showToast?.(
+                "เบิกครบวงเงินของเดือนนี้แล้ว — ต้องรอเดือนถัดไป",
+              );
+              return;
+            }
+            submit();
+          }}
           className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5
             ${
               payrollLocked || remaining <= 0
-                ? "bg-bdr text-txt-soft cursor-not-allowed shadow-none"
+                ? "bg-bdr text-txt-soft shadow-none"
                 : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
             }`}
         >
