@@ -10,12 +10,7 @@ import {
   X as IconX,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  COLORS,
-  LEAVE_TYPES,
-  THAI_MONTH_NAMES,
-  TODAY,
-} from "../../constants";
+import { COLORS, LEAVE_TYPES, TODAY } from "../../constants";
 import type {
   Employee,
   LeaveEntry,
@@ -30,6 +25,7 @@ import {
 import { isMonthLocked, monthOf } from "../../utils/payrollLock";
 import ConfirmModal from "../modals/ConfirmModal";
 import AvatarCircle from "../shared/AvatarCircle";
+import MonthChevronNav from "../shared/MonthChevronNav";
 import ThaiDateInput from "../shared/ThaiDateInput";
 
 interface LeaveListPanelProps {
@@ -52,19 +48,24 @@ export default function LeaveListPanel({
   onAddLeave,
   showToast,
 }: LeaveListPanelProps) {
+  const currentMonth = TODAY.slice(0, 7);
   const [employeeFilter, setFilterEmp] = useState("");
   const [filterType, setFilterType] = useState("");
-  const [filterMonth, setFilterMonth] = useState(""); // "" = ทุกเดือน
+  const [filterMonth, setFilterMonth] = useState(currentMonth);
   const [confirmLeave, setConfirmLeave] = useState<any>(null);
 
-  // เดือนที่มีใบลา (YYYY-MM · ใหม่→เก่า) — ใช้เป็น option ใน month filter
-  const availableMonths = useMemo(
+  // navMonths = เดือนปัจจุบัน ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
+  // (กดลูกศรย้อนได้แม้เดือนปัจจุบันไม่มีใบลา · pattern เดียวกับ employee history)
+  const navMonths = useMemo(
     () =>
       Array.from(
-        new Set(allLeaves.map((lv) => lv.start.slice(0, 7))),
+        new Set([currentMonth, ...allLeaves.map((lv) => lv.start.slice(0, 7))]),
       ).sort((a, b) => b.localeCompare(a)),
-    [allLeaves],
+    [allLeaves, currentMonth],
   );
+  const effectiveMonth = navMonths.includes(filterMonth)
+    ? filterMonth
+    : currentMonth;
 
   /* ─── Add-leave form (collapsible) ─── */
   const [addOpen, setAddOpen] = useState(false);
@@ -124,7 +125,7 @@ export default function LeaveListPanel({
   const filteredLeaves = allLeaves
     .filter((lv) => !employeeFilter || lv.employeeId === employeeFilter)
     .filter((lv) => !filterType || lv.type === filterType)
-    .filter((lv) => !filterMonth || lv.start.startsWith(filterMonth))
+    .filter((lv) => lv.start.startsWith(effectiveMonth))
     .sort((a, b) => b.start.localeCompare(a.start));
 
   // เดือนที่ปิดรอบแล้ว — precompute ครั้งเดียวจาก payrollConfirms (กี่เดือน
@@ -260,27 +261,11 @@ export default function LeaveListPanel({
       </div>
 
       <div className="flex flex-col gap-2 mb-3.5">
-        <div className="relative">
-          <select
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
-          >
-            <option value="">ทุกเดือน</option>
-            {availableMonths.map((ym) => {
-              const [y, mo] = ym.split("-");
-              return (
-                <option key={ym} value={ym}>
-                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                  {parseInt(y, 10) + 543}
-                </option>
-              );
-            })}
-          </select>
-          <IconChevronDown
-            size={14}
-            strokeWidth={2.4}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+        <div className="flex justify-start">
+          <MonthChevronNav
+            months={navMonths}
+            selected={effectiveMonth}
+            onSelect={setFilterMonth}
           />
         </div>
         <div className="flex gap-2">
