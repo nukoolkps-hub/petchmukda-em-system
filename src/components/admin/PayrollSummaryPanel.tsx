@@ -4,7 +4,6 @@ import {
   Briefcase as IconBriefcase,
   CalendarDays as IconCalendar,
   Check as IconCheck,
-  ChevronDown as IconChevronDown,
   CircleCheck as IconCircleCheck,
   Copy as IconCopy,
   CreditCard as IconCreditCard,
@@ -15,7 +14,7 @@ import {
   ShoppingBag as IconShoppingBag,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { COLORS } from "../../constants";
 import { buildLoanContext } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
@@ -28,6 +27,7 @@ import {
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
+import MonthChevronNav from "../shared/MonthChevronNav";
 
 /* ─── Admin: Payroll Summary Panel ───────────────────────────────
    สรุปเงินเดือนสุทธิทุกคน + ข้อมูลธนาคาร พร้อมปุ่มคัดลอกเลขบัญชี
@@ -390,28 +390,12 @@ export default function PayrollSummaryPanel({
             คัดลอกเลขบัญชีไปวางในแอปธนาคารได้
           </div>
         </div>
-        <div className="relative">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
-          >
-            {months.map((m) => {
-              const [y, mo] = m.split("-");
-              return (
-                <option key={m} value={m}>
-                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                  {parseInt(y, 10) + 543}
-                </option>
-              );
-            })}
-          </select>
-          <IconChevronDown
-            size={12}
-            strokeWidth={2.4}
-            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-          />
-        </div>
+        <MonthChevronNav
+          months={months}
+          selected={selectedMonth}
+          onSelect={setSelectedMonth}
+          popoverSide="right"
+        />
       </div>
 
       {monthlyApprovedAdvances.error && (

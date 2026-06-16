@@ -19,7 +19,6 @@ import {
   Briefcase as IconBriefcase,
   Landmark as IconBuildingBank,
   Check as IconCheck,
-  ChevronDown as IconChevronDown,
   ClipboardList as IconClipboardList,
   Diamond as IconDiamond,
   HandCoins as IconHandCoins,
@@ -40,7 +39,7 @@ import {
   X as IconX,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { COLORS } from "../../constants";
 import { buildLoanContext } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { currentYearMonth } from "../../utils/dateUtils";
@@ -54,6 +53,7 @@ import {
 import PoolFlowModal from "../modals/PoolFlowModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
+import MonthChevronNav from "../shared/MonthChevronNav";
 import PoolAdjustmentModal from "./PoolAdjustmentModal";
 
 /* ─── Salary Admin Edit ────────────────────────────────────────── */
@@ -456,28 +456,12 @@ export default function SalaryAdminEdit({
             </button>
           )}
         </div>
-        <div className="relative">
-          <select
-            value={selectedMonth}
-            onChange={(e) => tryChangeMonth(e.target.value)}
-            className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
-          >
-            {monthOptions.map((m) => {
-              const [y, mo] = m.split("-");
-              return (
-                <option key={m} value={m}>
-                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                  {parseInt(y, 10) + 543}
-                </option>
-              );
-            })}
-          </select>
-          <IconChevronDown
-            size={12}
-            strokeWidth={2.4}
-            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-          />
-        </div>
+        <MonthChevronNav
+          months={monthOptions}
+          selected={selectedMonth}
+          onSelect={tryChangeMonth}
+          popoverSide="right"
+        />
       </div>
 
       {locked && (
