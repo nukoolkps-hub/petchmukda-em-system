@@ -4,25 +4,29 @@
    commit + push → auto deploy                                       */
 
 import {
+  Award as IconAward,
+  BadgeCheck as IconBadgeCheck,
   BadgePercent as IconBadgePercent,
   Banknote as IconBanknote,
   Calculator as IconCalculator,
+  Clock as IconClock,
   Coins as IconCoins,
   CreditCard as IconCreditCard,
   ArrowRightLeft as IconExchange,
-  Eye as IconEye,
   Gauge as IconGauge,
   Gem as IconGem,
+  HandCoins as IconHandCoins,
+  Hammer as IconHammer,
   Landmark as IconLandmark,
   Package as IconPackage,
   Percent as IconPercent,
   Printer as IconPrinter,
+  QrCode as IconQrCode,
   Receipt as IconReceipt,
   Repeat as IconRepeat,
   Replace as IconReplace,
   Scissors as IconScissors,
   ShoppingBag as IconShoppingBag,
-  Sparkles as IconSparkles,
   Star as IconStar,
   Tag as IconTag,
   Wallet as IconWallet,
@@ -132,7 +136,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "labor-cost",
     title: "ค่าแรง เริ่มต้น (ทอง 96.5%)",
-    Icon: IconTag,
+    Icon: IconHammer,
     blocks: [
       {
         type: "p",
@@ -164,7 +168,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "sell-price-9999",
     title: "การคำนวณราคาขาย (ทอง 99.99%)",
-    Icon: IconSparkles,
+    Icon: IconGem,
     blocks: [
       {
         type: "formula",
@@ -330,7 +334,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "sell-price-90",
     title: "การคำนวณราคาขาย (ทอง 90)",
-    Icon: IconStar,
+    Icon: IconBadgeCheck,
     blocks: [
       {
         type: "formula",
@@ -483,7 +487,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "price-tag",
     title: "การอ่านป้ายสินค้า",
-    Icon: IconEye,
+    Icon: IconTag,
     blocks: [
       {
         type: "p",
@@ -669,7 +673,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "buy-price-9999",
     title: "การคำนวณราคารับซื้อ (ทอง 99.99%)",
-    Icon: IconSparkles,
+    Icon: IconHandCoins,
     blocks: [
       {
         type: "table",
@@ -1251,7 +1255,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "pawn-interest",
     title: "การคำนวณดอกเบี้ยจำนำ",
-    Icon: IconPercent,
+    Icon: IconClock,
     blocks: [
       {
         type: "list",
@@ -1285,7 +1289,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "points",
     title: "แต้มสะสม",
-    Icon: IconStar,
+    Icon: IconAward,
     blocks: [
       { type: "h3", text: "แต้มจากรายการขาย" },
       {
@@ -1847,7 +1851,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   {
     id: "aeon",
     title: "ผ่อน AEON ผ่าน Website i-Dealer",
-    Icon: IconSparkles,
+    Icon: IconQrCode,
     blocks: [
       { type: "h3", text: "ข้อมูล Login" },
       { type: "p", text: "Website: i-Dealer" },
