@@ -20,7 +20,7 @@ import AvatarCircle from "../shared/AvatarCircle";
 
 type CalendarEmployee = Pick<
   Employee,
-  "id" | "name" | "avatar" | "avatarType" | "avatarImageUrl"
+  "id" | "name" | "nickname" | "avatar" | "avatarType" | "avatarImageUrl"
 >;
 
 interface TeamCalendarProps {
@@ -332,7 +332,7 @@ export default function TeamCalendar({
                   />
                   <div className="flex-1">
                     <div className="font-semibold text-txt text-base">
-                      {leaveEntry.employeeName}
+                      {employeeInfo?.nickname || leaveEntry.employeeName}
                     </div>
                     <div className="text-sm text-txt-mid mt-0.5 inline-flex items-center gap-1.5">
                       {leaveType?.Icon && (
