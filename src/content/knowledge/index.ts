@@ -1758,6 +1758,12 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "image",
+        src: "/knowledge/triangle-button.webp",
+        alt: "ปุ่มที่ 1 รูปสามเหลี่ยม",
+        caption: "5. กดปุ่มที่ 1 (รูปสามเหลี่ยม) นับจากทางซ้าย",
+      },
+      {
+        type: "image",
         src: "/knowledge/result-gold.webp",
         alt: "ผลการตรวจ Gold Value",
         caption: "7. อ่านค่า Gold Value (ในภาพ = 67.02%)",
