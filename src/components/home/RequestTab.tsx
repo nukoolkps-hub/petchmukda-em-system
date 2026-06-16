@@ -104,6 +104,16 @@ export default function RequestTab({
         .sort((a, b) => b.start.localeCompare(a.start)),
     [myLeaves, effectiveHistMonth],
   );
+  // จำนวนใบลาสูงสุดในเดือนใดเดือนหนึ่ง → ใช้กำหนด min-height ของลิสต์
+  // ให้สูงคงที่ · เปลี่ยนเดือนแล้วหน้าไม่หด/ไม่เด้งขึ้น (scroll ไม่กระโดด)
+  const maxMonthCount = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const lv of myLeaves) {
+      const k = lv.start.slice(0, 7);
+      counts[k] = (counts[k] || 0) + 1;
+    }
+    return Math.max(1, ...Object.values(counts));
+  }, [myLeaves]);
 
   /* ─── Quota status for this month ──────────────────────────── */
   const now = new Date();
@@ -343,81 +353,84 @@ export default function RequestTab({
             </div>
           );
         })()}
-        {monthLeaves.length === 0 ? (
-          <div className="text-center text-txt-soft py-7.5 text-sm bg-cream rounded-[14px] border border-dashed border-bdr">
-            ไม่มีใบลาในเดือนนี้
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {monthLeaves.map((h) => {
-              const lt = LEAVE_TYPES.find((t) => t.id === h.type);
-              return (
-                <div
-                  key={h.id}
-                  onClick={() =>
-                    setHistDetail(histDetail === h.id ? null : h.id)
-                  }
-                  className="bg-white rounded-[14px] p-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3 cursor-pointer"
-                >
+        {/* min-height คงที่ตามเดือนที่ใบลาเยอะสุด → สลับเดือนแล้วหน้าไม่หด/เด้ง */}
+        <div style={{ minHeight: maxMonthCount * 78 }}>
+          {monthLeaves.length === 0 ? (
+            <div className="text-center text-txt-soft py-7.5 text-sm bg-cream rounded-[14px] border border-dashed border-bdr">
+              ไม่มีใบลาในเดือนนี้
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {monthLeaves.map((h) => {
+                const lt = LEAVE_TYPES.find((t) => t.id === h.type);
+                return (
                   <div
-                    className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
-                    style={{
-                      background: lt?.colorLt || COLORS.creamDark,
-                      color: lt?.color || COLORS.textMedium,
-                    }}
+                    key={h.id}
+                    onClick={() =>
+                      setHistDetail(histDetail === h.id ? null : h.id)
+                    }
+                    className="bg-white rounded-[14px] p-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3 cursor-pointer"
                   >
-                    {lt?.Icon && <lt.Icon size={20} strokeWidth={2.2} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-txt text-base mb-0.5 flex items-center gap-1.5 flex-wrap">
-                      {lt?.label}
-                      {h.createdByAdmin && (
-                        <span className="text-xs font-extrabold tracking-wide px-1.5 py-px rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
-                          <IconShieldCheck size={10} strokeWidth={2.6} />
-                          ADMIN
-                        </span>
+                    <div
+                      className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
+                      style={{
+                        background: lt?.colorLt || COLORS.creamDark,
+                        color: lt?.color || COLORS.textMedium,
+                      }}
+                    >
+                      {lt?.Icon && <lt.Icon size={20} strokeWidth={2.2} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-txt text-base mb-0.5 flex items-center gap-1.5 flex-wrap">
+                        {lt?.label}
+                        {h.createdByAdmin && (
+                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-px rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
+                            <IconShieldCheck size={10} strokeWidth={2.6} />
+                            ADMIN
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-txt-mid">
+                        {fmtDate(h.start)}
+                        {h.start !== h.end ? ` – ${fmtDate(h.end)}` : ""} (
+                        {h.days} วันทำการ)
+                      </div>
+                      {histDetail === h.id && (
+                        <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex items-center gap-1.5">
+                          <IconCalendar size={12} strokeWidth={2.4} />
+                          วันที่ยื่น: {h.submitted}
+                        </div>
                       )}
                     </div>
-                    <div className="text-sm text-txt-mid">
-                      {fmtDate(h.start)}
-                      {h.start !== h.end ? ` – ${fmtDate(h.end)}` : ""} (
-                      {h.days} วันทำการ)
-                    </div>
-                    {histDetail === h.id && (
-                      <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex items-center gap-1.5">
-                        <IconCalendar size={12} strokeWidth={2.4} />
-                        วันที่ยื่น: {h.submitted}
-                      </div>
+                    {isFuture(h.start) && (
+                      <button
+                        type="button"
+                        aria-label="ลบใบลา"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmLeave(h);
+                        }}
+                        className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
+                      >
+                        <IconTrash
+                          size={16}
+                          color={COLORS.red}
+                          strokeWidth={2.2}
+                        />
+                      </button>
                     )}
+                    <IconChevronRight
+                      size={14}
+                      color={COLORS.textSoft}
+                      strokeWidth={2}
+                      className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail === h.id ? "rotate-90" : "rotate-0"}`}
+                    />
                   </div>
-                  {isFuture(h.start) && (
-                    <button
-                      type="button"
-                      aria-label="ลบใบลา"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setConfirmLeave(h);
-                      }}
-                      className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
-                    >
-                      <IconTrash
-                        size={16}
-                        color={COLORS.red}
-                        strokeWidth={2.2}
-                      />
-                    </button>
-                  )}
-                  <IconChevronRight
-                    size={14}
-                    color={COLORS.textSoft}
-                    strokeWidth={2}
-                    className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail === h.id ? "rotate-90" : "rotate-0"}`}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       <ConfirmModal
