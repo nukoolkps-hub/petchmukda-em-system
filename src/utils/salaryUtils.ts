@@ -13,12 +13,26 @@ const {
 } = BUSINESS_RULES;
 
 /* ─── Annual Raise Helpers ───────────────────────────────────────
-   เงินเดือนปัจจุบัน = baseSalary (ตอนเริ่มทำงาน) + Σ raises ที่ year ≤ ปี
-   ที่ต้องการคำนวณ · raise มีผลตั้งแต่ Jan ของปีนั้น                          */
+   เงินเดือนปัจจุบัน = baseSalary (ตอนเริ่มทำงาน) + ผลรวมของ raise ราย
+   ปีจนถึงปีที่ต้องการคำนวณ · raise มีผลตั้งแต่ Jan ของปีนั้น
+
+   2 source:
+   - annualRaiseAmount: AUTO ทุกปี (admin ตั้งครั้งเดียว · 0 = ไม่ขึ้น)
+   - annualRaises[year]: OVERRIDE per year (มี precedence เหนือ auto)     */
 
 interface RaiseSource {
   baseSalary?: number;
+  startWorkMonth?: string | null;
+  annualRaiseAmount?: number;
   annualRaises?: Record<string, number>;
+}
+
+/** ส่วนเพิ่มของปีนั้น (override > auto > 0) */
+function raiseAmountForYear(source: RaiseSource, year: number): number {
+  const overrides = source.annualRaises ?? {};
+  const key = String(year);
+  if (overrides[key] !== undefined) return Number(overrides[key]) || 0;
+  return Number(source.annualRaiseAmount ?? 0) || 0;
 }
 
 /** เงินเดือนพื้นฐาน "ของเดือน YYYY-MM" — รวม raises ของปีนั้นและก่อนหน้า ·
@@ -29,7 +43,6 @@ export function getEffectiveBaseSalary(
 ): number {
   if (!source) return 0;
   const base = source.baseSalary ?? 0;
-  const raises = source.annualRaises ?? {};
   // default = ปีปัจจุบัน (ตามเครื่อง user)
   const targetYear = (() => {
     if (yearMonthOrYear) {
@@ -39,12 +52,15 @@ export function getEffectiveBaseSalary(
     }
     return new Date().getFullYear();
   })();
+  const startWM = source.startWorkMonth;
+  if (!startWM) return Math.max(0, base);
+  const startYear = parseInt(startWM.slice(0, 4), 10);
+  if (!Number.isFinite(startYear)) return Math.max(0, base);
   let sum = base;
-  for (const [yearStr, amount] of Object.entries(raises)) {
-    const y = parseInt(yearStr, 10);
-    if (Number.isFinite(y) && y <= targetYear) {
-      sum += Number(amount) || 0;
-    }
+  // loop ปีตั้งแต่ startYear+1 → targetYear · skip ปีที่ยังไม่ครบ 1 ปี
+  for (let y = startYear + 1; y <= targetYear; y++) {
+    if (!isEligibleForRaiseYear(startWM, y)) continue;
+    sum += raiseAmountForYear(source, y);
   }
   return Math.max(0, sum);
 }
@@ -67,26 +83,29 @@ export function isEligibleForRaiseYear(
   return days >= 365;
 }
 
-/** ปีที่ admin ยังควรพิจารณาขึ้นเงินเดือน — ปีแรกที่ eligible แล้วยังไม่มี
- *  entry ใน annualRaises · null ถ้าครบหมดแล้วหรือยังไม่เริ่มทำงาน          */
-export function nextRaiseYearToReview(
-  startWorkMonth: string | undefined | null,
-  annualRaises: Record<string, number> | undefined,
+/** รายการประวัติ raise · ทุกปีที่ eligible ตั้งแต่ startYear+1 → max(currentYear, eligible upcoming Jan)
+ *  ส่ง back per-row: { year, amount, source: "auto" | "override" } */
+export function buildRaiseHistory(
+  source: RaiseSource | null | undefined,
   currentYear?: number,
-): number | null {
-  if (!startWorkMonth) return null;
-  const ys = startWorkMonth.slice(0, 4);
-  const startYear = parseInt(ys, 10);
-  if (!Number.isFinite(startYear)) return null;
-  const raises = annualRaises ?? {};
+): { year: number; amount: number; isOverride: boolean }[] {
+  if (!source?.startWorkMonth) return [];
+  const startYear = parseInt(source.startWorkMonth.slice(0, 4), 10);
+  if (!Number.isFinite(startYear)) return [];
   const now = currentYear ?? new Date().getFullYear();
-  // เริ่มสแกนจาก ปี startYear+1 → ถึงปีปัจจุบัน+1 (เผื่อ admin set ล่วงหน้าได้
-  // 1 ปี เช่น มิ.ย. 2026 ตั้ง raise สำหรับ Jan 2027)
+  // ขยายไปอีก 1 ปี เผื่อ Jan ปีหน้าที่ admin ต้องวางแผน
+  const overrides = source.annualRaises ?? {};
+  const list: { year: number; amount: number; isOverride: boolean }[] = [];
   for (let y = startYear + 1; y <= now + 1; y++) {
-    if (!isEligibleForRaiseYear(startWorkMonth, y)) continue;
-    if (raises[String(y)] === undefined) return y;
+    if (!isEligibleForRaiseYear(source.startWorkMonth, y)) continue;
+    const key = String(y);
+    const isOverride = overrides[key] !== undefined;
+    const amount = isOverride
+      ? Number(overrides[key]) || 0
+      : Number(source.annualRaiseAmount ?? 0) || 0;
+    list.push({ year: y, amount, isOverride });
   }
-  return null;
+  return list.sort((a, b) => b.year - a.year); // ใหม่ → เก่า
 }
 
 /* ─── Pool Share Helper (สูตรตาม Excel) ──────────────────────────
