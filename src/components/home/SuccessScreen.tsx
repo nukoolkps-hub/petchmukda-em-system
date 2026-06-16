@@ -4,7 +4,6 @@ import { Check as IconCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { LEAVE_TYPES } from "../../constants";
 import { fmtDate } from "../../utils/dateUtils";
-import Diamond from "../shared/Diamond";
 
 interface SuccessScreenProps {
   form: { type: string; startDate: string; endDate: string };
@@ -38,10 +37,6 @@ export default function SuccessScreen({
         </div>
         <div className="text-sm text-txt-mid mt-1">{days} วันทำการ</div>
       </div>
-      <div className="flex items-center justify-center gap-1.5 text-sm text-txt-soft mb-1">
-        <Diamond size={10} /> บันทึกเรียบร้อยแล้ว
-      </div>
-      <br />
       <div className="flex justify-center">
         <button
           onClick={() => {
