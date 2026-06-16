@@ -456,10 +456,38 @@ export default function EmployeeEditModal({
 
             {/* Start work month — ใช้ในหนังสือรับรองเงินเดือน */}
             <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-              <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
-                <IconCalendar size={12} strokeWidth={2.4} />
-                วันที่เริ่มงาน
-              </label>
+              {(() => {
+                const ym =
+                  editingStartWorkMonth !== undefined
+                    ? editingStartWorkMonth
+                    : employee.startWorkMonth || "";
+                let tenure = "";
+                if (ym && /^\d{4}-\d{2}$/.test(ym)) {
+                  const [y, m] = ym.split("-").map(Number);
+                  const now = new Date();
+                  let years = now.getFullYear() - y;
+                  let months = now.getMonth() - (m - 1);
+                  if (months < 0) {
+                    years -= 1;
+                    months += 12;
+                  }
+                  if (years <= 0 && months <= 0) tenure = "เพิ่งเริ่มงาน";
+                  else if (years <= 0) tenure = `${months} เดือน`;
+                  else if (months <= 0) tenure = `${years} ปี`;
+                  else tenure = `${years} ปี ${months} เดือน`;
+                }
+                return (
+                  <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5 flex-wrap">
+                    <IconCalendar size={12} strokeWidth={2.4} />
+                    วันที่เริ่มงาน
+                    {tenure && (
+                      <span className="font-normal text-txt-soft">
+                        ({tenure})
+                      </span>
+                    )}
+                  </label>
+                );
+              })()}
               {(() => {
                 const curYM =
                   editingStartWorkMonth !== undefined
