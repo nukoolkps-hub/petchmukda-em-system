@@ -269,22 +269,24 @@ export default function RequestTab({
       {/* ── ประวัติการลาของคุณ ── */}
       <div className="mt-8">
         <GoldDivider />
-        <div className="text-base font-bold text-txt mb-3 flex items-center gap-2">
-          <IconClipboardList
-            size={16}
-            strokeWidth={2.4}
-            className="text-maroon"
-          />
-          ประวัติการลาของคุณ
-        </div>
-        {/* เลือกเดือนที่จะดู — chevron nav + คลิก label เปิด picker */}
-        <div className="flex justify-center mb-3.5">
-          <MonthChevronNav
-            months={navMonths}
-            selected={effectiveHistMonth}
-            onSelect={setSelectedHistMonth}
-            subtitle={`${monthLeaves.length} รายการ`}
-          />
+        <div className="flex items-center gap-2 mb-3.5">
+          <div className="text-base font-bold text-txt flex items-center gap-2">
+            <IconClipboardList
+              size={16}
+              strokeWidth={2.4}
+              className="text-maroon"
+            />
+            ประวัติการลาของคุณ
+          </div>
+          <div className="ml-auto">
+            <MonthChevronNav
+              months={navMonths}
+              selected={effectiveHistMonth}
+              onSelect={setSelectedHistMonth}
+              subtitle={`${monthLeaves.length} รายการ`}
+              popoverSide="right"
+            />
+          </div>
         </div>
         {/* min-height คงที่ตามเดือนที่ใบลาเยอะสุด → สลับเดือนแล้วหน้าไม่หด/เด้ง */}
         <div style={{ minHeight: maxMonthCount * 78 }}>
