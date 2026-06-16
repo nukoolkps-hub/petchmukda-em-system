@@ -3,7 +3,8 @@ import {
   Banknote as IconBanknote,
   Briefcase as IconBriefcase,
   Landmark as IconBuildingBank,
-  ChevronDown as IconChevronDown,
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
   CirclePlus as IconCirclePlus,
   ClipboardList as IconClipboardList,
   Clock as IconClock,
@@ -44,6 +45,51 @@ import AdvanceHistoryModal from "../modals/AdvanceHistoryModal";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
+
+/* ─── ตัวเลือกเดือน — ปุ่ม chevron ซ้าย/ขวา (months เรียงใหม่→เก่า) ──── */
+function MonthChevronNav({
+  months,
+  selected,
+  onSelect,
+}: {
+  months: string[];
+  selected: string;
+  onSelect: (m: string) => void;
+}) {
+  const idx = months.indexOf(selected);
+  const hasOlder = idx < months.length - 1; // ‹ = เดือนเก่ากว่า
+  const hasNewer = idx > 0; // › = เดือนใหม่กว่า
+  const [y, mo] = selected.split("-");
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        aria-label="เดือนก่อนหน้า"
+        disabled={!hasOlder}
+        onClick={() => hasOlder && onSelect(months[idx + 1])}
+        className="w-8 h-8 rounded-[9px] border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        <IconChevronLeft size={14} strokeWidth={2.5} className="text-txt-mid" />
+      </button>
+      <span className="text-sm font-semibold text-txt min-w-[104px] text-center">
+        {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
+      </span>
+      <button
+        type="button"
+        aria-label="เดือนถัดไป"
+        disabled={!hasNewer}
+        onClick={() => hasNewer && onSelect(months[idx - 1])}
+        className="w-8 h-8 rounded-[9px] border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        <IconChevronRight
+          size={14}
+          strokeWidth={2.5}
+          className="text-txt-mid"
+        />
+      </button>
+    </div>
+  );
+}
 
 /* ─── Salary View (employee — read only) ───────────────────────── */
 export default function SalaryView({
@@ -266,28 +312,11 @@ export default function SalaryView({
       <div>
         <div className="flex items-center justify-between gap-2 mb-3.5">
           <div className="text-sm text-txt-soft flex-1">สลิปเงินเดือน</div>
-          <div className="relative">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="appearance-none cursor-pointer pl-3 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
-            >
-              {selectMonths.map((m) => {
-                const [y, mo] = m.split("-");
-                return (
-                  <option key={m} value={m}>
-                    {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                    {parseInt(y, 10) + 543}
-                  </option>
-                );
-              })}
-            </select>
-            <IconChevronDown
-              size={12}
-              strokeWidth={2.4}
-              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-            />
-          </div>
+          <MonthChevronNav
+            months={selectMonths}
+            selected={selectedMonth}
+            onSelect={setSelectedMonth}
+          />
         </div>
         <div className="text-center text-txt-soft py-[50px] px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr">
           <div className="flex justify-center mb-3 text-gold">
@@ -324,28 +353,11 @@ export default function SalaryView({
           <IconNetwork size={14} strokeWidth={2.4} />
           แผนผังเงินเดือน
         </button>
-        <div className="relative">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="appearance-none cursor-pointer pl-3 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
-          >
-            {selectMonths.map((m) => {
-              const [y, mo] = m.split("-");
-              return (
-                <option key={m} value={m}>
-                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                  {parseInt(y, 10) + 543}
-                </option>
-              );
-            })}
-          </select>
-          <IconChevronDown
-            size={12}
-            strokeWidth={2.4}
-            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-          />
-        </div>
+        <MonthChevronNav
+          months={selectMonths}
+          selected={selectedMonth}
+          onSelect={setSelectedMonth}
+        />
       </div>
 
       {/* รอยืนยันยอด — แสดงเงินรวมคร่าวๆ ก่อน แต่เตือนว่ายังเปลี่ยนได้ */}
