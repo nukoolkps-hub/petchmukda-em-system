@@ -43,6 +43,8 @@ interface RequestTabProps {
   /** validate form + show inline errors · return true ถ้าพร้อมยื่น */
   onValidate: () => boolean;
   onSubmit: () => void;
+  /** ล้างฟอร์ม (type + วันที่ + errors) — ใช้ตอนกด "ยกเลิก" ก่อนยื่น */
+  onResetForm: () => void;
   onDelete: (id: string | number) => void;
 }
 
@@ -62,6 +64,7 @@ export default function RequestTab({
   overLimit,
   onValidate,
   onSubmit,
+  onResetForm,
   onDelete,
 }: RequestTabProps) {
   const [confirmLeave, setConfirmLeave] = useState<LeaveEntry | null>(null);
@@ -299,13 +302,22 @@ export default function RequestTab({
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleClickSubmit}
-        className="w-full p-[17px] mt-1.5 border-none rounded-2xl text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-linear-135 from-maroon to-maroon-lt text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
-      >
-        ยื่นคำขอลา
-      </button>
+      <div className="flex gap-2.5 mt-1.5">
+        <button
+          type="button"
+          onClick={onResetForm}
+          className="basis-[34%] shrink-0 p-[17px] rounded-2xl border-[1.5px] border-bdr bg-white text-txt-mid text-lg font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
+        >
+          ยกเลิก
+        </button>
+        <button
+          type="button"
+          onClick={handleClickSubmit}
+          className="flex-1 p-[17px] border-none rounded-2xl text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-linear-135 from-maroon to-maroon-lt text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
+        >
+          ยื่นคำขอลา
+        </button>
+      </div>
       {showSubmitConfirm && (
         <SubmitLeaveConfirmModal
           type={form.type}
