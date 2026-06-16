@@ -27,7 +27,7 @@ import {
 } from "../employees";
 import { DEFAULT_GOLD_PRICE, subscribeGoldPrice } from "../goldPrice";
 import { EMPTY_LABOR_COST, subscribeLaborCost } from "../laborCost";
-import { subscribeLeaves, subscribeLeavesByEmployeeId } from "../leaves";
+import { subscribeLeaves } from "../leaves";
 import { EMPTY_LOYALTY_POINTS, subscribeLoyaltyPoints } from "../loyaltyPoints";
 import { subscribePayrollConfirms } from "../payrollConfirms";
 import {
@@ -188,13 +188,11 @@ export function useLeavesForScope({
   isAdmin: boolean;
   employeeId: string | null;
 }) {
+  // ทุกคน signed-in อ่าน leaves ได้ — ปฏิทินทีมโชว์ของเพื่อน +
+  // กันใบลาทับวันเพื่อน · scope กรองที่ UI ตอนคำนวณเฉพาะตัว
   return useScopedSubscription(
     () => {
-      if (isAdmin) return subscribeLeaves;
-      if (employeeId) {
-        return (onChange, onError) =>
-          subscribeLeavesByEmployeeId(employeeId, onChange, onError);
-      }
+      if (isAdmin || employeeId) return subscribeLeaves;
       return null;
     },
     [] as any[],
