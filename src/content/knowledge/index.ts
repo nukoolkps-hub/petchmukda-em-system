@@ -16,6 +16,7 @@ import {
   Landmark as IconLandmark,
   Package as IconPackage,
   Percent as IconPercent,
+  Printer as IconPrinter,
   Receipt as IconReceipt,
   Repeat as IconRepeat,
   Replace as IconReplace,
@@ -1772,6 +1773,29 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         src: "/knowledge/stop-button.jpg",
         alt: "ปุ่มหยุด",
         caption: "8. กดปุ่มที่ 2 (สี่เหลี่ยม 2 อัน) เพื่อหยุด",
+      },
+    ],
+  },
+
+  /* ── 14b. เครื่องตรวจ % ทอง — การพิมพ์ Report ── */
+  {
+    id: "measure-machine-print",
+    title: "เครื่องตรวจ % ทอง — การพิมพ์ Report",
+    Icon: IconPrinter,
+    blocks: [
+      {
+        type: "steps",
+        items: [
+          "กดปุ่ม เปิดเครื่องพิมพ์ (ไฟจะติดขึ้นมาสีเขียว)",
+          "กดปุ่มที่ 5 (รูปเครื่องพิมพ์) นับจากทางซ้าย",
+          "เลือก Print A4 Report",
+          "กดปุ่ม Print",
+          "กดปุ่มที่ 8 (รูปเครื่องพิมพ์ + ไขควง) นับจากทางซ้าย",
+          "ตรวจสอบว่า เป็นเครื่องพิมพ์ Canon TS200 series",
+          "หากเป็นตามข้อ 6 กดปุ่ม Cancel",
+          "กดปุ่มที่ 9 (รูปเครื่องพิมพ์ + กระดาษขาว) นับจากทางซ้าย",
+          "เสร็จสิ้นการพิมพ์ Report",
+        ],
       },
     ],
   },
