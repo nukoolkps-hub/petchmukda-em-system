@@ -26,7 +26,11 @@ import {
   Ticket as IconTicket,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { COLORS, THAI_MONTH_NAMES } from "../../constants";
+import {
+  COLORS,
+  THAI_MONTH_NAMES,
+  THAI_MONTH_SHORT_NAMES,
+} from "../../constants";
 import { buildLoanContext, loanRemaining } from "../../firebase/employeeLoans";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import { printSalaryCertificate } from "../../print/printSalaryCertificate";
@@ -113,13 +117,13 @@ function MonthChevronNav({
       </button>
 
       {open && (
-        <div className="absolute z-20 top-full right-0 mt-1.5 w-[228px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)] max-h-[280px] overflow-y-auto">
+        <div className="absolute z-20 top-full right-0 mt-1.5 w-[196px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)] max-h-[280px] overflow-y-auto">
           {byYear.map((g) => (
             <div key={g.year} className="mb-2 last:mb-0">
               <div className="text-[11px] font-bold text-txt-soft px-1 mb-1">
                 ปี {g.year + 543}
               </div>
-              <div className="grid grid-cols-2 gap-1">
+              <div className="grid grid-cols-3 gap-1">
                 {g.items.map((m) => {
                   const mm = parseInt(m.slice(5, 7), 10);
                   const isSel = m === selected;
@@ -131,13 +135,13 @@ function MonthChevronNav({
                         onSelect(m);
                         setOpen(false);
                       }}
-                      className={`py-2 px-2 rounded-[8px] text-sm font-semibold cursor-pointer font-[inherit] transition-colors ${
+                      className={`py-2 px-1 rounded-[8px] text-sm font-semibold cursor-pointer font-[inherit] transition-colors ${
                         isSel
                           ? "bg-maroon text-white"
                           : "bg-transparent text-txt-mid hover:bg-cream"
                       }`}
                     >
-                      {THAI_MONTH_NAMES[mm - 1]}
+                      {THAI_MONTH_SHORT_NAMES[mm - 1]}
                     </button>
                   );
                 })}

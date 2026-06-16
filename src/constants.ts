@@ -44,6 +44,20 @@ export const THAI_MONTH_NAMES = [
   "พฤศจิกายน",
   "ธันวาคม",
 ];
+export const THAI_MONTH_SHORT_NAMES = [
+  "ม.ค.",
+  "ก.พ.",
+  "มี.ค.",
+  "เม.ย.",
+  "พ.ค.",
+  "มิ.ย.",
+  "ก.ค.",
+  "ส.ค.",
+  "ก.ย.",
+  "ต.ค.",
+  "พ.ย.",
+  "ธ.ค.",
+];
 export const THAI_SHORT_WEEKDAY_NAMES = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
 
 export const LEAVE_TYPES = [
