@@ -1640,7 +1640,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 13. เครื่องตรวจเปอร์เซ็นต์ — Calibrate ── */
   {
     id: "calibrate-machine",
-    title: "เครื่องตรวจ % ทอง — การ Calibrate",
+    title: "เครื่องตรวจ % โลหะ — การ Calibrate",
     Icon: IconGauge,
     blocks: [
       {
@@ -1725,7 +1725,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 14. เครื่องตรวจเปอร์เซ็นต์ — การใช้งาน ── */
   {
     id: "measure-machine",
-    title: "เครื่องตรวจ % ทอง — การใช้งาน",
+    title: "เครื่องตรวจ % โลหะ — การตรวจ %",
     Icon: IconPercent,
     blocks: [
       {
@@ -1783,10 +1783,10 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── 14b. เครื่องตรวจ % ทอง — การพิมพ์ Report ── */
+  /* ── 14b. เครื่องตรวจ % โลหะ — การพิมพ์ Report ── */
   {
     id: "measure-machine-print",
-    title: "เครื่องตรวจ % ทอง — การพิมพ์ Report",
+    title: "เครื่องตรวจ % โลหะ — การพิมพ์ Report",
     Icon: IconPrinter,
     blocks: [
       {
