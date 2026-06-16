@@ -8,10 +8,11 @@ import {
   Sun as IconSun,
 } from "lucide-react";
 import { useState } from "react";
-import { COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { COLORS } from "../../constants";
 import type { Employee, LeaveEntry } from "../../types";
 import { fmtDateWithWeekday } from "../../utils/dateUtils";
 import AvatarCircle from "../shared/AvatarCircle";
+import MonthChevronNav from "../shared/MonthChevronNav";
 
 /* ─── แสดง breakdown วันธรรมดา/อาทิตย์ บรรทัดเดียว ใต้ยอดรวมวันลา ──── */
 function LeaveDayBreakdown({
@@ -85,16 +86,20 @@ export default function LeaveSummaryPanel({
   // key = `${employeeName}:${type}` — chip ที่ถูกกดให้แสดงรายการวัน
   const [expandedChip, setExpandedChip] = useState<string | null>(null);
 
-  const months: string[] = (
-    [...new Set(allLeaves.map((lv) => lv.start.slice(0, 7)))] as string[]
-  )
+  const currentMonth = `${now0.getFullYear()}-${String(now0.getMonth() + 1).padStart(2, "0")}`;
+  // navMonths = current month ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
+  // (admin เลื่อนถึงเดือนปัจจุบันได้แม้ยังไม่มีใบลา · ตรงกับ LeaveListPanel)
+  const months: string[] = [
+    ...new Set([
+      currentMonth,
+      ...(allLeaves.map((lv) => lv.start.slice(0, 7)) as string[]),
+    ]),
+  ]
     .sort()
     .reverse();
-  // selectedMonth default = เดือนปัจจุบัน แต่ dropdown มีให้เลือกแค่
-  // เดือนที่มีใบลาจริง → ถ้าไม่อยู่ใน list → fall back มา months[0]
   const effectiveMonth = months.includes(selectedMonth)
     ? selectedMonth
-    : months[0] || selectedMonth;
+    : currentMonth;
   const years: string[] = (
     [...new Set(allLeaves.map((lv) => lv.start.slice(0, 4)))] as string[]
   )
@@ -110,28 +115,12 @@ export default function LeaveSummaryPanel({
             <IconCalendar size={16} strokeWidth={2.4} />
             สรุปรายเดือน
           </div>
-          <div className="relative inline-block">
-            <select
-              value={effectiveMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="appearance-none cursor-pointer pl-2.5 pr-7 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
-            >
-              {months.map((m) => {
-                const [y, mo] = m.split("-");
-                return (
-                  <option key={m} value={m}>
-                    {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                    {parseInt(y, 10) + 543}
-                  </option>
-                );
-              })}
-            </select>
-            <IconChevronDown
-              size={12}
-              strokeWidth={2.4}
-              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-            />
-          </div>
+          <MonthChevronNav
+            months={months}
+            selected={effectiveMonth}
+            onSelect={setSelectedMonth}
+            popoverSide="right"
+          />
         </div>
         {employeeDirectory.length === 0 && (
           <div className="text-txt-soft text-sm text-center py-4">ไม่มีข้อมูล</div>
