@@ -466,9 +466,6 @@ export default function SalaryView({
                 {poolExclusionLabel(employeeInfo.poolExclusion)}
               </div>
             )}
-            <div className="text-[10px] text-txt-soft italic pt-1.5 leading-relaxed">
-              Sync จาก ADMIN — เปลี่ยน rate ที่ admin แล้วที่นี่อัปเดตทันที
-            </div>
           </div>
         </details>
       )}
