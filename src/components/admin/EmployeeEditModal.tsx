@@ -734,12 +734,11 @@ export default function EmployeeEditModal({
                       </div>
                       <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-0.5">
                         {history.map(({ year, amount, isOverride }) => {
+                          // กำลังแก้ไขปีนี้อยู่ใน draft (เพิ่งกด "แก้ไข" หรือกำลังพิมพ์)
+                          // — แสดง input · นอกนั้น display read-only (ทั้ง auto + saved override)
                           const editingThisYear =
-                            currentRaises[String(year)] !== undefined &&
                             editingAnnualRaises !== undefined &&
                             editingAnnualRaises[String(year)] !== undefined;
-                          // toggle edit: ถ้ามี override อยู่ → editing · auto → ต้องกด "แก้ไข"
-                          const showInput = isOverride || editingThisYear;
                           return (
                             <div
                               key={`raise-${year}`}
@@ -749,7 +748,7 @@ export default function EmployeeEditModal({
                                 <span className="text-xs font-extrabold text-txt-mid w-14 shrink-0">
                                   ปี {year}
                                 </span>
-                                {showInput ? (
+                                {editingThisYear ? (
                                   <>
                                     <div className="relative flex-1">
                                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
@@ -827,6 +826,25 @@ export default function EmployeeEditModal({
                                       />
                                       แก้ไข
                                     </button>
+                                    {/* saved override ที่ไม่ได้ edit อยู่ → ปุ่ม "↻ คืนค่า auto" ใช้ revert ได้ตรงๆ */}
+                                    {isOverride && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = { ...currentRaises };
+                                          delete next[String(year)];
+                                          updateRaises(next);
+                                        }}
+                                        title="ลบที่กำหนดเอง · กลับมาใช้จำนวน auto"
+                                        className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-[6px] border border-bdr bg-cream text-txt-mid text-[10px] font-bold cursor-pointer font-[inherit] hover:bg-white active:scale-[0.96]"
+                                      >
+                                        <IconRevert
+                                          size={10}
+                                          strokeWidth={2.5}
+                                        />
+                                        คืนค่า auto
+                                      </button>
+                                    )}
                                   </>
                                 )}
                               </div>
