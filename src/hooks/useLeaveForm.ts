@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import type { LeaveEntry } from "../types";
-import { countWorkdays, fmtShort } from "../utils/dateUtils";
+import { TODAY } from "../constants";
+import { addDaysYmd, countWorkdays, fmtShort } from "../utils/dateUtils";
+
+/** ลาป่วยล่วงหน้าได้สูงสุด 2 อาทิตย์ */
+const SICK_LEAVE_MAX_DATE = addDaysYmd(TODAY, 14);
 
 interface UseLeaveFormOptions {
   profileName: string | null;
@@ -61,6 +65,13 @@ export default function useLeaveForm({
       form.startDate.slice(0, 7) !== form.endDate.slice(0, 7)
     ) {
       e.endDate = "ลาป่วยข้ามเดือนไม่ได้ — กรุณายื่นแยกเดือน";
+    }
+    // ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์
+    if (form.type === "sick") {
+      if (form.startDate && form.startDate > SICK_LEAVE_MAX_DATE)
+        e.startDate = "ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์";
+      if (form.endDate && form.endDate > SICK_LEAVE_MAX_DATE)
+        e.endDate = "ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์";
     }
     if (overLimit) e.over = `วันลาเกินสิทธิ์คงเหลือ (${remain} วัน)`;
     // กันลาทับวันที่ลาไปแล้ว — เช็คทับซ้อนกับ leave อื่นของพนักงานคนเดียวกัน
