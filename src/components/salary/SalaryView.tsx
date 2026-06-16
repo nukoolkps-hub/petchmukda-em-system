@@ -650,6 +650,12 @@ export default function SalaryView({
                 − {formatThaiNumber(salaryCalculation.deductions)} ฿
               </div>
             </div>
+            <div className="ml-auto text-right">
+              <div className="text-xs text-gold-lt/50">เดือน</div>
+              <div className="text-sm font-bold text-gold-lt">
+                {selectedMonthLabel}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -732,6 +738,9 @@ export default function SalaryView({
         <div className="flex items-center gap-2 mb-3.5">
           <div className="w-1.5 h-4.5 rounded-sm bg-green" />
           <div className="font-bold text-base text-txt">รายรับ</div>
+          <div className="ml-auto text-xs font-semibold text-txt-soft">
+            {selectedMonthLabel}
+          </div>
         </div>
         {[
           {
@@ -880,6 +889,9 @@ export default function SalaryView({
         <div className="flex items-center gap-2 mb-3.5">
           <div className="w-1.5 h-4.5 rounded-sm bg-red" />
           <div className="font-bold text-base text-txt">รายการหัก</div>
+          <div className="ml-auto text-xs font-semibold text-txt-soft">
+            {selectedMonthLabel}
+          </div>
         </div>
         {[
           {

@@ -848,7 +848,7 @@ export default function EmployeeEditModal({
                                   </>
                                 )}
                               </div>
-                              <div className="text-[9px] text-txt-soft mt-1 ml-14">
+                              <div className="text-[9px] text-txt-soft mt-1 text-right">
                                 {isOverride
                                   ? "(กำหนดเอง · ปีพิเศษ)"
                                   : "(ตามค่า auto)"}
