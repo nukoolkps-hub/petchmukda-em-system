@@ -732,7 +732,7 @@ export default function EmployeeEditModal({
                       <div className="text-[11px] font-bold text-maroon mb-1.5">
                         ประวัติการขึ้นเงินเดือน
                       </div>
-                      <div className="space-y-1.5 max-h-72 overflow-y-auto pr-0.5">
+                      <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-0.5">
                         {history.map(({ year, amount, isOverride }) => {
                           const editingThisYear =
                             currentRaises[String(year)] !== undefined &&
