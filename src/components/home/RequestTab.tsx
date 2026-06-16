@@ -308,14 +308,14 @@ export default function RequestTab({
         <button
           type="button"
           onClick={onResetForm}
-          className="basis-[34%] shrink-0 p-[17px] rounded-2xl border-[1.5px] border-bdr bg-white text-txt-mid text-lg font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
+          className="basis-[34%] shrink-0 py-3.5 rounded-2xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
         >
           ยกเลิก
         </button>
         <button
           type="button"
           onClick={handleClickSubmit}
-          className="flex-1 p-[17px] border-none rounded-2xl text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-linear-135 from-maroon to-maroon-lt text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
+          className="flex-1 py-3.5 border-none rounded-2xl text-base font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-linear-135 from-maroon to-maroon-lt text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
         >
           ยื่นคำขอลา
         </button>

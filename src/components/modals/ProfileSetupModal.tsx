@@ -399,7 +399,7 @@ export default function ProfileSetupModal({
         {initial && onClose && (
           <button
             onClick={onClose}
-            className="basis-[34%] shrink-0 p-4 bg-transparent border-[1.5px] border-bdr rounded-[14px] text-base font-semibold text-txt-soft cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
+            className="basis-[34%] shrink-0 py-3.5 bg-transparent border-[1.5px] border-bdr rounded-[14px] text-base font-semibold text-txt-soft cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
           >
             ยกเลิก
           </button>
@@ -407,7 +407,7 @@ export default function ProfileSetupModal({
         <button
           onClick={save}
           disabled={saving || imageBusy}
-          className={`flex-1 p-4 border-none rounded-[14px] text-lg font-bold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.25)] flex items-center justify-center gap-2 ${saving || imageBusy ? "bg-bdr text-txt-soft cursor-not-allowed" : "bg-maroon text-white cursor-pointer"}`}
+          className={`flex-1 py-3.5 border-none rounded-[14px] text-base font-bold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.25)] flex items-center justify-center gap-2 ${saving || imageBusy ? "bg-bdr text-txt-soft cursor-not-allowed" : "bg-maroon text-white cursor-pointer"}`}
         >
           {saving ? "กำลังบันทึก..." : initial ? "บันทึก" : "เริ่มใช้งาน"}
         </button>
