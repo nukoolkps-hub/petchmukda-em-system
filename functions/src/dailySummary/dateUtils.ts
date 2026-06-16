@@ -35,14 +35,10 @@ export function getThaiDayName(date: Date): ThaiDayName {
 	return THAI_DAY_NAMES[idx];
 }
 
-/** วันนี้ใน Bangkok timezone → "dd/mm/yyyy" */
+/** วันนี้ใน Bangkok timezone → "dd/mm/yyyy" · ปี = พ.ศ. (= ค.ศ. + 543) */
 export function formatDateTH(date: Date): string {
-	return new Intl.DateTimeFormat("en-GB", {
-		timeZone: APP_TIMEZONE,
-		day: "2-digit",
-		month: "2-digit",
-		year: "numeric",
-	}).format(date);
+	const [y, m, d] = bangkokYmd(date).split("-");
+	return `${d}/${m}/${parseInt(y, 10) + 543}`;
 }
 
 /** Bangkok yyyy-mm-dd ของวันนั้น (ใช้ query Firestore leaves) */
