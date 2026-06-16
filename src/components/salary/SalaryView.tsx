@@ -426,8 +426,14 @@ export default function SalaryView({
           </summary>
           <div className="px-4 pb-3 pt-2 border-t border-bdr/40 space-y-1.5">
             <RateRow
-              label="เงินเดือนปัจจุบัน"
-              value={getEffectiveBaseSalary(employeeInfo, selectedMonth)}
+              label="เงินเดือนพื้นฐาน"
+              value={
+                // ใช้ snapshot ใน salary doc ของเดือนนี้ก่อน (เลขตรงกับใน "รายรับ")
+                // ถ้าเดือนยังไม่มี snapshot → fallback live effective
+                // (เดือนใหม่ที่ยังไม่ save · admin จะ snapshot ตอน save)
+                data?.baseSalary ||
+                getEffectiveBaseSalary(employeeInfo, selectedMonth)
+              }
               suffix="฿/เดือน"
             />
             {employeeRole.poolGroup ? (
