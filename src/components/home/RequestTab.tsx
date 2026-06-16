@@ -4,6 +4,7 @@ import {
   AlertCircle as IconAlertCircle,
   AlertTriangle as IconAlertTriangle,
   CalendarDays as IconCalendar,
+  CalendarRange as IconCalendarRange,
   ChevronRight as IconChevronRight,
   ClipboardList as IconClipboardList,
   ShieldCheck as IconShieldCheck,
@@ -15,7 +16,6 @@ import type { LeaveEntry } from "../../types";
 import { addDaysYmd, fmtDate, isFuture, todayYmd } from "../../utils/dateUtils";
 import ConfirmModal from "../modals/ConfirmModal";
 import CalendarPicker from "../shared/CalendarPicker";
-import Diamond from "../shared/Diamond";
 import GoldDivider from "../shared/GoldDivider";
 import MonthChevronNav from "../shared/MonthChevronNav";
 import LeaveTypeCard from "./LeaveTypeCard";
@@ -245,7 +245,7 @@ export default function RequestTab({
             {overLimit ? (
               <IconAlertCircle size={22} color={COLORS.red} strokeWidth={2.5} />
             ) : (
-              <Diamond size={22} color="#fff" />
+              <IconCalendarRange size={22} color="#fff" strokeWidth={2.2} />
             )}
           </div>
           <div>
