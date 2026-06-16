@@ -100,7 +100,7 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 ```
 useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
                                        ├── employees     (admin: all · employee: own only)
-                                       ├── leaves        (admin: all · employee: own only)
+                                       ├── leaves        (all signed-in — ปฏิทินทีม + กันยื่นลาทับวัน)
                                        ├── salaries      (admin: all via collectionGroup · employee: own only)
                                        ├── advances      (admin: all · employee: own only)
                                        ├── roles         (all signed-in)
@@ -114,7 +114,8 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 ```
 
 **Scope ของ subscription แตกต่างกัน:**
-- `employees`, `leaves`, `advances`, `salaries` → employee เห็นเฉพาะของตัวเอง (filter by `lineUserId == auth.uid` / scoped query)
+- `employees`, `advances`, `salaries` → employee เห็นเฉพาะของตัวเอง (filter by `lineUserId == auth.uid` / scoped query)
+- `leaves` → ทุกคน signed-in อ่านได้ (ปฏิทินทีมโชว์ใบลาทุกคน + กันยื่นลาทับวัน · ไม่มีฟิลด์อ่อนไหว)
 - `poolSnapshots` → ทุกคน signed-in อ่านได้ (public, non-sensitive — peer data สำหรับ pool calc)
 - `roles`, `payrollConfirms` → ทุกคน signed-in อ่านได้
 

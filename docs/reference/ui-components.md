@@ -39,13 +39,16 @@ Layout
 │   └── Tab navigation
 └── Routes
     ├── HomeTab
+    │   ├── PositionRateCard (เงินเดือนพื้นฐาน + อัตราค่าคอม · LIVE badge)
+    │   ├── DutyTodayCard (หน้าที่วันนี้)
     │   ├── LeaveTypeCard (quota display)
-    │   └── TeamCalendar (monthly view)
+    │   └── TeamCalendar (monthly view — ใบลาทุกคน)
     ├── RequestTab
     │   ├── Leave type selection
     │   ├── CalendarPicker (start/end)
-    │   └── Leave history list
+    │   └── Leave history (เลื่อนรายเดือน ‹/› · default เดือนปัจจุบัน)
     ├── SalaryView
+    │   ├── MonthChevronNav (เลื่อน ‹/› + แตะ label เปิด picker เลือกเดือน/ปี)
     │   ├── Earnings breakdown
     │   ├── Deductions breakdown
     │   ├── Pool share info
@@ -64,6 +67,7 @@ Layout
 | Component | File | Description |
 |---|---|---|
 | AvatarCircle | `shared/AvatarCircle.tsx` | Avatar renderer (text/emoji/image) |
+| PositionRateCard | `home/PositionRateCard.tsx` | การ์ดตำแหน่ง + เงินเดือนพื้นฐาน + อัตราค่าคอม (ปัจจุบัน · LIVE) — หน้าแรก |
 | BaseModal | `shared/BaseModal.tsx` | Modal dialog with backdrop blur |
 | CalendarPicker | `shared/CalendarPicker.tsx` | Date picker with Thai month names |
 | Diamond | `shared/Diamond.tsx` | Diamond SVG icon (brand element) |
