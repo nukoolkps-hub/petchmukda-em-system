@@ -82,6 +82,7 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
           "employeeId",
           "employeeName",
+          "employeeNickname",
           "type",
           "start",
           "end",
@@ -98,6 +99,12 @@ service cloud.firestore {
         && request.resource.data.end is string
         && request.resource.data.days is int
         && request.resource.data.days > 0
+        // employeeNickname (optional) = snapshot ของชื่อเล่นพนักงาน · null
+        // ได้ถ้าพนักงานไม่ได้ตั้งชื่อเล่นไว้ตอนยื่นใบลา
+        && (!("employeeNickname" in request.resource.data)
+          || request.resource.data.employeeNickname == null
+          || (request.resource.data.employeeNickname is string
+            && request.resource.data.employeeNickname.size() <= 80))
         && (!("reason" in request.resource.data)
           || (request.resource.data.reason is string && request.resource.data.reason.size() <= 500))
         && (!("submitted" in request.resource.data)
