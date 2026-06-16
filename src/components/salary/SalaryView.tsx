@@ -25,9 +25,10 @@ import {
   Star as IconStar,
   Ticket as IconTicket,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { buildLoanContext, loanRemaining } from "../../firebase/employeeLoans";
+import { useClickOutside } from "../../hooks/useClickOutside";
 import { printSalaryCertificate } from "../../print/printSalaryCertificate";
 import { printSalarySlip } from "../../print/printSalarySlip";
 import {
@@ -46,7 +47,9 @@ import PoolFlowModal from "../modals/PoolFlowModal";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
 
-/* ─── ตัวเลือกเดือน — ปุ่ม chevron ซ้าย/ขวา (months เรียงใหม่→เก่า) ──── */
+/* ─── ตัวเลือกเดือน — ปุ่ม chevron ซ้าย/ขวา + แตะชื่อเดือนเพื่อเลือกตรงๆ ──
+   months เรียงใหม่→เก่า · แตะ label เปิด popover เลือกเดือน/ปี (กระโดดได้
+   เลย — พนักงานที่มีประวัติหลายเดือนไม่ต้องกดลูกศรย้อนทีละเดือน) */
 function MonthChevronNav({
   months,
   selected,
@@ -56,12 +59,29 @@ function MonthChevronNav({
   selected: string;
   onSelect: (m: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useClickOutside(wrapRef, () => setOpen(false), open);
+
   const idx = months.indexOf(selected);
   const hasOlder = idx < months.length - 1; // ‹ = เดือนเก่ากว่า
   const hasNewer = idx > 0; // › = เดือนใหม่กว่า
   const [y, mo] = selected.split("-");
+
+  // จัดกลุ่มเดือนตามปี (พ.ศ.) — คงลำดับใหม่→เก่า สำหรับ popover
+  const byYear: { year: number; items: string[] }[] = [];
+  for (const m of months) {
+    const yr = parseInt(m.slice(0, 4), 10);
+    let g = byYear.find((x) => x.year === yr);
+    if (!g) {
+      g = { year: yr, items: [] };
+      byYear.push(g);
+    }
+    g.items.push(m);
+  }
+
   return (
-    <div className="flex items-center gap-1.5">
+    <div ref={wrapRef} className="relative flex items-center gap-1.5">
       <button
         type="button"
         aria-label="เดือนก่อนหน้า"
@@ -71,9 +91,13 @@ function MonthChevronNav({
       >
         <IconChevronLeft size={14} strokeWidth={2.5} className="text-txt-mid" />
       </button>
-      <span className="text-sm font-semibold text-txt min-w-[104px] text-center">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="h-8 px-3 rounded-[9px] border border-bdr bg-cream text-sm font-semibold text-txt min-w-[112px] text-center cursor-pointer font-[inherit]"
+      >
         {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
-      </span>
+      </button>
       <button
         type="button"
         aria-label="เดือนถัดไป"
@@ -87,6 +111,41 @@ function MonthChevronNav({
           className="text-txt-mid"
         />
       </button>
+
+      {open && (
+        <div className="absolute z-20 top-full right-0 mt-1.5 w-[228px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)] max-h-[280px] overflow-y-auto">
+          {byYear.map((g) => (
+            <div key={g.year} className="mb-2 last:mb-0">
+              <div className="text-[11px] font-bold text-txt-soft px-1 mb-1">
+                ปี {g.year + 543}
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                {g.items.map((m) => {
+                  const mm = parseInt(m.slice(5, 7), 10);
+                  const isSel = m === selected;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => {
+                        onSelect(m);
+                        setOpen(false);
+                      }}
+                      className={`py-2 px-2 rounded-[8px] text-sm font-semibold cursor-pointer font-[inherit] transition-colors ${
+                        isSel
+                          ? "bg-maroon text-white"
+                          : "bg-transparent text-txt-mid hover:bg-cream"
+                      }`}
+                    >
+                      {THAI_MONTH_NAMES[mm - 1]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -118,7 +177,8 @@ export default function SalaryView({
       Object.keys(salaryData[salaryEmployeeId] || {})
         .sort()
         .reverse()
-        .slice(0, 12),
+        // เก็บได้ถึง 5 ปี — พนักงานเก่าเปิด popover เลือกย้อนได้ลึก
+        .slice(0, 60),
     [salaryData, salaryEmployeeId],
   );
   const selectMonths = months.includes(selectedMonth)
