@@ -261,11 +261,12 @@ export default function LeaveListPanel({
       </div>
 
       <div className="flex flex-col gap-2 mb-3.5">
-        <div className="flex justify-start">
+        <div className="flex justify-end">
           <MonthChevronNav
             months={navMonths}
             selected={effectiveMonth}
             onSelect={setFilterMonth}
+            popoverSide="right"
           />
         </div>
         <div className="flex gap-2">
