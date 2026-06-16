@@ -89,6 +89,14 @@ export default function useLeaveForm({
     return e;
   }
 
+  /** run validate() + setErrors() · return true ถ้าไม่มี error · ใช้ตอน
+   *  เปิด confirm modal ก่อนยื่นจริง (ถ้า invalid → ขึ้น error inline ไม่เปิด modal) */
+  function validateAndSetErrors(): boolean {
+    const e = validate();
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
   /* ─── Submit — writes to Firestore ─────────────────────────── */
   async function submit(profile: {
     name: string;
@@ -170,6 +178,7 @@ export default function useLeaveForm({
     remain,
     overLimit,
     validate,
+    validateAndSetErrors,
     submit,
     reset,
     handleDelete,
