@@ -10,9 +10,9 @@ import {
   Trash2 as IconTrash,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { COLORS, LEAVE_TYPES, TODAY } from "../../constants";
+import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { LeaveEntry } from "../../types";
-import { addDaysYmd, fmtDate, isFuture } from "../../utils/dateUtils";
+import { addDaysYmd, fmtDate, isFuture, todayYmd } from "../../utils/dateUtils";
 import ConfirmModal from "../modals/ConfirmModal";
 import CalendarPicker from "../shared/CalendarPicker";
 import Diamond from "../shared/Diamond";
@@ -22,8 +22,6 @@ import LeaveTypeCard from "./LeaveTypeCard";
 
 /** ลาป่วยล่วงหน้าได้สูงสุด 2 อาทิตย์ */
 const SICK_LEAVE_MAX_AHEAD_DAYS = 14;
-/** วันสุดท้ายที่เลือกได้สำหรับลาป่วย = วันนี้ + 14 วัน */
-const SICK_LEAVE_MAX_DATE = addDaysYmd(TODAY, SICK_LEAVE_MAX_AHEAD_DAYS);
 
 interface RequestTabProps {
   profile: any;
@@ -66,7 +64,11 @@ export default function RequestTab({
   const [selectedHistMonth, setSelectedHistMonth] = useState("");
 
   /* ─── ประวัติการลา — แยกดูเป็นรายเดือน ────────────────────────── */
-  const currentMonth = TODAY.slice(0, 7);
+  // todayYmd() เรียกตอน render เพื่อไม่ stale ข้าม midnight (constants.TODAY
+  // คงค่าตอน module import) · sickMaxDate cap ปฏิทินลาป่วยที่ +14 วัน
+  const todayStr = todayYmd();
+  const currentMonth = todayStr.slice(0, 7);
+  const sickMaxDate = addDaysYmd(todayStr, SICK_LEAVE_MAX_AHEAD_DAYS);
   // ช่วงเดือนที่เลื่อนดูได้ (ต่อเนื่อง · ใหม่→เก่า) — ครอบทั้งเดือนปัจจุบัน
   // และทุกเดือนที่มีใบลา (รวมใบลาล่วงหน้าในอนาคต)
   const navMonths = useMemo(() => {
@@ -90,31 +92,48 @@ export default function RequestTab({
   const effectiveHistMonth = navMonths.includes(selectedHistMonth)
     ? selectedHistMonth
     : currentMonth;
+  // เลือก leaves ที่ overlap กับเดือนที่ดู — ใบลาคร่อมเดือน (พ.ค. 30 →
+  // มิ.ย. 2) ต้องโผล่ทั้งสองเดือน · เปรียบเทียบ YYYY-MM lexicographic
   const monthLeaves = useMemo(
     () =>
       myLeaves
-        .filter((lv) => lv.start.startsWith(effectiveHistMonth))
+        .filter(
+          (lv) =>
+            lv.start.slice(0, 7) <= effectiveHistMonth &&
+            lv.end.slice(0, 7) >= effectiveHistMonth,
+        )
         .sort((a, b) => b.start.localeCompare(a.start)),
     [myLeaves, effectiveHistMonth],
   );
   // จำนวนใบลาสูงสุดในเดือนใดเดือนหนึ่ง → ใช้กำหนด min-height ของลิสต์
   // ให้สูงคงที่ · เปลี่ยนเดือนแล้วหน้าไม่หด/ไม่เด้งขึ้น (scroll ไม่กระโดด)
+  // ใช้ overlap เดียวกับ monthLeaves: นับทุกเดือนที่ใบลาคร่อม
   const maxMonthCount = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const lv of myLeaves) {
-      const k = lv.start.slice(0, 7);
-      counts[k] = (counts[k] || 0) + 1;
+      const startYm = lv.start.slice(0, 7);
+      const endYm = lv.end.slice(0, 7);
+      // ทุกเดือนตั้งแต่ startYm ถึง endYm
+      let [y, m] = startYm.split("-").map(Number);
+      const [endY, endM] = endYm.split("-").map(Number);
+      while (y < endY || (y === endY && m <= endM)) {
+        const k = `${y}-${String(m).padStart(2, "0")}`;
+        counts[k] = (counts[k] || 0) + 1;
+        m += 1;
+        if (m === 13) {
+          m = 1;
+          y += 1;
+        }
+      }
     }
     return Math.max(1, ...Object.values(counts));
   }, [myLeaves]);
 
   /* ─── Quota status for this month ──────────────────────────── */
-  const now = new Date();
-  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const usedThisMonth = profile
     ? allLeaves.filter(
         (lv: LeaveEntry) =>
-          lv.employeeId === profile.id && lv.start.startsWith(yearMonth),
+          lv.employeeId === profile.id && lv.start.startsWith(currentMonth),
       ).length
     : 0;
   const rem = 2 - usedThisMonth;
@@ -168,10 +187,10 @@ export default function RequestTab({
                   if (lt.id !== "sick") return { ...f, type: lt.id };
                   // เปลี่ยนเป็นลาป่วย → ล้างวันที่ล่วงหน้าเกิน 2 อาทิตย์
                   const nextStart =
-                    !f.startDate || f.startDate <= SICK_LEAVE_MAX_DATE
+                    !f.startDate || f.startDate <= sickMaxDate
                       ? f.startDate
                       : "";
-                  const endOk = !f.endDate || f.endDate <= SICK_LEAVE_MAX_DATE;
+                  const endOk = !f.endDate || f.endDate <= sickMaxDate;
                   return {
                     type: lt.id,
                     startDate: nextStart,
@@ -202,18 +221,18 @@ export default function RequestTab({
             endDate: f.endDate && f.endDate < v ? "" : f.endDate,
           }))
         }
-        minDate={TODAY}
+        minDate={todayStr}
         // ลาป่วย → เลือกล่วงหน้าได้ไม่เกิน 2 อาทิตย์
-        maxDate={form.type === "sick" ? SICK_LEAVE_MAX_DATE : undefined}
+        maxDate={form.type === "sick" ? sickMaxDate : undefined}
         error={errors.startDate}
       />
       <div className="text-base font-bold text-txt mb-2 mt-1">วันที่สิ้นสุด</div>
       <CalendarPicker
         value={form.endDate}
         onChange={(v) => setForm((f) => ({ ...f, endDate: v }))}
-        minDate={form.startDate || TODAY}
+        minDate={form.startDate || todayStr}
         // ลาป่วย → เลือกล่วงหน้าได้ไม่เกิน 2 อาทิตย์
-        maxDate={form.type === "sick" ? SICK_LEAVE_MAX_DATE : undefined}
+        maxDate={form.type === "sick" ? sickMaxDate : undefined}
         error={errors.endDate}
       />
       {days > 0 && (

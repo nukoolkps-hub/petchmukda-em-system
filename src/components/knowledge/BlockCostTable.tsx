@@ -19,6 +19,7 @@ import {
   updateBlockCost,
 } from "../../firebase/blockCost";
 import { useBlockCost } from "../../firebase/hooks/useFirestore";
+import { fmtThaiDateTime } from "../../utils/dateUtils";
 
 interface Props {
   isAdmin?: boolean;
@@ -229,7 +230,7 @@ function EditableBlockSubCard({
 
       {updatedAt > 0 && !editing && (
         <div className="px-3 py-1.5 bg-cream/60 border-t border-bdr/40 text-[10px] text-txt-soft text-center italic">
-          อัปเดต {new Date(updatedAt).toLocaleString("th-TH")}
+          อัปเดต {fmtThaiDateTime(updatedAt)}
           {updatedBy ? ` · โดย ${updatedBy}` : ""}
         </div>
       )}

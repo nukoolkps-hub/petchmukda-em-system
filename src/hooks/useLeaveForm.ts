@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import type { LeaveEntry } from "../types";
-import { TODAY } from "../constants";
-import { addDaysYmd, countWorkdays, fmtShort } from "../utils/dateUtils";
-
-/** ลาป่วยล่วงหน้าได้สูงสุด 2 อาทิตย์ */
-const SICK_LEAVE_MAX_DATE = addDaysYmd(TODAY, 14);
+import { addDaysYmd, countWorkdays, fmtShort, todayYmd } from "../utils/dateUtils";
 
 interface UseLeaveFormOptions {
   profileName: string | null;
@@ -62,11 +58,13 @@ export default function useLeaveForm({
     if (!form.endDate) e.endDate = "กรุณาเลือกวันที่สิ้นสุด";
     if (form.startDate && form.endDate && form.endDate < form.startDate)
       e.endDate = "วันที่สิ้นสุดต้องไม่ก่อนวันเริ่มต้น";
-    // ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์
+    // ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์ · เรียก todayYmd() เพื่อไม่ stale
+    // ข้าม midnight ใน session ที่เปิดค้างทั้งคืน
     if (form.type === "sick") {
-      if (form.startDate && form.startDate > SICK_LEAVE_MAX_DATE)
+      const sickMaxDate = addDaysYmd(todayYmd(), 14);
+      if (form.startDate && form.startDate > sickMaxDate)
         e.startDate = "ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์";
-      if (form.endDate && form.endDate > SICK_LEAVE_MAX_DATE)
+      if (form.endDate && form.endDate > sickMaxDate)
         e.endDate = "ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์";
     }
     if (overLimit) e.over = `วันลาเกินสิทธิ์คงเหลือ (${remain} วัน)`;
@@ -109,7 +107,9 @@ export default function useLeaveForm({
       await addLeave({
         employeeId: authUid,
         employeeName: profile.name,
-        employeeNickname: employeeEntry?.nickname,
+        // ?? null กัน Firestore reject undefined (config.ts ไม่ได้เปิด
+        // ignoreUndefinedProperties · พนักงานที่ไม่ตั้งชื่อเล่นจะกลายเป็น undefined)
+        employeeNickname: employeeEntry?.nickname ?? null,
         type: form.type as "personal" | "sick",
         start: form.startDate,
         end: form.endDate,
