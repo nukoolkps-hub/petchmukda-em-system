@@ -22,6 +22,8 @@ interface Props {
   onSelect: (m: string) => void;
   /** ตำแหน่ง popover เลือกเดือน/ปี · "left" (default) หรือ "right" */
   popoverSide?: "left" | "right";
+  /** บรรทัดเล็กใต้ชื่อเดือน (เช่น "4 รายการ") · optional */
+  subtitle?: string;
 }
 
 export default function MonthChevronNav({
@@ -29,6 +31,7 @@ export default function MonthChevronNav({
   selected,
   onSelect,
   popoverSide = "left",
+  subtitle,
 }: Props) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -65,9 +68,16 @@ export default function MonthChevronNav({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="h-8 px-3 rounded-[9px] border border-bdr bg-cream text-sm font-semibold text-txt min-w-[112px] text-center cursor-pointer font-[inherit]"
+        className={`px-3 rounded-[9px] border border-bdr bg-cream text-sm font-semibold text-txt min-w-[112px] text-center cursor-pointer font-[inherit] ${subtitle ? "py-1.5 leading-tight" : "h-8"}`}
       >
-        {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
+        <div>
+          {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]} {parseInt(y, 10) + 543}
+        </div>
+        {subtitle && (
+          <div className="text-[11px] text-txt-soft font-normal mt-0.5">
+            {subtitle}
+          </div>
+        )}
       </button>
       <button
         type="button"

@@ -4,20 +4,20 @@ import {
   AlertCircle as IconAlertCircle,
   AlertTriangle as IconAlertTriangle,
   CalendarDays as IconCalendar,
-  ChevronLeft as IconChevronLeft,
   ChevronRight as IconChevronRight,
   ClipboardList as IconClipboardList,
   ShieldCheck as IconShieldCheck,
   Trash2 as IconTrash,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { COLORS, LEAVE_TYPES, THAI_MONTH_NAMES, TODAY } from "../../constants";
+import { COLORS, LEAVE_TYPES, TODAY } from "../../constants";
 import type { LeaveEntry } from "../../types";
 import { addDaysYmd, fmtDate, isFuture } from "../../utils/dateUtils";
 import ConfirmModal from "../modals/ConfirmModal";
 import CalendarPicker from "../shared/CalendarPicker";
 import Diamond from "../shared/Diamond";
 import GoldDivider from "../shared/GoldDivider";
+import MonthChevronNav from "../shared/MonthChevronNav";
 import LeaveTypeCard from "./LeaveTypeCard";
 
 /** ลาป่วยล่วงหน้าได้สูงสุด 2 อาทิตย์ */
@@ -277,57 +277,15 @@ export default function RequestTab({
           />
           ประวัติการลาของคุณ
         </div>
-        {/* เลือกเดือนที่จะดู — ลูกศรซ้าย/ขวา (เลื่อนได้ต่อเนื่อง) */}
-        {(() => {
-          // navMonths เรียงใหม่→เก่า · ‹ = เดือนเก่ากว่า · › = เดือนใหม่กว่า
-          const idx = navMonths.indexOf(effectiveHistMonth);
-          const hasOlder = idx < navMonths.length - 1;
-          const hasNewer = idx > 0;
-          const [y, mo] = effectiveHistMonth.split("-");
-          return (
-            <div className="flex items-center justify-between gap-2 mb-3.5">
-              <button
-                type="button"
-                aria-label="เดือนก่อนหน้า"
-                disabled={!hasOlder}
-                onClick={() =>
-                  hasOlder && setSelectedHistMonth(navMonths[idx + 1])
-                }
-                className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <IconChevronLeft
-                  size={14}
-                  color={COLORS.textMedium}
-                  strokeWidth={2.5}
-                />
-              </button>
-              <div className="text-center">
-                <div className="text-sm font-bold text-maroon">
-                  {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
-                  {parseInt(y, 10) + 543}
-                </div>
-                <div className="text-xs text-txt-soft mt-0.5">
-                  {monthLeaves.length} รายการ
-                </div>
-              </div>
-              <button
-                type="button"
-                aria-label="เดือนถัดไป"
-                disabled={!hasNewer}
-                onClick={() =>
-                  hasNewer && setSelectedHistMonth(navMonths[idx - 1])
-                }
-                className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <IconChevronRight
-                  size={14}
-                  color={COLORS.textMedium}
-                  strokeWidth={2.5}
-                />
-              </button>
-            </div>
-          );
-        })()}
+        {/* เลือกเดือนที่จะดู — chevron nav + คลิก label เปิด picker */}
+        <div className="flex justify-center mb-3.5">
+          <MonthChevronNav
+            months={navMonths}
+            selected={effectiveHistMonth}
+            onSelect={setSelectedHistMonth}
+            subtitle={`${monthLeaves.length} รายการ`}
+          />
+        </div>
         {/* min-height คงที่ตามเดือนที่ใบลาเยอะสุด → สลับเดือนแล้วหน้าไม่หด/เด้ง */}
         <div style={{ minHeight: maxMonthCount * 78 }}>
           {monthLeaves.length === 0 ? (
