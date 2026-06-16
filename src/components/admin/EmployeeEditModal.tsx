@@ -721,8 +721,8 @@ export default function EmployeeEditModal({
                       </span>
                     </div>
                     <div className="text-[10px] text-txt-soft mt-1.5 leading-relaxed">
-                      ตั้งครั้งเดียว · apply ทุกปี Jan ที่ทำงานครบรอบ ·
-                      0 = ไม่ขึ้นแบบ auto (กำหนดเฉพาะปีพิเศษได้ในประวัติ)
+                      ตั้งครั้งเดียว · apply ทุกปี Jan ที่ทำงานครบรอบ · 0 = ไม่ขึ้นแบบ auto
+                      (กำหนดเฉพาะปีพิเศษได้ในประวัติ)
                     </div>
                   </div>
 
@@ -758,9 +758,7 @@ export default function EmployeeEditModal({
                                         type="number"
                                         inputMode="decimal"
                                         min="0"
-                                        value={
-                                          currentRaises[String(year)] ?? 0
-                                        }
+                                        value={currentRaises[String(year)] ?? 0}
                                         onChange={(e) => {
                                           const raw = e.target.value;
                                           const next = { ...currentRaises };
@@ -791,10 +789,7 @@ export default function EmployeeEditModal({
                                       title="ลบที่กำหนดเอง · กลับมาใช้จำนวน auto"
                                       className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-[6px] border border-bdr bg-cream text-txt-mid text-[10px] font-bold cursor-pointer font-[inherit] hover:bg-white active:scale-[0.96]"
                                     >
-                                      <IconRevert
-                                        size={10}
-                                        strokeWidth={2.5}
-                                      />
+                                      <IconRevert size={10} strokeWidth={2.5} />
                                       คืนค่า auto
                                     </button>
                                   </>
@@ -820,10 +815,7 @@ export default function EmployeeEditModal({
                                       }
                                       className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-[6px] border border-gold/40 bg-cream text-maroon text-[10px] font-bold cursor-pointer font-[inherit] active:scale-[0.96]"
                                     >
-                                      <IconPencil
-                                        size={10}
-                                        strokeWidth={2.4}
-                                      />
+                                      <IconPencil size={10} strokeWidth={2.4} />
                                       แก้ไข
                                     </button>
                                     {/* saved override ที่ไม่ได้ edit อยู่ → ปุ่ม "↻ คืนค่า auto" ใช้ revert ได้ตรงๆ */}

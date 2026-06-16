@@ -52,11 +52,7 @@ export default function LiveExample({
     : isNak
       ? "bg-rose-gold"
       : "bg-maroon";
-  const stepBg = isSilver
-    ? "bg-silver"
-    : isNak
-      ? "bg-rose-gold"
-      : "bg-maroon";
+  const stepBg = isSilver ? "bg-silver" : isNak ? "bg-rose-gold" : "bg-maroon";
   const borderColor = isSilver
     ? "border-silver/25"
     : isNak
@@ -67,11 +63,7 @@ export default function LiveExample({
     : isNak
       ? "text-rose-gold-lt"
       : "text-gold-lt";
-  const dotBg = isSilver
-    ? "bg-silver"
-    : isNak
-      ? "bg-rose-gold"
-      : "bg-gold";
+  const dotBg = isSilver ? "bg-silver" : isNak ? "bg-rose-gold" : "bg-gold";
 
   return (
     <div

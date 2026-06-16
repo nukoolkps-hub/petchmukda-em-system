@@ -157,12 +157,8 @@ function EditableBlockSubCard({
           <col style={{ width: "45%" }} />
         </colgroup>
         <thead>
-          <tr
-            className={`text-white ${isSilver ? "bg-silver" : "bg-maroon"}`}
-          >
-            <th className="px-2.5 py-1.5 text-left font-bold text-xs">
-              น้ำหนัก
-            </th>
+          <tr className={`text-white ${isSilver ? "bg-silver" : "bg-maroon"}`}>
+            <th className="px-2.5 py-1.5 text-left font-bold text-xs">น้ำหนัก</th>
             <th className="px-2.5 py-1.5 text-right font-bold text-xs">
               ค่าบล็อก (฿)
             </th>
@@ -189,9 +185,7 @@ function EditableBlockSubCard({
                     className="w-full max-w-[140px] px-2 py-1 rounded-[7px] border-[1.5px] border-bdr text-sm font-bold text-maroon text-right font-[inherit] outline-none bg-white focus:border-maroon"
                   />
                 ) : (
-                  blockValues[r.id] ??
-                  DEFAULT_BLOCK_COST_VALUES[r.id] ??
-                  "—"
+                  (blockValues[r.id] ?? DEFAULT_BLOCK_COST_VALUES[r.id] ?? "—")
                 )}
               </td>
             </tr>
@@ -265,7 +259,11 @@ function PlainSubTable({
         ? "bg-linear-to-r from-maroon via-silver-dk to-silver text-white"
         : "bg-gold-pale text-maroon";
   const headerThBg =
-    tone === "silver" ? "bg-silver" : tone === "gradient" ? "bg-maroon" : "bg-maroon";
+    tone === "silver"
+      ? "bg-silver"
+      : tone === "gradient"
+        ? "bg-maroon"
+        : "bg-maroon";
   const borderColor =
     tone === "silver" ? "border-silver-lt/60" : "border-gold/40";
 

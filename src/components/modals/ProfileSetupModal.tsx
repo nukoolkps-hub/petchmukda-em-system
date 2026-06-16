@@ -373,9 +373,7 @@ export default function ProfileSetupModal({
               strokeWidth={2.4}
               className="text-maroon shrink-0 mt-px"
             />
-            <span>
-              บัญชีธนาคารบันทึกไว้แล้ว — หากต้องการแก้ไข ติดต่อ ADMIN เท่านั้น
-            </span>
+            <span>บัญชีธนาคารบันทึกไว้แล้ว — หากต้องการแก้ไข ติดต่อ ADMIN เท่านั้น</span>
           </div>
         )}
 

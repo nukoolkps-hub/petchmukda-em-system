@@ -211,8 +211,7 @@ export default function BackupPanel({ showToast }: Props) {
           รอบ backup อัตโนมัติ
         </div>
         <div className="mb-2.5">
-          ทุกวัน <b>อาทิตย์ ตี 3</b> (Asia/Bangkok) — Cloud Function รันเอง
-          ไม่ต้องกด
+          ทุกวัน <b>อาทิตย์ ตี 3</b> (Asia/Bangkok) — Cloud Function รันเอง ไม่ต้องกด
         </div>
 
         {!isConfigured && (
@@ -229,23 +228,26 @@ export default function BackupPanel({ showToast }: Props) {
                 </code>
               </li>
               <li>
-                สร้าง <b>Personal Access Token</b> ที่ GitHub (Settings →
-                Developer settings → Tokens) · scope:{" "}
-                <code className="bg-white px-1 rounded">
-                  contents: write
-                </code>{" "}
+                สร้าง <b>Personal Access Token</b> ที่ GitHub (Settings → Developer
+                settings → Tokens) · scope:{" "}
+                <code className="bg-white px-1 rounded">contents: write</code>{" "}
                 ของ repo นั้น
               </li>
               <li>
-                ใน Firestore <code className="bg-white px-1 rounded">/config/secrets</code>{" "}
+                ใน Firestore{" "}
+                <code className="bg-white px-1 rounded">/config/secrets</code>{" "}
                 เพิ่ม 2 field:
                 <ul className="list-disc list-outside pl-5 mt-1 space-y-0.5">
                   <li>
-                    <code className="bg-white px-1 rounded">GITHUB_BACKUP_TOKEN</code>{" "}
+                    <code className="bg-white px-1 rounded">
+                      GITHUB_BACKUP_TOKEN
+                    </code>{" "}
                     = token จากข้อ 2
                   </li>
                   <li>
-                    <code className="bg-white px-1 rounded">GITHUB_BACKUP_REPO</code>{" "}
+                    <code className="bg-white px-1 rounded">
+                      GITHUB_BACKUP_REPO
+                    </code>{" "}
                     = <code className="bg-white px-1 rounded">owner/repo</code>{" "}
                     (เช่น{" "}
                     <code className="bg-white px-1 rounded">
@@ -264,7 +266,9 @@ export default function BackupPanel({ showToast }: Props) {
           ปลอดภัยอย่างไร
         </div>
         <ul className="list-disc list-outside pl-5 space-y-0.5">
-          <li>Backup ไม่รวม <code>config/secrets</code> (LINE token, API key)</li>
+          <li>
+            Backup ไม่รวม <code>config/secrets</code> (LINE token, API key)
+          </li>
           <li>Repo ต้องตั้ง Private — ข้อมูลพนักงาน/บัญชี/เงินเดือนอยู่ในนั้น</li>
           <li>เก็บไว้ที่ GitHub = นอก Google ecosystem (Microsoft owned)</li>
         </ul>

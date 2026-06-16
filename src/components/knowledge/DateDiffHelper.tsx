@@ -105,9 +105,7 @@ export default function DateDiffHelper({ onComputed, hint }: Props = {}) {
               </span>
             ) : (
               <>
-                <span className="text-xs text-txt-soft">
-                  ระยะเวลาที่จำนำ ={" "}
-                </span>
+                <span className="text-xs text-txt-soft">ระยะเวลาที่จำนำ = </span>
                 <span className="text-base font-extrabold text-maroon tabular-nums">
                   {result.months}
                 </span>

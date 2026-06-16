@@ -6,9 +6,9 @@
 
 import {
   AlertTriangle as IconAlert,
-  ArrowLeftRight as IconExchange,
   CheckCircle2 as IconCheck,
   HandCoins as IconCoins,
+  ArrowLeftRight as IconExchange,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import MathText from "./MathText";
@@ -152,8 +152,7 @@ export default function FreeExchangeHelper() {
             <div className="text-sm text-red font-bold leading-relaxed">
               ไม่สามารถเปลี่ยนฟรีได้ — น้ำหนักไม่ตรงกัน
               <div className="text-[11px] font-semibold text-red/80 mt-0.5">
-                ทองรูปพรรณ 96.5% ต้องเปลี่ยน{" "}
-                <b>น้ำหนักที่เท่ากัน</b> เท่านั้น
+                ทองรูปพรรณ 96.5% ต้องเปลี่ยน <b>น้ำหนักที่เท่ากัน</b> เท่านั้น
               </div>
             </div>
           </div>
