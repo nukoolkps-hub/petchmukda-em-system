@@ -320,12 +320,12 @@ export default function EmployeeEditModal({
               <div className="text-xs text-txt-soft mt-[3px]">
                 คำนำหน้าใช้ในหนังสือรับรองเงินเดือน
               </div>
-              {/* Nickname — ใช้ในแจ้งเตือนรายวันทาง LINE */}
+              {/* Nickname — แสดงในปฏิทินการลา + รายการลา + แจ้งเตือน LINE */}
               <div className="mt-2.5">
                 <label className="text-xs text-maroon font-bold mb-1.5 flex items-center gap-1.5">
                   ชื่อเล่น
                   <span className="font-normal text-txt-soft">
-                    (ใช้ในแจ้งเตือน LINE รายวัน)
+                    (ใช้แสดงในแอปทั้งฝั่งพนักงาน + ADMIN และแจ้งเตือน LINE)
                   </span>
                 </label>
                 <input

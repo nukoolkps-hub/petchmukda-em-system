@@ -6,7 +6,7 @@ export type LeaveBalance = Record<LeaveKind, number>;
 export interface Employee {
   id: string;
   name: string;
-  nickname?: string; // ชื่อเล่น — ใช้ในการแจ้งเตือนรายวันทาง LINE
+  nickname?: string; // ชื่อเล่น — แสดงในปฏิทินการลา + รายการลา + แจ้งเตือน LINE
   avatar: string;
   avatarType: "text" | "emoji" | "image";
   avatarImageUrl: string | null;
