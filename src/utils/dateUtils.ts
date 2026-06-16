@@ -5,6 +5,12 @@ export function toYMD(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** "YYYY-MM-DD" + n วัน → "YYYY-MM-DD" (รองรับ n ติดลบ) */
+export function addDaysYmd(ymd: string, n: number): string {
+  const [y, m, d] = ymd.split("-").map((s) => parseInt(s, 10));
+  return toYMD(new Date(y, m - 1, d + n));
+}
+
 export function countWorkdays(s: string, e: string): number {
   if (!s || !e) return 0;
   const S = new Date(`${s}T00:00:00`),
