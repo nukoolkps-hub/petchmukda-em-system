@@ -153,11 +153,10 @@ Source: `src/utils/salaryUtils.ts` → `computePoolSharesForGroup()` · snapshot
 | กฎ | รายละเอียด | error |
 |---|---|---|
 | ห้ามทับใบเดิม | วันที่เลือกห้ามทับซ้อนกับใบลาเดิมของตัวเอง (interval overlap: `lv.start ≤ end && lv.end ≥ start`) | "วันที่เลือกทับกับใบลาเดิม (…)" |
-| ลาป่วยห้ามข้ามเดือน | `sick` ที่ `start` กับ `end` คนละเดือน → ให้ยื่นแยกเดือน | "ลาป่วยข้ามเดือนไม่ได้ — กรุณายื่นแยกเดือน" |
 | ลาป่วยล่วงหน้า ≤ 2 อาทิตย์ | `sick` เลือกวันได้ไม่เกิน `TODAY + 14` วัน | "ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์" |
 
-- ลากิจ (`personal`) ไม่มีข้อจำกัดข้ามเดือน/ล่วงหน้า (ลาล่วงหน้าได้)
-- **UI ป้องกันชั้นแรก:** `RequestTab` ปฏิทินวันที่สิ้นสุด cap `maxDate = min(สิ้นเดือน start, TODAY+14)` เมื่อเลือกลาป่วย · `validate()` เป็น defense layer
+- ลากิจ (`personal`) ไม่มีข้อจำกัดล่วงหน้า (ลาล่วงหน้าได้)
+- **UI ป้องกันชั้นแรก:** `RequestTab` ปฏิทินวันที่เริ่ม/สิ้นสุด cap `maxDate = TODAY+14` เมื่อเลือกลาป่วย · `validate()` เป็น defense layer
 - **ผู้ดูแล (admin)** เพิ่มใบลาให้พนักงานผ่าน `LeaveListPanel` ได้โดยไม่ติดกฎเหล่านี้ (override เคสลืมกดลา)
 
 Source: `src/utils/leaveUtils.ts` · `src/hooks/useLeaveForm.ts` · `src/components/home/RequestTab.tsx`

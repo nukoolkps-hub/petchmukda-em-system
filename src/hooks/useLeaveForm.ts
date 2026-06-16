@@ -57,15 +57,6 @@ export default function useLeaveForm({
     if (!form.endDate) e.endDate = "กรุณาเลือกวันที่สิ้นสุด";
     if (form.startDate && form.endDate && form.endDate < form.startDate)
       e.endDate = "วันที่สิ้นสุดต้องไม่ก่อนวันเริ่มต้น";
-    // ลาป่วยห้ามข้ามเดือน · ถ้าคร่อม → ให้ยื่นเป็น 2 ใบแยกเดือน
-    if (
-      form.type === "sick" &&
-      form.startDate &&
-      form.endDate &&
-      form.startDate.slice(0, 7) !== form.endDate.slice(0, 7)
-    ) {
-      e.endDate = "ลาป่วยข้ามเดือนไม่ได้ — กรุณายื่นแยกเดือน";
-    }
     // ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์
     if (form.type === "sick") {
       if (form.startDate && form.startDate > SICK_LEAVE_MAX_DATE)
