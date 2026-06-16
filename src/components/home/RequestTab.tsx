@@ -9,8 +9,8 @@ import {
   ShieldCheck as IconShieldCheck,
   Trash2 as IconTrash,
 } from "lucide-react";
-import { useState } from "react";
-import { COLORS, LEAVE_TYPES, TODAY } from "../../constants";
+import { useMemo, useState } from "react";
+import { COLORS, LEAVE_TYPES, THAI_MONTH_NAMES, TODAY } from "../../constants";
 import type { LeaveEntry } from "../../types";
 import { addDaysYmd, fmtDate, isFuture } from "../../utils/dateUtils";
 import ConfirmModal from "../modals/ConfirmModal";
@@ -69,6 +69,28 @@ export default function RequestTab({
   onDelete,
 }: RequestTabProps) {
   const [confirmLeave, setConfirmLeave] = useState<LeaveEntry | null>(null);
+  const [selectedHistMonth, setSelectedHistMonth] = useState("");
+
+  /* ─── ประวัติการลา — แยกดูเป็นรายเดือน ────────────────────────── */
+  // เดือนทั้งหมดที่มีใบลา (YYYY-MM · เรียงใหม่→เก่า)
+  const historyMonths = useMemo(
+    () =>
+      Array.from(new Set(myLeaves.map((lv) => lv.start.slice(0, 7)))).sort(
+        (a, b) => b.localeCompare(a),
+      ),
+    [myLeaves],
+  );
+  // เดือนที่กำลังดู — default = เดือนล่าสุดที่มีใบลา · กันค่าค้างถ้าเดือนหาย
+  const effectiveHistMonth = historyMonths.includes(selectedHistMonth)
+    ? selectedHistMonth
+    : historyMonths[0] || "";
+  const monthLeaves = useMemo(
+    () =>
+      myLeaves
+        .filter((lv) => lv.start.startsWith(effectiveHistMonth))
+        .sort((a, b) => b.start.localeCompare(a.start)),
+    [myLeaves, effectiveHistMonth],
+  );
 
   /* ─── Quota status for this month ──────────────────────────── */
   const now = new Date();
@@ -249,93 +271,115 @@ export default function RequestTab({
       {/* ── ประวัติการลาของคุณ ── */}
       <div className="mt-8">
         <GoldDivider />
-        <div className="text-base font-bold text-txt mb-3.5 flex items-center gap-2">
+        <div className="text-base font-bold text-txt mb-3 flex items-center gap-2">
           <IconClipboardList
             size={16}
             strokeWidth={2.4}
             className="text-maroon"
           />
           ประวัติการลาของคุณ
-          <span className="text-sm text-txt-soft font-medium ml-auto">
-            {myLeaves.length} รายการ
-          </span>
         </div>
-        {myLeaves.length === 0 && (
+        {myLeaves.length === 0 ? (
           <div className="text-center text-txt-soft py-7.5 text-sm bg-cream rounded-[14px] border border-dashed border-bdr">
             ยังไม่มีประวัติการลา
           </div>
-        )}
-        <div className="flex flex-col gap-2.5">
-          {[...myLeaves]
-            .sort((a, b) => b.start.localeCompare(a.start))
-            .map((h) => {
-              const lt = LEAVE_TYPES.find((t) => t.id === h.type);
-              return (
-                <div
-                  key={h.id}
-                  onClick={() =>
-                    setHistDetail(histDetail === h.id ? null : h.id)
-                  }
-                  className="bg-white rounded-[14px] p-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3 cursor-pointer"
-                >
+        ) : (
+          <>
+            {/* เลือกเดือนที่จะดู */}
+            <div className="flex items-center gap-2 mb-3.5">
+              <select
+                value={effectiveHistMonth}
+                onChange={(e) => setSelectedHistMonth(e.target.value)}
+                className="flex-1 appearance-none cursor-pointer py-2.5 pl-3.5 pr-9 rounded-[12px] text-sm font-bold outline-none font-[inherit] text-maroon bg-white border-[1.5px] border-bdr bg-[length:16px] bg-[right_0.75rem_center] bg-no-repeat"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237B1C1C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                }}
+              >
+                {historyMonths.map((ym) => {
+                  const [y, mo] = ym.split("-");
+                  return (
+                    <option key={ym} value={ym}>
+                      {THAI_MONTH_NAMES[parseInt(mo, 10) - 1]}{" "}
+                      {parseInt(y, 10) + 543}
+                    </option>
+                  );
+                })}
+              </select>
+              <span className="text-sm text-txt-soft font-medium shrink-0">
+                {monthLeaves.length} รายการ
+              </span>
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {monthLeaves.map((h) => {
+                const lt = LEAVE_TYPES.find((t) => t.id === h.type);
+                return (
                   <div
-                    className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
-                    style={{
-                      background: lt?.colorLt || COLORS.creamDark,
-                      color: lt?.color || COLORS.textMedium,
-                    }}
+                    key={h.id}
+                    onClick={() =>
+                      setHistDetail(histDetail === h.id ? null : h.id)
+                    }
+                    className="bg-white rounded-[14px] p-3.5 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3 cursor-pointer"
                   >
-                    {lt?.Icon && <lt.Icon size={20} strokeWidth={2.2} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-txt text-base mb-0.5 flex items-center gap-1.5 flex-wrap">
-                      {lt?.label}
-                      {h.createdByAdmin && (
-                        <span className="text-xs font-extrabold tracking-wide px-1.5 py-px rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
-                          <IconShieldCheck size={10} strokeWidth={2.6} />
-                          ADMIN
-                        </span>
+                    <div
+                      className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
+                      style={{
+                        background: lt?.colorLt || COLORS.creamDark,
+                        color: lt?.color || COLORS.textMedium,
+                      }}
+                    >
+                      {lt?.Icon && <lt.Icon size={20} strokeWidth={2.2} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-txt text-base mb-0.5 flex items-center gap-1.5 flex-wrap">
+                        {lt?.label}
+                        {h.createdByAdmin && (
+                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-px rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
+                            <IconShieldCheck size={10} strokeWidth={2.6} />
+                            ADMIN
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-txt-mid">
+                        {fmtDate(h.start)}
+                        {h.start !== h.end ? ` – ${fmtDate(h.end)}` : ""} (
+                        {h.days} วันทำการ)
+                      </div>
+                      {histDetail === h.id && (
+                        <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex items-center gap-1.5">
+                          <IconCalendar size={12} strokeWidth={2.4} />
+                          วันที่ยื่น: {h.submitted}
+                        </div>
                       )}
                     </div>
-                    <div className="text-sm text-txt-mid">
-                      {fmtDate(h.start)}
-                      {h.start !== h.end ? ` – ${fmtDate(h.end)}` : ""} (
-                      {h.days} วันทำการ)
-                    </div>
-                    {histDetail === h.id && (
-                      <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex items-center gap-1.5">
-                        <IconCalendar size={12} strokeWidth={2.4} />
-                        วันที่ยื่น: {h.submitted}
-                      </div>
+                    {isFuture(h.start) && (
+                      <button
+                        type="button"
+                        aria-label="ลบใบลา"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmLeave(h);
+                        }}
+                        className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
+                      >
+                        <IconTrash
+                          size={16}
+                          color={COLORS.red}
+                          strokeWidth={2.2}
+                        />
+                      </button>
                     )}
+                    <IconChevronRight
+                      size={14}
+                      color={COLORS.textSoft}
+                      strokeWidth={2}
+                      className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail === h.id ? "rotate-90" : "rotate-0"}`}
+                    />
                   </div>
-                  {isFuture(h.start) && (
-                    <button
-                      type="button"
-                      aria-label="ลบใบลา"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setConfirmLeave(h);
-                      }}
-                      className="w-9 h-9 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer shrink-0 border-[1.5px] border-[#C0392B30]"
-                    >
-                      <IconTrash
-                        size={16}
-                        color={COLORS.red}
-                        strokeWidth={2.2}
-                      />
-                    </button>
-                  )}
-                  <IconChevronRight
-                    size={14}
-                    color={COLORS.textSoft}
-                    strokeWidth={2}
-                    className={`shrink-0 mt-1 transition-transform duration-200 ${histDetail === h.id ? "rotate-90" : "rotate-0"}`}
-                  />
-                </div>
-              );
-            })}
-        </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       <ConfirmModal
