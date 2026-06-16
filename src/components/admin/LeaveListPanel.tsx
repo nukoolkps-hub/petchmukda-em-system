@@ -81,6 +81,7 @@ export default function LeaveListPanel({
       await onAddLeave({
         employeeId: emp.id,
         employeeName: emp.name,
+        employeeNickname: emp.nickname,
         type: addType,
         start: addStart,
         end: addEnd,

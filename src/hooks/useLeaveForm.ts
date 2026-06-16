@@ -11,7 +11,12 @@ const SICK_LEAVE_MAX_DATE = addDaysYmd(TODAY, 14);
 interface UseLeaveFormOptions {
   profileName: string | null;
   allLeaves: LeaveEntry[];
-  employeeDirectory: { name: string; balance?: any; used?: any }[];
+  employeeDirectory: {
+    name: string;
+    nickname?: string;
+    balance?: any;
+    used?: any;
+  }[];
   addLeave: (
     leave: Omit<LeaveEntry, "id">,
   ) => string | number | Promise<string>;
@@ -104,6 +109,7 @@ export default function useLeaveForm({
       await addLeave({
         employeeId: authUid,
         employeeName: profile.name,
+        employeeNickname: employeeEntry?.nickname,
         type: form.type as "personal" | "sick",
         start: form.startDate,
         end: form.endDate,

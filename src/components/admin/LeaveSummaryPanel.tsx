@@ -140,7 +140,7 @@ export default function LeaveSummaryPanel({
           {employeeDirectory
             .map((employeeInfo) => {
               const empId = employeeInfo.id;
-              const name = employeeInfo.name;
+              const name = employeeInfo.nickname || employeeInfo.name;
               const monthLeaves = allLeaves.filter(
                 (lv) =>
                   lv.employeeId === empId &&
@@ -301,7 +301,7 @@ export default function LeaveSummaryPanel({
           {employeeDirectory
             .map((employeeInfo) => {
               const empId = employeeInfo.id;
-              const name = employeeInfo.name;
+              const name = employeeInfo.nickname || employeeInfo.name;
               const yearLeaves = allLeaves.filter(
                 (lv) => lv.employeeId === empId && lv.start.startsWith(selYear),
               );
