@@ -129,8 +129,6 @@ export default function RequestTab({
 
   return (
     <div>
-      <GoldDivider />
-
       {/* quota status in form */}
       <div
         className={`rounded-xl px-4 py-3 mb-5 flex items-center gap-3 border-[1.5px] ${overQuota ? "bg-[#FEF2F2] border-[#C0392B50]" : "bg-gold-pale border-[#C9973A50]"}`}
