@@ -53,15 +53,13 @@ export default function PositionRateCard({ employee, role }: Props) {
           <IconBriefcase size={16} strokeWidth={2.4} className="text-maroon" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] text-txt-soft font-semibold">
-            ตำแหน่ง · เงินเดือนพื้นฐาน · อัตราค่าคอม (ปัจจุบัน)
-          </div>
           <div className="text-sm font-bold text-txt truncate">
-            {role.name}
+            เงินเดือนพื้นฐาน · อัตราค่าคอม
+          </div>
+          <div className="text-[11px] text-txt-soft font-semibold mt-0.5">
+            ปัจจุบัน
             {role.poolGroup && (
-              <span className="text-[11px] text-txt-soft font-semibold ml-1.5">
-                · กลุ่ม "{role.poolGroup}"
-              </span>
+              <span className="ml-1.5">· กลุ่ม "{role.poolGroup}"</span>
             )}
           </div>
         </div>
