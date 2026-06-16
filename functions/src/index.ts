@@ -53,7 +53,6 @@ export {
 	triggerFirestoreBackupNow,
 } from "./backup/backupToGitHub.js";
 // Maintenance
-export { backfillLeaveNicknames } from "./maintenance/backfillLeaveNicknames.js";
 export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";
 export { cleanupOldTips } from "./maintenance/cleanupOldTips.js";
 // One-time start-fresh utility (admin-only callable · ลบข้อมูลพนักงาน +

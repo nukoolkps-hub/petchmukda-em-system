@@ -5,7 +5,6 @@ import {
   FastForward as IconFastForward,
   Lock as IconLock,
   Plus as IconPlus,
-  RefreshCw as IconRefresh,
   ShieldCheck as IconShieldCheck,
   Trash2 as IconTrash,
   X as IconX,
@@ -23,7 +22,6 @@ import type {
   LeaveKind,
   PayrollConfirms,
 } from "../../types";
-import { triggerBackfillLeaveNicknames } from "../../firebase/leaves";
 import {
   countWorkdays,
   fmtDateWithWeekday,
@@ -58,27 +56,6 @@ export default function LeaveListPanel({
   const [filterType, setFilterType] = useState("");
   const [filterMonth, setFilterMonth] = useState(""); // "" = ทุกเดือน
   const [confirmLeave, setConfirmLeave] = useState<any>(null);
-  const [backfilling, setBackfilling] = useState(false);
-
-  async function handleBackfill() {
-    if (backfilling) return;
-    setBackfilling(true);
-    try {
-      const { updated, total } = await triggerBackfillLeaveNicknames();
-      showToast?.(
-        updated > 0
-          ? `เติมชื่อเล่นในใบลาเก่า ${updated}/${total} รายการแล้ว`
-          : "ใบลาทุกใบมีชื่อเล่นแล้ว — ไม่ต้องเติม",
-      );
-    } catch (err) {
-      console.error("[backfill] failed:", err);
-      showToast?.(
-        err instanceof Error ? err.message : "เติมชื่อเล่นไม่สำเร็จ",
-      );
-    } finally {
-      setBackfilling(false);
-    }
-  }
 
   // เดือนที่มีใบลา (YYYY-MM · ใหม่→เก่า) — ใช้เป็น option ใน month filter
   const availableMonths = useMemo(
@@ -160,24 +137,6 @@ export default function LeaveListPanel({
 
   return (
     <div>
-      {/* one-shot maintenance — เติมชื่อเล่นใน leave docs เก่า
-          (รันครั้งเดียวก็พอ · idempotent) */}
-      <div className="mb-2 flex justify-end">
-        <button
-          type="button"
-          onClick={handleBackfill}
-          disabled={backfilling}
-          title="เติม employeeNickname ในใบลาเก่าที่ submit ก่อน feature snapshot ออก · ทำให้ฝั่งพนักงานเห็นชื่อเล่นเพื่อนถูกต้อง"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] border border-bdr bg-white text-txt-mid text-[11px] font-semibold cursor-pointer font-[inherit] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
-        >
-          <IconRefresh
-            size={11}
-            strokeWidth={2.4}
-            className={backfilling ? "animate-spin" : ""}
-          />
-          {backfilling ? "กำลังเติม..." : "เติมชื่อเล่นในใบลาเก่า"}
-        </button>
-      </div>
       {/* เพิ่มการลา — collapsible (สำหรับพนักงานที่ลืมกดลา) */}
       <div className="mb-3.5 rounded-[14px] border border-bdr bg-white overflow-hidden">
         <button
