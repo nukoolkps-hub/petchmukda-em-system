@@ -15,6 +15,7 @@ import { COLORS, LEAVE_TYPES } from "../../constants";
 import type { LeaveEntry } from "../../types";
 import { addDaysYmd, fmtDate, isFuture, todayYmd } from "../../utils/dateUtils";
 import ConfirmModal from "../modals/ConfirmModal";
+import SubmitLeaveConfirmModal from "../modals/SubmitLeaveConfirmModal";
 import CalendarPicker from "../shared/CalendarPicker";
 import GoldDivider from "../shared/GoldDivider";
 import MonthChevronNav from "../shared/MonthChevronNav";
@@ -39,6 +40,8 @@ interface RequestTabProps {
   days: number;
   remain: number | null;
   overLimit: boolean;
+  /** validate form + show inline errors · return true ถ้าพร้อมยื่น */
+  onValidate: () => boolean;
   onSubmit: () => void;
   onDelete: (id: string | number) => void;
 }
@@ -57,11 +60,29 @@ export default function RequestTab({
   days,
   remain,
   overLimit,
+  onValidate,
   onSubmit,
   onDelete,
 }: RequestTabProps) {
   const [confirmLeave, setConfirmLeave] = useState<LeaveEntry | null>(null);
+  // confirm modal ก่อนยื่นใบลาจริง · เปิดเมื่อ validate ผ่านแล้วเท่านั้น
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [submittingLeave, setSubmittingLeave] = useState(false);
   const [selectedHistMonth, setSelectedHistMonth] = useState("");
+
+  function handleClickSubmit() {
+    if (!onValidate()) return; // errors แสดง inline ผ่าน errors prop
+    setShowSubmitConfirm(true);
+  }
+  async function handleConfirmSubmit() {
+    setSubmittingLeave(true);
+    try {
+      await onSubmit();
+      setShowSubmitConfirm(false);
+    } finally {
+      setSubmittingLeave(false);
+    }
+  }
 
   /* ─── ประวัติการลา — แยกดูเป็นรายเดือน ────────────────────────── */
   // todayYmd() เรียกตอน render เพื่อไม่ stale ข้าม midnight (constants.TODAY
@@ -279,11 +300,23 @@ export default function RequestTab({
       )}
 
       <button
-        onClick={onSubmit}
+        type="button"
+        onClick={handleClickSubmit}
         className="w-full p-[17px] mt-1.5 border-none rounded-2xl text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2.5 bg-linear-135 from-maroon to-maroon-lt text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
       >
         ยื่นคำขอลา
       </button>
+      {showSubmitConfirm && (
+        <SubmitLeaveConfirmModal
+          type={form.type}
+          startDate={form.startDate}
+          endDate={form.endDate}
+          days={days}
+          saving={submittingLeave}
+          onConfirm={handleConfirmSubmit}
+          onCancel={() => setShowSubmitConfirm(false)}
+        />
+      )}
 
       {/* ── ประวัติการลาของคุณ ── */}
       <div className="mt-8">
