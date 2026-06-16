@@ -17,6 +17,7 @@ import {
   Pencil as IconPencil,
   Plus as IconPlus,
   RefreshCw as IconRefresh,
+  RotateCcw as IconRevert,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
   Ticket as IconTicket,
@@ -788,13 +789,14 @@ export default function EmployeeEditModal({
                                         delete next[String(year)];
                                         updateRaises(next);
                                       }}
-                                      className="shrink-0 p-1 rounded text-txt-soft hover:text-red cursor-pointer"
-                                      title="คืนค่า auto"
+                                      title="ลบที่กำหนดเอง · กลับมาใช้จำนวน auto"
+                                      className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-[6px] border border-bdr bg-cream text-txt-mid text-[10px] font-bold cursor-pointer font-[inherit] hover:bg-white active:scale-[0.96]"
                                     >
-                                      <IconTrash
-                                        size={11}
-                                        strokeWidth={2.4}
+                                      <IconRevert
+                                        size={10}
+                                        strokeWidth={2.5}
                                       />
+                                      คืนค่า auto
                                     </button>
                                   </>
                                 ) : (
