@@ -25,6 +25,8 @@ export { processAdvanceNotifications } from "./advance/processAdvanceNotificatio
 export { bootstrapAdmin } from "./auth/bootstrapAdmin.js";
 export { devAuth } from "./auth/devAuth.js";
 export { lineAuth } from "./auth/lineAuth.js";
+// OAuth state token issuer — server-side CSRF defense (pair กับ lineAuth)
+export { prepareLineLogin } from "./auth/prepareLineLogin.js";
 export { seedLineConfigFromEnv } from "./auth/seedLineConfigFromEnv.js";
 export { setAdmin } from "./auth/setAdmin.js";
 // Daily summary — ภารกิจ + คนหยุด + เคล็ดลับ → ส่งเข้า LINE 07:30 ทุกวัน

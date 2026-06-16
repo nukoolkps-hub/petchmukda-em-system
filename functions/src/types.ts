@@ -33,6 +33,7 @@ export interface NotifyAdvanceRequestPayload {
 export interface LineAuthPayload {
 	code: string;
 	redirectUri: string;
+	state: string;
 }
 
 export interface DevAuthPayload {

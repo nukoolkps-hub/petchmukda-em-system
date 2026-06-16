@@ -3,6 +3,7 @@
  */
 
 import { getAuth, type Auth, type UserRecord } from "firebase-admin/auth";
+import type { Firestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import {
 	getAppFirestore,
@@ -14,8 +15,36 @@ import { parseLineAuthPayload } from "../helpers/payload.js";
 const UNPROVISIONED_LINE_USER_MESSAGE =
 	"บัญชี LINE นี้ยังไม่ได้ถูกเพิ่มโดยผู้ดูแลระบบ";
 
+/** atomically validate + consume OAuth state · single-use (delete in same txn)
+ *  · CSRF defense ฝั่ง server (เพิ่มจาก client sessionStorage check) */
+async function consumeLoginState(db: Firestore, state: string): Promise<void> {
+	const stateRef = db.collection("loginStates").doc(state);
+	await db.runTransaction(async (tx) => {
+		const snap = await tx.get(stateRef);
+		if (!snap.exists) {
+			throw new HttpsError(
+				"permission-denied",
+				"Invalid or already-used state",
+			);
+		}
+		const data = snap.data() as { createdAt?: number; expiresAt?: number };
+		const now = Date.now();
+		if (typeof data.expiresAt === "number" && now > data.expiresAt) {
+			tx.delete(stateRef);
+			throw new HttpsError("permission-denied", "Expired state");
+		}
+		// single-use — ลบทันทีใน txn เดียวกัน · request ที่ replay มาด้วย state
+		// เดิมจะเห็น "not exists" และโดน reject
+		tx.delete(stateRef);
+	});
+}
+
 export const lineAuth = onCall(async (request) => {
-	const { code, redirectUri } = parseLineAuthPayload(request.data);
+	const { code, redirectUri, state } = parseLineAuthPayload(request.data);
+
+	// CSRF defense: validate + consume state ก่อนยุ่งกับ LINE API · กัน
+	// attacker forge OAuth callback ไปที่ victim browser
+	await consumeLoginState(getAppFirestore(), state);
 
 	const config = await getLineConfig();
 	if (!config.LINE_LOGIN_CHANNEL_ID || !config.LINE_LOGIN_CHANNEL_SECRET) {

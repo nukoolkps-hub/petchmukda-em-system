@@ -19,6 +19,7 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
 const lineAuthFn = httpsCallable(functions, "lineAuth");
+const prepareLineLoginFn = httpsCallable(functions, "prepareLineLogin");
 const devAuthFn = httpsCallable(functions, "devAuth");
 const seedLineConfigFromEnvFn = httpsCallable(
   functions,
@@ -50,22 +51,32 @@ export async function signInWithGoogle() {
 }
 
 /* ─── LINE Login (full flow) ─────────────────────────────────
-   ขั้นที่ 1: redirect → LINE Login URL                          */
-export function startLineLogin({ channelId, redirectUri, state }) {
+   ขั้นที่ 1: ขอ state จาก server → redirect → LINE Login URL
+   - state ออกโดย Cloud Function prepareLineLogin · เก็บใน Firestore
+     loginStates/{state} (single-use · TTL 10 นาที)
+   - client เก็บ sessionStorage copy เพื่อ defense-in-depth (กัน race
+     ระหว่าง tabs · backup CSRF check)                              */
+export async function startLineLogin({ channelId, redirectUri }) {
   if (!channelId || !redirectUri) {
     throw new Error("Missing LINE channelId or redirectUri");
   }
+  // 1. request state จาก server ก่อน — กัน CSRF ฝั่ง server
+  const stateRes = await prepareLineLoginFn();
+  const state = (stateRes.data as { state?: string })?.state;
+  if (!state) {
+    throw new Error("Failed to prepare LINE login state");
+  }
+
+  // 2. เก็บ copy ใน sessionStorage เพื่อ defense-in-depth (client-side check)
+  sessionStorage.setItem("line_login_state", state);
+
+  // 3. redirect ไป LINE authorize URL พร้อม state เดียวกัน
   const url = new URL("https://access.line.me/oauth2/v2.1/authorize");
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", channelId);
   url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("state", state || crypto.randomUUID());
+  url.searchParams.set("state", state);
   url.searchParams.set("scope", "profile openid");
-  // เก็บ state ใน sessionStorage เพื่อ verify ตอน callback
-  sessionStorage.setItem(
-    "line_login_state",
-    url.searchParams.get("state") ?? "",
-  );
   window.location.href = url.toString();
 }
 
@@ -88,16 +99,17 @@ export async function completeLineLogin() {
     throw new Error("ไม่พบ authorization code จาก LINE");
   }
 
-  // Verify state (ป้องกัน CSRF)
+  // Verify state ฝั่ง client (defense-in-depth · server validate ซ้ำใน lineAuth
+  // ผ่าน Firestore transaction · single-use)
   const savedState = sessionStorage.getItem("line_login_state");
   if (state !== savedState) {
     throw new Error("State mismatch — อาจมีคนปลอมแปลง");
   }
   sessionStorage.removeItem("line_login_state");
 
-  // ส่ง code → Cloud Function
+  // ส่ง code + state → Cloud Function · server consume state ใน Firestore txn
   const redirectUri = window.location.origin + window.location.pathname;
-  const result = await lineAuthFn({ code, redirectUri });
+  const result = await lineAuthFn({ code, redirectUri, state });
   const { customToken } = result.data as { customToken: string };
 
   // Sign in ด้วย custom token
