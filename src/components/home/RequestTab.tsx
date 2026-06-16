@@ -261,37 +261,39 @@ export default function RequestTab({
       />
       {days > 0 && (
         <div
-          className={`rounded-2xl p-4.5 my-3.5 flex items-center gap-4 border-[1.5px] ${overLimit ? "bg-red-lt border-[#C0392B40]" : "bg-gold-pale border-[#C9973A60]"}`}
+          className={`rounded-2xl px-5 py-4 my-3.5 flex flex-col items-center text-center border-[1.5px] ${overLimit ? "bg-red-lt border-[#C0392B40]" : "bg-gold-pale border-[#C9973A60]"}`}
         >
           <div
-            className={`w-[50px] h-[50px] rounded-[14px] shrink-0 flex items-center justify-center ${overLimit ? "bg-[#C0392B18]" : "bg-linear-135 from-gold to-gold-lt"}`}
+            className={`text-sm font-semibold inline-flex items-center gap-1.5 ${overLimit ? "text-red" : "text-txt-mid"}`}
           >
             {overLimit ? (
-              <IconAlertCircle size={22} color={COLORS.red} strokeWidth={2.5} />
+              <IconAlertCircle size={14} color={COLORS.red} strokeWidth={2.5} />
             ) : (
-              <IconCalendarRange size={22} color="#fff" strokeWidth={2.2} />
+              <IconCalendarRange
+                size={14}
+                color={COLORS.maroon}
+                strokeWidth={2.4}
+              />
             )}
+            รวมจำนวนวันทำการ
           </div>
-          <div>
-            <div className="text-sm text-txt-mid mb-0.5">รวมจำนวนวันทำการ</div>
-            <div
-              className={`text-3xl font-extrabold leading-[1.1] ${overLimit ? "text-red" : "text-maroon"}`}
-            >
-              {days}
-              <span className="text-base font-semibold"> วัน</span>
-            </div>
-            <div
-              className={`text-sm mt-0.5 ${overLimit ? "text-red" : "text-txt-soft"}`}
-            >
-              {overLimit ? (
-                <span className="inline-flex items-center gap-1">
-                  <IconAlertTriangle size={14} strokeWidth={2.4} />
-                  เกินสิทธิ์! คงเหลือ {remain} วัน
-                </span>
-              ) : (
-                "(ไม่รวมวันเสาร์)"
-              )}
-            </div>
+          <div
+            className={`text-4xl font-extrabold leading-[1.05] mt-1.5 ${overLimit ? "text-red" : "text-maroon"}`}
+          >
+            {days}
+            <span className="text-lg font-semibold ml-1">วัน</span>
+          </div>
+          <div
+            className={`text-xs mt-1.5 ${overLimit ? "text-red" : "text-txt-soft"}`}
+          >
+            {overLimit ? (
+              <span className="inline-flex items-center gap-1">
+                <IconAlertTriangle size={12} strokeWidth={2.4} />
+                เกินสิทธิ์! คงเหลือ {remain} วัน
+              </span>
+            ) : (
+              "(ไม่รวมวันเสาร์)"
+            )}
           </div>
         </div>
       )}
