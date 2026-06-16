@@ -1797,6 +1797,37 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
           "เสร็จสิ้นการพิมพ์ Report",
         ],
       },
+      { type: "h3", text: "รูปประกอบ" },
+      {
+        type: "image",
+        src: "/knowledge/print-button5.webp",
+        alt: "ปุ่มที่ 5 รูปเครื่องพิมพ์",
+        caption: "2. กดปุ่มที่ 5 (รูปเครื่องพิมพ์) นับจากทางซ้าย",
+      },
+      {
+        type: "image",
+        src: "/knowledge/print-choose-a4.webp",
+        alt: "Print Choose · Print A4 Report",
+        caption: "3-4. เลือก Print A4 Report → กด Print",
+      },
+      {
+        type: "image",
+        src: "/knowledge/print-button8.webp",
+        alt: "ปุ่มที่ 8 รูปเครื่องพิมพ์ + ไขควง",
+        caption: "5. กดปุ่มที่ 8 (รูปเครื่องพิมพ์ + ไขควง) นับจากทางซ้าย",
+      },
+      {
+        type: "image",
+        src: "/knowledge/print-canon-ts200.webp",
+        alt: "Print dialog · Canon TS200 series",
+        caption: "6-7. ตรวจสอบเป็น Canon TS200 series → กด Cancel",
+      },
+      {
+        type: "image",
+        src: "/knowledge/print-button9.webp",
+        alt: "ปุ่มที่ 9 รูปเครื่องพิมพ์ + กระดาษขาว",
+        caption: "8. กดปุ่มที่ 9 (รูปเครื่องพิมพ์ + กระดาษขาว) นับจากทางซ้าย",
+      },
     ],
   },
 
