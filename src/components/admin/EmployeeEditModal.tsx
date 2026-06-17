@@ -415,7 +415,7 @@ export default function EmployeeEditModal({
                   <IconUser size={12} strokeWidth={2.4} />
                   ตำแหน่ง
                 </span>
-                <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
+                <span className="text-xs px-1.5 py-px rounded-lg bg-gold-pale text-maroon font-bold ml-auto">
                   แก้ในแท็บ "ตำแหน่ง"
                 </span>
               </div>
@@ -435,7 +435,7 @@ export default function EmployeeEditModal({
                   <IconBuildingBank size={12} strokeWidth={2.4} />
                   บัญชีรับเงินเดือน
                 </span>
-                <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
+                <span className="text-xs px-1.5 py-px rounded-lg bg-green-lt text-green font-bold ml-auto">
                   Admin แก้ได้
                 </span>
               </div>
@@ -495,7 +495,7 @@ export default function EmployeeEditModal({
                     </span>
                   )}
                 </span>
-                <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
+                <span className="text-xs px-1.5 py-px rounded-lg bg-cream-dk text-txt-mid font-bold ml-auto">
                   อ่านอย่างเดียว
                 </span>
               </label>
