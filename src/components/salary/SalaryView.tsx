@@ -310,17 +310,22 @@ export default function SalaryView({
 
   return (
     <div>
-      {/* month selector + ปุ่มแผนผังเงินเดือน — บนสุด เพื่อให้สลับเดือนง่าย */}
+      {/* month selector + ปุ่มแผนผังเงินเดือน — บนสุด เพื่อให้สลับเดือนง่าย
+          แผนผังโผล่เฉพาะ pool sales — ตำแหน่งอื่นไม่ใช้ pool calc */}
       <div className="flex items-center justify-between gap-2 mb-3">
-        <button
-          type="button"
-          onClick={() => setShowPoolFlow(true)}
-          title="แผนผังเงินเดือน"
-          className="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-[9px] border border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
-        >
-          <IconNetwork size={14} strokeWidth={2.4} />
-          แผนผังเงินเดือน
-        </button>
+        {employeeRole?.poolGroup ? (
+          <button
+            type="button"
+            onClick={() => setShowPoolFlow(true)}
+            title="แผนผังเงินเดือน"
+            className="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-[9px] border border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
+          >
+            <IconNetwork size={14} strokeWidth={2.4} />
+            แผนผังเงินเดือน
+          </button>
+        ) : (
+          <div />
+        )}
         <MonthChevronNav
           months={selectMonths}
           selected={selectedMonth}
@@ -338,7 +343,9 @@ export default function SalaryView({
           />
           <div className="text-xs text-txt leading-snug">
             <b>ตัวเลขประมาณการ</b> — ADMIN ยังไม่ได้ยืนยันยอด ตัวเลขอาจ เปลี่ยนแปลงได้ ·
-            พิมพ์สลิป/ใบรับรอง + แผนผังเงินเดือน เปิดได้หลังยืนยันยอด
+            พิมพ์สลิป/ใบรับรอง
+            {employeeRole?.poolGroup ? " + แผนผังเงินเดือน" : ""}{" "}
+            เปิดได้หลังยืนยันยอด
           </div>
         </div>
       )}
