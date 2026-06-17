@@ -307,6 +307,18 @@ export default function SalaryAdminEdit({
     }));
   }
 
+  // จำนวนใบของ "โบนัสอื่นๆ" item — เขียนลง bonusCounts map ใน draft
+  function updateBonusCount(itemId: string, value: string) {
+    const num = parseFloat(value) || 0;
+    setDraft((d: any) => ({
+      ...d,
+      bonusCounts: {
+        ...((d.bonusCounts ?? savedData.bonusCounts) || {}),
+        [itemId]: num,
+      },
+    }));
+  }
+
   /* ─── รายการ custom (รายรับ/รายหัก) ที่ Admin เพิ่มเอง ──────── */
   function currentCustomList(d, key: "customEarnings" | "customDeductions") {
     if (Array.isArray(d[key])) return d[key];
@@ -428,22 +440,15 @@ export default function SalaryAdminEdit({
             amount: sc.buyCommission,
           },
         ];
+  // โบนัสอื่นๆ (multi-item) — มาจาก salaryCalculation.bonusBreakdown โดยตรง
   const memberBonusBreakdown = !rolePaysPieceCommission(employeeRole)
     ? []
-    : [
-        {
-          label: "เชิญชวนสมัครบัตร",
-          pieces: sc.invitePieces,
-          rate: sc.invitePieceRate,
-          amount: sc.inviteCommission,
-        },
-        {
-          label: "ย้ายข้อมูลบัตร",
-          pieces: sc.transferPieces,
-          rate: sc.transferPieceRate,
-          amount: sc.transferCommission,
-        },
-      ];
+    : (sc.bonusBreakdown || []).map((b) => ({
+        label: b.label,
+        pieces: b.pieces,
+        rate: b.rate,
+        amount: b.amount,
+      }));
 
   // ปิดรอบถาวรแล้ว (พ้น 7 วันหลังยืนยันยอดครั้งแรก) → ห้ามแก้เดือนนี้
   const monthLock = getPayrollLock(payrollConfirms?.[selectedMonth]);
@@ -1126,97 +1131,82 @@ export default function SalaryAdminEdit({
           </div>
         )}
 
-        {/* บัตรสมาชิก — pieces × rate (เฉพาะตำแหน่งที่มีค่าคอมรายชิ้น) */}
-        {rolePaysPieceCommission(employeeRole) && (
-          <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
-            <div className="flex items-center gap-2 mb-3.5">
-              <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
-              <div className="font-bold text-sm text-txt">โบนัสบัตรสมาชิก</div>
-              <div className="ml-auto text-sm font-bold text-maroon">
-                + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
+        {/* โบนัสอื่นๆ — multi-item (เดิม: บัตรสมาชิก hardcode invite + transfer)
+            admin custom รายการเองในแท็บ "ตำแหน่ง" → role.bonusItems
+            ซ่อน section ถ้า role ไม่มีรายการเลย ([]) หรือไม่ใช่ piece role */}
+        {rolePaysPieceCommission(employeeRole) &&
+          (salaryCalculation.bonusBreakdown || []).length > 0 && (
+            <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+              <div className="flex items-center gap-2 mb-3.5">
+                <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
+                <div className="font-bold text-sm text-txt">โบนัสอื่นๆ</div>
+                <div className="ml-auto text-sm font-bold text-maroon">
+                  + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
+                </div>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {(salaryCalculation.bonusBreakdown || []).map((item) => {
+                  const count =
+                    (data.bonusCounts?.[item.id]) ??
+                    (item.id === "invite"
+                      ? data.invitePieces ?? 0
+                      : item.id === "transfer"
+                        ? data.transferPieces ?? 0
+                        : 0);
+                  return (
+                    <div
+                      key={item.id}
+                      className={`rounded-[10px] p-3 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div
+                          className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
+                        >
+                          <IconTicket size={16} strokeWidth={2.2} />
+                          {item.label}
+                        </div>
+                        <div className="text-xs text-txt-soft">
+                          Rate:{" "}
+                          <b className="text-maroon">
+                            {formatThaiNumber(item.rate)} ฿/ใบ
+                          </b>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 relative">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={count || ""}
+                            disabled={locked}
+                            onChange={(e) =>
+                              updateBonusCount(item.id, e.target.value)
+                            }
+                            className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                            ใบ
+                          </span>
+                        </div>
+                        <div className="text-sm text-txt-soft font-semibold">=</div>
+                        <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
+                          {formatThaiNumber(item.amount)} ฿
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-txt-soft mt-2.5 text-center inline-flex items-center justify-center gap-1 w-full">
+                <IconLightbulb
+                  size={12}
+                  strokeWidth={2.4}
+                  className="text-gold"
+                />
+                รายการ/Rate กำหนดในแท็บ "ตำแหน่ง" และ "ข้อมูลพนักงาน"
               </div>
             </div>
-
-            {/* Invite */}
-            <div
-              className={`rounded-[10px] p-3 mb-2.5 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div
-                  className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
-                >
-                  <IconTicket size={16} strokeWidth={2.2} />
-                  เชิญชวนสมัครบัตร
-                </div>
-                <div className="text-xs text-txt-soft">
-                  Rate:{" "}
-                  <b className="text-maroon">
-                    {formatThaiNumber(employeeInfo?.invitePieceRate || 0)} ฿/ใบ
-                  </b>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 relative">
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={data.invitePieces || ""}
-                    disabled={locked}
-                    onChange={(e) => update("invitePieces", e.target.value)}
-                    className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                    ใบ
-                  </span>
-                </div>
-                <div className="text-sm text-txt-soft font-semibold">=</div>
-                <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                  {formatThaiNumber(salaryCalculation.inviteCommission)} ฿
-                </div>
-              </div>
-            </div>
-
-            {/* Transfer */}
-            <div
-              className={`rounded-[10px] p-3 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div
-                  className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
-                >
-                  <IconRefresh size={16} strokeWidth={2.2} />
-                  ย้ายข้อมูลบัตร
-                </div>
-                <div className="text-xs text-txt-soft">
-                  Rate:{" "}
-                  <b className="text-maroon">
-                    {formatThaiNumber(employeeInfo?.transferPieceRate || 0)}{" "}
-                    ฿/ใบ
-                  </b>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 relative">
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={data.transferPieces || ""}
-                    disabled={locked}
-                    onChange={(e) => update("transferPieces", e.target.value)}
-                    className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                    ใบ
-                  </span>
-                </div>
-                <div className="text-sm text-txt-soft font-semibold">=</div>
-                <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                  {formatThaiNumber(salaryCalculation.transferCommission)} ฿
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+          )}
 
         {/* Earnings inputs */}
         <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
@@ -1320,15 +1310,16 @@ export default function SalaryAdminEdit({
             </div>
           )}
 
-          {/* Member-card bonus total — สรุปจากโบนัสบัตรสมาชิกด้านบน (เฉพาะตำแหน่ง
-              ที่มี piece commission) */}
-          {rolePaysPieceCommission(employeeRole) && (
+          {/* Bonus total — สรุปจากโบนัสอื่นๆ ด้านบน (เฉพาะตำแหน่งที่มี piece
+              commission + role กำหนดรายการ ≥ 1) */}
+          {rolePaysPieceCommission(employeeRole) &&
+            (sc.bonusBreakdown || []).length > 0 && (
             <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
               <div className="flex items-center gap-2.5">
                 <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-txt-soft font-semibold">
-                    รวมโบนัสบัตรสมาชิก
+                    รวมโบนัสอื่นๆ
                   </div>
                   <div className="text-base font-bold text-green mt-px">
                     + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿

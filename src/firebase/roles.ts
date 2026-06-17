@@ -48,6 +48,13 @@ export async function upsertRole(role) {
       // legacy pieceLabel — เขียน null เสมอเมื่อย้ายมา pieceItems แล้ว
       // (migrate-on-read ใน rolePieceItems ยังอ่าน pieceLabel ของ doc เก่าได้)
       pieceLabel: role.pieceLabel ?? null,
+      // โบนัสอื่นๆ (multi-item) — array เสมอ · [] = ปิด section
+      // whitelist field เหมือน pieceItems
+      bonusItems: Array.isArray(role.bonusItems)
+        ? role.bonusItems
+            .filter((it: any) => it?.id && typeof it.label === "string")
+            .map((it: any) => ({ id: String(it.id), label: String(it.label) }))
+        : null,
       updatedAt: Date.now(),
     },
     { merge: true },
