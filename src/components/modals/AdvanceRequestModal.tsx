@@ -85,10 +85,6 @@ export default function AdvanceRequestModal({
       setErr(`เกินวงเงินคงเหลือ — เบิกได้สูงสุด ${formatThaiNumber(remaining)} ฿`);
       return;
     }
-    if (!reason.trim()) {
-      setErr("กรุณาระบุเหตุผลก่อนยื่นคำขอเบิก");
-      return;
-    }
     setErr("");
     onSubmit({ amount: amountValue, reason: reason.trim(), month: yearMonth });
     setAmount("");
@@ -188,9 +184,10 @@ export default function AdvanceRequestModal({
           ))}
       </div>
 
-      {/* reason */}
+      {/* reason — ไม่บังคับ */}
       <label className="block text-sm text-txt-mid font-semibold mb-1.5">
-        เหตุผล
+        เหตุผล{" "}
+        <span className="font-normal text-txt-soft">(ถ้ามี)</span>
       </label>
       <textarea
         value={reason}
