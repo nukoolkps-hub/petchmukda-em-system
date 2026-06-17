@@ -35,6 +35,10 @@ interface Item {
   pieceItemId?: string;
   /** roleId — ใช้ filter dropdown รายการ + ลูกอัพ pieceItems ใน UI */
   roleId?: string;
+  /** snapshot ของชื่อพนักงาน · ใช้แสดงตอน orphan (employee เปลี่ยน role / ลบ) */
+  employeeName?: string;
+  /** snapshot ของชื่อรายการค่าคอม · ใช้แสดงตอน orphan (item ถูกลบจาก role) */
+  pieceItemLabel?: string;
   // shared
   pieces: number;
   label: string;
@@ -75,6 +79,8 @@ function normalizeItems(items: Item[] | undefined): Item[] {
     employeeId: it.employeeId || "",
     pieceItemId: it.pieceItemId || "",
     roleId: it.roleId || "",
+    employeeName: it.employeeName || "",
+    pieceItemLabel: it.pieceItemLabel || "",
     pieces: Number(it.pieces) || 0,
     label: it.label || "",
   }));
@@ -186,8 +192,25 @@ export default function PoolAdjustmentModal({
   async function save() {
     if (locked || saving || !dirty) return;
     setSaving(true);
+    // re-snapshot names ตอน save จากข้อมูลปัจจุบัน · กัน name ใน UI เก่า
+    // ไม่ตรงกับที่ admin เห็นล่าสุด (ถ้า admin rename หลังเปิด modal)
+    const itemsToSave = items.map((it) => {
+      if (it.kind !== "piece") return it;
+      const emp = it.employeeId
+        ? employeeDirectory.find((e) => e.id === it.employeeId)
+        : null;
+      const role = it.roleId ? roles.find((r) => r.id === it.roleId) : null;
+      const pi = role
+        ? rolePieceItems(role).find((p) => p.id === it.pieceItemId)
+        : null;
+      return {
+        ...it,
+        employeeName: emp ? emp.nickname || emp.name : it.employeeName || "",
+        pieceItemLabel: pi ? pi.label : it.pieceItemLabel || "",
+      };
+    });
     try {
-      await onSave(yearMonth, { items });
+      await onSave(yearMonth, { items: itemsToSave });
       showToast?.("บันทึกรายการยกเว้นค่าคอมแล้ว");
       onClose();
     } catch (err) {
@@ -314,6 +337,28 @@ export default function PoolAdjustmentModal({
           <div className="text-xs text-txt-soft mb-2 px-1 leading-relaxed">
             หัก count ของพนักงานในรายการที่เลือก — เลือก ตำแหน่ง · พนักงาน · รายการ
             ได้อิสระ
+            {/* ถ้ามี row orphan ใดๆ → อธิบาย */}
+            {pieceItems.some((it) => {
+              if (it.kind !== "piece") return false;
+              const roleOrphan =
+                !!it.roleId && !pieceRoles.some((r) => r.id === it.roleId);
+              const empOrphan =
+                !!it.employeeId &&
+                !!it.roleId &&
+                !employeesInRole(it.roleId).some(
+                  (e) => e.id === it.employeeId,
+                );
+              const itemOrphan =
+                !!it.pieceItemId &&
+                !!it.roleId &&
+                !itemsInRole(it.roleId).some((p) => p.id === it.pieceItemId);
+              return roleOrphan || empOrphan || itemOrphan;
+            }) && (
+              <span className="block mt-1 text-amber font-semibold">
+                ⚠ มีรายการที่อ้างถึงข้อมูลเก่า (พนักงานย้ายตำแหน่ง / รายการถูกลบ).
+                payout ของเดือนนั้นยังถูกต้องตาม snapshot · เก็บ/เปลี่ยน/ลบ row ได้
+              </span>
+            )}
           </div>
           {pieceItems.length === 0 ? (
             <div className="text-center text-xs text-txt-soft py-4 px-4 bg-cream/60 rounded-[10px] border border-dashed border-bdr mb-2">
@@ -524,7 +569,9 @@ function PieceRow({
             ))}
             {roleIsOrphan && (
               <option value={item.roleId}>
-                {orphanRole ? `${orphanRole.name} (ข้อมูลเก่า)` : "(ตำแหน่งเดิม)"}
+                {orphanRole
+                  ? `${orphanRole.name} (ไม่ใช่ตำแหน่งรายชิ้นแล้ว)`
+                  : "(ตำแหน่งเดิม — ไม่พบในระบบ)"}
               </option>
             )}
           </select>
@@ -561,8 +608,10 @@ function PieceRow({
                 {empIsOrphan && (
                   <option value={item.employeeId}>
                     {orphanEmp
-                      ? `${orphanEmp.nickname || orphanEmp.name} (ข้อมูลเก่า)`
-                      : "(พนักงานเดิม)"}
+                      ? `${orphanEmp.nickname || orphanEmp.name} (ย้ายตำแหน่งแล้ว)`
+                      : item.employeeName
+                        ? `${item.employeeName} (ลบจากระบบแล้ว)`
+                        : "(พนักงานเดิม — ไม่พบในระบบ)"}
                   </option>
                 )}
               </>
@@ -587,7 +636,11 @@ function PieceRow({
                   </option>
                 ))}
                 {itemIsOrphan && (
-                  <option value={item.pieceItemId}>(รายการเดิม)</option>
+                  <option value={item.pieceItemId}>
+                    {item.pieceItemLabel
+                      ? `${item.pieceItemLabel} (ลบจากตำแหน่งแล้ว)`
+                      : "(รายการเดิม — ถูกลบจากตำแหน่ง)"}
+                  </option>
                 )}
               </>
             )}

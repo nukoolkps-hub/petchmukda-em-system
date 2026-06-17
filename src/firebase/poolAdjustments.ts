@@ -32,6 +32,12 @@ export interface PoolAdjustmentItem {
   // piece variant (multi-item)
   employeeId?: string;
   pieceItemId?: string;
+  /** snapshot ชื่อพนักงาน ตอนสร้าง exclusion · ใช้แสดงใน UI ถ้าพนักงานถูกลบ
+   *  หรือเปลี่ยนตำแหน่งหลังบันทึก · piece variant เท่านั้น                    */
+  employeeName?: string;
+  /** snapshot label รายการ piece item · ใช้ใน UI ถ้า admin ลบ pieceItem ออก
+   *  จาก role config หลังบันทึก exclusion · piece variant เท่านั้น            */
+  pieceItemLabel?: string;
   // ใช้ทั้ง 2 variant
   pieces: number;
   label: string;
@@ -88,6 +94,10 @@ export async function setPoolAdjustment(
           ...base,
           employeeId: it.employeeId || "",
           pieceItemId: it.pieceItemId || "",
+          // snapshot names ที่ UI ส่งมา — กัน label หายเมื่อ admin ลบ
+          // employee/pieceItem ออกจาก system หลัง save exclusion
+          employeeName: (it.employeeName || "").slice(0, 120) || null as any,
+          pieceItemLabel: (it.pieceItemLabel || "").slice(0, 120) || null as any,
           // ลบ field ของ pool variant กันค้าง
           poolGroup: null as any,
           side: null as any,
