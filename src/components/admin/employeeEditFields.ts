@@ -18,6 +18,7 @@ export const EMPLOYEE_EDIT_FIELDS = [
   "nickname",
   "bank",
   "bankAccountNumber",
+  "pieceRates",
   "recurringItems",
 ] as const;
 

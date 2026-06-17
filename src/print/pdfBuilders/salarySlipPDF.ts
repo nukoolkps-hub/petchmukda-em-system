@@ -3,10 +3,7 @@
    ไม่ใช่ image-based เหมือน html2pdf                          */
 
 import { formatYmThai } from "../../utils/dateUtils";
-import {
-  rolePaysPieceCommission,
-  rolePieceLabel,
-} from "../../utils/salaryUtils";
+import { rolePaysPieceCommission } from "../../utils/salaryUtils";
 
 const COLORS = {
   maroon: "#7B1C1C",
@@ -54,11 +51,11 @@ export function buildSalarySlipDocDef({
   // ตำแหน่งไม่มี piece commission → ข้ามทั้ง piece + invite/transfer
   if (rolePaysPieceCommission(employeeRole)) {
     if (salaryCalculation.usesSinglePieceRate) {
-      if (salaryCalculation.singleRateCommission > 0)
-        earnRows.push([
-          rolePieceLabel(employeeRole) || "ค่าคอมตามจำนวนชิ้น",
-          formatNumber(salaryCalculation.singleRateCommission),
-        ]);
+      // multi-item — 1 แถวต่อรายการค่าคอม (เฉพาะที่ > 0)
+      for (const item of salaryCalculation.pieceBreakdown || []) {
+        if (item.amount > 0)
+          earnRows.push([item.label, formatNumber(item.amount)]);
+      }
     } else {
       if (salaryCalculation.normalSaleCommission > 0)
         earnRows.push([

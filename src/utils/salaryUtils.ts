@@ -1,34 +1,103 @@
 /* ─── Salary calculation helpers ───────────────────────────────── */
 
 import { BUSINESS_RULES } from "../constants";
+import type { PieceItem } from "../types";
 import { countWeekdayLeaves, getOverQuotaDays } from "./leaveUtils";
 
 /* ─── Role piece-commission policy ────────────────────────────────
    ตำแหน่งเก็บค่าคอมแยก 3 รูปแบบ:
    1. Pool sales — poolGroup ตั้ง → ใช้ normal/special/buy + invite/transfer
-   2. Single piece — poolGroup ว่าง + pieceLabel ตั้ง → ใช้ singlePieceRate
-      (label = pieceLabel เช่น "ค่าคอมต่อบิล") + invite/transfer
-   3. ไม่มีค่าคอม — poolGroup ว่าง + pieceLabel ว่าง → เงินเดือนพื้นฐานอย่างเดียว
-      (พนักงานทั่วไป รปภ. ทำความสะอาด)                                       */
+   2. Multi piece — poolGroup ว่าง + pieceItems ≥ 1 → แต่ละรายการมี rate
+      (ต่อพนักงาน) + จำนวนชิ้น (ต่อเดือน) + invite/transfer
+   3. ไม่มีค่าคอม — poolGroup ว่าง + ไม่มี pieceItems → เงินเดือนพื้นฐานอย่างเดียว
+      (พนักงานทั่วไป รปภ. ทำความสะอาด)
+   backward-compat: legacy role ที่มี pieceLabel (single) → migrate-on-read เป็น
+   1 pieceItem id="default" ที่อ่าน rate จาก singlePieceRate + จำนวนจาก
+   singleRatePieces                                                            */
+
+/** id ของ piece item เริ่มต้น (legacy single-rate) — map กับ singlePieceRate /
+ *  singleRatePieces ของข้อมูลเก่า                                              */
+export const LEGACY_PIECE_ITEM_ID = "default";
+
+interface RolePieceShape {
+  poolGroup?: string | null;
+  pieceItems?: PieceItem[] | null;
+  pieceLabel?: string | null;
+}
+
+/** รายการ piece item ของตำแหน่ง (normalize legacy pieceLabel → 1 item)
+ *  คืน [] ถ้า pool sales หรือไม่มีค่าคอมรายชิ้น                                  */
+export function rolePieceItems(
+  role: RolePieceShape | null | undefined,
+): PieceItem[] {
+  if (!role || role.poolGroup) return [];
+  if (Array.isArray(role.pieceItems) && role.pieceItems.length > 0) {
+    return role.pieceItems
+      .filter((it) => it && it.id && (it.label ?? "").trim())
+      .map((it) => ({ id: it.id, label: it.label.trim() }));
+  }
+  // legacy single label → 1 item id="default"
+  if (role.pieceLabel?.trim()) {
+    return [{ id: LEGACY_PIECE_ITEM_ID, label: role.pieceLabel.trim() }];
+  }
+  return [];
+}
 
 /** ตำแหน่งนี้มีค่าคอมแบบ "ต่อชิ้น" (รวม invite/transfer ด้วย) ไหม
- *  คืน true ถ้า: pool sales (ใช้ normal/special/buy) หรือ non-pool ที่ admin
- *  set `pieceLabel` แล้ว · false = ไม่มีค่าคอมเลย (รวม invite/transfer)         */
+ *  คืน true ถ้า: pool sales หรือ non-pool ที่มี pieceItems ≥ 1                  */
 export function rolePaysPieceCommission(
-  role: { poolGroup?: string | null; pieceLabel?: string | null } | null | undefined,
+  role: RolePieceShape | null | undefined,
 ): boolean {
   if (!role) return false;
   if (role.poolGroup) return true;
-  return !!role.pieceLabel?.trim();
+  return rolePieceItems(role).length > 0;
 }
 
-/** label ของ singlePieceRate · null ถ้าตำแหน่งไม่ใช้ single piece (pool sales / no
- *  commission) — caller ควรเช็คก่อนเรียก                                       */
+/** label ของ piece item แรก · "" ถ้าตำแหน่งไม่ใช้ piece (pool / no commission)
+ *  ใช้แสดงหัวข้อรวมตอนมีรายการเดียว — backward-compat กับโค้ดเดิม                */
 export function rolePieceLabel(
-  role: { poolGroup?: string | null; pieceLabel?: string | null } | null | undefined,
+  role: RolePieceShape | null | undefined,
 ): string {
-  if (!role || role.poolGroup) return "";
-  return (role.pieceLabel || "").trim();
+  const items = rolePieceItems(role);
+  return items[0]?.label || "";
+}
+
+/** อัตราค่าคอมต่อชิ้นของ item นี้ (ต่อพนักงาน) — snapshot (salary) ก่อน live (rates)
+ *  legacy item "default" → fallback singlePieceRate                            */
+export function resolvePieceItemRate(
+  itemId: string,
+  salary:
+    | { pieceRates?: Record<string, number>; singlePieceRate?: number }
+    | null
+    | undefined,
+  rates:
+    | { pieceRates?: Record<string, number>; singlePieceRate?: number }
+    | null
+    | undefined,
+): number {
+  if (salary?.pieceRates && typeof salary.pieceRates[itemId] === "number")
+    return salary.pieceRates[itemId];
+  if (itemId === LEGACY_PIECE_ITEM_ID && salary?.singlePieceRate != null)
+    return salary.singlePieceRate;
+  if (rates?.pieceRates && typeof rates.pieceRates[itemId] === "number")
+    return rates.pieceRates[itemId];
+  if (itemId === LEGACY_PIECE_ITEM_ID) return rates?.singlePieceRate ?? 0;
+  return 0;
+}
+
+/** จำนวนชิ้นของ item นี้ในเดือน (จาก salary doc) — legacy "default" → fallback
+ *  singleRatePieces                                                            */
+export function resolvePieceItemPieces(
+  itemId: string,
+  salary:
+    | { piecePieces?: Record<string, number>; singleRatePieces?: number }
+    | null
+    | undefined,
+): number {
+  if (salary?.piecePieces && typeof salary.piecePieces[itemId] === "number")
+    return salary.piecePieces[itemId];
+  if (itemId === LEGACY_PIECE_ITEM_ID) return salary?.singleRatePieces ?? 0;
+  return 0;
 }
 
 const {
@@ -514,13 +583,35 @@ export function calculateSalary(
     normalSaleCommission = 0,
     specialSaleCommission = 0,
     buyCommission = 0;
+  // breakdown รายการ piece (multi-item) — ใช้แสดงผลในสลิป/หน้า admin
+  let pieceBreakdown: {
+    id: string;
+    label: string;
+    pieces: number;
+    rate: number;
+    amount: number;
+  }[] = [];
 
   if (!usesPieceCommission) {
     // ตำแหน่งไม่มีค่าคอมรายชิ้น (พนักงานทั่วไป รปภ. ทำความสะอาด ฯลฯ)
     // → ทุก commission = 0 · เงินเดือนพื้นฐานอย่างเดียว
   } else if (usesSinglePieceRate) {
-    singleRatePieces = salary.singleRatePieces || 0;
-    singleRateCommission = Math.round(singleRatePieces * singlePieceRate);
+    // multi-item: รวมทุกรายการ → singleRateCommission = ผลรวม · pieceBreakdown
+    // เก็บราย item · singleRatePieces = ผลรวมจำนวนชิ้น (สำหรับ backward-compat)
+    const items = rolePieceItems(roleConfig);
+    pieceBreakdown = items.map((item) => {
+      const pieces = resolvePieceItemPieces(item.id, salary);
+      const rate = resolvePieceItemRate(item.id, salary, rates);
+      return {
+        id: item.id,
+        label: item.label,
+        pieces,
+        rate,
+        amount: Math.round(pieces * rate),
+      };
+    });
+    singleRatePieces = pieceBreakdown.reduce((s, b) => s + b.pieces, 0);
+    singleRateCommission = pieceBreakdown.reduce((s, b) => s + b.amount, 0);
   } else {
     const inPool = !!poolShare;
     normalSalePieces = inPool
@@ -668,6 +759,7 @@ export function calculateSalary(
     singleRatePieces,
     singleRateCommission,
     singlePieceRate,
+    pieceBreakdown, // [{id,label,pieces,rate,amount}] — multi-item piece commission
     normalSaleCommission,
     specialSaleCommission,
     buyCommission,
