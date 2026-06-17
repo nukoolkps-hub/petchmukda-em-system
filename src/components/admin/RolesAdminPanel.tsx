@@ -18,6 +18,7 @@ import {
 } from "../../utils/sanitizeRichText";
 import AvatarCircle from "../shared/AvatarCircle";
 import RichTextEditor from "../shared/RichTextEditor";
+import ThemedSelect from "../shared/ThemedSelect";
 
 /** normalize ฟิลด์ "หน้าที่หลัก" ก่อนเก็บ:
  *  - ว่างจริง (เคลียร์แล้วเหลือ <br>) → null
@@ -517,26 +518,15 @@ const EmployeeRoleAssignmentList = memo(function EmployeeRoleAssignmentList({
                 {employee.name}
               </div>
             </div>
-            <div className="relative">
-              <select
+            <div className="min-w-[160px]">
+              <ThemedSelect
                 value={employee.roleId || ""}
-                onChange={(ev) => {
-                  const rl = roles.find((r) => r.id === ev.target.value);
+                onChange={(v) => {
+                  const rl = roles.find((r) => r.id === v);
                   if (rl) onChangeEmpRole(employee.id, rl.id, rl.name);
                 }}
-                className="appearance-none cursor-pointer pl-2.5 pr-7 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt"
-              >
-                <option value="">— เลือก —</option>
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
-              <IconChevronDown
-                size={12}
-                strokeWidth={2.4}
-                className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                options={roles.map((r) => ({ value: r.id, label: r.name }))}
+                placeholder="— เลือก —"
               />
             </div>
           </div>
