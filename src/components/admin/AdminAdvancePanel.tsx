@@ -248,9 +248,10 @@ export default function AdminAdvancePanel({
           {filtered.map((request) => {
             const slipPreview =
               request.slipImageUrl || request.slipImageDataUrl;
-            const employeeInfo =
-              employeeDirectory.find((e) => e.id === request.employeeId) ||
-              employeeDirectory.find((e) => e.name === request.employeeName);
+            // lookup ด้วย employeeId เสมอ — name fallback อาจ map ผิดคนหลัง rename
+            const employeeInfo = employeeDirectory.find(
+              (e) => e.id === request.employeeId,
+            );
             const sMap = {
               pending: {
                 bg: COLORS.amberLight,

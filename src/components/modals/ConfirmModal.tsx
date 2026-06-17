@@ -22,7 +22,7 @@ export default function ConfirmModal({ leave, onConfirm, onCancel }) {
         ลบรายการลานี้?
       </div>
       <div className="text-sm text-txt-mid text-center mb-5 leading-[1.8]">
-        <b>{leave.employeeName}</b>
+        <b>{leave.employeeNickname || leave.employeeName}</b>
         <br />
         <span className="inline-flex items-center gap-1.5 align-middle">
           {lt?.Icon && (

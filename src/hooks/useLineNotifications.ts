@@ -57,10 +57,9 @@ export default function useLineNotifications({
     reason: string;
     month: string;
   }) {
-    const employee =
-      currentEmployee ||
-      employeeDirectory.find((e) => e.name === profileName) ||
-      null;
+    // lookup ผ่าน currentEmployee (passed in) เท่านั้น — ไม่ fallback ชื่อ
+    // เพราะ profile.name อาจไม่ตรง employee.name หลังโดน rename
+    const employee = currentEmployee || null;
     const employeeId = employee?.id || "";
     const reqData = {
       employeeId,
@@ -105,9 +104,10 @@ export default function useLineNotifications({
     }
 
     // LINE ถึงพนักงานถูกส่งจาก scheduled backend worker ตามสถานะใน Firestore
-    const employee =
-      employeeDirectory.find((e) => e.id === request.employeeId) ||
-      employeeDirectory.find((e) => e.name === request.employeeName);
+    // lookup ด้วย employeeId เสมอ — name อาจไม่ตรงหลังโดน rename
+    const employee = employeeDirectory.find(
+      (e) => e.id === request.employeeId,
+    );
     const empLineId = employee?.lineUserId;
     if (
       (updates.status === "approved" || updates.status === "rejected") &&

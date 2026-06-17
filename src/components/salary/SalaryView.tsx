@@ -65,9 +65,10 @@ export default function SalaryView({
   showToast,
 }) {
   const currentYM = currentYearMonth();
-  const employeeInfo =
-    employeeDirectory.find((employee) => employee.id === profileEmployeeId) ||
-    employeeDirectory.find((employee) => employee.name === profile?.name);
+  // lookup ด้วย employeeId เสมอ — profile.name อาจไม่ตรง employee.name หลัง rename
+  const employeeInfo = employeeDirectory.find(
+    (employee) => employee.id === profileEmployeeId,
+  );
   const salaryEmployeeId = employeeInfo?.id || profileEmployeeId || "";
   const [selectedMonth, setSelectedMonth] = useState(currentYM);
   const months = useMemo(
