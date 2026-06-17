@@ -1607,15 +1607,14 @@ export default function SalaryAdminEdit({
           <div className="text-2xl font-extrabold text-gold-lt mt-0.5">
             {formatThaiNumber(salaryCalculation.netSalary)} ฿
           </div>
+          <div className="text-xs text-[#E8C87A80] mt-1">
+            เดือน {formatYmThai(selectedMonth)}
+          </div>
         </div>
         <div className="text-right text-sm leading-[1.7] text-[#E8C87A99]">
           รายรับ + {formatThaiNumber(salaryCalculation.earnings)} ฿
           <br />
           รายหัก − {formatThaiNumber(salaryCalculation.deductions)} ฿
-          <br />
-          <span className="text-xs text-[#E8C87A80]">
-            เดือน {formatYmThai(selectedMonth)}
-          </span>
         </div>
       </div>
 
