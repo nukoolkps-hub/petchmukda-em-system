@@ -1264,15 +1264,15 @@ export default function EmployeeEditModal({
           <div className="flex gap-2">
             <button
               onClick={() => cancelAll(true)}
-              className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
+              className="basis-[34%] shrink-0 py-3.5 rounded-2xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
             >
               ยกเลิก
             </button>
             <button
               onClick={saveAll}
-              className="flex-2 py-[11px] rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-maroon-glow"
+              className="flex-1 py-3.5 rounded-2xl border-none bg-maroon text-white text-base font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-2 shadow-maroon-glow"
             >
-              <IconCheck size={14} strokeWidth={2.5} />
+              <IconCheck size={16} strokeWidth={2.5} />
               บันทึก
             </button>
           </div>

@@ -233,7 +233,7 @@ export default function DutyEditModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
+            className="basis-[34%] shrink-0 py-3.5 rounded-2xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
           >
             ยกเลิก
           </button>
@@ -275,8 +275,8 @@ export default function DutyEditModal({
                 setSaving(false);
               }
             }}
-            className={`flex-1 py-[11px] rounded-[10px] border-none text-white text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform ${
-              canSave && !saving ? "bg-maroon" : "bg-bdr cursor-not-allowed"
+            className={`flex-1 py-3.5 rounded-2xl border-none text-white text-base font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform ${
+              canSave && !saving ? "bg-maroon shadow-maroon-glow" : "bg-bdr cursor-not-allowed"
             }`}
           >
             {saving ? "กำลังบันทึก..." : "บันทึก"}
