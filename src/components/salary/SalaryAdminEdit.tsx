@@ -244,6 +244,17 @@ export default function SalaryAdminEdit({
       });
       employeePoolShare = shares[selectedEmployeeId];
     }
+    // รายการยกเว้นค่าคอม "ระดับ piece" สำหรับพนักงานคนนี้ (multi-item)
+    const monthExclusions = (poolAdjustments?.[selectedMonth]?.items || [])
+      .filter(
+        (it: any) =>
+          it.kind === "piece" && it.employeeId === selectedEmployeeId,
+      )
+      .map((it: any) => ({
+        pieceItemId: it.pieceItemId,
+        pieces: Number(it.pieces) || 0,
+        label: it.label,
+      }));
     const computedSalary = calculateSalary(
       data,
       overInfo,
@@ -253,6 +264,7 @@ export default function SalaryAdminEdit({
       employeePoolShare,
       employeeRole,
       buildLoanContext(employeeLoans, selectedEmployeeId, selectedMonth),
+      monthExclusions,
     );
     return {
       poolShare: employeePoolShare,
@@ -451,15 +463,16 @@ export default function SalaryAdminEdit({
             <IconNetwork size={14} strokeWidth={2.4} />
             แผนผังเงินเดือน
           </button>
-          {poolGroupsInfo.length > 0 && (
+          {(poolGroupsInfo.length > 0 ||
+            rolePaysPieceCommission(employeeRole)) && (
             <button
               type="button"
               onClick={() => setShowPoolAdjust(true)}
-              title="หักออกจากกองกลาง"
+              title="รายการยกเว้นค่าคอม"
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
             >
               <IconMinus size={14} strokeWidth={2.4} />
-              หักกองกลาง
+              รายการยกเว้นค่าคอม
             </button>
           )}
         </div>
@@ -1743,6 +1756,9 @@ export default function SalaryAdminEdit({
           locked={locked}
           adjustment={poolAdjustments?.[selectedMonth]}
           poolGroups={poolGroupsInfo}
+          employee={employeeInfo}
+          role={employeeRole}
+          mode={employeeRole?.poolGroup ? "pool" : "piece"}
           onSave={onSetPoolAdjustment}
           onClose={() => setShowPoolAdjust(false)}
           showToast={showToast}

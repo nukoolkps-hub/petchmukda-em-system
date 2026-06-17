@@ -152,6 +152,16 @@ export default function PayrollSummaryPanel({
           });
           poolShare = shares[employee.id];
         }
+        // รายการยกเว้นค่าคอม "ระดับ piece" สำหรับพนักงานคนนี้ (multi-item)
+        const monthExclusions = (poolAdjustments?.[selectedMonth]?.items || [])
+          .filter(
+            (it: any) => it.kind === "piece" && it.employeeId === employee.id,
+          )
+          .map((it: any) => ({
+            pieceItemId: it.pieceItemId,
+            pieces: Number(it.pieces) || 0,
+            label: it.label,
+          }));
         const salaryCalculation = data
           ? calculateSalary(
               data,
@@ -162,6 +172,7 @@ export default function PayrollSummaryPanel({
               poolShare,
               employeeRole,
               buildLoanContext(employeeLoans, employee.id, selectedMonth),
+              monthExclusions,
             )
           : null;
         return {
