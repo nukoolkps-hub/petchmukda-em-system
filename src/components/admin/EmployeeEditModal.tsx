@@ -436,7 +436,7 @@ export default function EmployeeEditModal({
                   บัญชีรับเงินเดือน
                 </span>
                 <span className="text-xs px-1.5 py-px rounded-lg bg-green-lt text-green font-bold ml-auto">
-                  Admin แก้ได้
+                  ADMIN แก้ไขได้
                 </span>
               </div>
               <div className="mb-1.5">
