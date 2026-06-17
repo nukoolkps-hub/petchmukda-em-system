@@ -64,14 +64,14 @@ export default function MonthChevronNav({
         aria-label="เดือนก่อนหน้า"
         disabled={!hasOlder}
         onClick={() => hasOlder && onSelect(months[idx + 1])}
-        className="w-8 h-8 rounded-[9px] border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <IconChevronLeft size={14} strokeWidth={2.5} className="text-txt-mid" />
       </button>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`px-3 rounded-[9px] border border-bdr bg-cream text-sm font-semibold text-txt min-w-[112px] text-center cursor-pointer font-[inherit] whitespace-nowrap ${subtitle ? "py-1.5 leading-tight" : "h-8"}`}
+        className={`px-2.5 py-1.5 rounded-lg border border-bdr bg-cream text-sm font-semibold text-txt min-w-[108px] text-center cursor-pointer font-[inherit] whitespace-nowrap ${subtitle ? "leading-tight" : ""}`}
       >
         <div>{formatYmThai(selected)}</div>
         {subtitle && (
@@ -85,7 +85,7 @@ export default function MonthChevronNav({
         aria-label="เดือนถัดไป"
         disabled={!hasNewer}
         onClick={() => hasNewer && onSelect(months[idx - 1])}
-        className="w-8 h-8 rounded-[9px] border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <IconChevronRight
           size={14}
