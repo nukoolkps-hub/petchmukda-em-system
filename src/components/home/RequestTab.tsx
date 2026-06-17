@@ -181,7 +181,7 @@ export default function RequestTab({
             className={`font-bold text-sm ${overQuota ? "text-red" : "text-maroon"}`}
           >
             {overQuota
-              ? "หมดโควต้าแล้ว - การลาวันต่อไปจะกระทบต่อเงินเดือน"
+              ? "หมดโควต้าแล้ว - การลาครั้งถัดไปจะกระทบต่อเงินเดือน"
               : `โควต้าเดือนนี้เหลือ ${rem} วัน`}
           </div>
           <div className="text-sm text-txt-soft mt-0.5">
