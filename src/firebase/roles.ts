@@ -37,6 +37,10 @@ export async function upsertRole(role) {
       // ignoreUndefinedProperties) · ตำแหน่งสร้างใหม่ไม่มี icon
       icon: role.icon ?? null,
       mainDuties: role.mainDuties ?? null,
+      // ป้ายค่าคอมต่อชิ้น (PR #460) — null = ไม่มีค่าคอม · ค่า = label ของ
+      // singlePieceRate · pool sales (poolGroup ตั้ง) ก็ null เพราะใช้
+      // normal/special/buy
+      pieceLabel: role.pieceLabel ?? null,
       updatedAt: Date.now(),
     },
     { merge: true },
