@@ -897,6 +897,24 @@ export default function SalaryAdminEdit({
                               − {formatThaiNumber(effExcludedAmount)} ฿
                             </span>
                           </div>
+                          {/* รายละเอียดเหตุผลของแต่ละ exclusion row */}
+                          {(item.exclusionEntries || []).length > 0 && (
+                            <div className="pl-2 flex flex-col gap-0.5">
+                              {(item.exclusionEntries || []).map((ex, ix) => (
+                                <div
+                                  key={ix}
+                                  className="flex justify-between text-[11px] text-red/80"
+                                >
+                                  <span className="truncate">
+                                    · {ex.label || "(ไม่ระบุเหตุผล)"}
+                                  </span>
+                                  <span className="tabular-nums shrink-0 ml-2">
+                                    {formatThaiNumber(ex.pieces)} ชิ้น
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                           <div className="flex justify-between text-sm pt-1 border-t border-dashed border-[#C9973A30]">
                             <span className="text-txt font-bold">
                               คิดค่าคอม {formatThaiNumber(item.pieces)} ชิ้น

@@ -651,12 +651,15 @@ export function calculateSalary(
     buyCommission = 0;
   // breakdown รายการ piece (multi-item) — ใช้แสดงผลในสลิป/หน้า admin
   // excluded = ผลรวมจริงที่ admin ใส่ (ไม่ cap) เพื่อให้ UI โชว์ตรง · pieces
-  // = max(0, gross-excluded) ตัวที่จ่ายเงินจริง
+  // = max(0, gross-excluded) ตัวที่จ่ายเงินจริง · exclusionEntries = list
+  // {pieces,label} ของรายการยกเว้นต่อ item เพื่อให้ UI โชว์ "เหตุผล" ให้ admin
+  // และพนักงานเห็น (ไม่ใช่แค่ตัวเลขรวม)
   let pieceBreakdown: {
     id: string;
     label: string;
     pieces: number;
     excluded: number;
+    exclusionEntries: { pieces: number; label: string }[];
     rate: number;
     amount: number;
   }[] = [];
@@ -669,11 +672,20 @@ export function calculateSalary(
     // เก็บราย item · singleRatePieces = ผลรวมจำนวนชิ้น (สำหรับ backward-compat)
     const items = rolePieceItems(roleConfig);
     // ผลรวมยกเว้นต่อ item id (จาก pieceExclusions) — ลบจาก gross ก่อนคูณ rate
+    // เก็บ list entries (pieces+label) ด้วย เพื่อให้ UI โชว์เหตุผลของแต่ละ row
     const exclusionsByItem: Record<string, number> = {};
+    const entriesByItem: Record<string, { pieces: number; label: string }[]> =
+      {};
     for (const ex of pieceExclusions || []) {
       if (!ex?.pieceItemId) continue;
+      const p = Math.max(0, Number(ex.pieces) || 0);
       exclusionsByItem[ex.pieceItemId] =
-        (exclusionsByItem[ex.pieceItemId] || 0) + (Number(ex.pieces) || 0);
+        (exclusionsByItem[ex.pieceItemId] || 0) + p;
+      if (!entriesByItem[ex.pieceItemId]) entriesByItem[ex.pieceItemId] = [];
+      entriesByItem[ex.pieceItemId].push({
+        pieces: p,
+        label: (ex.label || "").trim(),
+      });
     }
     pieceBreakdown = items.map((item) => {
       const gross = resolvePieceItemPieces(item.id, salary);
@@ -685,6 +697,7 @@ export function calculateSalary(
         label: item.label,
         pieces,
         excluded,
+        exclusionEntries: entriesByItem[item.id] || [],
         rate,
         amount: Math.round(pieces * rate),
       };

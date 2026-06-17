@@ -629,19 +629,31 @@ export default function SalaryView({
           ...(!rolePaysPieceCommission(employeeRole)
             ? []
             : salaryCalculation.usesSinglePieceRate
-              ? // multi-item — 1 แถวต่อรายการค่าคอม
-                (salaryCalculation.pieceBreakdown || []).map((item) => ({
-                  icon: (
-                    <IconPackage
-                      size={16}
-                      strokeWidth={2.2}
-                      color={COLORS.gold}
-                    />
-                  ),
-                  main: item.label,
-                  sub: `${item.pieces} ชิ้น × ${formatThaiNumber(item.rate)} ฿`,
-                  value: item.amount,
-                }))
+              ? // multi-item — 1 แถวต่อรายการค่าคอม · ถ้ามี exclusion พ่วง
+                // "หัก N ชิ้น (เหตุผล1, เหตุผล2)" ใน sub ให้พนักงานเห็นเหตุผล
+                (salaryCalculation.pieceBreakdown || []).map((item) => {
+                  let sub = `${item.pieces} ชิ้น × ${formatThaiNumber(item.rate)} ฿`;
+                  if ((item.excluded || 0) > 0) {
+                    const reasons = (item.exclusionEntries || [])
+                      .map((ex) => ex.label.trim())
+                      .filter((l) => l.length > 0)
+                      .join(", ");
+                    sub += ` · หัก ${formatThaiNumber(item.excluded)} ชิ้น`;
+                    if (reasons) sub += ` (${reasons})`;
+                  }
+                  return {
+                    icon: (
+                      <IconPackage
+                        size={16}
+                        strokeWidth={2.2}
+                        color={COLORS.gold}
+                      />
+                    ),
+                    main: item.label,
+                    sub,
+                    value: item.amount,
+                  };
+                })
               : [
                   {
                     icon: (
