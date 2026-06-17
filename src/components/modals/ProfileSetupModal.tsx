@@ -6,7 +6,7 @@ import {
   Type as IconType,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { COLORS, EMOJI_LIST } from "../../constants";
+import { COLORS, EMOJI_LIST, getBankAccountDigits } from "../../constants";
 import { uploadAvatar } from "../../firebase/storage";
 import { resizeAvatar } from "../../utils/imageUtils";
 import { validateBankAccount, validateRequired } from "../../utils/validators";
@@ -360,11 +360,23 @@ export default function ProfileSetupModal({
         </label>
         <input
           value={bankAccountNumber}
-          onChange={(e) => !lockBank && setBankAcc(e.target.value)}
+          onChange={(e) => {
+            if (lockBank) return;
+            // sanitize + จำกัด digit count ตามธนาคารที่เลือก (ห้ามเกิน)
+            const cleaned = e.target.value.replace(/[^0-9\- ]/g, "");
+            const digitsOnly = cleaned.replace(/[^0-9]/g, "");
+            if (digitsOnly.length > getBankAccountDigits(bank)) return;
+            setBankAcc(cleaned);
+          }}
           readOnly={lockBank}
           placeholder="เช่น 123-4-56789-0"
           className={`w-full px-4 py-3 rounded-xl text-base outline-none font-[inherit] box-border text-txt tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"} ${lockBank ? "bg-cream-dk cursor-not-allowed opacity-80" : "bg-white"}`}
         />
+        {bank && !lockBank && (
+          <div className="text-xs text-txt-soft mt-1 px-1">
+            {bank} ใช้เลขบัญชี {getBankAccountDigits(bank)} หลัก
+          </div>
+        )}
 
         {lockBank && (
           <div className="text-xs text-txt-soft mt-2 px-2.5 py-2 bg-cream/60 rounded-lg border border-bdr/60 inline-flex items-start gap-1.5">

@@ -24,7 +24,7 @@ import {
   X as IconX,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { COLORS } from "../../constants";
+import { COLORS, getBankAccountDigits } from "../../constants";
 import type { Employee, Role } from "../../types";
 import { formatTenure } from "../../utils/dateUtils";
 import {
@@ -88,6 +88,10 @@ export default function EmployeeEditModal({
   const editingBankAccountNumber = editingRole[
     `${employee.id}:bankAccountNumber`
   ] as string | undefined;
+  // ค่าปัจจุบันของช่องธนาคาร (live หรือ draft) → ใช้คุม max digits ของเลขบัญชี
+  const currentBank =
+    editingBank !== undefined ? editingBank : employee.bank || "";
+  const bankDigitLimit = getBankAccountDigits(currentBank);
   const editingRecurringItems = editingRole[`${employee.id}:recurringItems`] as
     | RecurringItem[]
     | undefined;
@@ -461,18 +465,24 @@ export default function EmployeeEditModal({
                     ? editingBankAccountNumber
                     : employee.bankAccountNumber || ""
                 }
-                onChange={(e) =>
+                onChange={(e) => {
+                  // sanitize + จำกัด digit count ตามธนาคารที่เลือก (ห้ามเกิน)
+                  const cleaned = e.target.value.replace(/[^0-9\- ]/g, "");
+                  const digitsOnly = cleaned.replace(/[^0-9]/g, "");
+                  if (digitsOnly.length > bankDigitLimit) return;
                   setEditingRole((previousEditingRole) => ({
                     ...previousEditingRole,
-                    [`${employee.id}:bankAccountNumber`]: e.target.value.replace(
-                      /[^0-9\- ]/g,
-                      "",
-                    ),
-                  }))
-                }
+                    [`${employee.id}:bankAccountNumber`]: cleaned,
+                  }));
+                }}
                 placeholder="เลขที่บัญชี"
                 className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[Prompt,monospace] tracking-wider text-txt border-[1.5px] ${editingBankAccountNumber !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
               />
+              {currentBank && (
+                <div className="text-[11px] text-txt-soft mt-1 px-1">
+                  {currentBank} ใช้เลขบัญชี {bankDigitLimit} หลัก
+                </div>
+              )}
             </div>
 
             {/* LINE User ID — read-only, copy only */}

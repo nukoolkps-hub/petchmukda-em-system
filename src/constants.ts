@@ -126,17 +126,22 @@ export const EMOJI_LIST = [
    วางบนพื้นสีแบรนด์ (เลข hex จาก banks-logo metadata)
    โลโก้มาจาก banks-logo (casperstack) — host เองที่ public/banks/   */
 export const THAI_BANKS = [
-  { name: "ธนาคารกสิกรไทย", short: "KBank", slug: "kbank", color: "#138f2d" },
-  { name: "ธนาคารกรุงเทพ", short: "BBL", slug: "bbl", color: "#1e4598" },
-  { name: "ธนาคารกรุงไทย", short: "KTB", slug: "ktb", color: "#1ba5e1" },
-  { name: "ธนาคารไทยพาณิชย์", short: "SCB", slug: "scb", color: "#4e2e7f" },
-  { name: "ธนาคารกรุงศรีอยุธยา", short: "BAY", slug: "bay", color: "#fec43b" },
+  // accountDigits = จำนวนหลักของเลขบัญชี (ไม่รวม - หรือ space) · ใช้ block
+  // ตอนพิมพ์ใน EmployeeEditModal + ProfileSetupModal · ค่ามาตรฐานปัจจุบัน
+  // (อิงข้อมูลบัตร debit/PromptPay) · ส่วนใหญ่ 10 หลัก ยกเว้น ออมสิน +
+  // ธ.ก.ส. + สแตนดาร์ดชาร์เตอร์ด ที่ใช้ 12 หลัก
+  { name: "ธนาคารกสิกรไทย", short: "KBank", slug: "kbank", color: "#138f2d", accountDigits: 10 },
+  { name: "ธนาคารกรุงเทพ", short: "BBL", slug: "bbl", color: "#1e4598", accountDigits: 10 },
+  { name: "ธนาคารกรุงไทย", short: "KTB", slug: "ktb", color: "#1ba5e1", accountDigits: 10 },
+  { name: "ธนาคารไทยพาณิชย์", short: "SCB", slug: "scb", color: "#4e2e7f", accountDigits: 10 },
+  { name: "ธนาคารกรุงศรีอยุธยา", short: "BAY", slug: "bay", color: "#fec43b", accountDigits: 10 },
   {
     name: "ธนาคารทหารไทยธนชาต",
     short: "TTB",
     slug: "ttb",
     color: "#ee871e",
     solid: true,
+    accountDigits: 10,
   },
   {
     name: "ธนาคารออมสิน",
@@ -146,33 +151,45 @@ export const THAI_BANKS = [
     // โลโก้ทางการเป็นตราครุฑรายละเอียดสูง — ย่อเล็กแล้วอ่านไม่ออก
     // ใช้ wordmark ตัวอักษรแทน (คมชัดทุกขนาด)
     textLogo: true,
+    accountDigits: 12,
   },
-  { name: "ธนาคาร ธ.ก.ส.", short: "BAAC", slug: "baac", color: "#4b9b1d" },
-  { name: "ธนาคารอาคารสงเคราะห์", short: "GHB", slug: "ghb", color: "#f7941e" },
-  { name: "ธนาคารยูโอบี", short: "UOB", slug: "uob", color: "#0b3979" },
-  { name: "ธนาคารซีไอเอ็มบี", short: "CIMB", slug: "cimb", color: "#7e2f36" },
+  { name: "ธนาคาร ธ.ก.ส.", short: "BAAC", slug: "baac", color: "#4b9b1d", accountDigits: 12 },
+  { name: "ธนาคารอาคารสงเคราะห์", short: "GHB", slug: "ghb", color: "#f7941e", accountDigits: 10 },
+  { name: "ธนาคารยูโอบี", short: "UOB", slug: "uob", color: "#0b3979", accountDigits: 10 },
+  { name: "ธนาคารซีไอเอ็มบี", short: "CIMB", slug: "cimb", color: "#7e2f36", accountDigits: 10 },
   {
     name: "ธนาคารแลนด์ แอนด์ เฮ้าส์",
     short: "LH Bank",
     slug: "lhb",
     color: "#6d6e71",
+    accountDigits: 10,
   },
-  { name: "ธนาคารไอซีบีซี", short: "ICBC", slug: "icbc", color: "#c50f1c" },
+  { name: "ธนาคารไอซีบีซี", short: "ICBC", slug: "icbc", color: "#c50f1c", accountDigits: 10 },
   {
     name: "ธนาคารสแตนดาร์ดชาร์เตอร์ด",
     short: "SCBT",
     slug: "sc",
     color: "#0473EA",
+    accountDigits: 12,
   },
-  { name: "ธนาคารทิสโก้", short: "TISCO", slug: "tisco", color: "#003F87" },
-  { name: "ธนาคารเกียรตินาคินภัทร", short: "KKP", slug: "kkp", color: "#199cc5" },
+  { name: "ธนาคารทิสโก้", short: "TISCO", slug: "tisco", color: "#003F87", accountDigits: 10 },
+  { name: "ธนาคารเกียรตินาคินภัทร", short: "KKP", slug: "kkp", color: "#199cc5", accountDigits: 10 },
   {
     name: "ธนาคารอิสลามแห่งประเทศไทย",
     short: "IBANK",
     slug: "ibank",
     color: "#008C44",
+    accountDigits: 10,
   },
 ];
+
+/** จำนวนหลักสูงสุดของเลขบัญชี (digit only, ไม่นับ -/space) ตามธนาคาร ·
+ *  default 15 (ค่อนข้างหลวม) สำหรับกรณีไม่รู้จัก / ยังไม่เลือกธนาคาร */
+export function getBankAccountDigits(bankName: string | null | undefined): number {
+  if (!bankName) return 15;
+  const found = THAI_BANKS.find((b) => b.name === bankName);
+  return (found as { accountDigits?: number } | undefined)?.accountDigits ?? 15;
+}
 
 export const TODAY = (() => {
   const d = new Date();
