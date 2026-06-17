@@ -202,7 +202,7 @@ export default function DutyCard({
                     : "bg-cream text-txt-mid border border-bdr"
                 }`}
               >
-                <span className="opacity-70">{idx + 1}.</span>
+                <span>{idx + 1}.</span>
                 {emp.nickname || emp.name}
               </div>
             );
