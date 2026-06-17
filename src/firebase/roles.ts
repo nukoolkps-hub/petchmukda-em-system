@@ -37,9 +37,11 @@ export async function upsertRole(role) {
       // ignoreUndefinedProperties) · ตำแหน่งสร้างใหม่ไม่มี icon
       icon: role.icon ?? null,
       mainDuties: role.mainDuties ?? null,
-      // ป้ายค่าคอมต่อชิ้น (PR #460) — null = ไม่มีค่าคอม · ค่า = label ของ
-      // singlePieceRate · pool sales (poolGroup ตั้ง) ก็ null เพราะใช้
-      // normal/special/buy
+      // รายการค่าคอมต่อชิ้น (multi-item) — [] / null = ไม่มีค่าคอม
+      // pool sales (poolGroup ตั้ง) ก็ null เพราะใช้ normal/special/buy
+      pieceItems: Array.isArray(role.pieceItems) ? role.pieceItems : null,
+      // legacy pieceLabel — เขียน null เสมอเมื่อย้ายมา pieceItems แล้ว
+      // (migrate-on-read ใน rolePieceItems ยังอ่าน pieceLabel ของ doc เก่าได้)
       pieceLabel: role.pieceLabel ?? null,
       updatedAt: Date.now(),
     },

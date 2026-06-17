@@ -35,7 +35,6 @@ import {
   calculateSalary,
   computePoolSharesForGroup,
   rolePaysPieceCommission,
-  rolePieceLabel,
 } from "../../utils/salaryUtils";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -284,6 +283,18 @@ export default function SalaryAdminEdit({
     setDraft((d) => ({ ...d, [field]: num }));
   }
 
+  // จำนวนชิ้นของรายการค่าคอม (multi-item) — เขียนลง piecePieces map ใน draft
+  function updatePiecePiece(itemId: string, value: string) {
+    const num = parseFloat(value) || 0;
+    setDraft((d: any) => ({
+      ...d,
+      piecePieces: {
+        ...((d.piecePieces ?? savedData.piecePieces) || {}),
+        [itemId]: num,
+      },
+    }));
+  }
+
   /* ─── รายการ custom (รายรับ/รายหัก) ที่ Admin เพิ่มเอง ──────── */
   function currentCustomList(d, key: "customEarnings" | "customDeductions") {
     if (Array.isArray(d[key])) return d[key];
@@ -375,39 +386,36 @@ export default function SalaryAdminEdit({
 
   // breakdown ของ "รวมค่าคอมตามจำนวนชิ้น" — แสดงว่ามาจากชิ้นไหน × เรท
   const sc = salaryCalculation;
-  // pieceLabel ของตำแหน่ง (ใช้แสดงใน breakdown / สลิป) · default "ค่าคอมตามชิ้น"
-  const singlePieceLabel = rolePieceLabel(employeeRole) || "ค่าคอมตามชิ้น";
   const commissionBreakdown = !rolePaysPieceCommission(employeeRole)
     ? []
     : sc.usesSinglePieceRate
-    ? [
-        {
-          label: singlePieceLabel,
-          pieces: sc.singleRatePieces,
-          rate: sc.singlePieceRate,
-          amount: sc.singleRateCommission,
-        },
-      ]
-    : [
-        {
-          label: "ขาย (ทั่วไป)",
-          pieces: sc.normalSalePieces,
-          rate: sc.normalSalePieceRate,
-          amount: sc.normalSaleCommission,
-        },
-        {
-          label: "ขาย (พิเศษ)",
-          pieces: sc.specialSalePieces,
-          rate: sc.specialSalePieceRate,
-          amount: sc.specialSaleCommission,
-        },
-        {
-          label: "รับซื้อ",
-          pieces: sc.buyPieces,
-          rate: sc.buyPieceRate,
-          amount: sc.buyCommission,
-        },
-      ];
+      ? // multi-item — 1 แถวต่อรายการค่าคอม
+        (sc.pieceBreakdown || []).map((b) => ({
+          label: b.label,
+          pieces: b.pieces,
+          rate: b.rate,
+          amount: b.amount,
+        }))
+      : [
+          {
+            label: "ขาย (ทั่วไป)",
+            pieces: sc.normalSalePieces,
+            rate: sc.normalSalePieceRate,
+            amount: sc.normalSaleCommission,
+          },
+          {
+            label: "ขาย (พิเศษ)",
+            pieces: sc.specialSalePieces,
+            rate: sc.specialSalePieceRate,
+            amount: sc.specialSaleCommission,
+          },
+          {
+            label: "รับซื้อ",
+            pieces: sc.buyPieces,
+            rate: sc.buyPieceRate,
+            amount: sc.buyCommission,
+          },
+        ];
   const memberBonusBreakdown = !rolePaysPieceCommission(employeeRole)
     ? []
     : [
@@ -791,48 +799,55 @@ export default function SalaryAdminEdit({
             piece commission เลย → ซ่อนกล่องนี้ทั้งกล่อง) */}
         {!rolePaysPieceCommission(employeeRole) ? null : employeeRole &&
           !employeeRole.poolGroup ? (
-          /* Single rate (เช่น ฝ่ายบัญชี) */
+          /* Multi-item piece rate (เช่น ฝ่ายบัญชี — "ทำบิล", "นับสต๊อก") */
           <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
             <div className="flex items-center gap-2 mb-3.5">
               <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
-              <div className="font-bold text-sm text-txt">
-                {rolePieceLabel(employeeRole) || "ค่าคอม"}
-              </div>
+              <div className="font-bold text-sm text-txt">ค่าคอมต่อชิ้น</div>
               <div className="ml-auto text-sm font-bold text-gold">
                 + {formatThaiNumber(salaryCalculation.singleRateCommission)} ฿
               </div>
             </div>
-            <div className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-bold text-txt flex items-center gap-1.5">
-                  <IconPackage size={16} strokeWidth={2.2} />
-                  จำนวนชิ้น
+            <div className="flex flex-col gap-2.5">
+              {(salaryCalculation.pieceBreakdown || []).map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-bold text-txt flex items-center gap-1.5">
+                      <IconPackage size={16} strokeWidth={2.2} />
+                      {item.label}
+                    </div>
+                    <div className="text-xs text-txt-soft">
+                      Rate:{" "}
+                      <b className="text-maroon">
+                        {formatThaiNumber(item.rate)} ฿/ชิ้น
+                      </b>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 relative">
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        value={item.pieces || ""}
+                        onChange={(e) =>
+                          updatePiecePiece(item.id, e.target.value)
+                        }
+                        className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                        ชิ้น
+                      </span>
+                    </div>
+                    <div className="text-sm text-txt-soft font-semibold">=</div>
+                    <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
+                      {formatThaiNumber(item.amount)} ฿
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-txt-soft">
-                  Rate:{" "}
-                  <b className="text-maroon">
-                    {formatThaiNumber(employeeInfo?.singlePieceRate || 0)} ฿/ชิ้น
-                  </b>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 relative">
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={data.singleRatePieces || ""}
-                    onChange={(e) => update("singleRatePieces", e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                    ชิ้น
-                  </span>
-                </div>
-                <div className="text-sm text-txt-soft font-semibold">=</div>
-                <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                  {formatThaiNumber(salaryCalculation.singleRateCommission)} ฿
-                </div>
-              </div>
+              ))}
             </div>
             <div className="text-xs text-txt-soft mt-2.5 text-center inline-flex items-center justify-center gap-1 w-full">
               <IconLightbulb
@@ -1034,93 +1049,94 @@ export default function SalaryAdminEdit({
 
         {/* บัตรสมาชิก — pieces × rate (เฉพาะตำแหน่งที่มีค่าคอมรายชิ้น) */}
         {rolePaysPieceCommission(employeeRole) && (
-        <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
-          <div className="flex items-center gap-2 mb-3.5">
-            <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
-            <div className="font-bold text-sm text-txt">โบนัสบัตรสมาชิก</div>
-            <div className="ml-auto text-sm font-bold text-maroon">
-              + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
+          <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+            <div className="flex items-center gap-2 mb-3.5">
+              <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
+              <div className="font-bold text-sm text-txt">โบนัสบัตรสมาชิก</div>
+              <div className="ml-auto text-sm font-bold text-maroon">
+                + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
+              </div>
             </div>
-          </div>
 
-          {/* Invite */}
-          <div
-            className={`rounded-[10px] p-3 mb-2.5 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div
-                className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
-              >
-                <IconTicket size={16} strokeWidth={2.2} />
-                เชิญชวนสมัครบัตร
+            {/* Invite */}
+            <div
+              className={`rounded-[10px] p-3 mb-2.5 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div
+                  className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
+                >
+                  <IconTicket size={16} strokeWidth={2.2} />
+                  เชิญชวนสมัครบัตร
+                </div>
+                <div className="text-xs text-txt-soft">
+                  Rate:{" "}
+                  <b className="text-maroon">
+                    {formatThaiNumber(employeeInfo?.invitePieceRate || 0)} ฿/ใบ
+                  </b>
+                </div>
               </div>
-              <div className="text-xs text-txt-soft">
-                Rate:{" "}
-                <b className="text-maroon">
-                  {formatThaiNumber(employeeInfo?.invitePieceRate || 0)} ฿/ใบ
-                </b>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={data.invitePieces || ""}
+                    disabled={locked}
+                    onChange={(e) => update("invitePieces", e.target.value)}
+                    className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                    ใบ
+                  </span>
+                </div>
+                <div className="text-sm text-txt-soft font-semibold">=</div>
+                <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
+                  {formatThaiNumber(salaryCalculation.inviteCommission)} ฿
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 relative">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={data.invitePieces || ""}
-                  disabled={locked}
-                  onChange={(e) => update("invitePieces", e.target.value)}
-                  className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                  ใบ
-                </span>
-              </div>
-              <div className="text-sm text-txt-soft font-semibold">=</div>
-              <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                {formatThaiNumber(salaryCalculation.inviteCommission)} ฿
-              </div>
-            </div>
-          </div>
 
-          {/* Transfer */}
-          <div
-            className={`rounded-[10px] p-3 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div
-                className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
-              >
-                <IconRefresh size={16} strokeWidth={2.2} />
-                ย้ายข้อมูลบัตร
+            {/* Transfer */}
+            <div
+              className={`rounded-[10px] p-3 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div
+                  className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
+                >
+                  <IconRefresh size={16} strokeWidth={2.2} />
+                  ย้ายข้อมูลบัตร
+                </div>
+                <div className="text-xs text-txt-soft">
+                  Rate:{" "}
+                  <b className="text-maroon">
+                    {formatThaiNumber(employeeInfo?.transferPieceRate || 0)}{" "}
+                    ฿/ใบ
+                  </b>
+                </div>
               </div>
-              <div className="text-xs text-txt-soft">
-                Rate:{" "}
-                <b className="text-maroon">
-                  {formatThaiNumber(employeeInfo?.transferPieceRate || 0)} ฿/ใบ
-                </b>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 relative">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={data.transferPieces || ""}
-                  disabled={locked}
-                  onChange={(e) => update("transferPieces", e.target.value)}
-                  className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                  ใบ
-                </span>
-              </div>
-              <div className="text-sm text-txt-soft font-semibold">=</div>
-              <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                {formatThaiNumber(salaryCalculation.transferCommission)} ฿
+              <div className="flex items-center gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={data.transferPieces || ""}
+                    disabled={locked}
+                    onChange={(e) => update("transferPieces", e.target.value)}
+                    className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                    ใบ
+                  </span>
+                </div>
+                <div className="text-sm text-txt-soft font-semibold">=</div>
+                <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
+                  {formatThaiNumber(salaryCalculation.transferCommission)} ฿
+                </div>
               </div>
             </div>
           </div>
-        </div>
         )}
 
         {/* Earnings inputs */}

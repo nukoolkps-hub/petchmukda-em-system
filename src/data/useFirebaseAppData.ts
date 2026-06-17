@@ -215,6 +215,7 @@ export default function useFirebaseAppData({
       totalLeaveDays: _ignoredTotalLeaveDays,
       baseSalary: _ignoredBaseSalary,
       singlePieceRate: _ignoredSinglePieceRate,
+      pieceRates: _ignoredPieceRates,
       normalSalePieceRate: _ignoredNormalRate,
       specialSalePieceRate: _ignoredSpecialRate,
       buyPieceRate: _ignoredBuyRate,
@@ -258,6 +259,8 @@ export default function useFirebaseAppData({
             ? existingSalary.baseSalary
             : getEffectiveBaseSalary(employee, yearMonth),
           singlePieceRate: employee.singlePieceRate ?? 0,
+          // snapshot อัตราต่อรายการ (multi-item piece) — freeze rate ของเดือนนั้น
+          pieceRates: employee.pieceRates ?? {},
           normalSalePieceRate: employee.normalSalePieceRate ?? 0,
           specialSalePieceRate: employee.specialSalePieceRate ?? 0,
           buyPieceRate: employee.buyPieceRate ?? 0,

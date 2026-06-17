@@ -31,8 +31,9 @@ import { formatTenure } from "../../utils/dateUtils";
 import {
   buildRaiseHistory,
   getEffectiveBaseSalary,
+  LEGACY_PIECE_ITEM_ID,
   rolePaysPieceCommission,
-  rolePieceLabel,
+  rolePieceItems,
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankPicker from "../shared/BankPicker";
@@ -79,6 +80,10 @@ export default function EmployeeEditModal({
   const editingTransferPieceRate =
     editingRole[`${employee.id}:transferPieceRate`];
   const editingSinglePieceRate = editingRole[`${employee.id}:singlePieceRate`];
+  // pieceRates (multi-item) — เก็บทั้ง map ใน draft key เดียว
+  const editingPieceRates = editingRole[`${employee.id}:pieceRates`] as
+    | Record<string, number>
+    | undefined;
   const editingBaseSalary = editingRole[`${employee.id}:baseSalary`];
   const editingSocialSecurity = editingRole[`${employee.id}:socialSecurity`];
   const editingStartWorkMonth = editingRole[`${employee.id}:startWorkMonth`];
@@ -100,8 +105,10 @@ export default function EmployeeEditModal({
     editingBankAccountNumber !== undefined
       ? editingBankAccountNumber
       : employee.bankAccountNumber || "";
-  const bankAccountDigitsTyped = currentBankAccountNumber.replace(/[^0-9]/g, "")
-    .length;
+  const bankAccountDigitsTyped = currentBankAccountNumber.replace(
+    /[^0-9]/g,
+    "",
+  ).length;
   // warning เมื่อ: เลือกธนาคารแล้ว + พิมพ์เลขแล้ว + ยังไม่ครบจำนวนหลัก
   const bankAccountIncomplete =
     !!currentBank &&
@@ -123,6 +130,7 @@ export default function EmployeeEditModal({
     editingInvitePieceRate !== undefined ||
     editingTransferPieceRate !== undefined ||
     editingSinglePieceRate !== undefined ||
+    editingPieceRates !== undefined ||
     editingBaseSalary !== undefined ||
     editingSocialSecurity !== undefined ||
     editingStartWorkMonth !== undefined ||
@@ -224,6 +232,15 @@ export default function EmployeeEditModal({
         "singlePieceRate",
         parseFloat(editingSinglePieceRate) || 0,
       );
+    if (editingPieceRates !== undefined) {
+      // sanitize: number ≥ 0 ต่อ item id
+      const cleaned: Record<string, number> = {};
+      for (const [k, v] of Object.entries(editingPieceRates)) {
+        const n = Number(v);
+        cleaned[k] = Number.isFinite(n) && n >= 0 ? n : 0;
+      }
+      await onUpdateRole(employee.id, "pieceRates", cleaned);
+    }
     if (editingBaseSalary !== undefined)
       await onUpdateRole(
         employee.id,
@@ -461,7 +478,9 @@ export default function EmployeeEditModal({
               <div className="mb-1.5">
                 <BankPicker
                   value={
-                    editingBank !== undefined ? editingBank : employee.bank || ""
+                    editingBank !== undefined
+                      ? editingBank
+                      : employee.bank || ""
                   }
                   onChange={(name) =>
                     setEditingRole((previousEditingRole) => ({
@@ -815,9 +834,40 @@ export default function EmployeeEditModal({
               if (!rolePaysPieceCommission(employeeRole)) return null;
               const usesSinglePieceRate =
                 employeeRole && !employeeRole.poolGroup;
-              const singleLabel =
-                rolePieceLabel(employeeRole) || "ค่าคอมต่อชิ้น";
               if (usesSinglePieceRate) {
+                const pieceItems = rolePieceItems(employeeRole);
+                // ค่า rate ปัจจุบันของ item (draft → live pieceRates → legacy
+                // singlePieceRate สำหรับ id "default")
+                const rateValue = (itemId: string): number | "" => {
+                  if (
+                    editingPieceRates &&
+                    editingPieceRates[itemId] !== undefined
+                  )
+                    return editingPieceRates[itemId];
+                  const live = employee.pieceRates?.[itemId];
+                  if (live !== undefined) return live;
+                  if (itemId === LEGACY_PIECE_ITEM_ID)
+                    return employee.singlePieceRate ?? "";
+                  return "";
+                };
+                const setRate = (itemId: string, raw: string) =>
+                  setEditingRole((prev) => {
+                    const base =
+                      (prev[`${employee.id}:pieceRates`] as
+                        | Record<string, number>
+                        | undefined) ??
+                      employee.pieceRates ??
+                      (employee.singlePieceRate != null
+                        ? { [LEGACY_PIECE_ITEM_ID]: employee.singlePieceRate }
+                        : {});
+                    return {
+                      ...prev,
+                      [`${employee.id}:pieceRates`]: {
+                        ...base,
+                        [itemId]: parseFloat(raw) || 0,
+                      },
+                    };
+                  });
                 return (
                   <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
                     <div className="text-sm font-bold text-maroon mb-2">
@@ -826,40 +876,29 @@ export default function EmployeeEditModal({
                         strokeWidth={2.4}
                         className="inline mr-1 -mt-px"
                       />
-                      Rate {singleLabel}
+                      Rate ค่าคอมต่อชิ้น (฿/ชิ้น)
                     </div>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                          <IconPackage
-                            size={12}
-                            strokeWidth={2.4}
-                            className="inline mr-1 -mt-px"
+                    <div className="flex flex-col gap-2">
+                      {pieceItems.map((item) => (
+                        <div key={item.id}>
+                          <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                            <IconPackage
+                              size={12}
+                              strokeWidth={2.4}
+                              className="inline mr-1 -mt-px"
+                            />
+                            {item.label}
+                          </label>
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            value={rateValue(item.id)}
+                            onChange={(e) => setRate(item.id, e.target.value)}
+                            className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingPieceRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
                           />
-                          {singleLabel}
-                        </label>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          min="0"
-                          value={
-                            editingSinglePieceRate !== undefined
-                              ? editingSinglePieceRate
-                              : (employee.singlePieceRate ?? "")
-                          }
-                          onChange={(e) =>
-                            setEditingRole((previousEditingRole) => ({
-                              ...previousEditingRole,
-                              [`${employee.id}:singlePieceRate`]:
-                                e.target.value,
-                            }))
-                          }
-                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingSinglePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
-                        />
-                      </div>
-                    </div>
-                    <div className="text-xs text-txt-soft text-center mt-1.5">
-                      หน่วย: ฿/ชิ้น
+                        </div>
+                      ))}
                     </div>
 
                     <div className="h-px my-2.5 bg-[#C9973A30]" />

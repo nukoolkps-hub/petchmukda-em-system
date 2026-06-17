@@ -13,8 +13,9 @@ import { formatTenure } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import {
   getEffectiveBaseSalary,
+  resolvePieceItemRate,
   rolePaysPieceCommission,
-  rolePieceLabel,
+  rolePieceItems,
 } from "../../utils/salaryUtils";
 
 function poolExclusionLabel(ex?: string | null): string {
@@ -110,11 +111,15 @@ export default function PositionRateCard({ employee, role }: Props) {
             />
           </>
         ) : rolePaysPieceCommission(role) ? (
-          <RateRow
-            label={rolePieceLabel(role) || "ค่าคอมต่อชิ้น"}
-            value={employee?.singlePieceRate}
-            suffix="฿/ชิ้น"
-          />
+          // multi-item — 1 แถวต่อรายการค่าคอม
+          rolePieceItems(role).map((item) => (
+            <RateRow
+              key={item.id}
+              label={item.label}
+              value={resolvePieceItemRate(item.id, null, employee)}
+              suffix="฿/ชิ้น"
+            />
+          ))
         ) : null}
         {/* invite/transfer — เฉพาะตำแหน่งที่มีค่าคอมรายชิ้น (รวม pool sales) */}
         {rolePaysPieceCommission(role) && (

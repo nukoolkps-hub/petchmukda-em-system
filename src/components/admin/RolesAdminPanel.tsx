@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { COLORS } from "../../constants";
+import type { PieceItem } from "../../types";
+import { rolePieceItems } from "../../utils/salaryUtils";
 import {
   isRichTextEmpty,
   sanitizeRichText,
@@ -19,6 +21,65 @@ import {
 import AvatarCircle from "../shared/AvatarCircle";
 import RichTextEditor from "../shared/RichTextEditor";
 import ThemedSelect from "../shared/ThemedSelect";
+
+/** สร้าง id ใหม่ของ piece item (คงที่ตลอดอายุ — อ้าง rate/จำนวนชิ้น) */
+function newPieceId(): string {
+  return `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/* ─── PieceItemsEditor — แก้ไขรายการค่าคอมต่อชิ้น (เพิ่ม/ลบ/แก้ label) ──── */
+function PieceItemsEditor({
+  items,
+  onChange,
+}: {
+  items: PieceItem[];
+  onChange: (next: PieceItem[]) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      {items.map((item, idx) => (
+        <div key={item.id} className="flex gap-1.5 items-center">
+          <input
+            value={item.label}
+            onChange={(ev) => {
+              const next = items.slice();
+              next[idx] = { ...item, label: ev.target.value };
+              onChange(next);
+            }}
+            placeholder='เช่น "ทำบิล", "นับสต๊อก"'
+            maxLength={40}
+            className="flex-1 px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[inherit] box-border bg-gold-pale/30"
+          />
+          <button
+            type="button"
+            onClick={() => onChange(items.filter((_, i) => i !== idx))}
+            aria-label="ลบรายการ"
+            className="shrink-0 w-8 h-8 rounded-lg border border-red/25 bg-red-lt text-red flex items-center justify-center cursor-pointer"
+          >
+            <IconTrash size={13} strokeWidth={2.2} />
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => onChange([...items, { id: newPieceId(), label: "" }])}
+        className="self-start px-2.5 py-1.5 rounded-lg border border-dashed border-gold/50 bg-gold-pale/20 text-maroon text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center gap-1"
+      >
+        <IconPlus size={12} strokeWidth={2.6} />
+        เพิ่มรายการค่าคอม
+      </button>
+    </div>
+  );
+}
+
+/** sanitize รายการ piece ก่อนเก็บ: ตัด label ว่าง + trim · คืน null ถ้าไม่เหลือ */
+function cleanPieceItems(items: PieceItem[] | undefined): PieceItem[] | null {
+  if (!Array.isArray(items)) return null;
+  const cleaned = items
+    .map((it) => ({ id: it.id, label: (it.label || "").trim() }))
+    .filter((it) => it.label);
+  return cleaned.length > 0 ? cleaned : null;
+}
 
 /** normalize ฟิลด์ "หน้าที่หลัก" ก่อนเก็บ:
  *  - ว่างจริง (เคลียร์แล้วเหลือ <br>) → null
@@ -38,11 +99,11 @@ export default function RolesAdminPanel({
   onDeleteRole,
   showToast,
 }) {
-  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, pieceLabel, mainDuties}}
+  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, pieceItems, mainDuties}}
   const [newRole, setNewRole] = useState({
     name: "",
     poolGroup: "",
-    pieceLabel: "",
+    pieceItems: [] as PieceItem[],
     mainDuties: "",
   });
   const [showAdd, setShowAdd] = useState(false);
@@ -54,17 +115,22 @@ export default function RolesAdminPanel({
     const current = roles.find((rl) => rl.id === roleId);
     if (!current) return;
     try {
-      // pieceLabel: เก็บ null ถ้าว่าง (force opt-in) · trim + drop ถ้าใส่ pool
-      // (pool sales ใช้ normal/special/buy ไม่ใช้ singlePieceRate)
+      // pieceItems: เก็บ null ถ้าว่าง (force opt-in) · drop ถ้าใส่ pool
+      // (pool sales ใช้ normal/special/buy ไม่ใช้ piece items)
       const poolValue = e.poolGroup?.trim() || null;
-      const pieceLabelDraft =
-        e.pieceLabel !== undefined ? e.pieceLabel : current.pieceLabel || "";
-      const pieceLabelValue = poolValue ? null : pieceLabelDraft.trim() || null;
+      const pieceItemsDraft =
+        e.pieceItems !== undefined ? e.pieceItems : rolePieceItems(current);
+      const pieceItemsValue = poolValue
+        ? null
+        : cleanPieceItems(pieceItemsDraft);
       await onUpsertRole({
         ...current,
         name: e.name || current.name,
         poolGroup: poolValue,
-        pieceLabel: pieceLabelValue,
+        pieceItems: pieceItemsValue,
+        // ย้ายมา pieceItems แล้ว → ล้าง legacy pieceLabel กัน migrate-on-read
+        // หยิบ label เก่ามาซ้ำ
+        pieceLabel: null,
         mainDuties: cleanMainDuties(e.mainDuties),
       });
       setEditing((prev) => {
@@ -88,11 +154,12 @@ export default function RolesAdminPanel({
         id,
         name: newRole.name.trim(),
         poolGroup: poolValue,
-        // pieceLabel ไม่ใช้ใน pool sales (มี normal/special/buy แล้ว)
-        pieceLabel: poolValue ? null : newRole.pieceLabel.trim() || null,
+        // pieceItems ไม่ใช้ใน pool sales (มี normal/special/buy แล้ว)
+        pieceItems: poolValue ? null : cleanPieceItems(newRole.pieceItems),
+        pieceLabel: null,
         mainDuties: cleanMainDuties(newRole.mainDuties),
       });
-      setNewRole({ name: "", poolGroup: "", pieceLabel: "", mainDuties: "" });
+      setNewRole({ name: "", poolGroup: "", pieceItems: [], mainDuties: "" });
       setShowAdd(false);
       showToast?.("เพิ่มตำแหน่งแล้ว");
     } catch (err) {
@@ -173,20 +240,17 @@ export default function RolesAdminPanel({
             className="w-full px-3 py-[9px] rounded-[9px] border border-bdr text-sm outline-none font-[Prompt,monospace] box-border mb-2.5"
           />
           {!newRole.poolGroup.trim() && (
-            <>
+            <div className="mb-2.5">
               <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                ป้ายค่าคอมต่อชิ้น (ทิ้งว่าง = ไม่มีค่าคอม)
+                รายการค่าคอมต่อชิ้น (ไม่เพิ่ม = ไม่มีค่าคอม)
               </label>
-              <input
-                value={newRole.pieceLabel}
-                onChange={(e) =>
-                  setNewRole({ ...newRole, pieceLabel: e.target.value })
+              <PieceItemsEditor
+                items={newRole.pieceItems}
+                onChange={(next) =>
+                  setNewRole({ ...newRole, pieceItems: next })
                 }
-                placeholder='เช่น "ค่าคอมต่อบิล" / "ค่าคอมต่อชิ้น"'
-                maxLength={40}
-                className="w-full px-3 py-[9px] rounded-[9px] border border-bdr text-sm outline-none font-[inherit] box-border mb-2.5"
               />
-            </>
+            </div>
           )}
           <label className="text-xs text-txt-soft font-semibold mb-1 block">
             หน้าที่หลัก (พนักงานจะเห็นในหน้า Home)
@@ -316,33 +380,31 @@ export default function RolesAdminPanel({
                             className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[Prompt,monospace] box-border bg-gold-pale/30"
                           />
                         </div>
-                        {/* pieceLabel — เฉพาะตำแหน่งที่ไม่ใช่ pool sales */}
-                        {!(e?.poolGroup !== undefined
-                          ? e.poolGroup
-                          : rl.poolGroup || ""
+                        {/* pieceItems — เฉพาะตำแหน่งที่ไม่ใช่ pool sales */}
+                        {!(
+                          e?.poolGroup !== undefined
+                            ? e.poolGroup
+                            : rl.poolGroup || ""
                         ).trim() && (
                           <div className="mb-2.5">
                             <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                              ป้ายค่าคอมต่อชิ้น (ทิ้งว่าง = ไม่มีค่าคอม)
+                              รายการค่าคอมต่อชิ้น (ไม่เพิ่ม = ไม่มีค่าคอม)
                             </label>
-                            <input
-                              value={
-                                e?.pieceLabel !== undefined
-                                  ? e.pieceLabel
-                                  : rl.pieceLabel || ""
+                            <PieceItemsEditor
+                              items={
+                                e?.pieceItems !== undefined
+                                  ? e.pieceItems
+                                  : rolePieceItems(rl)
                               }
-                              onChange={(ev) =>
+                              onChange={(next) =>
                                 setEditing((p) => ({
                                   ...p,
                                   [rl.id]: {
                                     ...(p[rl.id] || rl),
-                                    pieceLabel: ev.target.value,
+                                    pieceItems: next,
                                   },
                                 }))
                               }
-                              placeholder='เช่น "ค่าคอมต่อบิล"'
-                              maxLength={40}
-                              className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[inherit] box-border bg-gold-pale/30"
                             />
                           </div>
                         )}

@@ -42,7 +42,6 @@ import {
   calculateSalary,
   computePoolSharesForGroup,
   rolePaysPieceCommission,
-  rolePieceLabel,
 } from "../../utils/salaryUtils";
 import AdvanceHistoryModal from "../modals/AdvanceHistoryModal";
 import PoolFlowModal from "../modals/PoolFlowModal";
@@ -612,20 +611,19 @@ export default function SalaryView({
           ...(!rolePaysPieceCommission(employeeRole)
             ? []
             : salaryCalculation.usesSinglePieceRate
-              ? [
-                  {
-                    icon: (
-                      <IconPackage
-                        size={16}
-                        strokeWidth={2.2}
-                        color={COLORS.gold}
-                      />
-                    ),
-                    main: rolePieceLabel(employeeRole) || "ค่าคอม",
-                    sub: `${salaryCalculation.singleRatePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.singlePieceRate)} ฿`,
-                    value: salaryCalculation.singleRateCommission,
-                  },
-                ]
+              ? // multi-item — 1 แถวต่อรายการค่าคอม
+                (salaryCalculation.pieceBreakdown || []).map((item) => ({
+                  icon: (
+                    <IconPackage
+                      size={16}
+                      strokeWidth={2.2}
+                      color={COLORS.gold}
+                    />
+                  ),
+                  main: item.label,
+                  sub: `${item.pieces} ชิ้น × ${formatThaiNumber(item.rate)} ฿`,
+                  value: item.amount,
+                }))
               : [
                   {
                     icon: (

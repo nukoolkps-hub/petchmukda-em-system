@@ -19,7 +19,11 @@ export interface Employee {
   socialSecurity?: number;
   startWorkMonth?: string; // YYYY-MM วันที่เริ่มงาน (ใช้ในหนังสือรับรองเงินเดือน)
   prefix?: "นาย" | "นาง" | "นางสาว"; // คำนำหน้าชื่อ (ใช้ในหนังสือรับรองเงินเดือน)
-  singlePieceRate?: number;
+  singlePieceRate?: number; // legacy: rate ของ "default" piece item
+  /** อัตราค่าคอมต่อชิ้น แยกตามรายการ (multi-item · PR multi-piece)
+   *  key = pieceItem.id ใน Role.pieceItems · value = ฿/ชิ้น ของพนักงานคนนี้
+   *  legacy "default" item อ่าน singlePieceRate ถ้าไม่มีใน map นี้                */
+  pieceRates?: Record<string, number>;
   normalSalePieceRate?: number;
   specialSalePieceRate?: number;
   buyPieceRate?: number;
@@ -77,7 +81,14 @@ export interface LeaveType {
 
 export interface SalaryMonth {
   baseSalary?: number;
-  singleRatePieces?: number;
+  singleRatePieces?: number; // legacy: จำนวนชิ้นของ "default" piece item
+  /** จำนวนชิ้นต่อรายการค่าคอม (multi-item) ของเดือนนี้
+   *  key = pieceItem.id · value = จำนวนชิ้น · legacy "default" อ่าน
+   *  singleRatePieces ถ้าไม่มีใน map นี้                                         */
+  piecePieces?: Record<string, number>;
+  /** snapshot อัตราค่าคอมต่อชิ้นแยกรายการ (ตอน admin save salary) —
+   *  freeze rate ของเดือนนั้น เหมือน singlePieceRate/normalSalePieceRate         */
+  pieceRates?: Record<string, number>;
   normalSalePieces?: number;
   specialSalePieces?: number;
   buyPieces?: number;
@@ -140,6 +151,13 @@ export interface AdvanceRequest {
   lineNotificationSkippedReason?: string | null;
 }
 
+/** รายการค่าคอมต่อชิ้น 1 ประเภท (เช่น "ทำบิล", "นับสต๊อก") ของตำแหน่งที่ไม่ใช่
+ *  pool sales · id คงที่ (อ้างถึง rate ต่อพนักงาน + จำนวนชิ้นต่อเดือน)        */
+export interface PieceItem {
+  id: string;
+  label: string;
+}
+
 export interface Role {
   id: string;
   name: string;
@@ -147,12 +165,14 @@ export interface Role {
   icon: string;
   /** หน้าที่หลักของตำแหน่ง (admin กรอกเอง · null = ไม่ได้ตั้งค่า) */
   mainDuties?: string | null;
-  /** ป้ายค่าคอมต่อชิ้น สำหรับตำแหน่งที่ไม่ใช่ pool sales
-   *  - null/undefined → ไม่มีค่าคอมรายชิ้น (พนักงานทั่วไป/รปภ/ทำความสะอาด)
-   *    → ซ่อน piece rate + invite/transfer ทั้งหมด เงินเดือนพื้นฐานอย่างเดียว
-   *  - "ค่าคอมต่อบิล" / "ค่าคอมต่อชิ้น" / ฯลฯ → ใช้เป็น label ของ
-   *    `singlePieceRate` + โชว์ invite/transfer ด้วย
-   *  สำหรับ pool sales (poolGroup ตั้ง) — field นี้ไม่มีผล                  */
+  /** รายการค่าคอมต่อชิ้น (multi-item) สำหรับตำแหน่งที่ไม่ใช่ pool sales
+   *  - null/[] → ไม่มีค่าคอมรายชิ้น (พนักงานทั่วไป/รปภ/ทำความสะอาด)
+   *    → ซ่อน piece rate + invite/transfer เงินเดือนพื้นฐานอย่างเดียว
+   *  - [{id,label}, ...] → แต่ละรายการมี rate (ต่อพนักงาน) + จำนวนชิ้น (ต่อเดือน)
+   *  สำหรับ pool sales (poolGroup ตั้ง) — field นี้ไม่มีผล                      */
+  pieceItems?: PieceItem[] | null;
+  /** legacy single-label (ก่อน multi-item) · migrate-on-read เป็น 1 pieceItem
+   *  id="default" · เก็บไว้เพื่อ backward-compat ข้อมูลเก่า                      */
   pieceLabel?: string | null;
 }
 
