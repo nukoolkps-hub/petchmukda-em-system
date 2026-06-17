@@ -286,14 +286,6 @@ export default function LeaveListPanel({
       </div>
 
       <div className="flex flex-col gap-2 mb-3.5">
-        <div className="flex justify-end">
-          <MonthChevronNav
-            months={navMonths}
-            selected={effectiveMonth}
-            onSelect={onSelectMonth}
-            popoverSide="right"
-          />
-        </div>
         <div className="flex gap-2">
           <div className="relative flex-1">
             <select
@@ -333,6 +325,14 @@ export default function LeaveListPanel({
               className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
             />
           </div>
+        </div>
+        <div className="flex justify-end">
+          <MonthChevronNav
+            months={navMonths}
+            selected={effectiveMonth}
+            onSelect={onSelectMonth}
+            popoverSide="right"
+          />
         </div>
       </div>
       {filteredLeaves.length === 0 && (
