@@ -463,18 +463,15 @@ export default function SalaryAdminEdit({
             <IconNetwork size={14} strokeWidth={2.4} />
             แผนผังเงินเดือน
           </button>
-          {(poolGroupsInfo.length > 0 ||
-            rolePaysPieceCommission(employeeRole)) && (
-            <button
-              type="button"
-              onClick={() => setShowPoolAdjust(true)}
-              title="รายการยกเว้นค่าคอม"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
-            >
-              <IconMinus size={14} strokeWidth={2.4} />
-              รายการยกเว้นค่าคอม
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowPoolAdjust(true)}
+            title="รายการยกเว้นค่าคอม"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
+          >
+            <IconMinus size={14} strokeWidth={2.4} />
+            รายการยกเว้นค่าคอม
+          </button>
         </div>
         <MonthChevronNav
           months={monthOptions}
@@ -1756,9 +1753,8 @@ export default function SalaryAdminEdit({
           locked={locked}
           adjustment={poolAdjustments?.[selectedMonth]}
           poolGroups={poolGroupsInfo}
-          employee={employeeInfo}
-          role={employeeRole}
-          mode={employeeRole?.poolGroup ? "pool" : "piece"}
+          roles={roles}
+          employeeDirectory={employeeDirectory}
           onSave={onSetPoolAdjustment}
           onClose={() => setShowPoolAdjust(false)}
           showToast={showToast}
