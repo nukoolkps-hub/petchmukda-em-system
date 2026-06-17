@@ -9,6 +9,7 @@ import {
   CircleSlash as IconCircleSlash,
 } from "lucide-react";
 import type { Employee, Role } from "../../types";
+import { formatTenure } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
 
@@ -46,6 +47,7 @@ interface Props {
 
 export default function PositionRateCard({ employee, role }: Props) {
   if (!role) return null;
+  const tenure = formatTenure(employee?.startWorkMonth);
   return (
     <details className="group mb-2.5 rounded-[14px] bg-white border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)] overflow-hidden">
       <summary className="px-4 py-3 cursor-pointer list-none flex items-center gap-3 hover:bg-cream/40">
@@ -65,9 +67,11 @@ export default function PositionRateCard({ employee, role }: Props) {
               LIVE
             </span>
           </div>
-          {role.poolGroup && (
+          {(role.poolGroup || tenure) && (
             <div className="text-[11px] text-txt-soft font-semibold mt-0.5">
-              กลุ่ม "{role.poolGroup}"
+              {role.poolGroup && `กลุ่ม "${role.poolGroup}"`}
+              {role.poolGroup && tenure && " · "}
+              {tenure && `อายุงาน ${tenure}`}
             </div>
           )}
         </div>
