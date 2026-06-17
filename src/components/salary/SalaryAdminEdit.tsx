@@ -441,14 +441,13 @@ export default function SalaryAdminEdit({
           },
         ];
   // โบนัสอื่นๆ (multi-item) — มาจาก salaryCalculation.bonusBreakdown โดยตรง
-  const memberBonusBreakdown = !rolePaysPieceCommission(employeeRole)
-    ? []
-    : (sc.bonusBreakdown || []).map((b) => ({
-        label: b.label,
-        pieces: b.pieces,
-        rate: b.rate,
-        amount: b.amount,
-      }));
+  // ไม่ผูกกับ piece commission · admin ตั้ง bonusItems แยกได้
+  const memberBonusBreakdown = (sc.bonusBreakdown || []).map((b) => ({
+    label: b.label,
+    pieces: b.pieces,
+    rate: b.rate,
+    amount: b.amount,
+  }));
 
   // ปิดรอบถาวรแล้ว (พ้น 7 วันหลังยืนยันยอดครั้งแรก) → ห้ามแก้เดือนนี้
   const monthLock = getPayrollLock(payrollConfirms?.[selectedMonth]);
@@ -1133,9 +1132,8 @@ export default function SalaryAdminEdit({
 
         {/* โบนัสอื่นๆ — multi-item (เดิม: บัตรสมาชิก hardcode invite + transfer)
             admin custom รายการเองในแท็บ "ตำแหน่ง" → role.bonusItems
-            ซ่อน section ถ้า role ไม่มีรายการเลย ([]) หรือไม่ใช่ piece role */}
-        {rolePaysPieceCommission(employeeRole) &&
-          (salaryCalculation.bonusBreakdown || []).length > 0 && (
+            ซ่อน section ถ้า role ไม่มีรายการเลย ([]) — ไม่ผูกกับ piece commission */}
+        {(salaryCalculation.bonusBreakdown || []).length > 0 && (
             <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
               <div className="flex items-center gap-2 mb-3.5">
                 <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
@@ -1312,8 +1310,7 @@ export default function SalaryAdminEdit({
 
           {/* Bonus total — สรุปจากโบนัสอื่นๆ ด้านบน (เฉพาะตำแหน่งที่มี piece
               commission + role กำหนดรายการ ≥ 1) */}
-          {rolePaysPieceCommission(employeeRole) &&
-            (sc.bonusBreakdown || []).length > 0 && (
+          {(sc.bonusBreakdown || []).length > 0 && (
             <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
               <div className="flex items-center gap-2.5">
                 <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />

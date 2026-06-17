@@ -921,79 +921,6 @@ export default function EmployeeEditModal({
                       ))}
                     </div>
 
-                    {/* โบนัสอื่นๆ (multi-item) — ซ่อนถ้า role ไม่มีรายการ */}
-                    {(() => {
-                      const bonusItems = roleBonusItems(employeeRole);
-                      if (bonusItems.length === 0) return null;
-                      const bonusRateValue = (itemId: string): number | "" => {
-                        if (
-                          editingBonusRates &&
-                          editingBonusRates[itemId] !== undefined
-                        )
-                          return editingBonusRates[itemId];
-                        const live = employee.bonusRates?.[itemId];
-                        if (live !== undefined) return live;
-                        // legacy fallback สำหรับ id "invite" / "transfer"
-                        if (itemId === "invite")
-                          return employee.invitePieceRate ?? "";
-                        if (itemId === "transfer")
-                          return employee.transferPieceRate ?? "";
-                        return "";
-                      };
-                      const setBonusRate = (itemId: string, raw: string) =>
-                        setEditingRole((prev) => {
-                          const base =
-                            (prev[`${employee.id}:bonusRates`] as
-                              | Record<string, number>
-                              | undefined) ??
-                            employee.bonusRates ??
-                            {};
-                          return {
-                            ...prev,
-                            [`${employee.id}:bonusRates`]: {
-                              ...base,
-                              [itemId]: parseFloat(raw) || 0,
-                            },
-                          };
-                        });
-                      return (
-                        <>
-                          <div className="h-px my-2.5 bg-[#C9973A30]" />
-                          <div className="text-xs font-bold text-maroon mb-2">
-                            <IconTicket
-                              size={12}
-                              strokeWidth={2.4}
-                              className="inline mr-1 -mt-px"
-                            />
-                            Rate โบนัสอื่นๆ (฿/ใบ)
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            {bonusItems.map((item) => (
-                              <div key={item.id}>
-                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                                  <IconTicket
-                                    size={12}
-                                    strokeWidth={2.4}
-                                    className="inline mr-1 -mt-px"
-                                  />
-                                  {item.label}
-                                </label>
-                                <input
-                                  type="number"
-                                  inputMode="decimal"
-                                  min="0"
-                                  value={bonusRateValue(item.id)}
-                                  onChange={(e) =>
-                                    setBonusRate(item.id, e.target.value)
-                                  }
-                                  className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBonusRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      );
-                    })()}
                   </div>
                 );
               }
@@ -1255,6 +1182,77 @@ export default function EmployeeEditModal({
                   </div>
                   <div className="text-xs text-txt-soft text-center mt-1.5">
                     หน่วย: ฿/ใบ
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Rate โบนัสอื่นๆ (multi-item) — standalone · ไม่ผูก piece commission
+                ตำแหน่งที่ "ไม่มีค่าคอม แต่มีโบนัส" ก็เห็น section นี้ */}
+            {(() => {
+              const bonusItems = roleBonusItems(employeeRole);
+              if (bonusItems.length === 0) return null;
+              const bonusRateValue = (itemId: string): number | "" => {
+                if (
+                  editingBonusRates &&
+                  editingBonusRates[itemId] !== undefined
+                )
+                  return editingBonusRates[itemId];
+                const live = employee.bonusRates?.[itemId];
+                if (live !== undefined) return live;
+                if (itemId === "invite")
+                  return employee.invitePieceRate ?? "";
+                if (itemId === "transfer")
+                  return employee.transferPieceRate ?? "";
+                return "";
+              };
+              const setBonusRate = (itemId: string, raw: string) =>
+                setEditingRole((prev) => {
+                  const base =
+                    (prev[`${employee.id}:bonusRates`] as
+                      | Record<string, number>
+                      | undefined) ??
+                    employee.bonusRates ??
+                    {};
+                  return {
+                    ...prev,
+                    [`${employee.id}:bonusRates`]: {
+                      ...base,
+                      [itemId]: parseFloat(raw) || 0,
+                    },
+                  };
+                });
+              return (
+                <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+                  <div className="text-sm font-bold text-maroon mb-2">
+                    <IconTicket
+                      size={12}
+                      strokeWidth={2.4}
+                      className="inline mr-1 -mt-px"
+                    />
+                    Rate โบนัสอื่นๆ (฿/ใบ)
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {bonusItems.map((item) => (
+                      <div key={item.id}>
+                        <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                          <IconTicket
+                            size={12}
+                            strokeWidth={2.4}
+                            className="inline mr-1 -mt-px"
+                          />
+                          {item.label}
+                        </label>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          value={bonusRateValue(item.id)}
+                          onChange={(e) => setBonusRate(item.id, e.target.value)}
+                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBonusRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               );

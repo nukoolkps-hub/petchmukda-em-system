@@ -707,28 +707,27 @@ export function calculateSalary(
 
   // ── "โบนัสอื่นๆ" (multi-item · เดิม: invite + transfer hardcode) ───────
   // breakdown ต่อ item: {id, label, pieces, rate, amount} · ใช้แสดงผลใน UI
-  // และคำนวณ memberBonusTotal · usesPieceCommission gate กัน base-only roles
-  const bonusBreakdown = usesPieceCommission
-    ? roleBonusItems(roleConfig).map((item) => {
-        const pieces = resolveBonusItemCount(item.id, salary);
-        const rate = resolveBonusItemRate(item.id, salary, rates);
-        return {
-          id: item.id,
-          label: item.label,
-          pieces,
-          rate,
-          amount: Math.round(pieces * rate),
-        };
-      })
-    : [];
+  // gate ด้วย bonusItems ของ role เอง — decouple จาก piece commission
+  // (admin อยากได้ตำแหน่งที่ "ไม่มีค่าคอม แต่มีโบนัส" → bonus ต้องโผล่ตาม role.bonusItems)
+  const bonusItems = roleBonusItems(roleConfig);
+  const bonusBreakdown = bonusItems.map((item) => {
+    const pieces = resolveBonusItemCount(item.id, salary);
+    const rate = resolveBonusItemRate(item.id, salary, rates);
+    return {
+      id: item.id,
+      label: item.label,
+      pieces,
+      rate,
+      amount: Math.round(pieces * rate),
+    };
+  });
   const memberBonusTotal = bonusBreakdown.reduce((s, b) => s + b.amount, 0);
   // backward-compat: legacy fields (consumed by old UIs / mirror to salary doc)
-  const invitePieces = usesPieceCommission
-    ? resolveBonusItemCount(LEGACY_BONUS_INVITE_ID, salary)
-    : 0;
-  const transferPieces = usesPieceCommission
-    ? resolveBonusItemCount(LEGACY_BONUS_TRANSFER_ID, salary)
-    : 0;
+  const invitePieces = resolveBonusItemCount(LEGACY_BONUS_INVITE_ID, salary);
+  const transferPieces = resolveBonusItemCount(
+    LEGACY_BONUS_TRANSFER_ID,
+    salary,
+  );
   const inviteCommission = bonusBreakdown.find(
     (b) => b.id === LEGACY_BONUS_INVITE_ID,
   )?.amount || 0;

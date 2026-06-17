@@ -692,24 +692,18 @@ export default function SalaryView({
                     value: salaryCalculation.buyCommission,
                   },
                 ]),
-          // โบนัสอื่นๆ (multi-item) — เฉพาะตำแหน่งที่มี piece commission +
-          // role กำหนดรายการ (bonusItems != []) · ลูปแสดงทุก item ที่มี amount > 0
-          ...(!rolePaysPieceCommission(employeeRole)
-            ? []
-            : (salaryCalculation.bonusBreakdown || [])
-                .filter((b) => b.amount > 0)
-                .map((b) => ({
-                  icon: (
-                    <IconTicket
-                      size={16}
-                      strokeWidth={2.2}
-                      color={COLORS.gold}
-                    />
-                  ),
-                  main: `โบนัส${b.label}`,
-                  sub: `${b.pieces} ใบ × ${formatThaiNumber(b.rate)} ฿`,
-                  value: b.amount,
-                }))),
+          // โบนัสอื่นๆ (multi-item) — role กำหนดรายการ (bonusItems != []) · ไม่
+          // ผูกกับ piece commission · ลูปแสดงทุก item ที่มี amount > 0
+          ...((salaryCalculation.bonusBreakdown || [])
+            .filter((b) => b.amount > 0)
+            .map((b) => ({
+              icon: (
+                <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
+              ),
+              main: `โบนัส${b.label}`,
+              sub: `${b.pieces} ใบ × ${formatThaiNumber(b.rate)} ฿`,
+              value: b.amount,
+            }))),
           {
             icon: <IconStar size={16} strokeWidth={2.2} color={COLORS.gold} />,
             main: "โบนัสแห่งความขยัน(ไม่หยุด)",
