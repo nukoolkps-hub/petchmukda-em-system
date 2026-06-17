@@ -259,9 +259,9 @@ export default function LeaveApp() {
     month: string;
   }) {
     // ไม่ catch — ปล่อย error ขึ้นไปให้ modal โชว์ inline (toast บังปุ่ม)
+    // ไม่มี toast success ด้วย — modal ปิด = feedback พอแล้ว
     await submitAdvanceRequest({ amount, reason, month });
     setShowAdvanceModal(false);
-    showToast("ส่งคำขอผ่าน LINE แล้ว — รอ ADMIN โอนเงิน");
   }
 
   // ถ้าอยู่ใน salary route แต่ถูกปิดสิทธิ์ → redirect ไป home
