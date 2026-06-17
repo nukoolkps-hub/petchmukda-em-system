@@ -1180,7 +1180,7 @@ export default function SalaryAdminEdit({
             <div className="flex-1 min-w-0">
               <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
                 <span>เงินเดือนพื้นฐาน</span>
-                <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">
+                <span className="text-xs px-1.5 py-px rounded-lg bg-gold-pale text-maroon font-bold">
                   แก้ในแท็บ "ข้อมูลพนักงาน"
                 </span>
               </div>
@@ -1436,7 +1436,7 @@ export default function SalaryAdminEdit({
             <div className="flex-1 min-w-0">
               <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
                 <span>หักประกันสังคม</span>
-                <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold">
+                <span className="text-xs px-1.5 py-px rounded-lg bg-gold-pale text-maroon font-bold">
                   แก้ในแท็บ "ข้อมูลพนักงาน"
                 </span>
               </div>
