@@ -23,7 +23,11 @@ export default function AdvanceRequestModal({
   employeeId: string;
   salaryData: any;
   advanceRequests: any[];
-  onSubmit: (data: { amount: number; reason: string; month: string }) => void;
+  onSubmit: (data: {
+    amount: number;
+    reason: string;
+    month: string;
+  }) => void | Promise<void>;
   onClose: () => void;
 }) {
   const now = new Date();
@@ -70,8 +74,10 @@ export default function AdvanceRequestModal({
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [err, setErr] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function submit() {
+  async function submit() {
+    if (submitting) return;
     if (payrollLocked) {
       setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
       return;
@@ -86,9 +92,22 @@ export default function AdvanceRequestModal({
       return;
     }
     setErr("");
-    onSubmit({ amount: amountValue, reason: reason.trim(), month: yearMonth });
-    setAmount("");
-    setReason("");
+    setSubmitting(true);
+    try {
+      await onSubmit({
+        amount: amountValue,
+        reason: reason.trim(),
+        month: yearMonth,
+      });
+      setAmount("");
+      setReason("");
+    } catch (e) {
+      // error จาก parent (เช่น LOCK_MSG เดือนปิดรอบ) → โชว์ inline แทน toast
+      // (toast บังปุ่ม ส่ง/ยกเลิก ผู้ใช้มองไม่เห็น)
+      setErr(e instanceof Error ? e.message : "ส่งคำขอไม่สำเร็จ");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -224,6 +243,7 @@ export default function AdvanceRequestModal({
         </button>
         <button
           type="button"
+          disabled={submitting}
           onClick={() => {
             if (payrollLocked) {
               setErr(
@@ -239,7 +259,7 @@ export default function AdvanceRequestModal({
           }}
           className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5
             ${
-              payrollLocked || remaining <= 0
+              payrollLocked || remaining <= 0 || submitting
                 ? "bg-bdr text-txt-soft shadow-none"
                 : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
             }`}
@@ -248,7 +268,9 @@ export default function AdvanceRequestModal({
             ? "วันทำเงินเดือน — เบิกไม่ได้"
             : remaining <= 0
               ? "เต็มวงเงินแล้ว"
-              : "ส่งคำขอผ่าน LINE"}
+              : submitting
+                ? "กำลังส่ง..."
+                : "ส่งคำขอผ่าน LINE"}
         </button>
       </div>
     </BaseModal>

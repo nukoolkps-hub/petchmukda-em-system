@@ -258,12 +258,8 @@ export default function LeaveApp() {
     reason: string;
     month: string;
   }) {
-    try {
-      await submitAdvanceRequest({ amount, reason, month });
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "ส่งคำขอไม่สำเร็จ");
-      return;
-    }
+    // ไม่ catch — ปล่อย error ขึ้นไปให้ modal โชว์ inline (toast บังปุ่ม)
+    await submitAdvanceRequest({ amount, reason, month });
     setShowAdvanceModal(false);
     showToast("ส่งคำขอผ่าน LINE แล้ว — รอ ADMIN โอนเงิน");
   }
