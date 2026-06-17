@@ -14,6 +14,11 @@ import { ChevronDown as IconChevronDown } from "lucide-react";
 import { useRef, useState } from "react";
 import { useClickOutside } from "../../hooks/useClickOutside";
 
+/** สูงสุดของ dropdown · matches max-h ใน listbox class */
+const MAX_DROPDOWN_HEIGHT = 280;
+/** padding ขอบ viewport · กัน dropdown ชนขอบจริง (รวม ADMIN tab bar) */
+const VIEWPORT_MARGIN = 80;
+
 export interface ThemedSelectOption {
   value: string;
   label: string;
@@ -39,16 +44,36 @@ export default function ThemedSelect({
   className,
 }: ThemedSelectProps) {
   const [open, setOpen] = useState(false);
+  /** flip up เมื่อ space ข้างล่างไม่พอ — กัน dropdown ตกขอบ + ชน tab bar */
+  const [openUp, setOpenUp] = useState(false);
+  /** max-height ปรับตาม space จริง · กัน scroll หาย */
+  const [maxHeight, setMaxHeight] = useState(MAX_DROPDOWN_HEIGHT);
   const wrapRef = useRef<HTMLDivElement>(null);
   useClickOutside(wrapRef, () => setOpen(false), open, true);
 
   const selected = options.find((o) => o.value === value) || null;
 
+  function toggleOpen() {
+    if (disabled) return;
+    if (!open && wrapRef.current) {
+      const rect = wrapRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN;
+      const spaceAbove = rect.top - VIEWPORT_MARGIN;
+      // flip up เมื่อข้างล่างไม่พอ + ข้างบนเหลือมากกว่า
+      const flip = spaceBelow < MAX_DROPDOWN_HEIGHT && spaceAbove > spaceBelow;
+      setOpenUp(flip);
+      setMaxHeight(
+        Math.max(120, Math.min(MAX_DROPDOWN_HEIGHT, flip ? spaceAbove : spaceBelow)),
+      );
+    }
+    setOpen((p) => !p);
+  }
+
   return (
     <div className="relative" ref={wrapRef}>
       <button
         type="button"
-        onClick={() => !disabled && setOpen((p) => !p)}
+        onClick={toggleOpen}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -71,7 +96,8 @@ export default function ThemedSelect({
       {open && (
         <div
           role="listbox"
-          className="absolute z-50 left-0 right-0 mt-1 max-h-[280px] overflow-y-auto bg-white border border-bdr rounded-lg shadow-[0_8px_24px_rgba(45,26,14,0.15)] font-[inherit]"
+          style={{ maxHeight: `${maxHeight}px` }}
+          className={`absolute z-50 left-0 right-0 overflow-y-auto bg-white border border-bdr rounded-lg shadow-[0_8px_24px_rgba(45,26,14,0.15)] font-[inherit] ${openUp ? "bottom-full mb-1" : "top-full mt-1"}`}
         >
           {options.map((o) => {
             const active = o.value === value;
