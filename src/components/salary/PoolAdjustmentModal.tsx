@@ -73,11 +73,21 @@ function randomId() {
 function normalizeItems(
   items: Item[] | undefined,
   employeeDirectory: Employee[],
+  roles: Role[],
 ): Item[] {
   return (items || []).map((it) => {
     let roleId = it.roleId || "";
     // backward compat: exclusion เก่า (ก่อน persist roleId) ไม่มี field นี้
-    // → ลอง resolve จาก employee.roleId ปัจจุบัน (best-effort)
+    // strategy 1 — หา role ที่ยังมี pieceItemId นี้ (เชื่อถือได้สุด · ตรงตาม
+    // ตำแหน่งจริงที่ pieceItem อยู่ ไม่ใช่ตำแหน่งปัจจุบันของพนักงาน)
+    if (!roleId && it.kind === "piece" && it.pieceItemId) {
+      const role = roles.find((r) =>
+        rolePieceItems(r).some((p) => p.id === it.pieceItemId),
+      );
+      if (role) roleId = role.id;
+    }
+    // strategy 2 — fallback มา employee.roleId ปัจจุบัน (ถ้า pieceItem ถูกลบ
+    // จาก role แล้ว · best-effort เพื่อกัน dropdown ว่าง)
     if (!roleId && it.kind === "piece" && it.employeeId) {
       const emp = employeeDirectory.find((e) => e.id === it.employeeId);
       roleId = emp?.roleId || "";
@@ -119,13 +129,13 @@ export default function PoolAdjustmentModal({
   );
 
   const [items, setItems] = useState<Item[]>(() =>
-    normalizeItems(adjustment?.items, employeeDirectory),
+    normalizeItems(adjustment?.items, employeeDirectory, roles),
   );
   const [saving, setSaving] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-sync ตามเดือนเท่านั้น
   useEffect(() => {
-    setItems(normalizeItems(adjustment?.items, employeeDirectory));
+    setItems(normalizeItems(adjustment?.items, employeeDirectory, roles));
   }, [yearMonth]);
 
   const monthLabel = formatYmThai(yearMonth);
@@ -141,7 +151,7 @@ export default function PoolAdjustmentModal({
       .join("|");
   const dirty =
     compareKey(items) !==
-    compareKey(normalizeItems(adjustment?.items, employeeDirectory));
+    compareKey(normalizeItems(adjustment?.items, employeeDirectory, roles));
 
   // นำพนักงานในตำแหน่งที่เลือก (ใช้ filter dropdown employee ของ row piece)
   function employeesInRole(roleId: string) {
@@ -583,8 +593,8 @@ function PieceRow({
             {roleIsOrphan && (
               <option value={item.roleId}>
                 {orphanRole
-                  ? `${orphanRole.name} (ไม่ใช่ตำแหน่งรายชิ้นแล้ว)`
-                  : "(ตำแหน่งเดิม — ไม่พบในระบบ)"}
+                  ? `${orphanRole.name} (เก่า)`
+                  : "(ตำแหน่งเก่า)"}
               </option>
             )}
           </select>
@@ -621,10 +631,10 @@ function PieceRow({
                 {empIsOrphan && (
                   <option value={item.employeeId}>
                     {orphanEmp
-                      ? `${orphanEmp.nickname || orphanEmp.name} (ย้ายตำแหน่งแล้ว)`
+                      ? `${orphanEmp.nickname || orphanEmp.name} (ย้ายแล้ว)`
                       : item.employeeName
-                        ? `${item.employeeName} (ลบจากระบบแล้ว)`
-                        : "(พนักงานเดิม — ไม่พบในระบบ)"}
+                        ? `${item.employeeName} (ลบแล้ว)`
+                        : "(พนักงานเก่า)"}
                   </option>
                 )}
               </>
@@ -651,8 +661,8 @@ function PieceRow({
                 {itemIsOrphan && (
                   <option value={item.pieceItemId}>
                     {item.pieceItemLabel
-                      ? `${item.pieceItemLabel} (ลบจากตำแหน่งแล้ว)`
-                      : "(รายการเดิม — ถูกลบจากตำแหน่ง)"}
+                      ? `${item.pieceItemLabel} (ลบแล้ว)`
+                      : "(รายการเก่า)"}
                   </option>
                 )}
               </>
