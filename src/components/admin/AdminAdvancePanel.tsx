@@ -293,7 +293,10 @@ export default function AdminAdvancePanel({
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-txt text-sm">
-                      {request.employeeName}
+                      {/* live > snapshot · กรณี admin rename หลังพนักงานยื่นคำขอ */}
+                      {employeeInfo?.nickname ||
+                        employeeInfo?.name ||
+                        request.employeeName}
                     </div>
                     <div className="text-xs text-txt-soft">
                       {date.toLocaleDateString("th-TH", {
@@ -461,8 +464,14 @@ export default function AdminAdvancePanel({
             ปฏิเสธคำขอนี้?
           </div>
           <div className="text-sm text-txt-mid text-center mb-5">
-            {confirmReject.employeeName} · ฿
-            {formatThaiNumber(confirmReject.amount)}
+            {(() => {
+              // live > snapshot · กัน rename หลังยื่นคำขอ
+              const live = employeeDirectory.find(
+                (e) => e.id === confirmReject.employeeId,
+              );
+              return live?.nickname || live?.name || confirmReject.employeeName;
+            })()}{" "}
+            · ฿{formatThaiNumber(confirmReject.amount)}
           </div>
           <div className="flex gap-2.5">
             <button

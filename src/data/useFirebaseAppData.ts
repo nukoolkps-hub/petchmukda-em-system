@@ -177,8 +177,26 @@ export default function useFirebaseAppData({
     const employee = employeeResult.data.find((e) => e.id === employeeId);
     if (!employee) {
       // ไม่เจอ employee (ถูกลบ / data ยังโหลดไม่เสร็จ) → เขียนเฉพาะ fields
-      // ที่ caller ส่งมา อย่าแตะ snapshot ไม่งั้นจะ stomp totalLeaveDays เป็น 0
-      await salariesAPI.updateSalary(employeeId, yearMonth, fields);
+      // ที่ caller ส่งมา · DON'T touch snapshot fields · ไม่งั้น stomp ของเก่า
+      // (roleId/poolExclusion/totalLeaveDays ที่เคย freeze ไว้)
+      // strip snapshot keys ที่ caller ส่งมาด้วย กัน partial overwrite พังด้วย
+      const {
+        roleId: _r,
+        poolExclusion: _pe,
+        totalLeaveDays: _td,
+        baseSalary: _bs,
+        singlePieceRate: _sp,
+        pieceRates: _pr,
+        normalSalePieceRate: _ns,
+        specialSalePieceRate: _ss,
+        buyPieceRate: _bp,
+        invitePieceRate: _ir,
+        transferPieceRate: _tr,
+        bonusRates: _br,
+        socialSecurity: _soc,
+        ...safeFields
+      } = fields || {};
+      await salariesAPI.updateSalary(employeeId, yearMonth, safeFields);
       return;
     }
     // join ลาด้วย employeeId (ไม่ใช่ชื่อ) — ทนต่อการเปลี่ยนชื่อ/ชื่อซ้ำ
