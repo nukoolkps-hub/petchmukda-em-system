@@ -221,6 +221,7 @@ export default function useFirebaseAppData({
       buyPieceRate: _ignoredBuyRate,
       invitePieceRate: _ignoredInviteRate,
       transferPieceRate: _ignoredTransferRate,
+      bonusRates: _ignoredBonusRates,
       socialSecurity: _ignoredSocialSecurity,
       ...callerFields
     } = fields || {};
@@ -266,6 +267,8 @@ export default function useFirebaseAppData({
           buyPieceRate: employee.buyPieceRate ?? 0,
           invitePieceRate: employee.invitePieceRate ?? 0,
           transferPieceRate: employee.transferPieceRate ?? 0,
+          // snapshot โบนัสอื่นๆ (multi-item) — freeze rate ของเดือนนั้น
+          bonusRates: employee.bonusRates ?? {},
           socialSecurity: employee.socialSecurity ?? 0,
         };
 

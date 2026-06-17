@@ -692,11 +692,13 @@ export default function SalaryView({
                     value: salaryCalculation.buyCommission,
                   },
                 ]),
-          // invite/transfer — เฉพาะตำแหน่งที่มี piece commission
+          // โบนัสอื่นๆ (multi-item) — เฉพาะตำแหน่งที่มี piece commission +
+          // role กำหนดรายการ (bonusItems != []) · ลูปแสดงทุก item ที่มี amount > 0
           ...(!rolePaysPieceCommission(employeeRole)
             ? []
-            : [
-                {
+            : (salaryCalculation.bonusBreakdown || [])
+                .filter((b) => b.amount > 0)
+                .map((b) => ({
                   icon: (
                     <IconTicket
                       size={16}
@@ -704,23 +706,10 @@ export default function SalaryView({
                       color={COLORS.gold}
                     />
                   ),
-                  main: "โบนัสเชิญชวนสมัครบัตร",
-                  sub: `${salaryCalculation.invitePieces} ใบ × ${formatThaiNumber(salaryCalculation.invitePieceRate)} ฿`,
-                  value: salaryCalculation.inviteCommission,
-                },
-                {
-                  icon: (
-                    <IconRefresh
-                      size={16}
-                      strokeWidth={2.2}
-                      color={COLORS.gold}
-                    />
-                  ),
-                  main: "โบนัสย้ายข้อมูลบัตร",
-                  sub: `${salaryCalculation.transferPieces} ใบ × ${formatThaiNumber(salaryCalculation.transferPieceRate)} ฿`,
-                  value: salaryCalculation.transferCommission,
-                },
-              ]),
+                  main: `โบนัส${b.label}`,
+                  sub: `${b.pieces} ใบ × ${formatThaiNumber(b.rate)} ฿`,
+                  value: b.amount,
+                }))),
           {
             icon: <IconStar size={16} strokeWidth={2.2} color={COLORS.gold} />,
             main: "โบนัสแห่งความขยัน(ไม่หยุด)",

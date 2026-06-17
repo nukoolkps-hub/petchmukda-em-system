@@ -29,6 +29,10 @@ export interface Employee {
   buyPieceRate?: number;
   invitePieceRate?: number;
   transferPieceRate?: number;
+  /** map ของ rate "โบนัสอื่นๆ" — key=bonusItem.id · value=฿/ใบ
+   *  legacy "invite"/"transfer" item อ่าน invitePieceRate/transferPieceRate
+   *  ถ้าไม่มีใน map นี้ (backward compat)                                          */
+  bonusRates?: Record<string, number>;
   salaryDisabled?: boolean;
   poolExclusion?: "sell" | "buy" | "both" | "" | null;
   displayOrder?: number; // ลำดับการเรียง card admin ลากย้ายได้ — sync ทุกคน
@@ -94,6 +98,9 @@ export interface SalaryMonth {
   buyPieces?: number;
   invitePieces?: number;
   transferPieces?: number;
+  /** จำนวนใบของแต่ละ "โบนัสอื่นๆ" item · key=bonusItem.id · value=จำนวนใบ
+   *  legacy "invite"/"transfer" อ่าน invitePieces/transferPieces ถ้าไม่มีใน map  */
+  bonusCounts?: Record<string, number>;
   socialSecurity?: number;
   customEarnings?: { label: string; amount: number }[]; // รายการรายรับที่ Admin เพิ่มเอง
   customDeductions?: { label: string; amount: number }[]; // รายการหักที่ Admin เพิ่มเอง
@@ -174,6 +181,13 @@ export interface Role {
   /** legacy single-label (ก่อน multi-item) · migrate-on-read เป็น 1 pieceItem
    *  id="default" · เก็บไว้เพื่อ backward-compat ข้อมูลเก่า                      */
   pieceLabel?: string | null;
+  /** รายการ "โบนัสอื่นๆ" (multi-item) — แทน invite/transfer แบบ hardcode เดิม
+   *  - null/undefined → migrate-on-read เป็น default 2 รายการ
+   *    ({id:"invite",label:"เชิญชวนสมัครบัตร"}, {id:"transfer",label:"ย้ายข้อมูลบัตร"})
+   *  - [] → ไม่มีโบนัสอื่นๆ (ซ่อน section)
+   *  - [{id,label}, ...] → แต่ละรายการมี rate (ต่อพนักงาน) + จำนวน (ต่อเดือน)
+   *  ใช้ได้ทุก role ที่ rolePaysPieceCommission · pool sales ก็ใช้ได้                */
+  bonusItems?: PieceItem[] | null;
 }
 
 /** ตารางหน้าที่ admin-managed — admin กำหนดว่า "ตำแหน่งไหน ทำหน้าที่อะไร"

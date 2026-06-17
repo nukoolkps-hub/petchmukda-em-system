@@ -100,6 +100,63 @@ export function resolvePieceItemPieces(
   return 0;
 }
 
+/* ─── โบนัสอื่นๆ (ก่อนหน้านี้: บัตรสมาชิก hardcode invite/transfer) ──────
+   role.bonusItems = null/undefined → default [invite, transfer]
+   role.bonusItems = []             → ไม่มีโบนัสอื่นๆ (ซ่อน section)
+   role.bonusItems = [items]        → admin custom รายการเอง                   */
+export const LEGACY_BONUS_INVITE_ID = "invite";
+export const LEGACY_BONUS_TRANSFER_ID = "transfer";
+const DEFAULT_BONUS_ITEMS: { id: string; label: string }[] = [
+  { id: LEGACY_BONUS_INVITE_ID, label: "เชิญชวนสมัครบัตร" },
+  { id: LEGACY_BONUS_TRANSFER_ID, label: "ย้ายข้อมูลบัตร" },
+];
+export function roleBonusItems(
+  role: { bonusItems?: { id: string; label: string }[] | null } | null | undefined,
+): { id: string; label: string }[] {
+  if (!role) return [];
+  if (Array.isArray(role.bonusItems)) return role.bonusItems;
+  // null/undefined → default 2 รายการ (legacy data fallback)
+  return DEFAULT_BONUS_ITEMS;
+}
+export function resolveBonusItemRate(
+  itemId: string,
+  salary:
+    | { bonusRates?: Record<string, number>; invitePieceRate?: number; transferPieceRate?: number }
+    | null
+    | undefined,
+  rates?: {
+    bonusRates?: Record<string, number>;
+    invitePieceRate?: number;
+    transferPieceRate?: number;
+  },
+): number {
+  // priority: snapshot bonusRates → snapshot legacy field → rates bonusRates → rates legacy field
+  if (salary?.bonusRates && typeof salary.bonusRates[itemId] === "number")
+    return salary.bonusRates[itemId];
+  if (itemId === LEGACY_BONUS_INVITE_ID && salary?.invitePieceRate != null)
+    return salary.invitePieceRate;
+  if (itemId === LEGACY_BONUS_TRANSFER_ID && salary?.transferPieceRate != null)
+    return salary.transferPieceRate;
+  if (rates?.bonusRates && typeof rates.bonusRates[itemId] === "number")
+    return rates.bonusRates[itemId];
+  if (itemId === LEGACY_BONUS_INVITE_ID) return rates?.invitePieceRate ?? 0;
+  if (itemId === LEGACY_BONUS_TRANSFER_ID) return rates?.transferPieceRate ?? 0;
+  return 0;
+}
+export function resolveBonusItemCount(
+  itemId: string,
+  salary:
+    | { bonusCounts?: Record<string, number>; invitePieces?: number; transferPieces?: number }
+    | null
+    | undefined,
+): number {
+  if (salary?.bonusCounts && typeof salary.bonusCounts[itemId] === "number")
+    return salary.bonusCounts[itemId];
+  if (itemId === LEGACY_BONUS_INVITE_ID) return salary?.invitePieces ?? 0;
+  if (itemId === LEGACY_BONUS_TRANSFER_ID) return salary?.transferPieces ?? 0;
+  return 0;
+}
+
 const {
   DAYS_PER_MONTH,
   POOL_THRESHOLD,
@@ -648,11 +705,36 @@ export function calculateSalary(
     buyCommission = Math.round(buyPieces * buyPieceRate);
   }
 
-  const invitePieces = usesPieceCommission ? salary.invitePieces || 0 : 0;
-  const transferPieces = usesPieceCommission ? salary.transferPieces || 0 : 0;
-  const inviteCommission = invitePieces * invitePieceRate;
-  const transferCommission = transferPieces * transferPieceRate;
-  const memberBonusTotal = inviteCommission + transferCommission;
+  // ── "โบนัสอื่นๆ" (multi-item · เดิม: invite + transfer hardcode) ───────
+  // breakdown ต่อ item: {id, label, pieces, rate, amount} · ใช้แสดงผลใน UI
+  // และคำนวณ memberBonusTotal · usesPieceCommission gate กัน base-only roles
+  const bonusBreakdown = usesPieceCommission
+    ? roleBonusItems(roleConfig).map((item) => {
+        const pieces = resolveBonusItemCount(item.id, salary);
+        const rate = resolveBonusItemRate(item.id, salary, rates);
+        return {
+          id: item.id,
+          label: item.label,
+          pieces,
+          rate,
+          amount: Math.round(pieces * rate),
+        };
+      })
+    : [];
+  const memberBonusTotal = bonusBreakdown.reduce((s, b) => s + b.amount, 0);
+  // backward-compat: legacy fields (consumed by old UIs / mirror to salary doc)
+  const invitePieces = usesPieceCommission
+    ? resolveBonusItemCount(LEGACY_BONUS_INVITE_ID, salary)
+    : 0;
+  const transferPieces = usesPieceCommission
+    ? resolveBonusItemCount(LEGACY_BONUS_TRANSFER_ID, salary)
+    : 0;
+  const inviteCommission = bonusBreakdown.find(
+    (b) => b.id === LEGACY_BONUS_INVITE_ID,
+  )?.amount || 0;
+  const transferCommission = bonusBreakdown.find(
+    (b) => b.id === LEGACY_BONUS_TRANSFER_ID,
+  )?.amount || 0;
 
   // ถ้าถูกปิดสิทธิ์ Pool และขาย < 50% ของ Top → เงินเดือนพื้นฐาน = 0
   // (ต้อง compute losesBaseSalary ก่อน attendanceBonus เพื่อ zero มันด้วย)
@@ -788,6 +870,7 @@ export function calculateSalary(
     inviteCommission,
     transferCommission,
     memberBonusTotal,
+    bonusBreakdown, // [{id,label,pieces,rate,amount}] — multi-item bonus
     normalSalePieces,
     specialSalePieces,
     buyPieces,

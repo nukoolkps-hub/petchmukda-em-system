@@ -13,7 +13,7 @@ import {
 import { memo, useCallback, useState } from "react";
 import { COLORS } from "../../constants";
 import type { PieceItem } from "../../types";
-import { rolePieceItems } from "../../utils/salaryUtils";
+import { roleBonusItems, rolePieceItems } from "../../utils/salaryUtils";
 import {
   isRichTextEmpty,
   sanitizeRichText,
@@ -27,13 +27,18 @@ function newPieceId(): string {
   return `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 }
 
-/* ─── PieceItemsEditor — แก้ไขรายการค่าคอมต่อชิ้น (เพิ่ม/ลบ/แก้ label) ──── */
-function PieceItemsEditor({
+/* ─── ItemsEditor — แก้ไขรายการ {id,label}[] (เพิ่ม/ลบ/แก้)
+   ใช้ทั้ง pieceItems (ค่าคอมรายชิ้น) + bonusItems (โบนัสอื่นๆ)             */
+function ItemsEditor({
   items,
   onChange,
+  placeholder,
+  addLabel,
 }: {
   items: PieceItem[];
   onChange: (next: PieceItem[]) => void;
+  placeholder: string;
+  addLabel: string;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -46,7 +51,7 @@ function PieceItemsEditor({
               next[idx] = { ...item, label: ev.target.value };
               onChange(next);
             }}
-            placeholder='เช่น "ทำบิล", "นับสต๊อก"'
+            placeholder={placeholder}
             maxLength={40}
             className="flex-1 px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[inherit] box-border bg-gold-pale/30"
           />
@@ -66,7 +71,7 @@ function PieceItemsEditor({
         className="self-start px-2.5 py-1.5 rounded-lg border border-dashed border-gold/50 bg-gold-pale/20 text-maroon text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center gap-1"
       >
         <IconPlus size={12} strokeWidth={2.6} />
-        เพิ่มรายการค่าคอม
+        {addLabel}
       </button>
     </div>
   );
@@ -99,11 +104,16 @@ export default function RolesAdminPanel({
   onDeleteRole,
   showToast,
 }) {
-  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, pieceItems, mainDuties}}
+  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, pieceItems, bonusItems, mainDuties}}
   const [newRole, setNewRole] = useState({
     name: "",
     poolGroup: "",
     pieceItems: [] as PieceItem[],
+    // default bonusItems = legacy invite + transfer · admin ลบ/เพิ่มได้ ([] = ซ่อน section)
+    bonusItems: [
+      { id: "invite", label: "เชิญชวนสมัครบัตร" },
+      { id: "transfer", label: "ย้ายข้อมูลบัตร" },
+    ] as PieceItem[],
     mainDuties: "",
   });
   const [showAdd, setShowAdd] = useState(false);
@@ -123,11 +133,17 @@ export default function RolesAdminPanel({
       const pieceItemsValue = poolValue
         ? null
         : cleanPieceItems(pieceItemsDraft);
+      // bonusItems: drop pool sales กฎเหมือน pieceItems · array ว่าง = ปิด section
+      // (ถ้า admin ไม่แตะ field นี้ → ใช้ default migration จาก roleBonusItems)
+      const bonusItemsDraft =
+        e.bonusItems !== undefined ? e.bonusItems : roleBonusItems(current);
+      const bonusItemsValue = cleanPieceItems(bonusItemsDraft) ?? [];
       await onUpsertRole({
         ...current,
         name: e.name || current.name,
         poolGroup: poolValue,
         pieceItems: pieceItemsValue,
+        bonusItems: bonusItemsValue,
         // ย้ายมา pieceItems แล้ว → ล้าง legacy pieceLabel กัน migrate-on-read
         // หยิบ label เก่ามาซ้ำ
         pieceLabel: null,
@@ -156,10 +172,20 @@ export default function RolesAdminPanel({
         poolGroup: poolValue,
         // pieceItems ไม่ใช้ใน pool sales (มี normal/special/buy แล้ว)
         pieceItems: poolValue ? null : cleanPieceItems(newRole.pieceItems),
+        bonusItems: cleanPieceItems(newRole.bonusItems) ?? [],
         pieceLabel: null,
         mainDuties: cleanMainDuties(newRole.mainDuties),
       });
-      setNewRole({ name: "", poolGroup: "", pieceItems: [], mainDuties: "" });
+      setNewRole({
+        name: "",
+        poolGroup: "",
+        pieceItems: [],
+        bonusItems: [
+          { id: "invite", label: "เชิญชวนสมัครบัตร" },
+          { id: "transfer", label: "ย้ายข้อมูลบัตร" },
+        ],
+        mainDuties: "",
+      });
       setShowAdd(false);
       showToast?.("เพิ่มตำแหน่งแล้ว");
     } catch (err) {
@@ -244,7 +270,9 @@ export default function RolesAdminPanel({
               <label className="text-xs text-txt-soft font-semibold mb-1 block">
                 รายการค่าคอมต่อชิ้น (ไม่เพิ่ม = ไม่มีค่าคอม)
               </label>
-              <PieceItemsEditor
+              <ItemsEditor
+                placeholder='เช่น "ทำบิล", "นับสต๊อก"'
+                addLabel="เพิ่มรายการค่าคอม"
                 items={newRole.pieceItems}
                 onChange={(next) =>
                   setNewRole({ ...newRole, pieceItems: next })
@@ -252,6 +280,19 @@ export default function RolesAdminPanel({
               />
             </div>
           )}
+          <div className="mb-2.5">
+            <label className="text-xs text-txt-soft font-semibold mb-1 block">
+              โบนัสอื่นๆ (ไม่เพิ่ม = ซ่อน section)
+            </label>
+            <ItemsEditor
+              placeholder='เช่น "เชิญชวนสมัครบัตร", "ย้ายข้อมูล"'
+              addLabel="เพิ่มโบนัส"
+              items={newRole.bonusItems}
+              onChange={(next) =>
+                setNewRole({ ...newRole, bonusItems: next })
+              }
+            />
+          </div>
           <label className="text-xs text-txt-soft font-semibold mb-1 block">
             หน้าที่หลัก (พนักงานจะเห็นในหน้า Home)
           </label>
@@ -390,7 +431,9 @@ export default function RolesAdminPanel({
                             <label className="text-xs text-txt-soft font-semibold mb-1 block">
                               รายการค่าคอมต่อชิ้น (ไม่เพิ่ม = ไม่มีค่าคอม)
                             </label>
-                            <PieceItemsEditor
+                            <ItemsEditor
+                placeholder='เช่น "ทำบิล", "นับสต๊อก"'
+                addLabel="เพิ่มรายการค่าคอม"
                               items={
                                 e?.pieceItems !== undefined
                                   ? e.pieceItems
@@ -408,6 +451,29 @@ export default function RolesAdminPanel({
                             />
                           </div>
                         )}
+                        <div className="mb-2.5">
+                          <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                            โบนัสอื่นๆ (ไม่เพิ่ม = ซ่อน section)
+                          </label>
+                          <ItemsEditor
+                            placeholder='เช่น "เชิญชวนสมัครบัตร", "ย้ายข้อมูล"'
+                            addLabel="เพิ่มโบนัส"
+                            items={
+                              e?.bonusItems !== undefined
+                                ? e.bonusItems
+                                : roleBonusItems(rl)
+                            }
+                            onChange={(next) =>
+                              setEditing((p) => ({
+                                ...p,
+                                [rl.id]: {
+                                  ...(p[rl.id] || rl),
+                                  bonusItems: next,
+                                },
+                              }))
+                            }
+                          />
+                        </div>
                         <div className="mb-2.5">
                           <label className="text-xs text-txt-soft font-semibold mb-1 block">
                             หน้าที่หลัก (พนักงานจะเห็นในหน้า Home)
@@ -466,6 +532,10 @@ export default function RolesAdminPanel({
                                 // migrate legacy pieceLabel ให้เห็นใน editor
                                 // (กันกด save แล้ว legacy หายเงียบ)
                                 pieceItems: rolePieceItems(rl),
+                                // seed bonusItems จาก roleBonusItems() —
+                                // default [invite, transfer] ถ้า role doc
+                                // ไม่มี field (legacy) · admin แก้ได้
+                                bonusItems: roleBonusItems(rl),
                                 // sanitize ก่อนใส่ editor — กัน HTML ดิบ/พิษ
                                 // จาก DB รันใน contentEditable ฝั่ง admin
                                 mainDuties: sanitizeRichText(

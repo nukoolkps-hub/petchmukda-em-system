@@ -67,16 +67,11 @@ function buildSalarySlipHTML(
           value: salaryCalculation.buyCommission,
         });
     }
-    if (salaryCalculation.inviteCommission > 0)
-      earnRows.push({
-        label: "โบนัสเชิญชวนสมัครบัตร",
-        value: salaryCalculation.inviteCommission,
-      });
-    if (salaryCalculation.transferCommission > 0)
-      earnRows.push({
-        label: "โบนัสย้ายข้อมูลบัตร",
-        value: salaryCalculation.transferCommission,
-      });
+    // โบนัสอื่นๆ (multi-item) — แสดงทุก item ที่มี amount > 0
+    for (const bonus of salaryCalculation.bonusBreakdown || []) {
+      if (bonus.amount > 0)
+        earnRows.push({ label: `โบนัส${bonus.label}`, value: bonus.amount });
+    }
   }
   if (salaryCalculation.attendanceBonus > 0)
     earnRows.push({

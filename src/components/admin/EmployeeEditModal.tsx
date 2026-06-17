@@ -33,6 +33,7 @@ import {
   getEffectiveBaseSalary,
   LEGACY_PIECE_ITEM_ID,
   rolePaysPieceCommission,
+  roleBonusItems,
   rolePieceItems,
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -80,6 +81,11 @@ export default function EmployeeEditModal({
   const editingTransferPieceRate =
     editingRole[`${employee.id}:transferPieceRate`];
   const editingSinglePieceRate = editingRole[`${employee.id}:singlePieceRate`];
+  // bonusRates (multi-item โบนัสอื่นๆ) — map เดียวเหมือน pieceRates
+  const editingBonusRates = editingRole[`${employee.id}:bonusRates`] as
+    | Record<string, number>
+    | undefined;
+
   // pieceRates (multi-item) — เก็บทั้ง map ใน draft key เดียว
   const editingPieceRates = editingRole[`${employee.id}:pieceRates`] as
     | Record<string, number>
@@ -240,6 +246,14 @@ export default function EmployeeEditModal({
         cleaned[k] = Number.isFinite(n) && n >= 0 ? n : 0;
       }
       await onUpdateRole(employee.id, "pieceRates", cleaned);
+    }
+    if (editingBonusRates !== undefined) {
+      const cleaned: Record<string, number> = {};
+      for (const [k, v] of Object.entries(editingBonusRates)) {
+        const n = Number(v);
+        cleaned[k] = Number.isFinite(n) && n >= 0 ? n : 0;
+      }
+      await onUpdateRole(employee.id, "bonusRates", cleaned);
     }
     if (editingBaseSalary !== undefined)
       await onUpdateRole(
@@ -907,76 +921,79 @@ export default function EmployeeEditModal({
                       ))}
                     </div>
 
-                    <div className="h-px my-2.5 bg-[#C9973A30]" />
-                    <div className="text-xs font-bold text-maroon mb-2">
-                      <IconTicket
-                        size={12}
-                        strokeWidth={2.4}
-                        className="inline mr-1 -mt-px"
-                      />
-                      Rate บัตรสมาชิกต่อใบ
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                          <IconTicket
-                            size={12}
-                            strokeWidth={2.4}
-                            className="inline mr-1 -mt-px"
-                          />
-                          เชิญชวนสมัคร
-                        </label>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          min="0"
-                          value={
-                            editingInvitePieceRate !== undefined
-                              ? editingInvitePieceRate
-                              : (employee.invitePieceRate ?? "")
-                          }
-                          onChange={(e) =>
-                            setEditingRole((previousEditingRole) => ({
-                              ...previousEditingRole,
-                              [`${employee.id}:invitePieceRate`]:
-                                e.target.value,
-                            }))
-                          }
-                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingInvitePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                          <IconRefresh
-                            size={12}
-                            strokeWidth={2.4}
-                            className="inline mr-1 -mt-px"
-                          />
-                          ย้ายข้อมูล
-                        </label>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          min="0"
-                          value={
-                            editingTransferPieceRate !== undefined
-                              ? editingTransferPieceRate
-                              : (employee.transferPieceRate ?? "")
-                          }
-                          onChange={(e) =>
-                            setEditingRole((previousEditingRole) => ({
-                              ...previousEditingRole,
-                              [`${employee.id}:transferPieceRate`]:
-                                e.target.value,
-                            }))
-                          }
-                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingTransferPieceRate !== undefined ? "border-gold" : "border-bdr"}`}
-                        />
-                      </div>
-                    </div>
-                    <div className="text-xs text-txt-soft text-center mt-1.5">
-                      หน่วย: ฿/ใบ
-                    </div>
+                    {/* โบนัสอื่นๆ (multi-item) — ซ่อนถ้า role ไม่มีรายการ */}
+                    {(() => {
+                      const bonusItems = roleBonusItems(employeeRole);
+                      if (bonusItems.length === 0) return null;
+                      const bonusRateValue = (itemId: string): number | "" => {
+                        if (
+                          editingBonusRates &&
+                          editingBonusRates[itemId] !== undefined
+                        )
+                          return editingBonusRates[itemId];
+                        const live = employee.bonusRates?.[itemId];
+                        if (live !== undefined) return live;
+                        // legacy fallback สำหรับ id "invite" / "transfer"
+                        if (itemId === "invite")
+                          return employee.invitePieceRate ?? "";
+                        if (itemId === "transfer")
+                          return employee.transferPieceRate ?? "";
+                        return "";
+                      };
+                      const setBonusRate = (itemId: string, raw: string) =>
+                        setEditingRole((prev) => {
+                          const base =
+                            (prev[`${employee.id}:bonusRates`] as
+                              | Record<string, number>
+                              | undefined) ??
+                            employee.bonusRates ??
+                            {};
+                          return {
+                            ...prev,
+                            [`${employee.id}:bonusRates`]: {
+                              ...base,
+                              [itemId]: parseFloat(raw) || 0,
+                            },
+                          };
+                        });
+                      return (
+                        <>
+                          <div className="h-px my-2.5 bg-[#C9973A30]" />
+                          <div className="text-xs font-bold text-maroon mb-2">
+                            <IconTicket
+                              size={12}
+                              strokeWidth={2.4}
+                              className="inline mr-1 -mt-px"
+                            />
+                            Rate โบนัสอื่นๆ (฿/ใบ)
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            {bonusItems.map((item) => (
+                              <div key={item.id}>
+                                <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                                  <IconTicket
+                                    size={12}
+                                    strokeWidth={2.4}
+                                    className="inline mr-1 -mt-px"
+                                  />
+                                  {item.label}
+                                </label>
+                                <input
+                                  type="number"
+                                  inputMode="decimal"
+                                  min="0"
+                                  value={bonusRateValue(item.id)}
+                                  onChange={(e) =>
+                                    setBonusRate(item.id, e.target.value)
+                                  }
+                                  className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBonusRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 );
               }
