@@ -3,6 +3,34 @@
 import { BUSINESS_RULES } from "../constants";
 import { countWeekdayLeaves, getOverQuotaDays } from "./leaveUtils";
 
+/* ─── Role piece-commission policy ────────────────────────────────
+   ตำแหน่งเก็บค่าคอมแยก 3 รูปแบบ:
+   1. Pool sales — poolGroup ตั้ง → ใช้ normal/special/buy + invite/transfer
+   2. Single piece — poolGroup ว่าง + pieceLabel ตั้ง → ใช้ singlePieceRate
+      (label = pieceLabel เช่น "ค่าคอมต่อบิล") + invite/transfer
+   3. ไม่มีค่าคอม — poolGroup ว่าง + pieceLabel ว่าง → เงินเดือนพื้นฐานอย่างเดียว
+      (พนักงานทั่วไป รปภ. ทำความสะอาด)                                       */
+
+/** ตำแหน่งนี้มีค่าคอมแบบ "ต่อชิ้น" (รวม invite/transfer ด้วย) ไหม
+ *  คืน true ถ้า: pool sales (ใช้ normal/special/buy) หรือ non-pool ที่ admin
+ *  set `pieceLabel` แล้ว · false = ไม่มีค่าคอมเลย (รวม invite/transfer)         */
+export function rolePaysPieceCommission(
+  role: { poolGroup?: string | null; pieceLabel?: string | null } | null | undefined,
+): boolean {
+  if (!role) return false;
+  if (role.poolGroup) return true;
+  return !!role.pieceLabel?.trim();
+}
+
+/** label ของ singlePieceRate · null ถ้าตำแหน่งไม่ใช้ single piece (pool sales / no
+ *  commission) — caller ควรเช็คก่อนเรียก                                       */
+export function rolePieceLabel(
+  role: { poolGroup?: string | null; pieceLabel?: string | null } | null | undefined,
+): string {
+  if (!role || role.poolGroup) return "";
+  return (role.pieceLabel || "").trim();
+}
+
 const {
   DAYS_PER_MONTH,
   POOL_THRESHOLD,
@@ -464,7 +492,10 @@ export function calculateSalary(
       sundayOverQuotaDays * dailySalaryRate * SUNDAY_LEAVE_MULTIPLIER,
   );
 
-  const usesSinglePieceRate = roleConfig && !roleConfig.poolGroup;
+  // ตำแหน่งนี้มีค่าคอมรายชิ้นไหม (pool sales / single piece / ไม่มี)
+  const usesPieceCommission = rolePaysPieceCommission(roleConfig);
+  const usesSinglePieceRate =
+    usesPieceCommission && roleConfig && !roleConfig.poolGroup;
   const singlePieceRate = salary.singlePieceRate ?? rates?.singlePieceRate ?? 0;
   const normalSalePieceRate =
     salary.normalSalePieceRate ?? rates?.normalSalePieceRate ?? 0;
@@ -484,7 +515,10 @@ export function calculateSalary(
     specialSaleCommission = 0,
     buyCommission = 0;
 
-  if (usesSinglePieceRate) {
+  if (!usesPieceCommission) {
+    // ตำแหน่งไม่มีค่าคอมรายชิ้น (พนักงานทั่วไป รปภ. ทำความสะอาด ฯลฯ)
+    // → ทุก commission = 0 · เงินเดือนพื้นฐานอย่างเดียว
+  } else if (usesSinglePieceRate) {
     singleRatePieces = salary.singleRatePieces || 0;
     singleRateCommission = Math.round(singleRatePieces * singlePieceRate);
   } else {
@@ -501,8 +535,8 @@ export function calculateSalary(
     buyCommission = Math.round(buyPieces * buyPieceRate);
   }
 
-  const invitePieces = salary.invitePieces || 0;
-  const transferPieces = salary.transferPieces || 0;
+  const invitePieces = usesPieceCommission ? salary.invitePieces || 0 : 0;
+  const transferPieces = usesPieceCommission ? salary.transferPieces || 0 : 0;
   const inviteCommission = invitePieces * invitePieceRate;
   const transferCommission = transferPieces * transferPieceRate;
   const memberBonusTotal = inviteCommission + transferCommission;

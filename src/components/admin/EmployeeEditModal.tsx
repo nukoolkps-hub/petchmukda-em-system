@@ -31,6 +31,8 @@ import { formatTenure } from "../../utils/dateUtils";
 import {
   buildRaiseHistory,
   getEffectiveBaseSalary,
+  rolePaysPieceCommission,
+  rolePieceLabel,
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankPicker from "../shared/BankPicker";
@@ -808,8 +810,13 @@ export default function EmployeeEditModal({
 
             {/* Commission rates per piece */}
             {(() => {
+              // ไม่มี piece commission (poolGroup ว่าง + pieceLabel ว่าง) → ซ่อน
+              // ส่วนนี้ทั้งหมด · พนักงานทั่วไป/รปภ/ทำความสะอาด ได้แค่เงินเดือนพื้นฐาน
+              if (!rolePaysPieceCommission(employeeRole)) return null;
               const usesSinglePieceRate =
                 employeeRole && !employeeRole.poolGroup;
+              const singleLabel =
+                rolePieceLabel(employeeRole) || "ค่าคอมต่อชิ้น";
               if (usesSinglePieceRate) {
                 return (
                   <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
@@ -819,7 +826,7 @@ export default function EmployeeEditModal({
                         strokeWidth={2.4}
                         className="inline mr-1 -mt-px"
                       />
-                      Rate ค่าคอมต่อชิ้น
+                      Rate {singleLabel}
                     </div>
                     <div className="flex gap-2">
                       <div className="flex-1">
@@ -829,7 +836,7 @@ export default function EmployeeEditModal({
                             strokeWidth={2.4}
                             className="inline mr-1 -mt-px"
                           />
-                          ค่าคอมต่อชิ้น
+                          {singleLabel}
                         </label>
                         <input
                           type="number"

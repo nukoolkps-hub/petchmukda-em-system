@@ -34,6 +34,8 @@ import { getPayrollLock } from "../../utils/payrollLock";
 import {
   calculateSalary,
   computePoolSharesForGroup,
+  rolePaysPieceCommission,
+  rolePieceLabel,
 } from "../../utils/salaryUtils";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -373,10 +375,14 @@ export default function SalaryAdminEdit({
 
   // breakdown ของ "รวมค่าคอมตามจำนวนชิ้น" — แสดงว่ามาจากชิ้นไหน × เรท
   const sc = salaryCalculation;
-  const commissionBreakdown = sc.usesSinglePieceRate
+  // pieceLabel ของตำแหน่ง (ใช้แสดงใน breakdown / สลิป) · default "ค่าคอมตามชิ้น"
+  const singlePieceLabel = rolePieceLabel(employeeRole) || "ค่าคอมตามชิ้น";
+  const commissionBreakdown = !rolePaysPieceCommission(employeeRole)
+    ? []
+    : sc.usesSinglePieceRate
     ? [
         {
-          label: "ค่าคอมตามชิ้น",
+          label: singlePieceLabel,
           pieces: sc.singleRatePieces,
           rate: sc.singlePieceRate,
           amount: sc.singleRateCommission,
@@ -402,20 +408,22 @@ export default function SalaryAdminEdit({
           amount: sc.buyCommission,
         },
       ];
-  const memberBonusBreakdown = [
-    {
-      label: "เชิญชวนสมัครบัตร",
-      pieces: sc.invitePieces,
-      rate: sc.invitePieceRate,
-      amount: sc.inviteCommission,
-    },
-    {
-      label: "ย้ายข้อมูลบัตร",
-      pieces: sc.transferPieces,
-      rate: sc.transferPieceRate,
-      amount: sc.transferCommission,
-    },
-  ];
+  const memberBonusBreakdown = !rolePaysPieceCommission(employeeRole)
+    ? []
+    : [
+        {
+          label: "เชิญชวนสมัครบัตร",
+          pieces: sc.invitePieces,
+          rate: sc.invitePieceRate,
+          amount: sc.inviteCommission,
+        },
+        {
+          label: "ย้ายข้อมูลบัตร",
+          pieces: sc.transferPieces,
+          rate: sc.transferPieceRate,
+          amount: sc.transferCommission,
+        },
+      ];
 
   // ปิดรอบถาวรแล้ว (พ้น 7 วันหลังยืนยันยอดครั้งแรก) → ห้ามแก้เดือนนี้
   const monthLock = getPayrollLock(payrollConfirms?.[selectedMonth]);
@@ -779,13 +787,17 @@ export default function SalaryAdminEdit({
 
       {/* Desktop: 2 คอลัมน์ — ซ้าย ค่าคอม+รายรับ / ขวา บัตรสมาชิก+รายการหัก (มือถือเรียงเดี่ยวเหมือนเดิม) */}
       <div className="md:grid md:grid-cols-2 md:gap-x-3.5 md:items-start">
-        {/* Commission section — single rate or 3 sub-sections */}
-        {employeeRole && !employeeRole.poolGroup ? (
+        {/* Commission section — single rate or 3 sub-sections (ถ้าตำแหน่งไม่มี
+            piece commission เลย → ซ่อนกล่องนี้ทั้งกล่อง) */}
+        {!rolePaysPieceCommission(employeeRole) ? null : employeeRole &&
+          !employeeRole.poolGroup ? (
           /* Single rate (เช่น ฝ่ายบัญชี) */
           <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
             <div className="flex items-center gap-2 mb-3.5">
               <div className="w-1.5 h-4.5 rounded-sm bg-gold" />
-              <div className="font-bold text-sm text-txt">ค่าคอม</div>
+              <div className="font-bold text-sm text-txt">
+                {rolePieceLabel(employeeRole) || "ค่าคอม"}
+              </div>
               <div className="ml-auto text-sm font-bold text-gold">
                 + {formatThaiNumber(salaryCalculation.singleRateCommission)} ฿
               </div>
@@ -1020,7 +1032,8 @@ export default function SalaryAdminEdit({
           </div>
         )}
 
-        {/* บัตรสมาชิก — pieces × rate */}
+        {/* บัตรสมาชิก — pieces × rate (เฉพาะตำแหน่งที่มีค่าคอมรายชิ้น) */}
+        {rolePaysPieceCommission(employeeRole) && (
         <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
           <div className="flex items-center gap-2 mb-3.5">
             <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
@@ -1108,6 +1121,7 @@ export default function SalaryAdminEdit({
             </div>
           </div>
         </div>
+        )}
 
         {/* Earnings inputs */}
         <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
@@ -1211,40 +1225,43 @@ export default function SalaryAdminEdit({
             </div>
           )}
 
-          {/* Member-card bonus total — สรุปจากโบนัสบัตรสมาชิกด้านบน */}
-          <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
-            <div className="flex items-center gap-2.5">
-              <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs text-txt-soft font-semibold">
-                  รวมโบนัสบัตรสมาชิก
-                </div>
-                <div className="text-base font-bold text-green mt-px">
-                  + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
+          {/* Member-card bonus total — สรุปจากโบนัสบัตรสมาชิกด้านบน (เฉพาะตำแหน่ง
+              ที่มี piece commission) */}
+          {rolePaysPieceCommission(employeeRole) && (
+            <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
+              <div className="flex items-center gap-2.5">
+                <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-txt-soft font-semibold">
+                    รวมโบนัสบัตรสมาชิก
+                  </div>
+                  <div className="text-base font-bold text-green mt-px">
+                    + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
+                  </div>
                 </div>
               </div>
+              {memberBonusBreakdown.some((b) => b.amount > 0) && (
+                <div className="mt-2 pt-2 border-t border-dashed border-bdr flex flex-col gap-1">
+                  {memberBonusBreakdown
+                    .filter((b) => b.amount > 0)
+                    .map((b) => (
+                      <div
+                        key={b.label}
+                        className="flex justify-between text-[11px] text-txt-soft"
+                      >
+                        <span>
+                          {b.label} · {formatThaiNumber(b.pieces)} ใบ ×{" "}
+                          {formatThaiNumber(b.rate)} ฿
+                        </span>
+                        <span className="font-semibold text-txt-mid">
+                          + {formatThaiNumber(b.amount)} ฿
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
-            {memberBonusBreakdown.some((b) => b.amount > 0) && (
-              <div className="mt-2 pt-2 border-t border-dashed border-bdr flex flex-col gap-1">
-                {memberBonusBreakdown
-                  .filter((b) => b.amount > 0)
-                  .map((b) => (
-                    <div
-                      key={b.label}
-                      className="flex justify-between text-[11px] text-txt-soft"
-                    >
-                      <span>
-                        {b.label} · {formatThaiNumber(b.pieces)} ใบ ×{" "}
-                        {formatThaiNumber(b.rate)} ฿
-                      </span>
-                      <span className="font-semibold text-txt-mid">
-                        + {formatThaiNumber(b.amount)} ฿
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
+          )}
 
           {FIELDS_EARN.map((f) => (
             <div key={f.key} className="mb-2.5">
