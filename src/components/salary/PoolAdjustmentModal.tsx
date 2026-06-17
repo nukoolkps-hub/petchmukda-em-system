@@ -326,6 +326,8 @@ export default function PoolAdjustmentModal({
                   key={item.id}
                   item={item}
                   pieceRoles={pieceRoles}
+                  roles={roles}
+                  employeeDirectory={employeeDirectory}
                   employeesInRole={employeesInRole}
                   itemsInRole={itemsInRole}
                   locked={locked}
@@ -465,6 +467,8 @@ function PoolRow({
 function PieceRow({
   item,
   pieceRoles,
+  roles,
+  employeeDirectory,
   employeesInRole,
   itemsInRole,
   locked,
@@ -473,6 +477,10 @@ function PieceRow({
 }: {
   item: Item;
   pieceRoles: Role[];
+  /** ทุก role · ใช้ resolve orphan roleId (role ที่ถูกเปลี่ยน config ไปแล้ว) */
+  roles: Role[];
+  /** ทุกพนักงาน · ใช้ resolve orphan employeeId */
+  employeeDirectory: Employee[];
   employeesInRole: (roleId: string) => Employee[];
   itemsInRole: (roleId: string) => { id: string; label: string }[];
   locked: boolean;
@@ -481,6 +489,24 @@ function PieceRow({
 }) {
   const emps = item.roleId ? employeesInRole(item.roleId) : [];
   const its = item.roleId ? itemsInRole(item.roleId) : [];
+
+  // ── Orphan detection: row อ้าง id ที่ไม่อยู่ใน live list ──────────
+  // ถ้าเจอ → ใส่ option "(ข้อมูลเก่า)" ท้าย list ให้ admin เห็น + จัดการได้
+  // (เช่น admin เปลี่ยน role พนักงานหลังบันทึก exclusion · payout ยังถูก
+  //  เพราะ calculateSalary ใช้ snapshot · แค่ UI ต้องโชว์ให้แก้/ลบได้)
+  const roleIsOrphan =
+    !!item.roleId && !pieceRoles.some((r) => r.id === item.roleId);
+  const orphanRole = roleIsOrphan
+    ? roles.find((r) => r.id === item.roleId)
+    : null;
+  const empIsOrphan =
+    !!item.employeeId && !emps.some((e) => e.id === item.employeeId);
+  const orphanEmp = empIsOrphan
+    ? employeeDirectory.find((e) => e.id === item.employeeId)
+    : null;
+  const itemIsOrphan =
+    !!item.pieceItemId && !its.some((it) => it.id === item.pieceItemId);
+
   return (
     <div className="rounded-[10px] p-2.5 border border-bdr bg-cream/60 flex flex-col gap-2">
       <div className="flex items-center gap-2">
@@ -496,6 +522,11 @@ function PieceRow({
                 {r.name}
               </option>
             ))}
+            {roleIsOrphan && (
+              <option value={item.roleId}>
+                {orphanRole ? `${orphanRole.name} (ข้อมูลเก่า)` : "(ตำแหน่งเดิม)"}
+              </option>
+            )}
           </select>
           <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
         </div>
@@ -514,18 +545,27 @@ function PieceRow({
         <div className="relative flex-1 min-w-0">
           <select
             value={item.employeeId}
-            disabled={locked || emps.length === 0}
+            disabled={locked || (emps.length === 0 && !empIsOrphan)}
             onChange={(e) => onUpdate({ employeeId: e.target.value })}
             className={selectCls}
           >
-            {emps.length === 0 ? (
+            {emps.length === 0 && !empIsOrphan ? (
               <option value="">— ไม่มีพนักงาน —</option>
             ) : (
-              emps.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.nickname || e.name}
-                </option>
-              ))
+              <>
+                {emps.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.nickname || e.name}
+                  </option>
+                ))}
+                {empIsOrphan && (
+                  <option value={item.employeeId}>
+                    {orphanEmp
+                      ? `${orphanEmp.nickname || orphanEmp.name} (ข้อมูลเก่า)`
+                      : "(พนักงานเดิม)"}
+                  </option>
+                )}
+              </>
             )}
           </select>
           <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
@@ -533,18 +573,23 @@ function PieceRow({
         <div className="relative flex-1 min-w-0">
           <select
             value={item.pieceItemId}
-            disabled={locked || its.length === 0}
+            disabled={locked || (its.length === 0 && !itemIsOrphan)}
             onChange={(e) => onUpdate({ pieceItemId: e.target.value })}
             className={selectCls}
           >
-            {its.length === 0 ? (
+            {its.length === 0 && !itemIsOrphan ? (
               <option value="">— ไม่มีรายการ —</option>
             ) : (
-              its.map((it) => (
-                <option key={it.id} value={it.id}>
-                  {it.label}
-                </option>
-              ))
+              <>
+                {its.map((it) => (
+                  <option key={it.id} value={it.id}>
+                    {it.label}
+                  </option>
+                ))}
+                {itemIsOrphan && (
+                  <option value={item.pieceItemId}>(รายการเดิม)</option>
+                )}
+              </>
             )}
           </select>
           <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
