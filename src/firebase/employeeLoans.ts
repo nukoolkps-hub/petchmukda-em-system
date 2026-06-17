@@ -113,3 +113,16 @@ export function loanRemaining(loan: EmployeeLoan): number {
   );
   return Math.max(0, (Number(loan.principal) || 0) - paid);
 }
+
+/** คงเหลือ "ณ สิ้นเดือน yearMonth" — รวมเฉพาะ repayments[ym] ที่ ym ≤ yearMonth
+ *  ใช้แสดง snapshot ฝั่งพนักงานตอนเลื่อนดูเดือนเก่า (ไม่เอาเดือนอนาคต)
+ *  เปรียบเทียบ string "YYYY-MM" lexicographic = chronological */
+export function loanRemainingAsOfMonth(
+  loan: EmployeeLoan,
+  yearMonth: string,
+): number {
+  const paid = Object.entries(loan.repayments || {})
+    .filter(([ym]) => ym <= yearMonth)
+    .reduce((s, [, v]) => s + (Number(v) || 0), 0);
+  return Math.max(0, (Number(loan.principal) || 0) - paid);
+}

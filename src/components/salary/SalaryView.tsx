@@ -25,7 +25,10 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../../constants";
-import { buildLoanContext, loanRemaining } from "../../firebase/employeeLoans";
+import {
+  buildLoanContext,
+  loanRemainingAsOfMonth,
+} from "../../firebase/employeeLoans";
 import { printSalaryCertificate } from "../../print/printSalaryCertificate";
 import { printSalarySlip } from "../../print/printSalarySlip";
 import {
@@ -525,7 +528,9 @@ export default function SalaryView({
             </div>
             <div className="flex flex-col gap-2.5">
               {myLoans.map((loan) => {
-                const remaining = loanRemaining(loan);
+                // remaining ณ สิ้นเดือนที่ดู (snapshot) — ไม่นับ repayments
+                // ของเดือนอนาคต เลื่อนดูเดือนเก่าเห็นภาพชัดเจน
+                const remaining = loanRemainingAsOfMonth(loan, selectedMonth);
                 const paid = (loan.principal || 0) - remaining;
                 const pct =
                   loan.principal > 0
