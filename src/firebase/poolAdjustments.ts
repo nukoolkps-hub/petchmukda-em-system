@@ -32,6 +32,10 @@ export interface PoolAdjustmentItem {
   // piece variant (multi-item)
   employeeId?: string;
   pieceItemId?: string;
+  /** roleId ตอนสร้าง exclusion · ใช้ resolve pieceItem labels + dropdown filter
+   *  ใน UI · ไม่ใช่ตัวคำนวณ payout (calculateSalary ใช้ snapshot roleId
+   *  ของ salary doc) แต่จำเป็นสำหรับ UI re-edit                              */
+  roleId?: string;
   /** snapshot ชื่อพนักงาน ตอนสร้าง exclusion · ใช้แสดงใน UI ถ้าพนักงานถูกลบ
    *  หรือเปลี่ยนตำแหน่งหลังบันทึก · piece variant เท่านั้น                    */
   employeeName?: string;
@@ -94,6 +98,9 @@ export async function setPoolAdjustment(
           ...base,
           employeeId: it.employeeId || "",
           pieceItemId: it.pieceItemId || "",
+          // roleId ต้อง persist — ไม่งั้น UI re-edit ไม่รู้ว่า row นี้ผูกกับ
+          // ตำแหน่งไหน → filter dropdown ไม่ขึ้น + orphan flag เพี้ยน
+          roleId: it.roleId || "",
           // snapshot names ที่ UI ส่งมา — กัน label หายเมื่อ admin ลบ
           // employee/pieceItem ออกจาก system หลัง save exclusion
           employeeName: (it.employeeName || "").slice(0, 120) || null as any,

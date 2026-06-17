@@ -70,20 +70,32 @@ function randomId() {
   return Math.random().toString(36).slice(2, 11);
 }
 
-function normalizeItems(items: Item[] | undefined): Item[] {
-  return (items || []).map((it) => ({
-    id: it.id || randomId(),
-    kind: it.kind === "piece" ? "piece" : "pool",
-    poolGroup: it.poolGroup || "",
-    side: it.side === "buy" ? "buy" : "normal",
-    employeeId: it.employeeId || "",
-    pieceItemId: it.pieceItemId || "",
-    roleId: it.roleId || "",
-    employeeName: it.employeeName || "",
-    pieceItemLabel: it.pieceItemLabel || "",
-    pieces: Number(it.pieces) || 0,
-    label: it.label || "",
-  }));
+function normalizeItems(
+  items: Item[] | undefined,
+  employeeDirectory: Employee[],
+): Item[] {
+  return (items || []).map((it) => {
+    let roleId = it.roleId || "";
+    // backward compat: exclusion เก่า (ก่อน persist roleId) ไม่มี field นี้
+    // → ลอง resolve จาก employee.roleId ปัจจุบัน (best-effort)
+    if (!roleId && it.kind === "piece" && it.employeeId) {
+      const emp = employeeDirectory.find((e) => e.id === it.employeeId);
+      roleId = emp?.roleId || "";
+    }
+    return {
+      id: it.id || randomId(),
+      kind: it.kind === "piece" ? "piece" : "pool",
+      poolGroup: it.poolGroup || "",
+      side: it.side === "buy" ? "buy" : "normal",
+      employeeId: it.employeeId || "",
+      pieceItemId: it.pieceItemId || "",
+      roleId,
+      employeeName: it.employeeName || "",
+      pieceItemLabel: it.pieceItemLabel || "",
+      pieces: Number(it.pieces) || 0,
+      label: it.label || "",
+    };
+  });
 }
 
 export default function PoolAdjustmentModal({
@@ -107,13 +119,13 @@ export default function PoolAdjustmentModal({
   );
 
   const [items, setItems] = useState<Item[]>(() =>
-    normalizeItems(adjustment?.items),
+    normalizeItems(adjustment?.items, employeeDirectory),
   );
   const [saving, setSaving] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-sync ตามเดือนเท่านั้น
   useEffect(() => {
-    setItems(normalizeItems(adjustment?.items));
+    setItems(normalizeItems(adjustment?.items, employeeDirectory));
   }, [yearMonth]);
 
   const monthLabel = formatYmThai(yearMonth);
@@ -128,7 +140,8 @@ export default function PoolAdjustmentModal({
       .sort()
       .join("|");
   const dirty =
-    compareKey(items) !== compareKey(normalizeItems(adjustment?.items));
+    compareKey(items) !==
+    compareKey(normalizeItems(adjustment?.items, employeeDirectory));
 
   // นำพนักงานในตำแหน่งที่เลือก (ใช้ filter dropdown employee ของ row piece)
   function employeesInRole(roleId: string) {
