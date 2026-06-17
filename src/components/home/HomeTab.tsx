@@ -223,9 +223,8 @@ export default function HomeTab({
               className="text-red shrink-0"
             />
             <div className="text-sm text-red font-semibold leading-relaxed">
-              การลาต่อจากนี้ไป
-              <br />
-              <span className="font-bold">จะกระทบต่อเงินเดือน</span>
+              การลาครั้งถัดไป
+              <span className="font-bold"> จะกระทบต่อเงินเดือน</span>
             </div>
           </div>
         )}
