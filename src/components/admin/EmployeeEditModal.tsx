@@ -850,6 +850,12 @@ export default function EmployeeEditModal({
                     return employee.singlePieceRate ?? "";
                   return "";
                 };
+                // เช็คว่า role ใช้ legacy "default" id ไหม (migrate-on-read)
+                // ถ้าใช่ → seed singlePieceRate เข้า map ตอนเริ่มแก้ · ถ้าไม่ใช่
+                // → ไม่ seed (กัน dead "default" entry ใน pieceRates ของ role ใหม่)
+                const roleUsesLegacyDefault = pieceItems.some(
+                  (it) => it.id === LEGACY_PIECE_ITEM_ID,
+                );
                 const setRate = (itemId: string, raw: string) =>
                   setEditingRole((prev) => {
                     const base =
@@ -857,7 +863,7 @@ export default function EmployeeEditModal({
                         | Record<string, number>
                         | undefined) ??
                       employee.pieceRates ??
-                      (employee.singlePieceRate != null
+                      (roleUsesLegacyDefault && employee.singlePieceRate != null
                         ? { [LEGACY_PIECE_ITEM_ID]: employee.singlePieceRate }
                         : {});
                     return {

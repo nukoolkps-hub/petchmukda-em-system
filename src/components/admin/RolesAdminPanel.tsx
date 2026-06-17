@@ -462,6 +462,10 @@ export default function RolesAdminPanel({
                               [rl.id]: {
                                 name: rl.name,
                                 poolGroup: rl.poolGroup || "",
+                                // seed pieceItems จาก rolePieceItems() —
+                                // migrate legacy pieceLabel ให้เห็นใน editor
+                                // (กันกด save แล้ว legacy หายเงียบ)
+                                pieceItems: rolePieceItems(rl),
                                 // sanitize ก่อนใส่ editor — กัน HTML ดิบ/พิษ
                                 // จาก DB รันใน contentEditable ฝั่ง admin
                                 mainDuties: sanitizeRichText(
