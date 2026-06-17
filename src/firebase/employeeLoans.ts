@@ -10,6 +10,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -85,6 +86,38 @@ export async function updateEmployeeLoan(
 
 export async function deleteEmployeeLoan(id: string) {
   await deleteDoc(doc(ref, id));
+}
+
+/** บันทึก repayment ของเดือนหนึ่งแบบ atomic — ใช้ transaction กัน race
+ *  case: 2 admin sessions ยืนยันยอด 2 เดือนพร้อมกัน → ถ้าทำ {...loan.repayments, [ym]: x}
+ *  จาก state ภายนอกแล้วเขียนทับทั้ง map session ที่ write ทีหลังจะเด้ง entry
+ *  ของอีก session ทิ้ง. transaction อ่าน-คำนวณ-เขียน atomic ภายใน Firestore */
+export async function recordLoanRepaymentTx(
+  loanId: string,
+  yearMonth: string,
+  amount: number,
+): Promise<void> {
+  const loanRef = doc(ref, loanId);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(loanRef);
+    if (!snap.exists()) return;
+    const data = snap.data() as EmployeeLoan;
+    const principal = Number(data.principal) || 0;
+    const prevAmt = Number(data.repayments?.[yearMonth]) || 0;
+    if (prevAmt === amount) return; // ไม่เปลี่ยน
+    const newRepayments: Record<string, number> = {
+      ...(data.repayments || {}),
+      [yearMonth]: amount,
+    };
+    const paid = Object.values(newRepayments).reduce<number>(
+      (s, v) => s + (Number(v) || 0),
+      0,
+    );
+    tx.update(loanRef, {
+      [`repayments.${yearMonth}`]: amount,
+      status: paid >= principal ? "paid_off" : "active",
+    });
+  });
 }
 
 /* สร้าง loanContext ให้ calculateSalary — เงินกู้ของพนักงานคนนี้ที่ยังไม่ยกเลิก */

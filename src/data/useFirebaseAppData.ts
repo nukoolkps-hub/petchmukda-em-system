@@ -202,6 +202,11 @@ export default function useFirebaseAppData({
     const hasRateSnapshot =
       existingSalary != null && existingSalary.baseSalary != null;
     const freezeSnapshot = isMonthConfirmed && hasRateSnapshot;
+    // กฎเสริม: baseSalary ของเดือนที่ "เคย save" แล้ว → ห้าม re-stamp จาก
+    // getEffectiveBaseSalary ใหม่ ถึงแม้เดือนยังไม่ยืนยัน — ป้องกัน raise
+    // ปีปัจจุบัน (เช่น admin เพิ่ม annualRaises["2026"]) ย้อนเข้าเดือนเก่า
+    // โดยไม่ตั้งใจ. เดือนที่ไม่เคยมี snapshot → ใช้ค่า effective ปกติ
+    const preserveBaseSalary = !freezeSnapshot && hasRateSnapshot;
 
     // ดึง field ที่ระบบจัดการเองออกจาก fields ที่ caller ส่งมา (กันส่งค่าเก่าทับ)
     const {
@@ -236,6 +241,8 @@ export default function useFirebaseAppData({
     );
 
     // snapshot เรท/ตำแหน่งจากข้อมูลพนักงานปัจจุบัน — เขียนเฉพาะตอน "ไม่ freeze"
+    // baseSalary: ถ้าเคยมี snapshot อยู่แล้ว → preserve (กัน raise ปีปัจจุบัน
+    // เพิ่ม retroactive แล้วเดือนเก่าเด้ง) · ไม่เคยมี → ใช้ effective ของเดือนนั้น
     const rateSnapshot = freezeSnapshot
       ? {}
       : {
@@ -247,9 +254,9 @@ export default function useFirebaseAppData({
           poolThresholdExempt,
           coveragePay: coverage.total,
           coveragePayBreakdown: coverage.breakdown,
-          // snapshot effective base ของปีในเดือนนั้น — รวม raises ที่ได้รับมาแล้ว
-          // → past months frozen ตามค่าตอน save · raise ในอนาคตไม่กระทบเดือนเก่า
-          baseSalary: getEffectiveBaseSalary(employee, yearMonth),
+          baseSalary: preserveBaseSalary
+            ? existingSalary.baseSalary
+            : getEffectiveBaseSalary(employee, yearMonth),
           singlePieceRate: employee.singlePieceRate ?? 0,
           normalSalePieceRate: employee.normalSalePieceRate ?? 0,
           specialSalePieceRate: employee.specialSalePieceRate ?? 0,
@@ -265,24 +272,36 @@ export default function useFirebaseAppData({
       totalLeaveDays,
     });
     // mirror non-sensitive pool fields ลง poolSnapshots/{ym} เพื่อให้พนักงานอ่าน
-    // pool ของเพื่อนได้โดยไม่ต้องเปิดสิทธิ์อ่าน salary ทั้งใบ. อ่าน doc สดหลัง
-    // write แล้ว mirror "ค่าที่อยู่ใน doc จริง" (frozen หรือสด) — ไม่ใช่ค่า live
-    // ของ employee เพื่อให้ poolSnapshots ตรงกับ salary doc ที่ frozen ไว้
+    // pool ของเพื่อนได้โดยไม่ต้องเปิดสิทธิ์อ่าน salary ทั้งใบ. คำนวณ "snapshot
+    // ที่จะอยู่ใน doc หลัง write" จากค่า in-memory โดยตรง — ไม่ต้อง re-read
+    // (เร็วกว่า + ทนต่อ network glitch ระหว่าง write กับ read). merge:
+    // existingSalary (frozen fields) ← rateSnapshot (live fields if !freeze)
+    // ← callerFields (sale counts ที่ caller ส่ง) ← totalLeaveDays (เพิ่งคำนวณ)
+    const mirrorSource: Record<string, any> = {
+      ...(existingSalary || {}),
+      ...callerFields,
+      ...rateSnapshot,
+      totalLeaveDays,
+    };
     try {
-      const saved = await salariesAPI.getSalary(employeeId, yearMonth);
       await poolSnapshotsAPI.upsertPoolSnapshot(yearMonth, employeeId, {
-        normalSalePieces: saved?.normalSalePieces ?? 0,
-        specialSalePieces: saved?.specialSalePieces ?? 0,
-        buyPieces: saved?.buyPieces ?? 0,
-        roleId: saved?.roleId ?? employee.roleId ?? null,
-        poolExclusion: saved?.poolExclusion ?? employee.poolExclusion ?? null,
-        totalLeaveDays: saved?.totalLeaveDays ?? totalLeaveDays,
-        poolThresholdExempt: saved?.poolThresholdExempt ?? poolThresholdExempt,
+        normalSalePieces: mirrorSource.normalSalePieces ?? 0,
+        specialSalePieces: mirrorSource.specialSalePieces ?? 0,
+        buyPieces: mirrorSource.buyPieces ?? 0,
+        roleId: mirrorSource.roleId ?? employee.roleId ?? null,
+        poolExclusion:
+          mirrorSource.poolExclusion ?? employee.poolExclusion ?? null,
+        totalLeaveDays: mirrorSource.totalLeaveDays ?? totalLeaveDays,
+        poolThresholdExempt:
+          mirrorSource.poolThresholdExempt ?? poolThresholdExempt,
       });
     } catch (err) {
-      // poolSnapshot write fail ไม่ block การ save salary หลัก — แต่ log
-      // ไว้ ผลลัพธ์: ฝั่งพนักงานอาจเห็น pool ผิดจน save รอบหน้า
-      console.error("[Salaries] poolSnapshot write failed:", err);
+      // poolSnapshot write fail = ฝั่งพนักงานเห็น pool ผิดจน save รอบหน้า
+      // → throw กลับให้ caller (admin) เห็น error + retry ได้ ดีกว่า silent
+      console.error("[Salaries] poolSnapshot mirror failed:", err);
+      throw new Error(
+        "บันทึกเงินเดือนสำเร็จ แต่ sync pool snapshot ไม่ได้ — กรุณา save อีกครั้ง",
+      );
     }
   }
 

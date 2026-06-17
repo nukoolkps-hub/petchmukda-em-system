@@ -74,7 +74,11 @@ service cloud.firestore {
         && (!("bank" in request.resource.data)
           || (request.resource.data.bank is string && request.resource.data.bank.size() <= 80))
         && (!("bankAccountNumber" in request.resource.data)
-          || (request.resource.data.bankAccountNumber is string && request.resource.data.bankAccountNumber.size() <= 40))
+          || request.resource.data.bankAccountNumber == null
+          || (request.resource.data.bankAccountNumber is string
+            && request.resource.data.bankAccountNumber.size() <= 40
+            // ตัวเลข + เว้นวรรค + ขีด เท่านั้น — กัน script injection / data corruption
+            && request.resource.data.bankAccountNumber.matches('^[0-9\\- ]*$')))
         && request.resource.data.updatedAt is int;
     }
 
@@ -97,8 +101,14 @@ service cloud.firestore {
         && request.resource.data.type in ["personal", "sick"]
         && request.resource.data.start is string
         && request.resource.data.end is string
+        // start/end ต้องเป็น YYYY-MM-DD เท่านั้น — กันใส่ string มั่วๆ (เช่น
+        // "ลาวันนี้") แล้ว monthLocked() ไม่ทำงานหรือ data corrupted ต่อ
+        && request.resource.data.start.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && request.resource.data.end.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && request.resource.data.start <= request.resource.data.end
         && request.resource.data.days is int
         && request.resource.data.days > 0
+        && request.resource.data.days <= 366
         // employeeNickname (optional) = snapshot ของชื่อเล่นพนักงาน · null
         // ได้ถ้าพนักงานไม่ได้ตั้งชื่อเล่นไว้ตอนยื่นใบลา
         && (!("employeeNickname" in request.resource.data)
@@ -130,11 +140,29 @@ service cloud.firestore {
           get(/databases/$(database)/documents/employees/$(request.resource.data.employeeId)).data.name
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
+        // เพดานบนสุดของวงเงิน advance ที่ "เป็นไปได้" — base × 50% เพดานจริง
+        // คุมที่ client (ขึ้นกับ baseSalary ของแต่ละคน). rules ตั้ง guardrail
+        // สุดๆ ที่ 200,000 ฿/รายการ — กันพิมพ์ผิดเลขศูนย์เกิน / abuse
+        && request.resource.data.amount <= 200000
         && request.resource.data.reason is string
         && request.resource.data.reason.size() <= 500
         && request.resource.data.month is string
+        // month ต้องเป็น YYYY-MM — monthLocked() lookup ต้อง match key รูปแบบนี้
+        && request.resource.data.month.matches('^\\d{4}-\\d{2}$')
         && request.resource.data.status == "pending"
         && request.resource.data.submittedAt is string;
+    }
+
+    // admin อนุมัติ/ปฏิเสธ advance — ห้ามแก้ฟิลด์ผูก identity/เงิน (กันเผลอ
+    // แก้ amount/employeeId หลังอนุมัติแล้วยอดผิด). อนุญาตเฉพาะเปลี่ยน
+    // status + เพิ่ม slipImageUrl/rejectionReason/approvedAt/rejectedAt
+    function validAdvanceUpdate() {
+      return request.resource.data.employeeId == resource.data.employeeId
+        && request.resource.data.employeeName == resource.data.employeeName
+        && request.resource.data.amount == resource.data.amount
+        && request.resource.data.month == resource.data.month
+        && request.resource.data.submittedAt == resource.data.submittedAt
+        && request.resource.data.status in ["pending", "approved", "rejected"];
     }
 
     // ─── Employees ───────────────────────────────────────────────
@@ -206,7 +234,9 @@ service cloud.firestore {
     // totalLeaveDays } } — ทุกคนอ่านได้เพื่อคำนวณ pool ของกลุ่ม
     match /poolSnapshots/{yearMonth} {
       allow read:  if isSignedIn();
-      allow write: if isAdmin();
+      // เดือนปิดรอบแล้ว → snapshot ห้ามเปลี่ยน (กัน admin เผลอ save salary
+      // เดือนเก่าแล้วเด้ง pool ของพนักงานคนอื่นในเดือนนั้น)
+      allow write: if isAdmin() && !monthLocked(yearMonth);
     }
 
     // ─── Advances ────────────────────────────────────────────────
@@ -218,7 +248,9 @@ service cloud.firestore {
       allow create: if isEmployeeOwner(request.resource.data.employeeId)
         && validAdvanceCreate()
         && !monthLocked(request.resource.data.month);
-      allow update: if isAdmin() && !monthLocked(resource.data.month);
+      allow update: if isAdmin()
+        && !monthLocked(resource.data.month)
+        && validAdvanceUpdate();
       allow delete: if isAdmin() && !monthLocked(resource.data.month);
     }
 
@@ -303,7 +335,16 @@ service cloud.firestore {
     // write: admin · แต่เมื่อปิดรอบถาวรแล้ว (พ้น lockAtMs) ยืนยันใหม่ไม่ได้
     match /payrollConfirms/{key} {
       allow read: if isSignedIn();
-      allow write: if isAdmin() && !monthLocked(key);
+      // firstConfirmedAt + lockAtMs เขียนครั้งแรกเท่านั้น ห้ามรีเซ็ตเวลา
+      // (ไม่งั้นกดยืนยันใหม่จะ extend deadline ตลอด — เลื่อนปิดรอบไม่จบ)
+      allow create: if isAdmin();
+      allow update: if isAdmin()
+        && !monthLocked(key)
+        && (!('firstConfirmedAt' in resource.data)
+          || request.resource.data.firstConfirmedAt == resource.data.firstConfirmedAt)
+        && (!('lockAtMs' in resource.data)
+          || request.resource.data.lockAtMs == resource.data.lockAtMs);
+      allow delete: if isAdmin() && !monthLocked(key);
     }
 
     // ─── Cert Counters (running number ใบรับรอง) ─────────────────

@@ -263,7 +263,6 @@ export default function AdminPanel({
           poolAdjustments={poolAdjustments}
           employeeLoans={employeeLoans}
           storeCalendar={storeCalendar}
-          onUpdateLoan={onUpdateLoan}
           onSaveSalary={onSaveSalary}
           selectedMonth={adminMonth}
           onSelectMonth={setAdminMonth}
