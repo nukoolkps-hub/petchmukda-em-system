@@ -819,7 +819,15 @@ export default function SalaryAdminEdit({
               </div>
             </div>
             <div className="flex flex-col gap-2.5">
-              {(salaryCalculation.pieceBreakdown || []).map((item) => (
+              {(salaryCalculation.pieceBreakdown || []).map((item) => {
+                // input bind กับ gross (ค่าที่ admin พิมพ์) ไม่ใช่ item.pieces
+                // ของ pieceBreakdown ซึ่งเป็น "หลังหักรายการยกเว้น" — ไม่งั้น
+                // user พิมพ์ 6 มี exclusion 5 จะ display 1 (เพี้ยน)
+                const grossPieces =
+                  data.piecePieces?.[item.id] ??
+                  (item.id === "default" ? data.singleRatePieces ?? 0 : 0);
+                const excluded = Math.max(0, grossPieces - item.pieces);
+                return (
                 <div
                   key={item.id}
                   className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]"
@@ -841,7 +849,7 @@ export default function SalaryAdminEdit({
                       <input
                         type="number"
                         inputMode="numeric"
-                        value={item.pieces || ""}
+                        value={grossPieces || ""}
                         onChange={(e) =>
                           updatePiecePiece(item.id, e.target.value)
                         }
@@ -856,8 +864,15 @@ export default function SalaryAdminEdit({
                       {formatThaiNumber(item.amount)} ฿
                     </div>
                   </div>
+                  {excluded > 0 && (
+                    <div className="text-[11px] text-txt-soft mt-1.5 text-center">
+                      หักรายการยกเว้น {formatThaiNumber(excluded)} ชิ้น ·
+                      คิดค่าคอม {formatThaiNumber(item.pieces)} ชิ้น
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
             <div className="text-xs text-txt-soft mt-2.5 text-center inline-flex items-center justify-center gap-1 w-full">
               <IconLightbulb
