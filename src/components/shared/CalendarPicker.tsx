@@ -94,10 +94,10 @@ export default function CalendarPicker({
   // styling แยกตาม size
   const buttonClass = isSm
     ? "w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] cursor-pointer font-[inherit] box-border transition-all border-[1.5px]"
-    : "w-full flex items-center gap-3.5 px-4 py-3.5 rounded-[14px] cursor-pointer font-[inherit] box-border transition-all border-[1.5px]";
+    : "w-full flex items-center gap-3 px-4 py-3 rounded-[14px] cursor-pointer font-[inherit] box-border transition-all border-[1.5px]";
   const iconBoxClass = isSm
     ? "w-7 h-7 rounded-[8px] shrink-0 flex items-center justify-center"
-    : "w-9 h-9 rounded-[10px] shrink-0 flex items-center justify-center";
+    : "w-8 h-8 rounded-[10px] shrink-0 flex items-center justify-center";
   const labelClass = isSm
     ? `text-sm ${has ? "font-semibold text-txt" : "font-normal text-txt-soft"}`
     : `text-base ${has ? "font-semibold text-txt" : "font-normal text-txt-soft"}`;
