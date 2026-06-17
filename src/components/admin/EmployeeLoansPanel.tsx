@@ -59,7 +59,10 @@ export default function EmployeeLoansPanel({
   );
 
   const empOf = (id: string) => employeeDirectory.find((e) => e.id === id);
-  const empName = (id: string) => empOf(id)?.name || "—";
+  /** live > snapshot fallback > "—" · กัน loan ของพนักงานที่ถูกลบหายชื่อหมด
+   *  fallback = ชื่อ snapshot ตอนสร้าง loan (เช่น loan.employeeName)            */
+  const empName = (id: string, fallback?: string) =>
+    empOf(id)?.nickname || empOf(id)?.name || fallback || "—";
 
   return (
     <div>
@@ -111,7 +114,7 @@ export default function EmployeeLoansPanel({
                   />
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-txt text-sm truncate">
-                      {empName(loan.employeeId)}
+                      {empName(loan.employeeId, loan.employeeName)}
                     </div>
                     {loan.note && (
                       <div className="text-xs text-txt-soft truncate">
@@ -187,7 +190,7 @@ export default function EmployeeLoansPanel({
           <div className="text-center">
             <div className="font-bold text-lg text-txt mb-1.5">ลบเงินกู้นี้?</div>
             <div className="text-sm text-txt-mid mb-5 leading-relaxed">
-              {empName(confirmDelete.employeeId)} · เงินต้น ฿
+              {empName(confirmDelete.employeeId, confirmDelete.employeeName)} · เงินต้น ฿
               {formatThaiNumber(confirmDelete.principal)}
               <br />
               การหักที่บันทึกไปแล้วในเดือนที่ปิดรอบจะไม่เปลี่ยน
@@ -273,10 +276,12 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
     setErr("");
     setSaving(true);
     try {
+      const emp = employeeDirectory.find((e) => e.id === employeeId);
       await onAddLoan({
         employeeId,
-        employeeName:
-          employeeDirectory.find((e) => e.id === employeeId)?.name || "",
+        // snapshot ชื่อ ตอนสร้าง · ใช้ fallback ถ้าพนักงานถูกลบทีหลัง
+        // นำ nickname ก่อน เพราะเป็นชื่อเล่นที่ใช้ใน UI · ตรงกับ pattern leave/advance
+        employeeName: emp?.nickname || emp?.name || "",
         principal: principalNum,
         monthlyDeduction: monthlyNum,
         startMonth,

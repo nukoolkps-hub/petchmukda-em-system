@@ -80,12 +80,15 @@ export async function getEmployeeSalaries(employeeId) {
   return result;
 }
 
-/* ─── Set salary (create/replace) ──────────────────────────── */
+/* ─── Set salary (merge — preserve existing snapshot fields)
+   merge: true เสมอ — กัน caller เผลอ stomp roleId/poolExclusion/
+   totalLeaveDays snapshot ออกจาก doc                                */
 export async function setSalary(employeeId, yearMonth, data) {
-  await setDoc(monthRef(employeeId, yearMonth), {
-    ...data,
-    updatedAt: Date.now(),
-  });
+  await setDoc(
+    monthRef(employeeId, yearMonth),
+    { ...data, updatedAt: Date.now() },
+    { merge: true },
+  );
 }
 
 /* ─── Update salary (merge fields) ─────────────────────────── */
