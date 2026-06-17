@@ -593,10 +593,13 @@ export function calculateSalary(
     specialSaleCommission = 0,
     buyCommission = 0;
   // breakdown รายการ piece (multi-item) — ใช้แสดงผลในสลิป/หน้า admin
+  // excluded = ผลรวมจริงที่ admin ใส่ (ไม่ cap) เพื่อให้ UI โชว์ตรง · pieces
+  // = max(0, gross-excluded) ตัวที่จ่ายเงินจริง
   let pieceBreakdown: {
     id: string;
     label: string;
     pieces: number;
+    excluded: number;
     rate: number;
     amount: number;
   }[] = [];
@@ -624,6 +627,7 @@ export function calculateSalary(
         id: item.id,
         label: item.label,
         pieces,
+        excluded,
         rate,
         amount: Math.round(pieces * rate),
       };
