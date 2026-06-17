@@ -592,7 +592,9 @@ export default function LeaveApp() {
           {toastMsg && (
             // wrapper จัดกลาง · `md:left-[calc(50%+130px)]` ชดเชย sidebar 260px
             // เพื่อให้ toast อยู่กลาง .leave-main ไม่ใช่ viewport center
-            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 md:left-[calc(50%+130px)] z-500">
+            // z-1200 = สูงกว่า BaseModal (z-800) และ confirm modals (z-1000)
+            // → toast ลอยอยู่บนสุดเสมอ (ไม่หายไปหลัง modal)
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 md:left-[calc(50%+130px)] z-[1200]">
               <div className="bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] animate-[toastIn_0.25s_ease] whitespace-nowrap inline-flex items-center gap-1.5">
                 <IconCheck size={14} strokeWidth={2.6} />
                 {toastMsg}
