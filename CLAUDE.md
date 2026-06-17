@@ -115,7 +115,7 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 
 **Scope ของ subscription แตกต่างกัน:**
 - `employees`, `advances`, `salaries` → employee เห็นเฉพาะของตัวเอง (filter by `lineUserId == auth.uid` / scoped query)
-- `leaves` → ทุกคน signed-in อ่านได้ (ปฏิทินทีมโชว์ใบลาทุกคน + กันยื่นลาทับวัน · ไม่มีฟิลด์อ่อนไหว)
+- `leaves` → ทุกคน signed-in อ่านได้ (ปฏิทินทีมโชว์ใบลาทุกคน + กันยื่นลาทับวัน · ไม่มีฟิลด์อ่อนไหว) · leave doc เก็บ snapshot `employeeName + employeeNickname` ให้ peer อ่านชื่อได้โดยไม่ต้องเปิด `/employees` ทั้งคน · render: live > snapshot (ดู `docs/reference.md` → "Privacy: leaves") · filter/lookup ใช้ `employeeId` เสมอ ไม่ใช่ชื่อ
 - `poolSnapshots` → ทุกคน signed-in อ่านได้ (public, non-sensitive — peer data สำหรับ pool calc)
 - `roles`, `payrollConfirms` → ทุกคน signed-in อ่านได้
 

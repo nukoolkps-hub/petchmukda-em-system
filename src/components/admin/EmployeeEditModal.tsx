@@ -32,7 +32,7 @@ import {
   getEffectiveBaseSalary,
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
-import BankLogo from "../shared/BankLogo";
+import BankPicker from "../shared/BankPicker";
 import BaseModal from "../shared/BaseModal";
 import AnnualRaiseSection from "./AnnualRaiseSection";
 import { clearEmployeeDraft } from "./employeeEditFields";
@@ -84,6 +84,10 @@ export default function EmployeeEditModal({
   const editingPoolExclusion = editingRole[`${employee.id}:poolExclusion`];
   const editingName = editingRole[`${employee.id}:name`];
   const editingNickname = editingRole[`${employee.id}:nickname`];
+  const editingBank = editingRole[`${employee.id}:bank`] as string | undefined;
+  const editingBankAccountNumber = editingRole[
+    `${employee.id}:bankAccountNumber`
+  ] as string | undefined;
   const editingRecurringItems = editingRole[`${employee.id}:recurringItems`] as
     | RecurringItem[]
     | undefined;
@@ -108,6 +112,8 @@ export default function EmployeeEditModal({
     editingPoolExclusion !== undefined ||
     editingName !== undefined ||
     editingNickname !== undefined ||
+    editingBank !== undefined ||
+    editingBankAccountNumber !== undefined ||
     editingRecurringItems !== undefined ||
     editingAnnualRaises !== undefined ||
     editingAnnualRaiseAmount !== undefined;
@@ -217,6 +223,15 @@ export default function EmployeeEditModal({
       await onUpdateRole(employee.id, "prefix", editingPrefix);
     if (editingNickname !== undefined)
       await onUpdateRole(employee.id, "nickname", editingNickname.trim());
+    if (editingBank !== undefined)
+      await onUpdateRole(employee.id, "bank", editingBank);
+    if (editingBankAccountNumber !== undefined)
+      // sanitize: เก็บเฉพาะตัวเลข/space/ขีด ตาม firestore.rules regex
+      await onUpdateRole(
+        employee.id,
+        "bankAccountNumber",
+        editingBankAccountNumber.replace(/[^0-9\- ]/g, ""),
+      );
     if (editingRecurringItems !== undefined) {
       // sanitize: ตัด trailing space ใน label + แปลง amount เป็น number
       const cleaned = editingRecurringItems
@@ -412,30 +427,52 @@ export default function EmployeeEditModal({
                   : "ยังไม่กำหนดตำแหน่ง"}
               </div>
             </div>
-            {/* Bank info — read-only (พนักงานเป็นคนกรอกเอง) */}
-            <div className="mb-3 px-3 py-2.5 bg-cream rounded-[10px] border border-dashed border-bdr">
-              <div className="text-xs text-txt-soft font-semibold mb-[5px] flex items-center gap-1.5">
+            {/* Bank info — admin override
+                 (พนักงานกรอกเองตอน setup ครั้งแรก · admin แก้ภายหลังได้ที่นี่) */}
+            <div className="mb-3">
+              <div className="text-xs text-txt-soft font-semibold mb-1.5 flex items-center gap-1.5">
                 <span className="inline-flex items-center gap-1">
                   <IconBuildingBank size={12} strokeWidth={2.4} />
                   บัญชีรับเงินเดือน
                 </span>
                 <span className="text-xs px-1.5 py-px rounded-lg bg-bdr text-txt-soft font-bold ml-auto">
-                  พนักงานกรอกเอง
+                  Admin แก้ได้
                 </span>
               </div>
-              {employee.bank || employee.bankAccountNumber ? (
-                <>
-                  <div className="text-sm font-bold text-txt mb-px flex items-center gap-1.5">
-                    <BankLogo bank={employee.bank} size={18} />
-                    {employee.bank || "-"}
-                  </div>
-                  <div className="text-sm text-txt-mid tracking-wider">
-                    {employee.bankAccountNumber || "-"}
-                  </div>
-                </>
-              ) : (
-                <div className="text-sm text-txt-soft italic">ยังไม่มีข้อมูลบัญชี</div>
-              )}
+              <div className="mb-1.5">
+                <BankPicker
+                  value={
+                    editingBank !== undefined ? editingBank : employee.bank || ""
+                  }
+                  onChange={(name) =>
+                    setEditingRole((previousEditingRole) => ({
+                      ...previousEditingRole,
+                      [`${employee.id}:bank`]: name,
+                    }))
+                  }
+                  placeholder="— เลือกธนาคาร —"
+                />
+              </div>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={
+                  editingBankAccountNumber !== undefined
+                    ? editingBankAccountNumber
+                    : employee.bankAccountNumber || ""
+                }
+                onChange={(e) =>
+                  setEditingRole((previousEditingRole) => ({
+                    ...previousEditingRole,
+                    [`${employee.id}:bankAccountNumber`]: e.target.value.replace(
+                      /[^0-9\- ]/g,
+                      "",
+                    ),
+                  }))
+                }
+                placeholder="เลขที่บัญชี"
+                className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[Prompt,monospace] tracking-wider text-txt border-[1.5px] ${editingBankAccountNumber !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+              />
             </div>
 
             {/* LINE User ID — read-only, copy only */}

@@ -16,6 +16,8 @@ export const EMPLOYEE_EDIT_FIELDS = [
   "poolExclusion",
   "name",
   "nickname",
+  "bank",
+  "bankAccountNumber",
   "recurringItems",
 ] as const;
 
