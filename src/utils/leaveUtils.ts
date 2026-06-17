@@ -41,42 +41,38 @@ export function countWeekdayLeaves(
    - วันอาทิตย์ทุกวันที่ลา → ถูกหักทันที (× 1.5 ไม่ใช้โควต้า)
    - วันที่ร้านปิด (เสาร์ default + เสาร์ที่ไม่ได้ open + จ-ศ ปิดพิเศษ)
      → ไม่นับ ไม่หัก (ร้านปิดอยู่แล้ว — ลาไม่กระทบ)
-   - วันทำงาน (เสาร์เปิดพิเศษ + จ-ศ ปกติ) → 2 ครั้งแรก (เรียงตามวัน)
-     ไม่หัก, เกินจากนั้นค่อยหัก                                          */
+   - วันทำงาน (เสาร์เปิดพิเศษ + จ-ศ ปกติ) → 2 "วัน" แรก (เรียงตามวัน)
+     ไม่หัก, เกินจากนั้นค่อยหัก
+   IMPORTANT: นับเป็น "วัน" ไม่ใช่ "ใบลา" · ใบเดียวยาว 3 วัน = 3 วัน
+   (เดิมใช้ entries count ทำให้ใบลายาวๆ ใบเดียวฟรีทั้งใบ → store losing) */
 export function getOverQuotaDays(
   monthLeaves: { start: string; end: string }[],
   calendar?: StoreCalendar | null,
 ) {
-  const sorted = [...monthLeaves].sort((a, b) =>
-    a.start.localeCompare(b.start),
-  );
-
+  // เก็บวันที่ "วันทำงาน" ที่ลาทั้งหมด (chronological) · dedupe กันใบลาทับ
+  const workDayDates: string[] = [];
   let sundays = 0;
-  let weekdays = 0;
-  let weekdayLeaveCount = 0;
 
-  sorted.forEach((lv) => {
+  monthLeaves.forEach((lv) => {
     const s = new Date(`${lv.start}T00:00:00`);
     const e = new Date(`${lv.end}T00:00:00`);
     const c = new Date(s);
-    let entryHasWeekday = false;
-    let entryWeekdays = 0;
     while (c <= e) {
       const dow = c.getDay();
       if (dow === 0) {
-        sundays++; // อาทิตย์ — หักทันที (× 1.5)
+        sundays++; // อาทิตย์ — หักทันที (× 1.5) · นับเป็น day count
       } else if (isCountableWeekday(c, calendar)) {
-        // วันทำงาน (เสาร์เปิด/จ-ศ ปกติ) → เข้าโควต้า
-        entryWeekdays++;
-        entryHasWeekday = true;
+        workDayDates.push(
+          `${c.getFullYear()}-${String(c.getMonth() + 1).padStart(2, "0")}-${String(c.getDate()).padStart(2, "0")}`,
+        );
       }
-      // วันที่ร้านปิด (เสาร์ปกติ/จ-ศ ปิดพิเศษ) → ข้าม ไม่นับ ไม่หัก
+      // วันที่ร้านปิด → ข้าม ไม่นับ ไม่หัก
       c.setDate(c.getDate() + 1);
     }
-    if (entryHasWeekday) {
-      weekdayLeaveCount++;
-      if (weekdayLeaveCount > WEEKDAY_LEAVE_QUOTA) weekdays += entryWeekdays;
-    }
   });
+
+  // dedupe กันใบลาทับซ้อน + คำนวณส่วนเกินโควต้า "เป็นวัน"
+  const uniqueDays = new Set(workDayDates).size;
+  const weekdays = Math.max(0, uniqueDays - WEEKDAY_LEAVE_QUOTA);
   return { weekdays, sundays };
 }

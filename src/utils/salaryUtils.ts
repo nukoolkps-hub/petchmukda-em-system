@@ -165,8 +165,15 @@ export function computePoolSharesForGroup({
 
   // กรองพนักงานที่ "ปิดสิทธิ์ระบบเงินเดือน" ออกก่อน — กลุ่มนี้ใช้แอปเฉพาะ
   // ระบบลา ไม่นับเข้ากองกลาง ไม่ pull เกณฑ์ 80% และไม่ได้รับ commission
-  // (single source of truth — caller ที่ลืม filter ก็ปลอดภัย)
+  // CRITICAL: ใช้ salary snapshot ก่อน fall back current state
+  // → past month ที่ admin flip salaryDisabled ภายหลัง ไม่ทำให้ pool เก่า
+  //   ขยับ (เดิมใช้ current state ทำให้ peers ได้ share ของ Charlie ที่
+  //   เคย active ในเดือนนั้นซ้ำ)
   const activeIds = groupEmployeeIds.filter((id) => {
+    const salary = salaryData[id]?.[yearMonth];
+    if (salary && typeof salary.salaryDisabled === "boolean") {
+      return !salary.salaryDisabled;
+    }
     const employee = employeeDirectory.find((e) => e.id === id);
     return !employee?.salaryDisabled;
   });
@@ -443,7 +450,12 @@ export function calculateSalary(
     rates,
     loanContext?.yearMonth,
   );
-  const baseSalaryAmount = salary.baseSalary || liveEffectiveBase || 0;
+  // ใช้ ?? แทน || → เคารพ salary.baseSalary=0 ที่ admin ตั้งตั้งใจ (เช่น
+  // เดือนที่ลาไม่รับเงินเดือน) · เดิม || ทำให้ 0 ถูก fall back ไป live rate
+  const baseSalaryAmount =
+    salary.baseSalary !== undefined && salary.baseSalary !== null
+      ? salary.baseSalary
+      : (liveEffectiveBase ?? 0);
   const socialSecurityAmount =
     salary.socialSecurity ?? rates?.socialSecurity ?? 0;
   const dailySalaryRate = baseSalaryAmount / DAYS_PER_MONTH;
@@ -495,13 +507,20 @@ export function calculateSalary(
   const transferCommission = transferPieces * transferPieceRate;
   const memberBonusTotal = inviteCommission + transferCommission;
 
-  const leaveDays = totalLeaveDays || 0;
-  const bonusDays = Math.max(0, WEEKDAY_LEAVE_QUOTA - leaveDays);
-  const attendanceBonus = Math.round(bonusDays * dailySalaryRate);
-
   // ถ้าถูกปิดสิทธิ์ Pool และขาย < 50% ของ Top → เงินเดือนพื้นฐาน = 0
+  // (ต้อง compute losesBaseSalary ก่อน attendanceBonus เพื่อ zero มันด้วย)
   const losesBaseSalary = !!poolShare?.losesBaseSalary;
   const baseSalary = losesBaseSalary ? 0 : baseSalaryAmount;
+
+  // โบนัสแห่งความขยัน — รวม "ลาวันอาทิตย์" ด้วย (ขาดงานคือขาดงาน · เดิมนับ
+  // เฉพาะ weekday ทำให้ลาอาทิตย์อย่างเดียวยังได้ bonus เต็ม)
+  // ถ้า losesBaseSalary → ไม่ได้ bonus (base = 0 อยู่แล้ว · ป้องกัน paying
+  // 2× dailyRate ให้คนที่ไม่ควรได้ base · CRITICAL bug)
+  const leaveDays = (totalLeaveDays || 0) + sundayOverQuotaDays;
+  const bonusDays = losesBaseSalary
+    ? 0
+    : Math.max(0, WEEKDAY_LEAVE_QUOTA - leaveDays);
+  const attendanceBonus = Math.round(bonusDays * dailySalaryRate);
 
   const customEarningsTotal = Array.isArray(salary.customEarnings)
     ? salary.customEarnings.reduce(
