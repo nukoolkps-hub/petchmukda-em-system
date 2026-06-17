@@ -36,8 +36,9 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 
 | Field | Type | Description |
 |---|---|---|
-| employeeId | string | ref → employees |
-| employeeName | string | ชื่อพนักงาน |
+| employeeId | string | ref → employees (**join คีย์หลัก** · ใช้กรอง/ลูกอัพแทน employeeName ทุกที่ — กันโดน rename) |
+| employeeName | string | snapshot ชื่อจริง ตอนยื่นลา (สำหรับ peer view · พนักงานอ่าน employees ของเพื่อนไม่ได้) |
+| employeeNickname | string \| null | snapshot ชื่อเล่น ตอนยื่นลา (null ถ้าไม่ได้ตั้งไว้) |
 | type | "personal" / "sick" | ประเภทลา |
 | start | string (YYYY-MM-DD) | วันเริ่มลา |
 | end | string (YYYY-MM-DD) | วันสิ้นสุดลา |
@@ -47,6 +48,13 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | createdAt | number (timestamp) | เวลาสร้าง |
 
 หมายเหตุ: **read = ทุก signed-in** — ปฏิทินทีมโชว์ใบลาของทุกคน + กันยื่นลาทับวัน · ไม่มีฟิลด์อ่อนไหวใน leave doc
+
+> **Pattern แสดงชื่อ (live > snapshot):** ตอน render ชื่อในใบลา ใช้ลำดับ
+> `live.nickname → snapshot.employeeNickname → live.name → snapshot.employeeName`
+> · live = lookup จาก `employeeDirectory.find(e => e.id === lv.employeeId)`
+> · live ทับ snapshot → admin เพิ่มชื่อเล่น/เปลี่ยนชื่อภายหลัง ใบลาเก่าโชว์ค่าใหม่ทันที
+> · snapshot fallback — สำหรับ peer ที่พนักงานอ่าน employees doc ไม่ได้ (rules ปิด → directory ไม่มี record ของเพื่อน) ใช้ snapshot ใน leave doc แทน
+> · ใช้ pattern เดียวกันใน `TeamCalendar.tsx`, `LeaveListPanel.tsx`
 
 ### loginStates/{state} (CSRF defense — LINE Login)
 
