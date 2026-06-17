@@ -241,6 +241,9 @@ export default function useFirebaseAppData({
       : {
           roleId: employee.roleId ?? null,
           poolExclusion: employee.poolExclusion ?? null,
+          // snapshot salaryDisabled → กัน flip ในอนาคตทำให้ pool past month
+          // เปลี่ยน (computePoolSharesForGroup เคารพ snapshot ก่อน current)
+          salaryDisabled: !!employee.salaryDisabled,
           poolThresholdExempt,
           coveragePay: coverage.total,
           coveragePayBreakdown: coverage.breakdown,
