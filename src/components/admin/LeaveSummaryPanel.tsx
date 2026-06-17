@@ -87,7 +87,7 @@ export default function LeaveSummaryPanel({
   const today = todayYmd();
   const currentMonth = today.slice(0, 7);
   const [selYear, setSelYear] = useState(today.slice(0, 4));
-  // key = `${employeeName}:${type}` — chip ที่ถูกกดให้แสดงรายการวัน
+  // key = `${empId}:${type}` — chip ที่ถูกกดให้แสดงรายการวัน
   const [expandedChip, setExpandedChip] = useState<string | null>(null);
 
   // navMonths = current ∪ selectedMonth ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
