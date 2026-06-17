@@ -27,7 +27,7 @@ import { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../../constants";
 import { buildLoanContext } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
-import { currentYearMonth } from "../../utils/dateUtils";
+import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import { getPayrollLock } from "../../utils/payrollLock";
@@ -1612,6 +1612,10 @@ export default function SalaryAdminEdit({
           รายรับ + {formatThaiNumber(salaryCalculation.earnings)} ฿
           <br />
           รายหัก − {formatThaiNumber(salaryCalculation.deductions)} ฿
+          <br />
+          <span className="text-xs text-[#E8C87A80]">
+            เดือน {formatYmThai(selectedMonth)}
+          </span>
         </div>
       </div>
 
