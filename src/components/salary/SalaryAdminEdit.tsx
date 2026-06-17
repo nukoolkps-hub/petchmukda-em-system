@@ -828,7 +828,9 @@ export default function SalaryAdminEdit({
                 const grossPieces =
                   data.piecePieces?.[item.id] ??
                   (item.id === "default" ? data.singleRatePieces ?? 0 : 0);
-                const excluded = Math.max(0, grossPieces - item.pieces);
+                // excluded = ผลรวมจริงที่ admin ใส่ (ไม่ cap) จาก calculateSalary
+                // — ถ้า admin ใส่ 10 แต่พนักงานทำ 5 ต้องโชว์ "หัก 10" ไม่ใช่ 5
+                const excluded = item.excluded || 0;
                 const grossAmount = grossPieces * item.rate;
                 const excludedAmount = excluded * item.rate;
                 return (
@@ -868,26 +870,40 @@ export default function SalaryAdminEdit({
                       {formatThaiNumber(grossAmount)} ฿
                     </div>
                   </div>
-                  {excluded > 0 && (
-                    <div className="mt-2 pt-2 border-t border-dashed border-[#C9973A40] flex flex-col gap-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-red font-semibold">
-                          − หักรายการยกเว้น {formatThaiNumber(excluded)} ชิ้น
-                        </span>
-                        <span className="text-red font-bold tabular-nums">
-                          − {formatThaiNumber(excludedAmount)} ฿
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm pt-1 border-t border-dashed border-[#C9973A30]">
-                        <span className="text-txt font-bold">
-                          คิดค่าคอม {formatThaiNumber(item.pieces)} ชิ้น
-                        </span>
-                        <span className="text-green font-extrabold tabular-nums">
-                          + {formatThaiNumber(item.amount)} ฿
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                  {excluded > 0 &&
+                    (() => {
+                      // ถ้า admin ใส่ exclusion เกิน gross → cap arithmetic
+                      // แต่โชว์ "เกิน X ชิ้น" เพื่อ admin รู้ว่าใส่เกิน
+                      const overExclusion = Math.max(0, excluded - grossPieces);
+                      const effExcluded = Math.min(excluded, grossPieces);
+                      const effExcludedAmount = effExcluded * item.rate;
+                      return (
+                        <div className="mt-2 pt-2 border-t border-dashed border-[#C9973A40] flex flex-col gap-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-red font-semibold">
+                              − หักรายการยกเว้น {formatThaiNumber(excluded)} ชิ้น
+                              {overExclusion > 0 && (
+                                <span className="ml-1 text-amber font-bold">
+                                  (เกิน {formatThaiNumber(overExclusion)} ชิ้น
+                                  · คิดได้แค่ {formatThaiNumber(effExcluded)})
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-red font-bold tabular-nums">
+                              − {formatThaiNumber(effExcludedAmount)} ฿
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm pt-1 border-t border-dashed border-[#C9973A30]">
+                            <span className="text-txt font-bold">
+                              คิดค่าคอม {formatThaiNumber(item.pieces)} ชิ้น
+                            </span>
+                            <span className="text-green font-extrabold tabular-nums">
+                              + {formatThaiNumber(item.amount)} ฿
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                 </div>
                 );
               })}

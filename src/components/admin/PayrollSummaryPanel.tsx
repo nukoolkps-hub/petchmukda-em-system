@@ -451,6 +451,45 @@ export default function PayrollSummaryPanel({
         </div>
       </div>
 
+      {/* Legacy orphan warning — เตือน admin ก่อน confirm รอบว่ามีพนักงาน
+          ที่มี singleRatePieces ค้างจาก legacy แต่ role ไม่มี item id "default"
+          → ข้อมูลเก่าไม่ถูกคิดค่าคอม ต้องย้าย/ลบก่อน freeze รอบ */}
+      {(() => {
+        const orphans = rows.filter((r) => {
+          const legacy = Number(r.data?.singleRatePieces) || 0;
+          if (legacy <= 0) return false;
+          const hasDefault = (r.salaryCalculation.pieceBreakdown || []).some(
+            (b) => b.id === "default",
+          );
+          return !hasDefault;
+        });
+        if (orphans.length === 0) return null;
+        return (
+          <div className="rounded-[14px] px-4 py-3 mb-3 border-[1.5px] bg-amber-lt border-amber/40 flex items-start gap-2.5">
+            <IconAlertTriangle
+              size={18}
+              strokeWidth={2.4}
+              className="text-amber shrink-0 mt-0.5"
+            />
+            <div className="text-sm text-txt leading-snug">
+              <b className="text-amber">มีข้อมูลเก่าค้าง</b> — พนักงาน{" "}
+              {orphans.length} คน มี singleRatePieces (legacy) ค้างอยู่ใน
+              salary doc แต่ตำแหน่งปัจจุบันไม่มี item id "default" →
+              ไม่ถูกคิดค่าคอม กรุณาเปิดหน้า "จัดการเงินเดือน" แล้ว
+              ย้าย/ลบ ก่อน freeze รอบ
+              <div className="mt-1.5 text-xs text-txt-mid">
+                {orphans
+                  .map(
+                    (r) =>
+                      `${r.employee.nickname || r.employee.name} (${formatThaiNumber(Number(r.data?.singleRatePieces) || 0)} ชิ้น)`,
+                  )
+                  .join(" · ")}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Confirm payroll status / button */}
       {(() => {
         const confirmed = payrollConfirms?.[selectedMonth];
