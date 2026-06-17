@@ -451,18 +451,22 @@ export default function SalaryAdminEdit({
 
   return (
     <div>
-      {/* ปุ่มแผนผังเงินเดือน + หักกองกลาง + dropdown เลือกเดือน */}
+      {/* ปุ่มแผนผังเงินเดือน + รายการยกเว้น + dropdown เลือกเดือน
+          แผนผังโผล่เฉพาะ pool sales — ตำแหน่งอื่นไม่ใช้ pool calc · ดู
+          breakdown ใน form ปกติได้ */}
       <div className="flex items-center justify-between gap-2 mb-2.5">
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowPoolFlow(true)}
-            title="แผนผังเงินเดือน"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
-          >
-            <IconNetwork size={14} strokeWidth={2.4} />
-            แผนผังเงินเดือน
-          </button>
+          {employeeRole?.poolGroup && (
+            <button
+              type="button"
+              onClick={() => setShowPoolFlow(true)}
+              title="แผนผังเงินเดือน"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream cursor-pointer text-sm font-semibold text-maroon font-[inherit]"
+            >
+              <IconNetwork size={14} strokeWidth={2.4} />
+              แผนผังเงินเดือน
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setShowPoolAdjust(true)}
