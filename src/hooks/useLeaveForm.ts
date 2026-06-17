@@ -13,6 +13,7 @@ interface UseLeaveFormOptions {
   profileName: string | null;
   allLeaves: LeaveEntry[];
   employeeDirectory: {
+    id: string;
     name: string;
     nickname?: string;
     balance?: any;
@@ -41,12 +42,14 @@ export default function useLeaveForm({
   const [histDetail, setHistDetail] = useState<string | number | null>(null);
 
   /* ─── Derived values ───────────────────────────────────────── */
+  // filter ด้วย employeeId (ไม่ใช่ชื่อ) — กันชื่อใน Firestore mismatch กับ
+  // profile.name (โดน rename / space / ตัวพิมพ์) แล้วประวัติว่างเปล่า
   const myLeaves = allLeaves.filter(
-    (lv) => profileName && lv.employeeName === profileName,
+    (lv) => authUid && lv.employeeId === authUid,
   );
 
   const employeeEntry = employeeDirectory.find(
-    (e) => profileName && e.name === profileName,
+    (e) => authUid && e.id === authUid,
   );
   const balance = employeeEntry?.balance || { personal: 15, sick: 15 };
   const used = employeeEntry?.used || { personal: 0, sick: 0 };
