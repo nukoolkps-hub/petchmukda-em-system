@@ -165,7 +165,6 @@ export default function LeaveListPanel({
           months={navMonths}
           selected={effectiveMonth}
           onSelect={onSelectMonth}
-          popoverSide="right"
         />
       </div>
       {/* เพิ่มการลา — collapsible (สำหรับพนักงานที่ลืมกดลา) */}

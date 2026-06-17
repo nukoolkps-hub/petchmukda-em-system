@@ -127,7 +127,6 @@ export default function LeaveSummaryPanel({
             months={months}
             selected={effectiveMonth}
             onSelect={onSelectMonth}
-            popoverSide="right"
           />
         </div>
         {employeeDirectory.length === 0 && (

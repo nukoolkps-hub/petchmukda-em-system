@@ -394,7 +394,6 @@ export default function PayrollSummaryPanel({
           months={months}
           selected={selectedMonth}
           onSelect={setSelectedMonth}
-          popoverSide="right"
         />
       </div>
 

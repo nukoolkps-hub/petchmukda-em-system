@@ -271,7 +271,6 @@ export default function SalaryView({
             months={selectMonths}
             selected={selectedMonth}
             onSelect={setSelectedMonth}
-            popoverSide="right"
           />
         </div>
         <div className="text-center text-txt-soft py-[50px] px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr">
@@ -313,7 +312,6 @@ export default function SalaryView({
           months={selectMonths}
           selected={selectedMonth}
           onSelect={setSelectedMonth}
-          popoverSide="right"
         />
       </div>
 

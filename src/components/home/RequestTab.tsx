@@ -350,7 +350,6 @@ export default function RequestTab({
               selected={effectiveHistMonth}
               onSelect={setSelectedHistMonth}
               subtitle={`${monthLeaves.length} รายการ`}
-              popoverSide="right"
             />
           </div>
         </div>
