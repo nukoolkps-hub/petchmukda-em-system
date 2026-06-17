@@ -61,7 +61,7 @@ export default function MonthChevronNav({
   }, [months]);
 
   return (
-    <div ref={wrapRef} className="relative flex items-center gap-1.5">
+    <div ref={wrapRef} className="relative flex items-center gap-1.5 shrink-0">
       <button
         type="button"
         aria-label="เดือนก่อนหน้า"
@@ -74,7 +74,7 @@ export default function MonthChevronNav({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`px-3 rounded-[9px] border border-bdr bg-cream text-sm font-semibold text-txt min-w-[112px] text-center cursor-pointer font-[inherit] ${subtitle ? "py-1.5 leading-tight" : "h-8"}`}
+        className={`px-3 rounded-[9px] border border-bdr bg-cream text-sm font-semibold text-txt min-w-[112px] text-center cursor-pointer font-[inherit] whitespace-nowrap ${subtitle ? "py-1.5 leading-tight" : "h-8"}`}
       >
         <div>{formatYmThai(selected)}</div>
         {subtitle && (
