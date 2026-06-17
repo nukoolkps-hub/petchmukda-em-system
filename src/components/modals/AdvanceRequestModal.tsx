@@ -17,7 +17,6 @@ export default function AdvanceRequestModal({
   advanceRequests,
   onSubmit,
   onClose,
-  showToast,
 }: {
   profile: any;
   employee: any;
@@ -26,7 +25,6 @@ export default function AdvanceRequestModal({
   advanceRequests: any[];
   onSubmit: (data: { amount: number; reason: string; month: string }) => void;
   onClose: () => void;
-  showToast?: (msg: string) => void;
 }) {
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -73,29 +71,22 @@ export default function AdvanceRequestModal({
   const [reason, setReason] = useState("");
   const [err, setErr] = useState("");
 
-  function fail(message: string) {
-    setErr(message);
-    showToast?.(message);
-  }
-
   function submit() {
     if (payrollLocked) {
-      fail("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
+      setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
       return;
     }
     const amountValue = parseFloat(amount) || 0;
     if (amountValue <= 0) {
-      fail("กรุณาระบุจำนวนเงินที่ต้องการเบิก");
+      setErr("กรุณาระบุจำนวนเงินที่ต้องการเบิก");
       return;
     }
     if (amountValue > remaining) {
-      fail(
-        `เกินวงเงินคงเหลือ — เบิกได้สูงสุด ${formatThaiNumber(remaining)} ฿`,
-      );
+      setErr(`เกินวงเงินคงเหลือ — เบิกได้สูงสุด ${formatThaiNumber(remaining)} ฿`);
       return;
     }
     if (!reason.trim()) {
-      fail("กรุณาระบุเหตุผลก่อนยื่นคำขอเบิก");
+      setErr("กรุณาระบุเหตุผลก่อนยื่นคำขอเบิก");
       return;
     }
     setErr("");
@@ -238,15 +229,13 @@ export default function AdvanceRequestModal({
           type="button"
           onClick={() => {
             if (payrollLocked) {
-              showToast?.(
+              setErr(
                 "วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้",
               );
               return;
             }
             if (remaining <= 0) {
-              showToast?.(
-                "เบิกครบวงเงินของเดือนนี้แล้ว — ต้องรอเดือนถัดไป",
-              );
+              setErr("เบิกครบวงเงินของเดือนนี้แล้ว — ต้องรอเดือนถัดไป");
               return;
             }
             submit();
