@@ -701,7 +701,7 @@ export default function SalaryView({
                 <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
               ),
               main: `โบนัส${b.label}`,
-              sub: `${b.pieces} ใบ × ${formatThaiNumber(b.rate)} ฿`,
+              sub: `${b.pieces} ครั้ง × ${formatThaiNumber(b.rate)} ฿`,
               value: b.amount,
             }))),
           {

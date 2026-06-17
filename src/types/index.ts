@@ -29,7 +29,7 @@ export interface Employee {
   buyPieceRate?: number;
   invitePieceRate?: number;
   transferPieceRate?: number;
-  /** map ของ rate "โบนัสอื่นๆ" — key=bonusItem.id · value=฿/ใบ
+  /** map ของ rate "โบนัสอื่นๆ" — key=bonusItem.id · value=฿/ครั้ง
    *  legacy "invite"/"transfer" item อ่าน invitePieceRate/transferPieceRate
    *  ถ้าไม่มีใน map นี้ (backward compat)                                          */
   bonusRates?: Record<string, number>;
@@ -98,7 +98,7 @@ export interface SalaryMonth {
   buyPieces?: number;
   invitePieces?: number;
   transferPieces?: number;
-  /** จำนวนใบของแต่ละ "โบนัสอื่นๆ" item · key=bonusItem.id · value=จำนวนใบ
+  /** จำนวนครั้งของแต่ละ "โบนัสอื่นๆ" item · key=bonusItem.id · value=จำนวนครั้ง
    *  legacy "invite"/"transfer" อ่าน invitePieces/transferPieces ถ้าไม่มีใน map  */
   bonusCounts?: Record<string, number>;
   socialSecurity?: number;
