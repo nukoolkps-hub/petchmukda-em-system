@@ -362,10 +362,13 @@ export function computePoolSharesForGroup({
   // รวมจาก items แยกตามฝั่ง · clamp ≥ 0 · เก็บ gross + รายการไว้สำหรับแสดงผล
   const grossSellPoolPieces = totalSellPoolPieces;
   const grossBuyPoolPieces = totalBuyPoolPieces;
-  // กรองเฉพาะรายการของ "ตำแหน่งนี้" — item เก่าที่ไม่มี poolGroup ถือว่าใช้ได้
-  // กับทุกกลุ่ม (backward compat data ก่อนมี field นี้)
+  // กรองเฉพาะรายการของ "ตำแหน่งนี้" + เป็น pool variant — item เก่าที่ไม่มี
+  // poolGroup ถือว่าใช้ได้กับทุกกลุ่ม (backward compat data ก่อนมี field นี้)
+  // ใหม่: ข้าม piece variant (kind="piece") — apply แยกใน calculateSalary
   const adjItems = (poolAdjustment?.items || []).filter(
-    (it) => !it.poolGroup || !poolGroup || it.poolGroup === poolGroup,
+    (it: any) =>
+      it.kind !== "piece" &&
+      (!it.poolGroup || !poolGroup || it.poolGroup === poolGroup),
   );
   const excludedNormalItems = adjItems.filter((it) => it.side === "normal");
   const excludedBuyItems = adjItems.filter((it) => it.side === "buy");
@@ -528,6 +531,12 @@ export function calculateSalary(
       repayments?: Record<string, number>;
     }[];
   } | null,
+  // รายการยกเว้นค่าคอม "ระดับ piece" (multi-item) ของพนักงานคนนี้ เดือนนี้ ·
+  // [{ pieceItemId, pieces, label }] · ลบจาก piecePieces[itemId] ก่อนคูณ rate
+  // pool variant ไม่ส่งมาทางนี้ (apply ใน computePoolSharesForGroup)
+  pieceExclusions?:
+    | { pieceItemId: string; pieces: number; label?: string }[]
+    | null,
 ) {
   if (!salary) return null;
   const weekdayOverQuotaDays = overQuotaInfo?.weekdays || 0;
@@ -599,8 +608,17 @@ export function calculateSalary(
     // multi-item: รวมทุกรายการ → singleRateCommission = ผลรวม · pieceBreakdown
     // เก็บราย item · singleRatePieces = ผลรวมจำนวนชิ้น (สำหรับ backward-compat)
     const items = rolePieceItems(roleConfig);
+    // ผลรวมยกเว้นต่อ item id (จาก pieceExclusions) — ลบจาก gross ก่อนคูณ rate
+    const exclusionsByItem: Record<string, number> = {};
+    for (const ex of pieceExclusions || []) {
+      if (!ex?.pieceItemId) continue;
+      exclusionsByItem[ex.pieceItemId] =
+        (exclusionsByItem[ex.pieceItemId] || 0) + (Number(ex.pieces) || 0);
+    }
     pieceBreakdown = items.map((item) => {
-      const pieces = resolvePieceItemPieces(item.id, salary);
+      const gross = resolvePieceItemPieces(item.id, salary);
+      const excluded = exclusionsByItem[item.id] || 0;
+      const pieces = Math.max(0, gross - excluded);
       const rate = resolvePieceItemRate(item.id, salary, rates);
       return {
         id: item.id,

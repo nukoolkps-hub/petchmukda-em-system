@@ -153,6 +153,16 @@ export default function SalaryView({
       });
       employeePoolShare = shares[employeeInfo?.id];
     }
+    // รายการยกเว้นค่าคอม "ระดับ piece" สำหรับพนักงานคนนี้ (multi-item)
+    const monthExclusions = (poolAdjustments?.[selectedMonth]?.items || [])
+      .filter(
+        (it: any) => it.kind === "piece" && it.employeeId === salaryEmployeeId,
+      )
+      .map((it: any) => ({
+        pieceItemId: it.pieceItemId,
+        pieces: Number(it.pieces) || 0,
+        label: it.label,
+      }));
     const computedSalary = calculateSalary(
       data,
       overQuotaInfo,
@@ -162,6 +172,7 @@ export default function SalaryView({
       employeePoolShare,
       employeeRole,
       buildLoanContext(employeeLoans, salaryEmployeeId, selectedMonth),
+      monthExclusions,
     );
     return {
       overInfo: overQuotaInfo,
