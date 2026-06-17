@@ -37,10 +37,11 @@ export default function RolesAdminPanel({
   onDeleteRole,
   showToast,
 }) {
-  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, mainDuties}}
+  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, pieceLabel, mainDuties}}
   const [newRole, setNewRole] = useState({
     name: "",
     poolGroup: "",
+    pieceLabel: "",
     mainDuties: "",
   });
   const [showAdd, setShowAdd] = useState(false);
@@ -52,10 +53,17 @@ export default function RolesAdminPanel({
     const current = roles.find((rl) => rl.id === roleId);
     if (!current) return;
     try {
+      // pieceLabel: เก็บ null ถ้าว่าง (force opt-in) · trim + drop ถ้าใส่ pool
+      // (pool sales ใช้ normal/special/buy ไม่ใช้ singlePieceRate)
+      const poolValue = e.poolGroup?.trim() || null;
+      const pieceLabelDraft =
+        e.pieceLabel !== undefined ? e.pieceLabel : current.pieceLabel || "";
+      const pieceLabelValue = poolValue ? null : pieceLabelDraft.trim() || null;
       await onUpsertRole({
         ...current,
         name: e.name || current.name,
-        poolGroup: e.poolGroup || null,
+        poolGroup: poolValue,
+        pieceLabel: pieceLabelValue,
         mainDuties: cleanMainDuties(e.mainDuties),
       });
       setEditing((prev) => {
@@ -74,13 +82,16 @@ export default function RolesAdminPanel({
     if (!newRole.name.trim()) return;
     const id = `r_${Date.now()}`;
     try {
+      const poolValue = newRole.poolGroup.trim() || null;
       await onUpsertRole({
         id,
         name: newRole.name.trim(),
-        poolGroup: newRole.poolGroup.trim() || null,
+        poolGroup: poolValue,
+        // pieceLabel ไม่ใช้ใน pool sales (มี normal/special/buy แล้ว)
+        pieceLabel: poolValue ? null : newRole.pieceLabel.trim() || null,
         mainDuties: cleanMainDuties(newRole.mainDuties),
       });
-      setNewRole({ name: "", poolGroup: "", mainDuties: "" });
+      setNewRole({ name: "", poolGroup: "", pieceLabel: "", mainDuties: "" });
       setShowAdd(false);
       showToast?.("เพิ่มตำแหน่งแล้ว");
     } catch (err) {
@@ -160,6 +171,22 @@ export default function RolesAdminPanel({
             placeholder='กลุ่มกองกลาง (ทิ้งว่างถ้าไม่แชร์ค่าคอม) เช่น "sales"'
             className="w-full px-3 py-[9px] rounded-[9px] border border-bdr text-sm outline-none font-[Prompt,monospace] box-border mb-2.5"
           />
+          {!newRole.poolGroup.trim() && (
+            <>
+              <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                ป้ายค่าคอมต่อชิ้น (ทิ้งว่าง = ไม่มีค่าคอม)
+              </label>
+              <input
+                value={newRole.pieceLabel}
+                onChange={(e) =>
+                  setNewRole({ ...newRole, pieceLabel: e.target.value })
+                }
+                placeholder='เช่น "ค่าคอมต่อบิล" / "ค่าคอมต่อชิ้น"'
+                maxLength={40}
+                className="w-full px-3 py-[9px] rounded-[9px] border border-bdr text-sm outline-none font-[inherit] box-border mb-2.5"
+              />
+            </>
+          )}
           <label className="text-xs text-txt-soft font-semibold mb-1 block">
             หน้าที่หลัก (พนักงานจะเห็นในหน้า Home)
           </label>
@@ -213,10 +240,10 @@ export default function RolesAdminPanel({
                     color={COLORS.textSoft}
                   />
                   <span className="text-sm font-bold text-txt">
-                    ค่าคอมแยก (Rate ต่อชิ้นเดียว)
+                    ไม่แชร์กองกลาง
                   </span>
                   <span className="text-xs text-txt-soft ml-auto">
-                    ใครขายใครได้
+                    ใช้ piece rate / ไม่มีค่าคอม
                   </span>
                 </>
               )}
@@ -288,6 +315,36 @@ export default function RolesAdminPanel({
                             className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[Prompt,monospace] box-border bg-gold-pale/30"
                           />
                         </div>
+                        {/* pieceLabel — เฉพาะตำแหน่งที่ไม่ใช่ pool sales */}
+                        {!(e?.poolGroup !== undefined
+                          ? e.poolGroup
+                          : rl.poolGroup || ""
+                        ).trim() && (
+                          <div className="mb-2.5">
+                            <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                              ป้ายค่าคอมต่อชิ้น (ทิ้งว่าง = ไม่มีค่าคอม)
+                            </label>
+                            <input
+                              value={
+                                e?.pieceLabel !== undefined
+                                  ? e.pieceLabel
+                                  : rl.pieceLabel || ""
+                              }
+                              onChange={(ev) =>
+                                setEditing((p) => ({
+                                  ...p,
+                                  [rl.id]: {
+                                    ...(p[rl.id] || rl),
+                                    pieceLabel: ev.target.value,
+                                  },
+                                }))
+                              }
+                              placeholder='เช่น "ค่าคอมต่อบิล"'
+                              maxLength={40}
+                              className="w-full px-2.5 py-2 rounded-lg border-[1.5px] border-gold text-sm outline-none font-[inherit] box-border bg-gold-pale/30"
+                            />
+                          </div>
+                        )}
                         <div className="mb-2.5">
                           <label className="text-xs text-txt-soft font-semibold mb-1 block">
                             หน้าที่หลัก (พนักงานจะเห็นในหน้า Home)

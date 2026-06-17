@@ -1,4 +1,8 @@
 import { formatYmThai } from "../utils/dateUtils";
+import {
+  rolePaysPieceCommission,
+  rolePieceLabel,
+} from "../utils/salaryUtils";
 import { buildSalarySlipDocDef } from "./pdfBuilders/salarySlipPDF";
 import { openPDFBlob, printHTML } from "./webviewHelpers";
 
@@ -41,39 +45,42 @@ function buildSalarySlipHTML(
   // ── สร้างรายการรายรับ ──
   const earnRows: { label: string; value: any }[] = [];
   earnRows.push({ label: "เงินเดือนพื้นฐาน", value: salaryCalculation.baseSalary });
-  if (salaryCalculation.usesSinglePieceRate) {
-    if (salaryCalculation.singleRateCommission > 0)
+  // ถ้าตำแหน่งไม่มี piece commission → ข้ามทั้ง piece + invite/transfer
+  if (rolePaysPieceCommission(employeeRole)) {
+    if (salaryCalculation.usesSinglePieceRate) {
+      if (salaryCalculation.singleRateCommission > 0)
+        earnRows.push({
+          label: rolePieceLabel(employeeRole) || "ค่าคอมตามจำนวนชิ้น",
+          value: salaryCalculation.singleRateCommission,
+        });
+    } else {
+      if (salaryCalculation.normalSaleCommission > 0)
+        earnRows.push({
+          label: "ค่าคอมขาย-ทั่วไป",
+          value: salaryCalculation.normalSaleCommission,
+        });
+      if (salaryCalculation.specialSaleCommission > 0)
+        earnRows.push({
+          label: "ค่าคอมขาย-พิเศษ",
+          value: salaryCalculation.specialSaleCommission,
+        });
+      if (salaryCalculation.buyCommission > 0)
+        earnRows.push({
+          label: "ค่าคอมรับซื้อ",
+          value: salaryCalculation.buyCommission,
+        });
+    }
+    if (salaryCalculation.inviteCommission > 0)
       earnRows.push({
-        label: "ค่าคอมตามจำนวนชิ้น",
-        value: salaryCalculation.singleRateCommission,
+        label: "โบนัสเชิญชวนสมัครบัตร",
+        value: salaryCalculation.inviteCommission,
       });
-  } else {
-    if (salaryCalculation.normalSaleCommission > 0)
+    if (salaryCalculation.transferCommission > 0)
       earnRows.push({
-        label: "ค่าคอมขาย-ทั่วไป",
-        value: salaryCalculation.normalSaleCommission,
-      });
-    if (salaryCalculation.specialSaleCommission > 0)
-      earnRows.push({
-        label: "ค่าคอมขาย-พิเศษ",
-        value: salaryCalculation.specialSaleCommission,
-      });
-    if (salaryCalculation.buyCommission > 0)
-      earnRows.push({
-        label: "ค่าคอมรับซื้อ",
-        value: salaryCalculation.buyCommission,
+        label: "โบนัสย้ายข้อมูลบัตร",
+        value: salaryCalculation.transferCommission,
       });
   }
-  if (salaryCalculation.inviteCommission > 0)
-    earnRows.push({
-      label: "โบนัสเชิญชวนสมัครบัตร",
-      value: salaryCalculation.inviteCommission,
-    });
-  if (salaryCalculation.transferCommission > 0)
-    earnRows.push({
-      label: "โบนัสย้ายข้อมูลบัตร",
-      value: salaryCalculation.transferCommission,
-    });
   if (salaryCalculation.attendanceBonus > 0)
     earnRows.push({
       label: "โบนัสแห่งความขยัน(ไม่หยุด)",

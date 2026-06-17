@@ -11,7 +11,11 @@ import {
 import type { Employee, Role } from "../../types";
 import { formatTenure } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
-import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
+import {
+  getEffectiveBaseSalary,
+  rolePaysPieceCommission,
+  rolePieceLabel,
+} from "../../utils/salaryUtils";
 
 function poolExclusionLabel(ex?: string | null): string {
   if (ex === "both") return "ขายทั่วไป + รับซื้อ";
@@ -105,23 +109,28 @@ export default function PositionRateCard({ employee, role }: Props) {
               suffix="฿/ชิ้น"
             />
           </>
-        ) : (
+        ) : rolePaysPieceCommission(role) ? (
           <RateRow
-            label="ค่าคอมต่อชิ้น"
+            label={rolePieceLabel(role) || "ค่าคอมต่อชิ้น"}
             value={employee?.singlePieceRate}
             suffix="฿/ชิ้น"
           />
+        ) : null}
+        {/* invite/transfer — เฉพาะตำแหน่งที่มีค่าคอมรายชิ้น (รวม pool sales) */}
+        {rolePaysPieceCommission(role) && (
+          <>
+            <RateRow
+              label="เชิญสมัครบัตร"
+              value={employee?.invitePieceRate}
+              suffix="฿/ครั้ง"
+            />
+            <RateRow
+              label="ย้ายข้อมูลบัตร"
+              value={employee?.transferPieceRate}
+              suffix="฿/ครั้ง"
+            />
+          </>
         )}
-        <RateRow
-          label="เชิญสมัครบัตร"
-          value={employee?.invitePieceRate}
-          suffix="฿/ครั้ง"
-        />
-        <RateRow
-          label="ย้ายข้อมูลบัตร"
-          value={employee?.transferPieceRate}
-          suffix="฿/ครั้ง"
-        />
         {employee?.poolExclusion && (
           <div className="flex items-center gap-1.5 text-[11px] text-amber font-semibold pt-1.5 mt-1 border-t border-bdr/40">
             <IconCircleSlash size={12} strokeWidth={2.5} />

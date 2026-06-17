@@ -147,6 +147,13 @@ export interface Role {
   icon: string;
   /** หน้าที่หลักของตำแหน่ง (admin กรอกเอง · null = ไม่ได้ตั้งค่า) */
   mainDuties?: string | null;
+  /** ป้ายค่าคอมต่อชิ้น สำหรับตำแหน่งที่ไม่ใช่ pool sales
+   *  - null/undefined → ไม่มีค่าคอมรายชิ้น (พนักงานทั่วไป/รปภ/ทำความสะอาด)
+   *    → ซ่อน piece rate + invite/transfer ทั้งหมด เงินเดือนพื้นฐานอย่างเดียว
+   *  - "ค่าคอมต่อบิล" / "ค่าคอมต่อชิ้น" / ฯลฯ → ใช้เป็น label ของ
+   *    `singlePieceRate` + โชว์ invite/transfer ด้วย
+   *  สำหรับ pool sales (poolGroup ตั้ง) — field นี้ไม่มีผล                  */
+  pieceLabel?: string | null;
 }
 
 /** ตารางหน้าที่ admin-managed — admin กำหนดว่า "ตำแหน่งไหน ทำหน้าที่อะไร"

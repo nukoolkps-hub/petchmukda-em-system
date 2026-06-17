@@ -41,6 +41,8 @@ import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import {
   calculateSalary,
   computePoolSharesForGroup,
+  rolePaysPieceCommission,
+  rolePieceLabel,
 } from "../../utils/salaryUtils";
 import AdvanceHistoryModal from "../modals/AdvanceHistoryModal";
 import PoolFlowModal from "../modals/PoolFlowModal";
@@ -606,87 +608,103 @@ export default function SalaryView({
             sub: "",
             value: salaryCalculation.baseSalary,
           },
-          ...(salaryCalculation.usesSinglePieceRate
-            ? [
-                {
-                  icon: (
-                    <IconPackage
-                      size={16}
-                      strokeWidth={2.2}
-                      color={COLORS.gold}
-                    />
-                  ),
-                  main: "ค่าคอม",
-                  sub: `${salaryCalculation.singleRatePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.singlePieceRate)} ฿`,
-                  value: salaryCalculation.singleRateCommission,
-                },
-              ]
+          // ตำแหน่งไม่มีค่าคอมรายชิ้น → ไม่ใส่ rows ของ piece + invite/transfer
+          ...(!rolePaysPieceCommission(employeeRole)
+            ? []
+            : salaryCalculation.usesSinglePieceRate
+              ? [
+                  {
+                    icon: (
+                      <IconPackage
+                        size={16}
+                        strokeWidth={2.2}
+                        color={COLORS.gold}
+                      />
+                    ),
+                    main: rolePieceLabel(employeeRole) || "ค่าคอม",
+                    sub: `${salaryCalculation.singleRatePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.singlePieceRate)} ฿`,
+                    value: salaryCalculation.singleRateCommission,
+                  },
+                ]
+              : [
+                  {
+                    icon: (
+                      <IconDiamond
+                        size={16}
+                        strokeWidth={2.2}
+                        color={COLORS.gold}
+                      />
+                    ),
+                    main: "ค่าคอมขาย (ทั่วไป)",
+                    sub: poolShare
+                      ? `กองกลาง ${
+                          poolShare.excludedNormalPieces > 0
+                            ? `${poolShare.grossSellPoolPieces} − ${poolShare.excludedNormalPieces} = ${poolShare.totalSellPoolPieces}`
+                            : poolShare.totalSellPoolPieces
+                        } ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ${formatThaiNumber(salaryCalculation.normalSalePieceRate)} ฿`
+                      : `${salaryCalculation.normalSalePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.normalSalePieceRate)} ฿`,
+                    value: salaryCalculation.normalSaleCommission,
+                  },
+                  {
+                    icon: (
+                      <IconSparkles
+                        size={16}
+                        strokeWidth={2.2}
+                        color={COLORS.gold}
+                      />
+                    ),
+                    main: "ค่าคอมขาย (พิเศษ)",
+                    sub: `${salaryCalculation.specialSalePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.specialSalePieceRate)} ฿`,
+                    value: salaryCalculation.specialSaleCommission,
+                  },
+                  {
+                    icon: (
+                      <IconShoppingBag
+                        size={16}
+                        strokeWidth={2.2}
+                        color={COLORS.maroon}
+                      />
+                    ),
+                    main: "ค่าคอมรับซื้อ",
+                    sub: poolShare
+                      ? `กองกลาง ${
+                          poolShare.excludedBuyPieces > 0
+                            ? `${poolShare.grossBuyPoolPieces} − ${poolShare.excludedBuyPieces} = ${poolShare.totalBuyPoolPieces}`
+                            : poolShare.totalBuyPoolPieces
+                        } ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ${formatThaiNumber(salaryCalculation.buyPieceRate)} ฿`
+                      : `${salaryCalculation.buyPieces} ชิ้น × ${formatThaiNumber(salaryCalculation.buyPieceRate)} ฿`,
+                    value: salaryCalculation.buyCommission,
+                  },
+                ]),
+          // invite/transfer — เฉพาะตำแหน่งที่มี piece commission
+          ...(!rolePaysPieceCommission(employeeRole)
+            ? []
             : [
                 {
                   icon: (
-                    <IconDiamond
+                    <IconTicket
                       size={16}
                       strokeWidth={2.2}
                       color={COLORS.gold}
                     />
                   ),
-                  main: "ค่าคอมขาย (ทั่วไป)",
-                  sub: poolShare
-                    ? `กองกลาง ${
-                        poolShare.excludedNormalPieces > 0
-                          ? `${poolShare.grossSellPoolPieces} − ${poolShare.excludedNormalPieces} = ${poolShare.totalSellPoolPieces}`
-                          : poolShare.totalSellPoolPieces
-                      } ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ${formatThaiNumber(salaryCalculation.normalSalePieceRate)} ฿`
-                    : `${salaryCalculation.normalSalePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.normalSalePieceRate)} ฿`,
-                  value: salaryCalculation.normalSaleCommission,
+                  main: "โบนัสเชิญชวนสมัครบัตร",
+                  sub: `${salaryCalculation.invitePieces} ใบ × ${formatThaiNumber(salaryCalculation.invitePieceRate)} ฿`,
+                  value: salaryCalculation.inviteCommission,
                 },
                 {
                   icon: (
-                    <IconSparkles
+                    <IconRefresh
                       size={16}
                       strokeWidth={2.2}
                       color={COLORS.gold}
                     />
                   ),
-                  main: "ค่าคอมขาย (พิเศษ)",
-                  sub: `${salaryCalculation.specialSalePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.specialSalePieceRate)} ฿`,
-                  value: salaryCalculation.specialSaleCommission,
-                },
-                {
-                  icon: (
-                    <IconShoppingBag
-                      size={16}
-                      strokeWidth={2.2}
-                      color={COLORS.maroon}
-                    />
-                  ),
-                  main: "ค่าคอมรับซื้อ",
-                  sub: poolShare
-                    ? `กองกลาง ${
-                        poolShare.excludedBuyPieces > 0
-                          ? `${poolShare.grossBuyPoolPieces} − ${poolShare.excludedBuyPieces} = ${poolShare.totalBuyPoolPieces}`
-                          : poolShare.totalBuyPoolPieces
-                      } ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ${formatThaiNumber(salaryCalculation.buyPieceRate)} ฿`
-                    : `${salaryCalculation.buyPieces} ชิ้น × ${formatThaiNumber(salaryCalculation.buyPieceRate)} ฿`,
-                  value: salaryCalculation.buyCommission,
+                  main: "โบนัสย้ายข้อมูลบัตร",
+                  sub: `${salaryCalculation.transferPieces} ใบ × ${formatThaiNumber(salaryCalculation.transferPieceRate)} ฿`,
+                  value: salaryCalculation.transferCommission,
                 },
               ]),
-          {
-            icon: (
-              <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
-            ),
-            main: "โบนัสเชิญชวนสมัครบัตร",
-            sub: `${salaryCalculation.invitePieces} ใบ × ${formatThaiNumber(salaryCalculation.invitePieceRate)} ฿`,
-            value: salaryCalculation.inviteCommission,
-          },
-          {
-            icon: (
-              <IconRefresh size={16} strokeWidth={2.2} color={COLORS.gold} />
-            ),
-            main: "โบนัสย้ายข้อมูลบัตร",
-            sub: `${salaryCalculation.transferPieces} ใบ × ${formatThaiNumber(salaryCalculation.transferPieceRate)} ฿`,
-            value: salaryCalculation.transferCommission,
-          },
           {
             icon: <IconStar size={16} strokeWidth={2.2} color={COLORS.gold} />,
             main: "โบนัสแห่งความขยัน(ไม่หยุด)",
