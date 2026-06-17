@@ -827,6 +827,8 @@ export default function SalaryAdminEdit({
                   data.piecePieces?.[item.id] ??
                   (item.id === "default" ? data.singleRatePieces ?? 0 : 0);
                 const excluded = Math.max(0, grossPieces - item.pieces);
+                const grossAmount = grossPieces * item.rate;
+                const excludedAmount = excluded * item.rate;
                 return (
                 <div
                   key={item.id}
@@ -861,13 +863,27 @@ export default function SalaryAdminEdit({
                     </div>
                     <div className="text-sm text-txt-soft font-semibold">=</div>
                     <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                      {formatThaiNumber(item.amount)} ฿
+                      {formatThaiNumber(grossAmount)} ฿
                     </div>
                   </div>
                   {excluded > 0 && (
-                    <div className="text-[11px] text-txt-soft mt-1.5 text-center">
-                      หักรายการยกเว้น {formatThaiNumber(excluded)} ชิ้น ·
-                      คิดค่าคอม {formatThaiNumber(item.pieces)} ชิ้น
+                    <div className="mt-2 pt-2 border-t border-dashed border-[#C9973A40] flex flex-col gap-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-red font-semibold">
+                          − หักรายการยกเว้น {formatThaiNumber(excluded)} ชิ้น
+                        </span>
+                        <span className="text-red font-bold tabular-nums">
+                          − {formatThaiNumber(excludedAmount)} ฿
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm pt-1 border-t border-dashed border-[#C9973A30]">
+                        <span className="text-txt font-bold">
+                          คิดค่าคอม {formatThaiNumber(item.pieces)} ชิ้น
+                        </span>
+                        <span className="text-green font-extrabold tabular-nums">
+                          + {formatThaiNumber(item.amount)} ฿
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
