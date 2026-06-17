@@ -451,7 +451,6 @@ export default function SalaryAdminEdit({
           months={monthOptions}
           selected={selectedMonth}
           onSelect={tryChangeMonth}
-          popoverSide="right"
         />
       </div>
 

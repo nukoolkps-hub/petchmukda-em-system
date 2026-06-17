@@ -18,8 +18,6 @@ interface Props {
   months: string[]; // "YYYY-MM" · เรียงใหม่→เก่า
   selected: string;
   onSelect: (m: string) => void;
-  /** ตำแหน่ง popover เลือกเดือน/ปี · "left" (default) หรือ "right" */
-  popoverSide?: "left" | "right";
   /** บรรทัดเล็กใต้ชื่อเดือน (เช่น "4 รายการ") · optional */
   subtitle?: string;
 }
@@ -28,7 +26,6 @@ export default function MonthChevronNav({
   months,
   selected,
   onSelect,
-  popoverSide = "left",
   subtitle,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -67,14 +64,14 @@ export default function MonthChevronNav({
         aria-label="เดือนก่อนหน้า"
         disabled={!hasOlder}
         onClick={() => hasOlder && onSelect(months[idx + 1])}
-        className="w-8 h-8 rounded-[9px] border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <IconChevronLeft size={14} strokeWidth={2.5} className="text-txt-mid" />
       </button>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`px-3 rounded-[9px] border border-bdr bg-cream text-sm font-semibold text-txt min-w-[112px] text-center cursor-pointer font-[inherit] whitespace-nowrap ${subtitle ? "py-1.5 leading-tight" : "h-8"}`}
+        className={`px-2.5 py-1.5 rounded-lg border border-bdr bg-cream text-sm font-semibold text-txt min-w-[108px] text-center cursor-pointer font-[inherit] whitespace-nowrap ${subtitle ? "leading-tight" : ""}`}
       >
         <div>{formatYmThai(selected)}</div>
         {subtitle && (
@@ -88,7 +85,7 @@ export default function MonthChevronNav({
         aria-label="เดือนถัดไป"
         disabled={!hasNewer}
         onClick={() => hasNewer && onSelect(months[idx - 1])}
-        className="w-8 h-8 rounded-[9px] border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <IconChevronRight
           size={14}
@@ -99,7 +96,7 @@ export default function MonthChevronNav({
 
       {open && (
         <div
-          className={`absolute z-20 top-full ${popoverSide === "right" ? "right-0" : "left-0"} mt-1.5 w-[196px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)] max-h-[280px] overflow-y-auto`}
+          className="absolute z-20 top-full left-1/2 -translate-x-1/2 mt-1.5 w-[196px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)] max-h-[280px] overflow-y-auto"
         >
           {byYear.map((g) => (
             <div key={g.year} className="mb-2 last:mb-0">
