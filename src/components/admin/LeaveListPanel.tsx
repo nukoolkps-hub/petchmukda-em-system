@@ -56,8 +56,6 @@ export default function LeaveListPanel({
   showToast,
 }: LeaveListPanelProps) {
   const currentMonth = todayYmd().slice(0, 7);
-  const [employeeFilter, setFilterEmp] = useState("");
-  const [filterType, setFilterType] = useState("");
   const [confirmLeave, setConfirmLeave] = useState<any>(null);
 
   // navMonths = เดือนปัจจุบัน ∪ เดือนที่ถูกเลือก ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
@@ -138,15 +136,13 @@ export default function LeaveListPanel({
   const filteredLeaves = useMemo(
     () =>
       allLeaves
-        .filter((lv) => !employeeFilter || lv.employeeId === employeeFilter)
-        .filter((lv) => !filterType || lv.type === filterType)
         .filter(
           (lv) =>
             lv.start.slice(0, 7) <= effectiveMonth &&
             lv.end.slice(0, 7) >= effectiveMonth,
         )
         .sort((a, b) => b.start.localeCompare(a.start)),
-    [allLeaves, employeeFilter, filterType, effectiveMonth],
+    [allLeaves, effectiveMonth],
   );
 
   // เดือนที่ปิดรอบแล้ว — precompute ครั้งเดียวจาก payrollConfirms (กี่เดือน
@@ -163,6 +159,15 @@ export default function LeaveListPanel({
 
   return (
     <div>
+      {/* month picker — บนสุด ชิดขวา */}
+      <div className="flex justify-end mb-2.5">
+        <MonthChevronNav
+          months={navMonths}
+          selected={effectiveMonth}
+          onSelect={onSelectMonth}
+          popoverSide="right"
+        />
+      </div>
       {/* เพิ่มการลา — collapsible (สำหรับพนักงานที่ลืมกดลา) */}
       <div className="mb-3.5 rounded-[14px] border border-bdr bg-white overflow-hidden">
         <button
@@ -285,56 +290,6 @@ export default function LeaveListPanel({
         )}
       </div>
 
-      <div className="flex flex-col gap-2 mb-3.5">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <select
-              value={employeeFilter}
-              onChange={(e) => setFilterEmp(e.target.value)}
-              className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
-            >
-              <option value="">พนักงานทั้งหมด</option>
-              {employeeDirectory.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.nickname || emp.name}
-                </option>
-              ))}
-            </select>
-            <IconChevronDown
-              size={14}
-              strokeWidth={2.4}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-            />
-          </div>
-          <div className="relative flex-1">
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none"
-            >
-              <option value="">ประเภททั้งหมด</option>
-              {LEAVE_TYPES.map((lt) => (
-                <option key={lt.id} value={lt.id}>
-                  {lt.label}
-                </option>
-              ))}
-            </select>
-            <IconChevronDown
-              size={14}
-              strokeWidth={2.4}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-            />
-          </div>
-        </div>
-        <div className="flex justify-end">
-          <MonthChevronNav
-            months={navMonths}
-            selected={effectiveMonth}
-            onSelect={onSelectMonth}
-            popoverSide="right"
-          />
-        </div>
-      </div>
       {filteredLeaves.length === 0 && (
         <div className="text-center text-txt-soft py-10 text-base">
           ไม่มีรายการลาย้อนหลัง
