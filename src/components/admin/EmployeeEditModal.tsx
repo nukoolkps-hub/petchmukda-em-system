@@ -495,9 +495,6 @@ export default function EmployeeEditModal({
                     </span>
                   )}
                 </span>
-                <span className="text-xs px-1.5 py-px rounded-lg bg-cream-dk text-txt-mid font-bold ml-auto">
-                  อ่านอย่างเดียว
-                </span>
               </label>
               {employee.lineUserId ? (
                 <button
