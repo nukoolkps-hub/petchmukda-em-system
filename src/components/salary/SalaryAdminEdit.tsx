@@ -890,6 +890,26 @@ export default function SalaryAdminEdit({
                 );
               })}
             </div>
+            {/* legacy orphan warning: ถ้า salary doc มี singleRatePieces > 0
+                แต่ role.pieceItems ไม่มี id="default" → ข้อมูลเก่าค้างไม่ถูกคิด */}
+            {(() => {
+              const legacy = Number(data.singleRatePieces) || 0;
+              if (legacy <= 0) return null;
+              const hasDefault = (salaryCalculation.pieceBreakdown || []).some(
+                (b) => b.id === "default",
+              );
+              if (hasDefault) return null;
+              return (
+                <div className="mt-2.5 px-3 py-2 rounded-[9px] bg-amber-lt border border-amber/40 flex items-start gap-1.5 text-xs text-amber font-semibold">
+                  <IconLightbulb size={12} strokeWidth={2.4} className="shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">
+                    มีข้อมูลเก่าค้างอยู่: {formatThaiNumber(legacy)} ชิ้น
+                    (legacy) ไม่ถูกคิดค่าคอม
+                    — กรุณาย้ายเข้ารายการใหม่ด้านบนหรือลบทิ้ง
+                  </span>
+                </div>
+              );
+            })()}
             <div className="text-xs text-txt-soft mt-2.5 text-center inline-flex items-center justify-center gap-1 w-full">
               <IconLightbulb
                 size={12}
