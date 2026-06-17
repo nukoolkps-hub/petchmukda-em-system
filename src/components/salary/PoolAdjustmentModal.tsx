@@ -1,13 +1,12 @@
-/* ─── Commission Exclusions Modal ──────────────────────────────────
-   "รายการยกเว้นค่าคอม" ระดับเดือน · admin ใส่รายการที่ไม่เอามาคิดค่าคอม
+/* ─── Commission Exclusions Modal (รายการยกเว้นค่าคอม) ─────────────
+   ระดับเดือน · admin ใส่รายการที่ไม่เอามาคิดค่าคอม · 2 ประเภท:
 
-   2 variant ตามชนิด role ที่เปิด modal:
-   - kind="pool"  → pool sales (มี poolGroup): หักจากกองที่หารแบ่ง
-     · เลือกตำแหน่ง (poolGroup) + ฝั่ง (ขายทั่วไป/รับซื้อ) + จำนวนชิ้น + เหตุผล
+   - kind="pool"  → pool sales (poolGroup + ฝั่ง): หักจากกองที่หารแบ่ง
      · เกณฑ์ 80% ยังใช้ gross เหมือนเดิม (พนักงานยังมีสิทธิ์อยู่ในกอง)
-   - kind="piece" → multi-item piece (เช่น บัญชี): หักจากพนักงานรายคน
-     · เลือกพนักงาน + รายการค่าคอม + จำนวนชิ้น + เหตุผล
-     · ลบจาก count ของพนักงานคนนั้น รายการนั้น                              */
+   - kind="piece" → multi-item piece: หักจาก count ของพนักงานคนนึง รายการเดียว
+     · admin เลือก ตำแหน่ง → พนักงาน → รายการค่าคอม → จำนวน → เหตุผล อิสระ
+
+   Modal global (ไม่ผูกพนักงาน) — admin จัดการทุก exclusion ของเดือนได้ที่นี่    */
 import {
   ChevronDown as IconChevronDown,
   Lock as IconLock,
@@ -19,7 +18,10 @@ import { useEffect, useState } from "react";
 import type { Employee, Role } from "../../types";
 import { formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
-import { rolePieceItems } from "../../utils/salaryUtils";
+import {
+  rolePaysPieceCommission,
+  rolePieceItems,
+} from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
 
 interface Item {
@@ -31,6 +33,8 @@ interface Item {
   // piece variant
   employeeId?: string;
   pieceItemId?: string;
+  /** roleId — ใช้ filter dropdown รายการ + ลูกอัพ pieceItems ใน UI */
+  roleId?: string;
   // shared
   pieces: number;
   label: string;
@@ -47,13 +51,12 @@ interface Props {
   yearMonth: string;
   locked: boolean;
   adjustment?: { items?: Item[] };
-  /** กลุ่มกองกลางในเดือนนี้ — ใช้กับ pool variant */
+  /** กลุ่มกองกลางในเดือนนี้ — pool variant */
   poolGroups: PoolGroupInfo[];
-  /** ตำแหน่ง + พนักงาน + role ของพนักงานคนนี้ — ใช้กับ piece variant */
-  employee?: Employee | null;
-  role?: Role | null | undefined;
-  /** mode ของ modal — "pool" = role มี poolGroup, "piece" = multi-item */
-  mode: "pool" | "piece";
+  /** ตำแหน่งทั้งหมด · ใช้ filter dropdown ใน piece variant */
+  roles: Role[];
+  /** พนักงานทั้งหมด · ใช้ dropdown ใน piece variant */
+  employeeDirectory: Employee[];
   onSave: (yearMonth: string, fields: { items: Item[] }) => Promise<void>;
   onClose: () => void;
   showToast?: (msg: string) => void;
@@ -71,6 +74,7 @@ function normalizeItems(items: Item[] | undefined): Item[] {
     side: it.side === "buy" ? "buy" : "normal",
     employeeId: it.employeeId || "",
     pieceItemId: it.pieceItemId || "",
+    roleId: it.roleId || "",
     pieces: Number(it.pieces) || 0,
     label: it.label || "",
   }));
@@ -81,39 +85,33 @@ export default function PoolAdjustmentModal({
   locked,
   adjustment,
   poolGroups,
-  employee,
-  role,
-  mode,
+  roles,
+  employeeDirectory,
   onSave,
   onClose,
   showToast,
 }: Props) {
-  const pieceItems = mode === "piece" ? rolePieceItems(role) : [];
   const firstGroup = poolGroups[0]?.id || "";
-  const firstPieceItem = pieceItems[0]?.id || "";
+  // ตำแหน่งที่มี multi-item piece (ใช้ใน piece dropdown)
+  const pieceRoles = roles.filter(
+    (r) =>
+      !r.poolGroup &&
+      rolePaysPieceCommission(r) &&
+      rolePieceItems(r).length > 0,
+  );
 
-  // init จาก server doc — กรองเฉพาะ items ที่เกี่ยวกับ scope ปัจจุบัน
-  // (pool mode → pool items ทุกตำแหน่ง · piece mode → piece items ของ employee นี้)
-  const filterScope = (items: Item[]) =>
-    items.filter((it) =>
-      mode === "piece"
-        ? it.kind === "piece" && it.employeeId === employee?.id
-        : it.kind !== "piece",
-    );
   const [items, setItems] = useState<Item[]>(() =>
-    filterScope(normalizeItems(adjustment?.items)),
+    normalizeItems(adjustment?.items),
   );
   const [saving, setSaving] = useState(false);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-sync ตามเดือน/employee/mode เท่านั้น
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-sync ตามเดือนเท่านั้น
   useEffect(() => {
-    setItems(filterScope(normalizeItems(adjustment?.items)));
-  }, [yearMonth, employee?.id, mode]);
+    setItems(normalizeItems(adjustment?.items));
+  }, [yearMonth]);
 
   const monthLabel = formatYmThai(yearMonth);
 
-  // dirty — เทียบเฉพาะ items ใน scope ปัจจุบัน
-  const serverScope = filterScope(normalizeItems(adjustment?.items));
   const compareKey = (arr: Item[]) =>
     arr
       .map((i) =>
@@ -123,54 +121,73 @@ export default function PoolAdjustmentModal({
       )
       .sort()
       .join("|");
-  const dirty = compareKey(items) !== compareKey(serverScope);
+  const dirty =
+    compareKey(items) !== compareKey(normalizeItems(adjustment?.items));
 
-  function addItem() {
-    if (mode === "piece") {
-      setItems((prev) => [
-        ...prev,
-        {
-          id: randomId(),
-          kind: "piece",
-          employeeId: employee?.id || "",
-          pieceItemId: firstPieceItem,
-          pieces: 0,
-          label: "",
-        },
-      ]);
-    } else {
-      setItems((prev) => [
-        ...prev,
-        {
-          id: randomId(),
-          kind: "pool",
-          poolGroup: firstGroup,
-          side: "normal",
-          pieces: 0,
-          label: "",
-        },
-      ]);
-    }
+  // นำพนักงานในตำแหน่งที่เลือก (ใช้ filter dropdown employee ของ row piece)
+  function employeesInRole(roleId: string) {
+    return employeeDirectory.filter((e) => e.roleId === roleId);
+  }
+  function itemsInRole(roleId: string) {
+    const role = roles.find((r) => r.id === roleId);
+    return role ? rolePieceItems(role) : [];
+  }
+
+  function addPoolItem() {
+    setItems((prev) => [
+      ...prev,
+      {
+        id: randomId(),
+        kind: "pool",
+        poolGroup: firstGroup,
+        side: "normal",
+        pieces: 0,
+        label: "",
+      },
+    ]);
+  }
+  function addPieceItem() {
+    const firstRole = pieceRoles[0];
+    const firstEmp = firstRole ? employeesInRole(firstRole.id)[0] : null;
+    const firstItem = firstRole ? itemsInRole(firstRole.id)[0] : null;
+    setItems((prev) => [
+      ...prev,
+      {
+        id: randomId(),
+        kind: "piece",
+        roleId: firstRole?.id || "",
+        employeeId: firstEmp?.id || "",
+        pieceItemId: firstItem?.id || "",
+        pieces: 0,
+        label: "",
+      },
+    ]);
   }
   function removeItem(id: string) {
     setItems((prev) => prev.filter((i) => i.id !== id));
   }
   function updateItem(id: string, patch: Partial<Item>) {
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+    setItems((prev) =>
+      prev.map((i) => {
+        if (i.id !== id) return i;
+        const next = { ...i, ...patch };
+        // เมื่อเปลี่ยน role — reset employee + item เป็นตัวแรกของ role ใหม่
+        if (patch.roleId && patch.roleId !== i.roleId) {
+          const emp = employeesInRole(patch.roleId)[0];
+          const it0 = itemsInRole(patch.roleId)[0];
+          next.employeeId = emp?.id || "";
+          next.pieceItemId = it0?.id || "";
+        }
+        return next;
+      }),
+    );
   }
 
   async function save() {
     if (locked || saving || !dirty) return;
     setSaving(true);
     try {
-      // merge กับ items อื่นนอก scope (กันลบของ scope อื่น)
-      const allServer = normalizeItems(adjustment?.items);
-      const outsideScope = allServer.filter((it) =>
-        mode === "piece"
-          ? !(it.kind === "piece" && it.employeeId === employee?.id)
-          : it.kind === "piece",
-      );
-      await onSave(yearMonth, { items: [...outsideScope, ...items] });
+      await onSave(yearMonth, { items });
       showToast?.("บันทึกรายการยกเว้นค่าคอมแล้ว");
       onClose();
     } catch (err) {
@@ -183,7 +200,6 @@ export default function PoolAdjustmentModal({
     }
   }
 
-  // ยอดหักรวมต่อกลุ่ม+ฝั่ง (pool mode summary)
   function deducted(groupId: string, side: "normal" | "buy") {
     return items
       .filter(
@@ -192,17 +208,8 @@ export default function PoolAdjustmentModal({
       .reduce((s, i) => s + Math.max(0, Number(i.pieces) || 0), 0);
   }
 
-  // ยอดหักรวมต่อรายการ (piece mode summary)
-  function deductedPiece(itemId: string) {
-    return items
-      .filter((i) => i.kind === "piece" && i.pieceItemId === itemId)
-      .reduce((s, i) => s + Math.max(0, Number(i.pieces) || 0), 0);
-  }
-
-  const headerSubtitle =
-    mode === "piece"
-      ? `${employee?.name || ""} · ${monthLabel}`
-      : `สินค้าที่ไม่ได้ค่าคอม · ${monthLabel}`;
+  const poolItems = items.filter((i) => i.kind === "pool");
+  const pieceItems = items.filter((i) => i.kind === "piece");
 
   return (
     <BaseModal onClose={onClose} contentClassName="px-5.5 pt-6 pb-7">
@@ -215,7 +222,7 @@ export default function PoolAdjustmentModal({
           <div className="font-extrabold text-lg text-txt">
             รายการยกเว้นค่าคอม
           </div>
-          <div className="text-sm text-txt-soft mt-0.5">{headerSubtitle}</div>
+          <div className="text-sm text-txt-soft mt-0.5">{monthLabel}</div>
         </div>
       </div>
 
@@ -232,96 +239,120 @@ export default function PoolAdjustmentModal({
         </div>
       )}
 
-      <div className="text-xs text-txt-soft mb-3.5 leading-relaxed">
-        {mode === "piece"
-          ? "ยอดที่หักออก จะถูกตัดจาก count ของพนักงานคนนี้ ในรายการที่เลือก · ใช้บันทึกเหตุผล (เช่น ยอดเก่า, ไม่นับเดือนนี้)"
-          : "ยอดที่หักออก จะไม่ถูกนำไปแบ่งในกองกลาง แต่ ยังนับเป็นยอดของพนักงาน (ไม่กระทบเกณฑ์ 80%) · หักแยกตามตำแหน่ง"}
-      </div>
-
-      {/* รายการ */}
-      {mode === "piece" && pieceItems.length === 0 ? (
-        <div className="text-center text-sm text-txt-soft py-6 px-4 bg-cream/60 rounded-[12px] border border-dashed border-bdr mb-3">
-          ตำแหน่งนี้ยังไม่มีรายการค่าคอม
-          <br />
-          ตั้งที่ "ตั้งค่า → ตำแหน่ง" ก่อน
-        </div>
-      ) : items.length === 0 ? (
-        <div className="text-center text-sm text-txt-soft py-6 px-4 bg-cream/60 rounded-[12px] border border-dashed border-bdr mb-3">
-          ยังไม่มีรายการยกเว้น
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2 mb-3">
-          {items.map((item) => (
-            <ItemRow
-              key={item.id}
-              item={item}
-              mode={mode}
-              poolGroups={poolGroups}
-              pieceItems={pieceItems}
-              locked={locked}
-              onUpdate={(patch) => updateItem(item.id, patch)}
-              onRemove={() => removeItem(item.id)}
-            />
-          ))}
+      {/* ── SECTION A: Pool (กองกลาง) ──────────────────────────── */}
+      {poolGroups.length > 0 && (
+        <div className="mb-4">
+          <div className="text-sm font-bold text-maroon mb-2 px-1">
+            หักจากกองกลาง
+          </div>
+          <div className="text-xs text-txt-soft mb-2 px-1 leading-relaxed">
+            ยอดที่หักจะไม่ถูกนำไปแบ่งในกองกลาง แต่ยังนับเป็นยอดของพนักงาน (เกณฑ์ 80%)
+          </div>
+          {poolItems.length === 0 ? (
+            <div className="text-center text-xs text-txt-soft py-4 px-4 bg-cream/60 rounded-[10px] border border-dashed border-bdr mb-2">
+              ยังไม่มีรายการหัก
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 mb-2">
+              {poolItems.map((item) => (
+                <PoolRow
+                  key={item.id}
+                  item={item}
+                  poolGroups={poolGroups}
+                  locked={locked}
+                  onUpdate={(patch) => updateItem(item.id, patch)}
+                  onRemove={() => removeItem(item.id)}
+                />
+              ))}
+            </div>
+          )}
+          {!locked && (
+            <button
+              type="button"
+              onClick={addPoolItem}
+              className="w-full py-2 rounded-[10px] border-[1.5px] border-dashed border-maroon/30 bg-cream text-maroon text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
+            >
+              <IconPlus size={12} strokeWidth={2.4} />
+              เพิ่มรายการ — กองกลาง
+            </button>
+          )}
+          {/* สรุป pool summary */}
+          <div className="bg-gold-pale/60 rounded-[12px] p-2.5 mt-2.5 border border-gold/25 text-xs flex flex-col gap-1.5">
+            {poolGroups.map((g) => {
+              const dN = deducted(g.id, "normal");
+              const dB = deducted(g.id, "buy");
+              return (
+                <div key={g.id}>
+                  <div className="font-bold text-maroon mb-0.5">{g.label}</div>
+                  <div className="flex justify-between">
+                    <span className="text-txt-mid">ขาย (ทั่วไป)</span>
+                    <span className="font-semibold">
+                      {formatThaiNumber(g.normal)} − {formatThaiNumber(dN)} ={" "}
+                      {formatThaiNumber(Math.max(0, g.normal - dN))} ชิ้น
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-txt-mid">รับซื้อ</span>
+                    <span className="font-semibold">
+                      {formatThaiNumber(g.buy)} − {formatThaiNumber(dB)} ={" "}
+                      {formatThaiNumber(Math.max(0, g.buy - dB))} ชิ้น
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {!locked && (mode !== "piece" || pieceItems.length > 0) && (
-        <button
-          type="button"
-          onClick={addItem}
-          className="w-full mb-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-maroon/30 bg-cream text-maroon text-sm font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
-        >
-          <IconPlus size={14} strokeWidth={2.4} />
-          เพิ่มรายการยกเว้น
-        </button>
+      {/* ── SECTION B: Piece (ตำแหน่ง multi-item) ─────────────── */}
+      {pieceRoles.length > 0 && (
+        <div className="mb-4">
+          <div className="text-sm font-bold text-maroon mb-2 px-1">
+            หักจากค่าคอมรายชิ้น
+          </div>
+          <div className="text-xs text-txt-soft mb-2 px-1 leading-relaxed">
+            หัก count ของพนักงานในรายการที่เลือก — เลือก ตำแหน่ง · พนักงาน · รายการ
+            ได้อิสระ
+          </div>
+          {pieceItems.length === 0 ? (
+            <div className="text-center text-xs text-txt-soft py-4 px-4 bg-cream/60 rounded-[10px] border border-dashed border-bdr mb-2">
+              ยังไม่มีรายการหัก
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 mb-2">
+              {pieceItems.map((item) => (
+                <PieceRow
+                  key={item.id}
+                  item={item}
+                  pieceRoles={pieceRoles}
+                  employeesInRole={employeesInRole}
+                  itemsInRole={itemsInRole}
+                  locked={locked}
+                  onUpdate={(patch) => updateItem(item.id, patch)}
+                  onRemove={() => removeItem(item.id)}
+                />
+              ))}
+            </div>
+          )}
+          {!locked && (
+            <button
+              type="button"
+              onClick={addPieceItem}
+              className="w-full py-2 rounded-[10px] border-[1.5px] border-dashed border-maroon/30 bg-cream text-maroon text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
+            >
+              <IconPlus size={12} strokeWidth={2.4} />
+              เพิ่มรายการ — รายชิ้น
+            </button>
+          )}
+        </div>
       )}
 
-      {/* สรุปยอด */}
-      {mode === "pool" ? (
-        <div className="bg-gold-pale/60 rounded-[12px] p-3 mb-3.5 border border-gold/25 text-sm flex flex-col gap-2.5">
-          {poolGroups.map((g) => {
-            const dN = deducted(g.id, "normal");
-            const dB = deducted(g.id, "buy");
-            return (
-              <div key={g.id}>
-                <div className="font-bold text-maroon text-xs mb-0.5">
-                  {g.label}
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-txt-mid">ขาย (ทั่วไป)</span>
-                  <span className="font-semibold">
-                    {formatThaiNumber(g.normal)} − {formatThaiNumber(dN)} ={" "}
-                    {formatThaiNumber(Math.max(0, g.normal - dN))} ชิ้น
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-txt-mid">รับซื้อ</span>
-                  <span className="font-semibold">
-                    {formatThaiNumber(g.buy)} − {formatThaiNumber(dB)} ={" "}
-                    {formatThaiNumber(Math.max(0, g.buy - dB))} ชิ้น
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+      {poolGroups.length === 0 && pieceRoles.length === 0 && (
+        <div className="text-center text-sm text-txt-soft py-6 px-4 bg-cream/60 rounded-[12px] border border-dashed border-bdr mb-3">
+          ยังไม่มีตำแหน่งที่ใช้ค่าคอมรายชิ้น
         </div>
-      ) : pieceItems.length > 0 ? (
-        <div className="bg-gold-pale/60 rounded-[12px] p-3 mb-3.5 border border-gold/25 text-sm flex flex-col gap-1.5">
-          {pieceItems.map((it) => {
-            const d = deductedPiece(it.id);
-            if (d === 0) return null;
-            return (
-              <div key={it.id} className="flex justify-between text-xs">
-                <span className="text-txt-mid">{it.label}</span>
-                <span className="font-semibold">
-                  หัก {formatThaiNumber(d)} ชิ้น
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
+      )}
 
       <div className="flex gap-2.5">
         <button
@@ -349,95 +380,109 @@ export default function PoolAdjustmentModal({
   );
 }
 
-function ItemRow({
+const selectCls =
+  "w-full appearance-none pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt cursor-pointer disabled:bg-cream-dk disabled:text-txt-soft disabled:cursor-not-allowed";
+const chevronCls =
+  "absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft";
+
+function PoolRow({
   item,
-  mode,
   poolGroups,
-  pieceItems,
   locked,
   onUpdate,
   onRemove,
 }: {
   item: Item;
-  mode: "pool" | "piece";
   poolGroups: PoolGroupInfo[];
-  pieceItems: { id: string; label: string }[];
   locked: boolean;
   onUpdate: (patch: Partial<Item>) => void;
   onRemove: () => void;
 }) {
-  const selectCls =
-    "w-full appearance-none pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt cursor-pointer disabled:bg-cream-dk disabled:text-txt-soft disabled:cursor-not-allowed";
-  const chevronCls =
-    "absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft";
-
   return (
     <div className="rounded-[10px] p-2.5 border border-bdr bg-cream/60 flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        {mode === "pool" ? (
-          <>
-            <div className="relative flex-1 min-w-0">
-              <select
-                value={item.poolGroup}
-                disabled={locked}
-                onChange={(e) => onUpdate({ poolGroup: e.target.value })}
-                className={selectCls}
-              >
-                {poolGroups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.label}
-                  </option>
-                ))}
-              </select>
-              <IconChevronDown
-                size={12}
-                strokeWidth={2.4}
-                className={chevronCls}
-              />
-            </div>
-            <div className="relative">
-              <select
-                value={item.side}
-                disabled={locked}
-                onChange={(e) =>
-                  onUpdate({
-                    side: e.target.value === "buy" ? "buy" : "normal",
-                  })
-                }
-                className={selectCls}
-              >
-                <option value="normal">ขาย (ทั่วไป)</option>
-                <option value="buy">รับซื้อ</option>
-              </select>
-              <IconChevronDown
-                size={12}
-                strokeWidth={2.4}
-                className={chevronCls}
-              />
-            </div>
-          </>
-        ) : (
-          // piece variant — เลือกรายการค่าคอม
-          <div className="relative flex-1 min-w-0">
-            <select
-              value={item.pieceItemId}
-              disabled={locked}
-              onChange={(e) => onUpdate({ pieceItemId: e.target.value })}
-              className={selectCls}
-            >
-              {pieceItems.map((it) => (
-                <option key={it.id} value={it.id}>
-                  {it.label}
-                </option>
-              ))}
-            </select>
-            <IconChevronDown
-              size={12}
-              strokeWidth={2.4}
-              className={chevronCls}
-            />
-          </div>
+        <div className="relative flex-1 min-w-0">
+          <select
+            value={item.poolGroup}
+            disabled={locked}
+            onChange={(e) => onUpdate({ poolGroup: e.target.value })}
+            className={selectCls}
+          >
+            {poolGroups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.label}
+              </option>
+            ))}
+          </select>
+          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+        </div>
+        <div className="relative">
+          <select
+            value={item.side}
+            disabled={locked}
+            onChange={(e) =>
+              onUpdate({ side: e.target.value === "buy" ? "buy" : "normal" })
+            }
+            className={selectCls}
+          >
+            <option value="normal">ขาย (ทั่วไป)</option>
+            <option value="buy">รับซื้อ</option>
+          </select>
+          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+        </div>
+        {!locked && (
+          <button
+            type="button"
+            aria-label="ลบรายการ"
+            onClick={onRemove}
+            className="w-9 h-9 shrink-0 rounded-[10px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
+          >
+            <IconTrash size={15} className="text-red" strokeWidth={2.2} />
+          </button>
         )}
+      </div>
+      <PiecesAndLabelRow item={item} locked={locked} onUpdate={onUpdate} />
+    </div>
+  );
+}
+
+function PieceRow({
+  item,
+  pieceRoles,
+  employeesInRole,
+  itemsInRole,
+  locked,
+  onUpdate,
+  onRemove,
+}: {
+  item: Item;
+  pieceRoles: Role[];
+  employeesInRole: (roleId: string) => Employee[];
+  itemsInRole: (roleId: string) => { id: string; label: string }[];
+  locked: boolean;
+  onUpdate: (patch: Partial<Item>) => void;
+  onRemove: () => void;
+}) {
+  const emps = item.roleId ? employeesInRole(item.roleId) : [];
+  const its = item.roleId ? itemsInRole(item.roleId) : [];
+  return (
+    <div className="rounded-[10px] p-2.5 border border-bdr bg-cream/60 flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 min-w-0">
+          <select
+            value={item.roleId}
+            disabled={locked}
+            onChange={(e) => onUpdate({ roleId: e.target.value })}
+            className={selectCls}
+          >
+            {pieceRoles.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+        </div>
         {!locked && (
           <button
             type="button"
@@ -450,29 +495,83 @@ function ItemRow({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <input
-          type="text"
-          value={item.label}
-          disabled={locked}
-          maxLength={120}
-          placeholder="เหตุผล (เช่น โปรโมชั่น)"
-          onChange={(e) => onUpdate({ label: e.target.value })}
-          className={`flex-1 min-w-0 px-3 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
-        />
-        <div className="relative w-[110px] shrink-0">
-          <input
-            type="number"
-            inputMode="numeric"
-            value={item.pieces || ""}
-            disabled={locked}
-            placeholder="0"
-            onChange={(e) => onUpdate({ pieces: Number(e.target.value) || 0 })}
-            className={`w-full px-3 py-2 rounded-[8px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
-          />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs pointer-events-none">
-            ชิ้น
-          </span>
+        <div className="relative flex-1 min-w-0">
+          <select
+            value={item.employeeId}
+            disabled={locked || emps.length === 0}
+            onChange={(e) => onUpdate({ employeeId: e.target.value })}
+            className={selectCls}
+          >
+            {emps.length === 0 ? (
+              <option value="">— ไม่มีพนักงาน —</option>
+            ) : (
+              emps.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.nickname || e.name}
+                </option>
+              ))
+            )}
+          </select>
+          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
         </div>
+        <div className="relative flex-1 min-w-0">
+          <select
+            value={item.pieceItemId}
+            disabled={locked || its.length === 0}
+            onChange={(e) => onUpdate({ pieceItemId: e.target.value })}
+            className={selectCls}
+          >
+            {its.length === 0 ? (
+              <option value="">— ไม่มีรายการ —</option>
+            ) : (
+              its.map((it) => (
+                <option key={it.id} value={it.id}>
+                  {it.label}
+                </option>
+              ))
+            )}
+          </select>
+          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+        </div>
+      </div>
+      <PiecesAndLabelRow item={item} locked={locked} onUpdate={onUpdate} />
+    </div>
+  );
+}
+
+function PiecesAndLabelRow({
+  item,
+  locked,
+  onUpdate,
+}: {
+  item: Item;
+  locked: boolean;
+  onUpdate: (patch: Partial<Item>) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="text"
+        value={item.label}
+        disabled={locked}
+        maxLength={120}
+        placeholder="เหตุผล (เช่น โปรโมชั่น)"
+        onChange={(e) => onUpdate({ label: e.target.value })}
+        className={`flex-1 min-w-0 px-3 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
+      />
+      <div className="relative w-[110px] shrink-0">
+        <input
+          type="number"
+          inputMode="numeric"
+          value={item.pieces || ""}
+          disabled={locked}
+          placeholder="0"
+          onChange={(e) => onUpdate({ pieces: Number(e.target.value) || 0 })}
+          className={`w-full px-3 py-2 rounded-[8px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white"}`}
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs pointer-events-none">
+          ชิ้น
+        </span>
       </div>
     </div>
   );
