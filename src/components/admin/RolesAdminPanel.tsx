@@ -109,11 +109,8 @@ export default function RolesAdminPanel({
     name: "",
     poolGroup: "",
     pieceItems: [] as PieceItem[],
-    // default bonusItems = legacy invite + transfer · admin ลบ/เพิ่มได้ ([] = ซ่อน section)
-    bonusItems: [
-      { id: "invite", label: "เชิญชวนสมัครบัตร" },
-      { id: "transfer", label: "ย้ายข้อมูลบัตร" },
-    ] as PieceItem[],
+    // ตำแหน่งใหม่ — bonusItems ว่าง (admin เพิ่มเอง · [] = ซ่อน section)
+    bonusItems: [] as PieceItem[],
     mainDuties: "",
   });
   const [showAdd, setShowAdd] = useState(false);
@@ -180,10 +177,7 @@ export default function RolesAdminPanel({
         name: "",
         poolGroup: "",
         pieceItems: [],
-        bonusItems: [
-          { id: "invite", label: "เชิญชวนสมัครบัตร" },
-          { id: "transfer", label: "ย้ายข้อมูลบัตร" },
-        ],
+        bonusItems: [],
         mainDuties: "",
       });
       setShowAdd(false);
