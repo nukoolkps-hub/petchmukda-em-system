@@ -42,6 +42,13 @@ export default function ProfileSetupModal({
   >(null);
   const [imageBusy, setImageBusy] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // นับ digit ของเลขบัญชี — เตือนถ้าพิมพ์แล้วยังไม่ครบจำนวนหลักของธนาคารนั้น
+  const bankAccountDigitsTyped = bankAccountNumber.replace(/[^0-9]/g, "").length;
+  const bankAccountIncomplete =
+    !!bank &&
+    bankAccountDigitsTyped > 0 &&
+    bankAccountDigitsTyped < getBankAccountDigits(bank);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // auto initials from name
@@ -370,13 +377,21 @@ export default function ProfileSetupModal({
           }}
           readOnly={lockBank}
           placeholder="เช่น 123-4-56789-0"
-          className={`w-full px-4 py-3 rounded-xl text-base outline-none font-[inherit] box-border text-txt tracking-wide border-[1.5px] ${bankErr ? "border-red" : "border-bdr"} ${lockBank ? "bg-cream-dk cursor-not-allowed opacity-80" : "bg-white"}`}
+          className={`w-full px-4 py-3 rounded-xl text-base outline-none font-[inherit] box-border text-txt tracking-wide border-[1.5px] ${bankErr ? "border-red" : bankAccountIncomplete ? "border-amber" : "border-bdr"} ${lockBank ? "bg-cream-dk cursor-not-allowed opacity-80" : "bg-white"}`}
         />
-        {bank && !lockBank && (
-          <div className="text-xs text-txt-soft mt-1 px-1">
-            {bank} ใช้เลขบัญชี {getBankAccountDigits(bank)} หลัก
-          </div>
-        )}
+        {bank &&
+          !lockBank &&
+          (bankAccountIncomplete ? (
+            <div className="text-xs text-amber font-semibold mt-1 px-1 inline-flex items-center gap-1">
+              <IconAlertTriangle size={12} strokeWidth={2.4} />
+              ขาดอีก {getBankAccountDigits(bank) - bankAccountDigitsTyped} หลัก —{" "}
+              {bank} ใช้เลขบัญชี {getBankAccountDigits(bank)} หลัก
+            </div>
+          ) : (
+            <div className="text-xs text-txt-soft mt-1 px-1">
+              {bank} ใช้เลขบัญชี {getBankAccountDigits(bank)} หลัก
+            </div>
+          ))}
 
         {lockBank && (
           <div className="text-xs text-txt-soft mt-2 px-2.5 py-2 bg-cream/60 rounded-lg border border-bdr/60 inline-flex items-start gap-1.5">
