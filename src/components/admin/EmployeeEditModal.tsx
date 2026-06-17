@@ -1114,75 +1114,6 @@ export default function EmployeeEditModal({
                     หน่วย: ฿/ชิ้น
                   </div>
 
-                  <div className="h-px my-2.5 bg-[#C9973A30]" />
-                  <div className="text-xs font-bold text-maroon mb-2">
-                    <IconTicket
-                      size={12}
-                      strokeWidth={2.4}
-                      className="inline mr-1 -mt-px"
-                    />
-                    Rate บัตรสมาชิกต่อใบ
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                        <IconTicket
-                          size={12}
-                          strokeWidth={2.4}
-                          className="inline mr-1 -mt-px"
-                        />
-                        เชิญชวนสมัคร
-                      </label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        value={
-                          editingInvitePieceRate !== undefined
-                            ? editingInvitePieceRate
-                            : (employee.invitePieceRate ?? "")
-                        }
-                        onChange={(e) =>
-                          setEditingRole((previousEditingRole) => ({
-                            ...previousEditingRole,
-                            [`${employee.id}:invitePieceRate`]: e.target.value,
-                          }))
-                        }
-                        className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingInvitePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                        <IconRefresh
-                          size={12}
-                          strokeWidth={2.4}
-                          className="inline mr-1 -mt-px"
-                        />
-                        ย้ายข้อมูล
-                      </label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        value={
-                          editingTransferPieceRate !== undefined
-                            ? editingTransferPieceRate
-                            : (employee.transferPieceRate ?? "")
-                        }
-                        onChange={(e) =>
-                          setEditingRole((previousEditingRole) => ({
-                            ...previousEditingRole,
-                            [`${employee.id}:transferPieceRate`]:
-                              e.target.value,
-                          }))
-                        }
-                        className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingTransferPieceRate !== undefined ? "border-gold" : "border-bdr"}`}
-                      />
-                    </div>
-                  </div>
-                  <div className="text-xs text-txt-soft text-center mt-1.5">
-                    หน่วย: ฿/ใบ
-                  </div>
                 </div>
               );
             })()}
@@ -1230,7 +1161,7 @@ export default function EmployeeEditModal({
                       strokeWidth={2.4}
                       className="inline mr-1 -mt-px"
                     />
-                    Rate โบนัสอื่นๆ (฿/ใบ)
+                    Rate โบนัสอื่นๆ (฿/ครั้ง)
                   </div>
                   <div className="flex flex-col gap-2">
                     {bonusItems.map((item) => (
