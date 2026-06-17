@@ -1,4 +1,5 @@
 import {
+  AlertTriangle as IconAlertTriangle,
   Ban as IconBan,
   Briefcase as IconBriefcase,
   Landmark as IconBuildingBank,
@@ -92,6 +93,18 @@ export default function EmployeeEditModal({
   const currentBank =
     editingBank !== undefined ? editingBank : employee.bank || "";
   const bankDigitLimit = getBankAccountDigits(currentBank);
+  // นับ digit ของเลขบัญชีปัจจุบัน (live หรือ draft) — ใช้โชว์ warning เตือนถ้าไม่ครบ
+  const currentBankAccountNumber =
+    editingBankAccountNumber !== undefined
+      ? editingBankAccountNumber
+      : employee.bankAccountNumber || "";
+  const bankAccountDigitsTyped = currentBankAccountNumber.replace(/[^0-9]/g, "")
+    .length;
+  // warning เมื่อ: เลือกธนาคารแล้ว + พิมพ์เลขแล้ว + ยังไม่ครบจำนวนหลัก
+  const bankAccountIncomplete =
+    !!currentBank &&
+    bankAccountDigitsTyped > 0 &&
+    bankAccountDigitsTyped < bankDigitLimit;
   const editingRecurringItems = editingRole[`${employee.id}:recurringItems`] as
     | RecurringItem[]
     | undefined;
@@ -476,13 +489,19 @@ export default function EmployeeEditModal({
                   }));
                 }}
                 placeholder="เลขที่บัญชี"
-                className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[Prompt,monospace] tracking-wider text-txt border-[1.5px] ${editingBankAccountNumber !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[Prompt,monospace] tracking-wider text-txt border-[1.5px] ${bankAccountIncomplete ? "border-amber bg-white" : editingBankAccountNumber !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
               />
-              {currentBank && (
+              {bankAccountIncomplete ? (
+                <div className="text-[11px] text-amber font-semibold mt-1 px-1 inline-flex items-center gap-1">
+                  <IconAlertTriangle size={11} strokeWidth={2.4} />
+                  ขาดอีก {bankDigitLimit - bankAccountDigitsTyped} หลัก —{" "}
+                  {currentBank} ใช้เลขบัญชี {bankDigitLimit} หลัก
+                </div>
+              ) : currentBank ? (
                 <div className="text-[11px] text-txt-soft mt-1 px-1">
                   {currentBank} ใช้เลขบัญชี {bankDigitLimit} หลัก
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* LINE User ID — read-only, copy only */}
