@@ -319,11 +319,17 @@ export default function TeamCalendar({
                       const leaveType = LEAVE_TYPES.find(
                         (type) => type.id === leaveEntry.type,
                       );
+                      // lookup live record by employeeId (กันชื่อโดน rename) ·
+                      // live nickname จากปัจจุบันใน directory ทับ snapshot ใน
+                      // ใบลา (snapshot อาจเก่า) · fallback snapshot สำหรับ peer
+                      // ที่พนักงานอ่าน directory ไม่ได้
+                      const livePeer = employeeDirectory.find(
+                        (e) => e.id === leaveEntry.employeeId,
+                      );
                       const displayName =
+                        livePeer?.nickname ||
                         leaveEntry.employeeNickname ||
-                        employeeDirectory.find(
-                          (e) => e.name === leaveEntry.employeeName,
-                        )?.nickname ||
+                        livePeer?.name ||
                         leaveEntry.employeeName;
                       return (
                         <div
@@ -397,8 +403,11 @@ export default function TeamCalendar({
               const leaveType = LEAVE_TYPES.find(
                 (type) => type.id === leaveEntry.type,
               );
+              // lookup by employeeId — กันชื่อโดน rename (employeeName ในใบลา
+              // อาจเก่า) · ถ้าเป็นเพื่อนที่พนักงานอ่าน directory ไม่ได้ → undefined
+              // → ใช้ snapshot ใน leave doc แทน
               const employeeInfo = employeeDirectory.find(
-                (employee) => employee.name === leaveEntry.employeeName,
+                (employee) => employee.id === leaveEntry.employeeId,
               );
               return (
                 <div
@@ -418,8 +427,9 @@ export default function TeamCalendar({
                   />
                   <div className="flex-1">
                     <div className="font-semibold text-txt text-base">
-                      {leaveEntry.employeeNickname ||
-                        employeeInfo?.nickname ||
+                      {employeeInfo?.nickname ||
+                        leaveEntry.employeeNickname ||
+                        employeeInfo?.name ||
                         leaveEntry.employeeName}
                     </div>
                     <div className="text-sm text-txt-mid mt-0.5 inline-flex items-center gap-1.5">
