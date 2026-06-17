@@ -39,7 +39,12 @@ export async function upsertRole(role) {
       mainDuties: role.mainDuties ?? null,
       // รายการค่าคอมต่อชิ้น (multi-item) — [] / null = ไม่มีค่าคอม
       // pool sales (poolGroup ตั้ง) ก็ null เพราะใช้ normal/special/buy
-      pieceItems: Array.isArray(role.pieceItems) ? role.pieceItems : null,
+      // whitelist field {id, label} ป้องกัน transient state รั่ว (เช่น _dirty)
+      pieceItems: Array.isArray(role.pieceItems)
+        ? role.pieceItems
+            .filter((it: any) => it?.id && typeof it.label === "string")
+            .map((it: any) => ({ id: String(it.id), label: String(it.label) }))
+        : null,
       // legacy pieceLabel — เขียน null เสมอเมื่อย้ายมา pieceItems แล้ว
       // (migrate-on-read ใน rolePieceItems ยังอ่าน pieceLabel ของ doc เก่าได้)
       pieceLabel: role.pieceLabel ?? null,

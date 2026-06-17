@@ -335,16 +335,32 @@ export default function PoolAdjustmentModal({
               ))}
             </div>
           )}
-          {!locked && (
-            <button
-              type="button"
-              onClick={addPieceItem}
-              className="w-full py-2 rounded-[10px] border-[1.5px] border-dashed border-maroon/30 bg-cream text-maroon text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
-            >
-              <IconPlus size={12} strokeWidth={2.4} />
-              เพิ่มรายการ — รายชิ้น
-            </button>
-          )}
+          {!locked &&
+            (() => {
+              // เช็คว่ามีตำแหน่งที่มีพนักงานจริง · ถ้าไม่มี → disable + แสดงเหตุผล
+              // (กัน admin กดเพิ่มแล้วบันทึก กลับมาเปิดใหม่รายการหาย เพราะ
+              // sanitize filter ใน poolAdjustments.ts ทิ้ง row ที่ employeeId="")
+              const canAdd = pieceRoles.some(
+                (r) => employeesInRole(r.id).length > 0,
+              );
+              return (
+                <button
+                  type="button"
+                  onClick={addPieceItem}
+                  disabled={!canAdd}
+                  className={`w-full py-2 rounded-[10px] border-[1.5px] border-dashed text-xs font-bold font-[inherit] inline-flex items-center justify-center gap-1.5 ${
+                    canAdd
+                      ? "border-maroon/30 bg-cream text-maroon cursor-pointer"
+                      : "border-bdr bg-cream/40 text-txt-soft cursor-not-allowed"
+                  }`}
+                >
+                  <IconPlus size={12} strokeWidth={2.4} />
+                  {canAdd
+                    ? "เพิ่มรายการ — รายชิ้น"
+                    : "เพิ่มรายการ — ยังไม่มีพนักงานในตำแหน่งที่มีค่าคอมรายชิ้น"}
+                </button>
+              );
+            })()}
         </div>
       )}
 
