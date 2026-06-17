@@ -8,7 +8,11 @@
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { getAppFirestore } from "../helpers/config.js";
+import {
+	getAppFirestore,
+	getLineConfig,
+	isConfiguredAdminLineUser,
+} from "../helpers/config.js";
 import { parseBootstrapAdminPayload } from "../helpers/payload.js";
 
 const BOOTSTRAP_MARKER_PATH = "system/adminBootstrap";
@@ -31,6 +35,24 @@ export const bootstrapAdmin = onCall(async (request) => {
 
 	const uid = request.auth.uid;
 	const db = getAppFirestore();
+
+	// Defense in depth: ถ้า ADMIN_LINE_USER_ID ถูกตั้งไว้แล้ว → uid ต้องตรงกับ
+	// คนใน allowlist (uid ใน LINE auth flow = profile.userId). กันความเสี่ยง
+	// secret หลุดแล้ว user ที่ไม่ใช่ admin ของจริง bootstrap ตัวเองได้. ถ้ายัง
+	// ไม่ตั้ง allowlist (true first-time setup) → ปล่อย bypass ผ่าน secret
+	const lineConfig = await getLineConfig().catch(
+		() => ({}) as Record<string, unknown>,
+	);
+	const adminAllowlist = (lineConfig as { ADMIN_LINE_USER_ID?: string })
+		.ADMIN_LINE_USER_ID;
+	if (adminAllowlist && adminAllowlist.trim()) {
+		if (!isConfiguredAdminLineUser(uid, adminAllowlist)) {
+			throw new HttpsError(
+				"permission-denied",
+				"บัญชีนี้ไม่อยู่ในรายการแอดมิน (ADMIN_LINE_USER_ID)",
+			);
+		}
+	}
 	const markerRef = db.doc(BOOTSTRAP_MARKER_PATH);
 	const linkedEmployee = await db
 		.collection("employees")

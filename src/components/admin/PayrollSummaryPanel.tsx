@@ -15,7 +15,10 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { COLORS } from "../../constants";
-import { buildLoanContext } from "../../firebase/employeeLoans";
+import {
+  buildLoanContext,
+  recordLoanRepaymentTx,
+} from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
@@ -44,7 +47,7 @@ export default function PayrollSummaryPanel({
   storeCalendar,
   onSetPayrollConfirm,
   onSaveSalary,
-  onUpdateLoan,
+  // onUpdateLoan ไม่ใช้แล้ว — recordLoanRepaymentTx เขียน Firestore ตรง (transaction)
   // เดือนที่ดู (controlled โดย AdminPanel) — share กับ section อื่น
   selectedMonth,
   onSelectMonth,
@@ -303,9 +306,11 @@ export default function PayrollSummaryPanel({
   /* ─── บันทึก ledger การผ่อนเงินกู้ของเดือนนี้ ────────────────────
      เขียน repayments[selectedMonth] = ยอดหักจริง (จาก salaryCalculation)
      + อัพเดต status เป็น paid_off เมื่อผ่อนครบ · idempotent: re-confirm
-     เดือนเดิม overwrite ค่าเดิม (ข้ามถ้าไม่เปลี่ยน)                       */
+     เดือนเดิม overwrite ค่าเดิม (ข้ามถ้าไม่เปลี่ยน)
+     ใช้ transaction (recordLoanRepaymentTx) เพื่อกัน race: ถ้า admin
+     2 sessions ยืนยัน 2 เดือนพร้อมกัน → spread เก่าทับใหม่ (เด้ง entry หาย)
+     ตอนนี้ Firestore atomic merge ไม่ทับ entry อื่นแล้ว                  */
   async function recordLoanRepayments() {
-    if (!onUpdateLoan) return;
     const ym = selectedMonth;
     const updates: Promise<unknown>[] = [];
     for (const row of rows) {
@@ -316,18 +321,8 @@ export default function PayrollSummaryPanel({
       for (const loan of empLoans) {
         const amt = reps[loan.id] || 0;
         const prev = loan.repayments?.[ym] || 0;
-        if (amt === prev) continue; // ไม่เปลี่ยน → ไม่ต้องเขียน
-        const newRepayments = { ...(loan.repayments || {}), [ym]: amt };
-        const paid = Object.values(newRepayments).reduce<number>(
-          (s, v) => s + (Number(v) || 0),
-          0,
-        );
-        updates.push(
-          onUpdateLoan(loan.id, {
-            repayments: newRepayments,
-            status: paid >= (loan.principal || 0) ? "paid_off" : "active",
-          }),
-        );
+        if (amt === prev) continue;
+        updates.push(recordLoanRepaymentTx(loan.id, ym, amt));
       }
     }
     if (updates.length) await Promise.allSettled(updates);
