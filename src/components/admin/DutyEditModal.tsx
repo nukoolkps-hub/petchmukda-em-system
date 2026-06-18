@@ -276,7 +276,9 @@ export default function DutyEditModal({
               }
             }}
             className={`flex-1 py-3.5 rounded-2xl border-none text-white text-base font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform ${
-              canSave && !saving ? "bg-maroon shadow-maroon-glow" : "bg-bdr cursor-not-allowed"
+              canSave && !saving
+                ? "bg-maroon shadow-maroon-glow"
+                : "bg-bdr cursor-not-allowed"
             }`}
           >
             {saving ? "กำลังบันทึก..." : "บันทึก"}

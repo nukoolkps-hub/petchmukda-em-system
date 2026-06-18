@@ -105,8 +105,15 @@ function resolvePrimaryPoolItemId(
 /** sanitize pool items · ตัด label ว่าง · clamp threshold 0-100 · คืน []
  *  ถ้าไม่เหลือ (pool role ต้องมี items อย่างน้อย 1 ตัว · admin ต้องเพิ่ม)     */
 function cleanPoolItems(
-  items: { id: string; label: string; kind?: string; threshold?: number }[] | undefined,
-): { id: string; label: string; kind: "pool" | "personal"; threshold: number }[] {
+  items:
+    | { id: string; label: string; kind?: string; threshold?: number }[]
+    | undefined,
+): {
+  id: string;
+  label: string;
+  kind: "pool" | "personal";
+  threshold: number;
+}[] {
   if (!Array.isArray(items)) return [];
   // dedupe by id เก็บตัวแรกที่เจอ · audit fix #11 · กัน admin paste/copy
   // ทำให้ duplicate id (React warning + map overwrite ใน calc engine)
@@ -488,15 +495,13 @@ export default function RolesAdminPanel({
           ) : (
             <div className="mb-2.5">
               <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                รายการ pool sales (custom · เลือก "หลัก" = primary item สำหรับ
-                กฎ &lt; 50% ขาด base salary ตอน "ปิดทั้งหมด")
+                รายการ pool sales (custom · เลือก "หลัก" = primary item สำหรับ กฎ
+                &lt; 50% ขาด base salary ตอน "ปิดทั้งหมด")
               </label>
               <PoolItemsEditor
                 items={newRole.poolItems}
                 primaryId={newRole.primaryPoolItemId}
-                onChange={(next) =>
-                  setNewRole({ ...newRole, poolItems: next })
-                }
+                onChange={(next) => setNewRole({ ...newRole, poolItems: next })}
                 onChangePrimary={(id) =>
                   setNewRole({ ...newRole, primaryPoolItemId: id })
                 }
@@ -511,9 +516,7 @@ export default function RolesAdminPanel({
               placeholder='เช่น "เชิญชวนสมัครบัตร", "ย้ายข้อมูล"'
               addLabel="เพิ่มโบนัส"
               items={newRole.bonusItems}
-              onChange={(next) =>
-                setNewRole({ ...newRole, bonusItems: next })
-              }
+              onChange={(next) => setNewRole({ ...newRole, bonusItems: next })}
             />
           </div>
           <label className="text-xs text-txt-soft font-semibold mb-1 block">
@@ -655,8 +658,8 @@ export default function RolesAdminPanel({
                               รายการค่าคอมต่อชิ้น (ไม่เพิ่ม = ไม่มีค่าคอม)
                             </label>
                             <ItemsEditor
-                placeholder='เช่น "ทำบิล", "นับสต๊อก"'
-                addLabel="เพิ่มรายการค่าคอม"
+                              placeholder='เช่น "ทำบิล", "นับสต๊อก"'
+                              addLabel="เพิ่มรายการค่าคอม"
                               items={
                                 e?.pieceItems !== undefined
                                   ? e.pieceItems

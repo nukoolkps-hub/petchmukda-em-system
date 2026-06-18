@@ -105,9 +105,7 @@ export default function useLineNotifications({
 
     // LINE ถึงพนักงานถูกส่งจาก scheduled backend worker ตามสถานะใน Firestore
     // lookup ด้วย employeeId เสมอ — name อาจไม่ตรงหลังโดน rename
-    const employee = employeeDirectory.find(
-      (e) => e.id === request.employeeId,
-    );
+    const employee = employeeDirectory.find((e) => e.id === request.employeeId);
     const empLineId = employee?.lineUserId;
     if (
       (updates.status === "approved" || updates.status === "rejected") &&

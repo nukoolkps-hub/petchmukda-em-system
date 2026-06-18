@@ -27,9 +27,9 @@ import {
   buildRaiseHistory,
   getEffectiveBaseSalary,
   LEGACY_PIECE_ITEM_ID,
-  rolePaysPieceCommission,
   resolvePoolExclusionItemIds,
   roleBonusItems,
+  rolePaysPieceCommission,
   rolePieceItems,
   rolePoolItems,
   rolePrimaryPoolItemId,
@@ -890,7 +890,6 @@ export default function EmployeeEditModal({
                         </div>
                       ))}
                     </div>
-
                   </div>
                 );
               }
@@ -907,7 +906,7 @@ export default function EmployeeEditModal({
                       const liveExclusion =
                         editingPoolExclusion !== undefined
                           ? editingPoolExclusion
-                          : employee.poolExclusion ?? "";
+                          : (employee.poolExclusion ?? "");
                       // resolve display mode จาก liveExclusion variant
                       const mode: "none" | "some" | "all" = (() => {
                         // null/undefined/"" → ไม่ปิด · empty array NOT count
@@ -920,10 +919,7 @@ export default function EmployeeEditModal({
                           liveExclusion === ""
                         )
                           return "none";
-                        if (
-                          liveExclusion === "all" ||
-                          liveExclusion === "both"
-                        )
+                        if (liveExclusion === "all" || liveExclusion === "both")
                           return "all";
                         // Array (รวม empty []) หรือ legacy "sell"/"buy" → some
                         return "some";
@@ -933,7 +929,9 @@ export default function EmployeeEditModal({
                       if (Array.isArray(liveExclusion)) {
                         liveExclusion.forEach((id) => excludedIds.add(id));
                       } else if (liveExclusion === "sell") {
-                        ["normal", "special"].forEach((id) => excludedIds.add(id));
+                        ["normal", "special"].forEach((id) =>
+                          excludedIds.add(id),
+                        );
                       } else if (liveExclusion === "buy") {
                         excludedIds.add("buy");
                       }
@@ -978,7 +976,13 @@ export default function EmployeeEditModal({
                                 onChange={() => setExclusion("")}
                                 className="accent-green cursor-pointer"
                               />
-                              <span className={mode === "none" ? "text-green font-bold" : "text-txt"}>
+                              <span
+                                className={
+                                  mode === "none"
+                                    ? "text-green font-bold"
+                                    : "text-txt"
+                                }
+                              >
                                 ไม่ปิด
                               </span>
                             </label>
@@ -996,7 +1000,13 @@ export default function EmployeeEditModal({
                                 }
                                 className="accent-amber cursor-pointer"
                               />
-                              <span className={mode === "some" ? "text-amber font-bold" : "text-txt"}>
+                              <span
+                                className={
+                                  mode === "some"
+                                    ? "text-amber font-bold"
+                                    : "text-txt"
+                                }
+                              >
                                 ปิดเฉพาะรายการ
                               </span>
                             </label>
@@ -1007,24 +1017,25 @@ export default function EmployeeEditModal({
                                 {poolItems
                                   .filter((it) => it.kind === "pool")
                                   .map((it) => (
-                                  <label
-                                    key={it.id}
-                                    className="flex items-center gap-1.5 cursor-pointer text-xs py-0.5"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={excludedIds.has(it.id)}
-                                      onChange={(ev) => {
-                                        const next = new Set(excludedIds);
-                                        if (ev.target.checked) next.add(it.id);
-                                        else next.delete(it.id);
-                                        setExclusion([...next]);
-                                      }}
-                                      className="accent-amber cursor-pointer"
-                                    />
-                                    <span>{it.label}</span>
-                                  </label>
-                                ))}
+                                    <label
+                                      key={it.id}
+                                      className="flex items-center gap-1.5 cursor-pointer text-xs py-0.5"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={excludedIds.has(it.id)}
+                                        onChange={(ev) => {
+                                          const next = new Set(excludedIds);
+                                          if (ev.target.checked)
+                                            next.add(it.id);
+                                          else next.delete(it.id);
+                                          setExclusion([...next]);
+                                        }}
+                                        className="accent-amber cursor-pointer"
+                                      />
+                                      <span>{it.label}</span>
+                                    </label>
+                                  ))}
                               </div>
                             )}
                             <label className="flex items-center gap-2 cursor-pointer text-sm">
@@ -1035,23 +1046,31 @@ export default function EmployeeEditModal({
                                 onChange={() => setExclusion("all")}
                                 className="accent-red cursor-pointer"
                               />
-                              <span className={mode === "all" ? "text-red font-bold" : "text-txt"}>
+                              <span
+                                className={
+                                  mode === "all"
+                                    ? "text-red font-bold"
+                                    : "text-txt"
+                                }
+                              >
                                 ปิดทั้งหมด
                               </span>
                             </label>
-                            {mode === "all" && (() => {
-                              const primaryId = rolePrimaryPoolItemId(employeeRole);
-                              const primaryLabel =
-                                poolItems.find((it) => it.id === primaryId)
-                                  ?.label || primaryId;
-                              return (
-                                <div className="pl-6 text-[11px] text-txt-soft leading-relaxed">
-                                  ไม่ได้กองกลางทั้งหมด · ถ้า{" "}
-                                  <b>"{primaryLabel}"</b> &lt; 50% ของ top →
-                                  ไม่ได้เงินเดือนพื้นฐาน
-                                </div>
-                              );
-                            })()}
+                            {mode === "all" &&
+                              (() => {
+                                const primaryId =
+                                  rolePrimaryPoolItemId(employeeRole);
+                                const primaryLabel =
+                                  poolItems.find((it) => it.id === primaryId)
+                                    ?.label || primaryId;
+                                return (
+                                  <div className="pl-6 text-[11px] text-txt-soft leading-relaxed">
+                                    ไม่ได้กองกลางทั้งหมด · ถ้า{" "}
+                                    <b>"{primaryLabel}"</b> &lt; 50% ของ top →
+                                    ไม่ได้เงินเดือนพื้นฐาน
+                                  </div>
+                                );
+                              })()}
                           </div>
                         </div>
                       );
@@ -1077,75 +1096,76 @@ export default function EmployeeEditModal({
                           const liveExclusion =
                             editingPoolExclusion !== undefined
                               ? editingPoolExclusion
-                              : employee.poolExclusion ?? "";
-                          const { excludedIds: excIds } = resolvePoolExclusionItemIds(
-                            liveExclusion as any,
-                            poolItemsForRates,
-                          );
+                              : (employee.poolExclusion ?? "");
+                          const { excludedIds: excIds } =
+                            resolvePoolExclusionItemIds(
+                              liveExclusion as any,
+                              poolItemsForRates,
+                            );
                           return poolItemsForRates.map((it) => {
-                          const itemDisabled =
-                            excIds.has(it.id) && it.kind === "pool";
-                          const valueOf = (): number | "" => {
-                            if (
-                              editingPoolItemRates &&
-                              editingPoolItemRates[it.id] !== undefined
-                            )
-                              return editingPoolItemRates[it.id];
-                            const live = employee.poolItemRates?.[it.id];
-                            if (live !== undefined) return live;
-                            // legacy fallback (กรณี data จากก่อน Phase 1A)
-                            if (it.id === "normal")
-                              return employee.normalSalePieceRate ?? "";
-                            if (it.id === "special")
-                              return employee.specialSalePieceRate ?? "";
-                            if (it.id === "buy")
-                              return employee.buyPieceRate ?? "";
-                            return "";
-                          };
-                          const setRate = (raw: string) =>
-                            setEditingRole((prev) => {
-                              const base =
-                                (prev[`${employee.id}:poolItemRates`] as
-                                  | Record<string, number>
-                                  | undefined) ??
-                                employee.poolItemRates ??
-                                {};
-                              return {
-                                ...prev,
-                                [`${employee.id}:poolItemRates`]: {
-                                  ...base,
-                                  [it.id]: parseFloat(raw) || 0,
-                                },
-                              };
-                            });
-                          return (
-                            <div
-                              key={it.id}
-                              className="flex items-center gap-2"
-                            >
-                              <label className="text-sm font-semibold text-txt min-w-[100px] leading-tight">
-                                <div>{it.label}</div>
-                                {it.kind === "personal" && (
-                                  <div className="text-[10px] text-txt-soft font-normal">
-                                    (ไม่แชร์กองกลาง)
-                                  </div>
-                                )}
-                              </label>
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                min="0"
-                                value={itemDisabled ? "" : valueOf()}
-                                disabled={itemDisabled}
-                                onChange={(ev) => setRate(ev.target.value)}
-                                className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-center border-[1.5px] ${
-                                  itemDisabled
-                                    ? "text-txt-soft bg-cream-dk cursor-not-allowed border-bdr"
-                                    : `text-txt bg-white ${editingPoolItemRates?.[it.id] !== undefined ? "border-gold" : "border-bdr"}`
-                                }`}
-                              />
-                            </div>
-                          );
+                            const itemDisabled =
+                              excIds.has(it.id) && it.kind === "pool";
+                            const valueOf = (): number | "" => {
+                              if (
+                                editingPoolItemRates &&
+                                editingPoolItemRates[it.id] !== undefined
+                              )
+                                return editingPoolItemRates[it.id];
+                              const live = employee.poolItemRates?.[it.id];
+                              if (live !== undefined) return live;
+                              // legacy fallback (กรณี data จากก่อน Phase 1A)
+                              if (it.id === "normal")
+                                return employee.normalSalePieceRate ?? "";
+                              if (it.id === "special")
+                                return employee.specialSalePieceRate ?? "";
+                              if (it.id === "buy")
+                                return employee.buyPieceRate ?? "";
+                              return "";
+                            };
+                            const setRate = (raw: string) =>
+                              setEditingRole((prev) => {
+                                const base =
+                                  (prev[`${employee.id}:poolItemRates`] as
+                                    | Record<string, number>
+                                    | undefined) ??
+                                  employee.poolItemRates ??
+                                  {};
+                                return {
+                                  ...prev,
+                                  [`${employee.id}:poolItemRates`]: {
+                                    ...base,
+                                    [it.id]: parseFloat(raw) || 0,
+                                  },
+                                };
+                              });
+                            return (
+                              <div
+                                key={it.id}
+                                className="flex items-center gap-2"
+                              >
+                                <label className="text-sm font-semibold text-txt min-w-[100px] leading-tight">
+                                  <div>{it.label}</div>
+                                  {it.kind === "personal" && (
+                                    <div className="text-[10px] text-txt-soft font-normal">
+                                      (ไม่แชร์กองกลาง)
+                                    </div>
+                                  )}
+                                </label>
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  min="0"
+                                  value={itemDisabled ? "" : valueOf()}
+                                  disabled={itemDisabled}
+                                  onChange={(ev) => setRate(ev.target.value)}
+                                  className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-center border-[1.5px] ${
+                                    itemDisabled
+                                      ? "text-txt-soft bg-cream-dk cursor-not-allowed border-bdr"
+                                      : `text-txt bg-white ${editingPoolItemRates?.[it.id] !== undefined ? "border-gold" : "border-bdr"}`
+                                  }`}
+                                />
+                              </div>
+                            );
                           });
                         })()}
                       </div>
@@ -1168,8 +1188,7 @@ export default function EmployeeEditModal({
                   return editingBonusRates[itemId];
                 const live = employee.bonusRates?.[itemId];
                 if (live !== undefined) return live;
-                if (itemId === "invite")
-                  return employee.invitePieceRate ?? "";
+                if (itemId === "invite") return employee.invitePieceRate ?? "";
                 if (itemId === "transfer")
                   return employee.transferPieceRate ?? "";
                 return "";
@@ -1216,7 +1235,9 @@ export default function EmployeeEditModal({
                           inputMode="decimal"
                           min="0"
                           value={bonusRateValue(item.id)}
-                          onChange={(e) => setBonusRate(item.id, e.target.value)}
+                          onChange={(e) =>
+                            setBonusRate(item.id, e.target.value)
+                          }
                           className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBonusRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
                         />
                       </div>

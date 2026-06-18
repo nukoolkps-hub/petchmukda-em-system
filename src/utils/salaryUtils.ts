@@ -200,7 +200,10 @@ export function resolvePoolItemPieces(
     | null
     | undefined,
 ): number {
-  if (salary?.poolItemPieces && typeof salary.poolItemPieces[itemId] === "number")
+  if (
+    salary?.poolItemPieces &&
+    typeof salary.poolItemPieces[itemId] === "number"
+  )
     return salary.poolItemPieces[itemId];
   // legacy fallback by id
   if (itemId === LEGACY_POOL_NORMAL_ID) return salary?.normalSalePieces ?? 0;
@@ -227,10 +230,7 @@ export function resolvePoolItemRate(
   },
 ): number {
   // priority: snapshot map → snapshot legacy field → rates map → rates legacy
-  if (
-    salary?.poolItemRates &&
-    typeof salary.poolItemRates[itemId] === "number"
-  )
+  if (salary?.poolItemRates && typeof salary.poolItemRates[itemId] === "number")
     return salary.poolItemRates[itemId];
   if (itemId === LEGACY_POOL_NORMAL_ID && salary?.normalSalePieceRate != null)
     return salary.normalSalePieceRate;
@@ -241,7 +241,8 @@ export function resolvePoolItemRate(
   if (rates?.poolItemRates && typeof rates.poolItemRates[itemId] === "number")
     return rates.poolItemRates[itemId];
   if (itemId === LEGACY_POOL_NORMAL_ID) return rates?.normalSalePieceRate ?? 0;
-  if (itemId === LEGACY_POOL_SPECIAL_ID) return rates?.specialSalePieceRate ?? 0;
+  if (itemId === LEGACY_POOL_SPECIAL_ID)
+    return rates?.specialSalePieceRate ?? 0;
   if (itemId === LEGACY_POOL_BUY_ID) return rates?.buyPieceRate ?? 0;
   return 0;
 }
@@ -254,15 +255,7 @@ export function resolvePoolItemRate(
  *  - legacy "buy"       → "buy" item id
  *  - legacy "both"      → "all" → ทุก item id                                    */
 export function resolvePoolExclusionItemIds(
-  exclusion:
-    | "sell"
-    | "buy"
-    | "both"
-    | "all"
-    | ""
-    | string[]
-    | null
-    | undefined,
+  exclusion: "sell" | "buy" | "both" | "all" | "" | string[] | null | undefined,
   poolItems: { id: string }[],
 ): { excludedIds: Set<string>; isAll: boolean } {
   const allIds = new Set(poolItems.map((it) => it.id));
@@ -302,7 +295,10 @@ const DEFAULT_BONUS_ITEMS: { id: string; label: string }[] = [
   { id: LEGACY_BONUS_TRANSFER_ID, label: "ย้ายข้อมูลบัตร" },
 ];
 export function roleBonusItems(
-  role: { bonusItems?: { id: string; label: string }[] | null } | null | undefined,
+  role:
+    | { bonusItems?: { id: string; label: string }[] | null }
+    | null
+    | undefined,
 ): { id: string; label: string }[] {
   if (!role) return [];
   if (Array.isArray(role.bonusItems)) return role.bonusItems;
@@ -312,7 +308,11 @@ export function roleBonusItems(
 export function resolveBonusItemRate(
   itemId: string,
   salary:
-    | { bonusRates?: Record<string, number>; invitePieceRate?: number; transferPieceRate?: number }
+    | {
+        bonusRates?: Record<string, number>;
+        invitePieceRate?: number;
+        transferPieceRate?: number;
+      }
     | null
     | undefined,
   rates?: {
@@ -337,7 +337,11 @@ export function resolveBonusItemRate(
 export function resolveBonusItemCount(
   itemId: string,
   salary:
-    | { bonusCounts?: Record<string, number>; invitePieces?: number; transferPieces?: number }
+    | {
+        bonusCounts?: Record<string, number>;
+        invitePieces?: number;
+        transferPieces?: number;
+      }
     | null
     | undefined,
 ): number {
@@ -1092,7 +1096,8 @@ export function calculateSalary(
     // เพิ่ม) · kind=pool → ใช้ poolShare.itemShares[id].allocatedPieces ·
     // kind=personal → ใช้ pieces ของตัวเอง · fallback ไป legacy fields ถ้า
     // poolShare ไม่มี (เช่น role config เก่า ก่อน Phase 1A)
-    const poolItems = (poolShare?.poolItems as any) || rolePoolItems(roleConfig);
+    const poolItems =
+      (poolShare?.poolItems as any) || rolePoolItems(roleConfig);
     poolItemsBreakdown = poolItems.map((item: any) => {
       const itemShare = inPool ? poolShare?.itemShares?.[item.id] : null;
       const pieces = itemShare
@@ -1111,7 +1116,11 @@ export function calculateSalary(
     // Backward-compat: legacy salary doc มี normalSalePieces/specialSalePieces/
     // buyPieces แต่ admin ลบ item ออกจาก role.poolItems → pieces จะถูก orphan
     // → เพิ่ม legacy item ที่หายไปกลับเข้า breakdown (กัน past month เงินหาย)
-    const ensureLegacy = (id: string, label: string, kind: "pool" | "personal") => {
+    const ensureLegacy = (
+      id: string,
+      label: string,
+      kind: "pool" | "personal",
+    ) => {
       if (poolItemsBreakdown.find((b) => b.id === id)) return;
       const pieces = resolvePoolItemPieces(id, salary);
       if (pieces === 0) return; // ไม่ต้องเพิ่มถ้าไม่มี data
@@ -1163,12 +1172,10 @@ export function calculateSalary(
     LEGACY_BONUS_TRANSFER_ID,
     salary,
   );
-  const inviteCommission = bonusBreakdown.find(
-    (b) => b.id === LEGACY_BONUS_INVITE_ID,
-  )?.amount || 0;
-  const transferCommission = bonusBreakdown.find(
-    (b) => b.id === LEGACY_BONUS_TRANSFER_ID,
-  )?.amount || 0;
+  const inviteCommission =
+    bonusBreakdown.find((b) => b.id === LEGACY_BONUS_INVITE_ID)?.amount || 0;
+  const transferCommission =
+    bonusBreakdown.find((b) => b.id === LEGACY_BONUS_TRANSFER_ID)?.amount || 0;
 
   // ถ้าถูกปิดสิทธิ์ Pool และขาย < 50% ของ Top → เงินเดือนพื้นฐาน = 0
   // (ต้อง compute losesBaseSalary ก่อน attendanceBonus เพื่อ zero มันด้วย)

@@ -375,8 +375,8 @@ export default function PoolAdjustmentModal({
                       <div key={it.id} className="flex justify-between">
                         <span className="text-txt-mid">{it.label}</span>
                         <span className="font-semibold">
-                          {formatThaiNumber(it.gross)} − {formatThaiNumber(d)}{" "}
-                          = {formatThaiNumber(Math.max(0, it.gross - d))} ชิ้น
+                          {formatThaiNumber(it.gross)} − {formatThaiNumber(d)} ={" "}
+                          {formatThaiNumber(Math.max(0, it.gross - d))} ชิ้น
                         </span>
                       </div>
                     );
@@ -405,9 +405,7 @@ export default function PoolAdjustmentModal({
               const empOrphan =
                 !!it.employeeId &&
                 !!it.roleId &&
-                !employeesInRole(it.roleId).some(
-                  (e) => e.id === it.employeeId,
-                );
+                !employeesInRole(it.roleId).some((e) => e.id === it.employeeId);
               const itemOrphan =
                 !!it.pieceItemId &&
                 !!it.roleId &&
@@ -415,8 +413,8 @@ export default function PoolAdjustmentModal({
               return roleOrphan || empOrphan || itemOrphan;
             }) && (
               <span className="block mt-1 text-amber font-semibold">
-                ⚠ มีรายการที่อ้างถึงข้อมูลเก่า (พนักงานย้ายตำแหน่ง / รายการถูกลบ).
-                payout ของเดือนนั้นยังถูกต้องตาม snapshot · เก็บ/เปลี่ยน/ลบ row ได้
+                ⚠ มีรายการที่อ้างถึงข้อมูลเก่า (พนักงานย้ายตำแหน่ง / รายการถูกลบ). payout
+                ของเดือนนั้นยังถูกต้องตาม snapshot · เก็บ/เปลี่ยน/ลบ row ได้
               </span>
             )}
           </div>
@@ -657,9 +655,7 @@ function PieceRow({
             ))}
             {roleIsOrphan && (
               <option value={item.roleId}>
-                {orphanRole
-                  ? `${orphanRole.name} (เก่า)`
-                  : "(ตำแหน่งเก่า)"}
+                {orphanRole ? `${orphanRole.name} (เก่า)` : "(ตำแหน่งเก่า)"}
               </option>
             )}
           </select>

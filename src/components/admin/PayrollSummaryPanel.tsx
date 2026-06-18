@@ -474,10 +474,9 @@ export default function PayrollSummaryPanel({
             />
             <div className="text-sm text-txt leading-snug">
               <b className="text-amber">มีข้อมูลเก่าค้าง</b> — พนักงาน{" "}
-              {orphans.length} คน มี singleRatePieces (legacy) ค้างอยู่ใน
-              salary doc แต่ตำแหน่งปัจจุบันไม่มี item id "default" →
-              ไม่ถูกคิดค่าคอม กรุณาเปิดหน้า "จัดการเงินเดือน" แล้ว
-              ย้าย/ลบ ก่อน freeze รอบ
+              {orphans.length} คน มี singleRatePieces (legacy) ค้างอยู่ใน salary doc
+              แต่ตำแหน่งปัจจุบันไม่มี item id "default" → ไม่ถูกคิดค่าคอม กรุณาเปิดหน้า
+              "จัดการเงินเดือน" แล้ว ย้าย/ลบ ก่อน freeze รอบ
               <div className="mt-1.5 text-xs text-txt-mid">
                 {orphans
                   .map(

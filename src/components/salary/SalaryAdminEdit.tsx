@@ -896,102 +896,107 @@ export default function SalaryAdminEdit({
                 // user พิมพ์ 6 มี exclusion 5 จะ display 1 (เพี้ยน)
                 const grossPieces =
                   data.piecePieces?.[item.id] ??
-                  (item.id === "default" ? data.singleRatePieces ?? 0 : 0);
+                  (item.id === "default" ? (data.singleRatePieces ?? 0) : 0);
                 // excluded = ผลรวมจริงที่ admin ใส่ (ไม่ cap) จาก calculateSalary
                 // — ถ้า admin ใส่ 10 แต่พนักงานทำ 5 ต้องโชว์ "หัก 10" ไม่ใช่ 5
                 const excluded = item.excluded || 0;
                 const grossAmount = grossPieces * item.rate;
                 const excludedAmount = excluded * item.rate;
                 return (
-                <div
-                  key={item.id}
-                  className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm font-bold text-txt flex items-center gap-1.5">
-                      <IconPackage size={16} strokeWidth={2.2} />
-                      {item.label}
+                  <div
+                    key={item.id}
+                    className="bg-gold-pale rounded-[10px] p-3 border border-[#C9973A30]"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-bold text-txt flex items-center gap-1.5">
+                        <IconPackage size={16} strokeWidth={2.2} />
+                        {item.label}
+                      </div>
+                      <div className="text-xs text-txt-soft">
+                        Rate:{" "}
+                        <b className="text-maroon">
+                          {formatThaiNumber(item.rate)} ฿/ชิ้น
+                        </b>
+                      </div>
                     </div>
-                    <div className="text-xs text-txt-soft">
-                      Rate:{" "}
-                      <b className="text-maroon">
-                        {formatThaiNumber(item.rate)} ฿/ชิ้น
-                      </b>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={grossPieces || ""}
+                          onChange={(e) =>
+                            updatePiecePiece(item.id, e.target.value)
+                          }
+                          className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                          ชิ้น
+                        </span>
+                      </div>
+                      <div className="text-sm text-txt-soft font-semibold">
+                        =
+                      </div>
+                      <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
+                        {formatThaiNumber(grossAmount)} ฿
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 relative">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={grossPieces || ""}
-                        onChange={(e) =>
-                          updatePiecePiece(item.id, e.target.value)
-                        }
-                        className="w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-txt bg-white text-center"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                        ชิ้น
-                      </span>
-                    </div>
-                    <div className="text-sm text-txt-soft font-semibold">=</div>
-                    <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                      {formatThaiNumber(grossAmount)} ฿
-                    </div>
-                  </div>
-                  {excluded > 0 &&
-                    (() => {
-                      // ถ้า admin ใส่ exclusion เกิน gross → cap arithmetic
-                      // แต่โชว์ "เกิน X ชิ้น" เพื่อ admin รู้ว่าใส่เกิน
-                      const overExclusion = Math.max(0, excluded - grossPieces);
-                      const effExcluded = Math.min(excluded, grossPieces);
-                      const effExcludedAmount = effExcluded * item.rate;
-                      return (
-                        <div className="mt-2 pt-2 border-t border-dashed border-[#C9973A40] flex flex-col gap-1">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-red font-semibold">
-                              − หักรายการยกเว้น {formatThaiNumber(excluded)} ชิ้น
-                              {overExclusion > 0 && (
-                                <span className="ml-1 text-amber font-bold">
-                                  (เกิน {formatThaiNumber(overExclusion)} ชิ้น
-                                  · คิดได้แค่ {formatThaiNumber(effExcluded)})
-                                </span>
-                              )}
-                            </span>
-                            <span className="text-red font-bold tabular-nums">
-                              − {formatThaiNumber(effExcludedAmount)} ฿
-                            </span>
-                          </div>
-                          {/* รายละเอียดเหตุผลของแต่ละ exclusion row */}
-                          {(item.exclusionEntries || []).length > 0 && (
-                            <div className="pl-2 flex flex-col gap-0.5">
-                              {(item.exclusionEntries || []).map((ex, ix) => (
-                                <div
-                                  key={ix}
-                                  className="flex justify-between text-[11px] text-red/80"
-                                >
-                                  <span className="truncate">
-                                    · {ex.label || "(ไม่ระบุเหตุผล)"}
+                    {excluded > 0 &&
+                      (() => {
+                        // ถ้า admin ใส่ exclusion เกิน gross → cap arithmetic
+                        // แต่โชว์ "เกิน X ชิ้น" เพื่อ admin รู้ว่าใส่เกิน
+                        const overExclusion = Math.max(
+                          0,
+                          excluded - grossPieces,
+                        );
+                        const effExcluded = Math.min(excluded, grossPieces);
+                        const effExcludedAmount = effExcluded * item.rate;
+                        return (
+                          <div className="mt-2 pt-2 border-t border-dashed border-[#C9973A40] flex flex-col gap-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-red font-semibold">
+                                − หักรายการยกเว้น {formatThaiNumber(excluded)} ชิ้น
+                                {overExclusion > 0 && (
+                                  <span className="ml-1 text-amber font-bold">
+                                    (เกิน {formatThaiNumber(overExclusion)} ชิ้น ·
+                                    คิดได้แค่ {formatThaiNumber(effExcluded)})
                                   </span>
-                                  <span className="tabular-nums shrink-0 ml-2">
-                                    {formatThaiNumber(ex.pieces)} ชิ้น
-                                  </span>
-                                </div>
-                              ))}
+                                )}
+                              </span>
+                              <span className="text-red font-bold tabular-nums">
+                                − {formatThaiNumber(effExcludedAmount)} ฿
+                              </span>
                             </div>
-                          )}
-                          <div className="flex justify-between text-sm pt-1 border-t border-dashed border-[#C9973A30]">
-                            <span className="text-txt font-bold">
-                              คิดค่าคอม {formatThaiNumber(item.pieces)} ชิ้น
-                            </span>
-                            <span className="text-green font-extrabold tabular-nums">
-                              + {formatThaiNumber(item.amount)} ฿
-                            </span>
+                            {/* รายละเอียดเหตุผลของแต่ละ exclusion row */}
+                            {(item.exclusionEntries || []).length > 0 && (
+                              <div className="pl-2 flex flex-col gap-0.5">
+                                {(item.exclusionEntries || []).map((ex, ix) => (
+                                  <div
+                                    key={ix}
+                                    className="flex justify-between text-[11px] text-red/80"
+                                  >
+                                    <span className="truncate">
+                                      · {ex.label || "(ไม่ระบุเหตุผล)"}
+                                    </span>
+                                    <span className="tabular-nums shrink-0 ml-2">
+                                      {formatThaiNumber(ex.pieces)} ชิ้น
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <div className="flex justify-between text-sm pt-1 border-t border-dashed border-[#C9973A30]">
+                              <span className="text-txt font-bold">
+                                คิดค่าคอม {formatThaiNumber(item.pieces)} ชิ้น
+                              </span>
+                              <span className="text-green font-extrabold tabular-nums">
+                                + {formatThaiNumber(item.amount)} ฿
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })()}
-                </div>
+                        );
+                      })()}
+                  </div>
                 );
               })}
             </div>
@@ -1006,11 +1011,14 @@ export default function SalaryAdminEdit({
               if (hasDefault) return null;
               return (
                 <div className="mt-2.5 px-3 py-2 rounded-[9px] bg-amber-lt border border-amber/40 flex items-start gap-1.5 text-xs text-amber font-semibold">
-                  <IconLightbulb size={12} strokeWidth={2.4} className="shrink-0 mt-0.5" />
+                  <IconLightbulb
+                    size={12}
+                    strokeWidth={2.4}
+                    className="shrink-0 mt-0.5"
+                  />
                   <span className="leading-relaxed">
-                    มีข้อมูลเก่าค้างอยู่: {formatThaiNumber(legacy)} ชิ้น
-                    (legacy) ไม่ถูกคิดค่าคอม
-                    — กรุณาย้ายเข้ารายการใหม่ด้านบนหรือลบทิ้ง
+                    มีข้อมูลเก่าค้างอยู่: {formatThaiNumber(legacy)} ชิ้น (legacy)
+                    ไม่ถูกคิดค่าคอม — กรุณาย้ายเข้ารายการใหม่ด้านบนหรือลบทิ้ง
                   </span>
                 </div>
               );
@@ -1166,77 +1174,79 @@ export default function SalaryAdminEdit({
             admin custom รายการเองในแท็บ "ตำแหน่ง" → role.bonusItems
             ซ่อน section ถ้า role ไม่มีรายการเลย ([]) — ไม่ผูกกับ piece commission */}
         {(salaryCalculation.bonusBreakdown || []).length > 0 && (
-            <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
-              <div className="flex items-center gap-2 mb-3.5">
-                <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
-                <div className="font-bold text-sm text-txt">โบนัสอื่นๆ</div>
-                <div className="ml-auto text-sm font-bold text-maroon">
-                  + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
-                </div>
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {(salaryCalculation.bonusBreakdown || []).map((item) => {
-                  const count =
-                    (data.bonusCounts?.[item.id]) ??
-                    (item.id === "invite"
-                      ? data.invitePieces ?? 0
-                      : item.id === "transfer"
-                        ? data.transferPieces ?? 0
-                        : 0);
-                  return (
-                    <div
-                      key={item.id}
-                      className={`rounded-[10px] p-3 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div
-                          className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
-                        >
-                          <IconTicket size={16} strokeWidth={2.2} />
-                          {item.label}
-                        </div>
-                        <div className="text-xs text-txt-soft">
-                          Rate:{" "}
-                          <b className="text-maroon">
-                            {formatThaiNumber(item.rate)} ฿/ครั้ง
-                          </b>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 relative">
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            value={count || ""}
-                            disabled={locked}
-                            onChange={(e) =>
-                              updateBonusCount(item.id, e.target.value)
-                            }
-                            className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                            ครั้ง
-                          </span>
-                        </div>
-                        <div className="text-sm text-txt-soft font-semibold">=</div>
-                        <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
-                          {formatThaiNumber(item.amount)} ฿
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="text-xs text-txt-soft mt-2.5 text-center inline-flex items-center justify-center gap-1 w-full">
-                <IconLightbulb
-                  size={12}
-                  strokeWidth={2.4}
-                  className="text-gold"
-                />
-                รายการ/Rate กำหนดในแท็บ "ตำแหน่ง" และ "ข้อมูลพนักงาน"
+          <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+            <div className="flex items-center gap-2 mb-3.5">
+              <div className="w-1.5 h-4.5 rounded-sm bg-maroon-lt" />
+              <div className="font-bold text-sm text-txt">โบนัสอื่นๆ</div>
+              <div className="ml-auto text-sm font-bold text-maroon">
+                + {formatThaiNumber(salaryCalculation.memberBonusTotal)} ฿
               </div>
             </div>
-          )}
+            <div className="flex flex-col gap-2.5">
+              {(salaryCalculation.bonusBreakdown || []).map((item) => {
+                const count =
+                  data.bonusCounts?.[item.id] ??
+                  (item.id === "invite"
+                    ? (data.invitePieces ?? 0)
+                    : item.id === "transfer"
+                      ? (data.transferPieces ?? 0)
+                      : 0);
+                return (
+                  <div
+                    key={item.id}
+                    className={`rounded-[10px] p-3 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div
+                        className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
+                      >
+                        <IconTicket size={16} strokeWidth={2.2} />
+                        {item.label}
+                      </div>
+                      <div className="text-xs text-txt-soft">
+                        Rate:{" "}
+                        <b className="text-maroon">
+                          {formatThaiNumber(item.rate)} ฿/ครั้ง
+                        </b>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={count || ""}
+                          disabled={locked}
+                          onChange={(e) =>
+                            updateBonusCount(item.id, e.target.value)
+                          }
+                          className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                          ครั้ง
+                        </span>
+                      </div>
+                      <div className="text-sm text-txt-soft font-semibold">
+                        =
+                      </div>
+                      <div className="min-w-[90px] px-3 py-2.5 rounded-[9px] bg-cream text-base font-bold text-green text-right border border-bdr">
+                        {formatThaiNumber(item.amount)} ฿
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="text-xs text-txt-soft mt-2.5 text-center inline-flex items-center justify-center gap-1 w-full">
+              <IconLightbulb
+                size={12}
+                strokeWidth={2.4}
+                className="text-gold"
+              />
+              รายการ/Rate กำหนดในแท็บ "ตำแหน่ง" และ "ข้อมูลพนักงาน"
+            </div>
+          </div>
+        )}
 
         {/* Earnings inputs */}
         <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">

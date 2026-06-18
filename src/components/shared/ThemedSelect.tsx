@@ -63,7 +63,10 @@ export default function ThemedSelect({
       const flip = spaceBelow < MAX_DROPDOWN_HEIGHT && spaceAbove > spaceBelow;
       setOpenUp(flip);
       setMaxHeight(
-        Math.max(120, Math.min(MAX_DROPDOWN_HEIGHT, flip ? spaceAbove : spaceBelow)),
+        Math.max(
+          120,
+          Math.min(MAX_DROPDOWN_HEIGHT, flip ? spaceAbove : spaceBelow),
+        ),
       );
     }
     setOpen((p) => !p);

@@ -278,10 +278,10 @@ export default function useFirebaseAppData({
           // re-save unconfirmed month แล้ว coverage stamp ใหม่จากสถานะ leaves
           // ปัจจุบัน · เคยทำให้ past month earnings ขยับเงียบ · audit bug E)
           coveragePay: preserveBaseSalary
-            ? existingSalary.coveragePay ?? coverage.total
+            ? (existingSalary.coveragePay ?? coverage.total)
             : coverage.total,
           coveragePayBreakdown: preserveBaseSalary
-            ? existingSalary.coveragePayBreakdown ?? coverage.breakdown
+            ? (existingSalary.coveragePayBreakdown ?? coverage.breakdown)
             : coverage.breakdown,
           baseSalary: preserveBaseSalary
             ? existingSalary.baseSalary

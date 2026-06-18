@@ -21,8 +21,8 @@ import type {
   Role,
   StoreCalendar,
 } from "../../types";
-import { isRichTextEmpty } from "../../utils/sanitizeRichText";
 import { countWeekdayLeaves } from "../../utils/leaveUtils";
+import { isRichTextEmpty } from "../../utils/sanitizeRichText";
 import DutyForecastModal from "../modals/DutyForecastModal";
 import RoleMainDutiesModal from "../modals/RoleMainDutiesModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -67,10 +67,7 @@ export default function HomeTab({
         (lv) => lv.employeeId === profile.id && lv.start.startsWith(yearMonth),
       )
     : [];
-  const usedThisMonth = countWeekdayLeaves(
-    monthLeavesForQuota,
-    storeCalendar,
-  );
+  const usedThisMonth = countWeekdayLeaves(monthLeavesForQuota, storeCalendar);
   const quota = BUSINESS_RULES.WEEKDAY_LEAVE_QUOTA;
   const remaining = quota - usedThisMonth;
   const overQuotaDeduction = remaining < 0;

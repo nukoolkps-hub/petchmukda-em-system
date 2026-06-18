@@ -108,8 +108,9 @@ export async function setPoolAdjustment(
           roleId: it.roleId || "",
           // snapshot names ที่ UI ส่งมา — กัน label หายเมื่อ admin ลบ
           // employee/pieceItem ออกจาก system หลัง save exclusion
-          employeeName: (it.employeeName || "").slice(0, 120) || null as any,
-          pieceItemLabel: (it.pieceItemLabel || "").slice(0, 120) || null as any,
+          employeeName: (it.employeeName || "").slice(0, 120) || (null as any),
+          pieceItemLabel:
+            (it.pieceItemLabel || "").slice(0, 120) || (null as any),
           // ลบ field ของ pool variant กันค้าง
           poolGroup: null as any,
           side: null as any,

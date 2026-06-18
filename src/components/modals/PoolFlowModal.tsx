@@ -15,9 +15,9 @@ import type { Employee, Role } from "../../types";
 import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import {
+  computePoolSharesForGroup,
   LEGACY_POOL_BUY_ID,
   LEGACY_POOL_NORMAL_ID,
-  computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
 
@@ -338,9 +338,9 @@ function PoolItemFlow({
   const excludedItems =
     sample.excludedItemsByItemId?.[itemId] ??
     (itemId === LEGACY_POOL_NORMAL_ID
-      ? sample.excludedNormalItems ?? []
+      ? (sample.excludedNormalItems ?? [])
       : itemId === LEGACY_POOL_BUY_ID
-        ? sample.excludedBuyItems ?? []
+        ? (sample.excludedBuyItems ?? [])
         : []);
 
   // เรียงตามชิ้นมาก→น้อย · per-item

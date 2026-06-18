@@ -345,8 +345,7 @@ export default function SalaryView({
           <div className="text-xs text-txt leading-snug">
             <b>ตัวเลขประมาณการ</b> — ADMIN ยังไม่ได้ยืนยันยอด ตัวเลขอาจ เปลี่ยนแปลงได้ ·
             พิมพ์สลิป/ใบรับรอง
-            {employeeRole?.poolGroup ? " + แผนผังเงินเดือน" : ""}{" "}
-            เปิดได้หลังยืนยันยอด
+            {employeeRole?.poolGroup ? " + แผนผังเงินเดือน" : ""} เปิดได้หลังยืนยันยอด
           </div>
         </div>
       )}
@@ -663,9 +662,10 @@ export default function SalaryView({
                   let sub: string;
                   if (it.kind === "pool" && itemShare && itemPool != null) {
                     const excluded = (itemGross ?? 0) - (itemPool ?? 0);
-                    const poolStr = excluded > 0
-                      ? `${itemGross} − ${excluded} = ${itemPool}`
-                      : `${itemPool}`;
+                    const poolStr =
+                      excluded > 0
+                        ? `${itemGross} − ${excluded} = ${itemPool}`
+                        : `${itemPool}`;
                     sub = `กองกลาง ${poolStr} ชิ้น · ได้ ${itemShare.finalSharePercent.toFixed(2)}% = ${it.pieces.toFixed(1)} ชิ้น × ${formatThaiNumber(it.rate)} ฿`;
                   } else {
                     sub = `${it.pieces} ชิ้น × ${formatThaiNumber(it.rate)} ฿`;
@@ -691,7 +691,7 @@ export default function SalaryView({
                 })),
           // โบนัสอื่นๆ (multi-item) — role กำหนดรายการ (bonusItems != []) · ไม่
           // ผูกกับ piece commission · ลูปแสดงทุก item ที่มี amount > 0
-          ...((salaryCalculation.bonusBreakdown || [])
+          ...(salaryCalculation.bonusBreakdown || [])
             .filter((b) => b.amount > 0)
             .map((b) => ({
               icon: (
@@ -700,7 +700,7 @@ export default function SalaryView({
               main: `โบนัส${b.label}`,
               sub: `${b.pieces} ครั้ง × ${formatThaiNumber(b.rate)} ฿`,
               value: b.amount,
-            }))),
+            })),
           {
             icon: <IconStar size={16} strokeWidth={2.2} color={COLORS.gold} />,
             main: "โบนัสแห่งความขยัน(ไม่หยุด)",

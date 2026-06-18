@@ -44,7 +44,10 @@ export default function ProfileSetupModal({
   const [saving, setSaving] = useState(false);
 
   // นับ digit ของเลขบัญชี — เตือนถ้าพิมพ์แล้วยังไม่ครบจำนวนหลักของธนาคารนั้น
-  const bankAccountDigitsTyped = bankAccountNumber.replace(/[^0-9]/g, "").length;
+  const bankAccountDigitsTyped = bankAccountNumber.replace(
+    /[^0-9]/g,
+    "",
+  ).length;
   const bankAccountIncomplete =
     !!bank &&
     bankAccountDigitsTyped > 0 &&
