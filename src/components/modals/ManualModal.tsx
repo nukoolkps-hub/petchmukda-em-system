@@ -18,6 +18,7 @@ import {
   RotateCw as IconRotate,
   Ruler as IconRuler,
   Scale as IconScale,
+  Settings as IconSettings,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
   Star as IconStar,
@@ -343,10 +344,17 @@ export default function ManualModal({ onClose }) {
                 <br />
                 <b>เงิน</b> = ชิ้น × Rate ของแต่ละคน
               </p>
-              <p className="mt-2 text-xs text-txt-soft">
-                ⚙ ตัวอย่างข้างล่างคือ <b>3 รายการเริ่มต้น</b> (ขายทั่วไป · ขายพิเศษ · รับซื้อ)
-                · ADMIN เพิ่มหรือแก้รายการเองได้ในตำแหน่งงาน · แต่ละรายการ{" "}
-                <b>แยกกันคิด</b> เกณฑ์และกองของมันเอง
+              <p className="mt-2 text-xs text-txt-soft inline-flex items-start gap-1">
+                <IconSettings
+                  size={12}
+                  strokeWidth={2.4}
+                  className="mt-0.5 shrink-0 text-gold"
+                />
+                <span>
+                  ตัวอย่างข้างล่างคือ <b>3 รายการเริ่มต้น</b> (ขายทั่วไป · ขายพิเศษ ·
+                  รับซื้อ) · ADMIN เพิ่มหรือแก้รายการเองได้ในตำแหน่งงาน ·
+                  แต่ละรายการ <b>แยกกันคิด</b> เกณฑ์และกองของมันเอง
+                </span>
               </p>
             </Card>
           </Section>
@@ -382,10 +390,17 @@ export default function ManualModal({ onClose }) {
               รายการประเภท <b>"ส่วนตัว"</b> — ไม่ต้องแบ่งใคร · ขายกี่ชิ้น{" "}
               <b>คูณกับ Rate ของตัวเอง</b> ได้เลย · ลาก็ไม่กระทบเงินตรงนี้
             </p>
-            <p className="mt-2 text-xs text-txt-soft">
-              ⚙ ADMIN สร้างรายการ "ส่วนตัว" อื่นๆ ได้ในตำแหน่งงาน — เช่น
-              "โบนัสจุดขาย" หรือ "ค่าคอมพิเศษ" ฯลฯ · ทุกรายการ "ส่วนตัว"
-              ใช้กฎเดียวกัน
+            <p className="mt-2 text-xs text-txt-soft inline-flex items-start gap-1">
+              <IconSettings
+                size={12}
+                strokeWidth={2.4}
+                className="mt-0.5 shrink-0 text-gold"
+              />
+              <span>
+                ADMIN สร้างรายการ "ส่วนตัว" อื่นๆ ได้ในตำแหน่งงาน — เช่น
+                "โบนัสจุดขาย" หรือ "ค่าคอมพิเศษ" ฯลฯ · ทุกรายการ "ส่วนตัว"
+                ใช้กฎเดียวกัน
+              </span>
             </p>
           </Section>
 
@@ -564,8 +579,15 @@ export default function ManualModal({ onClose }) {
               </div>
             </div>
 
-            <div className="mt-3 pt-2 border-t border-[#C9973A40] text-xs text-txt-soft leading-relaxed">
-              💡 ลาไม่เกิน 2 วัน = ไม่กระทบเงิน · ลาเกินจะถูกหักไปแบ่งเพื่อนที่ไม่ลา
+            <div className="mt-3 pt-2 border-t border-[#C9973A40] text-xs text-txt-soft leading-relaxed inline-flex items-start gap-1">
+              <IconLightbulb
+                size={12}
+                strokeWidth={2.4}
+                className="mt-0.5 shrink-0 text-gold"
+              />
+              <span>
+                ลาไม่เกิน 2 วัน = ไม่กระทบเงิน · ลาเกินจะถูกหักไปแบ่งเพื่อนที่ไม่ลา
+              </span>
             </div>
           </Box>
 
@@ -603,9 +625,16 @@ export default function ManualModal({ onClose }) {
               </ul>
             </div>
 
-            <p className="mt-2.5 text-xs text-txt-soft">
-              ⚙ ADMIN สามารถ <b>เพิ่ม / แก้ / ลบ</b> รายการได้เอง (เช่น "ขายของแถม",
-              "ชวนเพื่อนสมัคร LINE" ฯลฯ) — แต่ละรายการตั้ง Rate ของพนักงานแต่ละคนได้
+            <p className="mt-2.5 text-xs text-txt-soft inline-flex items-start gap-1">
+              <IconSettings
+                size={12}
+                strokeWidth={2.4}
+                className="mt-0.5 shrink-0 text-gold"
+              />
+              <span>
+                ADMIN สามารถ <b>เพิ่ม / แก้ / ลบ</b> รายการได้เอง (เช่น "ขายของแถม",
+                "ชวนเพื่อนสมัคร LINE" ฯลฯ) — แต่ละรายการตั้ง Rate ของพนักงานแต่ละคนได้
+              </span>
             </p>
           </Section>
         </div>
@@ -723,7 +752,10 @@ export default function ManualModal({ onClose }) {
 
               <div className="pt-1.5 border-t border-[#C9973A30]">
                 <b>ธ.ค.</b> · หัก <b>฿1,800</b> (เดือนสุดท้าย){" "}
-                <span className="text-green font-bold">→ ผ่อนครบ ✓</span>
+                <span className="text-green font-bold inline-flex items-center gap-1">
+                  → ผ่อนครบ
+                  <IconCheck size={13} strokeWidth={2.8} />
+                </span>
               </div>
             </div>
           </Box>
