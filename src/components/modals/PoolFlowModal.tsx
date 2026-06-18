@@ -153,6 +153,7 @@ export default function PoolFlowModal({
         allLeaves,
         yearMonth: selectedMonth,
         employeeDirectory,
+        roles,
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
         poolGroup: activeGroup,
         storeCalendar,

@@ -475,6 +475,7 @@ export function computePoolSharesForGroup({
   allLeaves,
   yearMonth,
   employeeDirectory,
+  roles,
   poolAdjustment, // { items: [{poolGroup, side, pieces, label}] } — ระดับเดือน
   poolGroup, // ตำแหน่ง/กลุ่มที่กำลังคำนวณ — กรอง adjustment เฉพาะของกลุ่มนี้
   storeCalendar, // ปฏิทินเปิด-ปิดร้าน · ใช้นับวันลา (Sat ปิด → ไม่นับ)
@@ -484,6 +485,9 @@ export function computePoolSharesForGroup({
   allLeaves: any[];
   yearMonth: string;
   employeeDirectory: any[];
+  /** roles — ใช้ resolve role.poolItems + primaryPoolItemId · ถ้าไม่ส่งหรือไม่
+   *  เจอ role ของ group นี้ จะ fallback ใช้ default 3 items (legacy behavior) */
+  roles?: any[];
   poolAdjustment?: {
     items?: {
       poolGroup?: string;
@@ -516,11 +520,43 @@ export function computePoolSharesForGroup({
   });
   if (activeIds.length === 0) return {};
 
-  // --- Step 0: คัดข้อมูลพื้นฐานของแต่ละคน ---
-  const sellPieces: Record<string, number> = {}; // ทั่วไป + พิเศษ ของตัวเอง
-  const buyPieces: Record<string, number> = {}; // รับซื้อของตัวเอง
+  // --- Resolve poolItems config สำหรับกลุ่มนี้ ---
+  // หา role ของพนักงานคนใดคนหนึ่งใน group · ใช้ role.poolItems config
+  // เป็น canonical · ถ้าไม่เจอ role / roles ไม่ได้ส่งมา → fallback default 3 items
+  const groupRole = (() => {
+    if (!roles || roles.length === 0) return null;
+    for (const empId of activeIds) {
+      const salary = salaryData[empId]?.[yearMonth];
+      const emp = employeeDirectory.find((e) => e.id === empId);
+      const roleId = salary?.roleId || emp?.roleId;
+      const role = roles.find((r) => r.id === roleId);
+      if (role) return role;
+    }
+    return null;
+  })();
+  const poolItemsConfig = rolePoolItems(
+    groupRole || { poolGroup: poolGroup || "_" },
+  );
+  const primaryItemId = rolePrimaryPoolItemId(
+    groupRole || { poolGroup: poolGroup || "_" },
+  );
+  // แยก item ids ตาม kind
+  const poolItemIds = poolItemsConfig
+    .filter((it) => it.kind === "pool")
+    .map((it) => it.id);
+  // map id → threshold (%) · ใช้ตรวจ eligibility แต่ละ item
+  const itemThresholds: Record<string, number> = {};
+  poolItemsConfig.forEach((it) => {
+    itemThresholds[it.id] = it.threshold / 100;
+  });
+
+  // --- Step 0: คัดข้อมูลพื้นฐานของแต่ละคน · per-item pieces ---
+  // itemPiecesByEmp[empId][itemId] = ชิ้นของพนักงานในรายการนั้น (จาก resolver)
+  const itemPiecesByEmp: Record<string, Record<string, number>> = {};
+  const sellPieces: Record<string, number> = {}; // legacy: ทั่วไป + พิเศษ
+  const buyPieces: Record<string, number> = {}; // legacy: รับซื้อของตัวเอง
   const totalLeave: Record<string, number> = {}; // วันหยุดรวม (ปกติ + อาทิตย์)
-  const poolExclusion: Record<string, string | null> = {};
+  const poolExclusion: Record<string, any> = {};
   // เดือนนี้คนนี้ทำ monthly duty ที่ให้สิทธิ์กองกลาง → ยกเว้นเกณฑ์ 80%
   const thresholdExempt: Record<string, boolean> = {};
   activeIds.forEach((employeeId) => {
@@ -528,6 +564,13 @@ export function computePoolSharesForGroup({
     const employee = employeeDirectory.find(
       (candidateEmployee) => candidateEmployee.id === employeeId,
     );
+    // per-item pieces via resolver (fallback chain legacy → new schema)
+    itemPiecesByEmp[employeeId] = {};
+    poolItemsConfig.forEach((it) => {
+      itemPiecesByEmp[employeeId][it.id] = resolvePoolItemPieces(it.id, salary);
+    });
+    // legacy aggregate: sellPieces = normal + special (สำหรับ backward-compat
+    // fields ใน result · pool eligibility ใช้ itemPiecesByEmp ต่อ item แทน)
     sellPieces[employeeId] =
       (salary?.normalSalePieces || 0) + (salary?.specialSalePieces || 0);
     buyPieces[employeeId] = salary?.buyPieces || 0;
@@ -560,44 +603,72 @@ export function computePoolSharesForGroup({
   const buyEligibilityThreshold = topBuyPieces * POOL_THRESHOLD;
   const baseSalaryEligibilityThreshold = topSellPieces * BASE_SALARY_THRESHOLD;
 
-  // --- Step 1: หาว่าใครเข้า Pool ฝั่งไหนบ้าง ---
-  const sellPoolEligibility = {};
-  const buyPoolEligibility = {};
+  // per-item top pieces (สำหรับ kind=pool ใช้ตรวจ eligibility) · primary item
+  // top (สำหรับ losesBaseSalary check)
+  const topItemPieces: Record<string, number> = {};
+  poolItemsConfig.forEach((it) => {
+    topItemPieces[it.id] = Math.max(
+      0,
+      ...activeIds.map((empId) => itemPiecesByEmp[empId]?.[it.id] || 0),
+    );
+  });
+  const topPrimaryPieces = topItemPieces[primaryItemId] ?? 0;
+  const primaryBaseSalaryThreshold = topPrimaryPieces * BASE_SALARY_THRESHOLD;
+
+  // --- Step 1: per-item eligibility (รวม legacy ฝั่งขาย/ฝั่งรับซื้อ) ---
+  // resolve poolExclusion → set ของ item ids ที่โดน exclude ต่อพนักงาน
+  const exclusionByEmp: Record<string, Set<string>> = {};
   activeIds.forEach((employeeId) => {
-    const employeePoolExclusion = poolExclusion[employeeId];
-    // ทำ monthly duty ที่ให้สิทธิ์กองกลาง → ผ่านเกณฑ์ 80% อัตโนมัติ
-    // แต่ poolExclusion ที่ admin ปิดยังมาก่อนเสมอ (ปิดฝั่งไหน ฝั่งนั้นไม่ได้)
+    const { excludedIds } = resolvePoolExclusionItemIds(
+      poolExclusion[employeeId],
+      poolItemsConfig,
+    );
+    exclusionByEmp[employeeId] = excludedIds;
+  });
+  // itemEligibility[empId][itemId] = true/false · เฉพาะ kind=pool item
+  const itemEligibility: Record<string, Record<string, boolean>> = {};
+  activeIds.forEach((employeeId) => {
+    itemEligibility[employeeId] = {};
     const exempt = thresholdExempt[employeeId];
-    if (employeePoolExclusion === "sell" || employeePoolExclusion === "both") {
-      sellPoolEligibility[employeeId] = false;
-    } else {
-      sellPoolEligibility[employeeId] =
-        exempt || topSellPieces === 0
-          ? true
-          : sellPieces[employeeId] >= sellEligibilityThreshold;
-    }
-    if (employeePoolExclusion === "buy" || employeePoolExclusion === "both") {
-      buyPoolEligibility[employeeId] = false;
-    } else {
-      buyPoolEligibility[employeeId] =
-        exempt || topBuyPieces === 0
-          ? true
-          : buyPieces[employeeId] >= buyEligibilityThreshold;
-    }
+    const excludedIds = exclusionByEmp[employeeId];
+    poolItemsConfig.forEach((it) => {
+      if (it.kind !== "pool") return;
+      if (excludedIds.has(it.id)) {
+        itemEligibility[employeeId][it.id] = false;
+        return;
+      }
+      const top = topItemPieces[it.id] || 0;
+      if (exempt || top === 0) {
+        itemEligibility[employeeId][it.id] = true;
+        return;
+      }
+      const myPieces = itemPiecesByEmp[employeeId][it.id] || 0;
+      itemEligibility[employeeId][it.id] =
+        myPieces >= top * itemThresholds[it.id];
+    });
+  });
+  // legacy aggregate eligibility (สำหรับ backward-compat fields)
+  const sellPoolEligibility: Record<string, boolean> = {};
+  const buyPoolEligibility: Record<string, boolean> = {};
+  activeIds.forEach((employeeId) => {
+    sellPoolEligibility[employeeId] =
+      itemEligibility[employeeId][LEGACY_POOL_NORMAL_ID] ?? false;
+    buyPoolEligibility[employeeId] =
+      itemEligibility[employeeId][LEGACY_POOL_BUY_ID] ?? false;
   });
 
-  // --- Step 2: รวม Pool จากชิ้นของทุกคน แล้วหัก "ไม่นับค่าคอม" ระดับเดือน ---
-  let totalSellPoolPieces = 0;
-  let totalBuyPoolPieces = 0;
-  activeIds.forEach((employeeId) => {
-    const salary = salaryData[employeeId]?.[yearMonth];
-    if (salary) {
-      // กองกลางที่นำมาแบ่ง = เฉพาะ "ขายทั่วไป" — ขายพิเศษ ใครขายใครได้
-      // (จ่ายตรงผ่าน specialSaleCommission อยู่แล้ว ไม่เข้ากองที่หารแบ่ง)
-      totalSellPoolPieces += salary.normalSalePieces || 0;
-      totalBuyPoolPieces += buyPieces[employeeId]; // รับซื้อ
-    }
+  // --- Step 2: รวม Pool ต่อ item · per-item gross & adjustments ---
+  // grossItemPool[itemId] = ผลรวมก่อนหัก · totalItemPool[itemId] = หลังหัก
+  const grossItemPool: Record<string, number> = {};
+  poolItemsConfig.forEach((it) => {
+    if (it.kind !== "pool") return;
+    grossItemPool[it.id] = activeIds.reduce(
+      (s, empId) => s + (itemPiecesByEmp[empId]?.[it.id] || 0),
+      0,
+    );
   });
+  let totalSellPoolPieces = grossItemPool[LEGACY_POOL_NORMAL_ID] ?? 0;
+  let totalBuyPoolPieces = grossItemPool[LEGACY_POOL_BUY_ID] ?? 0;
   // หัก adjustment ระดับเดือน (admin ใส่แยก — เช่น สินค้าโปรโมชั่น / ทองแท่ง MD)
   // รวมจาก items แยกตามฝั่ง · clamp ≥ 0 · เก็บ gross + รายการไว้สำหรับแสดงผล
   const grossSellPoolPieces = totalSellPoolPieces;
@@ -687,18 +758,91 @@ export function computePoolSharesForGroup({
     };
   }
 
+  // legacy aggregate computes (sellResult/buyResult สำหรับ backward-compat
+  // return fields)
   const sellResult = computeShares(sellPoolEligibility, totalSellPoolPieces);
   const buyResult = computeShares(buyPoolEligibility, totalBuyPoolPieces);
+
+  // per-item shares (รวม normal/special/buy + custom items ใน Phase 2/3)
+  // kind=pool: ใช้ eligibility + share calc
+  // kind=personal: pieces ของตัวเอง · ไม่แชร์ · ไม่มี share% (sharePercent=100)
+  const itemShares: Record<
+    string,
+    Record<
+      string,
+      {
+        finalSharePercent: number;
+        allocatedPieces: number;
+        leaveDeductionPercent: number;
+        redistributedPercent: number;
+        eligible: boolean;
+        kind: "pool" | "personal";
+      }
+    >
+  > = {};
+  // per-item pool totals (หลังหัก adjustment ที่ apply ได้)
+  const totalItemPool: Record<string, number> = {};
+  // map legacy side (normal/buy) → คำนวณ pool total หลังหัก
+  poolItemsConfig.forEach((it) => {
+    if (it.kind !== "pool") return;
+    if (it.id === LEGACY_POOL_NORMAL_ID)
+      totalItemPool[it.id] = totalSellPoolPieces;
+    else if (it.id === LEGACY_POOL_BUY_ID)
+      totalItemPool[it.id] = totalBuyPoolPieces;
+    else
+      // custom pool items — ยังไม่มี adjustment mechanism เฉพาะ · ใช้ gross
+      totalItemPool[it.id] = grossItemPool[it.id] || 0;
+  });
+  poolItemsConfig.forEach((it) => {
+    if (it.kind === "pool") {
+      const itemEligPerEmp: Record<string, boolean> = {};
+      activeIds.forEach((empId) => {
+        itemEligPerEmp[empId] = itemEligibility[empId][it.id] || false;
+      });
+      const r = computeShares(itemEligPerEmp, totalItemPool[it.id]);
+      activeIds.forEach((empId) => {
+        if (!itemShares[empId]) itemShares[empId] = {};
+        const s = r.shares[empId];
+        itemShares[empId][it.id] = {
+          finalSharePercent: s?.finalSharePercent ?? 0,
+          allocatedPieces: s?.allocatedPieces ?? 0,
+          leaveDeductionPercent: s?.leaveDeductionPercent ?? 0,
+          redistributedPercent: s?.redistributedPercent ?? 0,
+          eligible: itemEligPerEmp[empId],
+          kind: "pool",
+        };
+      });
+    } else {
+      // personal: pieces ของตัวเอง · 100% share · ไม่หักลาแบบกอง
+      activeIds.forEach((empId) => {
+        if (!itemShares[empId]) itemShares[empId] = {};
+        const myPieces = itemPiecesByEmp[empId]?.[it.id] || 0;
+        itemShares[empId][it.id] = {
+          finalSharePercent: 100,
+          allocatedPieces: myPieces,
+          leaveDeductionPercent: 0,
+          redistributedPercent: 0,
+          eligible: true,
+          kind: "personal",
+        };
+      });
+    }
+  });
 
   // --- Step 4: ประกอบผลลัพธ์ของแต่ละคน ---
   const result = {};
   activeIds.forEach((employeeId) => {
     const sellShare = sellResult.shares[employeeId];
     const buyShare = buyResult.shares[employeeId];
+    // losesBaseSalary: "ปิดทั้งหมด" (legacy "both" หรือ new "all" หรือ
+    // string[] ที่ครอบคลุมทุก item) + พนักงานทำได้ < 50% ของ Top บน primary item
+    const exc = poolExclusion[employeeId];
+    const { isAll } = resolvePoolExclusionItemIds(exc, poolItemsConfig);
+    const myPrimaryPieces = itemPiecesByEmp[employeeId]?.[primaryItemId] || 0;
     const losesBaseSalary =
-      poolExclusion[employeeId] === "both" &&
-      topSellPieces > 0 &&
-      sellPieces[employeeId] < baseSalaryEligibilityThreshold;
+      isAll &&
+      topPrimaryPieces > 0 &&
+      myPrimaryPieces < primaryBaseSalaryThreshold;
 
     result[employeeId] = {
       // จำนวนชิ้นที่ได้
@@ -746,6 +890,15 @@ export function computePoolSharesForGroup({
       workDays: DAYS_PER_MONTH - totalLeave[employeeId],
       totalSellWorkDays: DAYS_PER_MONTH * sellResult.eligibleEmployeeCount,
       totalBuyWorkDays: DAYS_PER_MONTH * buyResult.eligibleEmployeeCount,
+      // ── New item-based fields (Phase 1B) ──────────────────────
+      poolItems: poolItemsConfig,
+      primaryPoolItemId: primaryItemId,
+      itemShares: itemShares[employeeId] || {},
+      itemPieces: itemPiecesByEmp[employeeId] || {},
+      topItemPieces,
+      grossItemPool,
+      totalItemPool,
+      excludedItemIds: [...exclusionByEmp[employeeId]],
     };
   });
   return result;

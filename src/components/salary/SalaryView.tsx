@@ -147,6 +147,7 @@ export default function SalaryView({
         allLeaves,
         yearMonth: selectedMonth,
         employeeDirectory,
+        roles,
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
         poolGroup: employeeRole.poolGroup,
         storeCalendar,
