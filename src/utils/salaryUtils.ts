@@ -460,7 +460,7 @@ export function buildRaiseHistory(
    ฝั่ง "ขาย"   = เกณฑ์ 80% ใช้ (ทั่วไป+พิเศษ) · กองกลางที่หารแบ่งใช้ "ทั่วไป" เท่านั้น
                   − poolAdjustment.excludedNormalPieces (สินค้าโปรโมชั่น ฯลฯ)
    ฝั่ง "รับซื้อ" = รับซื้อของแต่ละคน − poolAdjustment.excludedBuyPieces (MD ฯลฯ)
-                  ขาย-พิเศษ → ของใครของมัน: นับ 80% แต่ไม่เอาเข้ากองที่หารแบ่ง
+                  ขาย-พิเศษ → ส่วนตัว: นับ 80% แต่ไม่เอาเข้ากองที่หารแบ่ง
    poolAdjustment ระดับ "เดือน" ที่ admin ใส่แยก ไม่ใช่ per-employee — หักเฉพาะ
    ยอดที่เข้ากอง ไม่กระทบเกณฑ์ 80% (พนักงานยังมีสิทธิ์อยู่ในกอง)
 
@@ -480,7 +480,7 @@ export function buildRaiseHistory(
    - "both"  → ปิดทั้งคู่ + ถ้าขาย < 50% ของ Top → ไม่ได้เงินเดือนพื้นฐาน
 
    กฎ 80%: ถ้าชิ้น (ทั่วไป+พิเศษ) น้อยกว่า 80% ของ Top → ตัดออกจาก Pool
-   ขาย-พิเศษ → ของใครของมัน: นับตอนเช็ก 80% แต่ไม่เอาเข้ากองที่หารแบ่ง */
+   ขาย-พิเศษ → ส่วนตัว: นับตอนเช็ก 80% แต่ไม่เอาเข้ากองที่หารแบ่ง */
 export function computePoolSharesForGroup({
   groupEmployeeIds,
   salaryData,
@@ -799,7 +799,7 @@ export function computePoolSharesForGroup({
 
   // per-item shares (รวม normal/special/buy + custom items ใน Phase 2/3)
   // kind=pool: ใช้ eligibility + share calc
-  // kind=personal: pieces ของตัวเอง · ไม่แชร์ · ไม่มี share% (sharePercent=100)
+  // kind=personal (ส่วนตัว): pieces ของตัวเอง · ไม่เข้ากองกลาง · sharePercent=100
   const itemShares: Record<
     string,
     Record<

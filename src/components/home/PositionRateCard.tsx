@@ -153,14 +153,14 @@ export default function PositionRateCard({ employee, role }: Props) {
         )}
         {role.poolGroup
           ? // pool sales — loop poolItems (รวม custom items ที่ admin เพิ่ม)
-            // kind=pool → label "(กองกลาง)" · kind=personal → "(ไม่แชร์)"
+            // kind=pool → label "(กองกลาง)" · kind=personal → "(ส่วนตัว)"
             // strike-through เฉพาะ kind=pool ที่ถูก admin exclude · personal
-            // items ใช้ "(ไม่แชร์)" suffix พอ ไม่ต้อง strike
+            // items ใช้ "(ส่วนตัว)" suffix พอ ไม่ต้อง strike
             poolItemsCfg.map((item) => {
               const excluded =
                 item.kind === "pool" && poolExcludedIds.has(item.id);
               const labelSuffix =
-                item.kind === "pool" ? " (กองกลาง)" : " (ไม่แชร์)";
+                item.kind === "pool" ? " (กองกลาง)" : " (ส่วนตัว)";
               return (
                 <RateRow
                   key={item.id}

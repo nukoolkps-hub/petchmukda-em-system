@@ -12,7 +12,7 @@
    กฎ:
    - เกณฑ์ 80%: ใช้ gross (ไม่หัก) — พนักงานยังมีสิทธิ์อยู่ในกอง
    - กองกลางที่หารแบ่ง: ใช้ net (gross − sum of items)
-   - ขาย-พิเศษ: ไม่มี adjustment (ของใครของมันอยู่แล้ว)                 */
+   - ขาย-พิเศษ: ไม่มี adjustment (ส่วนตัวอยู่แล้ว)                 */
 import { collection, doc, onSnapshot, setDoc } from "firebase/firestore";
 import { COLLECTIONS, db } from "./config";
 
