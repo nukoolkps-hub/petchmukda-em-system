@@ -129,18 +129,28 @@ export default function KnowledgeView({ isAdmin, showToast }: Props) {
                   className={`shrink-0 text-txt-soft transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                 />
               </button>
-              {isOpen && (
-                <div className="px-3.5 pb-4 pt-3 border-t border-bdr/50">
-                  {section.blocks.map((block, i) => (
-                    <KnowledgeBlockView
-                      key={`b-${i}`}
-                      block={block}
-                      isAdmin={isAdmin}
-                      showToast={showToast}
-                    />
-                  ))}
+              {/* grid-rows trick: animate height smoothly · content stays mounted
+                  เมื่อยุบ (grid-rows-[0fr]) เพื่อให้ unmount/remount ไม่ทำงานช้า
+                  · overflow-hidden ภายในกัน content ล้นออก                        */}
+              <div
+                className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+                  isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                }`}
+                aria-hidden={!isOpen}
+              >
+                <div className="overflow-hidden">
+                  <div className="px-3.5 pb-4 pt-3 border-t border-bdr/50">
+                    {section.blocks.map((block, i) => (
+                      <KnowledgeBlockView
+                        key={`b-${i}`}
+                        block={block}
+                        isAdmin={isAdmin}
+                        showToast={showToast}
+                      />
+                    ))}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
