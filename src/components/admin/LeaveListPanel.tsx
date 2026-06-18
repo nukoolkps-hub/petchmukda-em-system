@@ -26,8 +26,8 @@ import {
 import { isMonthLocked, monthOf } from "../../utils/payrollLock";
 import ConfirmModal from "../modals/ConfirmModal";
 import AvatarCircle from "../shared/AvatarCircle";
+import CalendarPicker from "../shared/CalendarPicker";
 import MonthChevronNav from "../shared/MonthChevronNav";
-import ThaiDateInput from "../shared/ThaiDateInput";
 
 interface LeaveListPanelProps {
   allLeaves: LeaveEntry[];
@@ -232,23 +232,31 @@ export default function LeaveListPanel({
               />
             </div>
             <div className="flex gap-2">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="text-[11px] text-txt-soft font-semibold mb-1">
                   ตั้งแต่
                 </div>
-                <ThaiDateInput
+                <CalendarPicker
                   value={addStart}
                   onChange={(v) => {
                     setAddStart(v);
                     if (!addEnd || addEnd < v) setAddEnd(v);
                   }}
+                  storeCalendar={storeCalendar}
+                  size="sm"
                 />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="text-[11px] text-txt-soft font-semibold mb-1">
                   ถึง
                 </div>
-                <ThaiDateInput value={addEnd} onChange={setAddEnd} />
+                <CalendarPicker
+                  value={addEnd}
+                  onChange={setAddEnd}
+                  minDate={addStart || undefined}
+                  storeCalendar={storeCalendar}
+                  size="sm"
+                />
               </div>
             </div>
             <input
