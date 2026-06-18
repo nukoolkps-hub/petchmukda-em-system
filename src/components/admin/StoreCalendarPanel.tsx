@@ -5,6 +5,7 @@
    เพิ่ม → save ทันที (real-time sync) · ลบ → save ทันที                  */
 
 import {
+  AlertTriangle as IconAlertTriangle,
   CalendarOff as IconCalendarOff,
   CalendarPlus as IconCalendarPlus,
   ChevronDown as IconChevronDown,
@@ -26,6 +27,9 @@ interface Props {
   onUpdate: (cal: StoreCalendar) => Promise<void>;
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
+  /** ลบใบลา · ใช้ใน cascade-delete ตอนลบวันออกจากปฏิทิน
+   *  (ใบลาที่ครอบวันนั้นถูกลบทิ้งด้วย กัน frozen lv.days mismatch recompute) */
+  onDeleteLeave: (id: string | number) => void | Promise<void>;
   showToast?: (msg: string) => void;
 }
 
@@ -60,23 +64,29 @@ function isWeekday(ymd: string): boolean {
   return dow >= 1 && dow <= 5;
 }
 
-/** หาใบลาที่ active วันที่ ymd · return list ของชื่อ (live nickname > snapshot) */
+/** หาใบลาที่ active วันที่ ymd · return entries (full · ใช้ cascade delete + display) */
 function leavesOnDate(
   ymd: string,
   allLeaves: LeaveEntry[],
-  directory: Employee[],
-): string[] {
-  return allLeaves
-    .filter((lv) => lv.start <= ymd && ymd <= lv.end)
-    .map((lv) => {
-      const live = directory.find((e) => e.id === lv.employeeId);
-      return (
-        live?.nickname ||
-        lv.employeeNickname ||
-        live?.name ||
-        lv.employeeName
-      );
-    });
+): LeaveEntry[] {
+  return allLeaves.filter((lv) => lv.start <= ymd && ymd <= lv.end);
+}
+
+/** display name ของเจ้าของใบลา · live nickname > snapshot */
+function leaveOwnerName(lv: LeaveEntry, directory: Employee[]): string {
+  const live = directory.find((e) => e.id === lv.employeeId);
+  return (
+    live?.nickname ||
+    lv.employeeNickname ||
+    live?.name ||
+    lv.employeeName
+  );
+}
+
+/** label ของช่วงใบลา · "1 วัน" หรือ "5 วัน (15-19 ก.ค.)" */
+function leaveRangeLabel(lv: LeaveEntry): string {
+  if (lv.start === lv.end) return `${lv.days} วัน`;
+  return `${lv.days} วัน (${fmtShortWithWeekday(lv.start)} – ${fmtShortWithWeekday(lv.end)})`;
 }
 
 export default function StoreCalendarPanel({
@@ -84,6 +94,7 @@ export default function StoreCalendarPanel({
   onUpdate,
   allLeaves,
   employeeDirectory,
+  onDeleteLeave,
   showToast,
 }: Props) {
   const [adding, setAdding] = useState<"sat" | "wd" | null>(null);
@@ -95,10 +106,12 @@ export default function StoreCalendarPanel({
   const [selectedMonth, setSelectedMonth] = useState<string>(currentYearMonth());
   // confirm-before-remove · เปิด modal ตอน admin ลบเฉพาะวันที่มีใบลา ·
   // วันไหนไม่มีใบลาลบเลย ไม่ต้อง confirm
+  // cascade: ยืนยันลบ → ลบใบลาทุกใบในวันนี้ก่อน → แล้วค่อยลบวันออกจากปฏิทิน
+  // (กัน frozen lv.days ค้างไม่ตรงกับ recompute หลังเปลี่ยนปฏิทิน)
   const [confirmRemove, setConfirmRemove] = useState<{
     field: keyof StoreCalendar;
     ymd: string;
-    names: string[];
+    leaves: LeaveEntry[];
   } | null>(null);
 
   // months สำหรับ MonthChevronNav (เรียงใหม่→เก่า) ·
@@ -209,12 +222,47 @@ export default function StoreCalendarPanel({
   /** ตรวจใบลาก่อนลบ · ถ้ามี → confirm modal · ไม่มี → ลบเลย */
   function requestRemove(field: keyof StoreCalendar, ymd: string) {
     if (busy) return;
-    const names = leavesOnDate(ymd, allLeaves, employeeDirectory);
-    if (names.length === 0) {
+    const leaves = leavesOnDate(ymd, allLeaves);
+    if (leaves.length === 0) {
       remove(field, ymd);
       return;
     }
-    setConfirmRemove({ field, ymd, names });
+    setConfirmRemove({ field, ymd, leaves });
+  }
+
+  /** cascade-delete · ลบใบลาทุกใบในวันนั้นก่อน → แล้วลบวันออกจากปฏิทิน
+   *  · ใบลาหลายวันถูกลบทั้งใบ (admin เห็นช่วงในก่อนยืนยัน · ตัดสินใจเองได้) */
+  async function cascadeRemove(
+    field: keyof StoreCalendar,
+    ymd: string,
+    leaves: LeaveEntry[],
+  ) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      // ลบใบลาแบบ parallel · ใบไหน fail = abort ทั้งหมด (ไม่ remove calendar)
+      await Promise.all(leaves.map((lv) => onDeleteLeave(lv.id)));
+      // ลบ calendar mark — ใช้ logic เดียวกับ remove() แต่ inline เพื่อรวม
+      // toast เป็นครั้งเดียว (จะได้ไม่โชว์ "ลบแล้ว" ซ้อน)
+      const isSat = field === "extraOpenSaturdays";
+      await onUpdate({
+        ...storeCalendar,
+        [field]: (storeCalendar[field] as string[]).filter((d) => d !== ymd),
+        ...(isSat
+          ? {
+              paidExtraSaturdays: (storeCalendar.paidExtraSaturdays ?? []).filter(
+                (d) => d !== ymd,
+              ),
+            }
+          : {}),
+      });
+      showToast?.(`ลบใบลา ${leaves.length} ใบ + ลบวันออกจากปฏิทินแล้ว`);
+    } catch (e) {
+      console.error(e);
+      showToast?.("ลบไม่สำเร็จ — ลองอีกครั้ง");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function togglePaid(ymd: string) {
@@ -368,12 +416,11 @@ export default function StoreCalendarPanel({
             {/* warning: ถ้ามีใบลาในเสาร์ที่เลือก → จะกลายเป็นวันทำงาน · ใบลานับโควต้า */}
             {satPick &&
               (() => {
-                const names = leavesOnDate(
-                  satPick,
-                  allLeaves,
-                  employeeDirectory,
+                const leaves = leavesOnDate(satPick, allLeaves);
+                if (leaves.length === 0) return null;
+                const names = leaves.map((lv) =>
+                  leaveOwnerName(lv, employeeDirectory),
                 );
-                if (names.length === 0) return null;
                 return (
                   <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-amber-50 border border-amber-300 text-xs leading-relaxed text-amber-900 flex gap-2">
                     <span className="shrink-0">⚠</span>
@@ -518,12 +565,11 @@ export default function StoreCalendarPanel({
             {/* warning: ถ้ามีใบลาในวันที่ปิด → ใบลายังอยู่แต่ไม่นับโควต้า */}
             {wdPick &&
               (() => {
-                const names = leavesOnDate(
-                  wdPick,
-                  allLeaves,
-                  employeeDirectory,
+                const leaves = leavesOnDate(wdPick, allLeaves);
+                if (leaves.length === 0) return null;
+                const names = leaves.map((lv) =>
+                  leaveOwnerName(lv, employeeDirectory),
                 );
-                if (names.length === 0) return null;
                 return (
                   <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-emerald-50 border border-emerald-300 text-xs leading-relaxed text-emerald-900 flex gap-2">
                     <span className="shrink-0">ℹ</span>
@@ -595,49 +641,56 @@ export default function StoreCalendarPanel({
       </div>
 
       {/* Confirm-remove modal — เปิดเมื่อ admin ลบวันที่มีใบลา ·
-          อธิบายผลกระทบกับใบลาก่อนยืนยัน */}
+          cascade-delete: ลบใบลาทั้งหมดในวันนั้นก่อน → แล้วลบวันออกจากปฏิทิน
+          กัน frozen lv.days mismatch กับ recompute หลังเปลี่ยนปฏิทิน */}
       {confirmRemove && (
         <BaseModal onClose={() => !busy && setConfirmRemove(null)}>
           <div className="bg-white rounded-2xl p-5 w-full">
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-2xl">⚠️</span>
+              <IconAlertTriangle size={22} strokeWidth={2.4} className="text-amber-600" />
               <div className="text-lg font-bold text-maroon">
                 ยืนยันลบ?
               </div>
             </div>
             <div className="text-sm text-txt-mid mb-3 leading-relaxed">
-              <div className="mb-1">
+              <div className="mb-1.5">
                 วันที่:{" "}
                 <b className="text-txt">{fmtYmd(confirmRemove.ymd)}</b>
               </div>
               <div>
-                มีใบลา <b className="text-amber-800">{confirmRemove.names.length} คน</b>{" "}
-                ในวันนี้:
-                <div className="mt-1 px-2.5 py-1.5 rounded-[8px] bg-cream border border-bdr text-xs leading-relaxed">
-                  {confirmRemove.names.join(" · ")}
+                มีใบลา{" "}
+                <b className="text-amber-800">
+                  {confirmRemove.leaves.length} ใบ
+                </b>{" "}
+                ที่จะถูกลบ:
+                <div className="mt-1 px-2.5 py-1.5 rounded-[8px] bg-cream border border-bdr text-xs leading-relaxed flex flex-col gap-0.5">
+                  {confirmRemove.leaves.map((lv) => (
+                    <div key={lv.id}>
+                      · <b>{leaveOwnerName(lv, employeeDirectory)}</b>{" "}
+                      <span className="text-txt-soft">
+                        — {leaveRangeLabel(lv)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {confirmRemove.field === "extraOpenSaturdays" ? (
-              <div className="px-3 py-2.5 rounded-[10px] bg-emerald-50 border border-emerald-300 text-xs leading-relaxed text-emerald-900 mb-3.5 flex gap-2">
-                <span className="shrink-0">ℹ</span>
-                <div>
-                  หลังลบ · เสาร์นี้กลับเป็น "ปิด" → ใบลา{" "}
-                  <b>ไม่นับโควต้า · ไม่หักเงิน</b>{" "}
-                  (พนักงานได้สิทธิ์ลาคืนอัตโนมัติ)
-                </div>
+            <div className="px-3 py-2.5 rounded-[10px] bg-amber-50 border border-amber-300 text-xs leading-relaxed text-amber-900 mb-3.5 flex gap-2">
+              <IconAlertTriangle
+                size={14}
+                strokeWidth={2.5}
+                className="shrink-0 mt-0.5"
+              />
+              <div>
+                ระบบจะลบใบลาข้างต้นออกก่อน{" "}
+                <b>(รวมใบที่ครอบหลายวันด้วย)</b>{" "}
+                แล้วค่อยลบวันออกจากปฏิทิน · กัน{" "}
+                {confirmRemove.field === "extraOpenSaturdays"
+                  ? "ใบลาค้างในเสาร์ที่กลับเป็นวันร้านปิด"
+                  : "ใบลาค้างในวันที่กลับเป็นวันร้านเปิด"}
               </div>
-            ) : (
-              <div className="px-3 py-2.5 rounded-[10px] bg-amber-50 border border-amber-300 text-xs leading-relaxed text-amber-900 mb-3.5 flex gap-2">
-                <span className="shrink-0">⚠</span>
-                <div>
-                  หลังลบ · วันนี้กลับเป็น "เปิด" → ใบลาจะ{" "}
-                  <b>นับโควต้า + อาจหักเงิน</b>{" "}
-                  (พนักงานอาจเกินโควต้าโดยไม่รู้ตัว)
-                </div>
-              </div>
-            )}
+            </div>
 
             <div className="flex gap-2">
               <button
@@ -653,12 +706,12 @@ export default function StoreCalendarPanel({
                 onClick={async () => {
                   const target = confirmRemove;
                   setConfirmRemove(null);
-                  await remove(target.field, target.ymd);
+                  await cascadeRemove(target.field, target.ymd, target.leaves);
                 }}
                 disabled={busy}
                 className={`flex-1 py-2.5 rounded-lg bg-red text-white text-sm font-bold border-none font-[inherit] shadow-[0_3px_10px_rgba(192,57,43,0.25)] ${busy ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
               >
-                ยืนยันลบ
+                {busy ? "กำลังลบ..." : "ลบใบลา + ลบวัน"}
               </button>
             </div>
           </div>
