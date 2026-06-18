@@ -176,7 +176,11 @@ export default function LeaveListPanel({
       <div className="mb-3.5 rounded-[14px] border border-bdr bg-white">
         <button
           type="button"
-          onClick={() => setAddOpen((v) => !v)}
+          onClick={() => {
+            // ปิดฟอร์ม → ทิ้ง draft (parity กับปุ่ม "ยกเลิก" inside form)
+            if (addOpen) resetForm();
+            setAddOpen((v) => !v);
+          }}
           aria-expanded={addOpen}
           className={`w-full flex items-center gap-2 px-3.5 py-2.5 cursor-pointer font-[inherit] text-left active:scale-[0.995] transition-transform duration-100 rounded-t-[13px] ${addOpen ? "bg-maroon text-white" : "bg-gold-pale/40 text-maroon rounded-b-[13px]"}`}
         >
