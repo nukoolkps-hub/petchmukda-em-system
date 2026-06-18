@@ -175,10 +175,18 @@ export function rolePrimaryPoolItemId(
     | undefined,
 ): string {
   if (!role) return LEGACY_POOL_NORMAL_ID;
-  if (role.primaryPoolItemId) return role.primaryPoolItemId;
-  // fallback: ตัวแรกของ poolItems · legacy default = "normal"
+  // ตรวจว่า primaryPoolItemId ยังอยู่ใน poolItems ปัจจุบัน · ถ้า admin ลบ
+  // item ที่เคยเป็น primary โดยไม่ตั้งใหม่ → fallback ตัวแรกของ items · กัน
+  // orphan id ค้างทำให้ losesBaseSalary check ล้มเหลวเงียบ (top = 0 ตลอด)
   const items = rolePoolItems(role);
-  return items[0]?.id || LEGACY_POOL_NORMAL_ID;
+  if (
+    role.primaryPoolItemId &&
+    items.some((it) => it.id === role.primaryPoolItemId)
+  )
+    return role.primaryPoolItemId;
+  // fallback: ตัวแรก kind=pool ก่อน · ถ้าไม่มี → ตัวแรกใด ๆ · ถ้าไม่มีเลย → legacy
+  const firstPool = items.find((it) => it.kind === "pool");
+  return firstPool?.id || items[0]?.id || LEGACY_POOL_NORMAL_ID;
 }
 export function resolvePoolItemPieces(
   itemId: string,
@@ -985,6 +993,17 @@ export function calculateSalary(
     normalSaleCommission = 0,
     specialSaleCommission = 0,
     buyCommission = 0;
+  // breakdown รายการ pool sales (multi-item · custom + default normal/special/buy)
+  // ทุก kind=pool ใช้ allocatedPieces จาก poolShare.itemShares · ทุก kind=personal
+  // ใช้ pieces ของตัวเอง · amount = pieces × rate ของพนักงานคนนั้น
+  let poolItemsBreakdown: {
+    id: string;
+    label: string;
+    kind: "pool" | "personal";
+    pieces: number;
+    rate: number;
+    amount: number;
+  }[] = [];
   // breakdown รายการ piece (multi-item) — ใช้แสดงผลในสลิป/หน้า admin
   // excluded = ผลรวมจริงที่ admin ใส่ (ไม่ cap) เพื่อให้ UI โชว์ตรง · pieces
   // = max(0, gross-excluded) ตัวที่จ่ายเงินจริง · exclusionEntries = list
@@ -1042,16 +1061,36 @@ export function calculateSalary(
     singleRateCommission = pieceBreakdown.reduce((s, b) => s + b.amount, 0);
   } else {
     const inPool = !!poolShare;
-    normalSalePieces = inPool
-      ? poolShare.normalSalePieces || 0
-      : salary.normalSalePieces || 0;
-    specialSalePieces = salary.specialSalePieces || 0; // always personal
-    buyPieces = inPool ? poolShare.buyPieces || 0 : salary.buyPieces || 0;
-    normalSaleCommission = Math.round(normalSalePieces * normalSalePieceRate);
-    specialSaleCommission = Math.round(
-      specialSalePieces * specialSalePieceRate,
-    );
-    buyCommission = Math.round(buyPieces * buyPieceRate);
+    // Build per-item breakdown · loop poolItems (รวม custom items ที่ admin
+    // เพิ่ม) · kind=pool → ใช้ poolShare.itemShares[id].allocatedPieces ·
+    // kind=personal → ใช้ pieces ของตัวเอง · fallback ไป legacy fields ถ้า
+    // poolShare ไม่มี (เช่น role config เก่า ก่อน Phase 1A)
+    const poolItems = (poolShare?.poolItems as any) || rolePoolItems(roleConfig);
+    poolItemsBreakdown = poolItems.map((item: any) => {
+      const itemShare = inPool ? poolShare?.itemShares?.[item.id] : null;
+      const pieces = itemShare
+        ? itemShare.allocatedPieces || 0
+        : resolvePoolItemPieces(item.id, salary);
+      const rate = resolvePoolItemRate(item.id, salary, rates);
+      return {
+        id: item.id,
+        label: item.label,
+        kind: item.kind === "personal" ? "personal" : "pool",
+        pieces,
+        rate,
+        amount: Math.round(pieces * rate),
+      };
+    });
+    // Map ต้น 3 items กลับ legacy aggregate fields (backward-compat ของ UI/PDF)
+    const normalItem = poolItemsBreakdown.find((b) => b.id === "normal");
+    const specialItem = poolItemsBreakdown.find((b) => b.id === "special");
+    const buyItem = poolItemsBreakdown.find((b) => b.id === "buy");
+    normalSalePieces = normalItem?.pieces ?? 0;
+    specialSalePieces = specialItem?.pieces ?? 0;
+    buyPieces = buyItem?.pieces ?? 0;
+    normalSaleCommission = normalItem?.amount ?? 0;
+    specialSaleCommission = specialItem?.amount ?? 0;
+    buyCommission = buyItem?.amount ?? 0;
   }
 
   // ── "โบนัสอื่นๆ" (multi-item · เดิม: invite + transfer hardcode) ───────
@@ -1131,12 +1170,18 @@ export function calculateSalary(
   );
   // เงินค่าแทน (coverage) — admin stamp ตอน save salary · denorm ใน snapshot
   const coveragePay = Number(salary.coveragePay) || 0;
+  // ค่าคอม custom pool items (admin เพิ่ม id ที่ไม่ใช่ normal/special/buy) ·
+  // ตัวแรก 3 ตัวถูก map ไป legacy fields แล้ว · custom items ต้องบวกแยก
+  const customPoolCommission = poolItemsBreakdown
+    .filter((b) => !["normal", "special", "buy"].includes(b.id))
+    .reduce((s, b) => s + b.amount, 0);
   const earnings =
     baseSalary +
     singleRateCommission +
     normalSaleCommission +
     specialSaleCommission +
     buyCommission +
+    customPoolCommission +
     memberBonusTotal +
     attendanceBonus +
     coveragePay +
@@ -1212,6 +1257,8 @@ export function calculateSalary(
     singleRateCommission,
     singlePieceRate,
     pieceBreakdown, // [{id,label,pieces,rate,amount}] — multi-item piece commission
+    poolItemsBreakdown, // [{id,label,kind,pieces,rate,amount}] — multi-item pool sales (รวม custom)
+    customPoolCommission, // ผลรวม amount ของ custom pool items (id ไม่ใช่ normal/special/buy)
     normalSaleCommission,
     specialSaleCommission,
     buyCommission,

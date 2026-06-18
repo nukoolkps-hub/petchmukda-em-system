@@ -90,6 +90,18 @@ function cleanPieceItems(items: PieceItem[] | undefined): PieceItem[] | null {
   return cleaned.length > 0 ? cleaned : null;
 }
 
+/** resolve primary item id หลัง clean — ถ้า primary หาย (admin ลบ item ที่เป็น
+ *  primary โดยไม่ตั้งใหม่) → fallback ตัวแรก kind=pool · ถ้าไม่มีเลย → null    */
+function resolvePrimaryPoolItemId(
+  cleanedItems: { id: string; kind: "pool" | "personal" }[],
+  primaryId: string | null | undefined,
+): string | null {
+  if (primaryId && cleanedItems.some((it) => it.id === primaryId))
+    return primaryId;
+  const firstPool = cleanedItems.find((it) => it.kind === "pool");
+  return firstPool?.id || cleanedItems[0]?.id || null;
+}
+
 /** sanitize pool items · ตัด label ว่าง · clamp threshold 0-100 · คืน []
  *  ถ้าไม่เหลือ (pool role ต้องมี items อย่างน้อย 1 ตัว · admin ต้องเพิ่ม)     */
 function cleanPoolItems(
@@ -210,7 +222,7 @@ function PoolItemsEditor({
           onChange([
             ...items,
             {
-              id: `p_${Date.now()}`,
+              id: newPieceId(),
               label: "",
               kind: "pool" as const,
               threshold: 80,
@@ -295,14 +307,26 @@ export default function RolesAdminPanel({
         pieceItems: pieceItemsValue,
         bonusItems: bonusItemsValue,
         // pool items — เก็บ array เสมอถ้า pool role · null ถ้าไม่ใช่ pool
-        poolItems: poolValue
-          ? cleanPoolItems(e.poolItems !== undefined ? e.poolItems : (rolePoolItems(current) as any))
-          : null,
-        primaryPoolItemId: poolValue
-          ? e.primaryPoolItemId !== undefined
-            ? e.primaryPoolItemId || null
-            : current.primaryPoolItemId || null
-          : null,
+        // primary fallback ถ้า admin ลบ item ที่เป็น primary (กัน orphan id
+        // ค้างใน doc → losesBaseSalary check ล้มเหลวเงียบ)
+        ...(() => {
+          const cleaned = poolValue
+            ? cleanPoolItems(
+                e.poolItems !== undefined
+                  ? e.poolItems
+                  : (rolePoolItems(current) as any),
+              )
+            : null;
+          const primary = poolValue
+            ? resolvePrimaryPoolItemId(
+                cleaned || [],
+                e.primaryPoolItemId !== undefined
+                  ? e.primaryPoolItemId
+                  : current.primaryPoolItemId,
+              )
+            : null;
+          return { poolItems: cleaned, primaryPoolItemId: primary };
+        })(),
         // ย้ายมา pieceItems แล้ว → ล้าง legacy pieceLabel กัน migrate-on-read
         // หยิบ label เก่ามาซ้ำ
         pieceLabel: null,
@@ -332,8 +356,13 @@ export default function RolesAdminPanel({
         // pieceItems ไม่ใช้ใน pool sales (มี normal/special/buy แล้ว)
         pieceItems: poolValue ? null : cleanPieceItems(newRole.pieceItems),
         bonusItems: cleanPieceItems(newRole.bonusItems) ?? [],
-        poolItems: poolValue ? cleanPoolItems(newRole.poolItems) : null,
-        primaryPoolItemId: poolValue ? newRole.primaryPoolItemId || null : null,
+        ...(() => {
+          const cleaned = poolValue ? cleanPoolItems(newRole.poolItems) : null;
+          const primary = poolValue
+            ? resolvePrimaryPoolItemId(cleaned || [], newRole.primaryPoolItemId)
+            : null;
+          return { poolItems: cleaned, primaryPoolItemId: primary };
+        })(),
         pieceLabel: null,
         mainDuties: cleanMainDuties(newRole.mainDuties),
       });
