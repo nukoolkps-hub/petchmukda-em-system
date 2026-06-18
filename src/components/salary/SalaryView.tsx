@@ -110,6 +110,7 @@ export default function SalaryView({
     monthApprovedAdvances,
     poolShare,
     salaryCalculation,
+    previewSalary,
   } = useMemo(() => {
     const monthLeaves = salaryEmployeeId
       ? allLeaves.filter(
@@ -183,6 +184,23 @@ export default function SalaryView({
       monthExclusions,
       { workedDates: extraSatWorked },
     );
+    // ถ้ายังไม่มี salary doc → คำนวณ preview จากข้อมูลที่มี (เงินเดือนพื้นฐาน +
+    // โบนัสขยัน + เสาร์เปิดพิเศษ + หักลาเกินโควต้า) เพื่อให้พนักงานเห็นแรงจูงใจ
+    // ก่อน ADMIN กรอกค่าคอม (โดยเฉพาะโบนัสแห่งความขยัน)
+    const previewSalary = data
+      ? null
+      : calculateSalary(
+          {},
+          overQuotaInfo,
+          employeeInfo,
+          leaveDays,
+          approvedAdvanceAmountTotal,
+          null,
+          employeeRole,
+          buildLoanContext(employeeLoans, salaryEmployeeId, selectedMonth),
+          null,
+          { workedDates: extraSatWorked },
+        );
     return {
       overInfo: overQuotaInfo,
       overTotalDays: overQuotaInfo.weekdays + overQuotaInfo.sundays,
@@ -191,6 +209,7 @@ export default function SalaryView({
       approvedAdvanceTotal: approvedAdvanceAmountTotal,
       poolShare: employeePoolShare,
       salaryCalculation: computedSalary,
+      previewSalary,
     };
   }, [
     allLeaves,
@@ -295,24 +314,199 @@ export default function SalaryView({
             onSelect={setSelectedMonth}
           />
         </div>
-        <div className="text-center text-txt-soft py-[50px] px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr">
-          <div className="flex justify-center mb-3 text-gold">
-            <IconBanknote size={48} strokeWidth={1.8} />
+        <div className="text-center text-txt-soft py-7 px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr mb-3">
+          <div className="flex justify-center mb-2 text-gold">
+            <IconBanknote size={40} strokeWidth={1.8} />
           </div>
-          <div className="font-bold text-txt mb-1">ยังไม่มีข้อมูลเงินเดือน</div>
-          <div className="text-sm text-txt-soft mb-5">
-            เดือน {selectedMonthLabel}
+          <div className="font-bold text-txt mb-0.5">รอ ADMIN ยืนยันยอด</div>
+          <div className="text-xs text-txt-soft mb-3">
+            ค่าคอมขาย + รายการเสริม จะเพิ่มหลัง ADMIN กรอกข้อมูล
+            <br />
+            ตอนนี้ดูประมาณการจาก <b>เงินเดือนพื้นฐาน + โบนัสขยัน</b> ก่อน
           </div>
           {months.includes(currentYM) && selectedMonth !== currentYM && (
             <button
               onClick={() => setSelectedMonth(currentYM)}
-              className="px-5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25] inline-flex items-center gap-1.5"
+              className="px-4 py-2 rounded-[10px] border-none bg-maroon text-white text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center gap-1.5"
             >
-              <IconArrowLeft size={14} strokeWidth={2.5} />
+              <IconArrowLeft size={12} strokeWidth={2.5} />
               กลับไปเดือนปัจจุบัน
             </button>
           )}
         </div>
+
+        {/* preview card — แสดงแม้ data ยังไม่มี · เน้นโบนัสขยันเพื่อกระตุ้น */}
+        {previewSalary && (
+          <div className="bg-white rounded-[14px] border border-bdr overflow-hidden shadow-[0_2px_8px_rgba(90,30,10,0.05)]">
+            <div className="px-4 py-2.5 bg-cream border-b border-bdr flex items-center gap-2">
+              <IconBanknote
+                size={16}
+                strokeWidth={2.2}
+                color={COLORS.gold}
+              />
+              <div className="text-sm font-bold text-maroon flex-1">
+                ประมาณการเดือน {selectedMonthLabel}
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-[10px] bg-amber-100 text-amber-800 border border-amber-300">
+                preview
+              </span>
+            </div>
+            <div className="p-4 flex flex-col gap-2.5">
+              {/* base */}
+              <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                <IconBuildingBank
+                  size={16}
+                  strokeWidth={2.2}
+                  color={COLORS.gold}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-txt-mid">
+                    เงินเดือนพื้นฐาน
+                  </div>
+                  <div className="text-[11px] text-txt-soft">
+                    เรท/วัน ={" "}
+                    {formatThaiNumber(
+                      Math.round(previewSalary.dailySalaryRate),
+                    )}{" "}
+                    ฿
+                  </div>
+                </div>
+                <span className="text-base font-semibold text-green whitespace-nowrap">
+                  + {formatThaiNumber(previewSalary.baseSalary)} ฿
+                </span>
+              </div>
+
+              {/* attendance bonus — highlight ชัด */}
+              <div
+                className={`rounded-[10px] px-3 py-3 leading-[1.7] border ${
+                  previewSalary.attendanceBonus > 0
+                    ? "bg-green-lt border-[#1A6B3A30]"
+                    : "bg-cream border-bdr"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <IconStar
+                    size={16}
+                    strokeWidth={2.4}
+                    color={
+                      previewSalary.attendanceBonus > 0
+                        ? COLORS.green
+                        : COLORS.gold
+                    }
+                  />
+                  <div className="text-sm font-bold text-txt flex-1">
+                    โบนัสแห่งความขยัน (ไม่หยุด)
+                  </div>
+                  <span
+                    className={`text-base font-bold whitespace-nowrap ${
+                      previewSalary.attendanceBonus > 0
+                        ? "text-green"
+                        : "text-txt-soft"
+                    }`}
+                  >
+                    +{" "}
+                    {formatThaiNumber(previewSalary.attendanceBonus || 0)}{" "}
+                    ฿
+                  </span>
+                </div>
+                <div className="text-xs text-txt-mid leading-relaxed pl-6">
+                  ลาวันธรรมดาเดือนนี้:{" "}
+                  <b
+                    className={
+                      previewSalary.leaveDays >= 2
+                        ? "text-red"
+                        : "text-green"
+                    }
+                  >
+                    {previewSalary.leaveDays} วัน
+                  </b>
+                  <br />
+                  <span className="text-[11px] text-txt-soft">
+                    ลา 0 วัน → +
+                    {formatThaiNumber(
+                      Math.round(previewSalary.dailySalaryRate * 2),
+                    )}{" "}
+                    ฿ · ลา 1 วัน → +
+                    {formatThaiNumber(
+                      Math.round(previewSalary.dailySalaryRate),
+                    )}{" "}
+                    ฿ · ลา 2+ วัน → ไม่ได้โบนัส
+                  </span>
+                </div>
+              </div>
+
+              {/* Saturday bonus (ถ้ามี) */}
+              {(previewSalary.extraOpenSaturdayBonus || 0) > 0 && (
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                  <IconCalendarPlus
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.green}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">
+                      เงินเสาร์เปิดพิเศษ
+                    </div>
+                    <div className="text-[11px] text-txt-soft">
+                      {previewSalary.extraOpenSaturdayDays} วัน ×{" "}
+                      {formatThaiNumber(
+                        Math.round(previewSalary.dailySalaryRate),
+                      )}{" "}
+                      ฿
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-green whitespace-nowrap">
+                    +{" "}
+                    {formatThaiNumber(previewSalary.extraOpenSaturdayBonus)}{" "}
+                    ฿
+                  </span>
+                </div>
+              )}
+
+              {/* over-quota deduction (ถ้ามี) */}
+              {previewSalary.overQuotaDeduction > 0 && (
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                  <IconMinus
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.red}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">
+                      หักวันลาเกินโควต้า
+                    </div>
+                    <div className="text-[11px] text-txt-soft">
+                      เกินวันธรรมดา {previewSalary.weekdayOverQuotaDays} +
+                      อาทิตย์ {previewSalary.sundayOverQuotaDays} วัน
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-red whitespace-nowrap">
+                    − {formatThaiNumber(previewSalary.overQuotaDeduction)} ฿
+                  </span>
+                </div>
+              )}
+
+              {/* preview total */}
+              <div className="flex items-center justify-between pt-2 mt-1 border-t border-bdr">
+                <span className="text-sm font-bold text-txt">
+                  ประมาณการสุทธิ
+                </span>
+                <span className="text-lg font-extrabold text-maroon">
+                  {formatThaiNumber(
+                    previewSalary.baseSalary +
+                      previewSalary.attendanceBonus +
+                      (previewSalary.extraOpenSaturdayBonus || 0) -
+                      previewSalary.overQuotaDeduction,
+                  )}{" "}
+                  ฿
+                </span>
+              </div>
+              <div className="text-[11px] text-txt-soft text-center mt-1">
+                * ยังไม่รวมค่าคอมขาย / รายการเสริมอื่นๆ
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
