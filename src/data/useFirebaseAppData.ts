@@ -274,8 +274,15 @@ export default function useFirebaseAppData({
           // เปลี่ยน (computePoolSharesForGroup เคารพ snapshot ก่อน current)
           salaryDisabled: !!employee.salaryDisabled,
           poolThresholdExempt,
-          coveragePay: coverage.total,
-          coveragePayBreakdown: coverage.breakdown,
+          // coveragePay: preserve เดิมถ้ามี snapshot อยู่แล้ว (กัน admin
+          // re-save unconfirmed month แล้ว coverage stamp ใหม่จากสถานะ leaves
+          // ปัจจุบัน · เคยทำให้ past month earnings ขยับเงียบ · audit bug E)
+          coveragePay: preserveBaseSalary
+            ? existingSalary.coveragePay ?? coverage.total
+            : coverage.total,
+          coveragePayBreakdown: preserveBaseSalary
+            ? existingSalary.coveragePayBreakdown ?? coverage.breakdown
+            : coverage.breakdown,
           baseSalary: preserveBaseSalary
             ? existingSalary.baseSalary
             : getEffectiveBaseSalary(employee, yearMonth),
