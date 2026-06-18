@@ -254,6 +254,7 @@ export default function RequestTab({
         minDate={todayStr}
         // ลาป่วย → เลือกล่วงหน้าได้ไม่เกิน 2 อาทิตย์
         maxDate={form.type === "sick" ? sickMaxDate : undefined}
+        storeCalendar={storeCalendar}
         error={errors.startDate}
       />
       <div className="text-base font-bold text-txt mb-2 mt-1">วันที่สิ้นสุด</div>
@@ -263,6 +264,7 @@ export default function RequestTab({
         minDate={form.startDate || todayStr}
         // ลาป่วย → เลือกล่วงหน้าได้ไม่เกิน 2 อาทิตย์
         maxDate={form.type === "sick" ? sickMaxDate : undefined}
+        storeCalendar={storeCalendar}
         error={errors.endDate}
       />
       {days > 0 && (
