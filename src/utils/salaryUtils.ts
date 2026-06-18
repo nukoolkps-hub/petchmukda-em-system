@@ -969,6 +969,12 @@ export function calculateSalary(
   pieceExclusions?:
     | { pieceItemId: string; pieces: number; label?: string }[]
     | null,
+  // เสาร์เปิดพิเศษ "ที่ ADMIN tick ให้เงินเพิ่ม" ของเดือนนี้ที่พนักงานคนนี้
+  // มาทำงาน (ไม่ลา) · caller filter จาก storeCalendar.paidExtraSaturdays −
+  // ใบลาของพนักงาน · ได้เงินเพิ่ม = workedDates.length × dailyRate
+  extraOpenSaturdayContext?: {
+    workedDates: string[]; // ["YYYY-MM-DD", ...] เสาร์ที่มาทำงาน
+  } | null,
 ) {
   if (!salary) return null;
   const weekdayOverQuotaDays = overQuotaInfo?.weekdays || 0;
@@ -1225,6 +1231,13 @@ export function calculateSalary(
   );
   // เงินค่าแทน (coverage) — admin stamp ตอน save salary · denorm ใน snapshot
   const coveragePay = Number(salary.coveragePay) || 0;
+  // เงินเสาร์เปิดพิเศษ — caller pre-filter เสาร์ paid + พนักงานมาทำงาน (ไม่ลา)
+  const extraOpenSaturdayWorkedDates =
+    extraOpenSaturdayContext?.workedDates ?? [];
+  const extraOpenSaturdayDays = extraOpenSaturdayWorkedDates.length;
+  const extraOpenSaturdayBonus = Math.round(
+    extraOpenSaturdayDays * dailySalaryRate,
+  );
   // ค่าคอม custom pool items (admin เพิ่ม id ที่ไม่ใช่ normal/special/buy) ·
   // ตัวแรก 3 ตัวถูก map ไป legacy fields แล้ว · custom items ต้องบวกแยก
   const customPoolCommission = poolItemsBreakdown
@@ -1240,6 +1253,7 @@ export function calculateSalary(
     memberBonusTotal +
     attendanceBonus +
     coveragePay +
+    extraOpenSaturdayBonus +
     customEarningsTotal +
     recurringIncomesTotal;
   const advanceDeduction = approvedAdvanceTotal || 0;
@@ -1334,10 +1348,39 @@ export function calculateSalary(
     attendanceBonus,
     bonusDays,
     coveragePay,
+    extraOpenSaturdayBonus,
+    extraOpenSaturdayDays,
+    extraOpenSaturdayWorkedDates,
     leaveDays,
     advanceDeduction,
     socialSecurity: socialSecurityAmount,
     baseSalary,
     losesBaseSalary,
   };
+}
+
+/* ─── Helper: compute เสาร์เปิดพิเศษที่มีเงินเพิ่ม ของพนักงานคนนึง ────
+   ใช้กับ caller (SalaryAdminEdit / SalaryView / PayrollSummaryPanel) เพื่อ
+   สร้าง extraOpenSaturdayContext.workedDates ก่อนเรียก calculateSalary().
+
+   เงื่อนไข "ได้เงินเพิ่ม":
+   1. วันนั้นอยู่ใน storeCalendar.paidExtraSaturdays (admin ติ๊ก)
+   2. อยู่ในช่วง YYYY-MM ที่ระบุ
+   3. พนักงานไม่ลาวันนั้น (ตรวจจาก leaves: start ≤ ymd ≤ end)              */
+export function computeExtraOpenSaturdayWorkedDates(
+  yearMonth: string, // "YYYY-MM"
+  storeCalendar: { paidExtraSaturdays?: string[] } | null | undefined,
+  employeeLeaves: { start: string; end: string }[],
+): string[] {
+  const paid = storeCalendar?.paidExtraSaturdays ?? [];
+  if (paid.length === 0) return [];
+  const prefix = `${yearMonth}-`;
+  return paid
+    .filter((d) => d.startsWith(prefix))
+    .filter((d) => {
+      // ลา = วันนั้นอยู่ในช่วง start..end ของใบลาใดๆ
+      const onLeave = employeeLeaves.some((lv) => lv.start <= d && d <= lv.end);
+      return !onLeave;
+    })
+    .sort();
 }

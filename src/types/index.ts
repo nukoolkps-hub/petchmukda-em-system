@@ -274,6 +274,10 @@ export interface Duty {
 export interface StoreCalendar {
   extraOpenSaturdays: string[]; // ["YYYY-MM-DD", ...]
   extraClosedWeekdays: string[]; // ["YYYY-MM-DD", ...]
+  /** เสาร์เปิดพิเศษที่ ADMIN tick "ให้เงินเพิ่ม 1 วัน" — subset ของ
+   *  extraOpenSaturdays · พนักงานที่ไม่ลาวันนี้ได้ดอลลาร์เพิ่ม (dailyRate)
+   *  null/undefined → ไม่มี (legacy data)                                 */
+  paidExtraSaturdays?: string[];
 }
 
 /** ราคาทองคำไทย (อ้างอิงสมาคมค้าทองคำ · admin update วันละครั้ง)

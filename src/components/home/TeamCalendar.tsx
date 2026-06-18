@@ -1,6 +1,7 @@
 import {
   ChevronLeft as IconChevronLeft,
   ChevronRight as IconChevronRight,
+  Coins as IconCoins,
   Lock as IconLock,
   Sparkles as IconSparkles,
   Store as IconStore,
@@ -241,6 +242,9 @@ export default function TeamCalendar({
             const isExtraOpenSat =
               dayOfWeek === 6 &&
               !!storeCalendar?.extraOpenSaturdays?.includes(dateKey);
+            const isPaidExtraSat =
+              isExtraOpenSat &&
+              !!storeCalendar?.paidExtraSaturdays?.includes(dateKey);
 
             return (
               <div
@@ -304,6 +308,11 @@ export default function TeamCalendar({
                       <span className="inline-flex items-center gap-px">
                         <IconLock size={7} strokeWidth={3} />
                         ปิด
+                      </span>
+                    ) : isPaidExtraSat ? (
+                      <span className="inline-flex items-center gap-px">
+                        <IconCoins size={7} strokeWidth={3} />
+                        +1 วัน
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-px">

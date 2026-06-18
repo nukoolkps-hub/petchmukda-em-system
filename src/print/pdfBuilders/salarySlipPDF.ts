@@ -74,6 +74,12 @@ export function buildSalarySlipDocDef({
       "โบนัสแห่งความขยัน(ไม่หยุด)",
       formatNumber(salaryCalculation.attendanceBonus),
     ]);
+  if ((salaryCalculation.extraOpenSaturdayBonus || 0) > 0) {
+    earnRows.push([
+      `เงินเสาร์เปิดพิเศษ (${salaryCalculation.extraOpenSaturdayDays} วัน)`,
+      formatNumber(salaryCalculation.extraOpenSaturdayBonus),
+    ]);
+  }
   if ((salaryCalculation.coveragePay || 0) > 0) {
     const brk = Array.isArray(data.coveragePayBreakdown)
       ? data.coveragePayBreakdown

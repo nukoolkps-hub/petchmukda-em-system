@@ -12,6 +12,7 @@ const CAL_PATH = "config/storeCalendar";
 const EMPTY: StoreCalendar = {
   extraOpenSaturdays: [],
   extraClosedWeekdays: [],
+  paidExtraSaturdays: [],
 };
 
 export function subscribeStoreCalendar(
@@ -29,6 +30,9 @@ export function subscribeStoreCalendar(
         extraClosedWeekdays: Array.isArray(data.extraClosedWeekdays)
           ? data.extraClosedWeekdays
           : [],
+        paidExtraSaturdays: Array.isArray(data.paidExtraSaturdays)
+          ? data.paidExtraSaturdays
+          : [],
       });
     },
     (err) => {
@@ -41,11 +45,15 @@ export function subscribeStoreCalendar(
 export async function updateStoreCalendar(cal: StoreCalendar): Promise<void> {
   // sort + dedup ก่อนเขียน — กัน admin เพิ่มวันเดียวซ้ำ + ดูง่ายใน console
   const norm = (xs: string[]) => [...new Set(xs.filter(Boolean))].sort();
+  // paidExtraSaturdays ต้องเป็น subset ของ extraOpenSaturdays — กัน orphan
+  const openSet = new Set(norm(cal.extraOpenSaturdays));
+  const paid = norm(cal.paidExtraSaturdays ?? []).filter((d) => openSet.has(d));
   await setDoc(
     doc(db, CAL_PATH),
     {
-      extraOpenSaturdays: norm(cal.extraOpenSaturdays),
+      extraOpenSaturdays: [...openSet].sort(),
       extraClosedWeekdays: norm(cal.extraClosedWeekdays),
+      paidExtraSaturdays: paid,
       updatedAt: Date.now(),
     },
     { merge: true },

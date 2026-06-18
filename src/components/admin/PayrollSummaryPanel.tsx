@@ -25,6 +25,7 @@ import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import { getPayrollLock } from "../../utils/payrollLock";
 import {
   calculateSalary,
+  computeExtraOpenSaturdayWorkedDates,
   computePoolSharesForGroup,
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -163,6 +164,11 @@ export default function PayrollSummaryPanel({
             pieces: Number(it.pieces) || 0,
             label: it.label,
           }));
+        const extraSatWorked = computeExtraOpenSaturdayWorkedDates(
+          selectedMonth,
+          storeCalendar,
+          monthLeaves,
+        );
         const salaryCalculation = data
           ? calculateSalary(
               data,
@@ -174,6 +180,7 @@ export default function PayrollSummaryPanel({
               employeeRole,
               buildLoanContext(employeeLoans, employee.id, selectedMonth),
               monthExclusions,
+              { workedDates: extraSatWorked },
             )
           : null;
         return {
