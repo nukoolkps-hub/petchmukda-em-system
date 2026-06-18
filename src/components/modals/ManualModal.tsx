@@ -454,6 +454,25 @@ export default function ManualModal({ onClose }) {
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
+                <IconShoppingBag size={16} strokeWidth={2.4} />
+                รับซื้อ{" "}
+                <span className="text-xs font-normal">
+                  (รายการ "แชร์กองกลาง")
+                </span>
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              อีกรายการประเภท <b>"แชร์กองกลาง"</b> — แต่{" "}
+              <b>แยกกองของตัวเอง</b> ออกจากกองขาย · มีกอง · มีคนสูงสุด ·
+              มีเกณฑ์ของตัวเอง · ใช้สูตรเดียวกับขายทั่วไป
+            </p>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
                 <IconMinus size={16} strokeWidth={2.4} />
                 รายการยกเว้นค่าคอม (สินค้าโปรโมชั่น / ทองแท่ง MD)
               </span>
@@ -474,25 +493,6 @@ export default function ManualModal({ onClose }) {
                 <b>ยังมีสิทธิ์เข้ากองกลางอยู่</b> ไม่ถูกตัดออก
               </li>
             </ul>
-          </Section>
-
-          <Section
-            title={
-              <span className="inline-flex items-center gap-1.5">
-                <IconShoppingBag size={16} strokeWidth={2.4} />
-                รับซื้อ{" "}
-                <span className="text-xs font-normal">
-                  (รายการ "แชร์กองกลาง")
-                </span>
-              </span>
-            }
-            color={COLORS.maroon}
-          >
-            <p>
-              อีกรายการประเภท <b>"แชร์กองกลาง"</b> — แต่{" "}
-              <b>แยกกองของตัวเอง</b> ออกจากกองขาย · มีกอง · มีคนสูงสุด ·
-              มีเกณฑ์ของตัวเอง · ใช้สูตรเดียวกับขายทั่วไป
-            </p>
           </Section>
 
           <Section
@@ -766,6 +766,58 @@ export default function ManualModal({ onClose }) {
             </ul>
           </Section>
 
+          {/* รายการประจำเดือน */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconRefresh size={16} strokeWidth={2.4} />
+                รายการประจำเดือน
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              ADMIN ตั้ง <b>รายรับ/รายจ่ายประจำเดือน</b> ในข้อมูลพนักงานได้ —
+              จะถูกใช้ทุกเดือนจนกว่าจะลบ
+            </p>
+            <ul>
+              <li>
+                <b>รายรับ:</b> เช่น ค่าเดินทาง · เบี้ยขยัน → บวกเพิ่มในสลิป
+                ทุกเดือน
+              </li>
+              <li>
+                <b>รายจ่าย:</b> เช่น ค่าชุด · ค่าอาหาร → หักทุกเดือน
+              </li>
+              <li>แสดงในสลิปแยกบรรทัด · ชื่อรายการตามที่ ADMIN ตั้ง</li>
+            </ul>
+          </Section>
+
+          {/* รายการพิเศษเฉพาะเดือน */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconPlus size={16} strokeWidth={2.4} />
+                รายการพิเศษเฉพาะเดือน
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              ADMIN เพิ่ม <b>รายการพิเศษเฉพาะเดือนนั้น</b> ได้ในหน้าค่าคอม —
+              ใช้ครั้งเดียว ไม่ต่อเนื่อง
+            </p>
+            <ul>
+              <li>
+                <b>รายรับพิเศษ:</b> เช่น โบนัสพิเศษ · ของขวัญปีใหม่ ·
+                เงินรางวัลแข่งขัน
+              </li>
+              <li>
+                <b>หักพิเศษ:</b> เช่น ค่าของหาย · ค่าปรับลืมเก็บของ
+              </li>
+              <li>เห็นในสลิปเดือนนั้นๆ · ตามชื่อที่ ADMIN ตั้ง</li>
+            </ul>
+          </Section>
+
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
@@ -853,58 +905,6 @@ export default function ManualModal({ onClose }) {
               </div>
             </div>
           </Box>
-
-          {/* รายการประจำเดือน */}
-          <Section
-            title={
-              <span className="inline-flex items-center gap-1.5">
-                <IconRefresh size={16} strokeWidth={2.4} />
-                รายการประจำเดือน
-              </span>
-            }
-            color={COLORS.maroon}
-          >
-            <p>
-              ADMIN ตั้ง <b>รายรับ/รายจ่ายประจำเดือน</b> ในข้อมูลพนักงานได้ —
-              จะถูกใช้ทุกเดือนจนกว่าจะลบ
-            </p>
-            <ul>
-              <li>
-                <b>รายรับ:</b> เช่น ค่าเดินทาง · เบี้ยขยัน → บวกเพิ่มในสลิป
-                ทุกเดือน
-              </li>
-              <li>
-                <b>รายจ่าย:</b> เช่น ค่าชุด · ค่าอาหาร → หักทุกเดือน
-              </li>
-              <li>แสดงในสลิปแยกบรรทัด · ชื่อรายการตามที่ ADMIN ตั้ง</li>
-            </ul>
-          </Section>
-
-          {/* รายการพิเศษเฉพาะเดือน */}
-          <Section
-            title={
-              <span className="inline-flex items-center gap-1.5">
-                <IconPlus size={16} strokeWidth={2.4} />
-                รายการพิเศษเฉพาะเดือน
-              </span>
-            }
-            color={COLORS.maroon}
-          >
-            <p>
-              ADMIN เพิ่ม <b>รายการพิเศษเฉพาะเดือนนั้น</b> ได้ในหน้าค่าคอม —
-              ใช้ครั้งเดียว ไม่ต่อเนื่อง
-            </p>
-            <ul>
-              <li>
-                <b>รายรับพิเศษ:</b> เช่น โบนัสพิเศษ · ของขวัญปีใหม่ ·
-                เงินรางวัลแข่งขัน
-              </li>
-              <li>
-                <b>หักพิเศษ:</b> เช่น ค่าของหาย · ค่าปรับลืมเก็บของ
-              </li>
-              <li>เห็นในสลิปเดือนนั้นๆ · ตามชื่อที่ ADMIN ตั้ง</li>
-            </ul>
-          </Section>
         </div>
       )}
 
