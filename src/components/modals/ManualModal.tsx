@@ -473,7 +473,32 @@ export default function ManualModal({ onClose }) {
                 <b className="text-red">ไม่ได้แบ่งกองกลาง</b> รายการนั้น
                 (รายการอื่นยังได้)
               </p>
-              <p className="mt-1.5">
+              <div className="mt-2.5 rounded-[10px] bg-cream/70 border border-bdr p-2.5 text-xs leading-relaxed">
+                <div className="flex items-center gap-1 text-maroon font-bold mb-1">
+                  <IconLightbulb size={12} strokeWidth={2.4} />
+                  สำคัญ: แต่ละรายการคิดแยก — ไม่เอามารวมกัน
+                </div>
+                <div className="text-txt-mid">
+                  <b>ขายทั่วไป</b> มีคน top ของตัวเอง · เช็ค 80%
+                  เทียบกับยอดขายทั่วไปอย่างเดียว
+                  <br />
+                  <b>รับซื้อ</b> มีคน top ของตัวเอง · เช็ค 80%
+                  เทียบกับยอดรับซื้ออย่างเดียว
+                  <br />
+                  รายการที่ ADMIN เพิ่มเอง ก็คิดแยกเหมือนกัน · ไม่นำยอดของคนละ
+                  รายการมาบวกรวมกันเพื่อเช็คเกณฑ์
+                </div>
+                <div className="text-txt-mid mt-1.5 pt-1.5 border-t border-bdr/60">
+                  <b>ตัวอย่าง:</b> A ขายทั่วไป 100 ชิ้น · รับซื้อ 5 ชิ้น
+                  <br />
+                  คน top ขายทั่วไป = 120 ชิ้น → A ได้ 100/120 ={" "}
+                  <b className="text-green">83%</b> ✓ เข้ากองขายทั่วไป
+                  <br />
+                  คน top รับซื้อ = 50 ชิ้น → A ได้ 5/50 ={" "}
+                  <b className="text-red">10%</b> ✗ ไม่เข้ากองรับซื้อ
+                </div>
+              </div>
+              <p className="mt-2">
                 <b className="text-green">ข้อยกเว้น:</b> ถ้าทำ <b>หน้าที่รายเดือน</b> ที่
                 ADMIN ตั้งให้ "ได้สิทธิ์กองกลางอัตโนมัติ" → เข้ากองได้ทุกรายการแม้ยอดไม่ถึง 80%
                 (เพราะติดงานทั้งเดือน ขายไม่ทันเพื่อน)
