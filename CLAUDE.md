@@ -119,8 +119,24 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 - `poolSnapshots` → ทุกคน signed-in อ่านได้ (public, non-sensitive — peer data สำหรับ pool calc)
 - `roles`, `payrollConfirms` → ทุกคน signed-in อ่านได้
 
-**กองกลาง (Pool) calc + snapshot:** — รายละเอียดเต็ม → `docs/reference.md`
+**กองกลาง (Pool) — Item-based architecture (PR #488-#513):**
+- **`Role.poolItems`** — admin custom pool sales items per role (เดิม hardcode 3 รายการ)
+  - `PoolItem = { id, label, kind: "pool"|"personal", threshold: number }`
+  - `kind="pool"` แชร์กองกลาง (มี threshold % ของ top) · `kind="personal"` ใครขายใครได้ (ไม่แชร์)
+  - `Role.primaryPoolItemId` — primary item สำหรับ `losesBaseSalary` check (< 50% ของ top primary → ขาด base) ตอน `poolExclusion="all"`
+  - default 3 items: `{normal,kind=pool,80}`, `{special,kind=personal,80}`, `{buy,kind=pool,80}` · null/undefined → migrate-on-read
+- **`Employee.poolItemRates: Record<string, number>`** — rate ต่อ item id · legacy `normalSalePieceRate`/`specialSalePieceRate`/`buyPieceRate` fallback
+- **`Employee.poolExclusion`**: `null | "all" | string[]` — null=ไม่ปิด · `"all"`=ปิดทั้งหมด · `string[]`=ปิดเฉพาะ item ids
+  - legacy `"sell"|"buy"|"both"` รองรับ backward compat (migrate-on-read)
+- **`SalaryMonth.poolItemPieces: Record<string, number>`** — count ต่อ item id (snapshot per month) · legacy `normalSalePieces`/`specialSalePieces`/`buyPieces` fallback
+
+**Pool adjustment (PoolAdjustmentModal):**
+- `PoolAdjustmentItem.poolItemId` — admin เลือก pool item ที่จะหัก (Phase 3D) · legacy `side: "normal"|"buy"` รองรับ backward compat
+- Calc engine routes via `excludedByItemId[itemId]` · per-item deduction
+
+**Calc + snapshot:** — รายละเอียดเต็ม → `docs/reference.md`
 - ทุกหน้าที่โชว์ค่าคอมเรียก `computePoolSharesForGroup` ตัวเดียวกัน (single source of truth) → SalaryView, PayrollSummaryPanel, SalaryAdminEdit, PoolFlowModal เลขตรงกันเสมอ
+- Return shape: backward-compat fields เก่า + per-item `itemShares` · `itemPieces` · `topItemPieces` · `grossItemPool` · `totalItemPool` · `excludedItemsByItemId` · `poolItems` · `primaryPoolItemId`
 - ตอน admin save salary, `updateSalary` เขียน snapshot `{ roleId, poolExclusion, totalLeaveDays }` ลง salary doc + mirror ลง collection `poolSnapshots/{ym}` (public, non-sensitive)
 - **Privacy (phase 2 — ปัจจุบัน):** salaries อ่านได้แค่ admin/เจ้าของ (`firestore.rules`) · พนักงาน subscribe เฉพาะของตัวเอง · peer data ที่ pool calc ต้องใช้ดึงจาก `poolSnapshots` แล้ว merge ใน `useFirebaseAppData.salaryData` — ดู `docs/reference.md` → "Privacy: salaries vs poolSnapshots"
 - ปุ่ม "ยืนยันยอด" ใน PayrollSummaryPanel เรียก `backfillPoolSnapshots()` ก่อน freeze สลิป — รับประกันว่า snapshot ถูกเขียนเสมอ (แม้สลิป freeze จะ fail)
@@ -194,8 +210,8 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 |---|---|
 | โควต้าวันลา/เดือน (weekday) | 2 วัน |
 | ตัวคูณวันอาทิตย์ | 1.5× ของ dailyRate |
-| เกณฑ์เข้า Pool (sell/buy แยกกัน) | ≥ 80% ของ top |
-| เกณฑ์ได้เงินเดือนพื้นฐาน | ≥ 50% ของ top (poolExclusion=both) |
+| เกณฑ์เข้า Pool (per item · admin custom) | default 80% ของ top item (PR #488+) |
+| เกณฑ์ได้เงินเดือนพื้นฐาน | ≥ 50% ของ top primary item (poolExclusion="all") |
 | วันลา "ฟรี" ก่อนเริ่มหัก % ใน Pool | 2 วันแรก (ไม่กระทบ) |
 | เพดานเบิกล่วงหน้า | 50% ของ baseSalary |
 | โบนัสแห่งความขยัน (0 วันลา) | 2 × dailyRate |
