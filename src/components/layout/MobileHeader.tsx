@@ -3,6 +3,7 @@
 import {
   BookOpen as IconBook2,
   Pencil as IconEdit,
+  FileText as IconFileText,
   Shield as IconShield,
   User as IconUser,
 } from "lucide-react";
@@ -114,7 +115,21 @@ export default function MobileHeader({
             คู่มือ
           </button>
         )}
-        {tab !== "home" && <div className="w-9 h-9" />}
+        {tab === "salary" && (
+          <button
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("openSalaryCert"))
+            }
+            title="พิมพ์ใบรับรองเงินเดือน"
+            className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-xs font-semibold shrink-0 whitespace-nowrap"
+          >
+            <IconFileText size={16} color="#fff" strokeWidth={2.2} />
+            ใบรับรอง
+          </button>
+        )}
+        {tab !== "home" && tab !== "salary" && (
+          <div className="w-9 h-9" />
+        )}
       </div>
 
       {/* profile strip */}
