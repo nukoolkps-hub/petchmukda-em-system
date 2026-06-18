@@ -36,11 +36,13 @@ export function isSunday(ymd: string): boolean {
 interface StoreCalendarLite {
 	extraOpenSaturdays: string[];
 	extraClosedWeekdays: string[];
+	extraClosedSundays?: string[];
 }
 
 /** filter หน้าที่ที่ "applicable วันนี้":
  *  - ร้านปิด (เสาร์ default หรือ admin mark ปิด) → [] (ไม่มีหน้าที่)
- *  - อาทิตย์ → ตัด weekly+skipSundays (per-duty opt-out)
+ *  - อาทิตย์ปิดพิเศษ → [] (ไม่มีหน้าที่)
+ *  - อาทิตย์เปิด → ตัด weekly+skipSundays (per-duty opt-out)
  *  - วันทำงานอื่น → ทุกหน้าที่ปกติ                                        */
 export function applicableDuties(
 	duties: Duty[],
@@ -61,8 +63,11 @@ export function applicableDuties(
 	) {
 		return [];
 	}
-	// อาทิตย์: ใช้ per-duty opt-out
+	// อาทิตย์: ปิดพิเศษ → [] · เปิด → ใช้ per-duty opt-out
 	if (dow === 0) {
+		if ((calendar?.extraClosedSundays || []).includes(todayYmd)) {
+			return [];
+		}
 		return duties.filter((dt) => !(dt.period === "weekly" && dt.skipSundays));
 	}
 	return duties;

@@ -13,8 +13,8 @@ import {
   TODAY,
 } from "../../constants";
 import { useClickOutside } from "../../hooks/useClickOutside";
-import { fmtShort, toYMD } from "../../utils/dateUtils";
 import type { StoreCalendar } from "../../types";
+import { fmtShort, toYMD } from "../../utils/dateUtils";
 
 interface Props {
   value: string;
@@ -93,16 +93,16 @@ export default function CalendarPicker({
     // จ-ศ ที่ปิดพิเศษ = ถูก disable (ลาวันร้านปิดไม่นับ) ·
     // ถ้าไม่ส่ง storeCalendar → fallback ไป disableSaturdays prop เดิม
     if (storeCalendar) {
-      if (
-        dow === 6 &&
-        !storeCalendar.extraOpenSaturdays?.includes(ds)
-      )
+      if (dow === 6 && !storeCalendar.extraOpenSaturdays?.includes(ds))
         return "weekend";
       if (
         dow >= 1 &&
         dow <= 5 &&
         storeCalendar.extraClosedWeekdays?.includes(ds)
       )
+        return "weekend";
+      // อาทิตย์ปิดพิเศษ → disable (ร้านปิด · ลาวันนั้นไม่นับ)
+      if (dow === 0 && storeCalendar.extraClosedSundays?.includes(ds))
         return "weekend";
     } else if (disableSaturdays && dow === 6) {
       return "weekend";

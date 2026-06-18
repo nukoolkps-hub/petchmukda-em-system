@@ -111,6 +111,9 @@ async function buildSnapshot(): Promise<Snapshot> {
 		extraClosedWeekdays: Array.isArray(calendarData.extraClosedWeekdays)
 			? (calendarData.extraClosedWeekdays as string[])
 			: [],
+		extraClosedSundays: Array.isArray(calendarData.extraClosedSundays)
+			? (calendarData.extraClosedSundays as string[])
+			: [],
 	};
 
 	const duties: Duty[] = dutiesSnap.docs

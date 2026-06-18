@@ -1,7 +1,7 @@
 /* ─── Leave counting helpers ───────────────────────────────────── */
 import { BUSINESS_RULES } from "../constants";
 import type { StoreCalendar } from "../types";
-import { dateToYmd, isQuotaCountableDay } from "./storeCalendar";
+import { dateToYmd, isQuotaCountableDay, isStoreClosed } from "./storeCalendar";
 
 const { WEEKDAY_LEAVE_QUOTA } = BUSINESS_RULES;
 
@@ -38,9 +38,9 @@ export function countWeekdayLeaves(
 
 /* ─── Helper: นับวันลาที่ "ถูกหัก" ────────────────────────────────
    กฎ:
-   - วันอาทิตย์ทุกวันที่ลา → ถูกหักทันที (× 1.5 ไม่ใช้โควต้า)
-   - วันที่ร้านปิด (เสาร์ default + เสาร์ที่ไม่ได้ open + จ-ศ ปิดพิเศษ)
-     → ไม่นับ ไม่หัก (ร้านปิดอยู่แล้ว — ลาไม่กระทบ)
+   - วันอาทิตย์ทุกวันที่ลา (ร้านเปิด) → ถูกหักทันที (× 1.5 ไม่ใช้โควต้า)
+   - วันที่ร้านปิด (เสาร์ default + เสาร์ที่ไม่ได้ open + จ-ศ ปิดพิเศษ +
+     อาทิตย์ปิดพิเศษ) → ไม่นับ ไม่หัก (ร้านปิดอยู่แล้ว — ลาไม่กระทบ)
    - วันทำงาน (เสาร์เปิดพิเศษ + จ-ศ ปกติ) → 2 "วัน" แรก (เรียงตามวัน)
      ไม่หัก, เกินจากนั้นค่อยหัก
    IMPORTANT: นับเป็น "วัน" ไม่ใช่ "ใบลา" · ใบเดียวยาว 3 วัน = 3 วัน
@@ -60,7 +60,8 @@ export function getOverQuotaDays(
     while (c <= e) {
       const dow = c.getDay();
       if (dow === 0) {
-        sundays++; // อาทิตย์ — หักทันที (× 1.5) · นับเป็น day count
+        // อาทิตย์ที่ร้านเปิด → หักทันที (× 1.5) · อาทิตย์ปิดพิเศษ → ข้าม ไม่หัก
+        if (!isStoreClosed(dateToYmd(c), calendar)) sundays++;
       } else if (isCountableWeekday(c, calendar)) {
         workDayDates.push(
           `${c.getFullYear()}-${String(c.getMonth() + 1).padStart(2, "0")}-${String(c.getDate()).padStart(2, "0")}`,

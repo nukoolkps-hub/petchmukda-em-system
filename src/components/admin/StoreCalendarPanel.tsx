@@ -1,7 +1,8 @@
 /* ─── StoreCalendarPanel — ปฏิทินวันเปิด-ปิดร้าน ────────────────────
-   2 การ์ดในหน้าเดียว:
+   3 การ์ดในหน้าเดียว:
    1. เสาร์เปิดพิเศษ  — admin เพิ่มเสาร์ที่ให้พนักงานมาทำงาน
    2. วันธรรมดาปิดพิเศษ — admin เพิ่ม จ-ศ ที่ปิดร้าน (อบรม/หยุดยาว ฯลฯ)
+   3. อาทิตย์ปิดพิเศษ — admin เพิ่มอาทิตย์ที่ปิดร้าน (ลาไม่นับ · ไม่หัก × 1.5)
    เพิ่ม → save ทันที (real-time sync) · ลบ → save ทันที                  */
 
 import {
@@ -12,6 +13,7 @@ import {
   Coins as IconCoins,
   Plus as IconPlus,
   Store as IconStore,
+  Sun as IconSun,
   Trash2 as IconTrash,
   X as IconX,
 } from "lucide-react";
@@ -64,23 +66,21 @@ function isWeekday(ymd: string): boolean {
   return dow >= 1 && dow <= 5;
 }
 
+/** date input → YYYY-MM-DD (validate ว่าเป็นวันอาทิตย์) */
+function isSundayYmd(ymd: string): boolean {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay() === 0;
+}
+
 /** หาใบลาที่ active วันที่ ymd · return entries (full · ใช้ cascade delete + display) */
-function leavesOnDate(
-  ymd: string,
-  allLeaves: LeaveEntry[],
-): LeaveEntry[] {
+function leavesOnDate(ymd: string, allLeaves: LeaveEntry[]): LeaveEntry[] {
   return allLeaves.filter((lv) => lv.start <= ymd && ymd <= lv.end);
 }
 
 /** display name ของเจ้าของใบลา · live nickname > snapshot */
 function leaveOwnerName(lv: LeaveEntry, directory: Employee[]): string {
   const live = directory.find((e) => e.id === lv.employeeId);
-  return (
-    live?.nickname ||
-    lv.employeeNickname ||
-    live?.name ||
-    lv.employeeName
-  );
+  return live?.nickname || lv.employeeNickname || live?.name || lv.employeeName;
 }
 
 /** label ของช่วงใบลา · "1 วัน" หรือ "5 วัน (15-19 ก.ค.)" */
@@ -97,13 +97,16 @@ export default function StoreCalendarPanel({
   onDeleteLeave,
   showToast,
 }: Props) {
-  const [adding, setAdding] = useState<"sat" | "wd" | null>(null);
+  const [adding, setAdding] = useState<"sat" | "wd" | "sun" | null>(null);
   const [satPick, setSatPick] = useState("");
   const [wdPick, setWdPick] = useState("");
+  const [sunPick, setSunPick] = useState("");
   const [busy, setBusy] = useState(false);
   // selected month (YYYY-MM) — filter list ทั้ง sat/wd ตามเดือนนี้
   // default = current month · auto-jump เมื่อ admin เพิ่มวันในเดือนอื่น
-  const [selectedMonth, setSelectedMonth] = useState<string>(currentYearMonth());
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    currentYearMonth(),
+  );
   // confirm-before-remove · เปิด modal ตอน admin ลบเฉพาะวันที่มีใบลา ·
   // วันไหนไม่มีใบลาลบเลย ไม่ต้อง confirm
   // cascade: ยืนยันลบ → ลบใบลาทุกใบในวันนี้ก่อน → แล้วค่อยลบวันออกจากปฏิทิน
@@ -130,11 +133,14 @@ export default function StoreCalendarPanel({
         `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`,
       );
     }
-    // ทุกเดือนที่มีข้อมูล (sat + wd · past + future)
-    [
+    // ทุกเดือนที่มีข้อมูล (sat + wd + sun · past + future)
+    for (const d of [
       ...storeCalendar.extraOpenSaturdays,
       ...storeCalendar.extraClosedWeekdays,
-    ].forEach((d) => set.add(d.slice(0, 7)));
+      ...(storeCalendar.extraClosedSundays ?? []),
+    ]) {
+      set.add(d.slice(0, 7));
+    }
     return [...set].sort((a, b) => b.localeCompare(a));
   }, [storeCalendar, selectedMonth]);
 
@@ -193,6 +199,38 @@ export default function StoreCalendarPanel({
     }
   }
 
+  async function addSunday() {
+    if (!sunPick || busy) return;
+    if (!isSundayYmd(sunPick)) {
+      showToast?.("ต้องเป็นวันอาทิตย์");
+      return;
+    }
+    if ((storeCalendar.extraClosedSundays ?? []).includes(sunPick)) {
+      showToast?.("วันนี้อยู่ในรายการแล้ว");
+      return;
+    }
+    setBusy(true);
+    try {
+      await onUpdate({
+        ...storeCalendar,
+        extraClosedSundays: [
+          ...(storeCalendar.extraClosedSundays ?? []),
+          sunPick,
+        ],
+      });
+      // auto-jump ไปเดือนของวันที่เพิ่ง add
+      setSelectedMonth(sunPick.slice(0, 7));
+      setSunPick("");
+      setAdding(null);
+      showToast?.("เพิ่มอาทิตย์ปิดพิเศษแล้ว");
+    } catch (e) {
+      console.error(e);
+      showToast?.("เพิ่มไม่สำเร็จ");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function remove(field: keyof StoreCalendar, ymd: string) {
     if (busy) return;
     setBusy(true);
@@ -204,9 +242,9 @@ export default function StoreCalendarPanel({
         [field]: (storeCalendar[field] as string[]).filter((d) => d !== ymd),
         ...(isSat
           ? {
-              paidExtraSaturdays: (storeCalendar.paidExtraSaturdays ?? []).filter(
-                (d) => d !== ymd,
-              ),
+              paidExtraSaturdays: (
+                storeCalendar.paidExtraSaturdays ?? []
+              ).filter((d) => d !== ymd),
             }
           : {}),
       });
@@ -250,9 +288,9 @@ export default function StoreCalendarPanel({
         [field]: (storeCalendar[field] as string[]).filter((d) => d !== ymd),
         ...(isSat
           ? {
-              paidExtraSaturdays: (storeCalendar.paidExtraSaturdays ?? []).filter(
-                (d) => d !== ymd,
-              ),
+              paidExtraSaturdays: (
+                storeCalendar.paidExtraSaturdays ?? []
+              ).filter((d) => d !== ymd),
             }
           : {}),
       });
@@ -305,12 +343,15 @@ export default function StoreCalendarPanel({
   }
   const sat = partition(storeCalendar.extraOpenSaturdays);
   const wd = partition(storeCalendar.extraClosedWeekdays);
+  const sun = partition(storeCalendar.extraClosedSundays ?? []);
 
   const monthlyCount =
     sat.upcoming.length +
     sat.past.length +
     wd.upcoming.length +
-    wd.past.length;
+    wd.past.length +
+    sun.upcoming.length +
+    sun.past.length;
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -334,9 +375,7 @@ export default function StoreCalendarPanel({
           months={months}
           selected={selectedMonth}
           onSelect={setSelectedMonth}
-          subtitle={
-            monthlyCount > 0 ? `${monthlyCount} รายการ` : "ไม่มีรายการ"
-          }
+          subtitle={monthlyCount > 0 ? `${monthlyCount} รายการ` : "ไม่มีรายการ"}
         />
       </div>
 
@@ -576,8 +615,7 @@ export default function StoreCalendarPanel({
                     <div>
                       <b>มีใบลา {names.length} คนวันนี้</b> ({names.join(", ")})
                       <br />
-                      หลังปิดวันนี้ ใบลายังอยู่ในระบบ แต่{" "}
-                      <b>ไม่นับโควต้า · ไม่หักเงิน</b>{" "}
+                      หลังปิดวันนี้ ใบลายังอยู่ในระบบ แต่ <b>ไม่นับโควต้า · ไม่หักเงิน</b>{" "}
                       (ระบบคืนสิทธิ์ลาให้อัตโนมัติ)
                     </div>
                   </div>
@@ -640,6 +678,151 @@ export default function StoreCalendarPanel({
         </div>
       </div>
 
+      {/* อาทิตย์ปิดพิเศษ */}
+      <div className="rounded-[12px] border border-bdr bg-white">
+        <div className="px-3.5 py-3 border-b border-bdr flex items-center gap-2">
+          <IconSun size={16} strokeWidth={2.4} className="text-red" />
+          <div className="flex-1">
+            <div className="font-bold text-maroon text-sm">อาทิตย์ปิดพิเศษ</div>
+            <div className="text-xs text-txt-soft mt-0.5">
+              อาทิตย์ที่ปิดร้าน — ลาวันนี้ไม่นับ · ไม่หัก × 1.5
+            </div>
+          </div>
+          {adding !== "sun" && (
+            <button
+              type="button"
+              onClick={() => setAdding("sun")}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[9px] bg-red-lt text-red border border-red/25 text-xs font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform"
+            >
+              <IconPlus size={13} strokeWidth={2.6} />
+              เพิ่ม
+            </button>
+          )}
+        </div>
+
+        {adding === "sun" && (
+          <div className="border-b border-bdr bg-cream/40">
+            <div className="px-3.5 py-3 flex gap-2 items-center">
+              <ThaiDateInput
+                value={sunPick}
+                onChange={setSunPick}
+                className="flex-1 px-2.5 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] bg-white"
+              />
+              <button
+                type="button"
+                onClick={addSunday}
+                disabled={!sunPick || busy}
+                className={`px-3 py-2 rounded-[8px] border-none text-xs font-bold font-[inherit] ${
+                  sunPick && !busy
+                    ? "bg-maroon text-white cursor-pointer"
+                    : "bg-bdr text-txt-soft cursor-not-allowed"
+                }`}
+              >
+                บันทึก
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdding(null);
+                  setSunPick("");
+                }}
+                aria-label="ยกเลิก"
+                className="w-8 h-8 rounded-[8px] border border-bdr bg-white text-txt-soft cursor-pointer flex items-center justify-center"
+              >
+                <IconX size={14} strokeWidth={2.2} />
+              </button>
+            </div>
+            {/* warning ถ้าเลือกวันไม่ใช่อาทิตย์ */}
+            {sunPick && !isSundayYmd(sunPick) && (
+              <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-amber-50 border border-amber-300 text-xs leading-relaxed text-amber-900 flex gap-2">
+                <IconAlertTriangle
+                  size={13}
+                  strokeWidth={2.5}
+                  className="shrink-0 mt-0.5"
+                />
+                <div>
+                  วันที่เลือก <b>ไม่ใช่วันอาทิตย์</b> — ปิดได้เฉพาะวันอาทิตย์เท่านั้น
+                </div>
+              </div>
+            )}
+            {/* warning ถ้ามีใบลาในอาทิตย์ที่เลือก → จะไม่ถูกหัก × 1.5 อีก */}
+            {sunPick &&
+              isSundayYmd(sunPick) &&
+              (() => {
+                const leaves = leavesOnDate(sunPick, allLeaves);
+                if (leaves.length === 0) return null;
+                const names = leaves.map((lv) =>
+                  leaveOwnerName(lv, employeeDirectory),
+                );
+                return (
+                  <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-emerald-50 border border-emerald-300 text-xs leading-relaxed text-emerald-900 flex gap-2">
+                    <span className="shrink-0">ℹ</span>
+                    <div>
+                      <b>มีใบลา {names.length} คนวันนี้</b> ({names.join(", ")})
+                      <br />
+                      หลังปิดอาทิตย์นี้ ใบลายังอยู่ในระบบ แต่ <b>ไม่หัก × 1.5</b> (ร้านปิด —
+                      ลาไม่กระทบ)
+                    </div>
+                  </div>
+                );
+              })()}
+          </div>
+        )}
+
+        <div className="px-3.5 py-2.5">
+          {sun.upcoming.length === 0 && sun.past.length === 0 && (
+            <div className="text-sm text-txt-soft text-center py-3">
+              ไม่มีรายการเดือนนี้ — ปกติอาทิตย์เปิด (× 1.5)
+            </div>
+          )}
+          {sun.upcoming.map((d) => (
+            <div
+              key={d}
+              className="flex items-center gap-2 py-1.5 border-b border-bdr/40 last:border-b-0"
+            >
+              <span className="flex-1 text-sm font-semibold text-txt">
+                {fmtYmd(d)}
+              </span>
+              <button
+                type="button"
+                onClick={() => requestRemove("extraClosedSundays", d)}
+                disabled={busy}
+                aria-label="ลบ"
+                className="w-7 h-7 rounded-[7px] bg-red-lt text-red border border-red/20 cursor-pointer flex items-center justify-center"
+              >
+                <IconTrash size={12} strokeWidth={2.2} />
+              </button>
+            </div>
+          ))}
+          {sun.past.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-dashed border-bdr">
+              <div className="text-xs text-txt-soft mb-1.5">
+                ผ่านไปแล้ว ({sun.past.length})
+              </div>
+              {sun.past.slice(-3).map((d) => (
+                <div
+                  key={d}
+                  className="flex items-center gap-2 py-1 opacity-50"
+                >
+                  <span className="flex-1 text-xs text-txt-mid">
+                    {fmtYmd(d)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => requestRemove("extraClosedSundays", d)}
+                    disabled={busy}
+                    aria-label="ลบ"
+                    className="w-6 h-6 rounded-[6px] bg-cream border border-bdr cursor-pointer flex items-center justify-center"
+                  >
+                    <IconX size={10} strokeWidth={2.2} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Confirm-remove modal — เปิดเมื่อ admin ลบวันที่มีใบลา ·
           cascade-delete: ลบใบลาทั้งหมดในวันนั้นก่อน → แล้วลบวันออกจากปฏิทิน
           กัน frozen lv.days mismatch กับ recompute หลังเปลี่ยนปฏิทิน */}
@@ -647,15 +830,16 @@ export default function StoreCalendarPanel({
         <BaseModal onClose={() => !busy && setConfirmRemove(null)}>
           <div className="bg-white rounded-2xl p-5 w-full">
             <div className="flex items-center gap-2 mb-1.5">
-              <IconAlertTriangle size={22} strokeWidth={2.4} className="text-amber-600" />
-              <div className="text-lg font-bold text-maroon">
-                ยืนยันลบ?
-              </div>
+              <IconAlertTriangle
+                size={22}
+                strokeWidth={2.4}
+                className="text-amber-600"
+              />
+              <div className="text-lg font-bold text-maroon">ยืนยันลบ?</div>
             </div>
             <div className="text-sm text-txt-mid mb-3 leading-relaxed">
               <div className="mb-1.5">
-                วันที่:{" "}
-                <b className="text-txt">{fmtYmd(confirmRemove.ymd)}</b>
+                วันที่: <b className="text-txt">{fmtYmd(confirmRemove.ymd)}</b>
               </div>
               <div>
                 มีใบลา{" "}
@@ -683,8 +867,7 @@ export default function StoreCalendarPanel({
                 className="shrink-0 mt-0.5"
               />
               <div>
-                ระบบจะลบใบลาข้างต้นออกก่อน{" "}
-                <b>(รวมใบที่ครอบหลายวันด้วย)</b>{" "}
+                ระบบจะลบใบลาข้างต้นออกก่อน <b>(รวมใบที่ครอบหลายวันด้วย)</b>{" "}
                 แล้วค่อยลบวันออกจากปฏิทิน · กัน{" "}
                 {confirmRemove.field === "extraOpenSaturdays"
                   ? "ใบลาค้างในเสาร์ที่กลับเป็นวันร้านปิด"
