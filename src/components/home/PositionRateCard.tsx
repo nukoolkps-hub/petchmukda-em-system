@@ -50,25 +50,36 @@ function RateRow({
   suffix: string;
   strike?: boolean;
 }) {
+  // strike style ใช้ตรงๆ บน text spans (label + value + unit) แทน parent
+  // เพื่อให้เส้นต่อกันเป็นเส้นเดียว · decoration thickness 2.5px (50% หนาขึ้น)
+  const strikeCls = strike
+    ? "line-through decoration-red/70 decoration-[2.5px]"
+    : "";
   return (
     <div
-      className={`flex justify-between items-baseline ${strike ? "text-red/75 line-through decoration-red/60 decoration-[1.5px]" : ""}`}
+      className={`flex justify-between items-baseline ${strike ? "text-red/75" : ""}`}
     >
-      <span className="text-xs text-txt-mid inline-flex items-center gap-1">
+      <span
+        className={`text-xs text-txt-mid inline-flex items-center gap-1 ${strikeCls}`}
+      >
         {strike && (
           <IconLock
             size={11}
             strokeWidth={2.5}
-            className="no-underline text-red shrink-0"
+            className="no-underline text-red shrink-0 [text-decoration:none]"
           />
         )}
         {label}
       </span>
       <span
-        className={`text-sm font-bold tabular-nums ${strike ? "text-red/80" : "text-maroon"}`}
+        className={`text-sm font-bold tabular-nums ${strike ? "text-red/80" : "text-maroon"} ${strikeCls}`}
       >
         {formatThaiNumber(value || 0)}{" "}
-        <span className="text-[10px] text-txt-soft font-normal">{suffix}</span>
+        <span
+          className={`text-[10px] font-normal ${strike ? "text-red/80" : "text-txt-soft"} ${strikeCls}`}
+        >
+          {suffix}
+        </span>
       </span>
     </div>
   );
