@@ -18,7 +18,11 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
-import { currentYearMonth, fmtShortWithWeekday } from "../../utils/dateUtils";
+import {
+  currentYearMonth,
+  dateRange,
+  fmtShortWithWeekday,
+} from "../../utils/dateUtils";
 import BaseModal from "../shared/BaseModal";
 import CalendarPicker from "../shared/CalendarPicker";
 import MonthChevronNav from "../shared/MonthChevronNav";
@@ -104,7 +108,9 @@ export default function StoreCalendarPanel({
 }: Props) {
   const [adding, setAdding] = useState<"sat" | "wd" | "sun" | null>(null);
   const [satPick, setSatPick] = useState("");
-  const [wdPick, setWdPick] = useState("");
+  // วันธรรมดาปิดพิเศษ — เลือกเป็นช่วงได้ (เช่น อบรม จ-ศ ทั้งสัปดาห์)
+  const [wdStart, setWdStart] = useState("");
+  const [wdEnd, setWdEnd] = useState("");
   const [sunPick, setSunPick] = useState("");
   const [busy, setBusy] = useState(false);
   // selected month (YYYY-MM) — filter list ทั้ง sat/wd ตามเดือนนี้
@@ -180,26 +186,32 @@ export default function StoreCalendarPanel({
   }
 
   async function addWeekday() {
-    if (!wdPick || busy) return;
-    if (!isWeekday(wdPick)) {
-      showToast?.("ต้องเป็นวันธรรมดา (จันทร์-ศุกร์)");
+    if (!wdStart || !wdEnd || busy) return;
+    if (wdEnd < wdStart) {
+      showToast?.("ช่วงวันไม่ถูกต้อง — วันสิ้นสุดต้องไม่ก่อนวันเริ่ม");
       return;
     }
-    if (storeCalendar.extraClosedWeekdays.includes(wdPick)) {
-      showToast?.("วันนี้อยู่ในรายการแล้ว");
+    // เก็บเฉพาะ จ-ศ ในช่วง ที่ยังไม่อยู่ในรายการ (ข้ามเสาร์/อาทิตย์อัตโนมัติ)
+    const existing = new Set(storeCalendar.extraClosedWeekdays);
+    const toAdd = dateRange(wdStart, wdEnd).filter(
+      (ymd) => isWeekday(ymd) && !existing.has(ymd),
+    );
+    if (toAdd.length === 0) {
+      showToast?.("ไม่มีวันธรรมดาใหม่ในช่วงที่เลือก");
       return;
     }
     setBusy(true);
     try {
       await onUpdate({
         ...storeCalendar,
-        extraClosedWeekdays: [...storeCalendar.extraClosedWeekdays, wdPick],
+        extraClosedWeekdays: [...storeCalendar.extraClosedWeekdays, ...toAdd],
       });
-      // auto-jump ไปเดือนของวันที่เพิ่ง add
-      setSelectedMonth(wdPick.slice(0, 7));
-      setWdPick("");
+      // auto-jump ไปเดือนของวันเริ่ม
+      setSelectedMonth(wdStart.slice(0, 7));
+      setWdStart("");
+      setWdEnd("");
       setAdding(null);
-      showToast?.("เพิ่มวันธรรมดาปิดพิเศษแล้ว");
+      showToast?.(`เพิ่มวันธรรมดาปิดพิเศษ ${toAdd.length} วันแล้ว`);
     } catch (e) {
       console.error(e);
       showToast?.("เพิ่มไม่สำเร็จ");
@@ -575,20 +587,54 @@ export default function StoreCalendarPanel({
         {adding === "wd" && (
           <div className="border-b border-bdr bg-cream/40">
             <div className="px-3.5 py-3">
-              {/* ปฏิทินมาตรฐาน (เหมือนฟอร์มลา) · weekdaysOnly = เลือกได้แค่ จ-ศ */}
-              <CalendarPicker
-                value={wdPick}
-                onChange={setWdPick}
-                weekdaysOnly
-                size="sm"
-              />
+              {/* ปฏิทินมาตรฐาน · เลือกเป็นช่วงได้ (จ-ศ เท่านั้น · ข้ามเสาร์/อาทิตย์) */}
+              <div className="flex gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-txt-soft font-semibold mb-1">
+                    ตั้งแต่
+                  </div>
+                  <CalendarPicker
+                    value={wdStart}
+                    onChange={(v) => {
+                      setWdStart(v);
+                      if (!wdEnd || wdEnd < v) setWdEnd(v);
+                    }}
+                    weekdaysOnly
+                    size="sm"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-txt-soft font-semibold mb-1">
+                    ถึง
+                  </div>
+                  <CalendarPicker
+                    value={wdEnd}
+                    onChange={setWdEnd}
+                    minDate={wdStart || undefined}
+                    weekdaysOnly
+                    size="sm"
+                  />
+                </div>
+              </div>
+              {/* preview จำนวนวันธรรมดาที่จะปิด */}
+              {wdStart &&
+                wdEnd &&
+                (() => {
+                  const days = dateRange(wdStart, wdEnd).filter(isWeekday);
+                  return (
+                    <div className="text-xs text-txt-mid bg-cream/60 rounded-[8px] px-3 py-1.5 mb-2">
+                      ปิด <b className="text-maroon">{days.length} วันธรรมดา</b>{" "}
+                      (จ-ศ · ไม่นับเสาร์/อาทิตย์)
+                    </div>
+                  );
+                })()}
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={addWeekday}
-                  disabled={!wdPick || busy}
+                  disabled={!wdStart || !wdEnd || busy}
                   className={`flex-1 px-3 py-2 rounded-[8px] border-none text-xs font-bold font-[inherit] ${
-                    wdPick && !busy
+                    wdStart && wdEnd && !busy
                       ? "bg-maroon text-white cursor-pointer"
                       : "bg-bdr text-txt-soft cursor-not-allowed"
                   }`}
@@ -599,7 +645,8 @@ export default function StoreCalendarPanel({
                   type="button"
                   onClick={() => {
                     setAdding(null);
-                    setWdPick("");
+                    setWdStart("");
+                    setWdEnd("");
                   }}
                   className="px-3 py-2 rounded-[8px] border border-bdr bg-white text-txt-soft text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center gap-1"
                 >
@@ -608,21 +655,27 @@ export default function StoreCalendarPanel({
                 </button>
               </div>
             </div>
-            {/* warning: ถ้ามีใบลาในวันที่ปิด → ใบลายังอยู่แต่ไม่นับโควต้า */}
-            {wdPick &&
+            {/* warning: ถ้ามีใบลาในช่วงที่ปิด → ใบลายังอยู่แต่ไม่นับโควต้า */}
+            {wdStart &&
+              wdEnd &&
               (() => {
-                const leaves = leavesOnDate(wdPick, allLeaves);
-                if (leaves.length === 0) return null;
-                const names = leaves.map((lv) =>
-                  leaveOwnerName(lv, employeeDirectory),
+                // ใบลาที่ทับช่วง [wdStart, wdEnd] (overlap)
+                const leaves = allLeaves.filter(
+                  (lv) => lv.start <= wdEnd && lv.end >= wdStart,
                 );
+                if (leaves.length === 0) return null;
+                const names = [
+                  ...new Set(
+                    leaves.map((lv) => leaveOwnerName(lv, employeeDirectory)),
+                  ),
+                ];
                 return (
                   <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-emerald-50 border border-emerald-300 text-xs leading-relaxed text-emerald-900 flex gap-2">
                     <span className="shrink-0">ℹ</span>
                     <div>
-                      <b>มีใบลา {names.length} คนวันนี้</b> ({names.join(", ")})
+                      <b>มีใบลา {names.length} คนในช่วงนี้</b> ({names.join(", ")})
                       <br />
-                      หลังปิดวันนี้ ใบลายังอยู่ในระบบ แต่ <b>ไม่นับโควต้า · ไม่หักเงิน</b>{" "}
+                      หลังปิด ใบลายังอยู่ในระบบ แต่ <b>ไม่นับโควต้า · ไม่หักเงิน</b>{" "}
                       (ระบบคืนสิทธิ์ลาให้อัตโนมัติ)
                     </div>
                   </div>
