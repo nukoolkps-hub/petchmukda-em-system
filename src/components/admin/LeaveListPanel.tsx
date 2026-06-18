@@ -170,13 +170,15 @@ export default function LeaveListPanel({
           onSelect={onSelectMonth}
         />
       </div>
-      {/* เพิ่มการลา — collapsible (สำหรับพนักงานที่ลืมกดลา) */}
-      <div className="mb-3.5 rounded-[14px] border border-bdr bg-white overflow-hidden">
+      {/* เพิ่มการลา — collapsible (สำหรับพนักงานที่ลืมกดลา)
+          ไม่ใช้ overflow-hidden เพราะ CalendarPicker popup ต้องล้นออกขอบฟอร์ม
+          ได้ · header button มี rounded-t เอง · body ปิดเองเมื่อล้น */}
+      <div className="mb-3.5 rounded-[14px] border border-bdr bg-white">
         <button
           type="button"
           onClick={() => setAddOpen((v) => !v)}
           aria-expanded={addOpen}
-          className={`w-full flex items-center gap-2 px-3.5 py-2.5 cursor-pointer font-[inherit] text-left active:scale-[0.995] transition-transform duration-100 ${addOpen ? "bg-maroon text-white" : "bg-gold-pale/40 text-maroon"}`}
+          className={`w-full flex items-center gap-2 px-3.5 py-2.5 cursor-pointer font-[inherit] text-left active:scale-[0.995] transition-transform duration-100 rounded-t-[13px] ${addOpen ? "bg-maroon text-white" : "bg-gold-pale/40 text-maroon rounded-b-[13px]"}`}
         >
           <IconPlus
             size={16}
