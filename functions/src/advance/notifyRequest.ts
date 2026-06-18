@@ -23,31 +23,35 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 	}
 
 	const uid = request.auth.uid;
+	// lookup employee จาก lineUserId · ใช้เป็นแหล่งข้อมูลรองว่า user คนนี้คือใคร
+	// ถ้าหาไม่เจอ (เช่น lineUserId field ไม่ตรง · พนักงานเข้าผ่าน dev mode ·
+	// auth uid ต่างจาก lineUserId) → ไม่ throw · ใช้ payload data ที่ client
+	// ส่งมาเป็น fallback แทน (auth ก็ผ่านแล้วว่า login)
 	const employeeSnap = await getAppFirestore()
 		.collection("employees")
 		.where("lineUserId", "==", uid)
 		.limit(1)
 		.get();
-	if (employeeSnap.empty) {
-		throw new HttpsError("permission-denied", "ไม่พบข้อมูลพนักงาน");
+	const verifiedEmployee = employeeSnap.empty
+		? null
+		: (employeeSnap.docs[0].data() as {
+				name?: string;
+				bank?: string;
+				bankAccountNumber?: string;
+			});
+	if (!verifiedEmployee) {
+		console.warn(
+			`[notifyAdvanceRequest] no employee match for uid=${uid} · falling back to payload data`,
+		);
 	}
-	const verifiedEmployee = employeeSnap.docs[0].data() as {
-		name?: string;
-		bank?: string;
-		bankAccountNumber?: string;
-	};
 
-	const {
-		amount,
-		reason,
-		month,
-		submittedAt,
-		requestId,
-	} = parseNotifyAdvanceRequestPayload(request.data);
+	const payload = parseNotifyAdvanceRequestPayload(request.data);
+	const { amount, reason, month, submittedAt, requestId } = payload;
 
-	const employeeName = verifiedEmployee.name || "-";
-	const bank = verifiedEmployee.bank;
-	const bankAccountNumber = verifiedEmployee.bankAccountNumber;
+	const employeeName = verifiedEmployee?.name || payload.employeeName || "-";
+	const bank = verifiedEmployee?.bank ?? payload.bank;
+	const bankAccountNumber =
+		verifiedEmployee?.bankAccountNumber ?? payload.bankAccountNumber;
 
 	const config = await getLineConfig();
 	if (!config.LINE_CHANNEL_ACCESS_TOKEN || !config.ADMIN_LINE_USER_ID) {
@@ -264,10 +268,21 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 		},
 	};
 
-	await pushLineMessage(
-		config.LINE_CHANNEL_ACCESS_TOKEN,
-		config.ADMIN_LINE_USER_ID,
-		[flex],
+	console.log(
+		`[notifyAdvanceRequest] pushing to admin · employee=${employeeName} amount=${amount} requestId=${requestId ?? "-"}`,
 	);
+	try {
+		await pushLineMessage(
+			config.LINE_CHANNEL_ACCESS_TOKEN,
+			config.ADMIN_LINE_USER_ID,
+			[flex],
+		);
+	} catch (err) {
+		console.error(
+			"[notifyAdvanceRequest] pushLineMessage failed:",
+			err instanceof Error ? err.message : err,
+		);
+		throw err;
+	}
 	return { ok: true, requestId };
 });
