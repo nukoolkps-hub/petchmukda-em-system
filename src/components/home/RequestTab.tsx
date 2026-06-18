@@ -300,7 +300,7 @@ export default function RequestTab({
                 เกินสิทธิ์! คงเหลือ {remain} วัน
               </span>
             ) : (
-              "(ไม่รวมวันเสาร์)"
+              "(ไม่รวมวันที่ร้านปิด)"
             )}
           </div>
         </div>

@@ -274,7 +274,7 @@ export default function LeaveListPanel({
             />
             {addStart && addEnd && (
               <div className="text-xs text-txt-mid bg-cream/50 rounded-[8px] px-3 py-2">
-                จำนวนวันลา (ไม่นับวันเสาร์):{" "}
+                จำนวนวันลา (ไม่รวมวันที่ร้านปิด):{" "}
                 <span className="font-extrabold text-maroon">
                   {previewDays} วัน
                 </span>
