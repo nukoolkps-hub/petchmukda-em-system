@@ -306,13 +306,22 @@ export default function SalaryView({
   if (!data || !salaryCalculation) {
     return (
       <div>
-        <div className="flex items-center justify-between gap-2 mb-3.5">
+        <div className="flex items-center gap-2 mb-3.5">
           <div className="text-sm text-txt-soft flex-1">สลิปเงินเดือน</div>
           <MonthChevronNav
             months={selectMonths}
             selected={selectedMonth}
             onSelect={setSelectedMonth}
           />
+          <button
+            type="button"
+            onClick={handlePrintCert}
+            title="พิมพ์ใบรับรองเงินเดือน"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[9px] border-[1.5px] border-[#7B1C1C50] bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit] shrink-0"
+          >
+            <IconFileText size={13} strokeWidth={2.4} />
+            ใบรับรอง
+          </button>
         </div>
         {/* Banner: รอ ADMIN ยืนยันยอด */}
         <div className="bg-amber-50 border border-amber-300 rounded-[14px] px-4 py-3 mb-3 flex items-start gap-2.5">
@@ -399,61 +408,99 @@ export default function SalaryView({
           </div>
         )}
 
-        {/* Advance row — แสดงปุ่ม "เบิกล่วงหน้า" + "ประวัติ" ก่อน ADMIN ยืนยัน
-            ใช้ได้เลย เพราะรู้เงินเดือนพื้นฐานแล้ว (50% cap จาก employee config) */}
-        <div className="grid grid-cols-2 gap-2.5 mb-3">
-          <button
-            onClick={onOpenAdvance}
-            className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-3.5 py-3 border-none cursor-pointer font-[inherit] shadow-[0_3px_12px_var(--color-maroon)/0.25] text-left relative overflow-hidden"
-          >
-            <svg
-              className="absolute -top-1.5 -right-1.5 opacity-15"
-              width="50"
-              height="50"
-              viewBox="0 0 24 24"
-              fill={COLORS.goldLight}
+        {/* Advance row + Print panel — empty state:
+            เบิกเงิน enabled (รู้ baseSalary แล้ว · 50% cap) ·
+            สลิป + ใบรับรอง disabled (รอ ADMIN ยืนยันยอด) */}
+        <div className="grid grid-cols-2 gap-2.5 mb-3.5">
+          {/* Left col: เบิกเงิน + ประวัติเบิกเงิน — stacked */}
+          <div className="flex flex-col gap-2.5">
+            <button
+              onClick={onOpenAdvance}
+              className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-3.5 py-3 border-none cursor-pointer font-[inherit] shadow-[0_3px_12px_var(--color-maroon)/0.25] text-left relative overflow-hidden"
             >
-              <path d="M6 3h12l4 6-10 12L2 9z" />
-            </svg>
-            <div className="flex items-center gap-2 relative">
-              <div className="w-[34px] h-[34px] rounded-[10px] bg-white/18 flex items-center justify-center shrink-0">
-                <IconCirclePlus
-                  size={17}
-                  color={COLORS.goldLight}
-                  strokeWidth={2.4}
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-gold-lt leading-tight">
-                  เบิกเงิน
+              <svg
+                className="absolute -top-1.5 -right-1.5 opacity-15"
+                width="50"
+                height="50"
+                viewBox="0 0 24 24"
+                fill={COLORS.goldLight}
+              >
+                <path d="M6 3h12l4 6-10 12L2 9z" />
+              </svg>
+              <div className="flex items-center gap-2 relative">
+                <div className="w-[34px] h-[34px] rounded-[10px] bg-white/18 flex items-center justify-center shrink-0">
+                  <IconCirclePlus
+                    size={17}
+                    color={COLORS.goldLight}
+                    strokeWidth={2.4}
+                  />
                 </div>
-                <div className="text-xs text-gold-lt/65 mt-px">ล่วงหน้า</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-gold-lt leading-tight">
+                    เบิกเงิน
+                  </div>
+                  <div className="text-xs text-gold-lt/65 mt-px">ล่วงหน้า</div>
+                </div>
               </div>
-            </div>
-          </button>
-          <button
-            onClick={() => setShowHistory(true)}
-            className="bg-white rounded-[14px] px-3.5 py-3 cursor-pointer font-[inherit] shadow-[0_2px_10px_rgba(90,30,10,0.06)] text-left relative border-[1.5px] border-[#C9973A50]"
-          >
+            </button>
+            <button
+              onClick={() => setShowHistory(true)}
+              className="bg-white rounded-[14px] px-3.5 py-3 cursor-pointer font-[inherit] shadow-[0_2px_10px_rgba(90,30,10,0.06)] text-left relative border-[1.5px] border-[#C9973A50]"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
+                  <IconClock
+                    size={17}
+                    color={COLORS.maroon}
+                    strokeWidth={2.2}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-maroon leading-tight">
+                    ประวัติเบิกเงิน
+                  </div>
+                  <div className="text-xs text-txt-soft mt-px">
+                    {monthAdvances.length > 0
+                      ? `${monthAdvances.length} คำขอเดือนนี้`
+                      : "ไม่มีเดือนนี้"}
+                  </div>
+                </div>
+                {monthAdvances.some((r) => r.status === "pending") && (
+                  <div className="w-2 h-2 rounded-full bg-amber shadow-[0_0_0_3px_var(--color-amber)/0.2] shrink-0" />
+                )}
+              </div>
+            </button>
+          </div>
+
+          {/* Right col: Print panel — สลิป (disabled · รอยืนยันยอด)
+              ใบรับรองย้ายขึ้น header แล้ว (ไม่ผูกเดือน · ใช้ได้เสมอ) */}
+          <div className="flex flex-col gap-2 px-3 py-2.5 rounded-[14px] bg-gold-pale/20 border border-gold/15">
             <div className="flex items-center gap-2">
-              <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
-                <IconClock size={17} color={COLORS.maroon} strokeWidth={2.2} />
-              </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-maroon leading-tight">
-                  ประวัติเบิกเงิน
-                </div>
-                <div className="text-xs text-txt-soft mt-px">
-                  {monthAdvances.length > 0
-                    ? `${monthAdvances.length} คำขอเดือนนี้`
-                    : "ไม่มีเดือนนี้"}
+                <div className="text-sm text-txt-mid font-semibold flex items-center gap-1.5">
+                  <IconClipboardList size={14} strokeWidth={2.4} />
+                  สลิปเงินเดือน
                 </div>
               </div>
-              {monthAdvances.some((r) => r.status === "pending") && (
-                <div className="w-2 h-2 rounded-full bg-amber shadow-[0_0_0_3px_var(--color-amber)/0.2] shrink-0" />
-              )}
+              <button
+                type="button"
+                disabled
+                title="รอยืนยันยอด"
+                className="px-3.5 py-2 rounded-lg text-sm font-bold font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] shrink-0 bg-bdr/30 text-txt-soft border-bdr cursor-not-allowed"
+              >
+                <IconClock size={14} strokeWidth={2.4} />
+                พิมพ์
+              </button>
             </div>
-          </button>
+            <div className="text-[11px] text-txt-soft leading-snug mt-auto pt-1 flex items-start gap-1">
+              <IconLightbulb
+                size={12}
+                strokeWidth={2.4}
+                className="mt-0.5 shrink-0 text-gold"
+              />
+              <span>เปิดได้หลัง ADMIN ยืนยันยอด</span>
+            </div>
+          </div>
         </div>
 
         {/* เงินกู้ของคุณ (ถ้ามี) */}
@@ -812,9 +859,9 @@ export default function SalaryView({
 
   return (
     <div>
-      {/* month selector + ปุ่มแผนผังเงินเดือน — บนสุด เพื่อให้สลับเดือนง่าย
-          แผนผังโผล่เฉพาะ pool sales — ตำแหน่งอื่นไม่ใช้ pool calc */}
-      <div className="flex items-center justify-between gap-2 mb-3">
+      {/* month selector + ปุ่มแผนผังเงินเดือน + ใบรับรอง — บนสุด
+          แผนผังโผล่เฉพาะ pool sales · ใบรับรองไม่ผูกเดือน (ใช้ได้เสมอ) */}
+      <div className="flex items-center gap-2 mb-3">
         {employeeRole?.poolGroup ? (
           <button
             type="button"
@@ -826,13 +873,22 @@ export default function SalaryView({
             แผนผังเงินเดือน
           </button>
         ) : (
-          <div />
+          <div className="flex-1" />
         )}
         <MonthChevronNav
           months={selectMonths}
           selected={selectedMonth}
           onSelect={setSelectedMonth}
         />
+        <button
+          type="button"
+          onClick={handlePrintCert}
+          title="พิมพ์ใบรับรองเงินเดือน"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[9px] border-[1.5px] border-[#7B1C1C50] bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit] shrink-0"
+        >
+          <IconFileText size={13} strokeWidth={2.4} />
+          ใบรับรอง
+        </button>
       </div>
 
       {/* รอยืนยันยอด — แสดงเงินรวมคร่าวๆ ก่อน แต่เตือนว่ายังเปลี่ยนได้ */}
@@ -867,14 +923,21 @@ export default function SalaryView({
 
       {/* Advance (left col: stacked) + Print panel (right col) */}
       <div className="grid grid-cols-2 gap-2.5 mb-3.5">
-        {/* Left col: เบิกเงิน + ประวัติเบิกเงิน — stacked */}
+        {/* Left col: เบิกเงิน + ประวัติเบิกเงิน — stacked
+            เบิกเงิน disabled หลัง ADMIN ยืนยันยอด (รอบนั้นจบแล้ว) */}
         <div className="flex flex-col gap-2.5">
           <button
             onClick={onOpenAdvance}
-            className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-3.5 py-3 border-none cursor-pointer font-[inherit] shadow-[0_3px_12px_var(--color-maroon)/0.25] text-left relative overflow-hidden"
+            disabled={isMonthConfirmed}
+            title={isMonthConfirmed ? "ยืนยันยอดแล้ว — เบิกเงินรอบใหม่" : ""}
+            className={`rounded-[14px] px-3.5 py-3 border-none font-[inherit] text-left relative overflow-hidden ${
+              isMonthConfirmed
+                ? "bg-bdr/30 cursor-not-allowed"
+                : "bg-linear-135 from-maroon to-maroon-lt cursor-pointer shadow-[0_3px_12px_var(--color-maroon)/0.25]"
+            }`}
           >
             <svg
-              className="absolute -top-1.5 -right-1.5 opacity-15"
+              className={`absolute -top-1.5 -right-1.5 ${isMonthConfirmed ? "opacity-5" : "opacity-15"}`}
               width="50"
               height="50"
               viewBox="0 0 24 24"
@@ -883,18 +946,28 @@ export default function SalaryView({
               <path d="M6 3h12l4 6-10 12L2 9z" />
             </svg>
             <div className="flex items-center gap-2 relative">
-              <div className="w-[34px] h-[34px] rounded-[10px] bg-white/18 flex items-center justify-center shrink-0">
+              <div
+                className={`w-[34px] h-[34px] rounded-[10px] flex items-center justify-center shrink-0 ${
+                  isMonthConfirmed ? "bg-bdr/40" : "bg-white/18"
+                }`}
+              >
                 <IconCirclePlus
                   size={17}
-                  color={COLORS.goldLight}
+                  color={isMonthConfirmed ? COLORS.textSoft : COLORS.goldLight}
                   strokeWidth={2.4}
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-gold-lt leading-tight">
+                <div
+                  className={`text-sm font-bold leading-tight ${isMonthConfirmed ? "text-txt-soft" : "text-gold-lt"}`}
+                >
                   เบิกเงิน
                 </div>
-                <div className="text-xs text-gold-lt/65 mt-px">ล่วงหน้า</div>
+                <div
+                  className={`text-xs mt-px ${isMonthConfirmed ? "text-txt-soft/70" : "text-gold-lt/65"}`}
+                >
+                  {isMonthConfirmed ? "ยืนยันยอดแล้ว" : "ล่วงหน้า"}
+                </div>
               </div>
             </div>
           </button>
@@ -923,42 +996,18 @@ export default function SalaryView({
           </button>
         </div>
 
-        {/* Right col: Print panel — สลิปเงินเดือน + ใบรับรองเงินเดือน */}
+        {/* Right col: Print panel — สลิปเงินเดือน (ใบรับรองย้ายขึ้น header แล้ว) */}
         <div className="flex flex-col gap-2 px-3 py-2.5 rounded-[14px] bg-gold-pale/20 border border-gold/15">
           <div className="flex items-center gap-2">
             <div className="flex-1 min-w-0">
               <div className="text-sm text-txt-mid font-semibold flex items-center gap-1.5">
                 <IconClipboardList size={14} strokeWidth={2.4} />
-                สลิป
+                สลิปเงินเดือน
               </div>
             </div>
             <button
               type="button"
               onClick={handlePrintSlip}
-              disabled={!isMonthConfirmed}
-              title={isMonthConfirmed ? "พิมพ์ / บันทึก PDF" : "รอยืนยันยอด"}
-              className={`px-3.5 py-2 rounded-lg text-sm font-bold font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] shrink-0 ${
-                isMonthConfirmed
-                  ? "bg-white text-maroon border-[#7B1C1C50] cursor-pointer"
-                  : "bg-bdr/30 text-txt-soft border-bdr cursor-not-allowed"
-              }`}
-            >
-              {isMonthConfirmed ? (
-                <PrintIcon />
-              ) : (
-                <IconClock size={14} strokeWidth={2.4} />
-              )}
-              พิมพ์
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 text-sm text-txt-mid font-semibold min-w-0 flex items-center gap-1.5">
-              <IconFileText size={14} strokeWidth={2.4} />
-              ใบรับรอง
-            </div>
-            <button
-              type="button"
-              onClick={handlePrintCert}
               disabled={!isMonthConfirmed}
               title={isMonthConfirmed ? "พิมพ์ / บันทึก PDF" : "รอยืนยันยอด"}
               className={`px-3.5 py-2 rounded-lg text-sm font-bold font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] shrink-0 ${
