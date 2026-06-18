@@ -17,6 +17,7 @@ import {
 import { useState } from "react";
 import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
 import { fmtShortWithWeekday } from "../../utils/dateUtils";
+import BaseModal from "../shared/BaseModal";
 import ThaiDateInput from "../shared/ThaiDateInput";
 
 interface Props {
@@ -88,6 +89,13 @@ export default function StoreCalendarPanel({
   const [satPick, setSatPick] = useState("");
   const [wdPick, setWdPick] = useState("");
   const [busy, setBusy] = useState(false);
+  // confirm-before-remove · เปิด modal ตอน admin ลบเฉพาะวันที่มีใบลา ·
+  // วันไหนไม่มีใบลาลบเลย ไม่ต้อง confirm
+  const [confirmRemove, setConfirmRemove] = useState<{
+    field: keyof StoreCalendar;
+    ymd: string;
+    names: string[];
+  } | null>(null);
 
   // เสาร์ตัวเลือก: future-only AND ยังไม่เคย mark ไว้
   const satOptions = buildSaturdayOptions().filter(
@@ -164,6 +172,17 @@ export default function StoreCalendarPanel({
     } finally {
       setBusy(false);
     }
+  }
+
+  /** ตรวจใบลาก่อนลบ · ถ้ามี → confirm modal · ไม่มี → ลบเลย */
+  function requestRemove(field: keyof StoreCalendar, ymd: string) {
+    if (busy) return;
+    const names = leavesOnDate(ymd, allLeaves, employeeDirectory);
+    if (names.length === 0) {
+      remove(field, ymd);
+      return;
+    }
+    setConfirmRemove({ field, ymd, names });
   }
 
   async function togglePaid(ymd: string) {
@@ -351,7 +370,7 @@ export default function StoreCalendarPanel({
                 </button>
                 <button
                   type="button"
-                  onClick={() => remove("extraOpenSaturdays", d)}
+                  onClick={() => requestRemove("extraOpenSaturdays", d)}
                   disabled={busy}
                   aria-label="ลบ"
                   className="w-7 h-7 rounded-[7px] bg-red-lt text-red border border-red/20 cursor-pointer flex items-center justify-center"
@@ -376,7 +395,7 @@ export default function StoreCalendarPanel({
                   </span>
                   <button
                     type="button"
-                    onClick={() => remove("extraOpenSaturdays", d)}
+                    onClick={() => requestRemove("extraOpenSaturdays", d)}
                     disabled={busy}
                     aria-label="ลบ"
                     className="w-6 h-6 rounded-[6px] bg-cream border border-bdr cursor-pointer flex items-center justify-center"
@@ -485,7 +504,7 @@ export default function StoreCalendarPanel({
               </span>
               <button
                 type="button"
-                onClick={() => remove("extraClosedWeekdays", d)}
+                onClick={() => requestRemove("extraClosedWeekdays", d)}
                 disabled={busy}
                 aria-label="ลบ"
                 className="w-7 h-7 rounded-[7px] bg-red-lt text-red border border-red/20 cursor-pointer flex items-center justify-center"
@@ -509,7 +528,7 @@ export default function StoreCalendarPanel({
                   </span>
                   <button
                     type="button"
-                    onClick={() => remove("extraClosedWeekdays", d)}
+                    onClick={() => requestRemove("extraClosedWeekdays", d)}
                     disabled={busy}
                     aria-label="ลบ"
                     className="w-6 h-6 rounded-[6px] bg-cream border border-bdr cursor-pointer flex items-center justify-center"
@@ -522,6 +541,77 @@ export default function StoreCalendarPanel({
           )}
         </div>
       </div>
+
+      {/* Confirm-remove modal — เปิดเมื่อ admin ลบวันที่มีใบลา ·
+          อธิบายผลกระทบกับใบลาก่อนยืนยัน */}
+      {confirmRemove && (
+        <BaseModal onClose={() => !busy && setConfirmRemove(null)}>
+          <div className="bg-white rounded-2xl p-5 w-full">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-2xl">⚠️</span>
+              <div className="text-lg font-bold text-maroon">
+                ยืนยันลบ?
+              </div>
+            </div>
+            <div className="text-sm text-txt-mid mb-3 leading-relaxed">
+              <div className="mb-1">
+                วันที่:{" "}
+                <b className="text-txt">{fmtYmd(confirmRemove.ymd)}</b>
+              </div>
+              <div>
+                มีใบลา <b className="text-amber-800">{confirmRemove.names.length} คน</b>{" "}
+                ในวันนี้:
+                <div className="mt-1 px-2.5 py-1.5 rounded-[8px] bg-cream border border-bdr text-xs leading-relaxed">
+                  {confirmRemove.names.join(" · ")}
+                </div>
+              </div>
+            </div>
+
+            {confirmRemove.field === "extraOpenSaturdays" ? (
+              <div className="px-3 py-2.5 rounded-[10px] bg-emerald-50 border border-emerald-300 text-xs leading-relaxed text-emerald-900 mb-3.5 flex gap-2">
+                <span className="shrink-0">ℹ</span>
+                <div>
+                  หลังลบ · เสาร์นี้กลับเป็น "ปิด" → ใบลา{" "}
+                  <b>ไม่นับโควต้า · ไม่หักเงิน</b>{" "}
+                  (พนักงานได้สิทธิ์ลาคืนอัตโนมัติ)
+                </div>
+              </div>
+            ) : (
+              <div className="px-3 py-2.5 rounded-[10px] bg-amber-50 border border-amber-300 text-xs leading-relaxed text-amber-900 mb-3.5 flex gap-2">
+                <span className="shrink-0">⚠</span>
+                <div>
+                  หลังลบ · วันนี้กลับเป็น "เปิด" → ใบลาจะ{" "}
+                  <b>นับโควต้า + อาจหักเงิน</b>{" "}
+                  (พนักงานอาจเกินโควต้าโดยไม่รู้ตัว)
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmRemove(null)}
+                disabled={busy}
+                className="flex-1 py-2.5 rounded-lg bg-white text-txt-mid text-sm font-bold border border-bdr cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const target = confirmRemove;
+                  setConfirmRemove(null);
+                  await remove(target.field, target.ymd);
+                }}
+                disabled={busy}
+                className={`flex-1 py-2.5 rounded-lg bg-red text-white text-sm font-bold border-none font-[inherit] shadow-[0_3px_10px_rgba(192,57,43,0.25)] ${busy ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+              >
+                ยืนยันลบ
+              </button>
+            </div>
+          </div>
+        </BaseModal>
+      )}
     </div>
   );
 }
