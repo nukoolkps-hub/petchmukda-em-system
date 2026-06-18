@@ -14,6 +14,7 @@ import {
 } from "../../constants";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import { fmtShort, toYMD } from "../../utils/dateUtils";
+import type { StoreCalendar } from "../../types";
 
 interface Props {
   value: string;
@@ -21,8 +22,12 @@ interface Props {
   minDate?: string;
   maxDate?: string;
   /** disable วันเสาร์ — default true (ใช้ในฟอร์มลา · ร้านปิดวันเสาร์)
-   *  set false เมื่อใช้กับ calc/อื่นๆ ที่ทุกวันเลือกได้ */
+   *  set false เมื่อใช้กับ calc/อื่นๆ ที่ทุกวันเลือกได้
+   *  IGNORED ถ้า storeCalendar ถูกส่งมา (storeCalendar จะตัดสินใจเอง) */
   disableSaturdays?: boolean;
+  /** ปฏิทินเปิด-ปิดร้าน — ถ้าส่ง: เสาร์ใน extraOpenSaturdays = เลือกได้
+   *  · จ-ศ ใน extraClosedWeekdays = ถูก disable (ร้านปิด ลาวันนั้นไม่นับ) */
+  storeCalendar?: StoreCalendar | null;
   /** ขนาด · "md" (default · ใช้ในฟอร์มลา) · "sm" (compact · ใช้ในกล่องตัวช่วย) */
   size?: "md" | "sm";
   /** ปฏิทินแสดงแบบ inline (push siblings ลง) แทน popup overlay
@@ -38,6 +43,7 @@ export default function CalendarPicker({
   minDate,
   maxDate,
   disableSaturdays = true,
+  storeCalendar,
   size = "md",
   inline = false,
   error,
@@ -83,7 +89,24 @@ export default function CalendarPicker({
     const ds = toYMD(new Date(vy, vm, d));
     if (minDate && ds < minDate) return "disabled";
     if (maxDate && ds > maxDate) return "disabled";
-    if (disableSaturdays && dow === 6) return "weekend";
+    // storeCalendar override · เสาร์เปิดพิเศษ = เลือกลาได้ ·
+    // จ-ศ ที่ปิดพิเศษ = ถูก disable (ลาวันร้านปิดไม่นับ) ·
+    // ถ้าไม่ส่ง storeCalendar → fallback ไป disableSaturdays prop เดิม
+    if (storeCalendar) {
+      if (
+        dow === 6 &&
+        !storeCalendar.extraOpenSaturdays?.includes(ds)
+      )
+        return "weekend";
+      if (
+        dow >= 1 &&
+        dow <= 5 &&
+        storeCalendar.extraClosedWeekdays?.includes(ds)
+      )
+        return "weekend";
+    } else if (disableSaturdays && dow === 6) {
+      return "weekend";
+    }
     if (value && ds === value) return "selected";
     if (ds === TODAY) return "today";
     return "normal";
