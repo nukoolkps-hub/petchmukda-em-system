@@ -333,6 +333,7 @@ export default function AdminPanel({
           allLeaves={allLeaves}
           employeeDirectory={employeeDirectory}
           payrollConfirms={payrollConfirms}
+          storeCalendar={storeCalendar}
           onDelete={onDelete}
           onAddLeave={onAddLeave}
           selectedMonth={adminMonth}

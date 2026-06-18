@@ -180,6 +180,7 @@ export default function LeaveApp() {
     profileName: profile?.name || null,
     allLeaves,
     employeeDirectory,
+    storeCalendar,
     addLeave: addLeaveAction,
     deleteLeave: deleteLeaveAction,
     authUid: currentEmployeeId,

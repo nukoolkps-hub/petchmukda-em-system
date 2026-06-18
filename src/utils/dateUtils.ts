@@ -47,7 +47,19 @@ export function formatTenure(startWorkMonth?: string | null): string {
   return `${years} ปี ${months} เดือน`;
 }
 
-export function countWorkdays(s: string, e: string): number {
+/** นับวัน "ลาที่นับ" ช่วง s..e — ใช้คำนวณ days field ของใบลา (Firestore
+ *  rules ต้องการ days > 0) + แสดง preview ในฟอร์ม
+ *  - calendar = undefined → default rule: เสาร์ไม่นับ (ปิดอยู่เป็น default)
+ *  - calendar ส่งมา → เสาร์เปิดพิเศษ "นับ" · จ-ศ ปิดพิเศษ "ไม่นับ"
+ *    (ใช้กฎเดียวกับ isStoreClosed ใน salary calc · ไม่ต้องสร้างกฎซ้ำ)        */
+export function countWorkdays(
+  s: string,
+  e: string,
+  calendar?: {
+    extraOpenSaturdays?: string[];
+    extraClosedWeekdays?: string[];
+  } | null,
+): number {
   if (!s || !e) return 0;
   const S = new Date(`${s}T00:00:00`),
     E = new Date(`${e}T00:00:00`);
@@ -55,7 +67,20 @@ export function countWorkdays(s: string, e: string): number {
   let n = 0;
   const c = new Date(S);
   while (c <= E) {
-    if (c.getDay() !== 6) n++;
+    const dow = c.getDay();
+    const ymd = toYMD(c);
+    let isClosed: boolean;
+    if (dow === 6) {
+      // เสาร์: ปิด default · เปิดได้ถ้า admin mark
+      isClosed = !(calendar?.extraOpenSaturdays || []).includes(ymd);
+    } else if (dow === 0) {
+      // อาทิตย์: เปิดเสมอ (× 1.5 ลาก็นับ)
+      isClosed = false;
+    } else {
+      // จ-ศ: เปิด default · ปิดได้ถ้า admin mark
+      isClosed = (calendar?.extraClosedWeekdays || []).includes(ymd);
+    }
+    if (!isClosed) n++;
     c.setDate(c.getDate() + 1);
   }
   return n;

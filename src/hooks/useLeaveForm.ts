@@ -1,7 +1,7 @@
 /* ─── useLeaveForm — Leave request form logic ────────────────── */
 
 import { useState } from "react";
-import type { LeaveEntry } from "../types";
+import type { LeaveEntry, StoreCalendar } from "../types";
 import {
   addDaysYmd,
   countWorkdays,
@@ -19,6 +19,7 @@ interface UseLeaveFormOptions {
     balance?: any;
     used?: any;
   }[];
+  storeCalendar?: StoreCalendar | null;
   addLeave: (
     leave: Omit<LeaveEntry, "id">,
   ) => string | number | Promise<string>;
@@ -31,6 +32,7 @@ export default function useLeaveForm({
   profileName,
   allLeaves,
   employeeDirectory,
+  storeCalendar,
   addLeave,
   deleteLeave,
   authUid,
@@ -54,7 +56,7 @@ export default function useLeaveForm({
   const balance = employeeEntry?.balance || { personal: 15, sick: 15 };
   const used = employeeEntry?.used || { personal: 0, sick: 0 };
 
-  const days = countWorkdays(form.startDate, form.endDate);
+  const days = countWorkdays(form.startDate, form.endDate, storeCalendar);
   const remain = form.type ? balance[form.type] - used[form.type] : null;
   const overLimit = remain !== null && days > remain;
 
@@ -76,6 +78,10 @@ export default function useLeaveForm({
         e.endDate = "ลาป่วยล่วงหน้าได้ไม่เกิน 2 อาทิตย์";
     }
     if (overLimit) e.over = `วันลาเกินสิทธิ์คงเหลือ (${remain} วัน)`;
+    // กันยื่นลาวันร้านปิดทั้งหมด (เช่นเลือกเสาร์ปิด หรือ จ-ศ ที่ admin ปิด)
+    // → days = 0 · Firestore rules ปฏิเสธอยู่แล้ว แต่ต้องบอก user ก่อน
+    if (form.startDate && form.endDate && form.startDate <= form.endDate && days === 0)
+      e.over = "วันที่เลือกตรงกับวันร้านปิด · ลาวันร้านปิดไม่นับ";
     // กันลาทับวันที่ลาไปแล้ว — เช็คทับซ้อนกับ leave อื่นของพนักงานคนเดียวกัน
     if (form.startDate && form.endDate && form.endDate >= form.startDate) {
       const conflict = myLeaves.find(
