@@ -1,6 +1,6 @@
 /* ─── Store calendar helper — เปิด/ปิดร้านรายวัน ─────────────────────
    Default:
-   - อาทิตย์ = เปิด (× 1.5 ตามกฎเดิม)
+   - อาทิตย์ = เปิด (× 1.5 ตามกฎเดิม) · ปิดได้ถ้า admin mark (extraClosedSundays)
    - เสาร์ = ปิด
    - จ-ศ = เปิด
    Override ผ่าน /config/storeCalendar (admin-managed)
@@ -22,8 +22,8 @@ export function isStoreClosed(
     return !(calendar?.extraOpenSaturdays || []).includes(ymd);
   }
   if (dow === 0) {
-    // อาทิตย์: เปิดเสมอ (กฎเดิม × 1.5)
-    return false;
+    // อาทิตย์: เปิด default (กฎเดิม × 1.5) · ปิดได้ถ้า admin mark
+    return (calendar?.extraClosedSundays || []).includes(ymd);
   }
   // จันทร์-ศุกร์: เปิด default · ปิดได้ถ้า admin mark
   return (calendar?.extraClosedWeekdays || []).includes(ymd);

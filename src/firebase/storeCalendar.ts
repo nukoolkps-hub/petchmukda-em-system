@@ -13,6 +13,7 @@ const EMPTY: StoreCalendar = {
   extraOpenSaturdays: [],
   extraClosedWeekdays: [],
   paidExtraSaturdays: [],
+  extraClosedSundays: [],
 };
 
 export function subscribeStoreCalendar(
@@ -32,6 +33,9 @@ export function subscribeStoreCalendar(
           : [],
         paidExtraSaturdays: Array.isArray(data.paidExtraSaturdays)
           ? data.paidExtraSaturdays
+          : [],
+        extraClosedSundays: Array.isArray(data.extraClosedSundays)
+          ? data.extraClosedSundays
           : [],
       });
     },
@@ -54,6 +58,7 @@ export async function updateStoreCalendar(cal: StoreCalendar): Promise<void> {
       extraOpenSaturdays: [...openSet].sort(),
       extraClosedWeekdays: norm(cal.extraClosedWeekdays),
       paidExtraSaturdays: paid,
+      extraClosedSundays: norm(cal.extraClosedSundays ?? []),
       updatedAt: Date.now(),
     },
     { merge: true },

@@ -19,7 +19,11 @@ export const EMPLOYEE_EDIT_FIELDS = [
   "bank",
   "bankAccountNumber",
   "pieceRates",
+  "bonusRates",
+  "poolItemRates",
   "recurringItems",
+  "annualRaises",
+  "annualRaiseAmount",
 ] as const;
 
 /** มี draft ค้างสำหรับพนักงานคนนี้ไหม (ใช้โชว์ badge "มีการแก้ไข") */

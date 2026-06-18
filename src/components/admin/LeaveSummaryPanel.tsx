@@ -43,8 +43,8 @@ function LeaveDayBreakdown({
 }
 
 // นับวันธรรมดา/อาทิตย์ในช่วงวันลา — เคารพ storeCalendar เดียวกับ countWorkdays
-// (เสาร์เปิดพิเศษ → นับเป็น weekday · จ-ศ ปิดพิเศษ → ข้าม) ไม่งั้น breakdown
-// จะไม่ตรงกับ lv.days (badge "ลา N วัน") ที่นับด้วย countWorkdays ตอนยื่นลา
+// (เสาร์เปิดพิเศษ → นับเป็น weekday · จ-ศ ปิดพิเศษ → ข้าม · อาทิตย์ปิดพิเศษ → ข้าม)
+// ไม่งั้น breakdown จะไม่ตรงกับ lv.days (badge "ลา N วัน") ที่นับด้วย countWorkdays
 function countByDayType(
   start: string,
   end: string,
@@ -57,11 +57,12 @@ function countByDayType(
   const c = new Date(s);
   const extraOpenSat = new Set(calendar?.extraOpenSaturdays || []);
   const extraClosedWd = new Set(calendar?.extraClosedWeekdays || []);
+  const extraClosedSun = new Set(calendar?.extraClosedSundays || []);
   while (c <= e) {
     const dow = c.getDay();
     const ymd = toYMD(c);
     if (dow === 0) {
-      sundays++;
+      if (!extraClosedSun.has(ymd)) sundays++;
     } else if (dow === 6) {
       if (extraOpenSat.has(ymd)) weekdays++;
     } else {

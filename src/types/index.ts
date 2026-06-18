@@ -270,7 +270,8 @@ export interface Duty {
  *  - จ-ศ = เปิด
  *  Override:
  *  - extraOpenSaturdays: เสาร์ที่ admin เปิดพิเศษ (วันทำงานปกติ)
- *  - extraClosedWeekdays: จ-ศ ที่ admin ปิดพิเศษ (เช่น วันอบรม)             */
+ *  - extraClosedWeekdays: จ-ศ ที่ admin ปิดพิเศษ (เช่น วันอบรม)
+ *  - extraClosedSundays: อาทิตย์ที่ admin ปิดพิเศษ (ร้านปิด ลาไม่นับ · ไม่ × 1.5) */
 export interface StoreCalendar {
   extraOpenSaturdays: string[]; // ["YYYY-MM-DD", ...]
   extraClosedWeekdays: string[]; // ["YYYY-MM-DD", ...]
@@ -278,6 +279,9 @@ export interface StoreCalendar {
    *  extraOpenSaturdays · พนักงานที่ไม่ลาวันนี้ได้ดอลลาร์เพิ่ม (dailyRate)
    *  null/undefined → ไม่มี (legacy data)                                 */
   paidExtraSaturdays?: string[];
+  /** อาทิตย์ที่ ADMIN ปิดพิเศษ — กลายเป็นวันร้านปิด: ลาวันนั้นไม่นับ ·
+   *  ไม่หัก × 1.5 · ไม่มีหน้าที่ · null/undefined → ไม่มี (legacy = อาทิตย์เปิดเสมอ) */
+  extraClosedSundays?: string[];
 }
 
 /** ราคาทองคำไทย (อ้างอิงสมาคมค้าทองคำ · admin update วันละครั้ง)

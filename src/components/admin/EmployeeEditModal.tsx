@@ -292,11 +292,11 @@ export default function EmployeeEditModal({
         "poolExclusion",
         editingPoolExclusion || null,
       );
-    clearDraft();
-    onClose();
+    closeModal();
   };
   // ปิด modal = ทิ้ง draft เสมอ (parity กับปุ่ม "ยกเลิก") — ใช้กับ
   // X header · backdrop · ESC · ปุ่ม "ปิด" (ตอนไม่มี draft) · ปุ่ม "ยกเลิก"
+  // + ปลาย saveAll หลังเขียน Firestore เสร็จ — single close path
   const closeModal = () => {
     clearDraft();
     onClose();

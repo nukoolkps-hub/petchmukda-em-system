@@ -234,6 +234,7 @@ export default function AdminPanel({
           onUpdate={onUpdateStoreCalendar}
           allLeaves={allLeaves}
           employeeDirectory={employeeDirectory}
+          onDeleteLeave={onDelete}
           showToast={showToast}
         />
       )}

@@ -37,6 +37,7 @@ interface PoolFlowModalProps {
   storeCalendar?: {
     extraOpenSaturdays: string[];
     extraClosedWeekdays: string[];
+    extraClosedSundays?: string[];
   } | null;
   // เดือนนี้ admin "ยืนยันยอด" แล้วหรือยัง — ถ้ายัง ตัวเลขในแผนผังยังเปลี่ยนได้
   // (admin ยังแก้/พนักงานยื่นลาเพิ่มได้) → ล็อกแผนผังกันสับสน เปิดดูได้หลัง

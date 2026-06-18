@@ -512,6 +512,7 @@ export function computePoolSharesForGroup({
   storeCalendar?: {
     extraOpenSaturdays: string[];
     extraClosedWeekdays: string[];
+    extraClosedSundays?: string[];
   } | null;
 }) {
   if (!groupEmployeeIds || groupEmployeeIds.length === 0) return {};
