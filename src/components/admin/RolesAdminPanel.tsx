@@ -273,7 +273,8 @@ export default function RolesAdminPanel({
   showToast,
 }) {
   const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, pieceItems, bonusItems, poolItems, primaryPoolItemId, mainDuties}}
-  const [newRole, setNewRole] = useState({
+  // default ของ form "ตำแหน่งใหม่" — extract เพื่อ reuse ทั้งตอน save + ตอนปิดฟอร์ม
+  const makeBlankNewRole = () => ({
     name: "",
     poolGroup: "",
     pieceItems: [] as PieceItem[],
@@ -294,6 +295,7 @@ export default function RolesAdminPanel({
     primaryPoolItemId: "normal" as string,
     mainDuties: "",
   });
+  const [newRole, setNewRole] = useState(makeBlankNewRole);
   const [showAdd, setShowAdd] = useState(false);
   const [confirmDel, setConfirmDel] = useState<any>(null);
 
@@ -382,24 +384,7 @@ export default function RolesAdminPanel({
         pieceLabel: null,
         mainDuties: cleanMainDuties(newRole.mainDuties),
       });
-      setNewRole({
-        name: "",
-        poolGroup: "",
-        pieceItems: [],
-        bonusItems: [],
-        poolItems: [
-          { id: "normal", label: "ขายทั่วไป", kind: "pool", threshold: 80 },
-          {
-            id: "special",
-            label: "ขายพิเศษ",
-            kind: "personal",
-            threshold: 80,
-          },
-          { id: "buy", label: "รับซื้อ", kind: "pool", threshold: 80 },
-        ],
-        primaryPoolItemId: "normal",
-        mainDuties: "",
-      });
+      setNewRole(makeBlankNewRole());
       setShowAdd(false);
       showToast?.("เพิ่มตำแหน่งแล้ว");
     } catch (err) {
@@ -444,7 +429,11 @@ export default function RolesAdminPanel({
           กำหนดตำแหน่งและกลุ่มค่าคอมกองกลาง
         </div>
         <button
-          onClick={() => setShowAdd(!showAdd)}
+          onClick={() => {
+            // ปิดฟอร์ม → ทิ้ง draft ที่กรอกค้างไว้ (parity กับปุ่ม "ยกเลิก" inline edit)
+            if (showAdd) setNewRole(makeBlankNewRole());
+            setShowAdd(!showAdd);
+          }}
           className="px-3.5 py-[7px] rounded-[9px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] shadow-[0_2px_8px_var(--color-maroon)/0.25] flex items-center gap-[5px]"
         >
           {showAdd ? (
