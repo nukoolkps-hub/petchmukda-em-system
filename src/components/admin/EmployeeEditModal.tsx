@@ -1050,7 +1050,11 @@ export default function EmployeeEditModal({
                             </label>
                             {mode === "some" && (
                               <div className="pl-6 flex flex-col gap-0.5 mb-1">
-                                {poolItems.map((it) => (
+                                {/* แสดงเฉพาะ kind=pool · personal items ไม่
+                                    ต้อง tick เพราะไม่เข้ากองอยู่แล้ว */}
+                                {poolItems
+                                  .filter((it) => it.kind === "pool")
+                                  .map((it) => (
                                   <label
                                     key={it.id}
                                     className="flex items-center gap-1.5 cursor-pointer text-xs py-0.5"
@@ -1067,11 +1071,6 @@ export default function EmployeeEditModal({
                                       className="accent-amber cursor-pointer"
                                     />
                                     <span>{it.label}</span>
-                                    {it.kind === "personal" && (
-                                      <span className="text-[10px] text-txt-soft">
-                                        (ไม่แชร์กองกลาง)
-                                      </span>
-                                    )}
                                   </label>
                                 ))}
                               </div>
