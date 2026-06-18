@@ -9,7 +9,6 @@ import {
   AlertTriangle as IconAlertTriangle,
   CalendarOff as IconCalendarOff,
   CalendarPlus as IconCalendarPlus,
-  ChevronDown as IconChevronDown,
   Coins as IconCoins,
   Plus as IconPlus,
   Store as IconStore,
@@ -23,6 +22,10 @@ import { currentYearMonth, fmtShortWithWeekday } from "../../utils/dateUtils";
 import BaseModal from "../shared/BaseModal";
 import CalendarPicker from "../shared/CalendarPicker";
 import MonthChevronNav from "../shared/MonthChevronNav";
+import ThemedSelect from "../shared/ThemedSelect";
+
+/** ความสูง dropdown เสาร์/อาทิตย์ — โชว์ ~10 รายการก่อน scroll (6 เดือนมีหลายวัน) */
+const DROPDOWN_MAX_HEIGHT = 380;
 
 interface Props {
   storeCalendar: StoreCalendar;
@@ -38,13 +41,14 @@ interface Props {
 /** alias สำหรับใช้ชื่อเดิมใน panel นี้ */
 const fmtYmd = fmtShortWithWeekday;
 
-/** สร้าง list ของวัน (ตาม day-of-week) ใน 3 เดือนถัดไปจาก today
- *  · targetDow 6 = เสาร์ · 0 = อาทิตย์ — ใช้เป็น dropdown options */
+/** สร้าง list ของวัน (ตาม day-of-week) ใน 6 เดือนถัดไปจาก today
+ *  · targetDow 6 = เสาร์ · 0 = อาทิตย์ — ใช้เป็น dropdown options
+ *  · dropdown (ThemedSelect) จะ scroll เมื่อรายการเกินความสูงที่ตั้งไว้ */
 function buildDowOptions(targetDow: number): { ymd: string; label: string }[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const end = new Date(today);
-  end.setMonth(end.getMonth() + 3);
+  end.setMonth(end.getMonth() + 6);
   const out: { ymd: string; label: string }[] = [];
   const c = new Date(today);
   while (c <= end) {
@@ -414,23 +418,17 @@ export default function StoreCalendarPanel({
         {adding === "sat" && (
           <div className="border-b border-bdr bg-cream/40">
             <div className="px-3.5 py-3 flex gap-2 items-center">
-              <div className="relative flex-1">
-                <select
+              <div className="flex-1 min-w-0">
+                <ThemedSelect
                   value={satPick}
-                  onChange={(e) => setSatPick(e.target.value)}
-                  className="appearance-none cursor-pointer w-full pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt"
-                >
-                  <option value="">— เลือกเสาร์ —</option>
-                  {satOptions.map((o) => (
-                    <option key={o.ymd} value={o.ymd}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <IconChevronDown
-                  size={12}
-                  strokeWidth={2.4}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                  onChange={setSatPick}
+                  options={satOptions.map((o) => ({
+                    value: o.ymd,
+                    label: o.label,
+                  }))}
+                  placeholder="— เลือกเสาร์ —"
+                  maxHeightPx={DROPDOWN_MAX_HEIGHT}
+                  className="pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt cursor-pointer text-left w-full flex items-center relative"
                 />
               </div>
               <button
@@ -712,23 +710,17 @@ export default function StoreCalendarPanel({
         {adding === "sun" && (
           <div className="border-b border-bdr bg-cream/40">
             <div className="px-3.5 py-3 flex gap-2 items-center">
-              <div className="relative flex-1">
-                <select
+              <div className="flex-1 min-w-0">
+                <ThemedSelect
                   value={sunPick}
-                  onChange={(e) => setSunPick(e.target.value)}
-                  className="appearance-none cursor-pointer w-full pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt"
-                >
-                  <option value="">— เลือกอาทิตย์ —</option>
-                  {sunOptions.map((o) => (
-                    <option key={o.ymd} value={o.ymd}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <IconChevronDown
-                  size={12}
-                  strokeWidth={2.4}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                  onChange={setSunPick}
+                  options={sunOptions.map((o) => ({
+                    value: o.ymd,
+                    label: o.label,
+                  }))}
+                  placeholder="— เลือกอาทิตย์ —"
+                  maxHeightPx={DROPDOWN_MAX_HEIGHT}
+                  className="pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt cursor-pointer text-left w-full flex items-center relative"
                 />
               </div>
               <button
