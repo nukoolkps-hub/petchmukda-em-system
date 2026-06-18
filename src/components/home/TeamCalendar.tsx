@@ -250,7 +250,7 @@ export default function TeamCalendar({
               <div
                 key={dateKey}
                 onClick={() => selectDate(dateKey)}
-                className="min-h-[50px] rounded-[10px] px-0.5 pt-[5px] pb-1 cursor-pointer transition-[background-color,border-color,box-shadow] duration-150"
+                className="min-h-[62px] rounded-[10px] px-0.5 pt-[5px] pb-1 cursor-pointer transition-[background-color,border-color,box-shadow] duration-150"
                 style={{
                   background: isSelectedDate
                     ? colors.goldPale
@@ -296,31 +296,42 @@ export default function TeamCalendar({
                 >
                   {dayOfMonth}
                 </div>
-                {/* marker เปิด-ปิดร้าน (ขนาดเล็กใต้เลข) */}
-                {(storeClosed || isExtraOpenSat) && !hasLeaveEntries && (
+                {/* marker เปิด-ปิดร้าน (ขนาดเล็กใต้เลข)
+                    "+1 วัน" แสดง ALWAYS เมื่อ paid Saturday · ไม่ถูกซ่อนแม้มีใบลา
+                    (เพื่อให้พนักงานคนอื่นเห็นว่าเสาร์นี้จ่ายเพิ่ม) ·
+                    "ปิด"/"เปิด" แสดงเฉพาะตอนไม่มีใบลา (จะถูก dot ทับ) */}
+                {isPaidExtraSat ? (
                   <div
                     className="flex justify-center items-center mt-[2px] text-[8px] font-bold leading-none"
-                    style={{
-                      color: storeClosed ? colors.textSoft : colors.green,
-                    }}
+                    style={{ color: colors.green }}
                   >
-                    {storeClosed ? (
-                      <span className="inline-flex items-center gap-px">
-                        <IconLock size={7} strokeWidth={3} />
-                        ปิด
-                      </span>
-                    ) : isPaidExtraSat ? (
-                      <span className="inline-flex items-center gap-px">
-                        <IconCoins size={7} strokeWidth={3} />
-                        +1 วัน
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-px">
-                        <IconStore size={7} strokeWidth={3} />
-                        เปิด
-                      </span>
-                    )}
+                    <span className="inline-flex items-center gap-px">
+                      <IconCoins size={7} strokeWidth={3} />
+                      +1 วัน
+                    </span>
                   </div>
+                ) : (
+                  (storeClosed || isExtraOpenSat) &&
+                  !hasLeaveEntries && (
+                    <div
+                      className="flex justify-center items-center mt-[2px] text-[8px] font-bold leading-none"
+                      style={{
+                        color: storeClosed ? colors.textSoft : colors.green,
+                      }}
+                    >
+                      {storeClosed ? (
+                        <span className="inline-flex items-center gap-px">
+                          <IconLock size={7} strokeWidth={3} />
+                          ปิด
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-px">
+                          <IconStore size={7} strokeWidth={3} />
+                          เปิด
+                        </span>
+                      )}
+                    </div>
+                  )
                 )}
                 {hasLeaveEntries && (
                   <div
