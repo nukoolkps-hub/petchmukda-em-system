@@ -14,7 +14,11 @@ import { type ReactNode, useMemo, useState } from "react";
 import type { Employee, Role } from "../../types";
 import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
-import { computePoolSharesForGroup } from "../../utils/salaryUtils";
+import {
+  LEGACY_POOL_BUY_ID,
+  LEGACY_POOL_NORMAL_ID,
+  computePoolSharesForGroup,
+} from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
 
 interface PoolFlowModalProps {
@@ -196,12 +200,24 @@ export default function PoolFlowModal({
   const monthLabel = formatYmThai(selectedMonth);
 
   const sample = groupEmployeeIds.length ? shares[groupEmployeeIds[0]] : null;
-  const hasSell =
-    !!sample &&
-    (sample.totalSellPoolPieces > 0 || sample.eligibleSellEmployeeCount > 0);
-  const hasBuy =
-    !!sample &&
-    (sample.totalBuyPoolPieces > 0 || sample.eligibleBuyEmployeeCount > 0);
+  // pool items (kind=pool เท่านั้น) ที่มีอย่างน้อย 1 คนทำได้ หรือมีคนเข้ากอง
+  const flowItems: { id: string; label: string }[] = (() => {
+    if (!sample?.poolItems) return [];
+    return sample.poolItems
+      .filter((it: any) => it.kind === "pool")
+      .filter((it: any) => {
+        const total = sample.totalItemPool?.[it.id] ?? 0;
+        const itemShare = sample.itemShares?.[it.id];
+        return (
+          total > 0 ||
+          Object.values(sample.itemShares || {}).some(
+            (s: any) => s?.eligible && s?.allocatedPieces > 0,
+          ) ||
+          (itemShare && itemShare.eligible)
+        );
+      })
+      .map((it: any) => ({ id: it.id, label: it.label }));
+  })();
 
   return (
     <BaseModal
@@ -251,30 +267,27 @@ export default function PoolFlowModal({
         <EmptyState text="ตำแหน่งของคุณไม่ได้ใช้ระบบกองกลาง — ค่าคอมคิดตามจำนวนชิ้นของตัวเองโดยตรง" />
       ) : groupEmployeeIds.length === 0 ? (
         <EmptyState text={`ยังไม่มีข้อมูลค่าคอมของทีมนี้ในเดือน ${monthLabel}`} />
-      ) : !hasSell && !hasBuy ? (
+      ) : flowItems.length === 0 ? (
         <EmptyState text={`ยังไม่มีการขายหรือรับซื้อในเดือน ${monthLabel}`} />
       ) : (
         <div className="flex flex-col gap-5">
-          {hasSell && (
-            <PoolSideFlow
-              side="sell"
-              title="ฝั่งขาย"
-              titleIcon={<IconDiamond size={15} strokeWidth={2.4} />}
+          {flowItems.map((it) => (
+            <PoolItemFlow
+              key={it.id}
+              itemId={it.id}
+              title={it.label}
+              titleIcon={
+                it.id === LEGACY_POOL_BUY_ID ? (
+                  <IconShoppingBag size={15} strokeWidth={2.4} />
+                ) : (
+                  <IconDiamond size={15} strokeWidth={2.4} />
+                )
+              }
               groupEmployeeIds={groupEmployeeIds}
               shares={shares}
               nameOf={nameOf}
             />
-          )}
-          {hasBuy && (
-            <PoolSideFlow
-              side="buy"
-              title="ฝั่งรับซื้อ"
-              titleIcon={<IconShoppingBag size={15} strokeWidth={2.4} />}
-              groupEmployeeIds={groupEmployeeIds}
-              shares={shares}
-              nameOf={nameOf}
-            />
-          )}
+          ))}
           <div className="text-center text-xs text-txt-soft flex items-center justify-center gap-1.5">
             <IconLayers size={12} strokeWidth={2.2} />
             ตัวเลขคำนวณจากสูตรเดียวกับสลิปเงินเดือนและหน้าจ่ายเงินของแอดมิน
@@ -293,58 +306,63 @@ export default function PoolFlowModal({
 }
 
 /* ─── One side (ขาย หรือ รับซื้อ) ───────────────────────────────── */
-function PoolSideFlow({
-  side,
+function PoolItemFlow({
+  itemId,
   title,
   titleIcon,
   groupEmployeeIds,
   shares,
   nameOf,
+}: {
+  itemId: string;
+  title: string;
+  titleIcon: any;
+  groupEmployeeIds: string[];
+  shares: Record<string, any>;
+  nameOf: Record<string, any>;
 }) {
-  const isSell = side === "sell";
   const sample = shares[groupEmployeeIds[0]];
-  const totalPool = isSell
-    ? sample.totalSellPoolPieces
-    : sample.totalBuyPoolPieces;
-  const grossPool = isSell
-    ? (sample.grossSellPoolPieces ?? sample.totalSellPoolPieces)
-    : (sample.grossBuyPoolPieces ?? sample.totalBuyPoolPieces);
-  const excludedItems = isSell
-    ? (sample.excludedNormalItems ?? [])
-    : (sample.excludedBuyItems ?? []);
-  const excludedTotal = isSell
-    ? (sample.excludedNormalPieces ?? 0)
-    : (sample.excludedBuyPieces ?? 0);
-  const eligibleCount = isSell
-    ? sample.eligibleSellEmployeeCount
-    : sample.eligibleBuyEmployeeCount;
-  const baseSharePercent = isSell
-    ? sample.sellBaseSharePercent
-    : sample.buyBaseSharePercent;
-  const threshold = isSell
-    ? sample.sellEligibilityThreshold
-    : sample.buyEligibilityThreshold;
-  const topPieces = isSell ? sample.topSellPieces : sample.topBuyPieces;
+  const itemShare = sample.itemShares?.[itemId];
+  const totalPool = sample.totalItemPool?.[itemId] ?? 0;
+  const grossPool = sample.grossItemPool?.[itemId] ?? totalPool;
+  const excludedTotal = Math.max(0, grossPool - totalPool);
+  const topPieces = sample.topItemPieces?.[itemId] ?? 0;
+  const poolItemCfg = (sample.poolItems || []).find(
+    (it: any) => it.id === itemId,
+  );
+  const threshold = topPieces * ((poolItemCfg?.threshold ?? 80) / 100);
+  // pool adjustment items อาจไม่มี per-item แยก · ใช้ legacy fallback
+  // ถ้า itemId = "normal" → excludedNormalItems, "buy" → excludedBuyItems
+  const excludedItems =
+    itemId === LEGACY_POOL_NORMAL_ID
+      ? sample.excludedNormalItems ?? []
+      : itemId === LEGACY_POOL_BUY_ID
+        ? sample.excludedBuyItems ?? []
+        : [];
 
-  // เรียงตามชิ้นมาก→น้อย
+  // เรียงตามชิ้นมาก→น้อย · per-item
   const members = groupEmployeeIds
     .map((id) => {
       const s = shares[id];
-      const exclusion = s.poolExclusion;
-      const excluded = exclusion === side || exclusion === "both";
+      const itemShareForEmp = s.itemShares?.[itemId];
+      const excludedIds = new Set<string>(s.excludedItemIds || []);
+      const excluded = excludedIds.has(itemId);
+      const pieces = s.itemPieces?.[itemId] ?? 0;
       return {
         id,
         ...nameOf[id],
-        pieces: isSell ? s.employeeSellPieces : s.employeeBuyPieces,
+        pieces,
         leaveDays: s.leaveDays,
-        eligible: isSell ? s.eligibleForSellPool : s.eligibleForBuyPool,
-        sharePercent: isSell ? s.sellSharePercent : s.buySharePercent,
-        allocated: isSell ? s.normalSalePieces : s.buyPieces,
+        eligible: itemShareForEmp?.eligible ?? false,
+        sharePercent: itemShareForEmp?.finalSharePercent ?? 0,
+        allocated: itemShareForEmp?.allocatedPieces ?? 0,
         excluded,
-        exclusion,
+        exclusion: s.poolExclusion,
       };
     })
     .sort((a, b) => b.pieces - a.pieces);
+  const eligibleCount = members.filter((m) => m.eligible).length;
+  const baseSharePercent = eligibleCount > 0 ? 100 / eligibleCount : 0;
 
   return (
     <div className="rounded-[14px] border border-bdr bg-cream/40 p-3.5">
