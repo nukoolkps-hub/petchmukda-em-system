@@ -1697,28 +1697,35 @@ export default function SalaryAdminEdit({
         </div>
       </div>
 
-      {/* Save / Cancel buttons */}
+      {/* Sticky Save / Cancel bar — fixed bottom · clear BottomNav (mobile)
+          · style เดียวกับ EmployeeEditModal save bar (PR #467 spec) */}
       {dirty && (
-        <div className="mt-3.5 pt-3.5 border-t border-dashed border-bdr flex gap-2">
-          <button
-            onClick={cancelAll}
-            className="flex-1 py-3 rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
-          >
-            ยกเลิก
-          </button>
-          <button
-            onClick={saveAll}
-            disabled={saving || locked}
-            className={`flex-2 py-3 rounded-[10px] border-none bg-maroon text-white text-base font-bold font-[inherit] flex items-center justify-center gap-1.5 shadow-maroon-glow ${saving || locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
-          >
-            {locked ? (
-              <IconLock size={14} strokeWidth={2.5} />
-            ) : (
-              <IconCheck size={14} strokeWidth={2.5} />
-            )}
-            {locked ? "ปิดรอบแล้ว" : saving ? "กำลังบันทึก..." : "บันทึก"}
-          </button>
-        </div>
+        <>
+          {/* spacer ใต้ content กัน sticky bar ทับเนื้อหา */}
+          <div className="h-[80px]" />
+          <div className="fixed left-1/2 -translate-x-1/2 w-full max-w-[430px] md:max-w-[800px] bottom-[68px] md:bottom-3 z-50 px-3 md:px-6">
+            <div className="bg-white border-[1.5px] border-bdr rounded-2xl shadow-[0_-6px_24px_rgba(90,30,10,0.15)] p-2.5 flex gap-2">
+              <button
+                onClick={cancelAll}
+                className="basis-[34%] shrink-0 py-3.5 rounded-2xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={saveAll}
+                disabled={saving || locked}
+                className={`flex-1 py-3.5 rounded-2xl border-none bg-maroon text-white text-base font-bold font-[inherit] flex items-center justify-center gap-2 shadow-maroon-glow ${saving || locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+              >
+                {locked ? (
+                  <IconLock size={16} strokeWidth={2.5} />
+                ) : (
+                  <IconCheck size={16} strokeWidth={2.5} />
+                )}
+                {locked ? "ปิดรอบแล้ว" : saving ? "กำลังบันทึก..." : "บันทึก"}
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* กล่องเตือนก่อนสลับพนักงาน/เดือน ทั้งที่ยังมี draft ค้าง (in-app) */}
