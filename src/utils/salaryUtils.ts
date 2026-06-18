@@ -542,6 +542,13 @@ export function computePoolSharesForGroup({
     }
     return null;
   })();
+  // audit bug F: warn ถ้า roles ไม่ส่งมา (จะ fallback default 3 items
+  // ทำให้ custom pool items หาย · admin จะเห็นเลขผิดในเดือนเก่า)
+  if (!roles && typeof console !== "undefined") {
+    console.warn(
+      "[computePoolSharesForGroup] roles array not provided — falling back to default poolItems · custom items lost",
+    );
+  }
   const poolItemsConfig = rolePoolItems(
     groupRole || { poolGroup: poolGroup || "_" },
   );
@@ -835,15 +842,19 @@ export function computePoolSharesForGroup({
       });
     } else {
       // personal: pieces ของตัวเอง · 100% share · ไม่หักลาแบบกอง
+      // CRITICAL bug fix: ถ้า admin set poolExclusion ของพนักงานครอบคลุม item นี้
+      // (รวม "all") → ตัด commission ของ item นี้ด้วย (เดิม personal ได้เงิน
+      // ตลอด ไม่ honor exclusion · admin ปิดทั้งหมดแล้ว personal ยังได้เงิน)
       activeIds.forEach((empId) => {
         if (!itemShares[empId]) itemShares[empId] = {};
         const myPieces = itemPiecesByEmp[empId]?.[it.id] || 0;
+        const excluded = exclusionByEmp[empId]?.has(it.id) ?? false;
         itemShares[empId][it.id] = {
-          finalSharePercent: 100,
-          allocatedPieces: myPieces,
+          finalSharePercent: excluded ? 0 : 100,
+          allocatedPieces: excluded ? 0 : myPieces,
           leaveDeductionPercent: 0,
           redistributedPercent: 0,
-          eligible: true,
+          eligible: !excluded,
           kind: "personal",
         };
       });
@@ -1164,11 +1175,12 @@ export function calculateSalary(
   const losesBaseSalary = !!poolShare?.losesBaseSalary;
   const baseSalary = losesBaseSalary ? 0 : baseSalaryAmount;
 
-  // โบนัสแห่งความขยัน — รวม "ลาวันอาทิตย์" ด้วย (ขาดงานคือขาดงาน · เดิมนับ
-  // เฉพาะ weekday ทำให้ลาอาทิตย์อย่างเดียวยังได้ bonus เต็ม)
-  // ถ้า losesBaseSalary → ไม่ได้ bonus (base = 0 อยู่แล้ว · ป้องกัน paying
-  // 2× dailyRate ให้คนที่ไม่ควรได้ base · CRITICAL bug)
-  const leaveDays = (totalLeaveDays || 0) + sundayOverQuotaDays;
+  // โบนัสแห่งความขยัน — totalLeaveDays รวม sundays อยู่แล้ว
+  // (useFirebaseAppData L213: totalLeaveDays = weekdayLeaves + overInfo.sundays)
+  // เดิมบวก sundayOverQuotaDays ซ้ำ → Sunday นับ 2 เท่า → bonus ผิด
+  // ถ้า losesBaseSalary → ไม่ได้ bonus (base = 0 อยู่แล้ว · กัน paying
+  // 2× dailyRate ให้คนที่ไม่ควรได้ base · CRITICAL)
+  const leaveDays = totalLeaveDays || 0;
   const bonusDays = losesBaseSalary
     ? 0
     : Math.max(0, WEEKDAY_LEAVE_QUOTA - leaveDays);
