@@ -851,6 +851,16 @@ export default function SalaryView({
         <div className="text-center text-xs text-txt-soft mt-2">
           * ค่าคอม + รายการที่ ADMIN กรอกเอง จะเพิ่มหลังยืนยันยอด
         </div>
+
+        {/* AdvanceHistoryModal · ปุ่ม "ประวัติเบิกเงิน" เปิดได้ใน empty state ด้วย ·
+            ถ้าไม่ render ที่นี่ ปุ่มจะกดแล้วไม่มีอะไรเกิดขึ้น */}
+        {showHistory && (
+          <AdvanceHistoryModal
+            advanceRequests={monthAdvances}
+            monthLabel={formatYmThai(selectedMonth)}
+            onClose={() => setShowHistory(false)}
+          />
+        )}
       </div>
     );
   }
