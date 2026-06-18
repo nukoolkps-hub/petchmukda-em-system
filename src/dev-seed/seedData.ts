@@ -428,7 +428,7 @@ export const ADVANCE_REQUESTS_INIT: AdvanceRequest[] = [
    poolGroup:  ตำแหน่งใน group เดียวกัน → แชร์ Pool ค่าคอม
                (รวมชิ้น แล้วแบ่งตามสัดส่วนวันทำงาน)
    ตำแหน่งที่ไม่มี poolGroup (null)
-   → ใช้ Rate/ชิ้นเดียว (ค่าคอมแยก ของใครของมัน)                       */
+   → ใช้ Rate/ชิ้นเดียว (ค่าคอมแยก ส่วนตัว)                       */
 export const ROLES_INIT: Role[] = [
   { id: "sales", name: "พนักงานขาย", poolGroup: "sales", icon: "💎" },
   { id: "manager", name: "ผู้จัดการสาขา", poolGroup: null, icon: "👔" },

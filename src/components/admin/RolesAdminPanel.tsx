@@ -206,7 +206,7 @@ function PoolItemsEditor({
               className="px-1.5 py-1 rounded-md border border-bdr text-xs font-[inherit] bg-white"
             >
               <option value="pool">แชร์กองกลาง</option>
-              <option value="personal">ไม่แชร์กองกลาง</option>
+              <option value="personal">ส่วนตัว</option>
             </select>
             <div className="flex items-center gap-1 ml-auto">
               <span className="text-txt-soft">เกณฑ์เข้ากอง:</span>
@@ -279,7 +279,7 @@ export default function RolesAdminPanel({
     // ตำแหน่งใหม่ — bonusItems ว่าง (admin เพิ่มเอง · [] = ซ่อน section)
     bonusItems: [] as PieceItem[],
     // pool items (สำหรับ pool sales role) — default 3 รายการ ให้ admin
-    // ลบ/เพิ่ม/แก้ได้ตามต้องการ · "ขายพิเศษ" kind=personal (ของใครของมัน)
+    // ลบ/เพิ่ม/แก้ได้ตามต้องการ · "ขายพิเศษ" kind=personal (ส่วนตัว)
     poolItems: [
       { id: "normal", label: "ขายทั่วไป", kind: "pool" as const, threshold: 80 },
       {
@@ -572,7 +572,7 @@ export default function RolesAdminPanel({
                     color={COLORS.textSoft}
                   />
                   <span className="text-sm font-bold text-txt">
-                    ไม่แชร์กองกลาง
+                    ส่วนตัว
                   </span>
                   <span className="text-xs text-txt-soft ml-auto">
                     ใช้ piece rate / ไม่มีค่าคอม

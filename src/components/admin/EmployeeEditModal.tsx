@@ -1147,7 +1147,7 @@ export default function EmployeeEditModal({
                                   <div>{it.label}</div>
                                   {it.kind === "personal" && (
                                     <div className="text-[10px] text-txt-soft font-normal">
-                                      (ไม่แชร์กองกลาง)
+                                      (ส่วนตัว)
                                     </div>
                                   )}
                                 </label>
