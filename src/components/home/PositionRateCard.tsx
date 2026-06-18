@@ -50,36 +50,43 @@ function RateRow({
   suffix: string;
   strike?: boolean;
 }) {
-  // strike style ใช้ตรงๆ บน text spans (label + value + unit) แทน parent
-  // เพื่อให้เส้นต่อกันเป็นเส้นเดียว · decoration thickness 2.5px (50% หนาขึ้น)
-  const strikeCls = strike
-    ? "line-through decoration-red/70 decoration-[2.5px]"
-    : "";
+  // ใช้ pseudo-element bar (::after) สำหรับ strike แทน text-decoration
+  // → เส้นตรงเป๊ะ · thickness เท่ากันทั้งบรรทัด · ไม่ต่างตาม font size
+  // bar wrapper: relative inline-block · ::after เป็นแถบสีแดงทับกลางตัว
+  const barCls =
+    "relative inline-block after:content-[''] after:absolute after:inset-x-0 after:top-1/2 after:-translate-y-1/2 after:h-[3px] after:bg-red/75 after:rounded-full after:pointer-events-none";
   return (
     <div
       className={`flex justify-between items-baseline ${strike ? "text-red/75" : ""}`}
     >
-      <span
-        className={`text-xs text-txt-mid inline-flex items-center gap-1 ${strikeCls}`}
-      >
+      <span className="text-xs text-txt-mid inline-flex items-center gap-1">
         {strike && (
           <IconLock
             size={11}
             strokeWidth={2.5}
-            className="no-underline text-red shrink-0 [text-decoration:none]"
+            className="text-red shrink-0"
           />
         )}
-        {label}
+        {strike ? <span className={barCls}>{label}</span> : label}
       </span>
       <span
-        className={`text-sm font-bold tabular-nums ${strike ? "text-red/80" : "text-maroon"} ${strikeCls}`}
+        className={`text-sm font-bold tabular-nums ${strike ? "text-red/80" : "text-maroon"}`}
       >
-        {formatThaiNumber(value || 0)}{" "}
-        <span
-          className={`text-[10px] font-normal ${strike ? "text-red/80" : "text-txt-soft"} ${strikeCls}`}
-        >
-          {suffix}
-        </span>
+        {strike ? (
+          <span className={barCls}>
+            {formatThaiNumber(value || 0)}{" "}
+            <span className="text-[10px] font-normal text-red/80">
+              {suffix}
+            </span>
+          </span>
+        ) : (
+          <>
+            {formatThaiNumber(value || 0)}{" "}
+            <span className="text-[10px] text-txt-soft font-normal">
+              {suffix}
+            </span>
+          </>
+        )}
       </span>
     </div>
   );
