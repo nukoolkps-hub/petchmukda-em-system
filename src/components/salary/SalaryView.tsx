@@ -3,6 +3,7 @@ import {
   Banknote as IconBanknote,
   Briefcase as IconBriefcase,
   Landmark as IconBuildingBank,
+  CalendarPlus as IconCalendarPlus,
   CirclePlus as IconCirclePlus,
   ClipboardList as IconClipboardList,
   Clock as IconClock,
@@ -40,6 +41,7 @@ import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import {
   calculateSalary,
+  computeExtraOpenSaturdayWorkedDates,
   computePoolSharesForGroup,
   rolePaysPieceCommission,
 } from "../../utils/salaryUtils";
@@ -164,6 +166,11 @@ export default function SalaryView({
         pieces: Number(it.pieces) || 0,
         label: it.label,
       }));
+    const extraSatWorked = computeExtraOpenSaturdayWorkedDates(
+      selectedMonth,
+      storeCalendar,
+      monthLeaves,
+    );
     const computedSalary = calculateSalary(
       data,
       overQuotaInfo,
@@ -174,6 +181,7 @@ export default function SalaryView({
       employeeRole,
       buildLoanContext(employeeLoans, salaryEmployeeId, selectedMonth),
       monthExclusions,
+      { workedDates: extraSatWorked },
     );
     return {
       overInfo: overQuotaInfo,
@@ -709,6 +717,21 @@ export default function SalaryView({
                 ? `ลาวันธรรมดา ${salaryCalculation.leaveDays} วัน → ${salaryCalculation.bonusDays} วัน × ${formatThaiNumber(Math.round(salaryCalculation.dailySalaryRate))} ฿`
                 : `ลาวันธรรมดา ${salaryCalculation.leaveDays} วัน — ไม่ได้รับโบนัส`,
             value: salaryCalculation.attendanceBonus,
+          },
+          {
+            icon: (
+              <IconCalendarPlus
+                size={16}
+                strokeWidth={2.2}
+                color={COLORS.green}
+              />
+            ),
+            main: "เงินเสาร์เปิดพิเศษ",
+            sub:
+              salaryCalculation.extraOpenSaturdayDays > 0
+                ? `${salaryCalculation.extraOpenSaturdayDays} วัน × ${formatThaiNumber(Math.round(salaryCalculation.dailySalaryRate))} ฿`
+                : "",
+            value: salaryCalculation.extraOpenSaturdayBonus,
           },
           ...(Array.isArray(data.customEarnings)
             ? data.customEarnings.map((e) => ({

@@ -8,6 +8,7 @@ import {
   CalendarOff as IconCalendarOff,
   CalendarPlus as IconCalendarPlus,
   ChevronDown as IconChevronDown,
+  Coins as IconCoins,
   Plus as IconPlus,
   Store as IconStore,
   Trash2 as IconTrash,
@@ -120,9 +121,18 @@ export default function StoreCalendarPanel({
     if (busy) return;
     setBusy(true);
     try {
+      // ลบเสาร์ → ลบ paid flag ด้วย (subset constraint)
+      const isSat = field === "extraOpenSaturdays";
       await onUpdate({
         ...storeCalendar,
-        [field]: storeCalendar[field].filter((d) => d !== ymd),
+        [field]: (storeCalendar[field] as string[]).filter((d) => d !== ymd),
+        ...(isSat
+          ? {
+              paidExtraSaturdays: (storeCalendar.paidExtraSaturdays ?? []).filter(
+                (d) => d !== ymd,
+              ),
+            }
+          : {}),
       });
       showToast?.("ลบแล้ว");
     } catch (e) {
@@ -132,6 +142,27 @@ export default function StoreCalendarPanel({
       setBusy(false);
     }
   }
+
+  async function togglePaid(ymd: string) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const paid = new Set(storeCalendar.paidExtraSaturdays ?? []);
+      if (paid.has(ymd)) paid.delete(ymd);
+      else paid.add(ymd);
+      await onUpdate({
+        ...storeCalendar,
+        paidExtraSaturdays: [...paid],
+      });
+    } catch (e) {
+      console.error(e);
+      showToast?.("บันทึกไม่สำเร็จ");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const paidSet = new Set(storeCalendar.paidExtraSaturdays ?? []);
 
   // วันที่ในอดีต → เทาๆ (เก็บไว้แต่ลบเองได้)
   const today = new Date();
@@ -248,25 +279,42 @@ export default function StoreCalendarPanel({
               ยังไม่มี — กด "เพิ่ม" เพื่อกำหนดเสาร์เปิดพิเศษ
             </div>
           )}
-          {sat.upcoming.map((d) => (
-            <div
-              key={d}
-              className="flex items-center gap-2 py-1.5 border-b border-bdr/40 last:border-b-0"
-            >
-              <span className="flex-1 text-sm font-semibold text-txt">
-                {fmtYmd(d)}
-              </span>
-              <button
-                type="button"
-                onClick={() => remove("extraOpenSaturdays", d)}
-                disabled={busy}
-                aria-label="ลบ"
-                className="w-7 h-7 rounded-[7px] bg-red-lt text-red border border-red/20 cursor-pointer flex items-center justify-center"
+          {sat.upcoming.map((d) => {
+            const isPaid = paidSet.has(d);
+            return (
+              <div
+                key={d}
+                className="flex items-center gap-2 py-1.5 border-b border-bdr/40 last:border-b-0"
               >
-                <IconTrash size={12} strokeWidth={2.2} />
-              </button>
-            </div>
-          ))}
+                <span className="flex-1 text-sm font-semibold text-txt">
+                  {fmtYmd(d)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => togglePaid(d)}
+                  disabled={busy}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-[7px] border text-xs font-bold font-[inherit] cursor-pointer ${
+                    isPaid
+                      ? "bg-green-lt text-green border-green/30"
+                      : "bg-cream text-txt-soft border-bdr"
+                  }`}
+                  title="ติ๊กให้พนักงานที่มาทำงานได้เงินเพิ่ม 1 วัน"
+                >
+                  <IconCoins size={12} strokeWidth={2.4} />
+                  เงินเพิ่ม
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove("extraOpenSaturdays", d)}
+                  disabled={busy}
+                  aria-label="ลบ"
+                  className="w-7 h-7 rounded-[7px] bg-red-lt text-red border border-red/20 cursor-pointer flex items-center justify-center"
+                >
+                  <IconTrash size={12} strokeWidth={2.2} />
+                </button>
+              </div>
+            );
+          })}
           {sat.past.length > 0 && (
             <div className="mt-2 pt-2 border-t border-dashed border-bdr">
               <div className="text-xs text-txt-soft mb-1.5">
