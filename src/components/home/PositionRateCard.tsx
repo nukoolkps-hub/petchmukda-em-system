@@ -106,6 +106,10 @@ export default function PositionRateCard({ employee, role }: Props) {
     employee?.poolExclusion as any,
     poolItemsCfg,
   );
+  // นับเฉพาะ kind=pool ที่ถูก exclude (personal items ไม่นับ · inherent)
+  const excludedPoolItemsCount = poolItemsCfg.filter(
+    (it) => it.kind === "pool" && poolExcludedIds.has(it.id),
+  ).length;
   return (
     <details className="group mb-2.5 rounded-[14px] bg-white border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)] overflow-hidden">
       <summary className="px-4 py-3 cursor-pointer list-none flex items-center gap-3 hover:bg-cream/40">
@@ -148,11 +152,12 @@ export default function PositionRateCard({ employee, role }: Props) {
         {role.poolGroup
           ? // pool sales — loop poolItems (รวม custom items ที่ admin เพิ่ม)
             // kind=pool → label "(กองกลาง)" · kind=personal → "(ไม่แชร์)"
-            // strike-through ถ้า item ถูก exclude หรือ kind=personal+exclusion=all
+            // strike-through เฉพาะ kind=pool ที่ถูก admin exclude · personal
+            // items ใช้ "(ไม่แชร์)" suffix พอ ไม่ต้อง strike (เพราะ inherent ไม่
+            // เข้ากองอยู่แล้ว ไม่ใช่ admin block)
             poolItemsCfg.map((item) => {
-              const excluded = poolExcludedIds.has(item.id);
-              // personal items "ไม่เข้ากองกลาง" semantically — ขีดทับเฉพาะถ้า
-              // admin exclude · ปกติแสดงเป็น "(ไม่แชร์)" suffix
+              const excluded =
+                item.kind === "pool" && poolExcludedIds.has(item.id);
               const labelSuffix =
                 item.kind === "pool" ? " (กองกลาง)" : " (ไม่แชร์)";
               return (
@@ -186,13 +191,20 @@ export default function PositionRateCard({ employee, role }: Props) {
               suffix="฿/ครั้ง"
             />
           ))}
-        {employee?.poolExclusion &&
-          poolExcludedIds.size > 0 && (
-            <div className="flex items-center gap-1.5 text-[11px] text-amber font-semibold pt-1.5 mt-1 border-t border-bdr/40">
-              <IconCircleSlash size={12} strokeWidth={2.5} />
-              ไม่เข้ากองกลาง: {poolExclusionLabel(employee.poolExclusion)}
-            </div>
-          )}
+        {/* footer "ไม่เข้ากองกลาง" · นับเฉพาะ kind=pool ที่ถูก admin exclude
+            (personal items ไม่นับ · inherent อยู่แล้ว ไม่ใช่ admin block) */}
+        {excludedPoolItemsCount > 0 && (
+          <div className="flex items-center gap-1.5 text-[11px] text-amber font-semibold pt-1.5 mt-1 border-t border-bdr/40">
+            <IconCircleSlash size={12} strokeWidth={2.5} />
+            ไม่เข้ากองกลาง:{" "}
+            {Array.isArray(employee?.poolExclusion) ||
+            (typeof employee?.poolExclusion === "string" &&
+              employee.poolExclusion !== "all" &&
+              employee.poolExclusion !== "both")
+              ? `${excludedPoolItemsCount} รายการ`
+              : poolExclusionLabel(employee?.poolExclusion as any)}
+          </div>
+        )}
       </div>
     </details>
   );
