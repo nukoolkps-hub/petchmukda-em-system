@@ -179,7 +179,7 @@ function PoolItemsEditor({
               className="px-1.5 py-1 rounded-md border border-bdr text-xs font-[inherit] bg-white"
             >
               <option value="pool">แชร์กองกลาง</option>
-              <option value="personal">ใครขายใครได้</option>
+              <option value="personal">ไม่แชร์กองกลาง</option>
             </select>
             <div className="flex items-center gap-1 ml-auto">
               <span className="text-txt-soft">เกณฑ์เข้ากอง:</span>
