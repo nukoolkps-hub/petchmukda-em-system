@@ -14,8 +14,8 @@ import { ChevronDown as IconChevronDown } from "lucide-react";
 import { useRef, useState } from "react";
 import { useClickOutside } from "../../hooks/useClickOutside";
 
-/** สูงสุดของ dropdown · matches max-h ใน listbox class */
-const MAX_DROPDOWN_HEIGHT = 280;
+/** สูงสุดของ dropdown (default) · ปรับได้ผ่าน prop maxHeightPx */
+const DEFAULT_MAX_DROPDOWN_HEIGHT = 280;
 /** padding ขอบ viewport · กัน dropdown ชนขอบจริง (รวม ADMIN tab bar) */
 const VIEWPORT_MARGIN = 80;
 
@@ -33,6 +33,9 @@ interface ThemedSelectProps {
   disabled?: boolean;
   /** ปุ่มหลัก (closed state) — override class หลัก */
   className?: string;
+  /** ความสูงสูงสุดของ dropdown (px) · default 280 (~7-8 รายการ) ·
+   *  ส่งค่ามากขึ้นเพื่อโชว์รายการมากขึ้นก่อน scroll */
+  maxHeightPx?: number;
 }
 
 export default function ThemedSelect({
@@ -42,12 +45,13 @@ export default function ThemedSelect({
   placeholder = "— เลือก —",
   disabled = false,
   className,
+  maxHeightPx = DEFAULT_MAX_DROPDOWN_HEIGHT,
 }: ThemedSelectProps) {
   const [open, setOpen] = useState(false);
   /** flip up เมื่อ space ข้างล่างไม่พอ — กัน dropdown ตกขอบ + ชน tab bar */
   const [openUp, setOpenUp] = useState(false);
   /** max-height ปรับตาม space จริง · กัน scroll หาย */
-  const [maxHeight, setMaxHeight] = useState(MAX_DROPDOWN_HEIGHT);
+  const [maxHeight, setMaxHeight] = useState(maxHeightPx);
   const wrapRef = useRef<HTMLDivElement>(null);
   useClickOutside(wrapRef, () => setOpen(false), open, true);
 
@@ -60,13 +64,10 @@ export default function ThemedSelect({
       const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN;
       const spaceAbove = rect.top - VIEWPORT_MARGIN;
       // flip up เมื่อข้างล่างไม่พอ + ข้างบนเหลือมากกว่า
-      const flip = spaceBelow < MAX_DROPDOWN_HEIGHT && spaceAbove > spaceBelow;
+      const flip = spaceBelow < maxHeightPx && spaceAbove > spaceBelow;
       setOpenUp(flip);
       setMaxHeight(
-        Math.max(
-          120,
-          Math.min(MAX_DROPDOWN_HEIGHT, flip ? spaceAbove : spaceBelow),
-        ),
+        Math.max(120, Math.min(maxHeightPx, flip ? spaceAbove : spaceBelow)),
       );
     }
     setOpen((p) => !p);
