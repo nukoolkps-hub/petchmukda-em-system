@@ -1221,13 +1221,11 @@ export default function EmployeeEditModal({
                   </div>
                   <div className="flex flex-col gap-2">
                     {bonusItems.map((item) => (
-                      <div key={item.id}>
-                        <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                          <IconTicket
-                            size={12}
-                            strokeWidth={2.4}
-                            className="inline mr-1 -mt-px"
-                          />
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-2"
+                      >
+                        <label className="text-sm font-semibold text-txt min-w-[100px] leading-tight">
                           {item.label}
                         </label>
                         <input
@@ -1238,7 +1236,7 @@ export default function EmployeeEditModal({
                           onChange={(e) =>
                             setBonusRate(item.id, e.target.value)
                           }
-                          className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBonusRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
+                          className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBonusRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
                         />
                       </div>
                     ))}
