@@ -314,60 +314,252 @@ export default function SalaryView({
             onSelect={setSelectedMonth}
           />
         </div>
-        <div className="text-center text-txt-soft py-7 px-6 text-base bg-white rounded-[14px] border border-dashed border-bdr mb-3">
-          <div className="flex justify-center mb-2 text-gold">
-            <IconBanknote size={40} strokeWidth={1.8} />
+        {/* Banner: รอ ADMIN ยืนยันยอด */}
+        <div className="bg-amber-50 border border-amber-300 rounded-[14px] px-4 py-3 mb-3 flex items-start gap-2.5">
+          <IconLightbulb
+            size={18}
+            strokeWidth={2.4}
+            className="text-amber-800 shrink-0 mt-0.5"
+          />
+          <div className="flex-1">
+            <div className="text-sm font-bold text-amber-900 mb-0.5">
+              รอ ADMIN ยืนยันยอด
+            </div>
+            <div className="text-xs text-amber-800/90 leading-relaxed">
+              ค่าคอมขาย + รายการที่ ADMIN กรอกเอง จะเพิ่มหลังยืนยันยอด ·
+              ตอนนี้เห็นได้แต่ที่ระบบรู้แล้ว
+            </div>
+            {months.includes(currentYM) && selectedMonth !== currentYM && (
+              <button
+                onClick={() => setSelectedMonth(currentYM)}
+                className="mt-2 px-3 py-1 rounded-[8px] border-none bg-maroon text-white text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center gap-1.5"
+              >
+                <IconArrowLeft size={11} strokeWidth={2.5} />
+                กลับไปเดือนปัจจุบัน
+              </button>
+            )}
           </div>
-          <div className="font-bold text-txt mb-0.5">รอ ADMIN ยืนยันยอด</div>
-          <div className="text-xs text-txt-soft mb-3">
-            ค่าคอมขาย + รายการเสริม จะเพิ่มหลัง ADMIN กรอกข้อมูล
-            <br />
-            ตอนนี้ดูประมาณการจาก <b>เงินเดือนพื้นฐาน + โบนัสขยัน</b> ก่อน
-          </div>
-          {months.includes(currentYM) && selectedMonth !== currentYM && (
-            <button
-              onClick={() => setSelectedMonth(currentYM)}
-              className="px-4 py-2 rounded-[10px] border-none bg-maroon text-white text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center gap-1.5"
-            >
-              <IconArrowLeft size={12} strokeWidth={2.5} />
-              กลับไปเดือนปัจจุบัน
-            </button>
-          )}
         </div>
 
-        {/* preview card — แสดงแม้ data ยังไม่มี · เน้นโบนัสขยันเพื่อกระตุ้น */}
+        {/* Net salary card — เงินประมาณการสุทธิ */}
         {previewSalary && (
-          <div className="bg-white rounded-[14px] border border-bdr overflow-hidden shadow-[0_2px_8px_rgba(90,30,10,0.05)]">
-            <div className="px-4 py-2.5 bg-cream border-b border-bdr flex items-center gap-2">
-              <IconBanknote
-                size={16}
-                strokeWidth={2.2}
-                color={COLORS.gold}
-              />
-              <div className="text-sm font-bold text-maroon flex-1">
-                ประมาณการเดือน {selectedMonthLabel}
+          <div className="bg-linear-135 from-maroon-dk to-maroon rounded-[18px] px-[22px] pt-[22px] pb-5 text-white mb-4.5 shadow-[0_8px_28px_var(--color-maroon)/0.25] relative overflow-hidden">
+            <svg
+              className="absolute -top-2.5 -right-2.5 opacity-15"
+              width="120"
+              height="120"
+              viewBox="0 0 24 24"
+              fill={COLORS.goldLight}
+            >
+              <path d="M6 3h12l4 6-10 12L2 9z" />
+            </svg>
+            <div className="relative">
+              <div className="text-sm text-gold-lt/65 flex items-center gap-1.5">
+                เงินประมาณการสุทธิ
+                <span className="text-[9px] font-bold px-1.5 py-px rounded-[10px] bg-amber-200/25 text-gold-lt border border-amber-200/40">
+                  preview
+                </span>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-[10px] bg-amber-100 text-amber-800 border border-amber-300">
-                preview
-              </span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-4xl font-extrabold text-gold-lt tracking-[-0.02em]">
+                  {formatThaiNumber(previewSalary.netSalary ?? 0)} ฿
+                </span>
+              </div>
+              <div className="flex gap-3.5 mt-3.5 pt-3.5 border-t border-gold-lt/12">
+                <div>
+                  <div className="text-xs text-gold-lt/50">รวมรายรับ</div>
+                  <div className="text-base font-bold text-[#7EE8B5]">
+                    + {formatThaiNumber(previewSalary.earnings)} ฿
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gold-lt/50">รวมรายหัก</div>
+                  <div className="text-base font-bold text-[#FFB4A3]">
+                    − {formatThaiNumber(previewSalary.deductions)} ฿
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="p-4 flex flex-col gap-2.5">
-              {/* ─── รายรับ ─── */}
-              <div className="text-xs font-bold text-green mb-0.5 px-0.5">
-                รายรับ
-              </div>
+          </div>
+        )}
 
+        {/* Bank info card */}
+        {(employeeInfo?.bank || employeeInfo?.bankAccountNumber) && (
+          <div className="bg-white rounded-[14px] px-4 py-3.5 mb-2.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)] flex items-center gap-3">
+            <BankLogo bank={employeeInfo?.bank} size={40} />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-txt-soft mb-0.5">โอนเข้าบัญชี</div>
+              <div className="text-sm font-bold text-txt mb-px">
+                {employeeInfo?.bank || "-"}
+              </div>
+              <div className="text-sm text-txt-mid tracking-wider">
+                {employeeInfo?.bankAccountNumber || "-"}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Advance row — แสดงปุ่ม "เบิกล่วงหน้า" + "ประวัติ" ก่อน ADMIN ยืนยัน
+            ใช้ได้เลย เพราะรู้เงินเดือนพื้นฐานแล้ว (50% cap จาก employee config) */}
+        <div className="grid grid-cols-2 gap-2.5 mb-3">
+          <button
+            onClick={onOpenAdvance}
+            className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-3.5 py-3 border-none cursor-pointer font-[inherit] shadow-[0_3px_12px_var(--color-maroon)/0.25] text-left relative overflow-hidden"
+          >
+            <svg
+              className="absolute -top-1.5 -right-1.5 opacity-15"
+              width="50"
+              height="50"
+              viewBox="0 0 24 24"
+              fill={COLORS.goldLight}
+            >
+              <path d="M6 3h12l4 6-10 12L2 9z" />
+            </svg>
+            <div className="flex items-center gap-2 relative">
+              <div className="w-[34px] h-[34px] rounded-[10px] bg-white/18 flex items-center justify-center shrink-0">
+                <IconCirclePlus
+                  size={17}
+                  color={COLORS.goldLight}
+                  strokeWidth={2.4}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-gold-lt leading-tight">
+                  เบิกเงิน
+                </div>
+                <div className="text-xs text-gold-lt/65 mt-px">ล่วงหน้า</div>
+              </div>
+            </div>
+          </button>
+          <button
+            onClick={() => setShowHistory(true)}
+            className="bg-white rounded-[14px] px-3.5 py-3 cursor-pointer font-[inherit] shadow-[0_2px_10px_rgba(90,30,10,0.06)] text-left relative border-[1.5px] border-[#C9973A50]"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
+                <IconClock size={17} color={COLORS.maroon} strokeWidth={2.2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-maroon leading-tight">
+                  ประวัติเบิกเงิน
+                </div>
+                <div className="text-xs text-txt-soft mt-px">
+                  {monthAdvances.length > 0
+                    ? `${monthAdvances.length} คำขอเดือนนี้`
+                    : "ไม่มีเดือนนี้"}
+                </div>
+              </div>
+              {monthAdvances.some((r) => r.status === "pending") && (
+                <div className="w-2 h-2 rounded-full bg-amber shadow-[0_0_0_3px_var(--color-amber)/0.2] shrink-0" />
+              )}
+            </div>
+          </button>
+        </div>
+
+        {/* เงินกู้ของคุณ (ถ้ามี) */}
+        {(() => {
+          const myLoans = (employeeLoans || []).filter(
+            (l) =>
+              l.employeeId === salaryEmployeeId && l.status !== "cancelled",
+          );
+          if (myLoans.length === 0) return null;
+          return (
+            <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+              <div className="flex items-center gap-2 mb-3">
+                <IconHandCoins
+                  size={18}
+                  strokeWidth={2.2}
+                  color={COLORS.maroon}
+                />
+                <div className="font-bold text-base text-txt">
+                  เงินกู้ของคุณ
+                </div>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {myLoans.map((loan) => {
+                  const remaining = loanRemainingAsOfMonth(
+                    loan,
+                    selectedMonth,
+                  );
+                  const paid = (loan.principal || 0) - remaining;
+                  const pct =
+                    loan.principal > 0
+                      ? Math.min(
+                          100,
+                          Math.round((paid / loan.principal) * 100),
+                        )
+                      : 0;
+                  const thisMonth =
+                    previewSalary?.loanBreakdown?.find(
+                      (b: any) => b.id === loan.id,
+                    )?.amount || 0;
+                  const done = remaining <= 0;
+                  return (
+                    <div
+                      key={loan.id}
+                      className="bg-cream rounded-[10px] p-3 border border-bdr"
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="text-sm font-bold text-txt truncate">
+                          {loan.note || "เงินกู้"}
+                        </div>
+                        {done ? (
+                          <span className="text-xs font-bold text-green shrink-0">
+                            ผ่อนครบแล้ว
+                          </span>
+                        ) : thisMonth > 0 ? (
+                          <span className="text-xs font-semibold text-red shrink-0">
+                            เดือนนี้หัก − {formatThaiNumber(thisMonth)} ฿
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="h-1.5 rounded-full bg-cream-dk overflow-hidden mb-1.5">
+                        <div
+                          className="h-full bg-maroon rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-txt-soft">
+                        <span>
+                          ผ่อนเดือนละ{" "}
+                          {formatThaiNumber(loan.monthlyDeduction)} ฿
+                        </span>
+                        <span>
+                          คงเหลือ{" "}
+                          <b className="text-maroon">
+                            {formatThaiNumber(remaining)} ฿
+                          </b>{" "}
+                          / {formatThaiNumber(loan.principal)} ฿
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* รายรับ — เน้นโบนัสขยัน · ซ่อนรายการ ≤ 0 */}
+        {previewSalary && (
+          <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+            <div className="flex items-center gap-2 mb-3.5">
+              <div className="w-1.5 h-4.5 rounded-sm bg-green" />
+              <div className="font-bold text-base text-txt">รายรับ</div>
+              <div className="ml-auto text-xs font-semibold text-txt-soft">
+                {selectedMonthLabel}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2.5">
               {/* base */}
-              <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
-                <IconBuildingBank
+              <div className="flex items-center gap-2.5 py-1.5">
+                <IconBriefcase
                   size={16}
                   strokeWidth={2.2}
-                  color={COLORS.gold}
+                  color={COLORS.maroon}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-txt-mid">
-                    เงินเดือนพื้นฐาน
-                  </div>
+                  <div className="text-sm text-txt-mid">เงินเดือนพื้นฐาน</div>
                   <div className="text-[11px] text-txt-soft">
                     เรท/วัน ={" "}
                     {formatThaiNumber(
@@ -491,20 +683,26 @@ export default function SalaryView({
                 </div>
               ))}
 
-              {/* ─── รายการหัก ─── */}
-              {(previewSalary.socialSecurity > 0 ||
-                previewSalary.overQuotaDeduction > 0 ||
-                previewSalary.recurringDeductions.length > 0 ||
-                previewSalary.loanDeduction > 0 ||
-                previewSalary.advanceDeduction > 0) && (
-                <div className="text-xs font-bold text-red mt-2 mb-0.5 px-0.5">
-                  รายการหัก
-                </div>
-              )}
+            </div>
+            <div className="flex justify-between items-center pt-3 border-t-[1.5px] border-cream-dk mt-2">
+              <span className="text-sm font-bold text-txt">รวมรายรับ</span>
+              <span className="text-lg font-extrabold text-green">
+                + {formatThaiNumber(previewSalary.earnings)} ฿
+              </span>
+            </div>
+          </div>
+        )}
 
-              {/* ประกันสังคม */}
+        {/* รายการหัก — เฉพาะถ้ามีจริง (deductions > 0) */}
+        {previewSalary && previewSalary.deductions > 0 && (
+          <div className="bg-white rounded-[14px] p-4 mb-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)]">
+            <div className="flex items-center gap-2 mb-3.5">
+              <div className="w-1.5 h-4.5 rounded-sm bg-red" />
+              <div className="font-bold text-base text-txt">รายการหัก</div>
+            </div>
+            <div className="flex flex-col gap-2.5">
               {previewSalary.socialSecurity > 0 && (
-                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                <div className="flex items-center gap-2.5 py-1.5">
                   <IconBuildingBank
                     size={16}
                     strokeWidth={2.2}
@@ -512,19 +710,15 @@ export default function SalaryView({
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-txt-mid">ประกันสังคม</div>
-                    <div className="text-[11px] text-txt-soft">
-                      หักรายเดือน
-                    </div>
+                    <div className="text-[11px] text-txt-soft">หักรายเดือน</div>
                   </div>
                   <span className="text-base font-semibold text-red whitespace-nowrap">
                     − {formatThaiNumber(previewSalary.socialSecurity)} ฿
                   </span>
                 </div>
               )}
-
-              {/* over-quota deduction (ถ้ามี) */}
               {previewSalary.overQuotaDeduction > 0 && (
-                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                <div className="flex items-center gap-2.5 py-1.5">
                   <IconMinus
                     size={16}
                     strokeWidth={2.2}
@@ -544,12 +738,10 @@ export default function SalaryView({
                   </span>
                 </div>
               )}
-
-              {/* รายการหักประจำ (recurring deductions) */}
               {previewSalary.recurringDeductions.map((it: any) => (
                 <div
                   key={`rd-${it.label}`}
-                  className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk"
+                  className="flex items-center gap-2.5 py-1.5"
                 >
                   <IconMinus
                     size={16}
@@ -558,19 +750,15 @@ export default function SalaryView({
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-txt-mid">{it.label}</div>
-                    <div className="text-[11px] text-txt-soft">
-                      หักประจำเดือน
-                    </div>
+                    <div className="text-[11px] text-txt-soft">หักประจำเดือน</div>
                   </div>
                   <span className="text-base font-semibold text-red whitespace-nowrap">
                     − {formatThaiNumber(it.amount)} ฿
                   </span>
                 </div>
               ))}
-
-              {/* เบิกล่วงหน้า */}
               {previewSalary.advanceDeduction > 0 && (
-                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                <div className="flex items-center gap-2.5 py-1.5">
                   <IconHandCoins
                     size={16}
                     strokeWidth={2.2}
@@ -587,10 +775,8 @@ export default function SalaryView({
                   </span>
                 </div>
               )}
-
-              {/* ผ่อนเงินกู้ */}
               {previewSalary.loanDeduction > 0 && (
-                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                <div className="flex items-center gap-2.5 py-1.5">
                   <IconHandCoins
                     size={16}
                     strokeWidth={2.2}
@@ -607,33 +793,19 @@ export default function SalaryView({
                   </span>
                 </div>
               )}
-
-              {/* preview total */}
-              <div className="flex items-center justify-between pt-2 mt-1 border-t border-bdr">
-                <span className="text-sm font-bold text-txt">
-                  ประมาณการสุทธิ
-                </span>
-                <span className="text-lg font-extrabold text-maroon">
-                  {formatThaiNumber(
-                    previewSalary.baseSalary +
-                      previewSalary.attendanceBonus +
-                      (previewSalary.extraOpenSaturdayBonus || 0) +
-                      previewSalary.recurringIncomesTotal -
-                      previewSalary.socialSecurity -
-                      previewSalary.overQuotaDeduction -
-                      previewSalary.recurringDeductionsTotal -
-                      previewSalary.advanceDeduction -
-                      previewSalary.loanDeduction,
-                  )}{" "}
-                  ฿
-                </span>
-              </div>
-              <div className="text-[11px] text-txt-soft text-center mt-1">
-                * ยังไม่รวมค่าคอมขาย / รายการที่ ADMIN จะเพิ่ม
-              </div>
+            </div>
+            <div className="flex justify-between items-center pt-3 border-t-[1.5px] border-cream-dk mt-2">
+              <span className="text-sm font-bold text-txt">รวมรายหัก</span>
+              <span className="text-lg font-extrabold text-red">
+                − {formatThaiNumber(previewSalary.deductions)} ฿
+              </span>
             </div>
           </div>
         )}
+
+        <div className="text-center text-xs text-txt-soft mt-2">
+          * ค่าคอม + รายการที่ ADMIN กรอกเอง จะเพิ่มหลังยืนยันยอด
+        </div>
       </div>
     );
   }
