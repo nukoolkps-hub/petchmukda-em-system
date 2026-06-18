@@ -335,6 +335,63 @@ export default function SalaryView({
           )}
         </div>
 
+        {/* Advance row — แสดงปุ่ม "เบิกล่วงหน้า" + "ประวัติ" ก่อน ADMIN ยืนยัน
+            ใช้ได้เลย เพราะรู้เงินเดือนพื้นฐานแล้ว (50% cap จาก employee config) */}
+        <div className="grid grid-cols-2 gap-2.5 mb-3">
+          <button
+            onClick={onOpenAdvance}
+            className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-3.5 py-3 border-none cursor-pointer font-[inherit] shadow-[0_3px_12px_var(--color-maroon)/0.25] text-left relative overflow-hidden"
+          >
+            <svg
+              className="absolute -top-1.5 -right-1.5 opacity-15"
+              width="50"
+              height="50"
+              viewBox="0 0 24 24"
+              fill={COLORS.goldLight}
+            >
+              <path d="M6 3h12l4 6-10 12L2 9z" />
+            </svg>
+            <div className="flex items-center gap-2 relative">
+              <div className="w-[34px] h-[34px] rounded-[10px] bg-white/18 flex items-center justify-center shrink-0">
+                <IconCirclePlus
+                  size={17}
+                  color={COLORS.goldLight}
+                  strokeWidth={2.4}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-gold-lt leading-tight">
+                  เบิกเงิน
+                </div>
+                <div className="text-xs text-gold-lt/65 mt-px">ล่วงหน้า</div>
+              </div>
+            </div>
+          </button>
+          <button
+            onClick={() => setShowHistory(true)}
+            className="bg-white rounded-[14px] px-3.5 py-3 cursor-pointer font-[inherit] shadow-[0_2px_10px_rgba(90,30,10,0.06)] text-left relative border-[1.5px] border-[#C9973A50]"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
+                <IconClock size={17} color={COLORS.maroon} strokeWidth={2.2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-maroon leading-tight">
+                  ประวัติเบิกเงิน
+                </div>
+                <div className="text-xs text-txt-soft mt-px">
+                  {monthAdvances.length > 0
+                    ? `${monthAdvances.length} คำขอเดือนนี้`
+                    : "ไม่มีเดือนนี้"}
+                </div>
+              </div>
+              {monthAdvances.some((r) => r.status === "pending") && (
+                <div className="w-2 h-2 rounded-full bg-amber shadow-[0_0_0_3px_var(--color-amber)/0.2] shrink-0" />
+              )}
+            </div>
+          </button>
+        </div>
+
         {/* preview card — แสดงแม้ data ยังไม่มี · เน้นโบนัสขยันเพื่อกระตุ้น */}
         {previewSalary && (
           <div className="bg-white rounded-[14px] border border-bdr overflow-hidden shadow-[0_2px_8px_rgba(90,30,10,0.05)]">
