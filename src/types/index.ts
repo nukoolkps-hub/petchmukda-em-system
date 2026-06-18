@@ -33,8 +33,18 @@ export interface Employee {
    *  legacy "invite"/"transfer" item อ่าน invitePieceRate/transferPieceRate
    *  ถ้าไม่มีใน map นี้ (backward compat)                                          */
   bonusRates?: Record<string, number>;
+  /** map ของ rate pool item — key=poolItem.id · value=฿/ชิ้น
+   *  legacy "normal"/"special"/"buy" fallback ไป normal/special/buyPieceRate    */
+  poolItemRates?: Record<string, number>;
   salaryDisabled?: boolean;
-  poolExclusion?: "sell" | "buy" | "both" | "" | null;
+  /** poolExclusion shape:
+   *  null/""/undefined → ไม่ปิด
+   *  "all"             → ปิดทั้งหมด (กฎเดิม "both": <50% primary item ขาด base)
+   *  string[]          → ปิดเฉพาะ pool item ids ที่ระบุ
+   *  legacy: "sell" → migrate "normal"+"special" (kind=pool ฝั่งขาย) ⋅
+   *          "buy"  → migrate "buy" item id ⋅
+   *          "both" → migrate "all"                                              */
+  poolExclusion?: "sell" | "buy" | "both" | "all" | "" | string[] | null;
   displayOrder?: number; // ลำดับการเรียง card admin ลากย้ายได้ — sync ทุกคน
   recurringItems?: RecurringItem[]; // รายรับ/รายจ่ายประจำเดือน (ใช้ทุกเดือน)
   /** การขึ้นเงินเดือนประจำปี · จำนวนคงที่ AUTO ทุกปี Jan · 0 = ไม่ขึ้น auto
@@ -101,6 +111,9 @@ export interface SalaryMonth {
   /** จำนวนครั้งของแต่ละ "โบนัสอื่นๆ" item · key=bonusItem.id · value=จำนวนครั้ง
    *  legacy "invite"/"transfer" อ่าน invitePieces/transferPieces ถ้าไม่มีใน map  */
   bonusCounts?: Record<string, number>;
+  /** จำนวนชิ้นของแต่ละ pool item · key=poolItem.id · value=จำนวนชิ้น
+   *  legacy "normal"/"special"/"buy" fallback ไป normal/special/buyPieces        */
+  poolItemPieces?: Record<string, number>;
   socialSecurity?: number;
   customEarnings?: { label: string; amount: number }[]; // รายการรายรับที่ Admin เพิ่มเอง
   customDeductions?: { label: string; amount: number }[]; // รายการหักที่ Admin เพิ่มเอง
@@ -181,6 +194,17 @@ export interface Role {
   /** legacy single-label (ก่อน multi-item) · migrate-on-read เป็น 1 pieceItem
    *  id="default" · เก็บไว้เพื่อ backward-compat ข้อมูลเก่า                      */
   pieceLabel?: string | null;
+  /** รายการ pool sales (สำหรับ role ที่ poolGroup ตั้ง) — ก่อนหน้านี้ hardcode
+   *  3 รายการ (normal/special/buy) · ตอนนี้ admin custom ได้
+   *  null/undefined → migrate-on-read default 3 items
+   *  [] → no pool items (ตำแหน่ง pool group แต่ยังไม่ตั้งค่า — เลข = 0)
+   *  - kind: "pool" → แชร์กองกลาง (เกณฑ์ threshold% ของ top เพื่อเข้ากอง)
+   *  - kind: "personal" → ใครขายใครได้ (ไม่แชร์ · threshold ใช้สำหรับ count
+   *    เข้าเกณฑ์ 50%/ฐานเงินเดือนเท่านั้น)                                       */
+  poolItems?: PoolItem[] | null;
+  /** primary pool item id — ใช้สำหรับ losesBaseSalary check (ขาย < 50% ของ top)
+   *  ตอน poolExclusion = "all" · default migration = "normal"                  */
+  primaryPoolItemId?: string | null;
   /** รายการ "โบนัสอื่นๆ" (multi-item) — แทน invite/transfer แบบ hardcode เดิม
    *  - null/undefined → migrate-on-read เป็น default 2 รายการ
    *    ({id:"invite",label:"เชิญชวนสมัครบัตร"}, {id:"transfer",label:"ย้ายข้อมูลบัตร"})
@@ -188,6 +212,17 @@ export interface Role {
    *  - [{id,label}, ...] → แต่ละรายการมี rate (ต่อพนักงาน) + จำนวน (ต่อเดือน)
    *  ใช้ได้ทุก role ที่ rolePaysPieceCommission · pool sales ก็ใช้ได้                */
   bonusItems?: PieceItem[] | null;
+}
+
+/** Pool item config — admin custom รายการของ pool sales ต่อ role
+ *  threshold = % ของ top pieces ของ item นี้ ที่ต้องถึงเพื่อเข้ากอง (kind=pool)
+ *  หรือเกณฑ์ 50% สำหรับ base salary loss check (kind=personal · primary item) */
+export interface PoolItem {
+  id: string;
+  label: string;
+  kind: "pool" | "personal";
+  /** % ของ top (0-100) · default 80 สำหรับ pool · personal ใช้ตอน eligibility */
+  threshold: number;
 }
 
 /** ตารางหน้าที่ admin-managed — admin กำหนดว่า "ตำแหน่งไหน ทำหน้าที่อะไร"

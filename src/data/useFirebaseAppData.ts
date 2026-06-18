@@ -193,6 +193,7 @@ export default function useFirebaseAppData({
         invitePieceRate: _ir,
         transferPieceRate: _tr,
         bonusRates: _br,
+        poolItemRates: _pir,
         socialSecurity: _soc,
         ...safeFields
       } = fields || {};
@@ -240,6 +241,7 @@ export default function useFirebaseAppData({
       invitePieceRate: _ignoredInviteRate,
       transferPieceRate: _ignoredTransferRate,
       bonusRates: _ignoredBonusRates,
+      poolItemRates: _ignoredPoolItemRates,
       socialSecurity: _ignoredSocialSecurity,
       ...callerFields
     } = fields || {};
@@ -287,6 +289,8 @@ export default function useFirebaseAppData({
           transferPieceRate: employee.transferPieceRate ?? 0,
           // snapshot โบนัสอื่นๆ (multi-item) — freeze rate ของเดือนนั้น
           bonusRates: employee.bonusRates ?? {},
+          // snapshot pool items (multi-item) — freeze rate ของเดือนนั้น
+          poolItemRates: employee.poolItemRates ?? {},
           socialSecurity: employee.socialSecurity ?? 0,
         };
 

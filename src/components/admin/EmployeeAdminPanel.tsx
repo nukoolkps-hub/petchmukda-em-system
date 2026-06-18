@@ -104,34 +104,55 @@ export default function EmployeeAdminPanel({
                 <div className="text-xs text-txt-soft mt-px flex items-center gap-[5px] flex-wrap">
                   <IconBriefcase size={11} strokeWidth={2.4} />
                   {employee.role || "-"}
-                  {employee.poolExclusion &&
-                    (() => {
-                      const m = {
-                        sell: (
-                          <span className="inline-flex items-center gap-0.5">
-                            <IconDiamond size={10} strokeWidth={2.4} />
-                            ปิดขาย
-                          </span>
-                        ),
-                        buy: (
-                          <span className="inline-flex items-center gap-0.5">
-                            <IconShoppingBag size={10} strokeWidth={2.4} />
-                            ปิดซื้อ
-                          </span>
-                        ),
-                        both: (
-                          <span className="inline-flex items-center gap-0.5">
-                            <IconLock size={10} strokeWidth={2.4} />
-                            ปิดทั้งคู่
-                          </span>
-                        ),
-                      };
-                      return (
-                        <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
-                          {m[employee.poolExclusion]}
+                  {(() => {
+                    const exc = employee.poolExclusion;
+                    if (!exc) return null;
+                    // new variants: "all" | string[] · legacy: "sell" | "buy" | "both"
+                    const m: Record<string, React.ReactNode> = {
+                      sell: (
+                        <span className="inline-flex items-center gap-0.5">
+                          <IconDiamond size={10} strokeWidth={2.4} />
+                          ปิดขาย
+                        </span>
+                      ),
+                      buy: (
+                        <span className="inline-flex items-center gap-0.5">
+                          <IconShoppingBag size={10} strokeWidth={2.4} />
+                          ปิดซื้อ
+                        </span>
+                      ),
+                      both: (
+                        <span className="inline-flex items-center gap-0.5">
+                          <IconLock size={10} strokeWidth={2.4} />
+                          ปิดทั้งคู่
+                        </span>
+                      ),
+                      all: (
+                        <span className="inline-flex items-center gap-0.5">
+                          <IconLock size={10} strokeWidth={2.4} />
+                          ปิดทั้งหมด
+                        </span>
+                      ),
+                    };
+                    let content: React.ReactNode;
+                    if (Array.isArray(exc)) {
+                      if (exc.length === 0) return null;
+                      content = (
+                        <span className="inline-flex items-center gap-0.5">
+                          <IconLock size={10} strokeWidth={2.4} />
+                          ปิด {exc.length} รายการ
                         </span>
                       );
-                    })()}
+                    } else {
+                      content = m[exc as string];
+                      if (!content) return null;
+                    }
+                    return (
+                      <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
+                        {content}
+                      </span>
+                    );
+                  })()}
                   {employee.salaryDisabled && (
                     <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
                       <IconLock size={10} strokeWidth={2.4} />
