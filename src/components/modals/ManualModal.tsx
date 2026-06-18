@@ -325,9 +325,14 @@ export default function ManualModal({ onClose }) {
                 </li>
               </ol>
               <p className="mt-2">
-                <b>ชิ้นที่ได้</b> = (% ที่ได้ ÷ 100) × กองกลางรวม
+                <b>ชิ้นที่ได้</b> = (% ที่ได้ ÷ 100) × กองกลางของ item
                 <br />
                 <b>เงิน</b> = ชิ้น × Rate ของแต่ละคน
+              </p>
+              <p className="mt-2 text-xs text-txt-soft">
+                ⚙ ตัวอย่างด้านล่างคือ <b>default 3 items</b> (ขายทั่วไป · ขายพิเศษ ·
+                รับซื้อ) · ADMIN เพิ่ม/แก้ items เองได้ในแท็บ "ตำแหน่ง" · แต่ละ item
+                แยกกันคำนวณ threshold + กอง
               </p>
             </Card>
           </Section>
@@ -356,8 +361,9 @@ export default function ManualModal({ onClose }) {
             color={COLORS.gold}
           >
             <p>
-              <b>ไม่แชร์กองกลาง</b> — คูณ Rate ของตัวเอง · ไม่เข้ากองที่หารแบ่ง · ลาไม่กระทบ ·
-              ถ้า ADMIN <b>ปิด</b> สิทธิ์ผ่าน checkbox/all → ตัด commission ด้วย
+              <b>ไม่แชร์กองกลาง</b> — คูณ Rate ของตัวเอง · ไม่เข้ากองที่หารแบ่ง ·
+              ลาไม่กระทบ · ถ้า ADMIN <b>ปิด</b> สิทธิ์ผ่าน checkbox/all → ตัด commission
+              ด้วย
             </p>
           </Section>
 
@@ -372,14 +378,16 @@ export default function ManualModal({ onClose }) {
           >
             <p>
               บางสินค้าไม่ได้ค่าคอม — ADMIN ใส่ "รายการยกเว้นค่าคอม" ระดับเดือน
-              <b>แยกตาม pool item</b> (เลือกได้ทุก kind=pool item รวม custom เช่น "ขายมือสอง")
+              <b>แยกตาม pool item</b> (เลือกได้ทุก kind=pool item รวม custom เช่น
+              "ขายมือสอง")
             </p>
             <ul>
               <li>
                 <b>กองกลางที่หารแบ่ง</b> = gross − หัก ⇒ น้อยลง (per item)
               </li>
               <li>
-                <b>เกณฑ์ threshold</b> ใช้ gross (ไม่หัก) — พนักงานยังมีสิทธิ์อยู่ในกองแม้ขายโปรฯ/MD เยอะ
+                <b>เกณฑ์ threshold</b> ใช้ gross (ไม่หัก) —
+                พนักงานยังมีสิทธิ์อยู่ในกองแม้ขายโปรฯ/MD เยอะ
               </li>
             </ul>
           </Section>
@@ -394,7 +402,8 @@ export default function ManualModal({ onClose }) {
             color={COLORS.maroon}
           >
             <p>
-              คำนวณแบบกองกลาง <b>แยกฝั่ง</b> จากการขาย (ใช้สูตรเดียวกัน)
+              คำนวณแบบกองกลาง <b>แยกเป็น item ของตัวเอง</b> (ใช้สูตรเดียวกัน · top +
+              threshold ของตัวเอง)
             </p>
           </Section>
 
@@ -411,20 +420,22 @@ export default function ManualModal({ onClose }) {
               title={
                 <span className="inline-flex items-center gap-1.5">
                   <IconTrendingDown size={14} strokeWidth={2.4} />
-                  กฎ 80%
+                  กฎ threshold (default 80% · admin custom ได้)
                 </span>
               }
               color={COLORS.text}
             >
               <p>
-                แต่ละ pool item มี <b>threshold ของตัวเอง</b> (default 80% · ADMIN custom ได้):
-                คนที่ <b>ชิ้น &lt; threshold% ของ Top</b> ใน item นั้น →{" "}
-                <b className="text-red">ตัดออกจากกอง</b> item นั้น (เปอร์เซ็นต์ฐานและตัวคูณหักวันลาคำนวณ per item)
+                แต่ละ pool item มี <b>threshold ของตัวเอง</b> (default 80% · ADMIN
+                custom ได้): คนที่ <b>ชิ้น &lt; threshold% ของ Top</b> ใน item นั้น →{" "}
+                <b className="text-red">ตัดออกจากกอง</b> item นั้น
+                (เปอร์เซ็นต์ฐานและตัวคูณหักวันลาคำนวณ per item)
               </p>
               <p className="mt-1.5">
                 <b className="text-green">ข้อยกเว้น:</b> คนที่ทำ{" "}
-                <b>หน้าที่รายเดือนที่ "ให้สิทธิ์กองกลาง"</b> ในเดือนนั้น → เข้ากองได้ทุก kind=pool item แม้ &lt; threshold
-                (ติดทำหน้าที่ทั้งเดือน ขายไม่ทันเพื่อน) · แต่ยังเคารพ exclusion ที่ ADMIN ตั้ง · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%
+                <b>หน้าที่รายเดือนที่ "ให้สิทธิ์กองกลาง"</b> ในเดือนนั้น → เข้ากองได้ทุก
+                kind=pool item แม้ &lt; threshold (ติดทำหน้าที่ทั้งเดือน ขายไม่ทันเพื่อน) ·
+                แต่ยังเคารพ exclusion ที่ ADMIN ตั้ง · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%
               </p>
             </Card>
             <Card
@@ -441,12 +452,14 @@ export default function ManualModal({ onClose }) {
                   <b>ไม่ปิด</b> — เข้าทุก pool item ตามเกณฑ์ threshold
                 </li>
                 <li>
-                  <b>ปิดเฉพาะรายการ</b> — ติ๊ก checkbox per item · item ที่ติ๊ก → ไม่ได้กอง (item อื่นใช้ threshold ปกติ)
+                  <b>ปิดเฉพาะรายการ</b> — ติ๊ก checkbox per item · item ที่ติ๊ก →
+                  ไม่ได้กอง (item อื่นใช้ threshold ปกติ)
                 </li>
                 <li>
-                  <b>ปิดทั้งหมด</b> — ไม่ได้กองทุก item · ขายพิเศษ (kind=personal) ก็ถูกตัด
-                  <br />+ ถ้า <b>primary item</b> (ADMIN ตั้งใน role) &lt; 50% ของ Top primary →{" "}
-                  <b className="text-red">ไม่ได้เงินเดือนพื้นฐาน</b>
+                  <b>ปิดทั้งหมด</b> — ไม่ได้กองทุก item · ขายพิเศษ (kind=personal)
+                  ก็ถูกตัด
+                  <br />+ ถ้า <b>primary item</b> (ADMIN ตั้งใน role) &lt; 50% ของ
+                  Top primary → <b className="text-red">ไม่ได้เงินเดือนพื้นฐาน</b>
                 </li>
               </ul>
             </Card>
@@ -851,13 +864,17 @@ export default function ManualModal({ onClose }) {
             <p>
               หน้าที่ <b>รายเดือน</b> เปิดตัวเลือก{" "}
               <b>"ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%"</b> ได้ — คนทำติดทั้งเดือน
-              ขายไม่ทันเพื่อน จึงเข้ากองกลางได้ทั้ง 2 ฝั่ง
+              ขายไม่ทันเพื่อน จึงเข้ากองได้ทุก kind=pool item โดยไม่ต้องถึง threshold
             </p>
             <ul>
-              <li>ยังเคารพฝั่งที่ ADMIN ปิด (ปิดรับซื้อ → ไม่ได้ฝั่งรับซื้อ)</li>
+              <li>
+                ยังเคารพ exclusion ที่ ADMIN ตั้ง (ติ๊ก "ปิดเฉพาะรายการ" → ตัดเฉพาะ item
+                นั้น · "ปิดทั้งหมด" → ตัดทั้งหมด)
+              </li>
               <li>ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%</li>
               <li>
-                คน <b>"ปิดทั้งคู่"</b> → ทำรายเดือนไม่ได้ (เสี่ยงหลุด 50%)
+                คน <b>"ปิดทั้งหมด"</b> → ทำรายเดือนไม่ได้ (เสี่ยงหลุด 50% จาก primary
+                item)
               </li>
             </ul>
           </Section>

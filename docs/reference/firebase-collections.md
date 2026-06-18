@@ -151,7 +151,7 @@ Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth
 interface PoolItem {
   id: string;
   label: string;
-  kind: "pool" | "personal";  // pool = แชร์ · personal = ใครขายใครได้
+  kind: "pool" | "personal";  // pool = แชร์กองกลาง · personal = ไม่แชร์กองกลาง (ใครขายใครได้)
   threshold: number;          // % ของ top (0-100, default 80)
 }
 ```
