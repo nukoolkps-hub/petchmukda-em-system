@@ -325,6 +325,7 @@ export default function AdminPanel({
         <LeaveSummaryPanel
           allLeaves={allLeaves}
           employeeDirectory={employeeDirectory}
+          storeCalendar={storeCalendar}
           selectedMonth={adminMonth}
           onSelectMonth={setAdminMonth}
         />

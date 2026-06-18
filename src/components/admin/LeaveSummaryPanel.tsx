@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { BUSINESS_RULES, COLORS } from "../../constants";
-import type { Employee, LeaveEntry } from "../../types";
-import { fmtDateWithWeekday, todayYmd } from "../../utils/dateUtils";
+import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
+import { fmtDateWithWeekday, todayYmd, toYMD } from "../../utils/dateUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import MonthChevronNav from "../shared/MonthChevronNav";
 
@@ -42,26 +42,40 @@ function LeaveDayBreakdown({
   );
 }
 
-// นับวันธรรมดา/อาทิตย์ในช่วงวันลา (ข้ามเสาร์)
-function countByDayType(start: string, end: string) {
+// นับวันธรรมดา/อาทิตย์ในช่วงวันลา — เคารพ storeCalendar เดียวกับ countWorkdays
+// (เสาร์เปิดพิเศษ → นับเป็น weekday · จ-ศ ปิดพิเศษ → ข้าม) ไม่งั้น breakdown
+// จะไม่ตรงกับ lv.days (badge "ลา N วัน") ที่นับด้วย countWorkdays ตอนยื่นลา
+function countByDayType(
+  start: string,
+  end: string,
+  calendar?: StoreCalendar | null,
+) {
   let weekdays = 0;
   let sundays = 0;
   const s = new Date(`${start}T00:00:00`);
   const e = new Date(`${end}T00:00:00`);
   const c = new Date(s);
+  const extraOpenSat = new Set(calendar?.extraOpenSaturdays || []);
+  const extraClosedWd = new Set(calendar?.extraClosedWeekdays || []);
   while (c <= e) {
     const dow = c.getDay();
-    if (dow === 0) sundays++;
-    else if (dow !== 6) weekdays++;
+    const ymd = toYMD(c);
+    if (dow === 0) {
+      sundays++;
+    } else if (dow === 6) {
+      if (extraOpenSat.has(ymd)) weekdays++;
+    } else {
+      if (!extraClosedWd.has(ymd)) weekdays++;
+    }
     c.setDate(c.getDate() + 1);
   }
   return { weekdays, sundays };
 }
-function sumDayType(leaves: LeaveEntry[]) {
+function sumDayType(leaves: LeaveEntry[], calendar?: StoreCalendar | null) {
   let weekdays = 0;
   let sundays = 0;
   leaves.forEach((lv) => {
-    const r = countByDayType(lv.start, lv.end);
+    const r = countByDayType(lv.start, lv.end, calendar);
     weekdays += r.weekdays;
     sundays += r.sundays;
   });
@@ -71,6 +85,7 @@ function sumDayType(leaves: LeaveEntry[]) {
 interface LeaveSummaryPanelProps {
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
+  storeCalendar: StoreCalendar;
   /** เดือนที่ดู (YYYY-MM) — controlled โดย AdminPanel · share กับ section
    *  อื่น (LeaveListPanel · SalaryAdminEdit · PayrollSummaryPanel) */
   selectedMonth: string;
@@ -81,6 +96,7 @@ interface LeaveSummaryPanelProps {
 export default function LeaveSummaryPanel({
   allLeaves,
   employeeDirectory,
+  storeCalendar,
   selectedMonth,
   onSelectMonth,
 }: LeaveSummaryPanelProps) {
@@ -144,7 +160,10 @@ export default function LeaveSummaryPanel({
               );
               const totalTimes = monthLeaves.length;
               if (totalTimes === 0) return null;
-              const { weekdays, sundays } = sumDayType(monthLeaves);
+              const { weekdays, sundays } = sumDayType(
+                monthLeaves,
+                storeCalendar,
+              );
               const totalDays = weekdays + sundays;
               const personalDays = monthLeaves
                 .filter((lv) => lv.type === "personal")
@@ -306,7 +325,10 @@ export default function LeaveSummaryPanel({
               );
               const totalTimes = yearLeaves.length;
               if (totalTimes === 0) return null;
-              const { weekdays, sundays } = sumDayType(yearLeaves);
+              const { weekdays, sundays } = sumDayType(
+                yearLeaves,
+                storeCalendar,
+              );
               const totalDays = weekdays + sundays;
               const personalDays = yearLeaves
                 .filter((lv) => lv.type === "personal")
