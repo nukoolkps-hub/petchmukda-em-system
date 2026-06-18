@@ -601,53 +601,73 @@ export default function ManualModal({ onClose }) {
 
             <div className="flex flex-col gap-1.5">
               <div>
-                <b>พนักงาน A</b> · ลา 0 วัน
-                <br />
+                <div className="flex items-baseline justify-between gap-2">
+                  <span>
+                    <b>พนักงาน A</b> · ลา 0 วัน
+                  </span>
+                  <span className="whitespace-nowrap">
+                    ได้ <b className="text-green">25.33%</b> = 253.3 ชิ้น
+                  </span>
+                </div>
                 <span className="text-txt-soft text-xs">
                   → ไม่ถูกหัก + ได้แบ่งของคนลา
                 </span>
-                <br />
-                ได้ <b className="text-green">25.33%</b> = 253.3 ชิ้น
               </div>
 
               <div className="pt-1.5 border-t border-[#C9973A30]">
-                <b>พนักงาน B</b> · ลา 1 วัน
-                <br />
+                <div className="flex items-baseline justify-between gap-2">
+                  <span>
+                    <b>พนักงาน B</b> · ลา 1 วัน
+                  </span>
+                  <span className="whitespace-nowrap">
+                    ได้ <b className="text-green">25.33%</b> = 253.3 ชิ้น
+                  </span>
+                </div>
                 <span className="text-txt-soft text-xs">
                   → ยังอยู่ใน "2 วันฟรี" ไม่ถูกหัก
                 </span>
-                <br />
-                ได้ <b className="text-green">25.33%</b> = 253.3 ชิ้น
               </div>
 
               <div className="pt-1.5 border-t border-[#C9973A30]">
-                <b>พนักงาน C</b> · ลา 2 วัน
-                <br />
+                <div className="flex items-baseline justify-between gap-2">
+                  <span>
+                    <b>พนักงาน C</b> · ลา 2 วัน
+                  </span>
+                  <span className="whitespace-nowrap">
+                    ได้ <b className="text-green">25.33%</b> = 253.3 ชิ้น
+                  </span>
+                </div>
                 <span className="text-txt-soft text-xs">
                   → ยังอยู่ใน "2 วันฟรี" ไม่ถูกหัก
                 </span>
-                <br />
-                ได้ <b className="text-green">25.33%</b> = 253.3 ชิ้น
               </div>
 
               <div className="pt-1.5 border-t border-[#C9973A30]">
-                <b>พนักงาน D</b> · ลา 5 วัน
-                <br />
+                <div className="flex items-baseline justify-between gap-2">
+                  <span>
+                    <b>พนักงาน D</b> · ลา 5 วัน
+                  </span>
+                  <span className="whitespace-nowrap">
+                    ได้ <b className="text-red">15.33%</b> = 153.3 ชิ้น
+                  </span>
+                </div>
                 <span className="text-txt-soft text-xs">
                   → เกิน 2 วันมา 3 วัน → ถูกหัก 8%
                 </span>
-                <br />
-                ได้ <b className="text-red">15.33%</b> = 153.3 ชิ้น
               </div>
 
               <div className="pt-1.5 border-t border-[#C9973A30]">
-                <b>พนักงาน E</b> · ลา 7 วัน
-                <br />
+                <div className="flex items-baseline justify-between gap-2">
+                  <span>
+                    <b>พนักงาน E</b> · ลา 7 วัน
+                  </span>
+                  <span className="whitespace-nowrap">
+                    ได้ <b className="text-red">8.67%</b> = 86.7 ชิ้น
+                  </span>
+                </div>
                 <span className="text-txt-soft text-xs">
                   → เกิน 2 วันมา 5 วัน → ถูกหัก 13.33%
                 </span>
-                <br />
-                ได้ <b className="text-red">8.67%</b> = 86.7 ชิ้น
               </div>
             </div>
 
