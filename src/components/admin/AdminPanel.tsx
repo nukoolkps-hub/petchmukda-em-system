@@ -185,6 +185,9 @@ export default function AdminPanel({
         </div>
       </div>
 
+      {/* Section content · keyed by section → fadeIn re-triggers on swap */}
+      <div key={section} className="animate-[fadeIn_0.18s_ease-out]">
+
       {/* ── POSITIONS section ── */}
       {section === "positions" && (
         <RolesAdminPanel
@@ -355,6 +358,7 @@ export default function AdminPanel({
           setEditingEmpId={setEmployeeEditingId}
         />
       )}
+      </div>
     </div>
   );
 }

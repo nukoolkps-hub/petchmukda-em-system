@@ -520,7 +520,7 @@ export default function SalaryView({
           <div className="flex flex-col gap-2.5">
             <button
               onClick={onOpenAdvance}
-              className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-3.5 py-3 border-none cursor-pointer font-[inherit] shadow-[0_3px_12px_var(--color-maroon)/0.25] text-left relative overflow-hidden"
+              className="bg-linear-135 from-maroon to-maroon-lt rounded-[14px] px-3.5 py-3 border-none cursor-pointer font-[inherit] shadow-[0_3px_12px_var(--color-maroon)/0.25] text-left relative overflow-hidden active:scale-[0.97] transition-transform duration-100 ease-out"
             >
               <svg
                 className="absolute -top-1.5 -right-1.5 opacity-15"
@@ -549,7 +549,7 @@ export default function SalaryView({
             </button>
             <button
               onClick={() => setShowHistory(true)}
-              className="bg-white rounded-[14px] px-3.5 py-3 cursor-pointer font-[inherit] shadow-[0_2px_10px_rgba(90,30,10,0.06)] text-left relative border-[1.5px] border-[#C9973A50]"
+              className="bg-white rounded-[14px] px-3.5 py-3 cursor-pointer font-[inherit] shadow-[0_2px_10px_rgba(90,30,10,0.06)] text-left relative border-[1.5px] border-[#C9973A50] active:scale-[0.97] transition-transform duration-100 ease-out"
             >
               <div className="flex items-center gap-2">
                 <div className="w-[34px] h-[34px] rounded-[10px] bg-gold-pale flex items-center justify-center shrink-0 border border-[#C9973A40]">
@@ -1032,10 +1032,10 @@ export default function SalaryView({
             onClick={onOpenAdvance}
             disabled={isMonthConfirmed}
             title={isMonthConfirmed ? "ยืนยันยอดแล้ว — เบิกเงินรอบใหม่" : ""}
-            className={`rounded-[14px] px-3.5 py-3 border-none font-[inherit] text-left relative overflow-hidden ${
+            className={`rounded-[14px] px-3.5 py-3 border-none font-[inherit] text-left relative overflow-hidden transition-transform duration-100 ease-out ${
               isMonthConfirmed
                 ? "bg-bdr/30 cursor-not-allowed"
-                : "bg-linear-135 from-maroon to-maroon-lt cursor-pointer shadow-[0_3px_12px_var(--color-maroon)/0.25]"
+                : "bg-linear-135 from-maroon to-maroon-lt cursor-pointer shadow-[0_3px_12px_var(--color-maroon)/0.25] active:scale-[0.97]"
             }`}
           >
             <svg
