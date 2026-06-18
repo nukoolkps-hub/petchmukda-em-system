@@ -920,6 +920,9 @@ export function computePoolSharesForGroup({
       grossItemPool,
       totalItemPool,
       excludedItemIds: [...exclusionByEmp[employeeId]],
+      /** per-item exclusion items (adjustment) สำหรับ PoolFlowModal แสดง
+       *  reason list ของ custom items ด้วย (เดิม legacy normal/buy เท่านั้น) */
+      excludedItemsByItemId,
     };
   });
   return result;
@@ -1094,6 +1097,26 @@ export function calculateSalary(
         amount: Math.round(pieces * rate),
       };
     });
+    // Backward-compat: legacy salary doc มี normalSalePieces/specialSalePieces/
+    // buyPieces แต่ admin ลบ item ออกจาก role.poolItems → pieces จะถูก orphan
+    // → เพิ่ม legacy item ที่หายไปกลับเข้า breakdown (กัน past month เงินหาย)
+    const ensureLegacy = (id: string, label: string, kind: "pool" | "personal") => {
+      if (poolItemsBreakdown.find((b) => b.id === id)) return;
+      const pieces = resolvePoolItemPieces(id, salary);
+      if (pieces === 0) return; // ไม่ต้องเพิ่มถ้าไม่มี data
+      const rate = resolvePoolItemRate(id, salary, rates);
+      poolItemsBreakdown.push({
+        id,
+        label,
+        kind,
+        pieces,
+        rate,
+        amount: Math.round(pieces * rate),
+      });
+    };
+    ensureLegacy("normal", "ขายทั่วไป", "pool");
+    ensureLegacy("special", "ขายพิเศษ", "personal");
+    ensureLegacy("buy", "รับซื้อ", "pool");
     // Map ต้น 3 items กลับ legacy aggregate fields (backward-compat ของ UI/PDF)
     const normalItem = poolItemsBreakdown.find((b) => b.id === "normal");
     const specialItem = poolItemsBreakdown.find((b) => b.id === "special");

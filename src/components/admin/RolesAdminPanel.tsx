@@ -108,6 +108,9 @@ function cleanPoolItems(
   items: { id: string; label: string; kind?: string; threshold?: number }[] | undefined,
 ): { id: string; label: string; kind: "pool" | "personal"; threshold: number }[] {
   if (!Array.isArray(items)) return [];
+  // dedupe by id เก็บตัวแรกที่เจอ · audit fix #11 · กัน admin paste/copy
+  // ทำให้ duplicate id (React warning + map overwrite ใน calc engine)
+  const seen = new Set<string>();
   return items
     .map((it) => ({
       id: String(it.id),
@@ -120,7 +123,12 @@ function cleanPoolItems(
           ? Math.max(0, Math.min(100, it.threshold))
           : 80,
     }))
-    .filter((it) => it.label && it.id);
+    .filter((it) => {
+      if (!it.label || !it.id) return false;
+      if (seen.has(it.id)) return false;
+      seen.add(it.id);
+      return true;
+    });
 }
 
 /** PoolItemsEditor — แก้ไขรายการ pool sales (label + kind + threshold)
