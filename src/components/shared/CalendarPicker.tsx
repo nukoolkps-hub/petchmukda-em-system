@@ -33,6 +33,9 @@ interface Props {
   /** ปฏิทินแสดงแบบ inline (push siblings ลง) แทน popup overlay
    *  · ใช้ใน knowledge/calc ที่ popup จะทับ section ถัดไปแล้วดูเหมือนถูกตัด */
   inline?: boolean;
+  /** เลือกได้เฉพาะ จ-ศ (disable เสาร์+อาทิตย์) · ใช้ตอน admin เลือก
+   *  "วันธรรมดาปิดพิเศษ" — กันเลือกเสาร์/อาทิตย์ผิด */
+  weekdaysOnly?: boolean;
   error?: string;
 }
 
@@ -46,6 +49,7 @@ export default function CalendarPicker({
   storeCalendar,
   size = "md",
   inline = false,
+  weekdaysOnly = false,
   error,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -89,6 +93,9 @@ export default function CalendarPicker({
     const ds = toYMD(new Date(vy, vm, d));
     if (minDate && ds < minDate) return "disabled";
     if (maxDate && ds > maxDate) return "disabled";
+    // weekdaysOnly · เลือกได้เฉพาะ จ-ศ (disable เสาร์+อาทิตย์) — มาก่อน
+    // storeCalendar/disableSaturdays เพราะเป็นข้อจำกัดที่เข้มกว่า
+    if (weekdaysOnly && (dow === 0 || dow === 6)) return "weekend";
     // storeCalendar override · เสาร์เปิดพิเศษ = เลือกลาได้ ·
     // จ-ศ ที่ปิดพิเศษ = ถูก disable (ลาวันร้านปิดไม่นับ) ·
     // ถ้าไม่ส่ง storeCalendar → fallback ไป disableSaturdays prop เดิม
