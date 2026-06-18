@@ -316,6 +316,9 @@ export default function useFirebaseAppData({
         normalSalePieces: mirrorSource.normalSalePieces ?? 0,
         specialSalePieces: mirrorSource.specialSalePieces ?? 0,
         buyPieces: mirrorSource.buyPieces ?? 0,
+        // mirror poolItemPieces map (multi-item · รวม custom) เพื่อให้ employee-side
+        // pool calc เห็น peers' custom items · ถ้าไม่มี → resolver fallback 0
+        poolItemPieces: mirrorSource.poolItemPieces ?? {},
         roleId: mirrorSource.roleId ?? employee.roleId ?? null,
         poolExclusion:
           mirrorSource.poolExclusion ?? employee.poolExclusion ?? null,

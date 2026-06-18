@@ -19,8 +19,12 @@ export interface PoolSnapshotFields {
   normalSalePieces?: number;
   specialSalePieces?: number;
   buyPieces?: number;
+  /** poolItemPieces — multi-item map (รวม custom items ที่ admin เพิ่ม)
+   *  จำเป็นสำหรับ employee-side pool calc ที่จะเห็น peers' custom item
+   *  pieces · ถ้าไม่มี field นี้ pool calc ฝั่งพนักงานจะคืน 0 สำหรับ custom id */
+  poolItemPieces?: Record<string, number>;
   roleId?: string | null;
-  poolExclusion?: string | null;
+  poolExclusion?: string | string[] | null;
   totalLeaveDays?: number;
   poolThresholdExempt?: boolean; // ทำ monthly duty ที่ให้สิทธิ์กองกลางเดือนนี้
 }

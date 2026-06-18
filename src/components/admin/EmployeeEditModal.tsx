@@ -1075,12 +1075,19 @@ export default function EmployeeEditModal({
                                 ปิดทั้งหมด
                               </span>
                             </label>
-                            {mode === "all" && (
-                              <div className="pl-6 text-[11px] text-txt-soft leading-relaxed">
-                                ไม่ได้กองกลางทั้งหมด · ถ้า primary item
-                                ({rolePrimaryPoolItemId(employeeRole)}) &lt; 50% ของ top → ไม่ได้เงินเดือนพื้นฐาน
-                              </div>
-                            )}
+                            {mode === "all" && (() => {
+                              const primaryId = rolePrimaryPoolItemId(employeeRole);
+                              const primaryLabel =
+                                poolItems.find((it) => it.id === primaryId)
+                                  ?.label || primaryId;
+                              return (
+                                <div className="pl-6 text-[11px] text-txt-soft leading-relaxed">
+                                  ไม่ได้กองกลางทั้งหมด · ถ้า{" "}
+                                  <b>"{primaryLabel}"</b> &lt; 50% ของ top →
+                                  ไม่ได้เงินเดือนพื้นฐาน
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       );
