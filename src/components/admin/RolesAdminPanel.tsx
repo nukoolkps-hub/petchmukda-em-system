@@ -196,7 +196,7 @@ function PoolItemsEditor({
             <div className="flex items-center gap-1 ml-auto">
               <span className="text-txt-soft">เกณฑ์เข้ากอง:</span>
               <input
-                type="number"
+                type="text"
                 min={0}
                 max={100}
                 value={item.threshold}

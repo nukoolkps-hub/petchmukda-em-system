@@ -419,7 +419,7 @@ function CoverageFields({
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-txt-soft">฿</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min="0"
             value={coveragePayInput}

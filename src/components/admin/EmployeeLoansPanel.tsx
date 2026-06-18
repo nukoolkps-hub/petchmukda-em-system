@@ -353,7 +353,7 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
             เงินต้น (บาท)
           </label>
           <input
-            type="number"
+            type="text"
             inputMode="decimal"
             value={principal}
             onChange={(e) => setPrincipal(e.target.value)}
@@ -366,7 +366,7 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
             ผ่อนเดือนละ (บาท)
           </label>
           <input
-            type="number"
+            type="text"
             inputMode="decimal"
             value={monthly}
             onChange={(e) => setMonthly(e.target.value)}

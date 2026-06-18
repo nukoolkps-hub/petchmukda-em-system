@@ -158,7 +158,7 @@ export default function AdvanceRequestModal({
           ฿
         </span>
         <input
-          type="number"
+          type="text"
           inputMode="decimal"
           min="0"
           value={amount}

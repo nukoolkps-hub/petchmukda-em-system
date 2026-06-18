@@ -135,7 +135,7 @@ function RecurringItemRow({
         className="flex-1 min-w-0 py-1.5 px-2 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-txt bg-white border border-bdr"
       />
       <input
-        type="number"
+        type="text"
         value={item.amount || ""}
         onChange={(e) => onAmount(parseFloat(e.target.value) || 0)}
         placeholder="0"
