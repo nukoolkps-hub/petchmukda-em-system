@@ -997,7 +997,7 @@ export default function EmployeeEditModal({
                               ? "bg-[#FDECEA80] border-[#C0392B50]"
                               : mode === "some"
                                 ? "bg-amber-lt/70 border-amber/45"
-                                : "bg-cream border-bdr"
+                                : "bg-green-lt/60 border-green/30"
                           }`}
                         >
                           <div
@@ -1006,7 +1006,7 @@ export default function EmployeeEditModal({
                                 ? "text-red"
                                 : mode === "some"
                                   ? "text-amber"
-                                  : "text-txt"
+                                  : "text-green"
                             }`}
                           >
                             <IconBan
