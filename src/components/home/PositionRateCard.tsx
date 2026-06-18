@@ -7,6 +7,7 @@ import {
   Briefcase as IconBriefcase,
   ChevronDown as IconChevronDown,
   CircleSlash as IconCircleSlash,
+  Lock as IconLock,
 } from "lucide-react";
 import type { Employee, Role } from "../../types";
 import { formatTenure } from "../../utils/dateUtils";
@@ -41,7 +42,7 @@ function RateRow({
   label,
   value,
   suffix,
-  /** ขีดทับ (line-through) ทั้งบรรทัด — ใช้ตอน item ถูก exclude หรือ kind=personal */
+  /** strike-through + lock icon · ใช้ตอน item ถูก exclude · สีแดงเพื่อชัดเจน */
   strike,
 }: {
   label: string;
@@ -51,10 +52,21 @@ function RateRow({
 }) {
   return (
     <div
-      className={`flex justify-between items-baseline ${strike ? "line-through text-txt-soft opacity-70" : ""}`}
+      className={`flex justify-between items-baseline ${strike ? "text-red/75 line-through decoration-red/60 decoration-[1.5px]" : ""}`}
     >
-      <span className="text-xs text-txt-mid">{label}</span>
-      <span className="text-sm font-bold text-maroon tabular-nums">
+      <span className="text-xs text-txt-mid inline-flex items-center gap-1">
+        {strike && (
+          <IconLock
+            size={11}
+            strokeWidth={2.5}
+            className="no-underline text-red shrink-0"
+          />
+        )}
+        {label}
+      </span>
+      <span
+        className={`text-sm font-bold tabular-nums ${strike ? "text-red/80" : "text-maroon"}`}
+      >
         {formatThaiNumber(value || 0)}{" "}
         <span className="text-[10px] text-txt-soft font-normal">{suffix}</span>
       </span>
