@@ -185,24 +185,52 @@ export default function SalaryAdminEdit({
   // ยอดกองกลาง "แยกตามตำแหน่ง (poolGroup)" — ใช้แสดง/หัก ในกล่องหักกองกลาง
   // (adjustment เป็นระดับเดือน แต่หักแยกตามกลุ่ม)
   const poolGroupsInfo = useMemo(() => {
-    const map = new Map<
-      string,
-      { id: string; label: string; normal: number; buy: number }
-    >();
-    // label ของแต่ละกลุ่ม = รวมชื่อ role ที่อยู่กลุ่มเดียวกัน
+    type GroupItem = { id: string; label: string; gross: number };
+    type GroupInfo = {
+      id: string;
+      label: string;
+      items: GroupItem[];
+      itemsMap: Map<string, GroupItem>;
+      normal: number; // legacy aggregate (backward-compat)
+      buy: number;
+    };
+    const map = new Map<string, GroupInfo>();
+    // label ของแต่ละกลุ่ม + items config (kind=pool · เอามาจาก role แรกใน group)
     for (const r of roles) {
       if (!r.poolGroup) continue;
       const prev = map.get(r.poolGroup);
-      if (prev) prev.label = `${prev.label} / ${r.name}`;
-      else
+      if (prev) {
+        prev.label = `${prev.label} / ${r.name}`;
+        // เพิ่ม items ของ role ถัดไปที่ยังไม่อยู่ใน map (กัน items ขาดเมื่อ
+        // หลาย role share pool group แต่ items config ไม่ตรงกัน)
+        rolePoolItems(r).forEach((it) => {
+          if (it.kind === "pool" && !prev.itemsMap.has(it.id)) {
+            const entry: GroupItem = { id: it.id, label: it.label, gross: 0 };
+            prev.itemsMap.set(it.id, entry);
+            prev.items.push(entry);
+          }
+        });
+      } else {
+        const items: GroupItem[] = [];
+        const itemsMap = new Map<string, GroupItem>();
+        rolePoolItems(r).forEach((it) => {
+          if (it.kind === "pool") {
+            const entry: GroupItem = { id: it.id, label: it.label, gross: 0 };
+            items.push(entry);
+            itemsMap.set(it.id, entry);
+          }
+        });
         map.set(r.poolGroup, {
           id: r.poolGroup,
           label: r.name,
+          items,
+          itemsMap,
           normal: 0,
           buy: 0,
         });
+      }
     }
-    // รวมชิ้นของแต่ละกลุ่ม
+    // รวมชิ้นของแต่ละกลุ่ม per item · ใช้ resolvePoolItemPieces fallback chain
     for (const emp of employeeDirectory) {
       if (emp.salaryDisabled) continue;
       const roleId =
@@ -213,10 +241,20 @@ export default function SalaryAdminEdit({
       if (!g) continue;
       const sal = liveSalaryData[emp.id]?.[selectedMonth];
       if (!sal) continue;
+      g.items.forEach((it) => {
+        it.gross += resolvePoolItemPieces(it.id, sal);
+      });
+      // legacy aggregate (กรณี summary ตกหล่นใช้ fallback)
       g.normal += sal.normalSalePieces || 0;
       g.buy += sal.buyPieces || 0;
     }
-    return [...map.values()];
+    return [...map.values()].map((g) => ({
+      id: g.id,
+      label: g.label,
+      items: g.items,
+      normal: g.normal,
+      buy: g.buy,
+    }));
   }, [employeeDirectory, roles, liveSalaryData, selectedMonth]);
 
   /* ─── Heavy computation: memoized ───────────────────────────────── */

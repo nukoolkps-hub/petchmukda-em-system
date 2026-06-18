@@ -689,16 +689,31 @@ export function computePoolSharesForGroup({
       it.kind !== "piece" &&
       (!it.poolGroup || !poolGroup || it.poolGroup === poolGroup),
   );
-  const excludedNormalItems = adjItems.filter((it) => it.side === "normal");
-  const excludedBuyItems = adjItems.filter((it) => it.side === "buy");
-  const excludedNormal = excludedNormalItems.reduce(
-    (s, it) => s + Math.max(0, Number(it.pieces) || 0),
-    0,
-  );
-  const excludedBuy = excludedBuyItems.reduce(
-    (s, it) => s + Math.max(0, Number(it.pieces) || 0),
-    0,
-  );
+  // Phase 3D — resolve target item id per adjustment · poolItemId ก่อน · ถ้า
+  // ไม่มี → fallback legacy side ("normal" → LEGACY_POOL_NORMAL_ID, "buy" →
+  // LEGACY_POOL_BUY_ID) · กระจาย excluded pieces ต่อ item id
+  const excludedByItemId: Record<string, number> = {};
+  const excludedItemsByItemId: Record<string, any[]> = {};
+  adjItems.forEach((it: any) => {
+    const targetId =
+      it.poolItemId ||
+      (it.side === "buy"
+        ? LEGACY_POOL_BUY_ID
+        : it.side === "normal"
+          ? LEGACY_POOL_NORMAL_ID
+          : null);
+    if (!targetId) return;
+    const p = Math.max(0, Number(it.pieces) || 0);
+    excludedByItemId[targetId] = (excludedByItemId[targetId] || 0) + p;
+    if (!excludedItemsByItemId[targetId]) excludedItemsByItemId[targetId] = [];
+    excludedItemsByItemId[targetId].push(it);
+  });
+  // legacy aggregate ตัวเลข (สำหรับ backward-compat return fields)
+  const excludedNormal = excludedByItemId[LEGACY_POOL_NORMAL_ID] || 0;
+  const excludedBuy = excludedByItemId[LEGACY_POOL_BUY_ID] || 0;
+  const excludedNormalItems =
+    excludedItemsByItemId[LEGACY_POOL_NORMAL_ID] || [];
+  const excludedBuyItems = excludedItemsByItemId[LEGACY_POOL_BUY_ID] || [];
   totalSellPoolPieces = Math.max(0, totalSellPoolPieces - excludedNormal);
   totalBuyPoolPieces = Math.max(0, totalBuyPoolPieces - excludedBuy);
 
@@ -790,16 +805,14 @@ export function computePoolSharesForGroup({
   > = {};
   // per-item pool totals (หลังหัก adjustment ที่ apply ได้)
   const totalItemPool: Record<string, number> = {};
-  // map legacy side (normal/buy) → คำนวณ pool total หลังหัก
+  // Phase 3D: per-item pool total · หัก excludedByItemId ของแต่ละ item
+  // legacy normal/buy ก็ใช้ path เดียวกัน (excludedByItemId ครอบ legacy ผ่าน
+  // mapping ใน adjItems loop ด้านบน)
   poolItemsConfig.forEach((it) => {
     if (it.kind !== "pool") return;
-    if (it.id === LEGACY_POOL_NORMAL_ID)
-      totalItemPool[it.id] = totalSellPoolPieces;
-    else if (it.id === LEGACY_POOL_BUY_ID)
-      totalItemPool[it.id] = totalBuyPoolPieces;
-    else
-      // custom pool items — ยังไม่มี adjustment mechanism เฉพาะ · ใช้ gross
-      totalItemPool[it.id] = grossItemPool[it.id] || 0;
+    const gross = grossItemPool[it.id] || 0;
+    const excluded = excludedByItemId[it.id] || 0;
+    totalItemPool[it.id] = Math.max(0, gross - excluded);
   });
   poolItemsConfig.forEach((it) => {
     if (it.kind === "pool") {

@@ -29,7 +29,10 @@ interface Item {
   kind: "pool" | "piece";
   // pool variant
   poolGroup?: string;
+  /** legacy side (Phase < 3D) — fallback ถ้าไม่มี poolItemId */
   side?: "normal" | "buy";
+  /** pool item id — Phase 3D · รองรับ custom items ของ role */
+  poolItemId?: string;
   // piece variant
   employeeId?: string;
   pieceItemId?: string;
@@ -44,9 +47,14 @@ interface Item {
   label: string;
 }
 
+/** PoolGroupInfo — ข้อมูลของแต่ละ pool group สำหรับ Modal
+ *  items: pool items ของ role (kind=pool เท่านั้น) · gross ต่อ item
+ *  legacy normal/buy คงไว้สำหรับ summary backward-compat                     */
 interface PoolGroupInfo {
   id: string;
   label: string;
+  items: { id: string; label: string; gross: number }[];
+  /** legacy aggregate — ใช้ใน summary fallback ถ้า items ว่าง */
   normal: number;
   buy: number;
 }
@@ -92,11 +100,18 @@ function normalizeItems(
       const emp = employeeDirectory.find((e) => e.id === it.employeeId);
       roleId = emp?.roleId || "";
     }
+    // legacy side → poolItemId migration · ถ้าไม่มี poolItemId แต่มี side
+    // ให้ resolve: side="normal" → "normal" id · side="buy" → "buy" id
+    let poolItemId = it.poolItemId || "";
+    if (!poolItemId && it.kind !== "piece") {
+      poolItemId = it.side === "buy" ? "buy" : "normal";
+    }
     return {
       id: it.id || randomId(),
       kind: it.kind === "piece" ? "piece" : "pool",
       poolGroup: it.poolGroup || "",
       side: it.side === "buy" ? "buy" : "normal",
+      poolItemId,
       employeeId: it.employeeId || "",
       pieceItemId: it.pieceItemId || "",
       roleId,
@@ -163,13 +178,17 @@ export default function PoolAdjustmentModal({
   }
 
   function addPoolItem() {
+    // default poolItemId = item แรกของ group แรก · ถ้าไม่มี items fallback "normal"
+    const firstGroupObj = poolGroups[0];
+    const firstItemId = firstGroupObj?.items?.[0]?.id || "normal";
     setItems((prev) => [
       ...prev,
       {
         id: randomId(),
         kind: "pool",
         poolGroup: firstGroup,
-        side: "normal",
+        side: firstItemId === "buy" ? "buy" : "normal",
+        poolItemId: firstItemId,
         pieces: 0,
         label: "",
       },
@@ -246,10 +265,18 @@ export default function PoolAdjustmentModal({
     }
   }
 
-  function deducted(groupId: string, side: "normal" | "buy") {
+  /** ผลรวมที่ admin หักแล้วของ group + pool item id (Phase 3D) */
+  function deductedItem(groupId: string, itemId: string) {
     return items
       .filter(
-        (i) => i.kind === "pool" && i.poolGroup === groupId && i.side === side,
+        (i) =>
+          i.kind === "pool" &&
+          i.poolGroup === groupId &&
+          (i.poolItemId === itemId ||
+            // legacy fallback: ถ้าไม่มี poolItemId → mapping จาก side
+            (!i.poolItemId &&
+              ((i.side === "normal" && itemId === "normal") ||
+                (i.side === "buy" && itemId === "buy")))),
       )
       .reduce((s, i) => s + Math.max(0, Number(i.pieces) || 0), 0);
   }
@@ -322,28 +349,32 @@ export default function PoolAdjustmentModal({
               เพิ่มรายการ — กองกลาง
             </button>
           )}
-          {/* สรุป pool summary */}
+          {/* สรุป pool summary — loop ทุก pool item (รวม custom · Phase 3D) */}
           <div className="bg-gold-pale/60 rounded-[12px] p-2.5 mt-2.5 border border-gold/25 text-xs flex flex-col gap-1.5">
             {poolGroups.map((g) => {
-              const dN = deducted(g.id, "normal");
-              const dB = deducted(g.id, "buy");
+              // legacy: ถ้า items ว่าง (data เก่าก่อน Phase 1A) ใช้ normal/buy
+              const fallbackItems =
+                g.items && g.items.length > 0
+                  ? g.items
+                  : [
+                      { id: "normal", label: "ขาย (ทั่วไป)", gross: g.normal },
+                      { id: "buy", label: "รับซื้อ", gross: g.buy },
+                    ];
               return (
                 <div key={g.id}>
                   <div className="font-bold text-maroon mb-0.5">{g.label}</div>
-                  <div className="flex justify-between">
-                    <span className="text-txt-mid">ขาย (ทั่วไป)</span>
-                    <span className="font-semibold">
-                      {formatThaiNumber(g.normal)} − {formatThaiNumber(dN)} ={" "}
-                      {formatThaiNumber(Math.max(0, g.normal - dN))} ชิ้น
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-txt-mid">รับซื้อ</span>
-                    <span className="font-semibold">
-                      {formatThaiNumber(g.buy)} − {formatThaiNumber(dB)} ={" "}
-                      {formatThaiNumber(Math.max(0, g.buy - dB))} ชิ้น
-                    </span>
-                  </div>
+                  {fallbackItems.map((it) => {
+                    const d = deductedItem(g.id, it.id);
+                    return (
+                      <div key={it.id} className="flex justify-between">
+                        <span className="text-txt-mid">{it.label}</span>
+                        <span className="font-semibold">
+                          {formatThaiNumber(it.gross)} − {formatThaiNumber(d)}{" "}
+                          = {formatThaiNumber(Math.max(0, it.gross - d))} ชิ้น
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -503,17 +534,45 @@ function PoolRow({
           <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
         </div>
         <div className="relative">
-          <select
-            value={item.side}
-            disabled={locked}
-            onChange={(e) =>
-              onUpdate({ side: e.target.value === "buy" ? "buy" : "normal" })
-            }
-            className={selectCls}
-          >
-            <option value="normal">ขาย (ทั่วไป)</option>
-            <option value="buy">รับซื้อ</option>
-          </select>
+          {(() => {
+            // pool items ของ group ที่ admin เลือก (kind=pool เท่านั้น)
+            // legacy fallback: ถ้าไม่มี items → normal/buy hardcoded
+            const group = poolGroups.find((g) => g.id === item.poolGroup);
+            const groupItems =
+              group?.items && group.items.length > 0
+                ? group.items
+                : [
+                    { id: "normal", label: "ขาย (ทั่วไป)" },
+                    { id: "buy", label: "รับซื้อ" },
+                  ];
+            const currentItemId =
+              item.poolItemId || (item.side === "buy" ? "buy" : "normal");
+            return (
+              <select
+                value={currentItemId}
+                disabled={locked}
+                onChange={(e) =>
+                  onUpdate({
+                    poolItemId: e.target.value,
+                    // sync legacy side สำหรับ backward-compat
+                    side:
+                      e.target.value === "buy"
+                        ? "buy"
+                        : e.target.value === "normal"
+                          ? "normal"
+                          : item.side,
+                  })
+                }
+                className={selectCls}
+              >
+                {groupItems.map((it) => (
+                  <option key={it.id} value={it.id}>
+                    {it.label}
+                  </option>
+                ))}
+              </select>
+            );
+          })()}
           <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
         </div>
         {!locked && (
