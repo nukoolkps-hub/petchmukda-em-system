@@ -14,10 +14,11 @@ import {
   Trash2 as IconTrash,
   X as IconX,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
-import { fmtShortWithWeekday } from "../../utils/dateUtils";
+import { currentYearMonth, fmtShortWithWeekday } from "../../utils/dateUtils";
 import BaseModal from "../shared/BaseModal";
+import MonthChevronNav from "../shared/MonthChevronNav";
 import ThaiDateInput from "../shared/ThaiDateInput";
 
 interface Props {
@@ -89,6 +90,9 @@ export default function StoreCalendarPanel({
   const [satPick, setSatPick] = useState("");
   const [wdPick, setWdPick] = useState("");
   const [busy, setBusy] = useState(false);
+  // selected month (YYYY-MM) — filter list ทั้ง sat/wd ตามเดือนนี้
+  // default = current month · auto-jump เมื่อ admin เพิ่มวันในเดือนอื่น
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentYearMonth());
   // confirm-before-remove · เปิด modal ตอน admin ลบเฉพาะวันที่มีใบลา ·
   // วันไหนไม่มีใบลาลบเลย ไม่ต้อง confirm
   const [confirmRemove, setConfirmRemove] = useState<{
@@ -96,6 +100,30 @@ export default function StoreCalendarPanel({
     ymd: string;
     names: string[];
   } | null>(null);
+
+  // months สำหรับ MonthChevronNav (เรียงใหม่→เก่า) ·
+  // รวม: เดือนปัจจุบัน + เดือนที่มีข้อมูล + 3 เดือนข้างหน้า (กัน admin
+  // เลือก future month ไว้กรอก)
+  const months = useMemo(() => {
+    const set = new Set<string>();
+    const cur = currentYearMonth();
+    set.add(cur);
+    set.add(selectedMonth);
+    // 3 เดือนข้างหน้านับจากปัจจุบัน
+    const [cy, cm] = cur.split("-").map(Number);
+    for (let i = 1; i <= 3; i++) {
+      const dt = new Date(cy, cm - 1 + i, 1);
+      set.add(
+        `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`,
+      );
+    }
+    // ทุกเดือนที่มีข้อมูล (sat + wd · past + future)
+    [
+      ...storeCalendar.extraOpenSaturdays,
+      ...storeCalendar.extraClosedWeekdays,
+    ].forEach((d) => set.add(d.slice(0, 7)));
+    return [...set].sort((a, b) => b.localeCompare(a));
+  }, [storeCalendar, selectedMonth]);
 
   // เสาร์ตัวเลือก: future-only AND ยังไม่เคย mark ไว้
   const satOptions = buildSaturdayOptions().filter(
@@ -110,6 +138,8 @@ export default function StoreCalendarPanel({
         ...storeCalendar,
         extraOpenSaturdays: [...storeCalendar.extraOpenSaturdays, satPick],
       });
+      // auto-jump ไปเดือนของวันที่เพิ่ง add → admin เห็นว่าเข้าระบบแล้ว
+      setSelectedMonth(satPick.slice(0, 7));
       setSatPick("");
       setAdding(null);
       showToast?.("เพิ่มเสาร์เปิดพิเศษแล้ว");
@@ -137,6 +167,8 @@ export default function StoreCalendarPanel({
         ...storeCalendar,
         extraClosedWeekdays: [...storeCalendar.extraClosedWeekdays, wdPick],
       });
+      // auto-jump ไปเดือนของวันที่เพิ่ง add
+      setSelectedMonth(wdPick.slice(0, 7));
       setWdPick("");
       setAdding(null);
       showToast?.("เพิ่มวันธรรมดาปิดพิเศษแล้ว");
@@ -214,9 +246,10 @@ export default function StoreCalendarPanel({
     return new Date(y, m - 1, d) < today;
   };
 
-  // จัด sort + แยก past/future สำหรับ render
+  // filter by selectedMonth + แยก past/future สำหรับ render
   function partition(list: string[]) {
-    const sorted = [...list].sort();
+    const inMonth = list.filter((d) => d.startsWith(selectedMonth + "-"));
+    const sorted = [...inMonth].sort();
     return {
       upcoming: sorted.filter((d) => !isPast(d)),
       past: sorted.filter(isPast),
@@ -224,6 +257,12 @@ export default function StoreCalendarPanel({
   }
   const sat = partition(storeCalendar.extraOpenSaturdays);
   const wd = partition(storeCalendar.extraClosedWeekdays);
+
+  const monthlyCount =
+    sat.upcoming.length +
+    sat.past.length +
+    wd.upcoming.length +
+    wd.past.length;
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -238,6 +277,19 @@ export default function StoreCalendarPanel({
           <br />
           ใส่ข้อยกเว้นในรายการด้านล่าง — ระบบจะใช้คำนวณหน้าที่ + การลาให้ทันที
         </div>
+      </div>
+
+      {/* Month nav — เลือกเดือนเพื่อกรองรายการ sat/wd */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs text-txt-soft">ดูเดือน</div>
+        <MonthChevronNav
+          months={months}
+          selected={selectedMonth}
+          onSelect={setSelectedMonth}
+          subtitle={
+            monthlyCount > 0 ? `${monthlyCount} รายการ` : "ไม่มีรายการ"
+          }
+        />
       </div>
 
       {/* เสาร์เปิดพิเศษ */}
@@ -341,7 +393,7 @@ export default function StoreCalendarPanel({
         <div className="px-3.5 py-2.5">
           {sat.upcoming.length === 0 && sat.past.length === 0 && (
             <div className="text-sm text-txt-soft text-center py-3">
-              ยังไม่มี — กด "เพิ่ม" เพื่อกำหนดเสาร์เปิดพิเศษ
+              ไม่มีรายการเดือนนี้ — กด "เพิ่ม" เพื่อกำหนดเสาร์เปิดพิเศษ
             </div>
           )}
           {sat.upcoming.map((d) => {
@@ -491,7 +543,7 @@ export default function StoreCalendarPanel({
         <div className="px-3.5 py-2.5">
           {wd.upcoming.length === 0 && wd.past.length === 0 && (
             <div className="text-sm text-txt-soft text-center py-3">
-              ยังไม่มี — ปกติเปิดทุก จ-ศ
+              ไม่มีรายการเดือนนี้ — ปกติเปิดทุก จ-ศ
             </div>
           )}
           {wd.upcoming.map((d) => (
