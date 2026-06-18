@@ -1053,7 +1053,7 @@ export default function EmployeeEditModal({
                                 {poolItems.map((it) => (
                                   <label
                                     key={it.id}
-                                    className="flex items-start gap-1.5 cursor-pointer text-xs py-0.5"
+                                    className="flex items-center gap-1.5 cursor-pointer text-xs py-0.5"
                                   >
                                     <input
                                       type="checkbox"
@@ -1064,16 +1064,14 @@ export default function EmployeeEditModal({
                                         else next.delete(it.id);
                                         setExclusion([...next]);
                                       }}
-                                      className="accent-amber cursor-pointer mt-0.5"
+                                      className="accent-amber cursor-pointer"
                                     />
-                                    <div className="flex-1 min-w-0">
-                                      <div>{it.label}</div>
-                                      {it.kind === "personal" && (
-                                        <div className="text-[10px] text-txt-soft leading-tight">
-                                          (ไม่แชร์กองกลาง)
-                                        </div>
-                                      )}
-                                    </div>
+                                    <span>{it.label}</span>
+                                    {it.kind === "personal" && (
+                                      <span className="text-[10px] text-txt-soft">
+                                        (ไม่แชร์กองกลาง)
+                                      </span>
+                                    )}
                                   </label>
                                 ))}
                               </div>
@@ -1174,12 +1172,12 @@ export default function EmployeeEditModal({
                               key={it.id}
                               className="flex items-center gap-2"
                             >
-                              <label className="text-sm font-semibold text-txt min-w-[100px] leading-tight">
-                                <div>{it.label}</div>
+                              <label className="text-sm font-semibold text-txt min-w-[100px]">
+                                {it.label}
                                 {it.kind === "personal" && (
-                                  <div className="text-[10px] text-txt-soft font-normal">
+                                  <span className="text-[10px] text-txt-soft font-normal ml-1">
                                     (ไม่แชร์กองกลาง)
-                                  </div>
+                                  </span>
                                 )}
                               </label>
                               <input
