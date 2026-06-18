@@ -1318,35 +1318,6 @@ export default function SalaryAdminEdit({
             )}
           </div>
 
-          {/* เงินเสาร์เปิดพิเศษ — admin tick ใน storeCalendar · auto-computed */}
-          {(salaryCalculation.extraOpenSaturdayBonus || 0) > 0 && (
-            <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
-              <div className="flex items-center gap-2.5">
-                <IconCalendarPlus
-                  size={16}
-                  strokeWidth={2.2}
-                  color={COLORS.green}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs text-txt-soft font-semibold">
-                    เงินเสาร์เปิดพิเศษ ({salaryCalculation.extraOpenSaturdayDays}{" "}
-                    วัน × {formatThaiNumber(
-                      Math.round(salaryCalculation.dailySalaryRate),
-                    )}{" "}
-                    ฿)
-                  </div>
-                  <div className="text-base font-bold text-green mt-px">
-                    +{" "}
-                    {formatThaiNumber(
-                      salaryCalculation.extraOpenSaturdayBonus || 0,
-                    )}{" "}
-                    ฿
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* เงินค่าแทน (coverage) — admin stamp ตอน save · auto-computed */}
           {(salaryCalculation.coveragePay || 0) > 0 && (
             <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
@@ -1422,6 +1393,35 @@ export default function SalaryAdminEdit({
                     ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* เงินเสาร์เปิดพิเศษ — admin tick ใน storeCalendar · auto-computed */}
+          {(salaryCalculation.extraOpenSaturdayBonus || 0) > 0 && (
+            <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
+              <div className="flex items-center gap-2.5">
+                <IconCalendarPlus
+                  size={16}
+                  strokeWidth={2.2}
+                  color={COLORS.green}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-txt-soft font-semibold">
+                    เงินเสาร์เปิดพิเศษ ({salaryCalculation.extraOpenSaturdayDays}{" "}
+                    วัน × {formatThaiNumber(
+                      Math.round(salaryCalculation.dailySalaryRate),
+                    )}{" "}
+                    ฿)
+                  </div>
+                  <div className="text-base font-bold text-green mt-px">
+                    +{" "}
+                    {formatThaiNumber(
+                      salaryCalculation.extraOpenSaturdayBonus || 0,
+                    )}{" "}
+                    ฿
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
