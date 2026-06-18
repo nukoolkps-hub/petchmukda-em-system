@@ -18,8 +18,15 @@ import {
   rolePieceItems,
 } from "../../utils/salaryUtils";
 
-function poolExclusionLabel(ex?: string | null): string {
-  if (ex === "both") return "ขายทั่วไป + รับซื้อ";
+function poolExclusionLabel(
+  ex?: string | string[] | null,
+): string {
+  if (!ex) return "";
+  if (Array.isArray(ex)) {
+    if (ex.length === 0) return "";
+    return `${ex.length} รายการ`;
+  }
+  if (ex === "all" || ex === "both") return "ทั้งหมด";
   if (ex === "sell") return "ขายทั่วไป";
   if (ex === "buy") return "รับซื้อ";
   return "";

@@ -55,6 +55,25 @@ export async function upsertRole(role) {
             .filter((it: any) => it?.id && typeof it.label === "string")
             .map((it: any) => ({ id: String(it.id), label: String(it.label) }))
         : null,
+      // pool items (multi-item · pool sales) — array เสมอ · [] = ไม่มี pool item
+      // whitelist {id,label,kind,threshold} · threshold clamp 0-100
+      poolItems: Array.isArray(role.poolItems)
+        ? role.poolItems
+            .filter((it: any) => it?.id && typeof it.label === "string")
+            .map((it: any) => ({
+              id: String(it.id),
+              label: String(it.label),
+              kind: it.kind === "personal" ? "personal" : "pool",
+              threshold:
+                typeof it.threshold === "number"
+                  ? Math.max(0, Math.min(100, it.threshold))
+                  : 80,
+            }))
+        : null,
+      // primary item id (ใช้ใน losesBaseSalary check ตอน exclusion = "all")
+      primaryPoolItemId: role.primaryPoolItemId
+        ? String(role.primaryPoolItemId)
+        : null,
       updatedAt: Date.now(),
     },
     { merge: true },

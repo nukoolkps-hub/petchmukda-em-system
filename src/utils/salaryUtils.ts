@@ -100,6 +100,189 @@ export function resolvePieceItemPieces(
   return 0;
 }
 
+/* ─── Pool items (ก่อนหน้านี้: hardcode normal/special/buy) ──────────────
+   role.poolItems = null/undefined → migrate default 3 items
+   role.poolItems = []             → no items (display 0)
+   role.poolItems = [items]        → admin custom รายการเอง                     */
+export const LEGACY_POOL_NORMAL_ID = "normal";
+export const LEGACY_POOL_SPECIAL_ID = "special";
+export const LEGACY_POOL_BUY_ID = "buy";
+const DEFAULT_POOL_THRESHOLD_PCT = 80;
+const DEFAULT_POOL_ITEMS: {
+  id: string;
+  label: string;
+  kind: "pool" | "personal";
+  threshold: number;
+}[] = [
+  {
+    id: LEGACY_POOL_NORMAL_ID,
+    label: "ขายทั่วไป",
+    kind: "pool",
+    threshold: DEFAULT_POOL_THRESHOLD_PCT,
+  },
+  {
+    id: LEGACY_POOL_SPECIAL_ID,
+    label: "ขายพิเศษ",
+    kind: "personal",
+    threshold: DEFAULT_POOL_THRESHOLD_PCT,
+  },
+  {
+    id: LEGACY_POOL_BUY_ID,
+    label: "รับซื้อ",
+    kind: "pool",
+    threshold: DEFAULT_POOL_THRESHOLD_PCT,
+  },
+];
+export function rolePoolItems(
+  role:
+    | {
+        poolItems?:
+          | { id: string; label: string; kind?: string; threshold?: number }[]
+          | null;
+        poolGroup?: string | null;
+      }
+    | null
+    | undefined,
+): typeof DEFAULT_POOL_ITEMS {
+  if (!role) return [];
+  // ตำแหน่งที่ไม่ใช่ pool sales (poolGroup ว่าง) → ไม่มี pool items
+  if (!role.poolGroup) return [];
+  if (Array.isArray(role.poolItems)) {
+    return role.poolItems.map((it) => ({
+      id: it.id,
+      label: it.label,
+      kind: it.kind === "personal" ? "personal" : "pool",
+      threshold:
+        typeof it.threshold === "number"
+          ? Math.max(0, Math.min(100, it.threshold))
+          : DEFAULT_POOL_THRESHOLD_PCT,
+    }));
+  }
+  // null/undefined → default 3 items (legacy migration)
+  return DEFAULT_POOL_ITEMS;
+}
+/** primary item id ใช้สำหรับ losesBaseSalary check (poolExclusion = "all") */
+export function rolePrimaryPoolItemId(
+  role:
+    | {
+        primaryPoolItemId?: string | null;
+        poolItems?:
+          | { id: string; label: string; kind?: string; threshold?: number }[]
+          | null;
+        poolGroup?: string | null;
+      }
+    | null
+    | undefined,
+): string {
+  if (!role) return LEGACY_POOL_NORMAL_ID;
+  if (role.primaryPoolItemId) return role.primaryPoolItemId;
+  // fallback: ตัวแรกของ poolItems · legacy default = "normal"
+  const items = rolePoolItems(role);
+  return items[0]?.id || LEGACY_POOL_NORMAL_ID;
+}
+export function resolvePoolItemPieces(
+  itemId: string,
+  salary:
+    | {
+        poolItemPieces?: Record<string, number>;
+        normalSalePieces?: number;
+        specialSalePieces?: number;
+        buyPieces?: number;
+      }
+    | null
+    | undefined,
+): number {
+  if (salary?.poolItemPieces && typeof salary.poolItemPieces[itemId] === "number")
+    return salary.poolItemPieces[itemId];
+  // legacy fallback by id
+  if (itemId === LEGACY_POOL_NORMAL_ID) return salary?.normalSalePieces ?? 0;
+  if (itemId === LEGACY_POOL_SPECIAL_ID) return salary?.specialSalePieces ?? 0;
+  if (itemId === LEGACY_POOL_BUY_ID) return salary?.buyPieces ?? 0;
+  return 0;
+}
+export function resolvePoolItemRate(
+  itemId: string,
+  salary:
+    | {
+        poolItemRates?: Record<string, number>;
+        normalSalePieceRate?: number;
+        specialSalePieceRate?: number;
+        buyPieceRate?: number;
+      }
+    | null
+    | undefined,
+  rates?: {
+    poolItemRates?: Record<string, number>;
+    normalSalePieceRate?: number;
+    specialSalePieceRate?: number;
+    buyPieceRate?: number;
+  },
+): number {
+  // priority: snapshot map → snapshot legacy field → rates map → rates legacy
+  if (
+    salary?.poolItemRates &&
+    typeof salary.poolItemRates[itemId] === "number"
+  )
+    return salary.poolItemRates[itemId];
+  if (itemId === LEGACY_POOL_NORMAL_ID && salary?.normalSalePieceRate != null)
+    return salary.normalSalePieceRate;
+  if (itemId === LEGACY_POOL_SPECIAL_ID && salary?.specialSalePieceRate != null)
+    return salary.specialSalePieceRate;
+  if (itemId === LEGACY_POOL_BUY_ID && salary?.buyPieceRate != null)
+    return salary.buyPieceRate;
+  if (rates?.poolItemRates && typeof rates.poolItemRates[itemId] === "number")
+    return rates.poolItemRates[itemId];
+  if (itemId === LEGACY_POOL_NORMAL_ID) return rates?.normalSalePieceRate ?? 0;
+  if (itemId === LEGACY_POOL_SPECIAL_ID) return rates?.specialSalePieceRate ?? 0;
+  if (itemId === LEGACY_POOL_BUY_ID) return rates?.buyPieceRate ?? 0;
+  return 0;
+}
+/** แปลง poolExclusion → list ของ item ids ที่โดน exclude
+ *  - null/""/[]         → ไม่ปิด
+ *  - "all"              → ทุก item id
+ *  - string[]           → ใช้ตรงๆ
+ *  - legacy "sell"      → ทุก pool item kind=pool ฝั่งขาย (label เริ่ม "ขาย" หรือ
+ *                          item id ใน [normal, special]) · fallback id "normal","special"
+ *  - legacy "buy"       → "buy" item id
+ *  - legacy "both"      → "all" → ทุก item id                                    */
+export function resolvePoolExclusionItemIds(
+  exclusion:
+    | "sell"
+    | "buy"
+    | "both"
+    | "all"
+    | ""
+    | string[]
+    | null
+    | undefined,
+  poolItems: { id: string }[],
+): { excludedIds: Set<string>; isAll: boolean } {
+  const allIds = new Set(poolItems.map((it) => it.id));
+  if (!exclusion || (Array.isArray(exclusion) && exclusion.length === 0))
+    return { excludedIds: new Set(), isAll: false };
+  if (exclusion === "all" || exclusion === "both")
+    return { excludedIds: allIds, isAll: true };
+  if (Array.isArray(exclusion)) {
+    const filtered = exclusion.filter((id) => allIds.has(id));
+    return {
+      excludedIds: new Set(filtered),
+      isAll: filtered.length === allIds.size && allIds.size > 0,
+    };
+  }
+  // legacy string variant
+  if (exclusion === "sell") {
+    const sellIds = new Set([LEGACY_POOL_NORMAL_ID, LEGACY_POOL_SPECIAL_ID]);
+    const filtered = [...allIds].filter((id) => sellIds.has(id));
+    return { excludedIds: new Set(filtered), isAll: false };
+  }
+  if (exclusion === "buy") {
+    const buyIds = new Set([LEGACY_POOL_BUY_ID]);
+    const filtered = [...allIds].filter((id) => buyIds.has(id));
+    return { excludedIds: new Set(filtered), isAll: false };
+  }
+  return { excludedIds: new Set(), isAll: false };
+}
+
 /* ─── โบนัสอื่นๆ (ก่อนหน้านี้: บัตรสมาชิก hardcode invite/transfer) ──────
    role.bonusItems = null/undefined → default [invite, transfer]
    role.bonusItems = []             → ไม่มีโบนัสอื่นๆ (ซ่อน section)
