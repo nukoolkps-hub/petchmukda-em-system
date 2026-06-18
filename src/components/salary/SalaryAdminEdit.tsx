@@ -36,6 +36,7 @@ import {
   computePoolSharesForGroup,
   resolvePoolExclusionItemIds,
   resolvePoolItemPieces,
+  resolvePoolItemRate,
   rolePaysPieceCommission,
   rolePoolItems,
 } from "../../utils/salaryUtils";
@@ -1053,15 +1054,10 @@ export default function SalaryAdminEdit({
                 const value = poolDisabled
                   ? ""
                   : resolvePoolItemPieces(it.id, data) || "";
-                const rate =
-                  (employeeInfo?.poolItemRates?.[it.id]) ??
-                  (it.id === "normal"
-                    ? employeeInfo?.normalSalePieceRate ?? 0
-                    : it.id === "special"
-                      ? employeeInfo?.specialSalePieceRate ?? 0
-                      : it.id === "buy"
-                        ? employeeInfo?.buyPieceRate ?? 0
-                        : 0);
+                // resolve rate ผ่าน chain: salary snapshot > live employee
+                // (กัน past month ที่ rate ตอนนั้นกับตอนนี้ต่างกัน · admin/
+                // employee จะเห็น rate ของเดือนนั้นๆ ตรงกับ commission calc)
+                const rate = resolvePoolItemRate(it.id, data, employeeInfo);
                 const Icon =
                   it.id === "normal"
                     ? IconDiamond

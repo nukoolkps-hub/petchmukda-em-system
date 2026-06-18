@@ -160,7 +160,7 @@ export default function PoolAdjustmentModal({
       .map((i) =>
         i.kind === "piece"
           ? `piece:${i.employeeId}:${i.pieceItemId}:${i.pieces}:${i.label.trim()}`
-          : `pool:${i.poolGroup}:${i.side}:${i.pieces}:${i.label.trim()}`,
+          : `pool:${i.poolGroup}:${i.poolItemId || i.side}:${i.pieces}:${i.label.trim()}`,
       )
       .sort()
       .join("|");
@@ -178,17 +178,23 @@ export default function PoolAdjustmentModal({
   }
 
   function addPoolItem() {
-    // default poolItemId = item แรกของ group แรก · ถ้าไม่มี items fallback "normal"
+    // default poolItemId = item แรกของ group แรก
+    // audit fix: ถ้า group ไม่มี items เลย ห้ามเพิ่ม (จะเป็น orphan id "normal"
+    // ที่ไม่ตรงกับ role config · admin กด ลบ-เพิ่ม ค่าหัก ไม่มีผล)
     const firstGroupObj = poolGroups[0];
-    const firstItemId = firstGroupObj?.items?.[0]?.id || "normal";
+    const firstItem = firstGroupObj?.items?.[0];
+    if (!firstItem) {
+      showToast?.("ตำแหน่งของกองนี้ยังไม่มี pool items — เพิ่มในแท็บ 'ตำแหน่ง' ก่อน");
+      return;
+    }
     setItems((prev) => [
       ...prev,
       {
         id: randomId(),
         kind: "pool",
         poolGroup: firstGroup,
-        side: firstItemId === "buy" ? "buy" : "normal",
-        poolItemId: firstItemId,
+        side: firstItem.id === "buy" ? "buy" : "normal",
+        poolItemId: firstItem.id,
         pieces: 0,
         label: "",
       },

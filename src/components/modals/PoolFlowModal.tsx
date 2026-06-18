@@ -206,15 +206,17 @@ export default function PoolFlowModal({
     return sample.poolItems
       .filter((it: any) => it.kind === "pool")
       .filter((it: any) => {
+        // เช็คเฉพาะ item นี้: มี pool total > 0 หรือมีคนสักคนเข้ากองเฉพาะ
+        // item นี้ (eligible + allocated > 0) — เดิมใช้ Object.values(itemShares)
+        // .some ครอบทุก item ของ sample → ถ้าคนนี้ได้กองของ item อื่น
+        // item นี้ก็โผล่ทั้งที่ไม่มี data
         const total = sample.totalItemPool?.[it.id] ?? 0;
-        const itemShare = sample.itemShares?.[it.id];
-        return (
-          total > 0 ||
-          Object.values(sample.itemShares || {}).some(
-            (s: any) => s?.eligible && s?.allocatedPieces > 0,
-          ) ||
-          (itemShare && itemShare.eligible)
-        );
+        if (total > 0) return true;
+        // เช็คทั้ง group: มีพนักงานคนใดได้กองของ item นี้ไหม
+        return groupEmployeeIds.some((empId) => {
+          const s = shares[empId]?.itemShares?.[it.id];
+          return s?.eligible && s?.allocatedPieces > 0;
+        });
       })
       .map((it: any) => ({ id: it.id, label: it.label }));
   })();
@@ -331,14 +333,15 @@ function PoolItemFlow({
     (it: any) => it.id === itemId,
   );
   const threshold = topPieces * ((poolItemCfg?.threshold ?? 80) / 100);
-  // pool adjustment items อาจไม่มี per-item แยก · ใช้ legacy fallback
-  // ถ้า itemId = "normal" → excludedNormalItems, "buy" → excludedBuyItems
+  // Phase 4 audit fix: per-item adjustment items (รวม custom) · fallback ไป
+  // legacy excludedNormalItems/excludedBuyItems ถ้าไม่มี
   const excludedItems =
-    itemId === LEGACY_POOL_NORMAL_ID
+    sample.excludedItemsByItemId?.[itemId] ??
+    (itemId === LEGACY_POOL_NORMAL_ID
       ? sample.excludedNormalItems ?? []
       : itemId === LEGACY_POOL_BUY_ID
         ? sample.excludedBuyItems ?? []
-        : [];
+        : []);
 
   // เรียงตามชิ้นมาก→น้อย · per-item
   const members = groupEmployeeIds
