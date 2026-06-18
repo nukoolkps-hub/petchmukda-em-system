@@ -11,8 +11,9 @@ import {
   Trash2 as IconTrash,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { COLORS, LEAVE_TYPES } from "../../constants";
-import type { LeaveEntry } from "../../types";
+import { BUSINESS_RULES, COLORS, LEAVE_TYPES } from "../../constants";
+import type { LeaveEntry, StoreCalendar } from "../../types";
+import { countWeekdayLeaves } from "../../utils/leaveUtils";
 import { addDaysYmd, fmtDate, isFuture, todayYmd } from "../../utils/dateUtils";
 import ConfirmModal from "../modals/ConfirmModal";
 import SubmitLeaveConfirmModal from "../modals/SubmitLeaveConfirmModal";
@@ -46,6 +47,7 @@ interface RequestTabProps {
   /** ล้างฟอร์ม (type + วันที่ + errors) — ใช้ตอนกด "ยกเลิก" ก่อนยื่น */
   onResetForm: () => void;
   onDelete: (id: string | number) => void;
+  storeCalendar?: StoreCalendar | null;
 }
 
 export default function RequestTab({
@@ -66,6 +68,7 @@ export default function RequestTab({
   onSubmit,
   onResetForm,
   onDelete,
+  storeCalendar,
 }: RequestTabProps) {
   const [confirmLeave, setConfirmLeave] = useState<LeaveEntry | null>(null);
   // confirm modal ก่อนยื่นใบลาจริง · เปิดเมื่อ validate ผ่านแล้วเท่านั้น
@@ -153,15 +156,21 @@ export default function RequestTab({
     return Math.max(1, ...Object.values(counts));
   }, [myLeaves]);
 
-  /* ─── Quota status for this month ──────────────────────────── */
-  const usedThisMonth = profile
+  /* ─── Quota status for this month — count weekday days (Mon-Fri)
+       1 ใบลา 4 วันธรรมดา = 4 ไม่ใช่ 1 · sunday แยกหัก ไม่นับโควต้า */
+  const monthLeavesForQuota = profile
     ? allLeaves.filter(
         (lv: LeaveEntry) =>
           lv.employeeId === profile.id && lv.start.startsWith(currentMonth),
-      ).length
-    : 0;
-  const rem = 2 - usedThisMonth;
-  const overQuota = usedThisMonth >= 2;
+      )
+    : [];
+  const usedThisMonth = countWeekdayLeaves(
+    monthLeavesForQuota,
+    storeCalendar,
+  );
+  const quota = BUSINESS_RULES.WEEKDAY_LEAVE_QUOTA;
+  const rem = quota - usedThisMonth;
+  const overQuota = usedThisMonth >= quota;
 
   return (
     <div>

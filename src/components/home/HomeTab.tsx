@@ -12,7 +12,7 @@ import {
   Wallet as IconWallet,
 } from "lucide-react";
 import { useState } from "react";
-import { COLORS, LEAVE_TYPES } from "../../constants";
+import { BUSINESS_RULES, COLORS, LEAVE_TYPES } from "../../constants";
 import type { DutyAssignmentsSnapshot } from "../../firebase/dutyAssignments";
 import type {
   Duty,
@@ -22,6 +22,7 @@ import type {
   StoreCalendar,
 } from "../../types";
 import { isRichTextEmpty } from "../../utils/sanitizeRichText";
+import { countWeekdayLeaves } from "../../utils/leaveUtils";
 import DutyForecastModal from "../modals/DutyForecastModal";
 import RoleMainDutiesModal from "../modals/RoleMainDutiesModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -59,13 +60,18 @@ export default function HomeTab({
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-  /* ─── Monthly quota ────────────────────────────────────────── */
-  const usedThisMonth = profile
+  /* ─── Monthly quota — count weekday days (Mon-Fri) ไม่ใช่จำนวนใบลา
+       1 ใบลา 4 วันธรรมดา = 4 ไม่ใช่ 1 · sunday แยกหัก × 1.5 ไม่นับโควต้า */
+  const monthLeavesForQuota = profile
     ? allLeaves.filter(
         (lv) => lv.employeeId === profile.id && lv.start.startsWith(yearMonth),
-      ).length
-    : 0;
-  const quota = 2;
+      )
+    : [];
+  const usedThisMonth = countWeekdayLeaves(
+    monthLeavesForQuota,
+    storeCalendar,
+  );
+  const quota = BUSINESS_RULES.WEEKDAY_LEAVE_QUOTA;
   const remaining = quota - usedThisMonth;
   const overQuotaDeduction = remaining < 0;
 

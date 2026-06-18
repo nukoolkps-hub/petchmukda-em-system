@@ -410,6 +410,7 @@ export default function LeaveApp() {
                       onSubmit={() => profile && leaveForm.submit(profile)}
                       onResetForm={leaveForm.reset}
                       onDelete={leaveForm.handleDelete}
+                      storeCalendar={storeCalendar}
                     />
                   )
                 }
