@@ -1172,12 +1172,12 @@ export default function EmployeeEditModal({
                               key={it.id}
                               className="flex items-center gap-2"
                             >
-                              <label className="text-sm font-semibold text-txt min-w-[100px]">
-                                {it.label}
+                              <label className="text-sm font-semibold text-txt min-w-[100px] leading-tight">
+                                <div>{it.label}</div>
                                 {it.kind === "personal" && (
-                                  <span className="text-[10px] text-txt-soft font-normal ml-1">
+                                  <div className="text-[10px] text-txt-soft font-normal">
                                     (ไม่แชร์กองกลาง)
-                                  </span>
+                                  </div>
                                 )}
                               </label>
                               <input
