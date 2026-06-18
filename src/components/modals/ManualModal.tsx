@@ -339,7 +339,7 @@ export default function ManualModal({ onClose }) {
                 </li>
               </ol>
               <p className="mt-2">
-                <b>ชิ้นที่ได้</b> = (% ที่ได้ ÷ 100) × กองกลางของ item
+                <b>ชิ้นที่ได้</b> = (% ที่ได้ ÷ 100) × กองกลางของรายการนั้น
                 <br />
                 <b>เงิน</b> = ชิ้น × Rate ของแต่ละคน
               </p>
@@ -612,13 +612,17 @@ export default function ManualModal({ onClose }) {
             color={COLORS.maroon}
           >
             <p>
-              <b>พนักงานขอเอง</b> ผ่านแอป — ADMIN อนุมัติ/ปฏิเสธ ใน LINE
+              <b>พนักงานขอเอง</b> ในแอป — ADMIN <b>อนุมัติ/ปฏิเสธในแอป</b>{" "}
+              (ระบบส่งผลกลับให้พนักงานใน LINE)
             </p>
             <ul>
               <li>
                 <b>เพดาน:</b> 50% ของเงินเดือนพื้นฐาน
               </li>
-              <li>อนุมัติแล้ว → ADMIN โอนเงินทันที + แนบสลิปกลับในแอป</li>
+              <li>
+                ADMIN กดอนุมัติ + <b>แนบสลิปการโอน</b> →
+                ระบบส่งให้พนักงานเห็นในแอปและ LINE
+              </li>
               <li>
                 เดือนถัดไป → <b>หักจากเงินเดือนเต็มก้อน</b> รอบเดียวจบ
               </li>
@@ -652,7 +656,7 @@ export default function ManualModal({ onClose }) {
             >
               <ul>
                 <li>
-                  <b>เรียงตามเดือนเริ่ม</b> (FIFO) — ก้อนเก่าหักก่อน
+                  <b>เรียงตามเดือนเริ่ม</b> — ก้อนเก่ากู้ก่อนหักก่อน · ก้อนใหม่หักทีหลัง
                 </li>
                 <li>
                   <b>หักเท่าที่มี</b> — ถ้าเงินเดือนไม่พอ หักได้แค่ที่เหลือ ·
@@ -663,8 +667,8 @@ export default function ManualModal({ onClose }) {
                 </li>
               </ul>
               <p className="mt-2 text-xs text-txt-soft">
-                ระบบเก็บประวัติการหักรายเดือน (ledger) → คงเหลือถูกต้อง
-                แม้มีเดือนหักไม่ครบหรือข้ามเดือน
+                ระบบ <b>เก็บประวัติทุกครั้งที่หัก</b> — ดูย้อนหลังได้
+                · เดือนไหนหักไม่ครบ ก็ยกยอดเหลือไปเดือนถัดไปอัตโนมัติ
               </p>
             </Card>
           </Section>
@@ -813,7 +817,7 @@ export default function ManualModal({ onClose }) {
               title={
                 <span className="inline-flex items-center gap-1.5">
                   <IconRotate size={14} strokeWidth={2.4} />
-                  หมุนเวียน (rotation)
+                  หมุนเวียน
                 </span>
               }
               color={COLORS.text}
@@ -832,7 +836,7 @@ export default function ManualModal({ onClose }) {
               title={
                 <span className="inline-flex items-center gap-1.5">
                   <IconUserCheck size={14} strokeWidth={2.4} />
-                  แทนคนลา (coverage)
+                  แทนคนลา
                 </span>
               }
               color={COLORS.text}
@@ -863,8 +867,9 @@ export default function ManualModal({ onClose }) {
                 <b>สูตร:</b> เงินค่าแทน = อัตราต่อครั้ง × จำนวนวันที่แทนในเดือน
               </li>
               <li>
-                ระบบนับอัตโนมัติตอน ADMIN save salary — แสดงในสลิปแยกบรรทัด
-                <b> "เงินค่าแทน"</b> + breakdown รายหน้าที่
+                ระบบนับอัตโนมัติตอน ADMIN <b>บันทึกเงินเดือน</b> —
+                แสดงในสลิปแยกบรรทัด <b>"เงินค่าแทน"</b> +
+                <b>รายละเอียดแยกหน้าที่</b>
               </li>
               <li>ไม่ตั้งอัตรา (หรือใส่ 0) → ไม่จ่าย (ทำหน้าที่แทนตามปกติ ไม่มีเงินเพิ่ม)</li>
             </ul>
