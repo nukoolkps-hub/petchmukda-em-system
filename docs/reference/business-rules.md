@@ -89,7 +89,7 @@ interface PoolItem {
 ```
 
 - **kind="pool"** — แชร์กองกลาง · มี threshold % ต่อ item · admin custom ได้
-- **kind="personal"** — ไม่แชร์กองกลาง · ใครขายใครได้ · ไม่ถูกหักลา (`finalSharePercent=100` คงที่)
+- **kind="personal"** — ไม่แชร์กองกลาง · ของใครของมัน · ไม่ถูกหักลา (`finalSharePercent=100` คงที่)
 - **`Role.primaryPoolItemId`** — primary item สำหรับ `losesBaseSalary` check (default item แรก kind=pool)
 
 **Default migration** (legacy role ที่ไม่มี `poolItems`):

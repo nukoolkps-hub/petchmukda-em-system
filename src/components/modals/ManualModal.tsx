@@ -375,7 +375,7 @@ export default function ManualModal({ onClose }) {
             color={COLORS.gold}
           >
             <p>
-              <b>ใครขายใครได้</b> — ไม่ต้องแบ่งใคร · ขายกี่ชิ้น{" "}
+              <b>ของใครของมัน</b> — ไม่ต้องแบ่งใคร · ขายกี่ชิ้น{" "}
               <b>คูณกับ Rate ของตัวเอง</b> ได้เลย · ลาก็ไม่กระทบเงินตรงนี้
             </p>
           </Section>
@@ -561,26 +561,41 @@ export default function ManualModal({ onClose }) {
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
-                <IconTicket size={16} strokeWidth={2.4} />
-                บัตรสมาชิก
+                <IconStar size={16} strokeWidth={2.4} />
+                โบนัสอื่นๆ
               </span>
             }
             color={COLORS.maroon}
           >
             <p>
-              คิดตาม <b>Rate ของตัวเอง</b> × จำนวนใบ (ไม่เข้ากองกลาง)
+              รายการเสริมที่ ADMIN ตั้งเองในแต่ละตำแหน่ง — <b>ไม่แบ่งกองกลาง</b> ·
+              ใครทำได้ใครเก็บ
             </p>
-            <ul>
-              <li className="inline-flex items-center gap-1.5">
-                <IconTicket size={14} strokeWidth={2.4} />
-                เชิญชวนสมัครบัตร — ใบละ X บาท
-              </li>
-              <br />
-              <li className="inline-flex items-center gap-1.5">
-                <IconRefresh size={14} strokeWidth={2.4} />
-                ย้ายข้อมูลบัตร — ใบละ Y บาท
-              </li>
-            </ul>
+            <p className="mt-2">
+              <b>สูตร:</b> Rate ของตัวเอง × จำนวนที่ทำได้ในเดือนนั้น
+            </p>
+
+            <div className="mt-3 rounded-lg bg-cream/60 border border-bdr px-3 py-2.5">
+              <div className="text-xs text-txt-soft mb-1.5">
+                ตัวอย่างที่เริ่มต้นมาให้:
+              </div>
+              <ul className="m-0">
+                <li className="inline-flex items-center gap-1.5">
+                  <IconTicket size={14} strokeWidth={2.4} />
+                  เชิญชวนสมัครบัตรสมาชิก — ใบละ X บาท
+                </li>
+                <br />
+                <li className="inline-flex items-center gap-1.5">
+                  <IconRefresh size={14} strokeWidth={2.4} />
+                  ย้ายข้อมูลบัตรสมาชิก — ใบละ Y บาท
+                </li>
+              </ul>
+            </div>
+
+            <p className="mt-2.5 text-xs text-txt-soft">
+              ⚙ ADMIN สามารถ <b>เพิ่ม / แก้ / ลบ</b> รายการได้เอง (เช่น
+              "ขายของแถม", "ชวนเพื่อนสมัคร LINE" ฯลฯ) — แต่ละรายการตั้ง Rate ของพนักงานแต่ละคนได้
+            </p>
           </Section>
         </div>
       )}

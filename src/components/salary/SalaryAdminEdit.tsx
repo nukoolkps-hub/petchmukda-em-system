@@ -806,7 +806,7 @@ export default function SalaryAdminEdit({
               <br />
               <span className="inline-flex items-center gap-1">
                 <IconSparkles size={11} strokeWidth={2.4} />
-                ขาย-พิเศษไม่เข้ากองกลาง — ใครขายใครได้
+                ขาย-พิเศษไม่เข้ากองกลาง — ของใครของมัน
               </span>
             </div>
           </div>
