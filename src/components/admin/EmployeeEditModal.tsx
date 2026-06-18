@@ -295,13 +295,15 @@ export default function EmployeeEditModal({
     clearDraft();
     onClose();
   };
-  const cancelAll = (closeModal = false) => {
+  // ปิด modal = ทิ้ง draft เสมอ (parity กับปุ่ม "ยกเลิก") — ใช้กับ
+  // X header · backdrop · ESC · ปุ่ม "ปิด" (ตอนไม่มี draft) · ปุ่ม "ยกเลิก"
+  const closeModal = () => {
     clearDraft();
-    if (closeModal) onClose();
+    onClose();
   };
 
   return (
-    <BaseModal onClose={onClose} maxWidthClass="max-w-[760px]">
+    <BaseModal onClose={closeModal} maxWidthClass="max-w-[760px]">
       <div className="sticky top-0 z-10 bg-cream px-5 py-4 border-b border-bdr flex items-center gap-3">
         <AvatarCircle
           avatar={employee.avatar}
@@ -323,7 +325,7 @@ export default function EmployeeEditModal({
         <button
           type="button"
           aria-label="ปิดหน้าต่างแก้ไขพนักงาน"
-          onClick={onClose}
+          onClick={closeModal}
           className="w-9 h-9 rounded-[10px] border border-bdr bg-white text-txt-mid cursor-pointer flex items-center justify-center"
         >
           <IconX size={18} strokeWidth={2.3} />
@@ -1265,7 +1267,7 @@ export default function EmployeeEditModal({
         {dirty ? (
           <div className="flex gap-2">
             <button
-              onClick={() => cancelAll(true)}
+              onClick={closeModal}
               className="basis-[34%] shrink-0 py-3.5 rounded-2xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
             >
               ยกเลิก
@@ -1290,7 +1292,7 @@ export default function EmployeeEditModal({
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={closeModal}
               className="flex-1 py-[11px] rounded-[10px] border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
             >
               ปิด
