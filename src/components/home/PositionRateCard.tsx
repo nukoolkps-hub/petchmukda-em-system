@@ -24,9 +24,7 @@ import {
   rolePoolItems,
 } from "../../utils/salaryUtils";
 
-function poolExclusionLabel(
-  ex?: string | string[] | null,
-): string {
+function poolExclusionLabel(ex?: string | string[] | null): string {
   if (!ex) return "";
   if (Array.isArray(ex)) {
     if (ex.length === 0) return "";
@@ -61,11 +59,7 @@ function RateRow({
     >
       <span className="text-xs text-txt-mid inline-flex items-center gap-1">
         {strike && (
-          <IconLock
-            size={11}
-            strokeWidth={2.5}
-            className="text-red shrink-0"
-          />
+          <IconLock size={11} strokeWidth={2.5} className="text-red shrink-0" />
         )}
         {strike ? <span className={barCls}>{label}</span> : label}
       </span>
@@ -151,7 +145,8 @@ export default function PositionRateCard({ employee, role }: Props) {
         />
         {/* ── หัวข้อ "ค่าคอม" — โผล่เฉพาะตำแหน่งที่มี piece commission ── */}
         {(role.poolGroup ||
-          (rolePaysPieceCommission(role) && rolePieceItems(role).length > 0)) && (
+          (rolePaysPieceCommission(role) &&
+            rolePieceItems(role).length > 0)) && (
           <div className="text-[11px] font-extrabold text-maroon uppercase tracking-wider pt-1 mt-1 border-t border-bdr/40">
             ค่าคอม
           </div>

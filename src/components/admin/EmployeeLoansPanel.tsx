@@ -190,8 +190,8 @@ export default function EmployeeLoansPanel({
           <div className="text-center">
             <div className="font-bold text-lg text-txt mb-1.5">ลบเงินกู้นี้?</div>
             <div className="text-sm text-txt-mid mb-5 leading-relaxed">
-              {empName(confirmDelete.employeeId, confirmDelete.employeeName)} · เงินต้น ฿
-              {formatThaiNumber(confirmDelete.principal)}
+              {empName(confirmDelete.employeeId, confirmDelete.employeeName)} ·
+              เงินต้น ฿{formatThaiNumber(confirmDelete.principal)}
               <br />
               การหักที่บันทึกไปแล้วในเดือนที่ปิดรอบจะไม่เปลี่ยน
             </div>

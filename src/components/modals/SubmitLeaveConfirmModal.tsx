@@ -39,7 +39,11 @@ export default function SubmitLeaveConfirmModal({
       contentClassName="rounded-[20px] px-6 py-7"
     >
       <div className="w-14 h-14 rounded-full bg-gold-pale flex items-center justify-center mx-auto mb-4 border border-[#C9973A40]">
-        <IconCalendarRange size={26} color="var(--color-maroon)" strokeWidth={2.4} />
+        <IconCalendarRange
+          size={26}
+          color="var(--color-maroon)"
+          strokeWidth={2.4}
+        />
       </div>
       <div className="font-bold text-lg text-txt text-center mb-2">
         ยืนยันยื่นใบลา?

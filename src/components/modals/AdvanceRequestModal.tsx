@@ -186,8 +186,7 @@ export default function AdvanceRequestModal({
 
       {/* reason — ไม่บังคับ */}
       <label className="block text-sm text-txt-mid font-semibold mb-1.5">
-        เหตุผล{" "}
-        <span className="font-normal text-txt-soft">(ถ้ามี)</span>
+        เหตุผล <span className="font-normal text-txt-soft">(ถ้ามี)</span>
       </label>
       <textarea
         value={reason}
@@ -226,9 +225,7 @@ export default function AdvanceRequestModal({
           type="button"
           onClick={() => {
             if (payrollLocked) {
-              setErr(
-                "วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้",
-              );
+              setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
               return;
             }
             if (remaining <= 0) {

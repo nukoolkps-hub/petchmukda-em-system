@@ -95,9 +95,7 @@ export default function MonthChevronNav({
       </button>
 
       {open && (
-        <div
-          className="absolute z-20 top-full left-1/2 -translate-x-1/2 mt-1.5 w-[196px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)] max-h-[280px] overflow-y-auto"
-        >
+        <div className="absolute z-20 top-full left-1/2 -translate-x-1/2 mt-1.5 w-[196px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)] max-h-[280px] overflow-y-auto">
           {byYear.map((g) => (
             <div key={g.year} className="mb-2 last:mb-0">
               <div className="text-[11px] font-bold text-txt-soft px-1 mb-1">

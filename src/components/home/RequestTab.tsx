@@ -13,8 +13,8 @@ import {
 import { useMemo, useState } from "react";
 import { BUSINESS_RULES, COLORS, LEAVE_TYPES } from "../../constants";
 import type { LeaveEntry, StoreCalendar } from "../../types";
-import { countWeekdayLeaves } from "../../utils/leaveUtils";
 import { addDaysYmd, fmtDate, isFuture, todayYmd } from "../../utils/dateUtils";
+import { countWeekdayLeaves } from "../../utils/leaveUtils";
 import ConfirmModal from "../modals/ConfirmModal";
 import SubmitLeaveConfirmModal from "../modals/SubmitLeaveConfirmModal";
 import CalendarPicker from "../shared/CalendarPicker";
@@ -164,10 +164,7 @@ export default function RequestTab({
           lv.employeeId === profile.id && lv.start.startsWith(currentMonth),
       )
     : [];
-  const usedThisMonth = countWeekdayLeaves(
-    monthLeavesForQuota,
-    storeCalendar,
-  );
+  const usedThisMonth = countWeekdayLeaves(monthLeavesForQuota, storeCalendar);
   const quota = BUSINESS_RULES.WEEKDAY_LEAVE_QUOTA;
   const rem = quota - usedThisMonth;
   const overQuota = usedThisMonth >= quota;

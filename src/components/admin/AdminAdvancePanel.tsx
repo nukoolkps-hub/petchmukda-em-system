@@ -470,8 +470,7 @@ export default function AdminAdvancePanel({
                 (e) => e.id === confirmReject.employeeId,
               );
               return live?.nickname || live?.name || confirmReject.employeeName;
-            })()}{" "}
-            · ฿{formatThaiNumber(confirmReject.amount)}
+            })()} · ฿{formatThaiNumber(confirmReject.amount)}
           </div>
           <div className="flex gap-2.5">
             <button
