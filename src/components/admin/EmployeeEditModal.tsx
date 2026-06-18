@@ -955,10 +955,14 @@ export default function EmployeeEditModal({
                           : employee.poolExclusion ?? "";
                       // resolve display mode จาก liveExclusion variant
                       const mode: "none" | "some" | "all" = (() => {
+                        // null/undefined/"" → ไม่ปิด · empty array NOT count
+                        // (empty array = mode "some" ที่ยังไม่เลือก item ใด ·
+                        // ต้องแยกจาก null เพื่อให้ radio ค้างที่ "ปิดเฉพาะ
+                        // รายการ" หลัง user click — admin จะ tick item ต่อไป)
                         if (
-                          !liveExclusion ||
-                          (Array.isArray(liveExclusion) &&
-                            liveExclusion.length === 0)
+                          liveExclusion === undefined ||
+                          liveExclusion === null ||
+                          liveExclusion === ""
                         )
                           return "none";
                         if (
@@ -966,7 +970,7 @@ export default function EmployeeEditModal({
                           liveExclusion === "both"
                         )
                           return "all";
-                        // legacy "sell"/"buy" → ตีความเป็น some + selected ids
+                        // Array (รวม empty []) หรือ legacy "sell"/"buy" → some
                         return "some";
                       })();
                       // resolve excluded ids (สำหรับ checkboxes)
