@@ -88,15 +88,6 @@ export default function ManualModal({ onClose }) {
             ),
           },
           {
-            id: "lock",
-            label: (
-              <span className="inline-flex items-center gap-1.5">
-                <IconLock size={14} strokeWidth={2.4} />
-                ปิดรอบ 7 วัน
-              </span>
-            ),
-          },
-          {
             id: "docs",
             label: (
               <span className="inline-flex items-center gap-1.5">
@@ -106,12 +97,20 @@ export default function ManualModal({ onClose }) {
             ),
           },
           {
+            id: "lock",
+            label: (
+              <span className="inline-flex items-center gap-1.5">
+                <IconLock size={14} strokeWidth={2.4} />
+                ปิดรอบ 7 วัน
+              </span>
+            ),
+          },
+          {
             id: "duty",
-            wide: true,
             label: (
               <span className="inline-flex items-center gap-1.5">
                 <IconCalendarClock size={14} strokeWidth={2.4} />
-                หน้าที่รับผิดชอบ
+                หน้าที่
               </span>
             ),
           },
