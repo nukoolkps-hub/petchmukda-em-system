@@ -13,9 +13,14 @@ import { formatTenure } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import {
   getEffectiveBaseSalary,
+  resolveBonusItemRate,
   resolvePieceItemRate,
+  resolvePoolExclusionItemIds,
+  resolvePoolItemRate,
+  roleBonusItems,
   rolePaysPieceCommission,
   rolePieceItems,
+  rolePoolItems,
 } from "../../utils/salaryUtils";
 
 function poolExclusionLabel(
@@ -36,13 +41,18 @@ function RateRow({
   label,
   value,
   suffix,
+  /** ขีดทับ (line-through) ทั้งบรรทัด — ใช้ตอน item ถูก exclude หรือ kind=personal */
+  strike,
 }: {
   label: string;
   value: number | undefined;
   suffix: string;
+  strike?: boolean;
 }) {
   return (
-    <div className="flex justify-between items-baseline">
+    <div
+      className={`flex justify-between items-baseline ${strike ? "line-through text-txt-soft opacity-70" : ""}`}
+    >
       <span className="text-xs text-txt-mid">{label}</span>
       <span className="text-sm font-bold text-maroon tabular-nums">
         {formatThaiNumber(value || 0)}{" "}
@@ -60,6 +70,12 @@ interface Props {
 export default function PositionRateCard({ employee, role }: Props) {
   if (!role) return null;
   const tenure = formatTenure(employee?.startWorkMonth);
+  // pool items + excluded ids (admin ปิดให้พนักงานคนนี้) · ใช้ขีดทับ
+  const poolItemsCfg = role.poolGroup ? rolePoolItems(role) : [];
+  const { excludedIds: poolExcludedIds } = resolvePoolExclusionItemIds(
+    employee?.poolExclusion as any,
+    poolItemsCfg,
+  );
   return (
     <details className="group mb-2.5 rounded-[14px] bg-white border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.06)] overflow-hidden">
       <summary className="px-4 py-3 cursor-pointer list-none flex items-center gap-3 hover:bg-cream/40">
@@ -99,56 +115,54 @@ export default function PositionRateCard({ employee, role }: Props) {
           value={getEffectiveBaseSalary(employee)}
           suffix="฿/เดือน"
         />
-        {role.poolGroup ? (
-          <>
-            <RateRow
-              label="ขายทั่วไป (กองกลาง)"
-              value={employee?.normalSalePieceRate}
-              suffix="฿/ชิ้น"
-            />
-            <RateRow
-              label="ขายพิเศษ"
-              value={employee?.specialSalePieceRate}
-              suffix="฿/ชิ้น"
-            />
-            <RateRow
-              label="รับซื้อ (กองกลาง)"
-              value={employee?.buyPieceRate}
-              suffix="฿/ชิ้น"
-            />
-          </>
-        ) : rolePaysPieceCommission(role) ? (
-          // multi-item — 1 แถวต่อรายการค่าคอม
-          rolePieceItems(role).map((item) => (
+        {role.poolGroup
+          ? // pool sales — loop poolItems (รวม custom items ที่ admin เพิ่ม)
+            // kind=pool → label "(กองกลาง)" · kind=personal → "(ไม่แชร์)"
+            // strike-through ถ้า item ถูก exclude หรือ kind=personal+exclusion=all
+            poolItemsCfg.map((item) => {
+              const excluded = poolExcludedIds.has(item.id);
+              // personal items "ไม่เข้ากองกลาง" semantically — ขีดทับเฉพาะถ้า
+              // admin exclude · ปกติแสดงเป็น "(ไม่แชร์)" suffix
+              const labelSuffix =
+                item.kind === "pool" ? " (กองกลาง)" : " (ไม่แชร์)";
+              return (
+                <RateRow
+                  key={item.id}
+                  label={`${item.label}${labelSuffix}`}
+                  value={resolvePoolItemRate(item.id, null, employee as any)}
+                  suffix="฿/ชิ้น"
+                  strike={excluded}
+                />
+              );
+            })
+          : rolePaysPieceCommission(role)
+            ? // multi-item — 1 แถวต่อรายการค่าคอม
+              rolePieceItems(role).map((item) => (
+                <RateRow
+                  key={item.id}
+                  label={item.label}
+                  value={resolvePieceItemRate(item.id, null, employee)}
+                  suffix="฿/ชิ้น"
+                />
+              ))
+            : null}
+        {/* โบนัสอื่นๆ (multi-item) — เฉพาะตำแหน่งที่มีค่าคอมรายชิ้น (รวม pool sales) */}
+        {rolePaysPieceCommission(role) &&
+          roleBonusItems(role).map((item) => (
             <RateRow
               key={item.id}
               label={item.label}
-              value={resolvePieceItemRate(item.id, null, employee)}
-              suffix="฿/ชิ้น"
-            />
-          ))
-        ) : null}
-        {/* invite/transfer — เฉพาะตำแหน่งที่มีค่าคอมรายชิ้น (รวม pool sales) */}
-        {rolePaysPieceCommission(role) && (
-          <>
-            <RateRow
-              label="เชิญสมัครบัตร"
-              value={employee?.invitePieceRate}
+              value={resolveBonusItemRate(item.id, null, employee as any)}
               suffix="฿/ครั้ง"
             />
-            <RateRow
-              label="ย้ายข้อมูลบัตร"
-              value={employee?.transferPieceRate}
-              suffix="฿/ครั้ง"
-            />
-          </>
-        )}
-        {employee?.poolExclusion && (
-          <div className="flex items-center gap-1.5 text-[11px] text-amber font-semibold pt-1.5 mt-1 border-t border-bdr/40">
-            <IconCircleSlash size={12} strokeWidth={2.5} />
-            ไม่เข้ากองกลาง: {poolExclusionLabel(employee.poolExclusion)}
-          </div>
-        )}
+          ))}
+        {employee?.poolExclusion &&
+          poolExcludedIds.size > 0 && (
+            <div className="flex items-center gap-1.5 text-[11px] text-amber font-semibold pt-1.5 mt-1 border-t border-bdr/40">
+              <IconCircleSlash size={12} strokeWidth={2.5} />
+              ไม่เข้ากองกลาง: {poolExclusionLabel(employee.poolExclusion)}
+            </div>
+          )}
       </div>
     </details>
   );
