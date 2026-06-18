@@ -44,7 +44,7 @@ export default function ConfirmModal({ leave, onConfirm, onCancel }) {
         </button>
         <button
           onClick={onConfirm}
-          className="flex-1 p-3.5 rounded-xl border-none bg-red text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_rgba(192,57,43,0.31)]"
+          className="flex-1 p-3.5 rounded-xl border-none bg-red text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_rgba(192,57,43,0.31)] active:scale-[0.98] transition-transform duration-100"
         >
           ลบรายการ
         </button>

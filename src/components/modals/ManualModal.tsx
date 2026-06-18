@@ -129,7 +129,7 @@ export default function ManualModal({ onClose }) {
 
       {/* content */}
       {tab === "leave" && (
-        <div className="text-sm text-txt-mid leading-[1.8]">
+        <div className="text-sm text-txt-mid leading-[1.8] animate-[fadeIn_0.18s_ease-out]">
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
@@ -335,7 +335,7 @@ export default function ManualModal({ onClose }) {
       )}
 
       {tab === "commission" && (
-        <div className="text-sm text-txt-mid leading-[1.8]">
+        <div className="text-sm text-txt-mid leading-[1.8] animate-[fadeIn_0.18s_ease-out]">
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
@@ -734,7 +734,7 @@ export default function ManualModal({ onClose }) {
       )}
 
       {tab === "money" && (
-        <div className="text-sm text-txt-mid leading-[1.8]">
+        <div className="text-sm text-txt-mid leading-[1.8] animate-[fadeIn_0.18s_ease-out]">
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
@@ -908,7 +908,7 @@ export default function ManualModal({ onClose }) {
       )}
 
       {tab === "lock" && (
-        <div className="text-sm text-txt-mid leading-[1.8]">
+        <div className="text-sm text-txt-mid leading-[1.8] animate-[fadeIn_0.18s_ease-out]">
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
@@ -978,7 +978,7 @@ export default function ManualModal({ onClose }) {
       )}
 
       {tab === "docs" && (
-        <div className="text-sm text-txt-mid leading-[1.8]">
+        <div className="text-sm text-txt-mid leading-[1.8] animate-[fadeIn_0.18s_ease-out]">
           {/* สลิปเงินเดือน */}
           <Section
             title={
@@ -1079,7 +1079,7 @@ export default function ManualModal({ onClose }) {
       )}
 
       {tab === "duty" && (
-        <div className="text-sm text-txt-mid leading-[1.8]">
+        <div className="text-sm text-txt-mid leading-[1.8] animate-[fadeIn_0.18s_ease-out]">
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">

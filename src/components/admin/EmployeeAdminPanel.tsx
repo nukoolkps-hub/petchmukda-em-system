@@ -87,7 +87,7 @@ export default function EmployeeAdminPanel({
               key={employee.id}
               type="button"
               onClick={() => setEditingEmpId(employee.id)}
-              className="w-full flex items-center gap-3 px-3.5 py-3 cursor-pointer rounded-2xl shadow-[0_2px_8px_rgba(90,30,10,0.06)] border border-bdr bg-white text-left font-[inherit] transition-colors duration-200 hover:bg-cream/70"
+              className="w-full flex items-center gap-3 px-3.5 py-3 cursor-pointer rounded-2xl shadow-[0_2px_8px_rgba(90,30,10,0.06)] border border-bdr bg-white text-left font-[inherit] transition-[background-color,transform] duration-150 hover:bg-cream/70 active:scale-[0.99] active:bg-cream"
             >
               <AvatarCircle
                 avatar={employee.avatar}
@@ -238,7 +238,7 @@ export default function EmployeeAdminPanel({
                 );
                 setConfirmDeleteEmp(null);
               }}
-              className="flex-1 p-3.5 rounded-xl border-none bg-red text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_rgba(192,57,43,0.31)]"
+              className="flex-1 p-3.5 rounded-xl border-none bg-red text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_rgba(192,57,43,0.31)] active:scale-[0.98] transition-transform duration-100"
             >
               ลบพนักงาน
             </button>

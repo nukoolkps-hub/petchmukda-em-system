@@ -169,10 +169,17 @@ export default function LeaveApp() {
 
   /* ─── Toast ────────────────────────────────────────────────── */
   const [toastMsg, setToastMsg] = useState("");
+  const [toastClosing, setToastClosing] = useState(false);
 
   function showToast(msg: string) {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(""), 2800);
+    setToastClosing(false);
+    // 2600ms แสดง + 200ms exit fade → รวม 2800ms (เท่าเดิม)
+    setTimeout(() => setToastClosing(true), 2600);
+    setTimeout(() => {
+      setToastMsg("");
+      setToastClosing(false);
+    }, 2800);
   }
 
   /* ─── Leave form hook ──────────────────────────────────────── */
@@ -581,7 +588,7 @@ export default function LeaveApp() {
                     setAdminUnsavedDirty(false);
                     setAdminSection(next);
                   }}
-                  className="flex-1 p-3.5 rounded-xl border-none bg-amber text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_#D9770640]"
+                  className="flex-1 p-3.5 rounded-xl border-none bg-amber text-white text-base font-bold cursor-pointer font-[inherit] shadow-[0_4px_12px_#D9770640] active:scale-[0.98] transition-transform duration-100"
                 >
                   ออกจากหน้านี้
                 </button>
@@ -596,7 +603,13 @@ export default function LeaveApp() {
             // z-1200 = สูงกว่า BaseModal (z-800) และ confirm modals (z-1000)
             // → toast ลอยอยู่บนสุดเสมอ (ไม่หายไปหลัง modal)
             <div className="fixed bottom-20 left-1/2 -translate-x-1/2 md:left-[calc(50%+130px)] z-[1200]">
-              <div className="bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] animate-[toastIn_0.25s_ease] whitespace-nowrap inline-flex items-center gap-1.5">
+              <div
+                className={`bg-maroon text-white px-5.5 py-3 rounded-[30px] text-sm font-semibold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.37)] whitespace-nowrap inline-flex items-center gap-1.5 ${
+                  toastClosing
+                    ? "animate-[toastOut_0.2s_ease-in_forwards]"
+                    : "animate-[toastIn_0.25s_ease]"
+                }`}
+              >
                 <IconCheck size={14} strokeWidth={2.6} />
                 {toastMsg}
               </div>

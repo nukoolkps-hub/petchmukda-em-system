@@ -226,6 +226,58 @@ input[type="number"] {
     transform: translateY(0);
   }
 }
+/* ─── Shared exit/fade animations ────────────────────────────
+   ใช้ผ่าน animate-[fadeIn_0.18s_ease-out] / animate-[modalOut_0.14s_ease-in]
+   / animate-[toastOut_0.2s_ease-in]                                       */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modalOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes dialogOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes toastOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ─── Respect prefers-reduced-motion (a11y) ────────────────────
+   ผู้ใช้ที่ตั้ง OS ลด motion → ตัด animation/transition ทั้งหมด           */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* ─── Layout Shell ─────────────────────────────────────────── */
 .leave-app-root {
