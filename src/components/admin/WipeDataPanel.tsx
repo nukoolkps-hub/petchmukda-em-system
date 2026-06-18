@@ -8,6 +8,7 @@
 import {
   AlertTriangle as IconAlert,
   Check as IconCheck,
+  HardDrive as IconHardDrive,
   Eraser as IconEraser,
   History as IconHistory,
   ShieldCheck as IconShield,
@@ -39,9 +40,24 @@ const COLLECTIONS_TO_DELETE: { name: string; label: string }[] = [
 ];
 
 const COLLECTIONS_KEPT: string[] = [
-  "/config/* (goldPrice, laborCost, blockCost, loyaltyPoints, secrets, ฯลฯ)",
+  "/config/* (goldPrice, laborCost, blockCost, loyaltyPoints, secrets, storeCalendar, notifications, ฯลฯ)",
   "/roles (ตำแหน่งทั้งหมด)",
   "/duties (ตารางหน้าที่ — pool อาจอ้างถึง employee ที่ลบไปแล้ว · ต้องแก้ pool ใหม่หลังเพิ่มพนักงานจริง)",
+];
+
+const STORAGE_KEPT: { path: string; label: string }[] = [
+  {
+    path: "avatars/*",
+    label: "รูปอวตารพนักงาน · ลบเฉพาะตอนพนักงาน upload ใหม่ทับ",
+  },
+  {
+    path: "advanceSlips/*",
+    label: "สลิปการโอนเงินที่ ADMIN แนบตอนอนุมัติเบิก",
+  },
+  {
+    path: "salarySlips/*",
+    label: "สลิปเงินเดือน PDF ที่ freeze ตอนยืนยันยอด",
+  },
 ];
 
 const CONFIRM_TOKEN = "ล้างข้อมูล";
@@ -229,6 +245,37 @@ export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* Storage files — ไม่ได้ลบ */}
+      <div className="mb-4 rounded-[12px] border-[1.5px] border-amber/40 bg-white overflow-hidden">
+        <div className="px-3.5 py-2 bg-amber-lt/60 text-amber text-sm font-extrabold inline-flex items-center gap-1.5 w-full">
+          <IconHardDrive size={14} strokeWidth={2.5} />
+          ไฟล์ใน Storage — ไม่ถูกลบอัตโนมัติ
+        </div>
+        <div className="p-3.5 text-sm text-txt">
+          <div className="mb-2 text-xs text-txt-soft leading-relaxed">
+            การล้างข้อมูลลบเฉพาะข้อมูลใน Firestore · ไฟล์ใน Cloud Storage จะ
+            <b className="text-amber"> ค้างอยู่</b> (orphan · ไม่มี doc อ้างถึง) ·
+            ถ้าต้องการลบจริงๆ ให้ทำผ่าน Firebase Console → Storage โดยตรง
+          </div>
+          <ul className="space-y-1.5">
+            {STORAGE_KEPT.map((s) => (
+              <li
+                key={s.path}
+                className="flex items-start gap-2 leading-relaxed"
+              >
+                <span className="mt-[9px] w-2 h-2 rounded-full bg-amber/60 shrink-0" />
+                <span>
+                  <code className="text-[11px] bg-cream px-1 rounded">
+                    {s.path}
+                  </code>{" "}
+                  — {s.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       {/* recovery safety net */}
