@@ -33,6 +33,7 @@ import {
   getEffectiveBaseSalary,
   LEGACY_PIECE_ITEM_ID,
   rolePaysPieceCommission,
+  resolvePoolExclusionItemIds,
   roleBonusItems,
   rolePieceItems,
   rolePoolItems,
@@ -1107,7 +1108,22 @@ export default function EmployeeEditModal({
                         Rate ค่าคอมต่อชิ้น (฿/ชิ้น)
                       </div>
                       <div className="flex flex-col gap-2 mb-2.5">
-                        {rolePoolItems(employeeRole).map((it) => {
+                        {/* compute excluded ids ครั้งเดียวก่อน loop · disable
+                            input rate ของ item ที่ admin tick "ปิด" + kind=pool
+                            (kind=personal ไม่ผูกกอง · ไม่ disable) */}
+                        {(() => {
+                          const poolItemsForRates = rolePoolItems(employeeRole);
+                          const liveExclusion =
+                            editingPoolExclusion !== undefined
+                              ? editingPoolExclusion
+                              : employee.poolExclusion ?? "";
+                          const { excludedIds: excIds } = resolvePoolExclusionItemIds(
+                            liveExclusion as any,
+                            poolItemsForRates,
+                          );
+                          return poolItemsForRates.map((it) => {
+                          const itemDisabled =
+                            excIds.has(it.id) && it.kind === "pool";
                           const valueOf = (): number | "" => {
                             if (
                               editingPoolItemRates &&
@@ -1158,13 +1174,19 @@ export default function EmployeeEditModal({
                                 type="number"
                                 inputMode="decimal"
                                 min="0"
-                                value={valueOf()}
+                                value={itemDisabled ? "" : valueOf()}
+                                disabled={itemDisabled}
                                 onChange={(ev) => setRate(ev.target.value)}
-                                className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingPoolItemRates?.[it.id] !== undefined ? "border-gold" : "border-bdr"}`}
+                                className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-center border-[1.5px] ${
+                                  itemDisabled
+                                    ? "text-txt-soft bg-cream-dk cursor-not-allowed border-bdr"
+                                    : `text-txt bg-white ${editingPoolItemRates?.[it.id] !== undefined ? "border-gold" : "border-bdr"}`
+                                }`}
                               />
                             </div>
                           );
-                        })}
+                          });
+                        })()}
                       </div>
                     </>
                   )}
