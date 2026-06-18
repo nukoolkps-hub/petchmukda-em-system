@@ -137,7 +137,7 @@ export default function DutyCard({
               ? `แทนคนลา · ${coverageRole?.name || "(ลบแล้ว)"}`
               : `สลับทุก${duty.period === "weekly" ? "สัปดาห์" : "เดือน"}`}
             {duty.period === "monthly" && duty.grantsPoolEligibility && (
-              <span className="px-1.5 py-px rounded-[6px] bg-gold-pale text-maroon font-bold text-[10px]">
+              <span className="px-1.5 py-0.5 rounded-[6px] bg-gold-pale text-maroon font-bold text-[10px]">
                 ให้สิทธิ์กองกลาง
               </span>
             )}

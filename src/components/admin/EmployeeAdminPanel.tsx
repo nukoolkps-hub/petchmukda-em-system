@@ -148,19 +148,19 @@ export default function EmployeeAdminPanel({
                       if (!content) return null;
                     }
                     return (
-                      <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs">
+                      <span className="px-1.5 py-0.5 rounded-md bg-red-lt text-red font-bold text-xs">
                         {content}
                       </span>
                     );
                   })()}
                   {employee.salaryDisabled && (
-                    <span className="px-1.5 py-px rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
+                    <span className="px-1.5 py-0.5 rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
                       <IconLock size={10} strokeWidth={2.4} />
                       ปิดเงินเดือน
                     </span>
                   )}
                   {employee.lineUserId && (
-                    <span className="px-1.5 py-px rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs inline-flex items-center gap-0.5">
+                    <span className="px-1.5 py-0.5 rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs inline-flex items-center gap-0.5">
                       <IconMessageCircle size={10} strokeWidth={2.4} />
                       LINE
                     </span>
