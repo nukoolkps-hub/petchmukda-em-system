@@ -5,15 +5,15 @@ Config ทั้งหมดอยู่ใน `src/constants.ts` → `BUSINESS_
 ## สูตรเงินเดือน (calculateSalary)
 
 ```
-Earnings = baseSalary
-         + singleRatePieces × singlePieceRate
-         + normalSalePieces × normalSalePieceRate
-         + specialSalePieces × specialSalePieceRate
-         + buyPieces × buyPieceRate
-         + invitePieces × invitePieceRate
-         + transferPieces × transferPieceRate
-         + attendanceBonus
-         + coveragePay              (เงินค่าแทน — coverage duty × จำนวนวันที่แทน)
+Earnings = baseSalary                  (0 ถ้า losesBaseSalary)
+         + Σ pieceBreakdown.amount      (multi-item piece commission · non-pool roles)
+         + Σ poolItemsBreakdown.amount  (multi-item pool sales · รวม custom items
+                                         · = normalSale + specialSale + buy +
+                                         customPoolCommission)
+         + Σ bonusBreakdown.amount      (multi-item "โบนัสอื่นๆ" · invite/transfer
+                                         + custom · default 2 รายการ)
+         + attendanceBonus              (0 ถ้า losesBaseSalary)
+         + coveragePay                  (เงินค่าแทน — coverage duty × จำนวนครั้งที่แทน)
 
 Deductions = overQuotaDeduction
            + advanceDeduction
@@ -70,58 +70,97 @@ getEffectiveBaseSalary(employee, yearMonth?)
 
 Source: `src/utils/salaryUtils.ts` → `getEffectiveBaseSalary()` / `isEligibleForRaiseYear()` / `buildRaiseHistory()`
 
-## Pool Commission System ("กองกลาง")
+## Pool Commission System ("กองกลาง") — Item-based Architecture
 
 > UI ภาษาไทยเรียกระบบนี้ว่า **"กองกลาง"** · code/เอกสารเรียก `pool`
+> **PR #488-#516** เปลี่ยนจาก hardcode 3 ฝั่ง (normal/special/buy) → admin custom items per role
 
-แบ่ง commission ร่วมกันตาม pool group ที่กำหนดใน Role · sell pool และ buy pool คำนวณ**แยกกัน**ด้วยสูตรเดียวกัน
+### Role config: `poolItems`
 
-### ขั้นตอน (ตาม Excel)
+แต่ละ role pool group กำหนด `poolItems` ได้อิสระ · 1 item = 1 ประเภท commission:
 
-1. รวบรวมทุกคนใน pool group เดียวกัน (จาก `role.poolGroup`)
-2. หา **top** ในฝั่งนั้น: `topSellPieces = max(sellPieces ทุกคน)`, `topBuyPieces = max(buyPieces)`
-3. **กฎ 80%** — เกณฑ์เข้า pool: `pieces ≥ topPieces × POOL_THRESHOLD (= 0.8)` → ต่ำกว่าถูกตัดออก
-   - ฝั่งขาย: ใช้ `sellPieces = normalSalePieces + specialSalePieces` เทียบ
-   - **ข้อยกเว้น (duty):** คนที่ทำหน้าที่รายเดือนที่เปิด `grantsPoolEligibility` ในเดือนนั้น
-     (`salary.poolThresholdExempt = true`) → ผ่านเกณฑ์ 80% อัตโนมัติทั้ง sell+buy
-     (ติดทำหน้าที่ทั้งเดือน ขายไม่ทันเพื่อน) · **แต่ยังเคารพ `poolExclusion`** (Admin ปิดฝั่งไหน
-     ฝั่งนั้นไม่ได้) และ **ไม่กระทบเกณฑ์ 50% เงินเดือนพื้นฐาน** · คน `poolExclusion="both"`
-     ถูกกันออกจากรอบหน้าที่รายเดือน (`resolveDutyPool`) เพราะเสี่ยงหลุด 50%
-4. นับ `eligibleEmployeeCount` (n) = จำนวนคนที่ยังเหลือใน pool
-5. **เปอร์เซ็นต์ฐาน:** `baseSharePercent = 100 ÷ n`
-6. **ตัวคูณหักวันลา:** `leaveDeductionFactor = baseSharePercent ÷ DAYS_PER_MONTH (= 30)`
-7. **วันลาที่ใช้คำนวณ:** `effectiveLeave[i] = max(0, totalLeave[i] − LEAVE_DEDUCTION_FREE_DAYS (= 2))` — 2 วันแรกฟรี ไม่ถูกหัก
+```ts
+interface PoolItem {
+  id: string;
+  label: string;
+  kind: "pool" | "personal";
+  threshold: number;  // % ของ top item ที่ต้องถึงเพื่อเข้ากอง (0-100, default 80)
+}
+```
+
+- **kind="pool"** — แชร์กองกลาง · มี threshold % ต่อ item · admin custom ได้
+- **kind="personal"** — ใครขายใครได้ · ไม่แชร์ · ไม่ถูกหักลา (`finalSharePercent=100` คงที่)
+- **`Role.primaryPoolItemId`** — primary item สำหรับ `losesBaseSalary` check (default item แรก kind=pool)
+
+**Default migration** (legacy role ที่ไม่มี `poolItems`):
+```
+[
+  { id: "normal",  label: "ขายทั่วไป", kind: "pool",     threshold: 80 },
+  { id: "special", label: "ขายพิเศษ", kind: "personal", threshold: 80 },
+  { id: "buy",     label: "รับซื้อ",   kind: "pool",     threshold: 80 },
+]
+primaryPoolItemId: "normal"
+```
+
+### ขั้นตอน (per kind=pool item)
+
+1. รวบรวมทุกคนใน pool group เดียวกัน (`role.poolGroup`)
+2. **per-item top:** `topItemPieces[itemId] = max(itemPieces[empId][itemId] ทุกคน)`
+3. **กฎ threshold (per-item)** — เกณฑ์เข้ากองแต่ละ item:
+   `itemPieces[empId][itemId] ≥ topItemPieces[itemId] × (poolItem.threshold / 100)`
+   - ต่ำกว่าถูกตัดออกจากกอง item นี้
+   - admin custom threshold per item (default 80% เหมือนเดิม)
+   - **ข้อยกเว้น (duty):** `poolThresholdExempt=true` → ผ่าน threshold ของ**ทุก item** อัตโนมัติ
+4. นับ `eligibleEmployeeCount` per item (n) = จำนวนคนที่ยังเหลือใน pool item นั้น
+5. **เปอร์เซ็นต์ฐาน:** `baseSharePercent = 100 / n` (per item)
+6. **ตัวคูณหักวันลา:** `leaveDeductionFactor = baseSharePercent / 30` (per item · ต่างกันตาม n)
+7. **วันลาที่ใช้คำนวณ:** `effectiveLeave[i] = max(0, totalLeave[i] − 2)` — 2 วันแรกฟรี
 8. **% หัก** ของแต่ละคน: `leaveDeductionPercent[i] = effectiveLeave[i] × leaveDeductionFactor × (n − 1)`
-9. **% แบ่งเพื่อน** (กระจายให้คนอื่นๆ): `redistributedPercent[i] = leaveDeductionPercent[i] ÷ (n − 1)`
-10. **% สุทธิ** ของแต่ละคน: `finalSharePercent[i] = baseSharePercent − leaveDeductionPercent[i] + Σ(redistributedPercent ของคนอื่น)`
-11. **Pool รวมที่หารแบ่ง** (gross):
-    - ฝั่งขาย: `Σ normalSalePieces` (ทั่วไปเท่านั้น — **ไม่รวมพิเศษ**)
-    - ฝั่งรับซื้อ: `Σ buyPieces`
-    - แล้ว**หัก** `poolAdjustments` ของตำแหน่งนั้น → ได้ `totalPoolPieces` (net)
-12. **ชิ้นที่ได้:** `allocatedPieces[i] = (finalSharePercent[i] ÷ 100) × totalPoolPieces`
+9. **% แบ่งเพื่อน:** `redistributedPercent[i] = leaveDeductionPercent[i] / (n − 1)`
+10. **% สุทธิ:** `finalSharePercent[i] = base − myDeduction + Σ(redistributed จากคนอื่น)`
+11. **Pool รวม** ของ item: `grossItemPool[itemId] = Σ pieces ทุกคน` · หัก `excludedByItemId[itemId]` (จาก `poolAdjustments`) → `totalItemPool[itemId]`
+12. **ชิ้นที่ได้:** `allocatedPieces[i] = (finalSharePercent[i] / 100) × totalItemPool[itemId]`
 
-#### ทำไม 2 วันแรกฟรี
-ลา 0-2 วัน → ไม่ถูกหัก ไม่ถูกเอามาเกลี่ยให้เพื่อน (แต่ยังรับจากเพื่อนที่ลาเกิน 2 วันได้ปกติ)
-+ ยังได้ **โบนัสหยุดน้อย** ของตัวเองตามเดิม (`WEEKDAY_LEAVE_QUOTA`) — 2 ตัวแยกกัน
+#### kind="personal" item
+- `finalSharePercent = 100` · `allocatedPieces = myPieces` (ใครขายใครได้)
+- ลาไม่กระทบ
+- **แต่เคารพ `poolExclusion`** (PR #516 fix) — ถ้า admin tick personal item ใน exclusion → ตัด commission ของ item นี้
 
-### ขาย-พิเศษ (specialSalePieces)
+### Base Salary Threshold (50% rule)
 
-**ใครขายใครได้** — `commission = pieces × specialSalePieceRate` จ่ายตรงเข้า
-คนนั้น · ไม่เข้ากองกลางที่หารแบ่ง · **แต่นับรวมใน `sellPieces`** ตอนเทียบ
-80% threshold (พนักงานยังมีสิทธิ์เข้ากอง)
+**ถ้า `poolExclusion="all"` (หรือ legacy `"both"`):**
+- เช็ค `myPrimaryPieces < topItemPieces[primaryPoolItemId] × 0.5`
+- True → `losesBaseSalary = true` → ไม่ได้ baseSalary + attendanceBonus
+- **Primary item input ใน SalaryAdminEdit ยัง enable แม้ "ปิดทั้งหมด"** (PR #515) — เพื่อให้ admin ใส่ pieces ของ primary มาเช็ค 50% ได้
 
-### Base Salary Threshold
+> ถ้า `topPrimaryPieces=0` (ไม่มีใครมี pieces ของ primary item) → check ข้าม (`losesBaseSalary=false`)
 
-พนักงานที่มี `poolExclusion = "both"` **และ** `sellPieces < topSellPieces × BASE_SALARY_THRESHOLD (= 0.5)` → ไม่ได้ baseSalary
-
-### poolExclusion Field
+### `poolExclusion` Field (ใหม่ — flexible variants)
 
 | Value | ผล |
 |---|---|
-| `null` / `""` | เข้าทั้ง sell + buy pool |
-| `"sell"` | ไม่เข้า sell pool |
-| `"buy"` | ไม่เข้า buy pool |
-| `"both"` | ไม่เข้าทั้ง 2 pool + มีเกณฑ์ baseSalary |
+| `null` / `""` | ไม่ปิด · เข้าทุก pool item |
+| `string[]` (array) | ปิดเฉพาะ item ids ที่ระบุ (per-item exclusion) |
+| `"all"` | ปิดทุก item + 50% rule บน primary item |
+| `"both"` (legacy) | migrate → "all" |
+| `"sell"` (legacy) | migrate → `["normal", "special"]` |
+| `"buy"` (legacy) | migrate → `["buy"]` |
+
+`resolvePoolExclusionItemIds(exclusion, poolItems)` → `{ excludedIds: Set, isAll: bool }` ใช้ทุก surface (calc + UI)
+
+### `poolAdjustments` (per-item routing · PR #506)
+
+```ts
+interface PoolAdjustmentItem {
+  poolGroup: string;
+  poolItemId?: string;  // PR #506: admin เลือก pool item ที่จะหัก
+  side?: "normal" | "buy";  // legacy fallback (migrate → poolItemId)
+  pieces: number;
+  label: string;
+}
+```
+
+Calc engine routes via `excludedByItemId[poolItemId]` · per-item deduction · รองรับ custom items
 
 ### Snapshot (สำคัญสำหรับ employee view)
 
@@ -132,12 +171,17 @@ Source: `src/utils/salaryUtils.ts` → `getEffectiveBaseSalary()` / `isEligibleF
 | `roleId` | `employee.roleId` ปัจจุบัน |
 | `poolExclusion` | `employee.poolExclusion` |
 | `totalLeaveDays` | `weekdayLeaves + sundayLeaves` ของเดือนนั้น |
+| `poolItemRates` | `employee.poolItemRates` (map per item id) |
+| `poolItemPieces` | per-month count ต่อ item (จาก SalaryAdminEdit) |
+| `bonusRates` | `employee.bonusRates` (map per bonus item id) |
+| `bonusCounts` | per-month count ต่อ bonus item |
+| `pieceRates` | `employee.pieceRates` (map per piece item id, non-pool roles) |
+| `coveragePay`/`coveragePayBreakdown` | จาก `computeCoverageEarningsForMonth` · **preserve เดิมถ้า re-save** (PR #516 fix Bug E) |
 
-`computePoolSharesForGroup` ใช้ snapshot ก่อนเสมอ (fallback ไป live data เฉพาะ admin ที่อ่านได้เต็ม) — ทำให้ admin/employee เห็นเลขตรงกัน
+`computePoolSharesForGroup` ใช้ snapshot ก่อนเสมอ (fallback ไป live data เฉพาะ admin ที่อ่านได้เต็ม) — admin/employee เห็นเลขตรงกัน
 
-นอกจาก snapshot ใน salary doc แล้ว field ชุดเดียวกันยังถูก mirror ลง collection
-`poolSnapshots/{ym}` (public, ไม่มี field อ่อนไหว) — เป็น infra สำหรับ phase 2 ที่จะ
-ล็อกสิทธิ์อ่าน salaries ดู [`../reference.md`](../reference.md) → "Privacy: salaries vs poolSnapshots"
+mirror ชุดเดียวกัน + `poolItemPieces` ลง `poolSnapshots/{ym}` (public, ไม่มี field อ่อนไหว) → employee-side calc เห็น peers' custom items
+ดู [`../reference.md`](../reference.md) → "Privacy: salaries vs poolSnapshots"
 
 Source: `src/utils/salaryUtils.ts` → `computePoolSharesForGroup()` · snapshot inject ใน `src/data/useFirebaseAppData.ts` → `updateSalary()` · `src/firebase/poolSnapshots.ts`
 
@@ -287,16 +331,29 @@ function body ใน CI (รันใน `npm run typecheck` + ก่อน depl
 
 Source: `src/utils/dutyUtils.ts` → `pickPrimary()`, `assignPrimaries()`
 
-## รายการหักจากกองกลาง (`poolAdjustments`)
+## รายการยกเว้นค่าคอม (`poolAdjustments`) — Per-item routing
 
-admin ใส่ "จำนวนที่ไม่นับค่าคอม" ระดับเดือน — บางสินค้าไม่ได้ค่าคอม
-(สินค้าโปรโมชั่นฝั่งขาย, ทองแท่ง MD ฝั่งรับซื้อ ฯลฯ) · 1 doc/เดือน
+admin ใส่ "จำนวนที่ไม่นับค่าคอม" ระดับเดือน · 2 variants:
 
-- Schema: `items: [{id, poolGroup, side: "normal"|"buy", pieces, label}]`
-- **แยกตามตำแหน่ง (`poolGroup`):** หัก item ของกลุ่ม A ไม่กระทบกลุ่ม B
-- **เกณฑ์ 80% ใช้ gross** (ไม่หัก) — พนักงานยังมีสิทธิ์อยู่ในกองจากยอดที่ทำ
-- **กองที่หารแบ่งใช้ net:** `totalSellPoolPieces = gross − Σ items(side="normal")`
-- ไม่มี side adjustment สำหรับ "ขาย-พิเศษ" (ใครขายใครได้อยู่แล้ว)
+### 1. Pool variant (หักจากกองกลาง)
+```ts
+{ kind: "pool", poolGroup: string, poolItemId: string, pieces: number, label: string }
+```
+- `poolItemId` — admin เลือก pool item ที่จะหัก (PR #506)
+- legacy `side: "normal"|"buy"` → migrate-on-read เป็น poolItemId
+- **แยกตาม `poolGroup`:** หัก item ของกลุ่ม A ไม่กระทบกลุ่ม B
+- **เกณฑ์ threshold ใช้ gross** (ไม่หัก) — พนักงานยังมีสิทธิ์อยู่ในกอง
+- **กองที่หารแบ่งใช้ net:** `totalItemPool[id] = gross − Σ excludedByItemId[id]`
+- ใช้ได้กับทุก kind=pool item รวม custom (e.g., "ขายมือสอง")
+
+### 2. Piece variant (หักจาก count multi-item)
+```ts
+{ kind: "piece", employeeId: string, pieceItemId: string, pieces: number, label: string }
+```
+- admin เลือก พนักงาน + รายการค่าคอม (piece item)
+- หักจาก count ของพนักงานคนนั้น item เดียว
+- ใช้กับ role ที่ไม่ใช่ pool (e.g., บัญชี "ทำบิล")
+- snapshot `employeeName` + `pieceItemLabel` (PR #481) → กัน orphan display เมื่อ admin ลบทีหลัง
 
 ## กฎปิดรอบ 7 วัน
 

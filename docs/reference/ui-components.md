@@ -85,7 +85,8 @@ Layout
 | AdvanceHistoryModal | ประวัติเบิกเงิน |
 | ConfirmModal | ยืนยันลบรายการลา |
 | ManualModal | คู่มือใช้งาน (กฎลา + กฎ commission) |
-| PoolFlowModal | แผนผังเงินเดือน (📊) — flow การแบ่งค่าคอมกองกลาง (admin + พนักงาน) |
+| PoolFlowModal | แผนผังเงินเดือน (📊) — flow การแบ่งค่าคอมกองกลาง · **per-item** (PR #512) · loop ทุก kind=pool item รวม custom |
+| PoolAdjustmentModal | รายการยกเว้นค่าคอม · 2 variants (pool + piece) · **per-item routing** (PR #506) |
 
 ## Custom Hooks
 

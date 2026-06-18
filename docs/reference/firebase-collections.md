@@ -20,14 +20,17 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | baseSalary | number | เงินเดือนพื้นฐาน **เริ่มต้น** (effective base = + annualRaises ที่ถึงรอบ) |
 | annualRaiseAmount | number | จำนวนขึ้นเงินเดือน AUTO ทุก ม.ค. (`0` = ไม่ขึ้น) |
 | annualRaises | `Record<year, number>` | override การขึ้นเงินรายปี (key = ค.ศ. string) |
-| singlePieceRate | number | rate ชิ้นเดี่ยว |
-| normalSalePieceRate | number | rate ขายปกติ |
-| specialSalePieceRate | number | rate ขายพิเศษ |
-| buyPieceRate | number | rate ซื้อ |
-| invitePieceRate | number | rate ชวน |
-| transferPieceRate | number | rate โอน |
+| singlePieceRate | number | (legacy) rate ชิ้นเดี่ยว · multi-item refactor (PR #463) → ใช้ `pieceRates` แทน |
+| pieceRates | `Record<string, number>` | rate ต่อ piece item id (non-pool roles · multi-item) |
+| normalSalePieceRate | number | (legacy) rate ขายทั่วไป — fallback chain (PR #488+ → `poolItemRates["normal"]`) |
+| specialSalePieceRate | number | (legacy) rate ขายพิเศษ — fallback chain |
+| buyPieceRate | number | (legacy) rate รับซื้อ — fallback chain |
+| poolItemRates | `Record<string, number>` | rate ต่อ pool item id (PR #488+ · รวม custom items) |
+| invitePieceRate | number | (legacy) rate เชิญชวนสมัครบัตร — fallback chain (PR #477 → `bonusRates["invite"]`) |
+| transferPieceRate | number | (legacy) rate ย้ายข้อมูลบัตร — fallback chain |
+| bonusRates | `Record<string, number>` | rate ต่อ bonus item id (PR #477 · "โบนัสอื่นๆ" multi-item) |
 | salaryDisabled | boolean | ซ่อน tab เงินเดือน |
-| poolExclusion | "sell" / "buy" / "both" / null | ยกเว้น pool |
+| poolExclusion | `null` / `"all"` / `string[]` | ยกเว้น pool (PR #488+ · per-item) · legacy `"sell"/"buy"/"both"` migrate-on-read |
 | socialSecurity | number | ประกันสังคมรายเดือน (snapshot ลง salary doc ตอนคำนวณ) |
 | startWorkMonth | string (YYYY-MM) | วันที่เริ่มงาน — ใช้ในหนังสือรับรองเงินเดือน |
 | prefix | "นาย" / "นาง" / "นางสาว" | คำนำหน้าชื่อ — ใช้ในหนังสือรับรอง |
@@ -72,22 +75,32 @@ Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth
 
 | Field | Type | Description |
 |---|---|---|
-| singleRatePieces | number | ชิ้นเดี่ยว (ตำแหน่งที่ไม่แยก sell/buy) |
-| normalSalePieces | number | ชิ้นขายปกติ |
-| specialSalePieces | number | ชิ้นขายพิเศษ (ใครขายใครได้) |
-| buyPieces | number | ชิ้นรับซื้อ |
-| invitePieces | number | ชิ้นเชิญสมัครบัตร |
-| transferPieces | number | ชิ้นย้ายข้อมูลบัตร |
+| singleRatePieces | number | (legacy) ชิ้นเดี่ยว — fallback chain (PR #463 → `piecePieces` map) |
+| piecePieces | `Record<string, number>` | จำนวนชิ้นต่อ piece item id (non-pool roles · multi-item) |
+| normalSalePieces | number | (legacy) ขายทั่วไป — fallback chain |
+| specialSalePieces | number | (legacy) ขายพิเศษ — fallback chain |
+| buyPieces | number | (legacy) รับซื้อ — fallback chain |
+| poolItemPieces | `Record<string, number>` | จำนวนชิ้นต่อ pool item id (PR #488+ · รวม custom) |
+| invitePieces | number | (legacy) เชิญชวนสมัครบัตร — fallback chain |
+| transferPieces | number | (legacy) ย้ายข้อมูลบัตร — fallback chain |
+| bonusCounts | `Record<string, number>` | จำนวนครั้งต่อ bonus item id (PR #477) |
 | socialSecurity | number | ประกันสังคม |
 | customEarnings | `{label,amount}[]` | รายรับที่ admin เพิ่มเอง |
 | customDeductions | `{label,amount}[]` | รายหักที่ admin เพิ่มเอง |
+| coveragePay | number | เงินค่าแทน (coverage duty) จาก `computeCoverageEarningsForMonth` |
+| coveragePayBreakdown | `{empId,count,total,...}[]` | breakdown ค่าแทน · preserve เดิมถ้า re-save (PR #516) |
 | note | string | หมายเหตุ |
-| **Snapshot fields** | | *เขียนอัตโนมัติตอน save salary — ใช้คำนวณ Pool ฝั่ง employee + ล็อกอดีต* |
+| **Snapshot fields** | | *เขียนอัตโนมัติตอน save salary — ล็อกอดีต* |
 | roleId | string | snapshot ของ `employees.roleId` ตอน save |
-| poolExclusion | string\|null | snapshot ของ `employees.poolExclusion` ตอน save |
+| poolExclusion | string \| string[] \| null | snapshot exclusion (รองรับ array + legacy variants) |
+| poolThresholdExempt | boolean | snapshot exempt จาก duty primary (PR #488+ · auto-pass threshold) |
 | totalLeaveDays | number | `weekdayLeaves + sundayLeaves` ของเดือนนั้น |
 | baseSalary | number | snapshot เงินเดือนพื้นฐาน ตอน save |
-| singlePieceRate / normalSalePieceRate / specialSalePieceRate / buyPieceRate / invitePieceRate / transferPieceRate | number | snapshot เรทค่าคอม ตอน save |
+| singlePieceRate / pieceRates | number / map | snapshot piece rates · multi-item |
+| normalSalePieceRate / specialSalePieceRate / buyPieceRate | number | (legacy) snapshot rate fallback |
+| poolItemRates | `Record<string, number>` | snapshot pool item rates (PR #488+) |
+| invitePieceRate / transferPieceRate | number | (legacy) snapshot rate fallback |
+| bonusRates | `Record<string, number>` | snapshot bonus rates (PR #477) |
 | socialSecurity | number | snapshot ประกันสังคม ตอน save |
 
 > **ความไม่เปลี่ยนของอดีต (immutability):** ตั้งแต่มี snapshot เรท/ตำแหน่ง ข้อมูลเงินเดือนในอดีตจะ
@@ -124,8 +137,24 @@ Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth
 | Field | Type | Description |
 |---|---|---|
 | name | string | ชื่อตำแหน่ง |
-| poolGroup | string / null | กลุ่ม pool commission |
+| poolGroup | string / null | กลุ่ม pool commission (null = ไม่ใช่ pool role) |
 | icon | string | emoji icon |
+| mainDuties | string (HTML) / null | หน้าที่หลัก · sanitized HTML |
+| **pieceItems** | `PieceItem[]` / null | (non-pool roles) รายการค่าคอมรายชิ้น · `{id, label}` · PR #463 multi-item |
+| pieceLabel | string / null | (legacy) ก่อน multi-item · migrate-on-read |
+| **poolItems** | `PoolItem[]` / null | (pool roles) รายการ pool sales · `{id, label, kind, threshold}` · PR #488+ |
+| primaryPoolItemId | string / null | item สำหรับ 50% rule (default: ตัวแรก kind=pool) |
+| **bonusItems** | `PieceItem[]` / null | "โบนัสอื่นๆ" multi-item · null → migrate-on-read เป็น default 2 รายการ (invite/transfer) |
+
+```ts
+// poolItems schema
+interface PoolItem {
+  id: string;
+  label: string;
+  kind: "pool" | "personal";  // pool = แชร์ · personal = ใครขายใครได้
+  threshold: number;          // % ของ top (0-100, default 80)
+}
+```
 
 ### payrollConfirms/{YYYY-MM}
 
@@ -149,8 +178,13 @@ Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth
 
 ```
 poolSnapshots/2026-05 = {
-  "<empId>": { normalSalePieces, specialSalePieces, buyPieces,
-               roleId, poolExclusion, totalLeaveDays },
+  "<empId>": {
+    // legacy fields (fallback chain)
+    normalSalePieces, specialSalePieces, buyPieces,
+    // PR #494: multi-item map (รวม custom pool items)
+    poolItemPieces: { "normal": 50, "buy": 30, "p_2hand": 10, ... },
+    roleId, poolExclusion, totalLeaveDays, poolThresholdExempt
+  },
   ...,
   updatedAt: <number>
 }
@@ -161,9 +195,7 @@ poolSnapshots/2026-05 = {
 
 ### poolAdjustments/{YYYY-MM}
 
-"รายการหักจากกองกลาง" ที่ admin ใส่ — บางสินค้าไม่ได้ค่าคอม (โปรโมชั่นฝั่งขาย,
-ทองแท่ง MD ฝั่งรับซื้อ ฯลฯ) · หักระดับเดือน + **แยกตามตำแหน่ง (`poolGroup`)** ·
-1 doc/เดือน
+"รายการยกเว้นค่าคอม" ที่ admin ใส่ — 2 variants · 1 doc/เดือน
 
 | Field | Type | Description |
 |---|---|---|
@@ -173,15 +205,27 @@ poolSnapshots/2026-05 = {
 ```ts
 interface Item {
   id: string;
-  poolGroup: string;     // ตำแหน่ง/กลุ่มที่หักจาก (role.poolGroup)
-  side: "normal" | "buy"; // ฝั่งขายทั่วไป หรือ รับซื้อ
-  pieces: number;        // จำนวนชิ้นที่ไม่นับค่าคอม
-  label: string;         // เหตุผล (เช่น "โปรโมชั่น", "ทองแท่ง MD")
+  kind?: "pool" | "piece";  // PR #465+ · default "pool"
+
+  // pool variant — หักจากกองกลาง
+  poolGroup?: string;       // role.poolGroup
+  poolItemId?: string;      // PR #506: เลือก pool item · รวม custom items
+  side?: "normal" | "buy";  // legacy fallback · migrate → poolItemId
+
+  // piece variant — หักจาก count multi-item ของพนักงานคนเดียว
+  employeeId?: string;
+  pieceItemId?: string;
+  roleId?: string;          // ใช้ resolve labels ใน UI
+  employeeName?: string;    // snapshot (PR #481) · กัน orphan display
+  pieceItemLabel?: string;  // snapshot
+
+  // shared
+  pieces: number;
+  label: string;            // เหตุผล (e.g., "โปรโมชั่น", "ทำพลาด")
 }
 ```
 
-**กฎ:** เกณฑ์ 80% ใช้ gross (ไม่หัก พนักงานยังมีสิทธิ์อยู่ในกอง) ·
-กองที่หารแบ่งใช้ `net = gross − Σ items ของ poolGroup นั้น`
+**กฎ:** เกณฑ์ threshold ใช้ gross (ไม่หัก · พนักงานยังมีสิทธิ์อยู่ในกอง) · กองที่หารแบ่งใช้ `net = gross − Σ excludedByItemId[id]`
 
 ### employeeLoans/{loanId}
 
