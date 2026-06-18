@@ -21,8 +21,8 @@ import { useMemo, useState } from "react";
 import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
 import { currentYearMonth, fmtShortWithWeekday } from "../../utils/dateUtils";
 import BaseModal from "../shared/BaseModal";
+import CalendarPicker from "../shared/CalendarPicker";
 import MonthChevronNav from "../shared/MonthChevronNav";
-import ThaiDateInput from "../shared/ThaiDateInput";
 
 interface Props {
   storeCalendar: StoreCalendar;
@@ -38,8 +38,9 @@ interface Props {
 /** alias สำหรับใช้ชื่อเดิมใน panel นี้ */
 const fmtYmd = fmtShortWithWeekday;
 
-/** สร้าง list ของเสาร์ใน 3 เดือนถัดไปจาก today */
-function buildSaturdayOptions(): { ymd: string; label: string }[] {
+/** สร้าง list ของวัน (ตาม day-of-week) ใน 3 เดือนถัดไปจาก today
+ *  · targetDow 6 = เสาร์ · 0 = อาทิตย์ — ใช้เป็น dropdown options */
+function buildDowOptions(targetDow: number): { ymd: string; label: string }[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const end = new Date(today);
@@ -47,7 +48,7 @@ function buildSaturdayOptions(): { ymd: string; label: string }[] {
   const out: { ymd: string; label: string }[] = [];
   const c = new Date(today);
   while (c <= end) {
-    if (c.getDay() === 6) {
+    if (c.getDay() === targetDow) {
       const y = c.getFullYear();
       const m = String(c.getMonth() + 1).padStart(2, "0");
       const d = String(c.getDate()).padStart(2, "0");
@@ -145,8 +146,12 @@ export default function StoreCalendarPanel({
   }, [storeCalendar, selectedMonth]);
 
   // เสาร์ตัวเลือก: future-only AND ยังไม่เคย mark ไว้
-  const satOptions = buildSaturdayOptions().filter(
+  const satOptions = buildDowOptions(6).filter(
     (o) => !storeCalendar.extraOpenSaturdays.includes(o.ymd),
+  );
+  // อาทิตย์ตัวเลือก: future-only AND ยังไม่เคย mark ไว้ (mirror เสาร์)
+  const sunOptions = buildDowOptions(0).filter(
+    (o) => !(storeCalendar.extraClosedSundays ?? []).includes(o.ymd),
   );
 
   async function addSaturday() {
@@ -571,35 +576,39 @@ export default function StoreCalendarPanel({
 
         {adding === "wd" && (
           <div className="border-b border-bdr bg-cream/40">
-            <div className="px-3.5 py-3 flex gap-2 items-center">
-              <ThaiDateInput
+            <div className="px-3.5 py-3">
+              {/* ปฏิทินมาตรฐาน (เหมือนฟอร์มลา) · weekdaysOnly = เลือกได้แค่ จ-ศ */}
+              <CalendarPicker
                 value={wdPick}
                 onChange={setWdPick}
-                className="flex-1 px-2.5 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] bg-white"
+                weekdaysOnly
+                size="sm"
               />
-              <button
-                type="button"
-                onClick={addWeekday}
-                disabled={!wdPick || busy}
-                className={`px-3 py-2 rounded-[8px] border-none text-xs font-bold font-[inherit] ${
-                  wdPick && !busy
-                    ? "bg-maroon text-white cursor-pointer"
-                    : "bg-bdr text-txt-soft cursor-not-allowed"
-                }`}
-              >
-                บันทึก
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAdding(null);
-                  setWdPick("");
-                }}
-                aria-label="ยกเลิก"
-                className="w-8 h-8 rounded-[8px] border border-bdr bg-white text-txt-soft cursor-pointer flex items-center justify-center"
-              >
-                <IconX size={14} strokeWidth={2.2} />
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={addWeekday}
+                  disabled={!wdPick || busy}
+                  className={`flex-1 px-3 py-2 rounded-[8px] border-none text-xs font-bold font-[inherit] ${
+                    wdPick && !busy
+                      ? "bg-maroon text-white cursor-pointer"
+                      : "bg-bdr text-txt-soft cursor-not-allowed"
+                  }`}
+                >
+                  บันทึก
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdding(null);
+                    setWdPick("");
+                  }}
+                  className="px-3 py-2 rounded-[8px] border border-bdr bg-white text-txt-soft text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center gap-1"
+                >
+                  <IconX size={13} strokeWidth={2.2} />
+                  ยกเลิก
+                </button>
+              </div>
             </div>
             {/* warning: ถ้ามีใบลาในวันที่ปิด → ใบลายังอยู่แต่ไม่นับโควต้า */}
             {wdPick &&
@@ -703,11 +712,25 @@ export default function StoreCalendarPanel({
         {adding === "sun" && (
           <div className="border-b border-bdr bg-cream/40">
             <div className="px-3.5 py-3 flex gap-2 items-center">
-              <ThaiDateInput
-                value={sunPick}
-                onChange={setSunPick}
-                className="flex-1 px-2.5 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] bg-white"
-              />
+              <div className="relative flex-1">
+                <select
+                  value={sunPick}
+                  onChange={(e) => setSunPick(e.target.value)}
+                  className="appearance-none cursor-pointer w-full pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt"
+                >
+                  <option value="">— เลือกอาทิตย์ —</option>
+                  {sunOptions.map((o) => (
+                    <option key={o.ymd} value={o.ymd}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <IconChevronDown
+                  size={12}
+                  strokeWidth={2.4}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                />
+              </div>
               <button
                 type="button"
                 onClick={addSunday}
@@ -732,22 +755,8 @@ export default function StoreCalendarPanel({
                 <IconX size={14} strokeWidth={2.2} />
               </button>
             </div>
-            {/* warning ถ้าเลือกวันไม่ใช่อาทิตย์ */}
-            {sunPick && !isSundayYmd(sunPick) && (
-              <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-amber-50 border border-amber-300 text-xs leading-relaxed text-amber-900 flex gap-2">
-                <IconAlertTriangle
-                  size={13}
-                  strokeWidth={2.5}
-                  className="shrink-0 mt-0.5"
-                />
-                <div>
-                  วันที่เลือก <b>ไม่ใช่วันอาทิตย์</b> — ปิดได้เฉพาะวันอาทิตย์เท่านั้น
-                </div>
-              </div>
-            )}
             {/* warning ถ้ามีใบลาในอาทิตย์ที่เลือก → จะไม่ถูกหัก × 1.5 อีก */}
             {sunPick &&
-              isSundayYmd(sunPick) &&
               (() => {
                 const leaves = leavesOnDate(sunPick, allLeaves);
                 if (leaves.length === 0) return null;
