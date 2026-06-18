@@ -122,7 +122,7 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 **กองกลาง (Pool) — Item-based architecture (PR #488-#513):**
 - **`Role.poolItems`** — admin custom pool sales items per role (เดิม hardcode 3 รายการ)
   - `PoolItem = { id, label, kind: "pool"|"personal", threshold: number }`
-  - `kind="pool"` แชร์กองกลาง (มี threshold % ของ top) · `kind="personal"` ใครขายใครได้ (ไม่แชร์)
+  - `kind="pool"` แชร์กองกลาง (มี threshold % ของ top) · `kind="personal"` ไม่แชร์กองกลาง (ของใครของมัน)
   - `Role.primaryPoolItemId` — primary item สำหรับ `losesBaseSalary` check (< 50% ของ top primary → ขาด base) ตอน `poolExclusion="all"`
   - default 3 items: `{normal,kind=pool,80}`, `{special,kind=personal,80}`, `{buy,kind=pool,80}` · null/undefined → migrate-on-read
 - **`Employee.poolItemRates: Record<string, number>`** — rate ต่อ item id · legacy `normalSalePieceRate`/`specialSalePieceRate`/`buyPieceRate` fallback

@@ -89,7 +89,7 @@ interface PoolItem {
 ```
 
 - **kind="pool"** — แชร์กองกลาง · มี threshold % ต่อ item · admin custom ได้
-- **kind="personal"** — ใครขายใครได้ · ไม่แชร์ · ไม่ถูกหักลา (`finalSharePercent=100` คงที่)
+- **kind="personal"** — ไม่แชร์กองกลาง · ของใครของมัน · ไม่ถูกหักลา (`finalSharePercent=100` คงที่)
 - **`Role.primaryPoolItemId`** — primary item สำหรับ `losesBaseSalary` check (default item แรก kind=pool)
 
 **Default migration** (legacy role ที่ไม่มี `poolItems`):
@@ -122,7 +122,7 @@ primaryPoolItemId: "normal"
 12. **ชิ้นที่ได้:** `allocatedPieces[i] = (finalSharePercent[i] / 100) × totalItemPool[itemId]`
 
 #### kind="personal" item
-- `finalSharePercent = 100` · `allocatedPieces = myPieces` (ใครขายใครได้)
+- `finalSharePercent = 100` · `allocatedPieces = myPieces` (ไม่แชร์กองกลาง)
 - ลาไม่กระทบ
 - **แต่เคารพ `poolExclusion`** (PR #516 fix) — ถ้า admin tick personal item ใน exclusion → ตัด commission ของ item นี้
 

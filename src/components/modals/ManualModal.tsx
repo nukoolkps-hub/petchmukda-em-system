@@ -257,18 +257,32 @@ export default function ManualModal({ onClose }) {
           </Section>
 
           <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
-            <b className="text-maroon inline-flex items-center gap-1">
+            <div className="flex items-center gap-1 text-maroon font-bold mb-2">
               <IconLightbulb size={14} strokeWidth={2.4} />
-              ตัวอย่าง:
-            </b>{" "}
-            เงินเดือน ฿18,000 ลาวันธรรมดา 1 + วันอาทิตย์ 1<br />
-            เรท/วัน = 18,000 ÷ 30 = <b>฿600</b>
-            <br />
-            <span className="text-green">+ โบนัสขยัน</span> = 600 × 1 ={" "}
-            <b>฿600</b>
-            <br />
-            <span className="text-red">− หักวันอาทิตย์</span> = 600 × 1.5 ={" "}
-            <b>฿900</b>
+              ตัวอย่าง: เงินเดือน ฿18,000
+            </div>
+
+            <div className="mb-2.5 leading-relaxed">
+              ลาวันธรรมดา 1 วัน + ลาวันอาทิตย์ 1 วัน
+            </div>
+
+            <div className="mb-2 pb-2 border-b border-[#C9973A40]">
+              เรทต่อวัน = 18,000 ÷ 30 = <b>฿600</b>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <div>
+                <span className="text-green font-bold">+ โบนัสขยัน</span>
+                <br />
+                600 × 1 = <b className="text-green">฿600</b>
+              </div>
+
+              <div className="pt-1.5 border-t border-[#C9973A30]">
+                <span className="text-red font-bold">− หักวันอาทิตย์</span>
+                <br />
+                600 × 1.5 = <b className="text-red">฿900</b>
+              </div>
+            </div>
           </Box>
         </div>
       )}
@@ -325,9 +339,14 @@ export default function ManualModal({ onClose }) {
                 </li>
               </ol>
               <p className="mt-2">
-                <b>ชิ้นที่ได้</b> = (% ที่ได้ ÷ 100) × กองกลางรวม
+                <b>ชิ้นที่ได้</b> = (% ที่ได้ ÷ 100) × กองกลางของรายการนั้น
                 <br />
                 <b>เงิน</b> = ชิ้น × Rate ของแต่ละคน
+              </p>
+              <p className="mt-2 text-xs text-txt-soft">
+                ⚙ ตัวอย่างข้างล่างคือ <b>3 รายการเริ่มต้น</b> (ขายทั่วไป · ขายพิเศษ ·
+                รับซื้อ) · ADMIN เพิ่มหรือแก้รายการเองได้ในตำแหน่งงาน ·
+                แต่ละรายการ <b>แยกกันคิด</b> เกณฑ์และกองของมันเอง
               </p>
             </Card>
           </Section>
@@ -356,8 +375,8 @@ export default function ManualModal({ onClose }) {
             color={COLORS.gold}
           >
             <p>
-              <b>ไม่แชร์กองกลาง</b> — คูณ Rate ของตัวเอง · ไม่เข้ากองที่หารแบ่ง · ลาไม่กระทบ ·
-              ถ้า ADMIN <b>ปิด</b> สิทธิ์ผ่าน checkbox/all → ตัด commission ด้วย
+              <b>ของใครของมัน</b> — ไม่ต้องแบ่งใคร · ขายกี่ชิ้น{" "}
+              <b>คูณกับ Rate ของตัวเอง</b> ได้เลย · ลาก็ไม่กระทบเงินตรงนี้
             </p>
           </Section>
 
@@ -365,21 +384,26 @@ export default function ManualModal({ onClose }) {
             title={
               <span className="inline-flex items-center gap-1.5">
                 <IconMinus size={16} strokeWidth={2.4} />
-                หักจากกองกลาง (สินค้าโปรโมชั่น / ทองแท่ง MD)
+                รายการยกเว้นค่าคอม (สินค้าโปรโมชั่น / ทองแท่ง MD)
               </span>
             }
             color={COLORS.red}
           >
             <p>
-              บางสินค้าไม่ได้ค่าคอม — ADMIN ใส่ "รายการยกเว้นค่าคอม" ระดับเดือน
-              <b>แยกตาม pool item</b> (เลือกได้ทุก kind=pool item รวม custom เช่น "ขายมือสอง")
+              สินค้าบางอย่าง เช่น <b>สินค้าโปรโมชั่น</b> หรือ <b>ทองแท่ง MD</b>{" "}
+              จะ <b>ไม่นับเข้าค่าคอม</b> — ADMIN จะมาใส่ <b>"ของที่ยกเว้น"</b>{" "}
+              ในแต่ละเดือน (ใส่ได้แยกตามรายการขาย เช่น "ขายทั่วไป" / "รับซื้อ" /
+              "ขายมือสอง")
             </p>
             <ul>
               <li>
-                <b>กองกลางที่หารแบ่ง</b> = gross − หัก ⇒ น้อยลง (per item)
+                <b>กองกลางที่เอามาแบ่ง</b> จะ <b>เล็กลง</b>{" "}
+                (เพราะหักของที่ยกเว้นออก)
               </li>
               <li>
-                <b>เกณฑ์ threshold</b> ใช้ gross (ไม่หัก) — พนักงานยังมีสิทธิ์อยู่ในกองแม้ขายโปรฯ/MD เยอะ
+                <b>แต่ยอดของพนักงานยังนับครบ</b> —
+                ถ้าขายโปรโมชั่นหรือรับซื้อทองแท่งเยอะ{" "}
+                <b>ยังมีสิทธิ์เข้ากองกลางอยู่</b> ไม่ถูกตัดออก
               </li>
             </ul>
           </Section>
@@ -394,7 +418,8 @@ export default function ManualModal({ onClose }) {
             color={COLORS.maroon}
           >
             <p>
-              คำนวณแบบกองกลาง <b>แยกฝั่ง</b> จากการขาย (ใช้สูตรเดียวกัน)
+              คิดแบบกองกลาง — แต่<b>แยกออกจากกองขาย</b> (มีกอง · มีคนสูงสุด ·
+              มีเกณฑ์ของตัวเอง · ใช้สูตรเดียวกับขายทั่วไป)
             </p>
           </Section>
 
@@ -411,41 +436,44 @@ export default function ManualModal({ onClose }) {
               title={
                 <span className="inline-flex items-center gap-1.5">
                   <IconTrendingDown size={14} strokeWidth={2.4} />
-                  กฎ 80%
+                  เกณฑ์ขั้นต่ำ (เริ่มต้น 80% · ADMIN ตั้งใหม่ได้)
                 </span>
               }
               color={COLORS.text}
             >
               <p>
-                แต่ละ pool item มี <b>threshold ของตัวเอง</b> (default 80% · ADMIN custom ได้):
-                คนที่ <b>ชิ้น &lt; threshold% ของ Top</b> ใน item นั้น →{" "}
-                <b className="text-red">ตัดออกจากกอง</b> item นั้น (เปอร์เซ็นต์ฐานและตัวคูณหักวันลาคำนวณ per item)
+                <b>แต่ละรายการ</b> (ขายทั่วไป / รับซื้อ / ฯลฯ) มี{" "}
+                <b>เกณฑ์ขั้นต่ำของตัวเอง</b> — ถ้ายอดของเรา{" "}
+                <b>น้อยกว่า 80% ของคนที่ทำได้สูงสุด</b> ในรายการนั้น →{" "}
+                <b className="text-red">ไม่ได้แบ่งกองกลาง</b> รายการนั้น (รายการอื่นยังได้)
               </p>
               <p className="mt-1.5">
-                <b className="text-green">ข้อยกเว้น:</b> คนที่ทำ{" "}
-                <b>หน้าที่รายเดือนที่ "ให้สิทธิ์กองกลาง"</b> ในเดือนนั้น → เข้ากองได้ทุก kind=pool item แม้ &lt; threshold
-                (ติดทำหน้าที่ทั้งเดือน ขายไม่ทันเพื่อน) · แต่ยังเคารพ exclusion ที่ ADMIN ตั้ง · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%
+                <b className="text-green">ข้อยกเว้น:</b> ถ้าทำ <b>หน้าที่รายเดือน</b>{" "}
+                ที่ ADMIN ตั้งให้ "ได้สิทธิ์กองกลางอัตโนมัติ" →{" "}
+                เข้ากองได้ทุกรายการแม้ยอดไม่ถึง 80% (เพราะติดงานทั้งเดือน ขายไม่ทันเพื่อน)
               </p>
             </Card>
             <Card
               title={
                 <span className="inline-flex items-center gap-1.5">
                   <IconBan size={14} strokeWidth={2.4} />
-                  ADMIN ปิดสิทธิ์
+                  ADMIN ปิดสิทธิ์กองกลาง
                 </span>
               }
               color={COLORS.text}
             >
               <ul>
                 <li>
-                  <b>ไม่ปิด</b> — เข้าทุก pool item ตามเกณฑ์ threshold
+                  <b>ไม่ปิด</b> — เข้าทุกรายการตามเกณฑ์ขั้นต่ำ 80% ปกติ
                 </li>
                 <li>
-                  <b>ปิดเฉพาะรายการ</b> — ติ๊ก checkbox per item · item ที่ติ๊ก → ไม่ได้กอง (item อื่นใช้ threshold ปกติ)
+                  <b>ปิดเฉพาะบางรายการ</b> — รายการที่ถูกปิด ไม่ได้แบ่งกอง ·
+                  รายการที่เหลือใช้เกณฑ์ 80% ปกติ
                 </li>
                 <li>
-                  <b>ปิดทั้งหมด</b> — ไม่ได้กองทุก item · ขายพิเศษ (kind=personal) ก็ถูกตัด
-                  <br />+ ถ้า <b>primary item</b> (ADMIN ตั้งใน role) &lt; 50% ของ Top primary →{" "}
+                  <b>ปิดทั้งหมด</b> — ไม่ได้แบ่งกองในทุกรายการ
+                  <br />+ ถ้ายอด <b>รายการหลัก</b> (ADMIN เลือกไว้ในตำแหน่ง){" "}
+                  <b>น้อยกว่า 50%</b> ของคนสูงสุด →{" "}
                   <b className="text-red">ไม่ได้เงินเดือนพื้นฐาน</b>
                 </li>
               </ul>
@@ -453,62 +481,121 @@ export default function ManualModal({ onClose }) {
           </Section>
 
           <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
-            <b className="text-maroon inline-flex items-center gap-1">
+            <div className="flex items-center gap-1 text-maroon font-bold mb-2">
               <IconLightbulb size={14} strokeWidth={2.4} />
-              ตัวอย่างกองกลางขาย 5 คน · ขายคนละ 200 ชิ้น · กองรวม 1,000 ชิ้น
-            </b>
-            <br />
-            เปอร์เซ็นต์ฐาน = 100 ÷ 5 = <b>20%</b> ต่อคน · ตัวคูณหักวันลา = 20 ÷ 30 ={" "}
-            <b>0.667</b>
-            <br />
-            <ul className="pl-[18px] my-1.5 mx-0">
-              <li>
-                <b>พนักงาน A</b> ลา 0 วัน → ใช้คำนวณ 0 → ไม่ถูกหัก → % ได้{" "}
-                <b>25.33%</b> = 253.3 ชิ้น
-              </li>
-              <li>
-                <b>พนักงาน B</b> ลา 1 วัน → ใช้คำนวณ 0 → ไม่ถูกหัก → % ได้{" "}
-                <b>25.33%</b> = 253.3 ชิ้น
-              </li>
-              <li>
-                <b>พนักงาน C</b> ลา 2 วัน → ใช้คำนวณ 0 → ไม่ถูกหัก → % ได้{" "}
-                <b>25.33%</b> = 253.3 ชิ้น
-              </li>
-              <li>
-                <b>พนักงาน D</b> ลา 5 วัน → ใช้คำนวณ 3 → % หัก 8% → % ได้{" "}
-                <b>15.33%</b> = 153.3 ชิ้น
-              </li>
-              <li>
-                <b>พนักงาน E</b> ลา 7 วัน → ใช้คำนวณ 5 → % หัก 13.33% → % ได้{" "}
-                <b>8.67%</b> = 86.7 ชิ้น
-              </li>
-            </ul>
-            ลาไม่เกิน 2 วัน = ไม่กระทบ · เกินจากนั้นค่อยถูกหักไปแบ่งเพื่อน
+              ตัวอย่าง: กองกลางขาย 5 คน
+            </div>
+
+            <div className="mb-2 leading-relaxed">
+              ขายคนละ 200 ชิ้น · <b>กองรวม 1,000 ชิ้น</b>
+            </div>
+
+            <div className="mb-2.5 pb-2 border-b border-[#C9973A40] leading-relaxed">
+              <div>
+                ทุกคนได้ฐาน <b>20%</b> เท่ากัน
+                <span className="text-txt-soft text-xs"> (100 ÷ 5)</span>
+              </div>
+              <div>
+                หักวันลาวันละ <b>0.667%</b>
+                <span className="text-txt-soft text-xs"> (20 ÷ 30)</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <div>
+                <b>พนักงาน A</b> · ลา 0 วัน
+                <br />
+                <span className="text-txt-soft text-xs">
+                  → ไม่ถูกหัก + ได้แบ่งของคนลา
+                </span>
+                <br />
+                ได้ <b className="text-green">25.33%</b> = 253.3 ชิ้น
+              </div>
+
+              <div className="pt-1.5 border-t border-[#C9973A30]">
+                <b>พนักงาน B</b> · ลา 1 วัน
+                <br />
+                <span className="text-txt-soft text-xs">
+                  → ยังอยู่ใน "2 วันฟรี" ไม่ถูกหัก
+                </span>
+                <br />
+                ได้ <b className="text-green">25.33%</b> = 253.3 ชิ้น
+              </div>
+
+              <div className="pt-1.5 border-t border-[#C9973A30]">
+                <b>พนักงาน C</b> · ลา 2 วัน
+                <br />
+                <span className="text-txt-soft text-xs">
+                  → ยังอยู่ใน "2 วันฟรี" ไม่ถูกหัก
+                </span>
+                <br />
+                ได้ <b className="text-green">25.33%</b> = 253.3 ชิ้น
+              </div>
+
+              <div className="pt-1.5 border-t border-[#C9973A30]">
+                <b>พนักงาน D</b> · ลา 5 วัน
+                <br />
+                <span className="text-txt-soft text-xs">
+                  → เกิน 2 วันมา 3 วัน → ถูกหัก 8%
+                </span>
+                <br />
+                ได้ <b className="text-red">15.33%</b> = 153.3 ชิ้น
+              </div>
+
+              <div className="pt-1.5 border-t border-[#C9973A30]">
+                <b>พนักงาน E</b> · ลา 7 วัน
+                <br />
+                <span className="text-txt-soft text-xs">
+                  → เกิน 2 วันมา 5 วัน → ถูกหัก 13.33%
+                </span>
+                <br />
+                ได้ <b className="text-red">8.67%</b> = 86.7 ชิ้น
+              </div>
+            </div>
+
+            <div className="mt-3 pt-2 border-t border-[#C9973A40] text-xs text-txt-soft leading-relaxed">
+              💡 ลาไม่เกิน 2 วัน = ไม่กระทบเงิน · ลาเกินจะถูกหักไปแบ่งเพื่อนที่ไม่ลา
+            </div>
           </Box>
 
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
-                <IconTicket size={16} strokeWidth={2.4} />
-                บัตรสมาชิก
+                <IconStar size={16} strokeWidth={2.4} />
+                โบนัสอื่นๆ
               </span>
             }
             color={COLORS.maroon}
           >
             <p>
-              คิดตาม <b>Rate ของตัวเอง</b> × จำนวนใบ (ไม่เข้ากองกลาง)
+              รายการเสริมที่ ADMIN ตั้งเองในแต่ละตำแหน่ง — <b>ไม่แบ่งกองกลาง</b> ·
+              ใครทำได้ใครเก็บ
             </p>
-            <ul>
-              <li className="inline-flex items-center gap-1.5">
-                <IconTicket size={14} strokeWidth={2.4} />
-                เชิญชวนสมัครบัตร — ใบละ X บาท
-              </li>
-              <br />
-              <li className="inline-flex items-center gap-1.5">
-                <IconRefresh size={14} strokeWidth={2.4} />
-                ย้ายข้อมูลบัตร — ใบละ Y บาท
-              </li>
-            </ul>
+            <p className="mt-2">
+              <b>สูตร:</b> Rate ของตัวเอง × จำนวนที่ทำได้ในเดือนนั้น
+            </p>
+
+            <div className="mt-3 rounded-lg bg-cream/60 border border-bdr px-3 py-2.5">
+              <div className="text-xs text-txt-soft mb-1.5">
+                ตัวอย่างที่เริ่มต้นมาให้:
+              </div>
+              <ul className="m-0">
+                <li className="inline-flex items-center gap-1.5">
+                  <IconTicket size={14} strokeWidth={2.4} />
+                  เชิญชวนสมัครบัตรสมาชิก — ใบละ X บาท
+                </li>
+                <br />
+                <li className="inline-flex items-center gap-1.5">
+                  <IconRefresh size={14} strokeWidth={2.4} />
+                  ย้ายข้อมูลบัตรสมาชิก — ใบละ Y บาท
+                </li>
+              </ul>
+            </div>
+
+            <p className="mt-2.5 text-xs text-txt-soft">
+              ⚙ ADMIN สามารถ <b>เพิ่ม / แก้ / ลบ</b> รายการได้เอง (เช่น
+              "ขายของแถม", "ชวนเพื่อนสมัคร LINE" ฯลฯ) — แต่ละรายการตั้ง Rate ของพนักงานแต่ละคนได้
+            </p>
           </Section>
         </div>
       )}
@@ -525,13 +612,17 @@ export default function ManualModal({ onClose }) {
             color={COLORS.maroon}
           >
             <p>
-              <b>พนักงานขอเอง</b> ผ่านแอป — ADMIN อนุมัติ/ปฏิเสธ ใน LINE
+              <b>พนักงานขอเอง</b> ในแอป — ADMIN <b>อนุมัติ/ปฏิเสธในแอป</b>{" "}
+              (ระบบส่งผลกลับให้พนักงานใน LINE)
             </p>
             <ul>
               <li>
                 <b>เพดาน:</b> 50% ของเงินเดือนพื้นฐาน
               </li>
-              <li>อนุมัติแล้ว → ADMIN โอนเงินทันที + แนบสลิปกลับในแอป</li>
+              <li>
+                ADMIN กดอนุมัติ + <b>แนบสลิปการโอน</b> →
+                ระบบส่งให้พนักงานเห็นในแอปและ LINE
+              </li>
               <li>
                 เดือนถัดไป → <b>หักจากเงินเดือนเต็มก้อน</b> รอบเดียวจบ
               </li>
@@ -565,7 +656,7 @@ export default function ManualModal({ onClose }) {
             >
               <ul>
                 <li>
-                  <b>เรียงตามเดือนเริ่ม</b> (FIFO) — ก้อนเก่าหักก่อน
+                  <b>เรียงตามเดือนเริ่ม</b> — ก้อนเก่ากู้ก่อนหักก่อน · ก้อนใหม่หักทีหลัง
                 </li>
                 <li>
                   <b>หักเท่าที่มี</b> — ถ้าเงินเดือนไม่พอ หักได้แค่ที่เหลือ ·
@@ -576,33 +667,52 @@ export default function ManualModal({ onClose }) {
                 </li>
               </ul>
               <p className="mt-2 text-xs text-txt-soft">
-                ระบบเก็บประวัติการหักรายเดือน (ledger) → คงเหลือถูกต้อง
-                แม้มีเดือนหักไม่ครบหรือข้ามเดือน
+                ระบบ <b>เก็บประวัติทุกครั้งที่หัก</b> — ดูย้อนหลังได้
+                · เดือนไหนหักไม่ครบ ก็ยกยอดเหลือไปเดือนถัดไปอัตโนมัติ
               </p>
             </Card>
           </Section>
 
           <Box bg={COLORS.goldPale} border={`${COLORS.gold}40`}>
-            <b className="text-maroon inline-flex items-center gap-1">
+            <div className="flex items-center gap-1 text-maroon font-bold mb-2">
               <IconLightbulb size={14} strokeWidth={2.4} />
-              ตัวอย่าง:
-            </b>{" "}
-            กู้ ฿30,000 ผ่อนเดือนละ ฿5,000 เริ่ม มิ.ย.
-            <br />
-            <ul className="pl-[18px] my-1.5 mx-0">
-              <li>
-                มิ.ย.: เงินเดือนสุทธิเหลือ ฿20,000 → หัก <b>฿5,000</b> (คงเหลือ 25,000)
-              </li>
-              <li>
-                ก.ค.: เงินเดือนสุทธิเหลือ ฿3,200 → หัก <b>฿3,200</b> (คงเหลือ 21,800) ←
-                หักเท่าที่มี
-              </li>
-              <li>ส.ค.-ต.ค.: หักครบเดือนละ ฿5,000 จนเหลือ ฿6,800</li>
-              <li>พ.ย.: หัก ฿5,000 → คงเหลือ ฿1,800</li>
-              <li>
-                ธ.ค.: หัก <b>฿1,800</b> (เดือนสุดท้าย) → ผ่อนครบ ✓
-              </li>
-            </ul>
+              ตัวอย่าง: กู้ ฿30,000 ผ่อนเดือนละ ฿5,000
+            </div>
+
+            <div className="mb-2.5 text-xs text-txt-soft">
+              เริ่มผ่อนเดือน มิถุนายน
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <div>
+                <b>มิ.ย.</b> · เงินเดือนเหลือ ฿20,000
+                <br />→ หัก <b>฿5,000</b>
+                <span className="text-txt-soft text-xs"> (คงเหลือ 25,000)</span>
+              </div>
+
+              <div className="pt-1.5 border-t border-[#C9973A30]">
+                <b>ก.ค.</b> · เงินเดือนเหลือ ฿3,200{" "}
+                <span className="text-amber text-xs">(ไม่พอ)</span>
+                <br />→ หัก <b>฿3,200</b>{" "}
+                <span className="text-txt-soft text-xs">(เท่าที่มี · คงเหลือ 21,800)</span>
+              </div>
+
+              <div className="pt-1.5 border-t border-[#C9973A30]">
+                <b>ส.ค. – ต.ค.</b> · หักครบเดือนละ ฿5,000
+                <br />
+                <span className="text-txt-soft text-xs">→ คงเหลือ 6,800</span>
+              </div>
+
+              <div className="pt-1.5 border-t border-[#C9973A30]">
+                <b>พ.ย.</b> · หัก ฿5,000{" "}
+                <span className="text-txt-soft text-xs">(คงเหลือ 1,800)</span>
+              </div>
+
+              <div className="pt-1.5 border-t border-[#C9973A30]">
+                <b>ธ.ค.</b> · หัก <b>฿1,800</b> (เดือนสุดท้าย){" "}
+                <span className="text-green font-bold">→ ผ่อนครบ ✓</span>
+              </div>
+            </div>
           </Box>
         </div>
       )}
@@ -640,11 +750,11 @@ export default function ManualModal({ onClose }) {
                 <li>ยื่นใบลา / ลบใบลา</li>
                 <li>เบิกเงินล่วงหน้า / อนุมัติ-ปฏิเสธคำขอ</li>
                 <li>ยืนยันยอดใหม่</li>
-                <li>หักจากกองกลาง (poolAdjustments)</li>
+                <li>เพิ่ม/แก้รายการยกเว้นค่าคอม</li>
               </ul>
               <p className="mt-2 text-xs text-txt-soft">
-                บังคับ 2 ชั้น: UI ปุ่ม disabled + Firestore rules ปฏิเสธ การเขียน
-                (ป้องกันการ bypass)
+                ระบบ <b>ล็อก 2 ชั้น</b> — ปุ่มในแอปจะกดไม่ได้ + เซิร์ฟเวอร์ปฏิเสธการบันทึก
+                เพื่อป้องกันการแก้ย้อนหลัง
               </p>
             </Card>
           </Section>
@@ -707,7 +817,7 @@ export default function ManualModal({ onClose }) {
               title={
                 <span className="inline-flex items-center gap-1.5">
                   <IconRotate size={14} strokeWidth={2.4} />
-                  หมุนเวียน (rotation)
+                  หมุนเวียน
                 </span>
               }
               color={COLORS.text}
@@ -726,7 +836,7 @@ export default function ManualModal({ onClose }) {
               title={
                 <span className="inline-flex items-center gap-1.5">
                   <IconUserCheck size={14} strokeWidth={2.4} />
-                  แทนคนลา (coverage)
+                  แทนคนลา
                 </span>
               }
               color={COLORS.text}
@@ -757,8 +867,9 @@ export default function ManualModal({ onClose }) {
                 <b>สูตร:</b> เงินค่าแทน = อัตราต่อครั้ง × จำนวนวันที่แทนในเดือน
               </li>
               <li>
-                ระบบนับอัตโนมัติตอน ADMIN save salary — แสดงในสลิปแยกบรรทัด
-                <b> "เงินค่าแทน"</b> + breakdown รายหน้าที่
+                ระบบนับอัตโนมัติตอน ADMIN <b>บันทึกเงินเดือน</b> —
+                แสดงในสลิปแยกบรรทัด <b>"เงินค่าแทน"</b> +
+                <b>รายละเอียดแยกหน้าที่</b>
               </li>
               <li>ไม่ตั้งอัตรา (หรือใส่ 0) → ไม่จ่าย (ทำหน้าที่แทนตามปกติ ไม่มีเงินเพิ่ม)</li>
             </ul>
@@ -849,15 +960,19 @@ export default function ManualModal({ onClose }) {
             color={COLORS.maroon}
           >
             <p>
-              หน้าที่ <b>รายเดือน</b> เปิดตัวเลือก{" "}
-              <b>"ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%"</b> ได้ — คนทำติดทั้งเดือน
-              ขายไม่ทันเพื่อน จึงเข้ากองกลางได้ทั้ง 2 ฝั่ง
+              หน้าที่ <b>รายเดือน</b> สามารถเปิดตัวเลือก{" "}
+              <b>"ได้สิทธิ์กองกลางอัตโนมัติ"</b> ได้ — เพราะคนทำติดงานทั้งเดือน
+              ขายไม่ทันเพื่อน · จึงได้แบ่งกองทุกรายการแม้ยอดไม่ถึง 80%
             </p>
             <ul>
-              <li>ยังเคารพฝั่งที่ ADMIN ปิด (ปิดรับซื้อ → ไม่ได้ฝั่งรับซื้อ)</li>
-              <li>ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%</li>
               <li>
-                คน <b>"ปิดทั้งคู่"</b> → ทำรายเดือนไม่ได้ (เสี่ยงหลุด 50%)
+                แต่ถ้า ADMIN ปิดสิทธิ์ไว้ (ปิดเฉพาะรายการ / ปิดทั้งหมด){" "}
+                <b>ยังถูกตัดตามที่ ADMIN ตั้ง</b>
+              </li>
+              <li>เกณฑ์ "ได้เงินเดือนพื้นฐาน 50%" ก็ยังใช้ปกติ ไม่ยกเว้น</li>
+              <li>
+                คนที่ ADMIN ปิดสิทธิ์ <b>ทั้งหมด</b> → ไม่ควรไปทำหน้าที่รายเดือน
+                (เสี่ยงยอดรายการหลักไม่ถึง 50% → หลุดเงินเดือนพื้นฐาน)
               </li>
             </ul>
           </Section>

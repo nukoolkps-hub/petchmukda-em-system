@@ -199,7 +199,7 @@ export interface Role {
    *  null/undefined → migrate-on-read default 3 items
    *  [] → no pool items (ตำแหน่ง pool group แต่ยังไม่ตั้งค่า — เลข = 0)
    *  - kind: "pool" → แชร์กองกลาง (เกณฑ์ threshold% ของ top เพื่อเข้ากอง)
-   *  - kind: "personal" → ใครขายใครได้ (ไม่แชร์ · threshold ใช้สำหรับ count
+   *  - kind: "personal" → ของใครของมัน (ไม่แชร์ · threshold ใช้สำหรับ count
    *    เข้าเกณฑ์ 50%/ฐานเงินเดือนเท่านั้น)                                       */
   poolItems?: PoolItem[] | null;
   /** primary pool item id — ใช้สำหรับ losesBaseSalary check (ขาย < 50% ของ top)

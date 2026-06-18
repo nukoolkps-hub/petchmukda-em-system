@@ -272,7 +272,7 @@ export default function RolesAdminPanel({
     // ตำแหน่งใหม่ — bonusItems ว่าง (admin เพิ่มเอง · [] = ซ่อน section)
     bonusItems: [] as PieceItem[],
     // pool items (สำหรับ pool sales role) — default 3 รายการ ให้ admin
-    // ลบ/เพิ่ม/แก้ได้ตามต้องการ · "ขายพิเศษ" kind=personal (ใครขายใครได้)
+    // ลบ/เพิ่ม/แก้ได้ตามต้องการ · "ขายพิเศษ" kind=personal (ของใครของมัน)
     poolItems: [
       { id: "normal", label: "ขายทั่วไป", kind: "pool" as const, threshold: 80 },
       {
