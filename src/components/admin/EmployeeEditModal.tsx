@@ -35,6 +35,8 @@ import {
   rolePaysPieceCommission,
   roleBonusItems,
   rolePieceItems,
+  rolePoolItems,
+  rolePrimaryPoolItemId,
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankPicker from "../shared/BankPicker";
@@ -83,6 +85,11 @@ export default function EmployeeEditModal({
   const editingSinglePieceRate = editingRole[`${employee.id}:singlePieceRate`];
   // bonusRates (multi-item โบนัสอื่นๆ) — map เดียวเหมือน pieceRates
   const editingBonusRates = editingRole[`${employee.id}:bonusRates`] as
+    | Record<string, number>
+    | undefined;
+
+  // poolItemRates (multi-item pool sales) — map เดียวเหมือน pieceRates/bonusRates
+  const editingPoolItemRates = editingRole[`${employee.id}:poolItemRates`] as
     | Record<string, number>
     | undefined;
 
@@ -254,6 +261,14 @@ export default function EmployeeEditModal({
         cleaned[k] = Number.isFinite(n) && n >= 0 ? n : 0;
       }
       await onUpdateRole(employee.id, "bonusRates", cleaned);
+    }
+    if (editingPoolItemRates !== undefined) {
+      const cleaned: Record<string, number> = {};
+      for (const [k, v] of Object.entries(editingPoolItemRates)) {
+        const n = Number(v);
+        cleaned[k] = Number.isFinite(n) && n >= 0 ? n : 0;
+      }
+      await onUpdateRole(employee.id, "poolItemRates", cleaned);
     }
     if (editingBaseSalary !== undefined)
       await onUpdateRole(
@@ -926,45 +941,54 @@ export default function EmployeeEditModal({
               }
               return (
                 <div className="mb-2.5 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
-                  {/* Exclude from Pool — 3 levels (only for pool-group roles) */}
+                  {/* Per-item Pool Exclusion + Rates (Phase 2) ────────────
+                       UI: radio 3 mode (ไม่ปิด · ปิดบางรายการ · ปิดทั้งหมด)
+                       + checkbox per pool item ตอน mode="ปิดบางรายการ"
+                       + rates loop ตาม pool items ของ role */}
                   {employeeRole?.poolGroup &&
                     (() => {
-                      const currentPoolExclusion =
+                      const poolItems = rolePoolItems(employeeRole);
+                      // currentExclusion: live state · array | "all" | "" | null
+                      const liveExclusion =
                         editingPoolExclusion !== undefined
                           ? editingPoolExclusion
-                          : employee.poolExclusion || "";
-                      const poolExclusionOptions = [
-                        {
-                          id: "",
-                          label: "ไม่ปิด",
-                          Icon: IconCircleCheck,
-                          desc: "ใช้กฎ 80% ปกติทั้ง 2 ฝั่ง",
-                        },
-                        {
-                          id: "sell",
-                          label: "ปิดฝั่งขาย",
-                          Icon: IconDiamond,
-                          desc: "ไม่ได้กองกลางขาย · รับซื้อยังใช้กฎ 80%",
-                        },
-                        {
-                          id: "buy",
-                          label: "ปิดฝั่งรับซื้อ",
-                          Icon: IconShoppingBag,
-                          desc: "ไม่ได้กองกลางรับซื้อ · ขายยังใช้กฎ 80%",
-                        },
-                        {
-                          id: "both",
-                          label: "ปิดทั้งคู่",
-                          Icon: IconLock,
-                          desc: "ไม่ได้กองกลางทั้งหมด · ถ้าขาย < 50% ไม่ได้เงินเดือนพื้นฐาน",
-                        },
-                      ];
+                          : employee.poolExclusion ?? "";
+                      // resolve display mode จาก liveExclusion variant
+                      const mode: "none" | "some" | "all" = (() => {
+                        if (
+                          !liveExclusion ||
+                          (Array.isArray(liveExclusion) &&
+                            liveExclusion.length === 0)
+                        )
+                          return "none";
+                        if (
+                          liveExclusion === "all" ||
+                          liveExclusion === "both"
+                        )
+                          return "all";
+                        // legacy "sell"/"buy" → ตีความเป็น some + selected ids
+                        return "some";
+                      })();
+                      // resolve excluded ids (สำหรับ checkboxes)
+                      const excludedIds = new Set<string>();
+                      if (Array.isArray(liveExclusion)) {
+                        liveExclusion.forEach((id) => excludedIds.add(id));
+                      } else if (liveExclusion === "sell") {
+                        ["normal", "special"].forEach((id) => excludedIds.add(id));
+                      } else if (liveExclusion === "buy") {
+                        excludedIds.add("buy");
+                      }
+                      const setExclusion = (next: any) =>
+                        setEditingRole((prev) => ({
+                          ...prev,
+                          [`${employee.id}:poolExclusion`]: next,
+                        }));
                       return (
                         <div
-                          className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${currentPoolExclusion ? "bg-[#FDECEA80] border-[#C0392B50]" : "bg-cream border-bdr"}`}
+                          className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${mode !== "none" ? "bg-[#FDECEA80] border-[#C0392B50]" : "bg-cream border-bdr"}`}
                         >
                           <div
-                            className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${currentPoolExclusion ? "text-red" : "text-txt"}`}
+                            className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${mode !== "none" ? "text-red" : "text-txt"}`}
                           >
                             <IconBan
                               size={14}
@@ -973,147 +997,162 @@ export default function EmployeeEditModal({
                             />
                             ปิดสิทธิ์ค่าคอมกองกลาง
                           </div>
-                          <div className="flex flex-col gap-[5px]">
-                            {poolExclusionOptions.map((poolExclusionOption) => {
-                              const active =
-                                currentPoolExclusion === poolExclusionOption.id;
-                              return (
-                                <label
-                                  key={poolExclusionOption.id}
-                                  className={`flex items-start gap-2 px-2.5 py-[7px] rounded-[7px] cursor-pointer transition-all duration-150 border ${active ? (poolExclusionOption.id ? "bg-[#C0392B15] border-[#C0392B40]" : "bg-green-lt border-[#1A6B3A30]") : "bg-transparent border-transparent"}`}
-                                >
-                                  <input
-                                    type="radio"
-                                    name={`poolExclusion_${employee.id}`}
-                                    value={poolExclusionOption.id}
-                                    checked={active}
-                                    onChange={() =>
-                                      setEditingRole((previousEditingRole) => ({
-                                        ...previousEditingRole,
-                                        [`${employee.id}:poolExclusion`]:
-                                          poolExclusionOption.id,
-                                      }))
-                                    }
-                                    className={`mt-0.5 cursor-pointer ${poolExclusionOption.id ? "accent-red" : "accent-green"}`}
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <div
-                                      className={`text-sm font-semibold flex items-center gap-1.5 ${active ? (poolExclusionOption.id ? "text-red" : "text-green") : "text-txt"}`}
-                                    >
-                                      <poolExclusionOption.Icon
-                                        size={13}
-                                        strokeWidth={2.4}
-                                      />
-                                      {poolExclusionOption.label}
-                                    </div>
-                                    <div className="text-xs text-txt-soft mt-px leading-normal">
-                                      {poolExclusionOption.desc}
-                                    </div>
-                                  </div>
-                                </label>
-                              );
-                            })}
+                          {/* 3 radio modes */}
+                          <div className="flex flex-col gap-1">
+                            <label className="flex items-center gap-2 cursor-pointer text-sm">
+                              <input
+                                type="radio"
+                                name={`poolExclusion_${employee.id}`}
+                                checked={mode === "none"}
+                                onChange={() => setExclusion("")}
+                                className="accent-green cursor-pointer"
+                              />
+                              <span className={mode === "none" ? "text-green font-bold" : "text-txt"}>
+                                ไม่ปิด
+                              </span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer text-sm">
+                              <input
+                                type="radio"
+                                name={`poolExclusion_${employee.id}`}
+                                checked={mode === "some"}
+                                onChange={() =>
+                                  setExclusion(
+                                    excludedIds.size > 0
+                                      ? [...excludedIds]
+                                      : [],
+                                  )
+                                }
+                                className="accent-red cursor-pointer"
+                              />
+                              <span className={mode === "some" ? "text-red font-bold" : "text-txt"}>
+                                ปิดเฉพาะรายการ
+                              </span>
+                            </label>
+                            {mode === "some" && (
+                              <div className="pl-6 flex flex-col gap-0.5 mb-1">
+                                {poolItems.map((it) => (
+                                  <label
+                                    key={it.id}
+                                    className="flex items-center gap-1.5 cursor-pointer text-xs"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={excludedIds.has(it.id)}
+                                      onChange={(ev) => {
+                                        const next = new Set(excludedIds);
+                                        if (ev.target.checked) next.add(it.id);
+                                        else next.delete(it.id);
+                                        setExclusion([...next]);
+                                      }}
+                                      className="accent-red cursor-pointer"
+                                    />
+                                    <span>{it.label}</span>
+                                    {it.kind === "personal" && (
+                                      <span className="text-[10px] text-txt-soft">
+                                        (ใครขายใครได้)
+                                      </span>
+                                    )}
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                            <label className="flex items-center gap-2 cursor-pointer text-sm">
+                              <input
+                                type="radio"
+                                name={`poolExclusion_${employee.id}`}
+                                checked={mode === "all"}
+                                onChange={() => setExclusion("all")}
+                                className="accent-red cursor-pointer"
+                              />
+                              <span className={mode === "all" ? "text-red font-bold" : "text-txt"}>
+                                ปิดทั้งหมด
+                              </span>
+                            </label>
+                            {mode === "all" && (
+                              <div className="pl-6 text-[11px] text-txt-soft leading-relaxed">
+                                ไม่ได้กองกลางทั้งหมด · ถ้า primary item
+                                ({rolePrimaryPoolItemId(employeeRole)}) &lt; 50% ของ top → ไม่ได้เงินเดือนพื้นฐาน
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
                     })()}
-                  <div className="text-sm font-bold text-maroon mb-2">
-                    <IconCircleDollarSign
-                      size={12}
-                      strokeWidth={2.4}
-                      className="inline mr-1 -mt-px"
-                    />
-                    Rate ค่าคอมต่อชิ้น
-                  </div>
-                  <div className="flex gap-2 mb-2">
-                    <div className="flex-1">
-                      <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                        <IconDiamond
-                          size={12}
-                          strokeWidth={2.4}
-                          className="inline mr-1 -mt-px"
-                        />
-                        ขาย-ทั่วไป
-                      </label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        value={
-                          editingNormalSalePieceRate !== undefined
-                            ? editingNormalSalePieceRate
-                            : (employee.normalSalePieceRate ?? "")
-                        }
-                        onChange={(e) =>
-                          setEditingRole((previousEditingRole) => ({
-                            ...previousEditingRole,
-                            [`${employee.id}:normalSalePieceRate`]:
-                              e.target.value,
-                          }))
-                        }
-                        className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingNormalSalePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                        <IconSparkles
-                          size={12}
-                          strokeWidth={2.4}
-                          className="inline mr-1 -mt-px"
-                        />
-                        ขาย-พิเศษ
-                      </label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        value={
-                          editingSpecialSalePieceRate !== undefined
-                            ? editingSpecialSalePieceRate
-                            : (employee.specialSalePieceRate ?? "")
-                        }
-                        onChange={(e) =>
-                          setEditingRole((previousEditingRole) => ({
-                            ...previousEditingRole,
-                            [`${employee.id}:specialSalePieceRate`]:
-                              e.target.value,
-                          }))
-                        }
-                        className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingSpecialSalePieceRate !== undefined ? "border-gold" : "border-bdr"}`}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-xs text-txt-soft font-semibold mb-1 block">
-                        <IconShoppingBag
-                          size={12}
-                          strokeWidth={2.4}
-                          className="inline mr-1 -mt-px"
-                        />
-                        รับซื้อ
-                      </label>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        value={
-                          editingBuyPieceRate !== undefined
-                            ? editingBuyPieceRate
-                            : (employee.buyPieceRate ?? "")
-                        }
-                        onChange={(e) =>
-                          setEditingRole((previousEditingRole) => ({
-                            ...previousEditingRole,
-                            [`${employee.id}:buyPieceRate`]: e.target.value,
-                          }))
-                        }
-                        className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBuyPieceRate !== undefined ? "border-gold" : "border-bdr"}`}
-                      />
-                    </div>
-                  </div>
-                  <div className="text-xs text-txt-soft text-center mb-2.5">
-                    หน่วย: ฿/ชิ้น
-                  </div>
 
+                  {/* Per-item Pool Rate (loop ตาม role.poolItems) */}
+                  {employeeRole?.poolGroup && (
+                    <>
+                      <div className="text-sm font-bold text-maroon mb-2">
+                        <IconCircleDollarSign
+                          size={12}
+                          strokeWidth={2.4}
+                          className="inline mr-1 -mt-px"
+                        />
+                        Rate ค่าคอมต่อชิ้น (฿/ชิ้น)
+                      </div>
+                      <div className="flex flex-col gap-2 mb-2.5">
+                        {rolePoolItems(employeeRole).map((it) => {
+                          const valueOf = (): number | "" => {
+                            if (
+                              editingPoolItemRates &&
+                              editingPoolItemRates[it.id] !== undefined
+                            )
+                              return editingPoolItemRates[it.id];
+                            const live = employee.poolItemRates?.[it.id];
+                            if (live !== undefined) return live;
+                            // legacy fallback (กรณี data จากก่อน Phase 1A)
+                            if (it.id === "normal")
+                              return employee.normalSalePieceRate ?? "";
+                            if (it.id === "special")
+                              return employee.specialSalePieceRate ?? "";
+                            if (it.id === "buy")
+                              return employee.buyPieceRate ?? "";
+                            return "";
+                          };
+                          const setRate = (raw: string) =>
+                            setEditingRole((prev) => {
+                              const base =
+                                (prev[`${employee.id}:poolItemRates`] as
+                                  | Record<string, number>
+                                  | undefined) ??
+                                employee.poolItemRates ??
+                                {};
+                              return {
+                                ...prev,
+                                [`${employee.id}:poolItemRates`]: {
+                                  ...base,
+                                  [it.id]: parseFloat(raw) || 0,
+                                },
+                              };
+                            });
+                          return (
+                            <div
+                              key={it.id}
+                              className="flex items-center gap-2"
+                            >
+                              <label className="text-sm font-semibold text-txt min-w-[100px]">
+                                {it.label}
+                                {it.kind === "personal" && (
+                                  <span className="text-[10px] text-txt-soft ml-1">
+                                    (ใครขายใครได้)
+                                  </span>
+                                )}
+                              </label>
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                value={valueOf()}
+                                onChange={(ev) => setRate(ev.target.value)}
+                                className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingPoolItemRates?.[it.id] !== undefined ? "border-gold" : "border-bdr"}`}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
               );
             })()}

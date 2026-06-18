@@ -13,7 +13,11 @@ import {
 import { memo, useCallback, useState } from "react";
 import { COLORS } from "../../constants";
 import type { PieceItem } from "../../types";
-import { roleBonusItems, rolePieceItems } from "../../utils/salaryUtils";
+import {
+  roleBonusItems,
+  rolePieceItems,
+  rolePoolItems,
+} from "../../utils/salaryUtils";
 import {
   isRichTextEmpty,
   sanitizeRichText,
@@ -86,6 +90,142 @@ function cleanPieceItems(items: PieceItem[] | undefined): PieceItem[] | null {
   return cleaned.length > 0 ? cleaned : null;
 }
 
+/** sanitize pool items · ตัด label ว่าง · clamp threshold 0-100 · คืน []
+ *  ถ้าไม่เหลือ (pool role ต้องมี items อย่างน้อย 1 ตัว · admin ต้องเพิ่ม)     */
+function cleanPoolItems(
+  items: { id: string; label: string; kind?: string; threshold?: number }[] | undefined,
+): { id: string; label: string; kind: "pool" | "personal"; threshold: number }[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((it) => ({
+      id: String(it.id),
+      label: (it.label || "").trim(),
+      kind: (it.kind === "personal" ? "personal" : "pool") as
+        | "pool"
+        | "personal",
+      threshold:
+        typeof it.threshold === "number"
+          ? Math.max(0, Math.min(100, it.threshold))
+          : 80,
+    }))
+    .filter((it) => it.label && it.id);
+}
+
+/** PoolItemsEditor — แก้ไขรายการ pool sales (label + kind + threshold)
+ *  + primary item picker (สำหรับ losesBaseSalary check)                       */
+function PoolItemsEditor({
+  items,
+  primaryId,
+  onChange,
+  onChangePrimary,
+}: {
+  items: { id: string; label: string; kind: string; threshold: number }[];
+  primaryId: string;
+  onChange: (
+    next: {
+      id: string;
+      label: string;
+      kind: "pool" | "personal";
+      threshold: number;
+    }[],
+  ) => void;
+  onChangePrimary: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      {items.map((item, idx) => (
+        <div
+          key={item.id}
+          className="border-[1.5px] border-gold/40 rounded-lg p-2 bg-gold-pale/30 flex flex-col gap-1.5"
+        >
+          <div className="flex gap-1.5 items-center">
+            <input
+              value={item.label}
+              onChange={(ev) => {
+                const next = items.slice();
+                next[idx] = { ...item, label: ev.target.value } as any;
+                onChange(next as any);
+              }}
+              placeholder='เช่น "ขายทั่วไป", "ขายมือสอง"'
+              maxLength={40}
+              className="flex-1 px-2.5 py-1.5 rounded-md border border-bdr text-sm outline-none font-[inherit] box-border bg-white"
+            />
+            <label className="flex items-center gap-1 cursor-pointer text-xs font-semibold text-maroon">
+              <input
+                type="radio"
+                name="primaryPoolItem"
+                checked={primaryId === item.id}
+                onChange={() => onChangePrimary(item.id)}
+              />
+              <span>หลัก</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => onChange(items.filter((_, i) => i !== idx) as any)}
+              aria-label="ลบรายการ"
+              className="shrink-0 w-7 h-7 rounded-md border border-red/25 bg-red-lt text-red flex items-center justify-center cursor-pointer"
+            >
+              <IconTrash size={11} strokeWidth={2.2} />
+            </button>
+          </div>
+          <div className="flex gap-1.5 items-center text-xs">
+            <select
+              value={item.kind}
+              onChange={(ev) => {
+                const next = items.slice();
+                next[idx] = { ...item, kind: ev.target.value as any } as any;
+                onChange(next as any);
+              }}
+              className="px-1.5 py-1 rounded-md border border-bdr text-xs font-[inherit] bg-white"
+            >
+              <option value="pool">แชร์กองกลาง</option>
+              <option value="personal">ใครขายใครได้</option>
+            </select>
+            <div className="flex items-center gap-1 ml-auto">
+              <span className="text-txt-soft">เกณฑ์เข้ากอง:</span>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={item.threshold}
+                disabled={item.kind === "personal"}
+                onChange={(ev) => {
+                  const next = items.slice();
+                  next[idx] = {
+                    ...item,
+                    threshold: Number(ev.target.value) || 0,
+                  } as any;
+                  onChange(next as any);
+                }}
+                className="w-14 px-1.5 py-1 rounded-md border border-bdr text-xs text-center font-bold font-[inherit] bg-white disabled:bg-cream-dk disabled:text-txt-soft"
+              />
+              <span className="text-txt-soft">%</span>
+            </div>
+          </div>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() =>
+          onChange([
+            ...items,
+            {
+              id: `p_${Date.now()}`,
+              label: "",
+              kind: "pool" as const,
+              threshold: 80,
+            },
+          ] as any)
+        }
+        className="self-start px-2.5 py-1.5 rounded-lg border border-dashed border-gold/50 bg-gold-pale/20 text-maroon text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center gap-1"
+      >
+        <IconPlus size={12} strokeWidth={2.6} />
+        เพิ่มรายการ pool
+      </button>
+    </div>
+  );
+}
+
 /** normalize ฟิลด์ "หน้าที่หลัก" ก่อนเก็บ:
  *  - ว่างจริง (เคลียร์แล้วเหลือ <br>) → null
  *  - มีเนื้อหา → sanitize ทันทีตอน write (single source of truth ปลอดภัย
@@ -104,13 +244,26 @@ export default function RolesAdminPanel({
   onDeleteRole,
   showToast,
 }) {
-  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, pieceItems, bonusItems, mainDuties}}
+  const [editing, setEditing] = useState({}); // {roleId: {name, poolGroup, pieceItems, bonusItems, poolItems, primaryPoolItemId, mainDuties}}
   const [newRole, setNewRole] = useState({
     name: "",
     poolGroup: "",
     pieceItems: [] as PieceItem[],
     // ตำแหน่งใหม่ — bonusItems ว่าง (admin เพิ่มเอง · [] = ซ่อน section)
     bonusItems: [] as PieceItem[],
+    // pool items (สำหรับ pool sales role) — default 3 รายการ ให้ admin
+    // ลบ/เพิ่ม/แก้ได้ตามต้องการ · "ขายพิเศษ" kind=personal (ใครขายใครได้)
+    poolItems: [
+      { id: "normal", label: "ขายทั่วไป", kind: "pool" as const, threshold: 80 },
+      {
+        id: "special",
+        label: "ขายพิเศษ",
+        kind: "personal" as const,
+        threshold: 80,
+      },
+      { id: "buy", label: "รับซื้อ", kind: "pool" as const, threshold: 80 },
+    ],
+    primaryPoolItemId: "normal" as string,
     mainDuties: "",
   });
   const [showAdd, setShowAdd] = useState(false);
@@ -141,6 +294,15 @@ export default function RolesAdminPanel({
         poolGroup: poolValue,
         pieceItems: pieceItemsValue,
         bonusItems: bonusItemsValue,
+        // pool items — เก็บ array เสมอถ้า pool role · null ถ้าไม่ใช่ pool
+        poolItems: poolValue
+          ? cleanPoolItems(e.poolItems !== undefined ? e.poolItems : (rolePoolItems(current) as any))
+          : null,
+        primaryPoolItemId: poolValue
+          ? e.primaryPoolItemId !== undefined
+            ? e.primaryPoolItemId || null
+            : current.primaryPoolItemId || null
+          : null,
         // ย้ายมา pieceItems แล้ว → ล้าง legacy pieceLabel กัน migrate-on-read
         // หยิบ label เก่ามาซ้ำ
         pieceLabel: null,
@@ -170,6 +332,8 @@ export default function RolesAdminPanel({
         // pieceItems ไม่ใช้ใน pool sales (มี normal/special/buy แล้ว)
         pieceItems: poolValue ? null : cleanPieceItems(newRole.pieceItems),
         bonusItems: cleanPieceItems(newRole.bonusItems) ?? [],
+        poolItems: poolValue ? cleanPoolItems(newRole.poolItems) : null,
+        primaryPoolItemId: poolValue ? newRole.primaryPoolItemId || null : null,
         pieceLabel: null,
         mainDuties: cleanMainDuties(newRole.mainDuties),
       });
@@ -178,6 +342,17 @@ export default function RolesAdminPanel({
         poolGroup: "",
         pieceItems: [],
         bonusItems: [],
+        poolItems: [
+          { id: "normal", label: "ขายทั่วไป", kind: "pool", threshold: 80 },
+          {
+            id: "special",
+            label: "ขายพิเศษ",
+            kind: "personal",
+            threshold: 80,
+          },
+          { id: "buy", label: "รับซื้อ", kind: "pool", threshold: 80 },
+        ],
+        primaryPoolItemId: "normal",
         mainDuties: "",
       });
       setShowAdd(false);
@@ -259,7 +434,7 @@ export default function RolesAdminPanel({
             placeholder='กลุ่มกองกลาง (ทิ้งว่างถ้าไม่แชร์ค่าคอม) เช่น "sales"'
             className="w-full px-3 py-[9px] rounded-[9px] border border-bdr text-sm outline-none font-[Prompt,monospace] box-border mb-2.5"
           />
-          {!newRole.poolGroup.trim() && (
+          {!newRole.poolGroup.trim() ? (
             <div className="mb-2.5">
               <label className="text-xs text-txt-soft font-semibold mb-1 block">
                 รายการค่าคอมต่อชิ้น (ไม่เพิ่ม = ไม่มีค่าคอม)
@@ -270,6 +445,23 @@ export default function RolesAdminPanel({
                 items={newRole.pieceItems}
                 onChange={(next) =>
                   setNewRole({ ...newRole, pieceItems: next })
+                }
+              />
+            </div>
+          ) : (
+            <div className="mb-2.5">
+              <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                รายการ pool sales (custom · เลือก "หลัก" = primary item สำหรับ
+                กฎ &lt; 50% ขาด base salary ตอน "ปิดทั้งหมด")
+              </label>
+              <PoolItemsEditor
+                items={newRole.poolItems}
+                primaryId={newRole.primaryPoolItemId}
+                onChange={(next) =>
+                  setNewRole({ ...newRole, poolItems: next })
+                }
+                onChangePrimary={(id) =>
+                  setNewRole({ ...newRole, primaryPoolItemId: id })
                 }
               />
             </div>
@@ -420,7 +612,7 @@ export default function RolesAdminPanel({
                           e?.poolGroup !== undefined
                             ? e.poolGroup
                             : rl.poolGroup || ""
-                        ).trim() && (
+                        ).trim() ? (
                           <div className="mb-2.5">
                             <label className="text-xs text-txt-soft font-semibold mb-1 block">
                               รายการค่าคอมต่อชิ้น (ไม่เพิ่ม = ไม่มีค่าคอม)
@@ -439,6 +631,42 @@ export default function RolesAdminPanel({
                                   [rl.id]: {
                                     ...(p[rl.id] || rl),
                                     pieceItems: next,
+                                  },
+                                }))
+                              }
+                            />
+                          </div>
+                        ) : (
+                          <div className="mb-2.5">
+                            <label className="text-xs text-txt-soft font-semibold mb-1 block">
+                              รายการ pool sales (เลือก "หลัก" = primary)
+                            </label>
+                            <PoolItemsEditor
+                              items={
+                                (e?.poolItems !== undefined
+                                  ? e.poolItems
+                                  : rolePoolItems(rl)) as any
+                              }
+                              primaryId={
+                                e?.primaryPoolItemId !== undefined
+                                  ? e.primaryPoolItemId || ""
+                                  : rl.primaryPoolItemId || ""
+                              }
+                              onChange={(next) =>
+                                setEditing((p) => ({
+                                  ...p,
+                                  [rl.id]: {
+                                    ...(p[rl.id] || rl),
+                                    poolItems: next,
+                                  },
+                                }))
+                              }
+                              onChangePrimary={(id) =>
+                                setEditing((p) => ({
+                                  ...p,
+                                  [rl.id]: {
+                                    ...(p[rl.id] || rl),
+                                    primaryPoolItemId: id,
                                   },
                                 }))
                               }
@@ -530,6 +758,11 @@ export default function RolesAdminPanel({
                                 // default [invite, transfer] ถ้า role doc
                                 // ไม่มี field (legacy) · admin แก้ได้
                                 bonusItems: roleBonusItems(rl),
+                                // seed pool items จาก rolePoolItems() · default
+                                // 3 รายการ (legacy migration) ถ้าไม่มี
+                                poolItems: rolePoolItems(rl),
+                                primaryPoolItemId:
+                                  rl.primaryPoolItemId || "normal",
                                 // sanitize ก่อนใส่ editor — กัน HTML ดิบ/พิษ
                                 // จาก DB รันใน contentEditable ฝั่ง admin
                                 mainDuties: sanitizeRichText(
