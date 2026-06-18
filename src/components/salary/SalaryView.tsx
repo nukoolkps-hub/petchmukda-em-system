@@ -352,6 +352,11 @@ export default function SalaryView({
               </span>
             </div>
             <div className="p-4 flex flex-col gap-2.5">
+              {/* ─── รายรับ ─── */}
+              <div className="text-xs font-bold text-green mb-0.5 px-0.5">
+                รายรับ
+              </div>
+
               {/* base */}
               <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
                 <IconBuildingBank
@@ -463,6 +468,60 @@ export default function SalaryView({
                 </div>
               )}
 
+              {/* รายรับประจำ (recurring incomes) */}
+              {previewSalary.recurringIncomes.map((it: any) => (
+                <div
+                  key={`ri-${it.label}`}
+                  className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk"
+                >
+                  <IconPlus
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.gold}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">{it.label}</div>
+                    <div className="text-[11px] text-txt-soft">
+                      รายรับประจำเดือน
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-green whitespace-nowrap">
+                    + {formatThaiNumber(it.amount)} ฿
+                  </span>
+                </div>
+              ))}
+
+              {/* ─── รายการหัก ─── */}
+              {(previewSalary.socialSecurity > 0 ||
+                previewSalary.overQuotaDeduction > 0 ||
+                previewSalary.recurringDeductions.length > 0 ||
+                previewSalary.loanDeduction > 0 ||
+                previewSalary.advanceDeduction > 0) && (
+                <div className="text-xs font-bold text-red mt-2 mb-0.5 px-0.5">
+                  รายการหัก
+                </div>
+              )}
+
+              {/* ประกันสังคม */}
+              {previewSalary.socialSecurity > 0 && (
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                  <IconBuildingBank
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.red}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">ประกันสังคม</div>
+                    <div className="text-[11px] text-txt-soft">
+                      หักรายเดือน
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-red whitespace-nowrap">
+                    − {formatThaiNumber(previewSalary.socialSecurity)} ฿
+                  </span>
+                </div>
+              )}
+
               {/* over-quota deduction (ถ้ามี) */}
               {previewSalary.overQuotaDeduction > 0 && (
                 <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
@@ -486,6 +545,69 @@ export default function SalaryView({
                 </div>
               )}
 
+              {/* รายการหักประจำ (recurring deductions) */}
+              {previewSalary.recurringDeductions.map((it: any) => (
+                <div
+                  key={`rd-${it.label}`}
+                  className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk"
+                >
+                  <IconMinus
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.red}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">{it.label}</div>
+                    <div className="text-[11px] text-txt-soft">
+                      หักประจำเดือน
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-red whitespace-nowrap">
+                    − {formatThaiNumber(it.amount)} ฿
+                  </span>
+                </div>
+              ))}
+
+              {/* เบิกล่วงหน้า */}
+              {previewSalary.advanceDeduction > 0 && (
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                  <IconHandCoins
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.red}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">เบิกล่วงหน้า</div>
+                    <div className="text-[11px] text-txt-soft">
+                      หักเงินที่เบิกไปก่อน
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-red whitespace-nowrap">
+                    − {formatThaiNumber(previewSalary.advanceDeduction)} ฿
+                  </span>
+                </div>
+              )}
+
+              {/* ผ่อนเงินกู้ */}
+              {previewSalary.loanDeduction > 0 && (
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                  <IconHandCoins
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.red}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">ผ่อนเงินกู้</div>
+                    <div className="text-[11px] text-txt-soft">
+                      หักตามรอบที่ตั้งไว้
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-red whitespace-nowrap">
+                    − {formatThaiNumber(previewSalary.loanDeduction)} ฿
+                  </span>
+                </div>
+              )}
+
               {/* preview total */}
               <div className="flex items-center justify-between pt-2 mt-1 border-t border-bdr">
                 <span className="text-sm font-bold text-txt">
@@ -495,14 +617,19 @@ export default function SalaryView({
                   {formatThaiNumber(
                     previewSalary.baseSalary +
                       previewSalary.attendanceBonus +
-                      (previewSalary.extraOpenSaturdayBonus || 0) -
-                      previewSalary.overQuotaDeduction,
+                      (previewSalary.extraOpenSaturdayBonus || 0) +
+                      previewSalary.recurringIncomesTotal -
+                      previewSalary.socialSecurity -
+                      previewSalary.overQuotaDeduction -
+                      previewSalary.recurringDeductionsTotal -
+                      previewSalary.advanceDeduction -
+                      previewSalary.loanDeduction,
                   )}{" "}
                   ฿
                 </span>
               </div>
               <div className="text-[11px] text-txt-soft text-center mt-1">
-                * ยังไม่รวมค่าคอมขาย / รายการเสริมอื่นๆ
+                * ยังไม่รวมค่าคอมขาย / รายการที่ ADMIN จะเพิ่ม
               </div>
             </div>
           </div>
