@@ -1050,7 +1050,7 @@ export default function EmployeeEditModal({
                                     <span>{it.label}</span>
                                     {it.kind === "personal" && (
                                       <span className="text-[10px] text-txt-soft">
-                                        (ใครขายใครได้)
+                                        (ไม่แชร์กองกลาง)
                                       </span>
                                     )}
                                   </label>
@@ -1135,7 +1135,7 @@ export default function EmployeeEditModal({
                                 {it.label}
                                 {it.kind === "personal" && (
                                   <span className="text-[10px] text-txt-soft ml-1">
-                                    (ใครขายใครได้)
+                                    (ไม่แชร์กองกลาง)
                                   </span>
                                 )}
                               </label>
