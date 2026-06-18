@@ -149,12 +149,18 @@ export default function PositionRateCard({ employee, role }: Props) {
           value={getEffectiveBaseSalary(employee)}
           suffix="฿/เดือน"
         />
+        {/* ── หัวข้อ "ค่าคอม" — โผล่เฉพาะตำแหน่งที่มี piece commission ── */}
+        {(role.poolGroup ||
+          (rolePaysPieceCommission(role) && rolePieceItems(role).length > 0)) && (
+          <div className="text-[11px] font-extrabold text-maroon uppercase tracking-wider pt-1 mt-1 border-t border-bdr/40">
+            ค่าคอม
+          </div>
+        )}
         {role.poolGroup
           ? // pool sales — loop poolItems (รวม custom items ที่ admin เพิ่ม)
             // kind=pool → label "(กองกลาง)" · kind=personal → "(ไม่แชร์)"
             // strike-through เฉพาะ kind=pool ที่ถูก admin exclude · personal
-            // items ใช้ "(ไม่แชร์)" suffix พอ ไม่ต้อง strike (เพราะ inherent ไม่
-            // เข้ากองอยู่แล้ว ไม่ใช่ admin block)
+            // items ใช้ "(ไม่แชร์)" suffix พอ ไม่ต้อง strike
             poolItemsCfg.map((item) => {
               const excluded =
                 item.kind === "pool" && poolExcludedIds.has(item.id);
@@ -181,7 +187,12 @@ export default function PositionRateCard({ employee, role }: Props) {
                 />
               ))
             : null}
-        {/* โบนัสอื่นๆ (multi-item) — เฉพาะตำแหน่งที่มีค่าคอมรายชิ้น (รวม pool sales) */}
+        {/* ── หัวข้อ "โบนัสอื่นๆ" — โผล่เฉพาะถ้ามี bonus items ── */}
+        {rolePaysPieceCommission(role) && roleBonusItems(role).length > 0 && (
+          <div className="text-[11px] font-extrabold text-maroon uppercase tracking-wider pt-1 mt-1 border-t border-bdr/40">
+            โบนัสอื่นๆ
+          </div>
+        )}
         {rolePaysPieceCommission(role) &&
           roleBonusItems(role).map((item) => (
             <RateRow
