@@ -6,19 +6,14 @@ import {
   CalendarDays as IconCalendar,
   Check as IconCheck,
   ChevronDown as IconChevronDown,
-  CircleCheck as IconCircleCheck,
   CircleDollarSign as IconCircleDollarSign,
   Copy as IconCopy,
-  Diamond as IconDiamond,
   Lightbulb as IconLightbulb,
   Lock as IconLock,
   MessageCircle as IconMessageCircle,
   Package as IconPackage,
   Pencil as IconPencil,
   Plus as IconPlus,
-  RefreshCw as IconRefresh,
-  ShoppingBag as IconShoppingBag,
-  Sparkles as IconSparkles,
   Ticket as IconTicket,
   Trash2 as IconTrash,
   User as IconUser,
@@ -75,14 +70,6 @@ export default function EmployeeEditModal({
   onRequestDelete,
 }: EmployeeEditModalProps) {
   const [activeTab, setActiveTab] = useState<"personal" | "salary">("personal");
-  const editingNormalSalePieceRate =
-    editingRole[`${employee.id}:normalSalePieceRate`];
-  const editingSpecialSalePieceRate =
-    editingRole[`${employee.id}:specialSalePieceRate`];
-  const editingBuyPieceRate = editingRole[`${employee.id}:buyPieceRate`];
-  const editingInvitePieceRate = editingRole[`${employee.id}:invitePieceRate`];
-  const editingTransferPieceRate =
-    editingRole[`${employee.id}:transferPieceRate`];
   const editingSinglePieceRate = editingRole[`${employee.id}:singlePieceRate`];
   // bonusRates (multi-item โบนัสอื่นๆ) — map เดียวเหมือน pieceRates
   const editingBonusRates = editingRole[`${employee.id}:bonusRates`] as
@@ -138,11 +125,6 @@ export default function EmployeeEditModal({
     `${employee.id}:annualRaiseAmount`
   ] as string | undefined;
   const dirty =
-    editingNormalSalePieceRate !== undefined ||
-    editingSpecialSalePieceRate !== undefined ||
-    editingBuyPieceRate !== undefined ||
-    editingInvitePieceRate !== undefined ||
-    editingTransferPieceRate !== undefined ||
     editingSinglePieceRate !== undefined ||
     editingPieceRates !== undefined ||
     editingBonusRates !== undefined ||
@@ -212,36 +194,6 @@ export default function EmployeeEditModal({
   const saveAll = async () => {
     if (editingName !== undefined && editingName.trim() !== "")
       await onUpdateRole(employee.id, "name", editingName.trim());
-    if (editingNormalSalePieceRate !== undefined)
-      await onUpdateRole(
-        employee.id,
-        "normalSalePieceRate",
-        parseFloat(editingNormalSalePieceRate) || 0,
-      );
-    if (editingSpecialSalePieceRate !== undefined)
-      await onUpdateRole(
-        employee.id,
-        "specialSalePieceRate",
-        parseFloat(editingSpecialSalePieceRate) || 0,
-      );
-    if (editingBuyPieceRate !== undefined)
-      await onUpdateRole(
-        employee.id,
-        "buyPieceRate",
-        parseFloat(editingBuyPieceRate) || 0,
-      );
-    if (editingInvitePieceRate !== undefined)
-      await onUpdateRole(
-        employee.id,
-        "invitePieceRate",
-        parseFloat(editingInvitePieceRate) || 0,
-      );
-    if (editingTransferPieceRate !== undefined)
-      await onUpdateRole(
-        employee.id,
-        "transferPieceRate",
-        parseFloat(editingTransferPieceRate) || 0,
-      );
     if (editingSinglePieceRate !== undefined)
       await onUpdateRole(
         employee.id,
