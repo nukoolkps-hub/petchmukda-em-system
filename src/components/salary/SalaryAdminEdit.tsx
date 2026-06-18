@@ -39,6 +39,7 @@ import {
   resolvePoolItemRate,
   rolePaysPieceCommission,
   rolePoolItems,
+  rolePrimaryPoolItemId,
 } from "../../utils/salaryUtils";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -1044,12 +1045,19 @@ export default function SalaryAdminEdit({
             {(() => {
               const poolItems = rolePoolItems(employeeRole);
               const exc = employeeInfo?.poolExclusion;
-              const { excludedIds } = resolvePoolExclusionItemIds(
+              const { excludedIds, isAll } = resolvePoolExclusionItemIds(
                 exc as any,
                 poolItems,
               );
+              const primaryItemId = rolePrimaryPoolItemId(employeeRole);
               return poolItems.map((it) => {
-                const poolDisabled = excludedIds.has(it.id) && it.kind === "pool";
+                // primary item ต้อง input ได้แม้ตอน isAll (ปิดทั้งหมด) เพราะ
+                // ต้องใช้ pieces เพื่อเช็คเกณฑ์ < 50% → losesBaseSalary
+                const isPrimaryWhileAll = isAll && it.id === primaryItemId;
+                const poolDisabled =
+                  excludedIds.has(it.id) &&
+                  it.kind === "pool" &&
+                  !isPrimaryWhileAll;
                 const disabled = poolDisabled || locked;
                 const value = poolDisabled
                   ? ""
@@ -1088,6 +1096,11 @@ export default function SalaryAdminEdit({
                             ถูกปิด
                           </span>
                         )}
+                        {isPrimaryWhileAll && (
+                          <span className="text-[10px] px-1.5 py-px rounded-lg text-amber font-bold bg-amber-lt/60 inline-flex items-center gap-0.5">
+                            หลัก · ใช้เช็ค 50%
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-txt-soft">
                         Rate:{" "}
@@ -1113,6 +1126,11 @@ export default function SalaryAdminEdit({
                         </span>
                       </div>
                     </div>
+                    {isPrimaryWhileAll && (
+                      <div className="text-[11px] text-amber mt-1.5 text-center font-semibold">
+                        ⚠ ใส่จำนวนเพื่อตรวจสอบเกณฑ์ &lt; 50% (ไม่นับเป็นค่าคอม)
+                      </div>
+                    )}
                   </div>
                 );
               });
