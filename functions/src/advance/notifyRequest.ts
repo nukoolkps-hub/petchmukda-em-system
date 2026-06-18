@@ -23,30 +23,67 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 	}
 
 	const uid = request.auth.uid;
-	// lookup employee จาก lineUserId · ใช้เป็นแหล่งข้อมูลรองว่า user คนนี้คือใคร
-	// ถ้าหาไม่เจอ (เช่น lineUserId field ไม่ตรง · พนักงานเข้าผ่าน dev mode ·
-	// auth uid ต่างจาก lineUserId) → ไม่ throw · ใช้ payload data ที่ client
-	// ส่งมาเป็น fallback แทน (auth ก็ผ่านแล้วว่า login)
-	const employeeSnap = await getAppFirestore()
+	const db = getAppFirestore();
+
+	type EmployeeData = {
+		name?: string;
+		bank?: string;
+		bankAccountNumber?: string;
+		lineUserId?: string;
+	};
+
+	// lookup employee · primary path: where("lineUserId", "==", uid)
+	let verifiedEmployee: EmployeeData | null = null;
+	const employeeSnap = await db
 		.collection("employees")
 		.where("lineUserId", "==", uid)
 		.limit(1)
 		.get();
-	const verifiedEmployee = employeeSnap.empty
-		? null
-		: (employeeSnap.docs[0].data() as {
-				name?: string;
-				bank?: string;
-				bankAccountNumber?: string;
-			});
+	if (!employeeSnap.empty) {
+		verifiedEmployee = employeeSnap.docs[0].data() as EmployeeData;
+	}
+
+	const payload = parseNotifyAdvanceRequestPayload(request.data);
+	const { amount, reason, month, submittedAt, requestId } = payload;
+
+	// self-heal: ถ้าหาไม่เจอด้วย lineUserId · ลองใช้ requestId เข้าหา advance doc
+	// → อ่าน employeeId · เปิด employee doc · update lineUserId ให้ตรงกับ uid
+	// ตอนนี้ (เพื่อให้รอบหน้าใช้ verified path ได้) · นี่ทำให้ field สะอาดขึ้น
+	// อัตโนมัติเมื่อพนักงานยื่นเบิกครั้งแรกหลังเชื่อม LINE
+	if (!verifiedEmployee && requestId) {
+		try {
+			const advanceRef = db.collection("advances").doc(String(requestId));
+			const advanceSnap = await advanceRef.get();
+			const employeeId = (
+				advanceSnap.data() as { employeeId?: string } | undefined
+			)?.employeeId;
+			if (employeeId) {
+				const empRef = db.collection("employees").doc(employeeId);
+				const empSnap = await empRef.get();
+				if (empSnap.exists) {
+					const empData = empSnap.data() as EmployeeData;
+					verifiedEmployee = empData;
+					if (empData.lineUserId !== uid) {
+						await empRef.update({ lineUserId: uid });
+						console.log(
+							`[notifyAdvanceRequest] self-healed lineUserId for employee ${employeeId} (was=${empData.lineUserId ?? "<empty>"}, now=${uid})`,
+						);
+					}
+				}
+			}
+		} catch (err) {
+			console.warn(
+				"[notifyAdvanceRequest] self-heal lookup failed:",
+				err instanceof Error ? err.message : err,
+			);
+		}
+	}
+
 	if (!verifiedEmployee) {
 		console.warn(
 			`[notifyAdvanceRequest] no employee match for uid=${uid} · falling back to payload data`,
 		);
 	}
-
-	const payload = parseNotifyAdvanceRequestPayload(request.data);
-	const { amount, reason, month, submittedAt, requestId } = payload;
 
 	const employeeName = verifiedEmployee?.name || payload.employeeName || "-";
 	const bank = verifiedEmployee?.bank ?? payload.bank;
