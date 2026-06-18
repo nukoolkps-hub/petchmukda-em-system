@@ -258,8 +258,12 @@ export default function SalaryView({
   const [customPurpose, setCustomPurpose] = useState("");
 
   function handlePrintCert() {
-    if (!data) {
-      showToast?.("ไม่มีข้อมูลสำหรับสร้างหนังสือรับรอง");
+    // ใบรับรองเงินเดือนใช้ employeeInfo (เงินเดือนพื้นฐาน · ตำแหน่ง · ชื่อ ·
+    // วันเริ่มงาน) จาก admin config — ไม่ต้องรอ salary doc รายเดือน
+    // (printSalaryCertificate ใช้ employeeInfo.baseSalary ก่อน · data?.baseSalary
+    // เป็น fallback เท่านั้น)
+    if (!employeeInfo) {
+      showToast?.("ไม่มีข้อมูลพนักงาน — ลองเข้าใหม่ภายหลัง");
       return;
     }
     setShowCertModal(true);
@@ -313,6 +317,104 @@ export default function SalaryView({
   // PoolFlowModal ล็อกด้วย isConfirmed prop (ปิดแผนผังจนกว่าจะ confirm)
   const isMonthConfirmed = !!payrollConfirms?.[selectedMonth]?.confirmedAt;
   const selectedMonthLabel = formatYmThai(selectedMonth);
+
+  // ใบรับรอง modal — render ที่เดียวกันในทุก state · ใช้ใน empty + main view
+  // เพื่อให้ปุ่ม "ใบรับรอง" บน MobileHeader เปิด modal ได้แม้ยังไม่มี salary doc
+  const certModal = showCertModal && (
+    <BaseModal onClose={() => setShowCertModal(false)}>
+      <div className="bg-cream rounded-2xl p-5 w-full">
+        <div className="text-lg font-bold text-maroon mb-1 flex items-center gap-1.5">
+          <IconFileText size={18} strokeWidth={2.4} />
+          พิมพ์ใบรับรองเงินเดือน
+        </div>
+        <div className="text-sm text-txt-mid mb-3.5">
+          ระบุวัตถุประสงค์ — ข้อความจะถูกพิมพ์ลงในใบรับรอง
+        </div>
+
+        <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5">
+          เลือกด่วน
+        </div>
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          {CERT_PURPOSE_OPTIONS.map((p) => {
+            const active = selectedPreset === p && !customPurpose.trim();
+            return (
+              <button
+                key={p}
+                type="button"
+                onClick={() => {
+                  setSelectedPreset(p);
+                  setCustomPurpose("");
+                }}
+                className={`px-3 py-2 rounded-lg text-sm font-semibold text-left border-[1.5px] cursor-pointer font-[inherit] ${
+                  active
+                    ? "bg-maroon text-white border-maroon"
+                    : "bg-white text-txt border-bdr"
+                }`}
+              >
+                {p}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedPreset(null);
+            setCustomPurpose("");
+          }}
+          className={`w-full px-3 py-2 mb-4 rounded-lg text-sm font-semibold border-[1.5px] cursor-pointer font-[inherit] ${
+            selectedPreset === null && !customPurpose.trim()
+              ? "bg-maroon text-white border-maroon"
+              : "bg-white text-txt-mid border-dashed border-bdr"
+          }`}
+        >
+          — ไม่ระบุวัตถุประสงค์ —
+        </button>
+
+        <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5 flex items-center gap-1">
+          <IconPencil size={12} strokeWidth={2.4} />
+          กำหนดเอง
+        </div>
+        <input
+          type="text"
+          value={customPurpose}
+          onChange={(e) => setCustomPurpose(e.target.value)}
+          placeholder="พิมพ์วัตถุประสงค์ที่ต้องการ..."
+          className="w-full px-3 py-2.5 mb-4 rounded-lg border-[1.5px] border-bdr text-sm font-[inherit] bg-white outline-none focus:border-maroon"
+        />
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setShowCertModal(false)}
+            className="flex-1 py-2.5 rounded-lg bg-white text-txt-mid text-sm font-bold border border-bdr cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
+          >
+            ยกเลิก
+          </button>
+          <button
+            type="button"
+            onClick={confirmPrintCert}
+            disabled={issuingCert}
+            className={`flex-1 py-2.5 rounded-lg bg-maroon text-white text-sm font-bold border-none font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25] ${issuingCert ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+          >
+            <span className="inline-flex items-center gap-1.5">
+              {issuingCert ? (
+                <>
+                  <IconClock size={14} strokeWidth={2.4} />
+                  กำลังออกเลขที่...
+                </>
+              ) : (
+                <>
+                  <IconPrinter size={14} strokeWidth={2.4} />
+                  พิมพ์
+                </>
+              )}
+            </span>
+          </button>
+        </div>
+      </div>
+    </BaseModal>
+  );
 
   if (!data || !salaryCalculation) {
     return (
@@ -852,7 +954,7 @@ export default function SalaryView({
           * ค่าคอม + รายการที่ ADMIN กรอกเอง จะเพิ่มหลังยืนยันยอด
         </div>
 
-        {/* AdvanceHistoryModal · ปุ่ม "ประวัติเบิกเงิน" เปิดได้ใน empty state ด้วย ·
+        {/* AdvanceHistoryModal + Cert Modal · ใช้ใน empty state ด้วย ·
             ถ้าไม่ render ที่นี่ ปุ่มจะกดแล้วไม่มีอะไรเกิดขึ้น */}
         {showHistory && (
           <AdvanceHistoryModal
@@ -861,6 +963,7 @@ export default function SalaryView({
             onClose={() => setShowHistory(false)}
           />
         )}
+        {certModal}
       </div>
     );
   }
@@ -1432,102 +1535,7 @@ export default function SalaryView({
         ข้อมูลกำหนดโดย ADMIN
       </div>
 
-      {showCertModal && (
-        <BaseModal onClose={() => setShowCertModal(false)}>
-          <div className="bg-cream rounded-2xl p-5 w-full">
-            <div className="text-lg font-bold text-maroon mb-1 flex items-center gap-1.5">
-              <IconFileText size={18} strokeWidth={2.4} />
-              พิมพ์ใบรับรองเงินเดือน
-            </div>
-            <div className="text-sm text-txt-mid mb-3.5">
-              ระบุวัตถุประสงค์ — ข้อความจะถูกพิมพ์ลงในใบรับรอง
-            </div>
-
-            <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5">
-              เลือกด่วน
-            </div>
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              {CERT_PURPOSE_OPTIONS.map((p) => {
-                // preset ถือว่า active เฉพาะตอน user ยังไม่พิมพ์ custom
-                const active = selectedPreset === p && !customPurpose.trim();
-                return (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => {
-                      setSelectedPreset(p);
-                      setCustomPurpose("");
-                    }}
-                    className={`px-3 py-2 rounded-lg text-sm font-semibold text-left border-[1.5px] cursor-pointer font-[inherit] ${
-                      active
-                        ? "bg-maroon text-white border-maroon"
-                        : "bg-white text-txt border-bdr"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedPreset(null);
-                setCustomPurpose("");
-              }}
-              className={`w-full px-3 py-2 mb-4 rounded-lg text-sm font-semibold border-[1.5px] cursor-pointer font-[inherit] ${
-                selectedPreset === null && !customPurpose.trim()
-                  ? "bg-maroon text-white border-maroon"
-                  : "bg-white text-txt-mid border-dashed border-bdr"
-              }`}
-            >
-              — ไม่ระบุวัตถุประสงค์ —
-            </button>
-
-            <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5 flex items-center gap-1">
-              <IconPencil size={12} strokeWidth={2.4} />
-              กำหนดเอง
-            </div>
-            <input
-              type="text"
-              value={customPurpose}
-              onChange={(e) => setCustomPurpose(e.target.value)}
-              placeholder="พิมพ์วัตถุประสงค์ที่ต้องการ..."
-              className="w-full px-3 py-2.5 mb-4 rounded-lg border-[1.5px] border-bdr text-sm font-[inherit] bg-white outline-none focus:border-maroon"
-            />
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setShowCertModal(false)}
-                className="flex-1 py-2.5 rounded-lg bg-white text-txt-mid text-sm font-bold border border-bdr cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="button"
-                onClick={confirmPrintCert}
-                disabled={issuingCert}
-                className={`flex-1 py-2.5 rounded-lg bg-maroon text-white text-sm font-bold border-none font-[inherit] shadow-[0_3px_10px_var(--color-maroon)/0.25] ${issuingCert ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
-              >
-                <span className="inline-flex items-center gap-1.5">
-                  {issuingCert ? (
-                    <>
-                      <IconClock size={14} strokeWidth={2.4} />
-                      กำลังออกเลขที่...
-                    </>
-                  ) : (
-                    <>
-                      <IconPrinter size={14} strokeWidth={2.4} />
-                      พิมพ์
-                    </>
-                  )}
-                </span>
-              </button>
-            </div>
-          </div>
-        </BaseModal>
-      )}
+      {certModal}
 
       {showHistory &&
         (() => {
