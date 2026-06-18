@@ -117,6 +117,24 @@ export default function PayrollSummaryPanel({
       }
     });
 
+    // คำนวณ pool shares "ครั้งเดียวต่อกลุ่ม" (ไม่ใช่ต่อคน) — เดิมเรียก
+    // computePoolSharesForGroup ใน loop ต่อพนักงาน = O(G²) ต่อกลุ่ม ·
+    // hoist ออกมา cache ตาม poolGroup → O(G) + เลขชุดเดียวกันทั้งกลุ่ม
+    const sharesByPoolGroup: Record<string, Record<string, any>> = {};
+    for (const [poolGroup, groupIds] of Object.entries(groupedEmpsByPool)) {
+      sharesByPoolGroup[poolGroup] = computePoolSharesForGroup({
+        groupEmployeeIds: groupIds as string[],
+        salaryData,
+        allLeaves,
+        yearMonth: selectedMonth,
+        employeeDirectory,
+        roles,
+        poolAdjustment: poolAdjustments?.[selectedMonth] || null,
+        poolGroup,
+        storeCalendar,
+      });
+    }
+
     // compute each employee's netSalary salary
     return activeEmps
       .map((employee) => {
@@ -140,19 +158,8 @@ export default function PayrollSummaryPanel({
 
         let poolShare = null;
         if (employeeRole?.poolGroup) {
-          const groupIds = groupedEmpsByPool[employeeRole.poolGroup] || [];
-          const shares = computePoolSharesForGroup({
-            groupEmployeeIds: groupIds,
-            salaryData,
-            allLeaves,
-            yearMonth: selectedMonth,
-            employeeDirectory,
-            roles,
-            poolAdjustment: poolAdjustments?.[selectedMonth] || null,
-            poolGroup: employeeRole.poolGroup,
-            storeCalendar,
-          });
-          poolShare = shares[employee.id];
+          poolShare =
+            sharesByPoolGroup[employeeRole.poolGroup]?.[employee.id] ?? null;
         }
         // รายการยกเว้นค่าคอม "ระดับ piece" สำหรับพนักงานคนนี้ (multi-item)
         const monthExclusions = (poolAdjustments?.[selectedMonth]?.items || [])
