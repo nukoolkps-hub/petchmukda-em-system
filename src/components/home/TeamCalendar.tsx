@@ -323,7 +323,16 @@ export default function TeamCalendar({
                   </div>
                 )}
                 {hasLeaveEntries && (
-                  <div className="flex flex-wrap gap-px justify-center mt-[3px]">
+                  <div
+                    className={`flex flex-wrap gap-px justify-center mt-[3px] ${
+                      storeClosed ? "opacity-40" : ""
+                    }`}
+                    title={
+                      storeClosed
+                        ? "วันร้านปิด — ใบลาไม่นับโควต้า · ไม่หักเงิน"
+                        : undefined
+                    }
+                  >
                     {leaveEntriesForDate.slice(0, 3).map((leaveEntry) => {
                       const leaveType = LEAVE_TYPES.find(
                         (type) => type.id === leaveEntry.type,
@@ -343,7 +352,7 @@ export default function TeamCalendar({
                       return (
                         <div
                           key={leaveEntry.id}
-                          title={`${displayName} (${leaveType?.label || leaveEntry.type})`}
+                          title={`${displayName} (${leaveType?.label || leaveEntry.type})${storeClosed ? " · วันร้านปิด ไม่นับ" : ""}`}
                           className="w-2.5 h-2.5 rounded-full border border-white"
                           style={{
                             background: leaveType?.color || colors.gold,

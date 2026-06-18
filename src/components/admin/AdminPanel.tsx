@@ -229,6 +229,8 @@ export default function AdminPanel({
         <StoreCalendarPanel
           storeCalendar={storeCalendar}
           onUpdate={onUpdateStoreCalendar}
+          allLeaves={allLeaves}
+          employeeDirectory={employeeDirectory}
           showToast={showToast}
         />
       )}

@@ -15,13 +15,15 @@ import {
   X as IconX,
 } from "lucide-react";
 import { useState } from "react";
-import type { StoreCalendar } from "../../types";
+import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
 import { fmtShortWithWeekday } from "../../utils/dateUtils";
 import ThaiDateInput from "../shared/ThaiDateInput";
 
 interface Props {
   storeCalendar: StoreCalendar;
   onUpdate: (cal: StoreCalendar) => Promise<void>;
+  allLeaves: LeaveEntry[];
+  employeeDirectory: Employee[];
   showToast?: (msg: string) => void;
 }
 
@@ -56,9 +58,30 @@ function isWeekday(ymd: string): boolean {
   return dow >= 1 && dow <= 5;
 }
 
+/** หาใบลาที่ active วันที่ ymd · return list ของชื่อ (live nickname > snapshot) */
+function leavesOnDate(
+  ymd: string,
+  allLeaves: LeaveEntry[],
+  directory: Employee[],
+): string[] {
+  return allLeaves
+    .filter((lv) => lv.start <= ymd && ymd <= lv.end)
+    .map((lv) => {
+      const live = directory.find((e) => e.id === lv.employeeId);
+      return (
+        live?.nickname ||
+        lv.employeeNickname ||
+        live?.name ||
+        lv.employeeName
+      );
+    });
+}
+
 export default function StoreCalendarPanel({
   storeCalendar,
   onUpdate,
+  allLeaves,
+  employeeDirectory,
   showToast,
 }: Props) {
   const [adding, setAdding] = useState<"sat" | "wd" | null>(null);
@@ -226,49 +249,72 @@ export default function StoreCalendarPanel({
 
         {/* add row */}
         {adding === "sat" && (
-          <div className="px-3.5 py-3 border-b border-bdr bg-cream/40 flex gap-2 items-center">
-            <div className="relative flex-1">
-              <select
-                value={satPick}
-                onChange={(e) => setSatPick(e.target.value)}
-                className="appearance-none cursor-pointer w-full pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt"
+          <div className="border-b border-bdr bg-cream/40">
+            <div className="px-3.5 py-3 flex gap-2 items-center">
+              <div className="relative flex-1">
+                <select
+                  value={satPick}
+                  onChange={(e) => setSatPick(e.target.value)}
+                  className="appearance-none cursor-pointer w-full pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt"
+                >
+                  <option value="">— เลือกเสาร์ —</option>
+                  {satOptions.map((o) => (
+                    <option key={o.ymd} value={o.ymd}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <IconChevronDown
+                  size={12}
+                  strokeWidth={2.4}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={addSaturday}
+                disabled={!satPick || busy}
+                className={`px-3 py-2 rounded-[8px] border-none text-xs font-bold font-[inherit] ${
+                  satPick && !busy
+                    ? "bg-maroon text-white cursor-pointer"
+                    : "bg-bdr text-txt-soft cursor-not-allowed"
+                }`}
               >
-                <option value="">— เลือกเสาร์ —</option>
-                {satOptions.map((o) => (
-                  <option key={o.ymd} value={o.ymd}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-              <IconChevronDown
-                size={12}
-                strokeWidth={2.4}
-                className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-              />
+                บันทึก
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdding(null);
+                  setSatPick("");
+                }}
+                aria-label="ยกเลิก"
+                className="w-8 h-8 rounded-[8px] border border-bdr bg-white text-txt-soft cursor-pointer flex items-center justify-center"
+              >
+                <IconX size={14} strokeWidth={2.2} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={addSaturday}
-              disabled={!satPick || busy}
-              className={`px-3 py-2 rounded-[8px] border-none text-xs font-bold font-[inherit] ${
-                satPick && !busy
-                  ? "bg-maroon text-white cursor-pointer"
-                  : "bg-bdr text-txt-soft cursor-not-allowed"
-              }`}
-            >
-              บันทึก
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAdding(null);
-                setSatPick("");
-              }}
-              aria-label="ยกเลิก"
-              className="w-8 h-8 rounded-[8px] border border-bdr bg-white text-txt-soft cursor-pointer flex items-center justify-center"
-            >
-              <IconX size={14} strokeWidth={2.2} />
-            </button>
+            {/* warning: ถ้ามีใบลาในเสาร์ที่เลือก → จะกลายเป็นวันทำงาน · ใบลานับโควต้า */}
+            {satPick &&
+              (() => {
+                const names = leavesOnDate(
+                  satPick,
+                  allLeaves,
+                  employeeDirectory,
+                );
+                if (names.length === 0) return null;
+                return (
+                  <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-amber-50 border border-amber-300 text-xs leading-relaxed text-amber-900 flex gap-2">
+                    <span className="shrink-0">⚠</span>
+                    <div>
+                      <b>มีใบลา {names.length} คนวันนี้</b> ({names.join(", ")})
+                      <br />
+                      หลังเปิดเสาร์นี้ ใบลาจะ <b>นับโควต้า + อาจหักเงิน</b>{" "}
+                      (เหมือนวันธรรมดา)
+                    </div>
+                  </div>
+                );
+              })()}
           </div>
         )}
 
@@ -367,35 +413,59 @@ export default function StoreCalendarPanel({
         </div>
 
         {adding === "wd" && (
-          <div className="px-3.5 py-3 border-b border-bdr bg-cream/40 flex gap-2 items-center">
-            <ThaiDateInput
-              value={wdPick}
-              onChange={setWdPick}
-              className="flex-1 px-2.5 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] bg-white"
-            />
-            <button
-              type="button"
-              onClick={addWeekday}
-              disabled={!wdPick || busy}
-              className={`px-3 py-2 rounded-[8px] border-none text-xs font-bold font-[inherit] ${
-                wdPick && !busy
-                  ? "bg-maroon text-white cursor-pointer"
-                  : "bg-bdr text-txt-soft cursor-not-allowed"
-              }`}
-            >
-              บันทึก
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAdding(null);
-                setWdPick("");
-              }}
-              aria-label="ยกเลิก"
-              className="w-8 h-8 rounded-[8px] border border-bdr bg-white text-txt-soft cursor-pointer flex items-center justify-center"
-            >
-              <IconX size={14} strokeWidth={2.2} />
-            </button>
+          <div className="border-b border-bdr bg-cream/40">
+            <div className="px-3.5 py-3 flex gap-2 items-center">
+              <ThaiDateInput
+                value={wdPick}
+                onChange={setWdPick}
+                className="flex-1 px-2.5 py-2 rounded-[8px] border border-bdr text-sm outline-none font-[inherit] bg-white"
+              />
+              <button
+                type="button"
+                onClick={addWeekday}
+                disabled={!wdPick || busy}
+                className={`px-3 py-2 rounded-[8px] border-none text-xs font-bold font-[inherit] ${
+                  wdPick && !busy
+                    ? "bg-maroon text-white cursor-pointer"
+                    : "bg-bdr text-txt-soft cursor-not-allowed"
+                }`}
+              >
+                บันทึก
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdding(null);
+                  setWdPick("");
+                }}
+                aria-label="ยกเลิก"
+                className="w-8 h-8 rounded-[8px] border border-bdr bg-white text-txt-soft cursor-pointer flex items-center justify-center"
+              >
+                <IconX size={14} strokeWidth={2.2} />
+              </button>
+            </div>
+            {/* warning: ถ้ามีใบลาในวันที่ปิด → ใบลายังอยู่แต่ไม่นับโควต้า */}
+            {wdPick &&
+              (() => {
+                const names = leavesOnDate(
+                  wdPick,
+                  allLeaves,
+                  employeeDirectory,
+                );
+                if (names.length === 0) return null;
+                return (
+                  <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-emerald-50 border border-emerald-300 text-xs leading-relaxed text-emerald-900 flex gap-2">
+                    <span className="shrink-0">ℹ</span>
+                    <div>
+                      <b>มีใบลา {names.length} คนวันนี้</b> ({names.join(", ")})
+                      <br />
+                      หลังปิดวันนี้ ใบลายังอยู่ในระบบ แต่{" "}
+                      <b>ไม่นับโควต้า · ไม่หักเงิน</b>{" "}
+                      (ระบบคืนสิทธิ์ลาให้อัตโนมัติ)
+                    </div>
+                  </div>
+                );
+              })()}
           </div>
         )}
 
