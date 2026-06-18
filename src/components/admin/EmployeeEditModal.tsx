@@ -1143,7 +1143,7 @@ export default function EmployeeEditModal({
                                 key={it.id}
                                 className="flex items-center gap-2"
                               >
-                                <label className="text-sm font-semibold text-txt min-w-[100px] leading-tight">
+                                <label className="text-sm font-semibold text-txt min-w-[130px] leading-tight">
                                   <div>{it.label}</div>
                                   {it.kind === "personal" && (
                                     <div className="text-[10px] text-txt-soft font-normal">
@@ -1225,7 +1225,7 @@ export default function EmployeeEditModal({
                         key={item.id}
                         className="flex items-center gap-2"
                       >
-                        <label className="text-sm font-semibold text-txt min-w-[100px] leading-tight">
+                        <label className="text-sm font-semibold text-txt min-w-[130px] leading-tight">
                           {item.label}
                         </label>
                         <input
