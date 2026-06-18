@@ -144,6 +144,8 @@ export default function EmployeeEditModal({
     editingTransferPieceRate !== undefined ||
     editingSinglePieceRate !== undefined ||
     editingPieceRates !== undefined ||
+    editingBonusRates !== undefined ||
+    editingPoolItemRates !== undefined ||
     editingBaseSalary !== undefined ||
     editingSocialSecurity !== undefined ||
     editingStartWorkMonth !== undefined ||
