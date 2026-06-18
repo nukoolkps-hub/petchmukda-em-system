@@ -265,6 +265,17 @@ export default function SalaryView({
     setShowCertModal(true);
   }
 
+  // listen header button (MobileHeader dispatches event เมื่อกด "ใบรับรอง")
+  // ใช้ window event แทน prop drilling · header ไม่ต้องรู้จัก data/state
+  useEffect(() => {
+    const handler = () => handlePrintCert();
+    window.addEventListener("openSalaryCert", handler);
+    return () => window.removeEventListener("openSalaryCert", handler);
+    // handlePrintCert ใช้ data จาก closure · re-attach ทุกครั้งที่ data เปลี่ยน
+    // เพื่อให้ event handler มี data ล่าสุด
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
   const [issuingCert, setIssuingCert] = useState(false);
 
   async function confirmPrintCert() {
@@ -306,22 +317,13 @@ export default function SalaryView({
   if (!data || !salaryCalculation) {
     return (
       <div>
-        <div className="flex items-center gap-2 mb-3.5">
+        <div className="flex items-center justify-between gap-2 mb-3.5">
           <div className="text-sm text-txt-soft flex-1">สลิปเงินเดือน</div>
           <MonthChevronNav
             months={selectMonths}
             selected={selectedMonth}
             onSelect={setSelectedMonth}
           />
-          <button
-            type="button"
-            onClick={handlePrintCert}
-            title="พิมพ์ใบรับรองเงินเดือน"
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[9px] border-[1.5px] border-[#7B1C1C50] bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit] shrink-0"
-          >
-            <IconFileText size={13} strokeWidth={2.4} />
-            ใบรับรอง
-          </button>
         </div>
         {/* Banner: รอ ADMIN ยืนยันยอด */}
         <div className="bg-amber-50 border border-amber-300 rounded-[14px] px-4 py-3 mb-3 flex items-start gap-2.5">
@@ -472,26 +474,22 @@ export default function SalaryView({
             </button>
           </div>
 
-          {/* Right col: Print panel — สลิป (disabled · รอยืนยันยอด)
-              ใบรับรองย้ายขึ้น header แล้ว (ไม่ผูกเดือน · ใช้ได้เสมอ) */}
+          {/* Right col: Print panel — สลิปเงินเดือน (disabled · รอยืนยันยอด)
+              label centered + ปุ่มพิมพ์ บรรทัดล่าง */}
           <div className="flex flex-col gap-2 px-3 py-2.5 rounded-[14px] bg-gold-pale/20 border border-gold/15">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-txt-mid font-semibold flex items-center gap-1.5">
-                  <IconClipboardList size={14} strokeWidth={2.4} />
-                  สลิปเงินเดือน
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled
-                title="รอยืนยันยอด"
-                className="px-3.5 py-2 rounded-lg text-sm font-bold font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] shrink-0 bg-bdr/30 text-txt-soft border-bdr cursor-not-allowed"
-              >
-                <IconClock size={14} strokeWidth={2.4} />
-                พิมพ์
-              </button>
+            <div className="text-sm text-txt-mid font-semibold flex items-center justify-center gap-1.5">
+              <IconClipboardList size={14} strokeWidth={2.4} />
+              สลิปเงินเดือน
             </div>
+            <button
+              type="button"
+              disabled
+              title="รอยืนยันยอด"
+              className="w-full px-3.5 py-2 rounded-lg text-sm font-bold font-[inherit] flex items-center justify-center gap-1.5 border-[1.5px] bg-bdr/30 text-txt-soft border-bdr cursor-not-allowed"
+            >
+              <IconClock size={14} strokeWidth={2.4} />
+              พิมพ์
+            </button>
             <div className="text-[11px] text-txt-soft leading-snug mt-auto pt-1 flex items-start gap-1">
               <IconLightbulb
                 size={12}
@@ -859,9 +857,9 @@ export default function SalaryView({
 
   return (
     <div>
-      {/* month selector + ปุ่มแผนผังเงินเดือน + ใบรับรอง — บนสุด
-          แผนผังโผล่เฉพาะ pool sales · ใบรับรองไม่ผูกเดือน (ใช้ได้เสมอ) */}
-      <div className="flex items-center gap-2 mb-3">
+      {/* month selector + ปุ่มแผนผังเงินเดือน — บนสุด
+          แผนผังโผล่เฉพาะ pool sales · ใบรับรองอยู่ main header (MobileHeader) */}
+      <div className="flex items-center justify-between gap-2 mb-3">
         {employeeRole?.poolGroup ? (
           <button
             type="button"
@@ -873,22 +871,13 @@ export default function SalaryView({
             แผนผังเงินเดือน
           </button>
         ) : (
-          <div className="flex-1" />
+          <div />
         )}
         <MonthChevronNav
           months={selectMonths}
           selected={selectedMonth}
           onSelect={setSelectedMonth}
         />
-        <button
-          type="button"
-          onClick={handlePrintCert}
-          title="พิมพ์ใบรับรองเงินเดือน"
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[9px] border-[1.5px] border-[#7B1C1C50] bg-white text-maroon text-xs font-bold cursor-pointer font-[inherit] shrink-0"
-        >
-          <IconFileText size={13} strokeWidth={2.4} />
-          ใบรับรอง
-        </button>
       </div>
 
       {/* รอยืนยันยอด — แสดงเงินรวมคร่าวๆ ก่อน แต่เตือนว่ายังเปลี่ยนได้ */}
@@ -996,34 +985,30 @@ export default function SalaryView({
           </button>
         </div>
 
-        {/* Right col: Print panel — สลิปเงินเดือน (ใบรับรองย้ายขึ้น header แล้ว) */}
+        {/* Right col: Print panel — สลิปเงินเดือน · label centered + ปุ่มบรรทัดล่าง */}
         <div className="flex flex-col gap-2 px-3 py-2.5 rounded-[14px] bg-gold-pale/20 border border-gold/15">
-          <div className="flex items-center gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="text-sm text-txt-mid font-semibold flex items-center gap-1.5">
-                <IconClipboardList size={14} strokeWidth={2.4} />
-                สลิปเงินเดือน
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handlePrintSlip}
-              disabled={!isMonthConfirmed}
-              title={isMonthConfirmed ? "พิมพ์ / บันทึก PDF" : "รอยืนยันยอด"}
-              className={`px-3.5 py-2 rounded-lg text-sm font-bold font-[inherit] flex items-center gap-1.5 whitespace-nowrap border-[1.5px] shrink-0 ${
-                isMonthConfirmed
-                  ? "bg-white text-maroon border-[#7B1C1C50] cursor-pointer"
-                  : "bg-bdr/30 text-txt-soft border-bdr cursor-not-allowed"
-              }`}
-            >
-              {isMonthConfirmed ? (
-                <PrintIcon />
-              ) : (
-                <IconClock size={14} strokeWidth={2.4} />
-              )}
-              พิมพ์
-            </button>
+          <div className="text-sm text-txt-mid font-semibold flex items-center justify-center gap-1.5">
+            <IconClipboardList size={14} strokeWidth={2.4} />
+            สลิปเงินเดือน
           </div>
+          <button
+            type="button"
+            onClick={handlePrintSlip}
+            disabled={!isMonthConfirmed}
+            title={isMonthConfirmed ? "พิมพ์ / บันทึก PDF" : "รอยืนยันยอด"}
+            className={`w-full px-3.5 py-2 rounded-lg text-sm font-bold font-[inherit] flex items-center justify-center gap-1.5 border-[1.5px] ${
+              isMonthConfirmed
+                ? "bg-white text-maroon border-[#7B1C1C50] cursor-pointer"
+                : "bg-bdr/30 text-txt-soft border-bdr cursor-not-allowed"
+            }`}
+          >
+            {isMonthConfirmed ? (
+              <PrintIcon />
+            ) : (
+              <IconClock size={14} strokeWidth={2.4} />
+            )}
+            พิมพ์
+          </button>
           <div className="text-[11px] text-txt-soft leading-snug mt-auto pt-1 flex items-start gap-1">
             <IconLightbulb
               size={12}
