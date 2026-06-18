@@ -9,11 +9,13 @@ import {
   Check as IconCheck,
   ClipboardList as IconClipboardList,
   Diamond as IconDiamond,
+  FileText as IconFileText,
   HandCoins as IconHandCoins,
   Handshake as IconHandshake,
   Lightbulb as IconLightbulb,
   Lock as IconLock,
   Minus as IconMinus,
+  Plus as IconPlus,
   RefreshCw as IconRefresh,
   RotateCw as IconRotate,
   Ruler as IconRuler,
@@ -91,6 +93,15 @@ export default function ManualModal({ onClose }) {
               <span className="inline-flex items-center gap-1.5">
                 <IconLock size={14} strokeWidth={2.4} />
                 ปิดรอบ 7 วัน
+              </span>
+            ),
+          },
+          {
+            id: "docs",
+            label: (
+              <span className="inline-flex items-center gap-1.5">
+                <IconFileText size={14} strokeWidth={2.4} />
+                เอกสาร
               </span>
             ),
           },
@@ -207,6 +218,42 @@ export default function ManualModal({ onClose }) {
                 <b>ลาวันนั้นไม่นับ</b>
               </li>
             </ul>
+          </Section>
+
+          {/* แยก section: เสาร์เปิดพิเศษมี 2 แบบ */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconBanknote size={16} strokeWidth={2.4} />
+                เสาร์เปิดพิเศษ — มี 2 แบบ
+              </span>
+            }
+            color={COLORS.green}
+          >
+            <Card title="แบบที่ 1: เปิดเฉยๆ" color={COLORS.text}>
+              <p>
+                ADMIN กำหนดเฉพาะ "เปิด" — มาทำงานนับชั่วโมงปกติ ·
+                ไม่มีเงินเพิ่มในสลิป
+              </p>
+            </Card>
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconBanknote size={14} strokeWidth={2.4} />
+                  แบบที่ 2: เปิด + จ่ายเพิ่ม
+                </span>
+              }
+              color={COLORS.text}
+            >
+              <p>
+                ADMIN ติ๊ก <b>"จ่ายเพิ่ม"</b> ในเสาร์นั้น → ถ้ามาทำงาน (ไม่ลา)
+                ได้เงิน <b>+1 dailyRate</b> เข้าสลิป ในบรรทัด{" "}
+                <b>"เงินเสาร์เปิดพิเศษ"</b>
+              </p>
+              <p className="mt-1.5 text-xs text-txt-soft">
+                ลาวันนั้น → ไม่ได้เงินเพิ่ม + วันลานับเข้าโควต้าเหมือนวันธรรมดา
+              </p>
+            </Card>
           </Section>
 
           <Section
@@ -524,7 +571,8 @@ export default function ManualModal({ onClose }) {
                 <li>
                   <b>ปิดทั้งหมด</b> — ไม่ได้แบ่งกองในทุกรายการ
                   <br />+ ถ้ายอด <b>รายการหลัก</b> (ADMIN เลือกไว้ในตำแหน่ง){" "}
-                  <b>น้อยกว่า 50%</b> ของคนสูงสุด →{" "}
+                  <b>น้อยกว่า 50%</b> ของคนที่ทำได้สูงสุด{" "}
+                  <i className="text-txt-soft">ในรายการหลัก</i> →{" "}
                   <b className="text-red">ไม่ได้เงินเดือนพื้นฐาน</b>
                 </li>
               </ul>
@@ -662,6 +710,27 @@ export default function ManualModal({ onClose }) {
               </span>
             </p>
           </Section>
+
+          {/* ปิดระบบเงินเดือน — กรณีพิเศษ */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconBan size={16} strokeWidth={2.4} />
+                ปิดระบบเงินเดือน (กรณีพิเศษ)
+              </span>
+            }
+            color={COLORS.text}
+          >
+            <p>
+              บางตำแหน่ง (เช่น <b>ฝึกงาน / Part-time / นอกระบบ</b>) ADMIN ตั้ง
+              <b> "ปิดระบบเงินเดือน"</b> ได้
+            </p>
+            <ul>
+              <li>ไม่อยู่ในระบบสลิป · ไม่อยู่ในกองกลาง · ไม่มีค่าคอม</li>
+              <li>ใช้ได้แค่ระบบลา + ปฏิทินทีม</li>
+              <li>เห็นบน HomeTab แค่ส่วนปฏิทิน · ไม่มีแท็บเงินเดือน</li>
+            </ul>
+          </Section>
         </div>
       )}
 
@@ -784,6 +853,58 @@ export default function ManualModal({ onClose }) {
               </div>
             </div>
           </Box>
+
+          {/* รายการประจำเดือน */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconRefresh size={16} strokeWidth={2.4} />
+                รายการประจำเดือน
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              ADMIN ตั้ง <b>รายรับ/รายจ่ายประจำเดือน</b> ในข้อมูลพนักงานได้ —
+              จะถูกใช้ทุกเดือนจนกว่าจะลบ
+            </p>
+            <ul>
+              <li>
+                <b>รายรับ:</b> เช่น ค่าเดินทาง · เบี้ยขยัน → บวกเพิ่มในสลิป
+                ทุกเดือน
+              </li>
+              <li>
+                <b>รายจ่าย:</b> เช่น ค่าชุด · ค่าอาหาร → หักทุกเดือน
+              </li>
+              <li>แสดงในสลิปแยกบรรทัด · ชื่อรายการตามที่ ADMIN ตั้ง</li>
+            </ul>
+          </Section>
+
+          {/* รายการพิเศษเฉพาะเดือน */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconPlus size={16} strokeWidth={2.4} />
+                รายการพิเศษเฉพาะเดือน
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              ADMIN เพิ่ม <b>รายการพิเศษเฉพาะเดือนนั้น</b> ได้ในหน้าค่าคอม —
+              ใช้ครั้งเดียว ไม่ต่อเนื่อง
+            </p>
+            <ul>
+              <li>
+                <b>รายรับพิเศษ:</b> เช่น โบนัสพิเศษ · ของขวัญปีใหม่ ·
+                เงินรางวัลแข่งขัน
+              </li>
+              <li>
+                <b>หักพิเศษ:</b> เช่น ค่าของหาย · ค่าปรับลืมเก็บของ
+              </li>
+              <li>เห็นในสลิปเดือนนั้นๆ · ตามชื่อที่ ADMIN ตั้ง</li>
+            </ul>
+          </Section>
         </div>
       )}
 
@@ -854,6 +975,107 @@ export default function ManualModal({ onClose }) {
             ให้เวลา ADMIN ปรับแก้ตัวเลขหลังจ่ายเงินจริง (พนักงานทักท้วง, พบลาเพิ่ม, คำนวณผิด
             ฯลฯ) — พอครบกำหนดล็อกถาวร เพื่อกัน ข้อมูลในอดีตเปลี่ยนแปลงโดยไม่ตั้งใจ
           </Box>
+        </div>
+      )}
+
+      {tab === "docs" && (
+        <div className="text-sm text-txt-mid leading-[1.8]">
+          {/* สลิปเงินเดือน */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconClipboardList size={16} strokeWidth={2.4} />
+                สลิปเงินเดือน
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              พิมพ์/บันทึก PDF สลิปประจำเดือนได้เองจากหน้า "เงินเดือน" —
+              ปุ่ม <b>"พิมพ์"</b> ในการ์ดสลิปขวามือ
+            </p>
+            <ul>
+              <li>
+                เปิดได้หลัง ADMIN กด <b>"ยืนยันยอด"</b> ของเดือนนั้น ·
+                ก่อนนั้นปุ่มจะเป็นสีเทา
+              </li>
+              <li>
+                สลิปมีรายละเอียดครบ: เงินเดือนพื้นฐาน · ค่าคอม · โบนัส ·
+                รายการหัก · เงินสุทธิ
+              </li>
+              <li>
+                เลือก <b>"Save as PDF"</b> ในหน้าต่างพิมพ์ → ได้ไฟล์ PDF
+                ค้นข้อความได้ · ฟอนต์ไทย Sarabun
+              </li>
+            </ul>
+          </Section>
+
+          {/* หนังสือรับรองเงินเดือน */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconFileText size={16} strokeWidth={2.4} />
+                หนังสือรับรองเงินเดือน
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              ออกหนังสือรับรองเงินเดือนได้เอง — ปุ่ม <b>"ใบรับรอง"</b>{" "}
+              บน header ด้านบนของหน้าเงินเดือน
+            </p>
+            <ul>
+              <li>
+                <b>ใช้ได้ทันที</b> — ไม่ต้องรอ ADMIN ยืนยันยอด
+                (อ้างเงินเดือนพื้นฐานจากข้อมูลพนักงาน)
+              </li>
+              <li>
+                เลือก <b>วัตถุประสงค์</b> (ค้ำประกัน, สมัครบัตรเครดิต ฯลฯ)
+                หรือพิมพ์เอง — ข้อความจะถูกใส่ในหนังสือ
+              </li>
+              <li>
+                <b>เลขที่อ้างอิง</b> รันอัตโนมัติ (เช่น พทม. 045/2569)
+                เพื่อให้ตรวจสอบกลับมาที่ห้างได้
+              </li>
+              <li>
+                มีอายุ <b>30 วัน</b> นับจากวันออก
+              </li>
+            </ul>
+          </Section>
+
+          {/* เงินเดือนขึ้นรายปี */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconTrendingDown
+                  size={16}
+                  strokeWidth={2.4}
+                  className="rotate-180"
+                />
+                เงินเดือนขึ้นรายปี
+              </span>
+            }
+            color={COLORS.green}
+          >
+            <p>
+              <b>1 มกราคม ของทุกปี</b> เงินเดือนพื้นฐานจะถูกบวกอัตโนมัติ
+              ตามที่ ADMIN ตั้งไว้
+            </p>
+            <ul>
+              <li>
+                เกณฑ์: ต้องทำงาน <b>ครบ 1 ปี</b> ก่อนถึงจะได้ขึ้น
+              </li>
+              <li>จำนวนที่ขึ้น = ADMIN ตั้งในหน้า "ข้อมูลพนักงาน"</li>
+              <li>
+                ADMIN <b>override</b> เฉพาะปีได้ (เช่น ปีนี้ขึ้นพิเศษ
+                หรือไม่ขึ้นปีหนึ่ง)
+              </li>
+            </ul>
+            <p className="mt-2 text-xs text-txt-soft">
+              เห็นในสลิปเดือน ม.ค. ของปีถัดไป · ค้นหาในประวัติเงินเดือน
+              ในหน้า "ข้อมูลพนักงาน"
+            </p>
+          </Section>
         </div>
       )}
 
