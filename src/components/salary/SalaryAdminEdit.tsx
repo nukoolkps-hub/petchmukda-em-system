@@ -1107,13 +1107,13 @@ export default function SalaryAdminEdit({
                           </span>
                         )}
                         {poolDisabled && (
-                          <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20] inline-flex items-center gap-0.5">
+                          <span className="text-xs px-1.5 py-0.5 rounded-lg text-red font-bold bg-[#C0392B20] inline-flex items-center gap-0.5">
                             <IconLock size={11} strokeWidth={2.4} />
                             ถูกปิด
                           </span>
                         )}
                         {isPrimaryWhileAll && (
-                          <span className="text-[10px] px-1.5 py-px rounded-lg text-amber font-bold bg-amber-lt/60 inline-flex items-center gap-0.5">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-lg text-amber font-bold bg-amber-lt/60 inline-flex items-center gap-0.5">
                             หลัก · ใช้เช็ค 50%
                           </span>
                         )}
@@ -1272,7 +1272,7 @@ export default function SalaryAdminEdit({
             <div className="flex-1 min-w-0">
               <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
                 <span>เงินเดือนพื้นฐาน</span>
-                <span className="text-xs px-1.5 py-px rounded-lg bg-gold-pale text-maroon font-bold">
+                <span className="text-xs px-1.5 py-0.5 rounded-lg bg-gold-pale text-maroon font-bold">
                   แก้ในแท็บ "ข้อมูลพนักงาน"
                 </span>
               </div>
@@ -1557,7 +1557,7 @@ export default function SalaryAdminEdit({
             <div className="flex-1 min-w-0">
               <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
                 <span>หักประกันสังคม</span>
-                <span className="text-xs px-1.5 py-px rounded-lg bg-gold-pale text-maroon font-bold">
+                <span className="text-xs px-1.5 py-0.5 rounded-lg bg-gold-pale text-maroon font-bold">
                   แก้ในแท็บ "ข้อมูลพนักงาน"
                 </span>
               </div>
@@ -1777,7 +1777,7 @@ export default function SalaryAdminEdit({
           <div className="text-sm text-[#E8C87AAA]">
             เงินสุทธิ{" "}
             {dirty && (
-              <span className="px-1.5 py-px rounded-md text-xs font-bold ml-[5px] bg-[#D9770640] text-gold-lt">
+              <span className="px-1.5 py-0.5 rounded-md text-xs font-bold ml-[5px] bg-[#D9770640] text-gold-lt">
                 ยังไม่บันทึก
               </span>
             )}

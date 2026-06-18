@@ -392,7 +392,7 @@ export default function RequestTab({
                       <div className="font-bold text-txt text-base mb-0.5 flex items-center gap-1.5 flex-wrap">
                         {lt?.label}
                         {h.createdByAdmin && (
-                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-px rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
+                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-0.5 rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
                             <IconShieldCheck size={10} strokeWidth={2.6} />
                             ADMIN
                           </span>

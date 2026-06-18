@@ -556,7 +556,7 @@ export default function RolesAdminPanel({
                   />
                   <span className="text-sm font-bold text-maroon">
                     กองกลาง:{" "}
-                    <code className="bg-gold-pale px-2 py-px rounded-md text-sm">
+                    <code className="bg-gold-pale px-2 py-0.5 rounded-md text-sm">
                       {groupKey}
                     </code>
                   </span>
