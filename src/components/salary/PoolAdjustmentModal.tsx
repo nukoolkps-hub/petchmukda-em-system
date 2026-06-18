@@ -322,14 +322,14 @@ export default function PoolAdjustmentModal({
       {poolGroups.length > 0 && (
         <div className="mb-4">
           <div className="text-sm font-bold text-maroon mb-2 px-1">
-            หักจากกองกลาง
+            รายการยกเว้นค่าคอม
           </div>
           <div className="text-xs text-txt-soft mb-2 px-1 leading-relaxed">
-            ยอดที่หักจะไม่ถูกนำไปแบ่งในกองกลาง แต่ยังนับเป็นยอดของพนักงาน (เกณฑ์ 80%)
+            ยอดที่ยกเว้นจะไม่ถูกนำไปแบ่งในกองกลาง แต่ยังนับเป็นยอดของพนักงาน (เกณฑ์ 80%)
           </div>
           {poolItems.length === 0 ? (
             <div className="text-center text-xs text-txt-soft py-4 px-4 bg-cream/60 rounded-[10px] border border-dashed border-bdr mb-2">
-              ยังไม่มีรายการหัก
+              ยังไม่มีรายการยกเว้น
             </div>
           ) : (
             <div className="flex flex-col gap-2 mb-2">
@@ -422,7 +422,7 @@ export default function PoolAdjustmentModal({
           </div>
           {pieceItems.length === 0 ? (
             <div className="text-center text-xs text-txt-soft py-4 px-4 bg-cream/60 rounded-[10px] border border-dashed border-bdr mb-2">
-              ยังไม่มีรายการหัก
+              ยังไม่มีรายการยกเว้น
             </div>
           ) : (
             <div className="flex flex-col gap-2 mb-2">
