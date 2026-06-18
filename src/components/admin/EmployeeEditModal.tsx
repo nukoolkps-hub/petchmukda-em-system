@@ -992,10 +992,22 @@ export default function EmployeeEditModal({
                         }));
                       return (
                         <div
-                          className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${mode !== "none" ? "bg-[#FDECEA80] border-[#C0392B50]" : "bg-cream border-bdr"}`}
+                          className={`px-3 py-2.5 rounded-[9px] mb-2.5 border-[1.5px] ${
+                            mode === "all"
+                              ? "bg-[#FDECEA80] border-[#C0392B50]"
+                              : mode === "some"
+                                ? "bg-amber-lt/70 border-amber/45"
+                                : "bg-cream border-bdr"
+                          }`}
                         >
                           <div
-                            className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${mode !== "none" ? "text-red" : "text-txt"}`}
+                            className={`text-sm font-bold mb-2 flex items-center gap-1.5 ${
+                              mode === "all"
+                                ? "text-red"
+                                : mode === "some"
+                                  ? "text-amber"
+                                  : "text-txt"
+                            }`}
                           >
                             <IconBan
                               size={14}
@@ -1030,9 +1042,9 @@ export default function EmployeeEditModal({
                                       : [],
                                   )
                                 }
-                                className="accent-red cursor-pointer"
+                                className="accent-amber cursor-pointer"
                               />
-                              <span className={mode === "some" ? "text-red font-bold" : "text-txt"}>
+                              <span className={mode === "some" ? "text-amber font-bold" : "text-txt"}>
                                 ปิดเฉพาะรายการ
                               </span>
                             </label>
@@ -1052,7 +1064,7 @@ export default function EmployeeEditModal({
                                         else next.delete(it.id);
                                         setExclusion([...next]);
                                       }}
-                                      className="accent-red cursor-pointer mt-0.5"
+                                      className="accent-amber cursor-pointer mt-0.5"
                                     />
                                     <div className="flex-1 min-w-0">
                                       <div>{it.label}</div>
