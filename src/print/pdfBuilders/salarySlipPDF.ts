@@ -57,21 +57,11 @@ export function buildSalarySlipDocDef({
           earnRows.push([item.label, formatNumber(item.amount)]);
       }
     } else {
-      if (salaryCalculation.normalSaleCommission > 0)
-        earnRows.push([
-          "ค่าคอมขาย-ทั่วไป",
-          formatNumber(salaryCalculation.normalSaleCommission),
-        ]);
-      if (salaryCalculation.specialSaleCommission > 0)
-        earnRows.push([
-          "ค่าคอมขาย-พิเศษ",
-          formatNumber(salaryCalculation.specialSaleCommission),
-        ]);
-      if (salaryCalculation.buyCommission > 0)
-        earnRows.push([
-          "ค่าคอมรับซื้อ",
-          formatNumber(salaryCalculation.buyCommission),
-        ]);
+      // pool sales (multi-item · loop รวม custom)
+      for (const it of salaryCalculation.poolItemsBreakdown || []) {
+        if (it.amount > 0)
+          earnRows.push([`ค่าคอม${it.label}`, formatNumber(it.amount)]);
+      }
     }
     // โบนัสอื่นๆ (multi-item) — แสดงทุก item ที่มี amount > 0
     for (const bonus of salaryCalculation.bonusBreakdown || []) {

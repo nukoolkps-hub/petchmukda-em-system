@@ -655,56 +655,40 @@ export default function SalaryView({
                     value: item.amount,
                   };
                 })
-              : [
-                  {
+              : (salaryCalculation.poolItemsBreakdown || []).map((it: any) => {
+                  // sub text: pool item → กองกลาง + share% · personal → pieces × rate
+                  const itemShare = poolShare?.itemShares?.[it.id];
+                  const itemPool = poolShare?.totalItemPool?.[it.id];
+                  const itemGross = poolShare?.grossItemPool?.[it.id];
+                  let sub: string;
+                  if (it.kind === "pool" && itemShare && itemPool != null) {
+                    const excluded = (itemGross ?? 0) - (itemPool ?? 0);
+                    const poolStr = excluded > 0
+                      ? `${itemGross} − ${excluded} = ${itemPool}`
+                      : `${itemPool}`;
+                    sub = `กองกลาง ${poolStr} ชิ้น · ได้ ${itemShare.finalSharePercent.toFixed(2)}% = ${it.pieces.toFixed(1)} ชิ้น × ${formatThaiNumber(it.rate)} ฿`;
+                  } else {
+                    sub = `${it.pieces} ชิ้น × ${formatThaiNumber(it.rate)} ฿`;
+                  }
+                  const Icon =
+                    it.id === "buy"
+                      ? IconShoppingBag
+                      : it.id === "special"
+                        ? IconSparkles
+                        : IconDiamond;
+                  return {
                     icon: (
-                      <IconDiamond
+                      <Icon
                         size={16}
                         strokeWidth={2.2}
-                        color={COLORS.gold}
+                        color={it.id === "buy" ? COLORS.maroon : COLORS.gold}
                       />
                     ),
-                    main: "ค่าคอมขาย (ทั่วไป)",
-                    sub: poolShare
-                      ? `กองกลาง ${
-                          poolShare.excludedNormalPieces > 0
-                            ? `${poolShare.grossSellPoolPieces} − ${poolShare.excludedNormalPieces} = ${poolShare.totalSellPoolPieces}`
-                            : poolShare.totalSellPoolPieces
-                        } ชิ้น · ได้ ${poolShare.sellSharePercent.toFixed(2)}% = ${salaryCalculation.normalSalePieces.toFixed(1)} ชิ้น × ${formatThaiNumber(salaryCalculation.normalSalePieceRate)} ฿`
-                      : `${salaryCalculation.normalSalePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.normalSalePieceRate)} ฿`,
-                    value: salaryCalculation.normalSaleCommission,
-                  },
-                  {
-                    icon: (
-                      <IconSparkles
-                        size={16}
-                        strokeWidth={2.2}
-                        color={COLORS.gold}
-                      />
-                    ),
-                    main: "ค่าคอมขาย (พิเศษ)",
-                    sub: `${salaryCalculation.specialSalePieces} ชิ้น × ${formatThaiNumber(salaryCalculation.specialSalePieceRate)} ฿`,
-                    value: salaryCalculation.specialSaleCommission,
-                  },
-                  {
-                    icon: (
-                      <IconShoppingBag
-                        size={16}
-                        strokeWidth={2.2}
-                        color={COLORS.maroon}
-                      />
-                    ),
-                    main: "ค่าคอมรับซื้อ",
-                    sub: poolShare
-                      ? `กองกลาง ${
-                          poolShare.excludedBuyPieces > 0
-                            ? `${poolShare.grossBuyPoolPieces} − ${poolShare.excludedBuyPieces} = ${poolShare.totalBuyPoolPieces}`
-                            : poolShare.totalBuyPoolPieces
-                        } ชิ้น · ได้ ${poolShare.buySharePercent.toFixed(2)}% = ${salaryCalculation.buyPieces.toFixed(1)} ชิ้น × ${formatThaiNumber(salaryCalculation.buyPieceRate)} ฿`
-                      : `${salaryCalculation.buyPieces} ชิ้น × ${formatThaiNumber(salaryCalculation.buyPieceRate)} ฿`,
-                    value: salaryCalculation.buyCommission,
-                  },
-                ]),
+                    main: `ค่าคอม${it.label}`,
+                    sub,
+                    value: it.amount,
+                  };
+                })),
           // โบนัสอื่นๆ (multi-item) — role กำหนดรายการ (bonusItems != []) · ไม่
           // ผูกกับ piece commission · ลูปแสดงทุก item ที่มี amount > 0
           ...((salaryCalculation.bonusBreakdown || [])

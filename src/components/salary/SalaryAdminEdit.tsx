@@ -34,7 +34,10 @@ import { getPayrollLock } from "../../utils/payrollLock";
 import {
   calculateSalary,
   computePoolSharesForGroup,
+  resolvePoolExclusionItemIds,
+  resolvePoolItemPieces,
   rolePaysPieceCommission,
+  rolePoolItems,
 } from "../../utils/salaryUtils";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -318,6 +321,27 @@ export default function SalaryAdminEdit({
         [itemId]: num,
       },
     }));
+  }
+
+  // จำนวนชิ้นของ pool item — เขียนลง poolItemPieces map ใน draft
+  // mirror legacy fields (normalSalePieces/specialSalePieces/buyPieces) ด้วย
+  // กัน pool calc (peer) อ่านจาก poolSnapshots แล้ว fallback chain ขาด
+  function updatePoolItemPiece(itemId: string, value: string) {
+    const num = parseFloat(value) || 0;
+    setDraft((d: any) => {
+      const next = {
+        ...d,
+        poolItemPieces: {
+          ...((d.poolItemPieces ?? savedData.poolItemPieces) || {}),
+          [itemId]: num,
+        },
+      };
+      // backward compat mirror สำหรับ id เก่า (normal/special/buy)
+      if (itemId === "normal") next.normalSalePieces = num;
+      else if (itemId === "special") next.specialSalePieces = num;
+      else if (itemId === "buy") next.buyPieces = num;
+      return next;
+    });
   }
 
   /* ─── รายการ custom (รายรับ/รายหัก) ที่ Admin เพิ่มเอง ──────── */
@@ -976,151 +1000,88 @@ export default function SalaryAdminEdit({
               </div>
             </div>
 
-            {/* Pre-compute disabled flags */}
+            {/* Pool items — loop ตาม role.poolItems (รวม custom items)
+                kind=pool: ถูก poolExclusion ปิดได้ · kind=personal: ส่วนตัว    */}
             {(() => {
+              const poolItems = rolePoolItems(employeeRole);
               const exc = employeeInfo?.poolExclusion;
-              const _sellDisabled = exc === "sell" || exc === "both";
-              const _buyDisabled = exc === "buy" || exc === "both";
-              return null;
-            })()}
-
-            {/* Normal */}
-            {(() => {
-              const exc = employeeInfo?.poolExclusion;
-              const poolDisabled = exc === "sell" || exc === "both";
-              const disabled = poolDisabled || locked;
-              return (
-                <div
-                  className={`rounded-[10px] p-3 mb-2.5 relative border ${disabled ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div
-                      className={`text-sm font-bold flex items-center gap-1.5 ${disabled ? "text-txt-soft" : "text-txt"}`}
-                    >
-                      <IconDiamond size={14} strokeWidth={2.4} />
-                      ขาย (ทั่วไป)
-                      {poolDisabled && (
-                        <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20] inline-flex items-center gap-0.5">
-                          <IconLock size={11} strokeWidth={2.4} />
-                          ถูกปิด
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-xs text-txt-soft">
-                      Rate:{" "}
-                      <b className="text-maroon">
-                        {formatThaiNumber(
-                          employeeInfo?.normalSalePieceRate || 0,
-                        )}{" "}
-                        ฿/ชิ้น
-                      </b>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 relative">
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={poolDisabled ? "" : data.normalSalePieces || ""}
-                        disabled={disabled}
-                        onChange={(e) =>
-                          update("normalSalePieces", e.target.value)
-                        }
-                        className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                        ชิ้น
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              const { excludedIds } = resolvePoolExclusionItemIds(
+                exc as any,
+                poolItems,
               );
-            })()}
-
-            {/* Special — ใครขายใครได้ ไม่ขึ้นกับ poolExclusion */}
-            <div
-              className={`rounded-[10px] p-3 mb-2.5 border ${locked ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div
-                  className={`text-sm font-bold flex items-center gap-1.5 ${locked ? "text-txt-soft" : "text-txt"}`}
-                >
-                  <IconSparkles size={16} strokeWidth={2.2} />
-                  ขาย (พิเศษ)
-                </div>
-                <div className="text-xs text-txt-soft">
-                  Rate:{" "}
-                  <b className="text-maroon">
-                    {formatThaiNumber(employeeInfo?.specialSalePieceRate || 0)}{" "}
-                    ฿/ชิ้น
-                  </b>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 relative">
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={data.specialSalePieces || ""}
-                    disabled={locked}
-                    onChange={(e) =>
-                      update("specialSalePieces", e.target.value)
-                    }
-                    className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${locked ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                    ชิ้น
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Buy */}
-            {(() => {
-              const exc = employeeInfo?.poolExclusion;
-              const poolDisabled = exc === "buy" || exc === "both";
-              const disabled = poolDisabled || locked;
-              return (
-                <div
-                  className={`rounded-[10px] p-3 relative border ${disabled ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div
-                      className={`text-sm font-bold flex items-center gap-1.5 ${disabled ? "text-txt-soft" : "text-txt"}`}
-                    >
-                      <IconShoppingBag size={14} strokeWidth={2.4} />
-                      รับซื้อ
-                      {poolDisabled && (
-                        <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20] inline-flex items-center gap-0.5">
-                          <IconLock size={11} strokeWidth={2.4} />
-                          ถูกปิด
+              return poolItems.map((it) => {
+                const poolDisabled = excludedIds.has(it.id) && it.kind === "pool";
+                const disabled = poolDisabled || locked;
+                const value = poolDisabled
+                  ? ""
+                  : resolvePoolItemPieces(it.id, data) || "";
+                const rate =
+                  (employeeInfo?.poolItemRates?.[it.id]) ??
+                  (it.id === "normal"
+                    ? employeeInfo?.normalSalePieceRate ?? 0
+                    : it.id === "special"
+                      ? employeeInfo?.specialSalePieceRate ?? 0
+                      : it.id === "buy"
+                        ? employeeInfo?.buyPieceRate ?? 0
+                        : 0);
+                const Icon =
+                  it.id === "normal"
+                    ? IconDiamond
+                    : it.id === "special"
+                      ? IconSparkles
+                      : it.id === "buy"
+                        ? IconShoppingBag
+                        : IconDiamond;
+                return (
+                  <div
+                    key={it.id}
+                    className={`rounded-[10px] p-3 mb-2.5 relative border ${disabled ? "bg-cream border-bdr opacity-60" : "bg-gold-pale border-[#C9973A30]"}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div
+                        className={`text-sm font-bold flex items-center gap-1.5 ${disabled ? "text-txt-soft" : "text-txt"}`}
+                      >
+                        <Icon size={14} strokeWidth={2.4} />
+                        {it.label}
+                        {it.kind === "personal" && (
+                          <span className="text-[10px] text-txt-soft font-normal">
+                            (ไม่แชร์กองกลาง)
+                          </span>
+                        )}
+                        {poolDisabled && (
+                          <span className="text-xs px-1.5 py-px rounded-lg text-red font-bold bg-[#C0392B20] inline-flex items-center gap-0.5">
+                            <IconLock size={11} strokeWidth={2.4} />
+                            ถูกปิด
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-txt-soft">
+                        Rate:{" "}
+                        <b className="text-maroon">
+                          {formatThaiNumber(rate)} ฿/ชิ้น
+                        </b>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 relative">
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={value}
+                          disabled={disabled}
+                          onChange={(e) =>
+                            updatePoolItemPiece(it.id, e.target.value)
+                          }
+                          className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
+                          ชิ้น
                         </span>
-                      )}
-                    </div>
-                    <div className="text-xs text-txt-soft">
-                      Rate:{" "}
-                      <b className="text-maroon">
-                        {formatThaiNumber(employeeInfo?.buyPieceRate || 0)} ฿/ชิ้น
-                      </b>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 relative">
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={poolDisabled ? "" : data.buyPieces || ""}
-                        disabled={disabled}
-                        onChange={(e) => update("buyPieces", e.target.value)}
-                        className={`w-full px-3.5 py-2.5 rounded-[9px] border border-bdr text-base font-bold outline-none font-[inherit] text-center ${disabled ? "text-txt-soft bg-cream-dk cursor-not-allowed" : "text-txt bg-white cursor-text"}`}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
-                        ชิ้น
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
+                );
+              });
             })()}
 
             <div className="text-xs text-txt-soft mt-2.5 text-center inline-flex items-center justify-center gap-1 w-full">
