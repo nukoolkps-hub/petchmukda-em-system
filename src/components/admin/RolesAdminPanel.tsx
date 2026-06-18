@@ -183,6 +183,7 @@ function PoolItemsEditor({
                 name="primaryPoolItem"
                 checked={primaryId === item.id}
                 onChange={() => onChangePrimary(item.id)}
+                className="accent-maroon"
               />
               <span>หลัก</span>
             </label>
