@@ -28,7 +28,12 @@ export interface PoolAdjustmentItem {
   kind?: "pool" | "piece";
   // pool variant
   poolGroup?: string;
+  /** legacy side · normal/buy hardcoded ก่อน Phase 3D · backward compat ผ่าน
+   *  resolver: ถ้าไม่มี poolItemId → side="normal" → "normal" id · "buy" → "buy" id */
   side?: "normal" | "buy";
+  /** pool item id ที่ admin เลือก · Phase 3D · รองรับ custom items
+   *  ของ role · กรณีไม่มี → ใช้ side mapping (backward compat) */
+  poolItemId?: string;
   // piece variant (multi-item)
   employeeId?: string;
   pieceItemId?: string;
@@ -114,6 +119,9 @@ export async function setPoolAdjustment(
         ...base,
         poolGroup: it.poolGroup || "",
         side: it.side === "buy" ? "buy" : "normal",
+        // poolItemId — Phase 3D · admin custom pool items ใน role
+        // (e.g. "ขายมือสอง") · null ถ้า legacy (fallback ใช้ side)
+        poolItemId: it.poolItemId ? String(it.poolItemId) : (null as any),
         employeeId: null as any,
         pieceItemId: null as any,
       };
