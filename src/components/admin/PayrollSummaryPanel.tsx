@@ -146,6 +146,7 @@ export default function PayrollSummaryPanel({
             allLeaves,
             yearMonth: selectedMonth,
             employeeDirectory,
+            roles,
             poolAdjustment: poolAdjustments?.[selectedMonth] || null,
             poolGroup: employeeRole.poolGroup,
             storeCalendar,

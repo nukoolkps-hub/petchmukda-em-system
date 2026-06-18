@@ -238,6 +238,7 @@ export default function SalaryAdminEdit({
         allLeaves,
         yearMonth: selectedMonth,
         employeeDirectory,
+        roles,
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
         poolGroup: employeeRole.poolGroup,
         storeCalendar,
