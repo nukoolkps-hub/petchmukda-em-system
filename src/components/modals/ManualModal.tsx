@@ -355,13 +355,17 @@ export default function ManualModal({ onClose }) {
             title={
               <span className="inline-flex items-center gap-1.5">
                 <IconDiamond size={16} strokeWidth={2.4} />
-                ขายทั่วไป
+                ขายทั่วไป{" "}
+                <span className="text-xs font-normal">
+                  (รายการ "แชร์กองกลาง")
+                </span>
               </span>
             }
             color={COLORS.maroon}
           >
             <p>
-              <b>เข้ากองกลาง</b> — ยอดของทุกคนรวมกัน แล้วแบ่งตามสูตร 7 ข้อ ข้างบน
+              รายการประเภท <b>"แชร์กองกลาง"</b> — ยอดของทุกคนรวมกันเป็นกอง
+              แล้วแบ่งคืนตามสูตร 7 ข้อข้างบน
             </p>
           </Section>
 
@@ -369,14 +373,19 @@ export default function ManualModal({ onClose }) {
             title={
               <span className="inline-flex items-center gap-1.5">
                 <IconSparkles size={16} strokeWidth={2.4} />
-                ขายพิเศษ
+                ขายพิเศษ <span className="text-xs font-normal">(รายการ "ส่วนตัว")</span>
               </span>
             }
             color={COLORS.gold}
           >
             <p>
-              <b>ส่วนตัว</b> — ไม่ต้องแบ่งใคร · ขายกี่ชิ้น{" "}
+              รายการประเภท <b>"ส่วนตัว"</b> — ไม่ต้องแบ่งใคร · ขายกี่ชิ้น{" "}
               <b>คูณกับ Rate ของตัวเอง</b> ได้เลย · ลาก็ไม่กระทบเงินตรงนี้
+            </p>
+            <p className="mt-2 text-xs text-txt-soft">
+              ⚙ ADMIN สร้างรายการ "ส่วนตัว" อื่นๆ ได้ในตำแหน่งงาน — เช่น
+              "โบนัสจุดขาย" หรือ "ค่าคอมพิเศษ" ฯลฯ · ทุกรายการ "ส่วนตัว"
+              ใช้กฎเดียวกัน
             </p>
           </Section>
 
@@ -409,14 +418,18 @@ export default function ManualModal({ onClose }) {
             title={
               <span className="inline-flex items-center gap-1.5">
                 <IconShoppingBag size={16} strokeWidth={2.4} />
-                รับซื้อ
+                รับซื้อ{" "}
+                <span className="text-xs font-normal">
+                  (รายการ "แชร์กองกลาง")
+                </span>
               </span>
             }
             color={COLORS.maroon}
           >
             <p>
-              คิดแบบกองกลาง — แต่<b>แยกออกจากกองขาย</b> (มีกอง · มีคนสูงสุด ·
-              มีเกณฑ์ของตัวเอง · ใช้สูตรเดียวกับขายทั่วไป)
+              อีกรายการประเภท <b>"แชร์กองกลาง"</b> — แต่{" "}
+              <b>แยกกองของตัวเอง</b> ออกจากกองขาย · มีกอง · มีคนสูงสุด ·
+              มีเกณฑ์ของตัวเอง · ใช้สูตรเดียวกับขายทั่วไป
             </p>
           </Section>
 
