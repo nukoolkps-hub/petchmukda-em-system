@@ -757,7 +757,7 @@ function PiecesAndLabelRow({
       />
       <div className="relative w-[110px] shrink-0">
         <input
-          type="number"
+          type="text"
           inputMode="numeric"
           value={item.pieces || ""}
           disabled={locked}

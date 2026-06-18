@@ -75,7 +75,7 @@ export default function AnnualRaiseSection({
               ฿
             </span>
             <input
-              type="number"
+              type="text"
               inputMode="decimal"
               min="0"
               placeholder="0"
@@ -125,7 +125,7 @@ export default function AnnualRaiseSection({
                             +฿
                           </span>
                           <input
-                            type="number"
+                            type="text"
                             inputMode="decimal"
                             min="0"
                             value={currentRaises[String(year)] ?? 0}

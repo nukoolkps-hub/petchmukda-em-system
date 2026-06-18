@@ -735,7 +735,7 @@ export default function EmployeeEditModal({
                   ฿
                 </span>
                 <input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
                   min="0"
                   value={
@@ -772,7 +772,7 @@ export default function EmployeeEditModal({
                   ฿
                 </span>
                 <input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
                   min="0"
                   value={
@@ -928,7 +928,7 @@ export default function EmployeeEditModal({
                             {item.label}
                           </label>
                           <input
-                            type="number"
+                            type="text"
                             inputMode="decimal"
                             min="0"
                             value={rateValue(item.id)}
@@ -1180,7 +1180,7 @@ export default function EmployeeEditModal({
                                 )}
                               </label>
                               <input
-                                type="number"
+                                type="text"
                                 inputMode="decimal"
                                 min="0"
                                 value={itemDisabled ? "" : valueOf()}
@@ -1260,7 +1260,7 @@ export default function EmployeeEditModal({
                           {item.label}
                         </label>
                         <input
-                          type="number"
+                          type="text"
                           inputMode="decimal"
                           min="0"
                           value={bonusRateValue(item.id)}

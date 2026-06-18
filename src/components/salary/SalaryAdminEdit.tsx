@@ -920,7 +920,7 @@ export default function SalaryAdminEdit({
                   <div className="flex items-center gap-2">
                     <div className="flex-1 relative">
                       <input
-                        type="number"
+                        type="text"
                         inputMode="numeric"
                         value={grossPieces || ""}
                         onChange={(e) =>
@@ -1103,7 +1103,7 @@ export default function SalaryAdminEdit({
                     <div className="flex items-center gap-2">
                       <div className="flex-1 relative">
                         <input
-                          type="number"
+                          type="text"
                           inputMode="numeric"
                           value={value}
                           disabled={disabled}
@@ -1191,7 +1191,7 @@ export default function SalaryAdminEdit({
                       <div className="flex items-center gap-2">
                         <div className="flex-1 relative">
                           <input
-                            type="number"
+                            type="text"
                             inputMode="numeric"
                             value={count || ""}
                             disabled={locked}
@@ -1374,7 +1374,7 @@ export default function SalaryAdminEdit({
                   ฿
                 </span>
                 <input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
                   min="0"
                   value={data[f.key] || ""}
@@ -1446,7 +1446,7 @@ export default function SalaryAdminEdit({
                     ฿
                   </span>
                   <input
-                    type="number"
+                    type="text"
                     inputMode="decimal"
                     min="0"
                     value={item?.amount || ""}
@@ -1660,7 +1660,7 @@ export default function SalaryAdminEdit({
                   ฿
                 </span>
                 <input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
                   min="0"
                   value={item?.amount || ""}
