@@ -33,6 +33,7 @@ interface LeaveListPanelProps {
   allLeaves: LeaveEntry[];
   employeeDirectory: Employee[];
   payrollConfirms: PayrollConfirms;
+  storeCalendar?: import("../../types").StoreCalendar | null;
   onDelete: (id: string | number) => void;
   onAddLeave: (
     leave: Omit<LeaveEntry, "id">,
@@ -49,6 +50,7 @@ export default function LeaveListPanel({
   allLeaves,
   employeeDirectory,
   payrollConfirms,
+  storeCalendar,
   onDelete,
   onAddLeave,
   selectedMonth,
@@ -90,7 +92,8 @@ export default function LeaveListPanel({
     setAddReason("");
   }
 
-  const previewDays = addStart && addEnd ? countWorkdays(addStart, addEnd) : 0;
+  const previewDays =
+    addStart && addEnd ? countWorkdays(addStart, addEnd, storeCalendar) : 0;
   const canSubmit =
     !!addEmpId && !!addStart && !!addEnd && addStart <= addEnd && !saving;
 
