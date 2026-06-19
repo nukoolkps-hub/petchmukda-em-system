@@ -1505,7 +1505,7 @@ export default function SalaryAdminEdit({
                 strokeWidth={2.4}
                 color={COLORS.green}
               />
-              โบนัสแห่งความขยัน(ไม่หยุด){" "}
+              โบนัสแห่งความขยัน (ไม่หยุด){" "}
               <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                 อัตโนมัติ
               </span>

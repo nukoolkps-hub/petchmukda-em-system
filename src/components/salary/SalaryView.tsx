@@ -732,7 +732,7 @@ export default function SalaryView({
                 <div className="flex items-center gap-2 mb-1">
                   <IconStar size={16} strokeWidth={2.4} color={COLORS.green} />
                   <div className="text-sm font-bold text-txt flex-1">
-                    โบนัสแห่งความขยัน(ไม่หยุด)
+                    โบนัสแห่งความขยัน (ไม่หยุด)
                   </div>
                   <span
                     className={`text-base font-bold whitespace-nowrap ${
@@ -1355,7 +1355,7 @@ export default function SalaryView({
             })),
           {
             icon: <IconStar size={16} strokeWidth={2.2} color={COLORS.green} />,
-            main: "โบนัสแห่งความขยัน(ไม่หยุด)",
+            main: "โบนัสแห่งความขยัน (ไม่หยุด)",
             sub:
               salaryCalculation.leaveDays <= 2
                 ? `ลาวันธรรมดา ${salaryCalculation.leaveDays} วัน → ${salaryCalculation.bonusDays} วัน × ${formatThaiNumber(Math.round(salaryCalculation.dailySalaryRate))} ฿`

@@ -71,7 +71,7 @@ export function buildSalarySlipDocDef({
   }
   if (salaryCalculation.attendanceBonus > 0)
     earnRows.push([
-      "โบนัสแห่งความขยัน(ไม่หยุด)",
+      "โบนัสแห่งความขยัน (ไม่หยุด)",
       formatNumber(salaryCalculation.attendanceBonus),
     ]);
   if ((salaryCalculation.extraOpenSaturdayBonus || 0) > 0) {

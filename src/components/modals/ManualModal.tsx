@@ -339,7 +339,7 @@ export default function ManualModal({ onClose }) {
             title={
               <span className="inline-flex items-center gap-1.5">
                 <IconStar size={16} strokeWidth={2.4} />
-                โบนัสแห่งความขยัน(ไม่หยุด)
+                โบนัสแห่งความขยัน (ไม่หยุด)
               </span>
             }
             color={COLORS.green}
