@@ -91,15 +91,15 @@ export function buildSalarySlipDocDef({
       formatNumber(salaryCalculation.coveragePay),
     ]);
   }
-  // รายรับประจำเดือน — ADMIN ตั้งในข้อมูลพนักงาน · ใช้ทุกเดือน
-  for (const it of salaryCalculation.recurringIncomes || []) {
-    if (it.amount > 0)
-      earnRows.push([it.label || "รายรับประจำ", formatNumber(it.amount)]);
-  }
   if (Array.isArray(data.customEarnings))
     for (const e of data.customEarnings)
       if (e?.amount > 0)
         earnRows.push([e.label || "รายการรายรับ", formatNumber(e.amount)]);
+  // รายรับประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
+  for (const it of salaryCalculation.recurringIncomes || []) {
+    if (it.amount > 0)
+      earnRows.push([it.label || "รายรับประจำ", formatNumber(it.amount)]);
+  }
 
   /* ─── สร้าง deductions rows ───────────────────────────── */
   const dedRows: [string, string][] = [];
@@ -117,15 +117,15 @@ export function buildSalarySlipDocDef({
       "ลาเกินโควต้า",
       formatNumber(salaryCalculation.overQuotaDeduction),
     ]);
-  // รายการหักประจำเดือน — ADMIN ตั้งในข้อมูลพนักงาน · ใช้ทุกเดือน
-  for (const it of salaryCalculation.recurringDeductions || []) {
-    if (it.amount > 0)
-      dedRows.push([it.label || "หักประจำ", formatNumber(it.amount)]);
-  }
   if (Array.isArray(data.customDeductions))
     for (const d of data.customDeductions)
       if (d?.amount > 0)
         dedRows.push([d.label || "รายการหัก", formatNumber(d.amount)]);
+  // รายการหักประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
+  for (const it of salaryCalculation.recurringDeductions || []) {
+    if (it.amount > 0)
+      dedRows.push([it.label || "หักประจำ", formatNumber(it.amount)]);
+  }
 
   /* ─── pdfmake doc definition ──────────────────────────── */
   return {

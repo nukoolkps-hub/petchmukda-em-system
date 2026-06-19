@@ -884,29 +884,6 @@ export default function SalaryView({
                   </span>
                 </div>
               )}
-              {(previewSalary.recurringDeductions || []).map(
-                (it: any, i: number) => (
-                  <div
-                    key={`rd-${i}-${it.label}`}
-                    className="flex items-center gap-2.5 py-1.5"
-                  >
-                    <IconMinus
-                      size={16}
-                      strokeWidth={2.2}
-                      color={COLORS.red}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm text-txt-mid">{it.label}</div>
-                      <div className="text-[11px] text-txt-soft">
-                        หักประจำเดือน
-                      </div>
-                    </div>
-                    <span className="text-base font-semibold text-red whitespace-nowrap">
-                      − {formatThaiNumber(it.amount)} ฿
-                    </span>
-                  </div>
-                ),
-              )}
               {previewSalary.advanceDeduction > 0 && (
                 <div className="flex items-center gap-2.5 py-1.5">
                   <IconBanknote
@@ -942,6 +919,30 @@ export default function SalaryView({
                     − {formatThaiNumber(previewSalary.loanDeduction)} ฿
                   </span>
                 </div>
+              )}
+              {/* รายการหักประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ */}
+              {(previewSalary.recurringDeductions || []).map(
+                (it: any, i: number) => (
+                  <div
+                    key={`rd-${i}-${it.label}`}
+                    className="flex items-center gap-2.5 py-1.5"
+                  >
+                    <IconMinus
+                      size={16}
+                      strokeWidth={2.2}
+                      color={COLORS.red}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-txt-mid">{it.label}</div>
+                      <div className="text-[11px] text-txt-soft">
+                        หักประจำเดือน
+                      </div>
+                    </div>
+                    <span className="text-base font-semibold text-red whitespace-nowrap">
+                      − {formatThaiNumber(it.amount)} ฿
+                    </span>
+                  </div>
+                ),
               )}
             </div>
             <div className="flex justify-between items-center pt-3 border-t-[1.5px] border-cream-dk mt-2">
@@ -1401,16 +1402,6 @@ export default function SalaryView({
                 : "แทนคนลาเดือนนี้",
             value: salaryCalculation.coveragePay || 0,
           },
-          ...(salaryCalculation.recurringIncomes || []).map(
-            (it: { label: string; amount: number }) => ({
-              icon: (
-                <IconPlus size={16} strokeWidth={2.2} color={COLORS.green} />
-              ),
-              main: it.label || "รายรับประจำ",
-              sub: "รายรับประจำเดือน",
-              value: it.amount,
-            }),
-          ),
           ...(Array.isArray(data.customEarnings)
             ? data.customEarnings.map((e) => ({
                 icon: (
@@ -1421,6 +1412,17 @@ export default function SalaryView({
                 value: e.amount,
               }))
             : []),
+          // รายรับประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
+          ...(salaryCalculation.recurringIncomes || []).map(
+            (it: { label: string; amount: number }) => ({
+              icon: (
+                <IconPlus size={16} strokeWidth={2.2} color={COLORS.green} />
+              ),
+              main: it.label || "รายรับประจำ",
+              sub: "รายรับประจำเดือน",
+              value: it.amount,
+            }),
+          ),
         ]
           .filter((x) => x.value > 0)
           .map((row, i) => (
@@ -1513,16 +1515,6 @@ export default function SalaryView({
                 : "",
             value: salaryCalculation.overQuotaDeduction,
           },
-          ...(salaryCalculation.recurringDeductions || []).map(
-            (it: { label: string; amount: number }) => ({
-              icon: (
-                <IconMinus size={16} strokeWidth={2.2} color={COLORS.red} />
-              ),
-              main: it.label || "หักประจำ",
-              sub: "รายการหักประจำเดือน",
-              value: it.amount,
-            }),
-          ),
           ...(Array.isArray(data.customDeductions)
             ? data.customDeductions.map((d) => ({
                 icon: (
@@ -1533,6 +1525,17 @@ export default function SalaryView({
                 value: d.amount,
               }))
             : []),
+          // หักประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
+          ...(salaryCalculation.recurringDeductions || []).map(
+            (it: { label: string; amount: number }) => ({
+              icon: (
+                <IconMinus size={16} strokeWidth={2.2} color={COLORS.red} />
+              ),
+              main: it.label || "หักประจำ",
+              sub: "รายการหักประจำเดือน",
+              value: it.amount,
+            }),
+          ),
         ]
           .filter((x) => x.value > 0)
           .map((row, i) => (
