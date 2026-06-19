@@ -15,7 +15,6 @@ import {
   Network as IconNetwork,
   Package as IconPackage,
   Plus as IconPlus,
-  RefreshCw as IconRefresh,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
   Star as IconStar,
@@ -44,11 +43,47 @@ import {
   rolePrimaryPoolItemId,
 } from "../../utils/salaryUtils";
 import PoolFlowModal from "../modals/PoolFlowModal";
-import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import MonthChevronNav from "../shared/MonthChevronNav";
 import EmployeeCardGrid from "./EmployeeCardGrid";
 import PoolAdjustmentModal from "./PoolAdjustmentModal";
+
+/* ─── การ์ดรายการประจำเดือน (read-only) ─────────────────────────────
+   รายรับ/หักประจำที่ engine แตกออกมา · admin แก้/ลบที่หน้า "พนักงาน"
+   income = เขียว + IconPlus + "+" · deduction = แดง + IconMinus + "−"   */
+function RecurringRow({
+  item,
+  kind,
+}: {
+  item: { label: string; amount: number };
+  kind: "income" | "deduction";
+}) {
+  const isIncome = kind === "income";
+  const toneClass = isIncome ? "text-green" : "text-red";
+  return (
+    <div className="bg-cream/50 rounded-[12px] p-3 mt-2.5 border border-dashed border-bdr">
+      <div className={`font-bold mb-1 flex items-center gap-1.5 ${toneClass}`}>
+        {isIncome ? (
+          <IconPlus size={14} strokeWidth={2.4} />
+        ) : (
+          <IconMinus size={14} strokeWidth={2.4} />
+        )}
+        {item.label}
+        <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
+          ประจำเดือน
+        </span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-txt-soft">
+          {isIncome ? "รายรับประจำจากข้อมูลพนักงาน" : "หักประจำจากข้อมูลพนักงาน"}
+        </span>
+        <span className={`text-base font-semibold whitespace-nowrap ${toneClass}`}>
+          {isIncome ? "+" : "−"} {formatThaiNumber(item.amount)} ฿
+        </span>
+      </div>
+    </div>
+  );
+}
 
 /* ─── Salary Admin Edit ────────────────────────────────────────── */
 export default function SalaryAdminEdit({
@@ -909,7 +944,6 @@ export default function SalaryAdminEdit({
                 // — ถ้า admin ใส่ 10 แต่พนักงานทำ 5 ต้องโชว์ "หัก 10" ไม่ใช่ 5
                 const excluded = item.excluded || 0;
                 const grossAmount = grossPieces * item.rate;
-                const excludedAmount = excluded * item.rate;
                 return (
                   <div
                     key={item.id}
@@ -1496,26 +1530,7 @@ export default function SalaryAdminEdit({
               profile · admin แก้/ลบที่หน้า "พนักงาน" ไม่ใช่ที่นี่              */}
           {salaryCalculation.recurringIncomes?.map(
             (it: { label: string; amount: number }, i: number) => (
-              <div
-                key={`ri-${i}-${it.label}`}
-                className="bg-cream/50 rounded-[12px] p-3 mt-2.5 border border-dashed border-bdr"
-              >
-                <div className="font-bold mb-1 flex items-center gap-1.5 text-green">
-                  <IconPlus size={14} strokeWidth={2.4} />
-                  {it.label}
-                  <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
-                    ประจำเดือน
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-txt-soft">
-                    รายรับประจำจากข้อมูลพนักงาน
-                  </span>
-                  <span className="text-base font-semibold text-green whitespace-nowrap">
-                    + {formatThaiNumber(it.amount)} ฿
-                  </span>
-                </div>
-              </div>
+              <RecurringRow key={`ri-${i}-${it.label}`} item={it} kind="income" />
             ),
           )}
 
@@ -1739,26 +1754,11 @@ export default function SalaryAdminEdit({
               employee profile · admin แก้/ลบที่หน้า "พนักงาน" ไม่ใช่ที่นี่    */}
           {salaryCalculation.recurringDeductions?.map(
             (it: { label: string; amount: number }, i: number) => (
-              <div
+              <RecurringRow
                 key={`rd-${i}-${it.label}`}
-                className="bg-cream/50 rounded-[12px] p-3 mt-2.5 border border-dashed border-bdr"
-              >
-                <div className="font-bold mb-1 flex items-center gap-1.5 text-red">
-                  <IconMinus size={14} strokeWidth={2.4} />
-                  {it.label}
-                  <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
-                    ประจำเดือน
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-txt-soft">
-                    หักประจำจากข้อมูลพนักงาน
-                  </span>
-                  <span className="text-base font-semibold text-red whitespace-nowrap">
-                    − {formatThaiNumber(it.amount)} ฿
-                  </span>
-                </div>
-              </div>
+                item={it}
+                kind="deduction"
+              />
             ),
           )}
 

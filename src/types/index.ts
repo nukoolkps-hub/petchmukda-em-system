@@ -66,6 +66,13 @@ export interface RecurringItem {
   amount: number;
 }
 
+/** บรรทัดเงินในสลิป (ชื่อ + จำนวน) — ใช้กับ custom earnings/deductions +
+ *  recurring incomes/deductions ที่ engine แตกออกมาแล้ว (ไม่มี id/type) */
+export interface SalaryLineItem {
+  label: string;
+  amount: number;
+}
+
 export interface LeaveEntry {
   id: string | number;
   employeeName: string;
@@ -115,8 +122,8 @@ export interface SalaryMonth {
    *  legacy "normal"/"special"/"buy" fallback ไป normal/special/buyPieces        */
   poolItemPieces?: Record<string, number>;
   socialSecurity?: number;
-  customEarnings?: { label: string; amount: number }[]; // รายการรายรับที่ Admin เพิ่มเอง
-  customDeductions?: { label: string; amount: number }[]; // รายการหักที่ Admin เพิ่มเอง
+  customEarnings?: SalaryLineItem[]; // รายการรายรับที่ Admin เพิ่มเอง
+  customDeductions?: SalaryLineItem[]; // รายการหักที่ Admin เพิ่มเอง
   note?: string;
   slipUrl?: string; // สลิป PDF ที่ freeze ลง Storage ตอน Admin ยืนยันยอด
   slipFrozenAt?: string; // ISO timestamp ตอน freeze สลิป
