@@ -772,39 +772,9 @@ export default function SalaryView({
                 </div>
               </div>
 
-              {/* เงินค่าแทน (coverage) — แทนคนลาเดือนนี้ · เห็นเฉพาะถ้ามี */}
-              {(previewSalary.coveragePay || 0) > 0 && (
-                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
-                  <IconHandshake
-                    size={16}
-                    strokeWidth={2.2}
-                    color={COLORS.green}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-txt-mid">
-                      เงินค่าแทน
-                    </div>
-                    <div className="text-[11px] text-txt-soft">
-                      {Array.isArray(data?.coveragePayBreakdown) &&
-                      data.coveragePayBreakdown.length > 0
-                        ? data.coveragePayBreakdown
-                            .map(
-                              (b: {
-                                dutyName: string;
-                                count: number;
-                                rate: number;
-                              }) =>
-                                `${b.dutyName} ${b.count}×${formatThaiNumber(b.rate)}`,
-                            )
-                            .join(" · ")
-                        : "แทนคนลาเดือนนี้"}
-                    </div>
-                  </div>
-                  <span className="text-base font-semibold text-green whitespace-nowrap">
-                    + {formatThaiNumber(previewSalary.coveragePay)} ฿
-                  </span>
-                </div>
-              )}
+              {/* เงินค่าแทน (coverage) — ใน preview = 0 เสมอ (admin stamp ตอน
+                  save salary doc · ก่อนนั้นไม่มีค่า) — บรรทัด render อยู่ใน
+                  final slip rows ที่อ่าน salaryCalculation.coveragePay แทน */}
 
               {/* Saturday bonus (ถ้ามี) */}
               {(previewSalary.extraOpenSaturdayBonus || 0) > 0 && (
@@ -835,27 +805,29 @@ export default function SalaryView({
               )}
 
               {/* รายรับประจำ (recurring incomes) */}
-              {previewSalary.recurringIncomes.map((it: any) => (
-                <div
-                  key={`ri-${it.label}`}
-                  className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk"
-                >
-                  <IconPlus
-                    size={16}
-                    strokeWidth={2.2}
-                    color={COLORS.green}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-txt-mid">{it.label}</div>
-                    <div className="text-[11px] text-txt-soft">
-                      รายรับประจำเดือน
+              {(previewSalary.recurringIncomes || []).map(
+                (it: any, i: number) => (
+                  <div
+                    key={`ri-${i}-${it.label}`}
+                    className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk"
+                  >
+                    <IconPlus
+                      size={16}
+                      strokeWidth={2.2}
+                      color={COLORS.green}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-txt-mid">{it.label}</div>
+                      <div className="text-[11px] text-txt-soft">
+                        รายรับประจำเดือน
+                      </div>
                     </div>
+                    <span className="text-base font-semibold text-green whitespace-nowrap">
+                      + {formatThaiNumber(it.amount)} ฿
+                    </span>
                   </div>
-                  <span className="text-base font-semibold text-green whitespace-nowrap">
-                    + {formatThaiNumber(it.amount)} ฿
-                  </span>
-                </div>
-              ))}
+                ),
+              )}
 
             </div>
             <div className="flex justify-between items-center pt-3 border-t-[1.5px] border-cream-dk mt-2">
@@ -912,25 +884,29 @@ export default function SalaryView({
                   </span>
                 </div>
               )}
-              {previewSalary.recurringDeductions.map((it: any) => (
-                <div
-                  key={`rd-${it.label}`}
-                  className="flex items-center gap-2.5 py-1.5"
-                >
-                  <IconMinus
-                    size={16}
-                    strokeWidth={2.2}
-                    color={COLORS.red}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-txt-mid">{it.label}</div>
-                    <div className="text-[11px] text-txt-soft">หักประจำเดือน</div>
+              {(previewSalary.recurringDeductions || []).map(
+                (it: any, i: number) => (
+                  <div
+                    key={`rd-${i}-${it.label}`}
+                    className="flex items-center gap-2.5 py-1.5"
+                  >
+                    <IconMinus
+                      size={16}
+                      strokeWidth={2.2}
+                      color={COLORS.red}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-txt-mid">{it.label}</div>
+                      <div className="text-[11px] text-txt-soft">
+                        หักประจำเดือน
+                      </div>
+                    </div>
+                    <span className="text-base font-semibold text-red whitespace-nowrap">
+                      − {formatThaiNumber(it.amount)} ฿
+                    </span>
                   </div>
-                  <span className="text-base font-semibold text-red whitespace-nowrap">
-                    − {formatThaiNumber(it.amount)} ฿
-                  </span>
-                </div>
-              ))}
+                ),
+              )}
               {previewSalary.advanceDeduction > 0 && (
                 <div className="flex items-center gap-2.5 py-1.5">
                   <IconHandCoins
