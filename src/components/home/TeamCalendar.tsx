@@ -30,6 +30,9 @@ interface TeamCalendarProps {
   leaveEntries: LeaveEntry[];
   employeeDirectory: CalendarEmployee[];
   storeCalendar?: StoreCalendar | null;
+  /** id ของพนักงานที่กำลังดู — ใช้แยก "ของตัวเอง" กับ "ของเพื่อน" ในจุดวันลา
+   *  · null/undefined (เช่นฝั่ง admin) → ทุกดอตทึบเหมือนเดิม ไม่ highlight ตัวเอง */
+  myEmployeeId?: string | null;
 }
 
 /* ─── Team Calendar ────────────────────────────────────────────── */
@@ -37,6 +40,7 @@ export default function TeamCalendar({
   leaveEntries,
   employeeDirectory,
   storeCalendar,
+  myEmployeeId,
 }: TeamCalendarProps) {
   const now = new Date();
   const [visibleYear, setVisibleYear] = useState(now.getFullYear());
@@ -360,13 +364,24 @@ export default function TeamCalendar({
                         leaveEntry.employeeNickname ||
                         livePeer?.name ||
                         leaveEntry.employeeName;
+                      // ของตัวเอง = ดอตทึบ · ของเพื่อน = ดอตวงแหวน (สีเดียวกัน)
+                      // myEmployeeId = null/undefined (admin) → ทุกอัน solid เหมือนเดิม
+                      const dotColor = leaveType?.color || colors.gold;
+                      const isOwn =
+                        !!myEmployeeId &&
+                        leaveEntry.employeeId === myEmployeeId;
+                      const isSolid = isOwn || !myEmployeeId;
                       return (
                         <div
                           key={leaveEntry.id}
-                          title={`${displayName} (${leaveType?.label || leaveEntry.type})${storeClosed ? " · วันร้านปิด ไม่นับ" : ""}`}
-                          className="w-2.5 h-2.5 rounded-full border border-white"
+                          title={`${displayName}${isOwn ? " (คุณ)" : ""} (${leaveType?.label || leaveEntry.type})${storeClosed ? " · วันร้านปิด ไม่นับ" : ""}`}
+                          className="w-2.5 h-2.5 rounded-full"
                           style={{
-                            background: leaveType?.color || colors.gold,
+                            background: isSolid ? dotColor : "transparent",
+                            border: isSolid
+                              ? "1px solid white"
+                              : `1.5px solid ${dotColor}`,
+                            boxSizing: "border-box",
                           }}
                         />
                       );
@@ -406,6 +421,33 @@ export default function TeamCalendar({
             />
             <span className="text-sm text-txt-soft">เสาร์เปิดพิเศษ</span>
           </div>
+          {/* แยกของตัวเอง vs เพื่อน — เฉพาะฝั่งพนักงาน */}
+          {myEmployeeId && (
+            <>
+              <div className="flex items-center gap-[5px]">
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{
+                    background: colors.text,
+                    border: "1px solid white",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <span className="text-sm text-txt-soft">ของคุณ</span>
+              </div>
+              <div className="flex items-center gap-[5px]">
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{
+                    background: "transparent",
+                    border: `1.5px solid ${colors.text}`,
+                    boxSizing: "border-box",
+                  }}
+                />
+                <span className="text-sm text-txt-soft">ของเพื่อน</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
       <div className="bg-white rounded-[18px] p-4 mb-3.5 shadow-[0_2px_14px_rgba(90,30,10,0.08)] border border-bdr">
