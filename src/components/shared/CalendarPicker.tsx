@@ -53,6 +53,9 @@ export default function CalendarPicker({
   error,
 }: Props) {
   const [open, setOpen] = useState(false);
+  /** popup ใน absolute mode: ถ้าพื้นที่ขวาไม่พอ flip ยึดขอบขวาแทนซ้าย ·
+   *  กันปฏิทินตกขอบจอเมื่อ button อยู่ฝั่งขวาของ row (เช่นช่อง "ถึง") */
+  const [alignRight, setAlignRight] = useState(false);
   const initD = value ? new Date(`${value}T00:00:00`) : new Date();
   const [vy, setVy] = useState(initD.getFullYear());
   const [vm, setVm] = useState(initD.getMonth());
@@ -136,7 +139,18 @@ export default function CalendarPicker({
     <div ref={ref} className="relative mb-3.5">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          // ก่อนเปิด: ตรวจพื้นที่ขวา ถ้าไม่พอกว้าง popup (≥ 280px) flip ยึดขอบขวา
+          if (!open && !inline && ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            const POPUP_WIDTH = 280;
+            const MARGIN = 8;
+            const needFlip =
+              rect.left + POPUP_WIDTH + MARGIN > window.innerWidth;
+            setAlignRight(needFlip);
+          }
+          setOpen((v) => !v);
+        }}
         className={`${buttonClass}
           ${has ? "bg-gold-pale/30" : "bg-white"}
           ${open ? "shadow-[0_0_0_3px_var(--color-gold)/0.13]" : "shadow-none"}
@@ -172,7 +186,7 @@ export default function CalendarPicker({
           className={
             inline
               ? "mt-1.5 bg-white rounded-2xl px-4 pt-4.5 pb-3.5 border border-bdr animate-[calFade_0.18s_ease]"
-              : "absolute top-[calc(100%+6px)] left-0 right-0 z-[400] bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]"
+              : `absolute top-[calc(100%+6px)] ${alignRight ? "right-0" : "left-0"} z-[400] w-[280px] max-w-[calc(100vw-1rem)] bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]`
           }
         >
           <div className="flex items-center justify-between mb-3.5">
