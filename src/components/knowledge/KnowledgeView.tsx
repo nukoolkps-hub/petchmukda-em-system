@@ -3,7 +3,6 @@
    เปิดทีละ section + remember last opened ใน sessionStorage           */
 
 import {
-  Brain as IconBrain,
   ChevronDown as IconChevronDown,
   Search as IconSearch,
   X as IconX,
@@ -42,20 +41,9 @@ export default function KnowledgeView({ isAdmin, showToast }: Props) {
 
   return (
     <div className="font-sans">
-      {/* header */}
-      <div className="flex items-center gap-3 mb-4 px-1">
-        <div className="w-10 h-10 rounded-[11px] bg-gold-pale flex items-center justify-center shrink-0">
-          <IconBrain size={20} strokeWidth={2.4} color={COLORS.maroon} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-extrabold text-lg text-txt leading-tight">
-            ความรู้ต่างๆ
-          </div>
-          <div className="text-xs text-txt-soft">
-            วิธีการและตัวอย่างต่างๆ ที่ใช้ในการคำนวณราคา ภายในห้างเพชรทองมุกดา · ฉบับปี 2569
-          </div>
-        </div>
-      </div>
+      {/* หัวข้อใหญ่ "ความรู้ต่างๆ" อยู่ใน MobileHeader (PAGE_TITLES) +
+          desktop sidebar — ไม่ซ้ำในเนื้อหา · เริ่มจาก gold-price ทันที
+          ให้ pattern เหมือนหน้า "ยื่นคำขอลา" / "เงินเดือน"                  */}
 
       {/* ราคาทองคำแท่งวันนี้ — real-time จาก /config/goldPrice */}
       <GoldPriceHeader isAdmin={isAdmin} showToast={showToast} />
