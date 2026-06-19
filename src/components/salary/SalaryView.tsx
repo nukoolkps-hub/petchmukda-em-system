@@ -11,6 +11,7 @@ import {
   FileText as IconFileText,
   HandCoins as IconHandCoins,
   Lightbulb as IconLightbulb,
+  Handshake as IconHandshake,
   Minus as IconMinus,
   Network as IconNetwork,
   StickyNote as IconNote,
@@ -779,6 +780,40 @@ export default function SalaryView({
                 </div>
               </div>
 
+              {/* เงินค่าแทน (coverage) — แทนคนลาเดือนนี้ · เห็นเฉพาะถ้ามี */}
+              {(previewSalary.coveragePay || 0) > 0 && (
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                  <IconHandshake
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.gold}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">
+                      เงินค่าแทน
+                    </div>
+                    <div className="text-[11px] text-txt-soft">
+                      {Array.isArray(data?.coveragePayBreakdown) &&
+                      data.coveragePayBreakdown.length > 0
+                        ? data.coveragePayBreakdown
+                            .map(
+                              (b: {
+                                dutyName: string;
+                                count: number;
+                                rate: number;
+                              }) =>
+                                `${b.dutyName} ${b.count}×${formatThaiNumber(b.rate)}`,
+                            )
+                            .join(" · ")
+                        : "แทนคนลาเดือนนี้"}
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-green whitespace-nowrap">
+                    + {formatThaiNumber(previewSalary.coveragePay)} ฿
+                  </span>
+                </div>
+              )}
+
               {/* Saturday bonus (ถ้ามี) */}
               {(previewSalary.extraOpenSaturdayBonus || 0) > 0 && (
                 <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
@@ -1373,6 +1408,41 @@ export default function SalaryView({
                 : "",
             value: salaryCalculation.extraOpenSaturdayBonus,
           },
+          {
+            icon: (
+              <IconHandshake
+                size={16}
+                strokeWidth={2.2}
+                color={COLORS.gold}
+              />
+            ),
+            main: "เงินค่าแทน",
+            sub:
+              Array.isArray(data.coveragePayBreakdown) &&
+              data.coveragePayBreakdown.length > 0
+                ? data.coveragePayBreakdown
+                    .map(
+                      (b: {
+                        dutyName: string;
+                        count: number;
+                        rate: number;
+                      }) =>
+                        `${b.dutyName} ${b.count}×${formatThaiNumber(b.rate)}`,
+                    )
+                    .join(" · ")
+                : "แทนคนลาเดือนนี้",
+            value: salaryCalculation.coveragePay || 0,
+          },
+          ...(salaryCalculation.recurringIncomes || []).map(
+            (it: { label: string; amount: number }) => ({
+              icon: (
+                <IconPlus size={16} strokeWidth={2.2} color={COLORS.gold} />
+              ),
+              main: it.label || "รายรับประจำ",
+              sub: "รายรับประจำเดือน",
+              value: it.amount,
+            }),
+          ),
           ...(Array.isArray(data.customEarnings)
             ? data.customEarnings.map((e) => ({
                 icon: (
@@ -1475,6 +1545,16 @@ export default function SalaryView({
                 : "",
             value: salaryCalculation.overQuotaDeduction,
           },
+          ...(salaryCalculation.recurringDeductions || []).map(
+            (it: { label: string; amount: number }) => ({
+              icon: (
+                <IconMinus size={16} strokeWidth={2.2} color={COLORS.red} />
+              ),
+              main: it.label || "หักประจำ",
+              sub: "รายการหักประจำเดือน",
+              value: it.amount,
+            }),
+          ),
           ...(Array.isArray(data.customDeductions)
             ? data.customDeductions.map((d) => ({
                 icon: (

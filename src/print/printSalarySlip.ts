@@ -81,6 +81,27 @@ function buildSalarySlipHTML(
       value: salaryCalculation.coveragePay,
     });
   }
+  // เงินเสาร์เปิดพิเศษ — ADMIN tick "จ่ายเพิ่ม" ในเสาร์เปิดพิเศษ + พนักงาน
+  // มาทำงาน (ไม่ลา) → + 1 dailyRate ต่อวัน
+  if ((salaryCalculation.extraOpenSaturdayBonus || 0) > 0) {
+    earnRows.push({
+      label: `เงินเสาร์เปิดพิเศษ <span style="font-size:10px;color:#999;">(${salaryCalculation.extraOpenSaturdayDays} วัน)</span>`,
+      value: salaryCalculation.extraOpenSaturdayBonus,
+    });
+  }
+  // รายรับประจำเดือน — ADMIN ตั้งในข้อมูลพนักงาน · ใช้ทุกเดือน
+  for (const it of salaryCalculation.recurringIncomes || []) {
+    if (it.amount > 0)
+      earnRows.push({ label: it.label || "รายรับประจำ", value: it.amount });
+  }
+  // รายรับพิเศษเฉพาะเดือน (custom earnings) — admin เพิ่มในหน้าค่าคอม
+  if (Array.isArray(data.customEarnings))
+    for (const e of data.customEarnings)
+      if (e?.amount > 0)
+        earnRows.push({
+          label: e.label || "รายรับพิเศษ",
+          value: e.amount,
+        });
 
   // ── รายการหัก ──
   const dedRows: { label: string; value: any }[] = [];
@@ -106,6 +127,11 @@ function buildSalarySlipHTML(
       label: "หักลาเกินโควต้า",
       value: salaryCalculation.overQuotaDeduction,
     });
+  }
+  // รายการหักประจำเดือน — ADMIN ตั้งในข้อมูลพนักงาน · ใช้ทุกเดือน
+  for (const it of salaryCalculation.recurringDeductions || []) {
+    if (it.amount > 0)
+      dedRows.push({ label: it.label || "หักประจำ", value: it.amount });
   }
   if (Array.isArray(data.customDeductions))
     for (const d of data.customDeductions)
