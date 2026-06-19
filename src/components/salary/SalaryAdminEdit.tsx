@@ -191,16 +191,28 @@ export default function SalaryAdminEdit({
     setDraft({});
   }, []);
 
-  const monthLeaves = employeeInfo
-    ? allLeaves.filter(
-        (lv) =>
-          lv.employeeId === employeeInfo.id &&
-          lv.start.startsWith(selectedMonth),
-      )
-    : [];
-  const overInfo = getOverQuotaDays(monthLeaves, storeCalendar);
+  // วันลาเดือนนี้ของพนักงานที่เลือก — memoize ให้ reference นิ่ง (กัน memo
+  // หนักด้านล่าง recompute ทุก render · ค่าเลขเหมือนเดิมเป๊ะ แค่ ref คงที่)
+  const monthLeaves = useMemo(
+    () =>
+      employeeInfo
+        ? allLeaves.filter(
+            (lv) =>
+              lv.employeeId === employeeInfo.id &&
+              lv.start.startsWith(selectedMonth),
+          )
+        : [],
+    [employeeInfo, allLeaves, selectedMonth],
+  );
+  const overInfo = useMemo(
+    () => getOverQuotaDays(monthLeaves, storeCalendar),
+    [monthLeaves, storeCalendar],
+  );
   const overTotalDays = overInfo.weekdays + overInfo.sundays;
-  const totalLeaveDays = countWeekdayLeaves(monthLeaves, storeCalendar);
+  const totalLeaveDays = useMemo(
+    () => countWeekdayLeaves(monthLeaves, storeCalendar),
+    [monthLeaves, storeCalendar],
+  );
   const monthApprovedAdvances = (monthlyApprovedAdvances.data || []).filter(
     (r) => r.employeeId === selectedEmployeeId,
   );
@@ -370,6 +382,7 @@ export default function SalaryAdminEdit({
     data,
     overInfo,
     employeeInfo,
+    monthLeaves,
     totalLeaveDays,
     approvedAdvanceTotal,
     poolAdjustments,
