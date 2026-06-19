@@ -1454,7 +1454,7 @@ export default function SalaryAdminEdit({
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-txt-soft font-semibold">
-                    เงินเสาร์เปิดพิเศษ ({salaryCalculation.extraOpenSaturdayDays}{" "}
+                    เสาร์เปิดพิเศษ ({salaryCalculation.extraOpenSaturdayDays}{" "}
                     วัน × {formatThaiNumber(
                       Math.round(salaryCalculation.dailySalaryRate),
                     )}{" "}
