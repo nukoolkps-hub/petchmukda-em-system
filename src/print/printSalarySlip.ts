@@ -65,7 +65,7 @@ function buildSalarySlipHTML(
   }
   if (salaryCalculation.attendanceBonus > 0)
     earnRows.push({
-      label: "โบนัสแห่งความขยัน(ไม่หยุด)",
+      label: "โบนัสแห่งความขยัน (ไม่หยุด)",
       value: salaryCalculation.attendanceBonus,
     });
   if ((salaryCalculation.coveragePay || 0) > 0) {
