@@ -85,7 +85,7 @@ export default function AnnualRaiseSection({
                   : savedAutoAmount
               }
               onChange={(e) => onChangeAutoAmount(e.target.value)}
-              className={`w-full py-[9px] pr-3 pl-7 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] tabular-nums ${draftAutoAmount !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+              className={`w-full py-[9px] pr-3 pl-7 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] tabular-nums ${draftAutoAmount !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
             />
           </div>
           <span className="text-xs text-txt-soft shrink-0">บาท/ปี</span>
@@ -141,7 +141,7 @@ export default function AnnualRaiseSection({
                               }
                               onChangeRaises(next);
                             }}
-                            className="w-full py-1.5 pr-2 pl-7 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] border-gold/60 bg-white tabular-nums"
+                            className="w-full py-1.5 pr-2 pl-7 rounded-[7px] text-sm leading-normal font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] border-gold/60 bg-white tabular-nums"
                           />
                         </div>
                         <span className="text-[10px] text-txt-soft shrink-0">
