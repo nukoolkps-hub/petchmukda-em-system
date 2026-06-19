@@ -1268,7 +1268,7 @@ export default function SalaryAdminEdit({
 
           {/* Base salary — read-only (กำหนดในข้อมูลพนักงาน) */}
           <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr flex items-center gap-2.5">
-            <IconBriefcase size={16} strokeWidth={2.2} color={COLORS.maroon} />
+            <IconBriefcase size={16} strokeWidth={2.2} color={COLORS.green} />
             <div className="flex-1 min-w-0">
               <div className="text-xs text-txt-soft font-semibold flex items-center gap-1.5">
                 <span>เงินเดือนพื้นฐาน</span>
@@ -1285,7 +1285,7 @@ export default function SalaryAdminEdit({
           {/* Commission total — สรุปจากค่าคอมด้านบน */}
           <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
             <div className="flex items-center gap-2.5">
-              <IconDiamond size={16} strokeWidth={2.2} color={COLORS.gold} />
+              <IconDiamond size={16} strokeWidth={2.2} color={COLORS.green} />
               <div className="flex-1 min-w-0">
                 <div className="text-xs text-txt-soft font-semibold">
                   รวมค่าคอมตามจำนวนชิ้น
@@ -1325,7 +1325,7 @@ export default function SalaryAdminEdit({
                 <IconHandshake
                   size={16}
                   strokeWidth={2.2}
-                  color={COLORS.gold}
+                  color={COLORS.green}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-txt-soft font-semibold">
@@ -1363,7 +1363,7 @@ export default function SalaryAdminEdit({
           {(sc.bonusBreakdown || []).length > 0 && (
             <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
               <div className="flex items-center gap-2.5">
-                <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
+                <IconTicket size={16} strokeWidth={2.2} color={COLORS.green} />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-txt-soft font-semibold">
                     รวมโบนัสอื่นๆ
@@ -1453,7 +1453,11 @@ export default function SalaryAdminEdit({
             <div
               className={`font-bold mb-1 flex items-center gap-1.5 ${salaryCalculation.attendanceBonus > 0 ? "text-green" : "text-txt-mid"}`}
             >
-              <IconStar size={14} strokeWidth={2.4} />
+              <IconStar
+                size={14}
+                strokeWidth={2.4}
+                color={COLORS.green}
+              />
               โบนัสแห่งความขยัน(ไม่หยุด){" "}
               <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                 อัตโนมัติ
@@ -1596,7 +1600,11 @@ export default function SalaryAdminEdit({
           {/* over-quota auto note */}
           <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
             <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
-              <IconClipboardList size={14} strokeWidth={2.4} />
+              <IconClipboardList
+                size={14}
+                strokeWidth={2.4}
+                color={COLORS.red}
+              />
               หักลาเกินโควต้า{" "}
               <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                 อัตโนมัติ
@@ -1663,7 +1671,7 @@ export default function SalaryAdminEdit({
           {/* auto advance deduction note */}
           <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
             <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
-              <IconBanknote size={14} strokeWidth={2.4} />
+              <IconBanknote size={14} strokeWidth={2.4} color={COLORS.red} />
               หักเงินเบิกล่วงหน้า{" "}
               <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                 อัตโนมัติ
@@ -1703,7 +1711,7 @@ export default function SalaryAdminEdit({
           {salaryCalculation.loanDeduction > 0 && (
             <div className="bg-gold-pale rounded-[9px] px-3.5 py-3 mt-2.5 text-sm text-txt-mid leading-[1.7] border border-[#C9973A30]">
               <div className="font-bold text-maroon mb-1 flex items-center gap-1.5">
-                <IconHandCoins size={14} strokeWidth={2.4} />
+                <IconHandCoins size={14} strokeWidth={2.4} color={COLORS.red} />
                 หักผ่อนเงินกู้{" "}
                 <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                   อัตโนมัติ
@@ -1736,7 +1744,7 @@ export default function SalaryAdminEdit({
                 className="bg-cream/50 rounded-[12px] p-3 mt-2.5 border border-dashed border-bdr"
               >
                 <div className="font-bold mb-1 flex items-center gap-1.5 text-red">
-                  <IconTrash size={14} strokeWidth={2.4} />
+                  <IconMinus size={14} strokeWidth={2.4} />
                   {it.label}
                   <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                     ประจำเดือน
