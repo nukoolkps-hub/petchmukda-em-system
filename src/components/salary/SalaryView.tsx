@@ -732,7 +732,7 @@ export default function SalaryView({
                 <div className="flex items-center gap-2 mb-1">
                   <IconStar size={16} strokeWidth={2.4} color={COLORS.green} />
                   <div className="text-sm font-bold text-txt flex-1">
-                    โบนัสแห่งความขยัน (ไม่หยุด)
+                    โบนัสแห่งความขยัน(ไม่หยุด)
                   </div>
                   <span
                     className={`text-base font-bold whitespace-nowrap ${
@@ -855,7 +855,7 @@ export default function SalaryView({
                     color={COLORS.red}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-txt-mid">ประกันสังคม</div>
+                    <div className="text-sm text-txt-mid">หักประกันสังคม</div>
                     <div className="text-[11px] text-txt-soft">หักรายเดือน</div>
                   </div>
                   <span className="text-base font-semibold text-red whitespace-nowrap">
@@ -865,14 +865,14 @@ export default function SalaryView({
               )}
               {previewSalary.overQuotaDeduction > 0 && (
                 <div className="flex items-center gap-2.5 py-1.5">
-                  <IconMinus
+                  <IconClipboardList
                     size={16}
                     strokeWidth={2.2}
                     color={COLORS.red}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-txt-mid">
-                      หักวันลาเกินโควต้า
+                      หักลาเกินโควต้า
                     </div>
                     <div className="text-[11px] text-txt-soft">
                       เกินวันธรรมดา {previewSalary.weekdayOverQuotaDays} +
@@ -909,13 +909,13 @@ export default function SalaryView({
               )}
               {previewSalary.advanceDeduction > 0 && (
                 <div className="flex items-center gap-2.5 py-1.5">
-                  <IconHandCoins
+                  <IconBanknote
                     size={16}
                     strokeWidth={2.2}
                     color={COLORS.red}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-txt-mid">เบิกล่วงหน้า</div>
+                    <div className="text-sm text-txt-mid">หักเงินเบิกล่วงหน้า</div>
                     <div className="text-[11px] text-txt-soft">
                       หักเงินที่เบิกไปก่อน
                     </div>
@@ -933,7 +933,7 @@ export default function SalaryView({
                     color={COLORS.red}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-txt-mid">ผ่อนเงินกู้</div>
+                    <div className="text-sm text-txt-mid">หักผ่อนเงินกู้</div>
                     <div className="text-[11px] text-txt-soft">
                       หักตามรอบที่ตั้งไว้
                     </div>
@@ -1297,7 +1297,7 @@ export default function SalaryView({
                       <IconPackage
                         size={16}
                         strokeWidth={2.2}
-                        color={COLORS.gold}
+                        color={COLORS.green}
                       />
                     ),
                     main: item.label,
