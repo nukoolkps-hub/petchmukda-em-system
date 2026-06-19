@@ -268,6 +268,7 @@ export default function HomeTab({
       <TeamCalendar
         leaveEntries={allLeaves}
         storeCalendar={storeCalendar}
+        myEmployeeId={profile?.id || null}
         employeeDirectory={[
           ...employeeDirectory,
           ...(profile && !employeeDirectory.find((e) => e.id === profile.id)
