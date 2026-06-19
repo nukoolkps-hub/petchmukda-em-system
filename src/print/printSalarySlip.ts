@@ -89,11 +89,6 @@ function buildSalarySlipHTML(
       value: salaryCalculation.extraOpenSaturdayBonus,
     });
   }
-  // รายรับประจำเดือน — ADMIN ตั้งในข้อมูลพนักงาน · ใช้ทุกเดือน
-  for (const it of salaryCalculation.recurringIncomes || []) {
-    if (it.amount > 0)
-      earnRows.push({ label: it.label || "รายรับประจำ", value: it.amount });
-  }
   // รายรับพิเศษเฉพาะเดือน (custom earnings) — admin เพิ่มในหน้าค่าคอม
   if (Array.isArray(data.customEarnings))
     for (const e of data.customEarnings)
@@ -102,6 +97,11 @@ function buildSalarySlipHTML(
           label: e.label || "รายรับพิเศษ",
           value: e.amount,
         });
+  // รายรับประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
+  for (const it of salaryCalculation.recurringIncomes || []) {
+    if (it.amount > 0)
+      earnRows.push({ label: it.label || "รายรับประจำ", value: it.amount });
+  }
 
   // ── รายการหัก ──
   const dedRows: { label: string; value: any }[] = [];
@@ -128,15 +128,15 @@ function buildSalarySlipHTML(
       value: salaryCalculation.overQuotaDeduction,
     });
   }
-  // รายการหักประจำเดือน — ADMIN ตั้งในข้อมูลพนักงาน · ใช้ทุกเดือน
-  for (const it of salaryCalculation.recurringDeductions || []) {
-    if (it.amount > 0)
-      dedRows.push({ label: it.label || "หักประจำ", value: it.amount });
-  }
   if (Array.isArray(data.customDeductions))
     for (const d of data.customDeductions)
       if (d?.amount > 0)
         dedRows.push({ label: d.label || "รายการหัก", value: d.amount });
+  // รายการหักประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
+  for (const it of salaryCalculation.recurringDeductions || []) {
+    if (it.amount > 0)
+      dedRows.push({ label: it.label || "หักประจำ", value: it.amount });
+  }
 
   const slipHTML = `<!doctype html>
 <html lang="th">

@@ -1539,14 +1539,6 @@ export default function SalaryAdminEdit({
             )}
           </div>
 
-          {/* รายรับประจำเดือน (recurring incomes) — read-only · มาจาก employee
-              profile · admin แก้/ลบที่หน้า "พนักงาน" ไม่ใช่ที่นี่              */}
-          {salaryCalculation.recurringIncomes?.map(
-            (it: { label: string; amount: number }, i: number) => (
-              <RecurringRow key={`ri-${i}-${it.label}`} item={it} kind="income" />
-            ),
-          )}
-
           {/* custom earnings — รายการรายรับที่เพิ่มเอง */}
           {(Array.isArray(data.customEarnings) ? data.customEarnings : []).map(
             (item, index) => (
@@ -1598,6 +1590,14 @@ export default function SalaryAdminEdit({
               <IconPlus size={14} strokeWidth={2.4} />
               เพิ่มรายการรายรับ
             </button>
+          )}
+
+          {/* รายรับประจำเดือน (recurring incomes) — read-only · มาจาก employee
+              profile · admin แก้/ลบที่หน้า "พนักงาน" · อยู่ล่างสุดตามที่ ADMIN ขอ */}
+          {salaryCalculation.recurringIncomes?.map(
+            (it: { label: string; amount: number }, i: number) => (
+              <RecurringRow key={`ri-${i}-${it.label}`} item={it} kind="income" />
+            ),
           )}
         </div>
 
@@ -1763,18 +1763,6 @@ export default function SalaryAdminEdit({
             </div>
           )}
 
-          {/* รายการหักประจำเดือน (recurring deductions) — read-only · มาจาก
-              employee profile · admin แก้/ลบที่หน้า "พนักงาน" ไม่ใช่ที่นี่    */}
-          {salaryCalculation.recurringDeductions?.map(
-            (it: { label: string; amount: number }, i: number) => (
-              <RecurringRow
-                key={`rd-${i}-${it.label}`}
-                item={it}
-                kind="deduction"
-              />
-            ),
-          )}
-
           {/* custom deductions — รายการหักที่เพิ่มเอง */}
           {(Array.isArray(data.customDeductions)
             ? data.customDeductions
@@ -1827,6 +1815,18 @@ export default function SalaryAdminEdit({
               <IconPlus size={14} strokeWidth={2.4} />
               เพิ่มรายการหัก
             </button>
+          )}
+
+          {/* รายการหักประจำเดือน (recurring deductions) — read-only · มาจาก
+              employee profile · admin แก้/ลบที่หน้า "พนักงาน" · อยู่ล่างสุดตามที่ ADMIN ขอ */}
+          {salaryCalculation.recurringDeductions?.map(
+            (it: { label: string; amount: number }, i: number) => (
+              <RecurringRow
+                key={`rd-${i}-${it.label}`}
+                item={it}
+                kind="deduction"
+              />
+            ),
           )}
         </div>
       </div>
