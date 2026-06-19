@@ -105,7 +105,7 @@ export default function MobileHeader({
             </div>
           )}
         </div>
-        {tab === "home" && (
+        {(tab === "home" || tab === "admin") && (
           <button
             onClick={onShowManual}
             title="คู่มือการใช้งาน"
@@ -127,7 +127,7 @@ export default function MobileHeader({
             ใบรับรอง
           </button>
         )}
-        {tab !== "home" && tab !== "salary" && (
+        {tab !== "home" && tab !== "salary" && tab !== "admin" && (
           <div className="w-9 h-9" />
         )}
       </div>
