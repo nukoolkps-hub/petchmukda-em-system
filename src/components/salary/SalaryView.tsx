@@ -704,7 +704,7 @@ export default function SalaryView({
                 <IconBriefcase
                   size={16}
                   strokeWidth={2.2}
-                  color={COLORS.maroon}
+                  color={COLORS.green}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-txt-mid">เงินเดือนพื้นฐาน</div>
@@ -730,15 +730,7 @@ export default function SalaryView({
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <IconStar
-                    size={16}
-                    strokeWidth={2.4}
-                    color={
-                      previewSalary.attendanceBonus > 0
-                        ? COLORS.green
-                        : COLORS.gold
-                    }
-                  />
+                  <IconStar size={16} strokeWidth={2.4} color={COLORS.green} />
                   <div className="text-sm font-bold text-txt flex-1">
                     โบนัสแห่งความขยัน (ไม่หยุด)
                   </div>
@@ -786,7 +778,7 @@ export default function SalaryView({
                   <IconHandshake
                     size={16}
                     strokeWidth={2.2}
-                    color={COLORS.gold}
+                    color={COLORS.green}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-txt-mid">
@@ -851,7 +843,7 @@ export default function SalaryView({
                   <IconPlus
                     size={16}
                     strokeWidth={2.2}
-                    color={COLORS.gold}
+                    color={COLORS.green}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-txt-mid">{it.label}</div>
@@ -1301,7 +1293,7 @@ export default function SalaryView({
               <IconBriefcase
                 size={16}
                 strokeWidth={2.2}
-                color={COLORS.maroon}
+                color={COLORS.green}
               />
             ),
             main: "เงินเดือนพื้นฐาน",
@@ -1364,7 +1356,7 @@ export default function SalaryView({
                       <Icon
                         size={16}
                         strokeWidth={2.2}
-                        color={it.id === "buy" ? COLORS.maroon : COLORS.gold}
+                        color={COLORS.green}
                       />
                     ),
                     main: `ค่าคอม${it.label}`,
@@ -1378,14 +1370,14 @@ export default function SalaryView({
             .filter((b) => b.amount > 0)
             .map((b) => ({
               icon: (
-                <IconTicket size={16} strokeWidth={2.2} color={COLORS.gold} />
+                <IconTicket size={16} strokeWidth={2.2} color={COLORS.green} />
               ),
               main: `โบนัส${b.label}`,
               sub: `${b.pieces} ครั้ง × ${formatThaiNumber(b.rate)} ฿`,
               value: b.amount,
             })),
           {
-            icon: <IconStar size={16} strokeWidth={2.2} color={COLORS.gold} />,
+            icon: <IconStar size={16} strokeWidth={2.2} color={COLORS.green} />,
             main: "โบนัสแห่งความขยัน(ไม่หยุด)",
             sub:
               salaryCalculation.leaveDays <= 2
@@ -1413,7 +1405,7 @@ export default function SalaryView({
               <IconHandshake
                 size={16}
                 strokeWidth={2.2}
-                color={COLORS.gold}
+                color={COLORS.green}
               />
             ),
             main: "เงินค่าแทน",
@@ -1436,7 +1428,7 @@ export default function SalaryView({
           ...(salaryCalculation.recurringIncomes || []).map(
             (it: { label: string; amount: number }) => ({
               icon: (
-                <IconPlus size={16} strokeWidth={2.2} color={COLORS.gold} />
+                <IconPlus size={16} strokeWidth={2.2} color={COLORS.green} />
               ),
               main: it.label || "รายรับประจำ",
               sub: "รายรับประจำเดือน",
@@ -1446,7 +1438,7 @@ export default function SalaryView({
           ...(Array.isArray(data.customEarnings)
             ? data.customEarnings.map((e) => ({
                 icon: (
-                  <IconPlus size={16} strokeWidth={2.2} color={COLORS.gold} />
+                  <IconPlus size={16} strokeWidth={2.2} color={COLORS.green} />
                 ),
                 main: e.label || "รายการรายรับ",
                 sub: "",
