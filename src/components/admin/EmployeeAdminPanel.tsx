@@ -135,8 +135,12 @@ export default function EmployeeAdminPanel({
                       ),
                     };
                     let content: React.ReactNode;
+                    // partial = ปิดเฉพาะบางรายการ (array · ยังเข้ากองได้ที่เหลือ) → ส้ม
+                    // full = ปิดทั้งหมด/legacy sell/buy/both → แดง (ขั้นรุนแรงกว่า)
+                    let isPartial = false;
                     if (Array.isArray(exc)) {
                       if (exc.length === 0) return null;
+                      isPartial = true;
                       content = (
                         <span className="inline-flex items-center gap-0.5">
                           <IconLock size={10} strokeWidth={2.4} />
@@ -148,7 +152,13 @@ export default function EmployeeAdminPanel({
                       if (!content) return null;
                     }
                     return (
-                      <span className="px-1.5 py-0.5 rounded-md bg-red-lt text-red font-bold text-xs">
+                      <span
+                        className={`px-1.5 py-0.5 rounded-md font-bold text-xs ${
+                          isPartial
+                            ? "bg-amber-lt text-amber"
+                            : "bg-red-lt text-red"
+                        }`}
+                      >
                         {content}
                       </span>
                     );
