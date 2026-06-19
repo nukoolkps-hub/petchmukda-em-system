@@ -85,7 +85,7 @@ function buildSalarySlipHTML(
   // มาทำงาน (ไม่ลา) → + 1 dailyRate ต่อวัน
   if ((salaryCalculation.extraOpenSaturdayBonus || 0) > 0) {
     earnRows.push({
-      label: `เงินเสาร์เปิดพิเศษ <span style="font-size:10px;color:#999;">(${salaryCalculation.extraOpenSaturdayDays} วัน)</span>`,
+      label: `เสาร์เปิดพิเศษ <span style="font-size:10px;color:#999;">(${salaryCalculation.extraOpenSaturdayDays} วัน)</span>`,
       value: salaryCalculation.extraOpenSaturdayBonus,
     });
   }

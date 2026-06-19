@@ -76,7 +76,7 @@ export function buildSalarySlipDocDef({
     ]);
   if ((salaryCalculation.extraOpenSaturdayBonus || 0) > 0) {
     earnRows.push([
-      `เงินเสาร์เปิดพิเศษ (${salaryCalculation.extraOpenSaturdayDays} วัน)`,
+      `เสาร์เปิดพิเศษ (${salaryCalculation.extraOpenSaturdayDays} วัน)`,
       formatNumber(salaryCalculation.extraOpenSaturdayBonus),
     ]);
   }

@@ -786,7 +786,7 @@ export default function SalaryView({
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-txt-mid">
-                      เงินเสาร์เปิดพิเศษ
+                      เสาร์เปิดพิเศษ
                     </div>
                     <div className="text-[11px] text-txt-soft">
                       {previewSalary.extraOpenSaturdayDays} วัน ×{" "}
@@ -1369,7 +1369,7 @@ export default function SalaryView({
                 color={COLORS.green}
               />
             ),
-            main: "เงินเสาร์เปิดพิเศษ",
+            main: "เสาร์เปิดพิเศษ",
             sub:
               salaryCalculation.extraOpenSaturdayDays > 0
                 ? `${salaryCalculation.extraOpenSaturdayDays} วัน × ${formatThaiNumber(Math.round(salaryCalculation.dailySalaryRate))} ฿`
