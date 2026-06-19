@@ -128,7 +128,14 @@ export default function MobileHeader({
           </button>
         )}
         {tab !== "home" && tab !== "salary" && (
-          <div className="w-9 h-9" />
+          <button
+            onClick={onShowManual}
+            title="คู่มือการใช้งาน"
+            className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-xs font-semibold shrink-0 whitespace-nowrap"
+          >
+            <IconBook2 size={16} color="#fff" strokeWidth={2.2} />
+            คู่มือ
+          </button>
         )}
       </div>
 
