@@ -156,7 +156,7 @@ export default function DutyEditModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="เช่น ทำความสะอาด, แทนบัญชี"
-            className="w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
+            className="w-full py-[9px] px-3 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
           />
         </div>
 
@@ -427,7 +427,7 @@ function CoverageFields({
             value={coveragePayInput}
             onChange={(e) => setCoveragePayInput(e.target.value)}
             placeholder="0"
-            className="flex-1 py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
+            className="flex-1 py-[9px] px-3 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
           />
           <span className="text-xs text-txt-soft">/ครั้ง</span>
         </div>

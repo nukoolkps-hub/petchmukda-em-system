@@ -378,7 +378,7 @@ export default function EmployeeEditModal({
                         [`${employee.id}:prefix`]: e.target.value,
                       }))
                     }
-                    className={`appearance-none cursor-pointer w-full py-[9px] pl-2.5 pr-7 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingPrefix !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                    className={`appearance-none cursor-pointer w-full py-[9px] pl-2.5 pr-7 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingPrefix !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
                   >
                     <option value="นางสาว">นางสาว</option>
                     <option value="นาง">นาง</option>
@@ -401,7 +401,7 @@ export default function EmployeeEditModal({
                       [`${employee.id}:name`]: e.target.value,
                     }))
                   }
-                  className={`flex-1 min-w-0 py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingName !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                  className={`flex-1 min-w-0 py-[9px] px-3 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingName !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
                 />
               </div>
               {/* Nickname — แสดงในปฏิทินการลา + รายการลา + แจ้งเตือน LINE */}
@@ -426,7 +426,7 @@ export default function EmployeeEditModal({
                     }))
                   }
                   placeholder="เช่น พี่หมู, น้องนุ่น"
-                  className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingNickname !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                  className={`w-full py-[9px] px-3 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingNickname !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
                 />
               </div>
             </div>
@@ -627,7 +627,7 @@ export default function EmployeeEditModal({
                         onChange={(e) =>
                           setYM(curYear || String(nowYear), e.target.value)
                         }
-                        className={`appearance-none cursor-pointer w-full py-[9px] pl-3 pr-7 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
+                        className={`appearance-none cursor-pointer w-full py-[9px] pl-3 pr-7 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
                       >
                         <option value="">เดือน</option>
                         {thaiMonths.map((mn, i) => (
@@ -651,7 +651,7 @@ export default function EmployeeEditModal({
                         onChange={(e) =>
                           setYM(e.target.value, curMonth || "01")
                         }
-                        className={`appearance-none cursor-pointer w-full py-[9px] pl-3 pr-7 rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
+                        className={`appearance-none cursor-pointer w-full py-[9px] pl-3 pr-7 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
                       >
                         <option value="">ปี (พ.ศ.)</option>
                         {years.map((y) => (
@@ -703,7 +703,7 @@ export default function EmployeeEditModal({
                       [`${employee.id}:baseSalary`]: e.target.value,
                     }))
                   }
-                  className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingBaseSalary !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                  className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingBaseSalary !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
                 />
               </div>
               <div className="text-xs text-txt-soft mt-[3px]">
@@ -740,7 +740,7 @@ export default function EmployeeEditModal({
                       [`${employee.id}:socialSecurity`]: e.target.value,
                     }))
                   }
-                  className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingSocialSecurity !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
+                  className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingSocialSecurity !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
                 />
               </div>
               <div className="text-xs text-txt-soft mt-[3px]">
@@ -887,7 +887,7 @@ export default function EmployeeEditModal({
                             min="0"
                             value={rateValue(item.id)}
                             onChange={(e) => setRate(item.id, e.target.value)}
-                            className={`w-full px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingPieceRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
+                            className={`w-full px-3 py-[9px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingPieceRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
                           />
                         </div>
                       ))}
@@ -1160,7 +1160,7 @@ export default function EmployeeEditModal({
                                   value={itemDisabled ? "" : valueOf()}
                                   disabled={itemDisabled}
                                   onChange={(ev) => setRate(ev.target.value)}
-                                  className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-center border-[1.5px] ${
+                                  className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-center border-[1.5px] ${
                                     itemDisabled
                                       ? "text-txt-soft bg-cream-dk cursor-not-allowed border-bdr"
                                       : `text-txt bg-white ${editingPoolItemRates?.[it.id] !== undefined ? "border-gold" : "border-bdr"}`
@@ -1238,7 +1238,7 @@ export default function EmployeeEditModal({
                           onChange={(e) =>
                             setBonusRate(item.id, e.target.value)
                           }
-                          className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBonusRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
+                          className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBonusRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
                         />
                       </div>
                     ))}

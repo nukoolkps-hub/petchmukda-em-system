@@ -132,14 +132,14 @@ function RecurringItemRow({
         value={item.label}
         onChange={(e) => onLabel(e.target.value)}
         placeholder="ชื่อรายการ"
-        className="flex-1 min-w-0 py-1.5 px-2 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-txt bg-white border border-bdr"
+        className="flex-1 min-w-0 py-1.5 px-2 rounded-[7px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt bg-white border border-bdr"
       />
       <input
         type="text"
         value={item.amount || ""}
         onChange={(e) => onAmount(parseFloat(e.target.value) || 0)}
         placeholder="0"
-        className="shrink-0 w-[100px] py-1.5 px-2 rounded-[7px] text-sm font-bold outline-none font-[inherit] text-txt bg-white border border-bdr text-right"
+        className="shrink-0 w-[100px] py-1.5 px-2 rounded-[7px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt bg-white border border-bdr text-right"
       />
       <button
         type="button"
