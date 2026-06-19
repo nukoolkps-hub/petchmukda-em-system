@@ -42,7 +42,7 @@ export default function MobileHeader({
       {/* Memphis scatter decoration */}
       <MemphisPattern variant="header" />
 
-      <div className="flex items-center justify-between mb-4 relative">
+      <div className="flex items-center justify-between mb-4 relative min-h-9">
         <div className="flex items-center gap-2.5">
           {tab === "home" ? (
             <div className="flex items-center gap-2.5 select-none">
