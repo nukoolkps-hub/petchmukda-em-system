@@ -1488,6 +1488,33 @@ export default function SalaryAdminEdit({
             )}
           </div>
 
+          {/* รายรับประจำเดือน (recurring incomes) — read-only · มาจาก employee
+              profile · admin แก้/ลบที่หน้า "พนักงาน" ไม่ใช่ที่นี่              */}
+          {salaryCalculation.recurringIncomes?.map(
+            (it: { label: string; amount: number }, i: number) => (
+              <div
+                key={`ri-${i}-${it.label}`}
+                className="bg-cream/50 rounded-[12px] p-3 mt-2.5 border border-dashed border-bdr"
+              >
+                <div className="font-bold mb-1 flex items-center gap-1.5 text-green">
+                  <IconPlus size={14} strokeWidth={2.4} />
+                  {it.label}
+                  <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
+                    ประจำเดือน
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-txt-soft">
+                    รายรับประจำจากข้อมูลพนักงาน
+                  </span>
+                  <span className="text-base font-semibold text-green whitespace-nowrap">
+                    + {formatThaiNumber(it.amount)} ฿
+                  </span>
+                </div>
+              </div>
+            ),
+          )}
+
           {/* custom earnings — รายการรายรับที่เพิ่มเอง */}
           {(Array.isArray(data.customEarnings) ? data.customEarnings : []).map(
             (item, index) => (
@@ -1698,6 +1725,33 @@ export default function SalaryAdminEdit({
                 หักเดือนนี้: − {formatThaiNumber(salaryCalculation.loanDeduction)} ฿
               </div>
             </div>
+          )}
+
+          {/* รายการหักประจำเดือน (recurring deductions) — read-only · มาจาก
+              employee profile · admin แก้/ลบที่หน้า "พนักงาน" ไม่ใช่ที่นี่    */}
+          {salaryCalculation.recurringDeductions?.map(
+            (it: { label: string; amount: number }, i: number) => (
+              <div
+                key={`rd-${i}-${it.label}`}
+                className="bg-cream/50 rounded-[12px] p-3 mt-2.5 border border-dashed border-bdr"
+              >
+                <div className="font-bold mb-1 flex items-center gap-1.5 text-red">
+                  <IconTrash size={14} strokeWidth={2.4} />
+                  {it.label}
+                  <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
+                    ประจำเดือน
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-txt-soft">
+                    หักประจำจากข้อมูลพนักงาน
+                  </span>
+                  <span className="text-base font-semibold text-red whitespace-nowrap">
+                    − {formatThaiNumber(it.amount)} ฿
+                  </span>
+                </div>
+              </div>
+            ),
           )}
 
           {/* custom deductions — รายการหักที่เพิ่มเอง */}
