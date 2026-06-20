@@ -10,7 +10,15 @@ import { openPDFBlob, printHTML } from "./webviewHelpers";
    • downloadSalaryCertificatePDF() → pdfmake (PDF text-searchable)    */
 
 function buildCertificateHTML(
-  { profile, employeeInfo, data, startDate, purpose, refNo }: any,
+  {
+    profile,
+    employeeInfo,
+    data,
+    startDate,
+    purpose,
+    refNo,
+    salaryOverride,
+  }: any,
   opts: { includePrintControls?: boolean } = {},
 ) {
   // ข้อมูล "ทางการ" ให้ใช้จาก employeeInfo (ที่ Admin ตั้งไว้) ก่อน profile (LINE)
@@ -19,7 +27,7 @@ function buildCertificateHTML(
   // เงินเดือนพื้นฐาน "ปัจจุบัน" = baseSalary + raises สะสมถึงปีนี้
   // (ไม่ใช่ baseSalary ดิบ — ต้องสะท้อนการขึ้นเงินเดือนประจำปี เพราะใบรับรอง
   //  ใช้ยื่นกู้/สมัครงาน · ต้องเป็นเลขจริงของวันออกใบ)
-  const baseSalary = employeeInfo
+  const effectiveBase = employeeInfo
     ? getEffectiveBaseSalary({
         baseSalary: employeeInfo.baseSalary ?? 0,
         startWorkMonth: employeeInfo.startWorkMonth ?? null,
@@ -27,6 +35,13 @@ function buildCertificateHTML(
         annualRaises: employeeInfo.annualRaises ?? {},
       }) || data?.baseSalary || 0
     : data?.baseSalary || 0;
+  // salaryOverride: caller (UI) ส่งมาเมื่อพนักงานอยากระบุยอดต่ำกว่าจริง
+  // (เช่น ยื่นกู้เครดิตการ์ดที่ไม่อยากโชว์ยอดเต็ม) · clamp ห้ามเกิน effective
+  // (กันโชว์ยอดสูงกว่าจริง · ผิดกฎหมาย/ผิดจรรยาบรรณ)
+  const baseSalary =
+    typeof salaryOverride === "number" && salaryOverride > 0
+      ? Math.min(salaryOverride, effectiveBase)
+      : effectiveBase;
 
   // mode='pdf' → ไม่ต้องมีปุ่ม + auto-print
   const includePrintControls = opts.includePrintControls !== false;
