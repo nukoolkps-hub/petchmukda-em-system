@@ -31,7 +31,7 @@ const COLLECTIONS_TO_DELETE: { name: string; label: string }[] = [
   { name: "advances", label: "เบิกเงินล่วงหน้า" },
   { name: "employeeLoans", label: "เงินกู้" },
   { name: "payrollConfirms", label: "ยืนยันยอดรอบเงินเดือน" },
-  { name: "poolSnapshots", label: "Snapshot กองกลาง (ข้อมูลเพื่อนใน pool calc)" },
+  { name: "poolSnapshots", label: "Snapshot กองกลาง (ข้อมูลเพื่อนร่วมงานร่วมงานใน pool calc)" },
   { name: "poolAdjustments", label: "รายการหักกองกลาง" },
   { name: "dutyAssignmentsToday", label: "Cache เวรประจำวัน" },
   { name: "certCounters", label: "ตัวนับใบรับรอง" },
@@ -331,7 +331,7 @@ export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
       </div>
       <div className="mb-3 text-xs text-txt-mid leading-relaxed">
         เลือกพนักงานที่ต้องการลบ — ลบเฉพาะข้อมูลของคนนั้น (สลิปเงินเดือน · ใบลา · เบิกเงิน ·
-        เงินกู้ · entries ใน pool snapshots) · ไม่กระทบ พนักงานคนอื่นและ config
+        เงินกู้ · entries ใน pool snapshots) · ไม่กระทบ เพื่อนร่วมงานและ config
       </div>
 
       <div className="mb-3 rounded-[12px] border-[1.5px] border-bdr/60 bg-white overflow-hidden">

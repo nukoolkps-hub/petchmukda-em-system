@@ -649,7 +649,7 @@ export default function SalaryAdminEdit({
           <div className="text-xs text-txt-mid mb-2 leading-relaxed">
             ตัดสิทธิ์ฝั่งขาย/รับซื้อ แยกกัน · &lt; 80% ของ Top = ตัดออก
             <br />
-            แบ่งกองกลางตามสูตร: % ได้ = Base − % หัก + Σ% แบ่งเพื่อน
+            แบ่งกองกลางตามสูตร: % ได้ = Base − % หัก + Σ% แบ่งให้เพื่อนร่วมงาน
           </div>
 
           {/* Admin-locked: ปิดสิทธิ์ Pool */}
@@ -788,7 +788,7 @@ export default function SalaryAdminEdit({
                 </div>
                 <div className="text-xs text-txt-soft leading-relaxed">
                   หัก: <b>{poolShare.sellLeaveDeductionPercent.toFixed(2)}%</b> ·
-                  แบ่งเพื่อน:{" "}
+                  แบ่งให้เพื่อนร่วมงาน:{" "}
                   <b>{poolShare.sellRedistributedPercent.toFixed(2)}%</b>
                   <br />
                   ได้ชิ้น:{" "}
@@ -829,7 +829,7 @@ export default function SalaryAdminEdit({
                 </div>
                 <div className="text-xs text-txt-soft leading-relaxed">
                   หัก: <b>{poolShare.buyLeaveDeductionPercent.toFixed(2)}%</b> ·
-                  แบ่งเพื่อน:{" "}
+                  แบ่งให้เพื่อนร่วมงาน:{" "}
                   <b>{poolShare.buyRedistributedPercent.toFixed(2)}%</b>
                   <br />
                   ได้ชิ้น:{" "}
@@ -858,7 +858,7 @@ export default function SalaryAdminEdit({
             )}
 
             <div className="mt-1.5 px-2 py-1.5 rounded-md text-xs text-maroon text-center font-semibold leading-relaxed bg-[#C9973A15]">
-              สูตร: % ที่ได้ = Base − % การหัก + Σ(% แบ่งเพื่อน)
+              สูตร: % ที่ได้ = Base − % การหัก + Σ(% แบ่งให้เพื่อนร่วมงาน)
               <br />
               <span className="inline-flex items-center gap-1">
                 <IconSparkles size={11} strokeWidth={2.4} />
