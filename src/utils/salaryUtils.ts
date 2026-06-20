@@ -831,6 +831,9 @@ export function computePoolSharesForGroup({
     const excluded = excludedByItemId[it.id] || 0;
     totalItemPool[it.id] = Math.max(0, gross - excluded);
   });
+  // group-wide per-item stats (เพื่อโชว์ "X คน · Base Y%" ในหน้า admin/ flow)
+  const eligibleCountByItemId: Record<string, number> = {};
+  const baseSharePercentByItemId: Record<string, number> = {};
   poolItemsConfig.forEach((it) => {
     if (it.kind === "pool") {
       const itemEligPerEmp: Record<string, boolean> = {};
@@ -838,6 +841,8 @@ export function computePoolSharesForGroup({
         itemEligPerEmp[empId] = itemEligibility[empId][it.id] || false;
       });
       const r = computeShares(itemEligPerEmp, totalItemPool[it.id]);
+      eligibleCountByItemId[it.id] = r.eligibleEmployeeCount;
+      baseSharePercentByItemId[it.id] = r.baseSharePercent;
       activeIds.forEach((empId) => {
         if (!itemShares[empId]) itemShares[empId] = {};
         const s = r.shares[empId];
@@ -944,6 +949,10 @@ export function computePoolSharesForGroup({
       /** per-item exclusion items (adjustment) สำหรับ PoolFlowModal แสดง
        *  reason list ของ custom items ด้วย (เดิม legacy normal/buy เท่านั้น) */
       excludedItemsByItemId,
+      /** group-wide eligible count + base share per pool item ·
+       *  ใช้แสดง "X คน · Base Y%" ใน SalaryAdminEdit + PoolFlowModal */
+      eligibleCountByItemId,
+      baseSharePercentByItemId,
     };
   });
   return result;
