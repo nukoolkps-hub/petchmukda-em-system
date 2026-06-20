@@ -3,7 +3,7 @@
    ไม่ใช่ image-based เหมือน html2pdf                          */
 
 import { formatYmThai } from "../../utils/dateUtils";
-import { rolePaysPieceCommission } from "../../utils/salaryUtils";
+import { applyHiddenFilter, buildSlipRowsCatalog } from "../../utils/slipRows";
 
 const COLORS = {
   maroon: "#7B1C1C",
@@ -18,6 +18,13 @@ const CONTENT_WIDTH = 523; // A4 (595.28) − pageMargins 36×2
 
 const formatNumber = (value) => Number(value || 0).toLocaleString("th-TH");
 
+/** PDF เดิม label ฝั่ง deduction ไม่มี "หัก" prefix (section header ระบุอยู่แล้ว)
+ *  catalog ใส่ prefix ตามที่แสดงใน HTML/UI · strip ตรงนี้ก่อน render ใน PDF */
+function stripDeductionPrefix(label: string): string {
+  if (label.startsWith("หัก")) return label.slice(3);
+  return label;
+}
+
 /**
  * Build pdfmake document definition for salary slip
  * @returns {Object} pdfmake docDefinition
@@ -30,6 +37,8 @@ export function buildSalarySlipDocDef({
   salaryCalculation,
   selectedMonth,
   monthApprovedAdvances,
+  hiddenEarnIds,
+  hiddenDedIds,
 }) {
   if (!data || !salaryCalculation) throw new Error("ไม่มีข้อมูลเงินเดือนเดือนนี้");
 
@@ -45,90 +54,37 @@ export function buildSalarySlipDocDef({
   const bankAccountNumber =
     employeeInfo?.bankAccountNumber || profile?.bankAccountNumber || "-";
 
-  /* ─── สร้าง earnings rows ─────────────────────────────── */
-  const earnRows: [string, string][] = [];
-  earnRows.push([
-    "เงินเดือนพื้นฐานปัจจุบัน",
-    formatNumber(salaryCalculation.baseSalary),
+  /* ─── สร้าง earnings + deductions rows จาก shared catalog ──────
+     UI modal ใช้ catalog ตัวเดียวกัน · pass hiddenIds ผ่าน args ·
+     sublabel render เป็น "\n${sublabel}" (newline ใน cell ของ pdfmake)
+     ดู src/utils/slipRows.ts ─────────────────────────────────────── */
+  const catalog = buildSlipRowsCatalog({
+    data,
+    salaryCalculation,
+    employeeRole,
+  });
+  const earnCatalog = applyHiddenFilter(
+    catalog.earnRows,
+    hiddenEarnIds || new Set(),
+    "รายรับอื่นๆ",
+  );
+  const dedCatalog = applyHiddenFilter(
+    catalog.dedRows,
+    hiddenDedIds || new Set(),
+    "รายการหักอื่นๆ",
+  );
+  const earnRows: [string, string][] = earnCatalog.map((r) => [
+    r.sublabel ? `${r.label}\n${r.sublabel}` : r.label,
+    formatNumber(r.value),
   ]);
-  // ตำแหน่งไม่มี piece commission → ข้ามทั้ง piece + invite/transfer
-  if (rolePaysPieceCommission(employeeRole)) {
-    if (salaryCalculation.usesSinglePieceRate) {
-      // multi-item — 1 แถวต่อรายการค่าคอม (เฉพาะที่ > 0)
-      for (const item of salaryCalculation.pieceBreakdown || []) {
-        if (item.amount > 0)
-          earnRows.push([item.label, formatNumber(item.amount)]);
-      }
-    } else {
-      // pool sales (multi-item · loop รวม custom)
-      for (const it of salaryCalculation.poolItemsBreakdown || []) {
-        if (it.amount > 0)
-          earnRows.push([`ค่าคอม${it.label}`, formatNumber(it.amount)]);
-      }
-    }
-    // โบนัสอื่นๆ (multi-item) — แสดงทุก item ที่มี amount > 0
-    for (const bonus of salaryCalculation.bonusBreakdown || []) {
-      if (bonus.amount > 0)
-        earnRows.push([`โบนัส${bonus.label}`, formatNumber(bonus.amount)]);
-    }
-  }
-  if (salaryCalculation.attendanceBonus > 0)
-    earnRows.push([
-      "โบนัสแห่งความขยัน (ไม่หยุด)",
-      formatNumber(salaryCalculation.attendanceBonus),
-    ]);
-  if ((salaryCalculation.extraOpenSaturdayBonus || 0) > 0) {
-    earnRows.push([
-      `เสาร์เปิดพิเศษ (${salaryCalculation.extraOpenSaturdayDays} วัน)`,
-      formatNumber(salaryCalculation.extraOpenSaturdayBonus),
-    ]);
-  }
-  if ((salaryCalculation.coveragePay || 0) > 0) {
-    const brk = Array.isArray(data.coveragePayBreakdown)
-      ? data.coveragePayBreakdown
-          .map((b: any) => `${b.dutyName} ${b.count}×${formatNumber(b.rate)}`)
-          .join(", ")
-      : "";
-    earnRows.push([
-      brk ? `เงินค่าแทน\n${brk}` : "เงินค่าแทน",
-      formatNumber(salaryCalculation.coveragePay),
-    ]);
-  }
-  if (Array.isArray(data.customEarnings))
-    for (const e of data.customEarnings)
-      if (e?.amount > 0)
-        earnRows.push([e.label || "รายการรายรับ", formatNumber(e.amount)]);
-  // รายรับประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
-  for (const it of salaryCalculation.recurringIncomes || []) {
-    if (it.amount > 0)
-      earnRows.push([it.label || "รายรับประจำ", formatNumber(it.amount)]);
-  }
-
-  /* ─── สร้าง deductions rows ───────────────────────────── */
-  const dedRows: [string, string][] = [];
-  if (salaryCalculation.advanceDeduction > 0)
-    dedRows.push([
-      "เบิกล่วงหน้า",
-      formatNumber(salaryCalculation.advanceDeduction),
-    ]);
-  if (salaryCalculation.loanDeduction > 0)
-    dedRows.push(["ผ่อนเงินกู้", formatNumber(salaryCalculation.loanDeduction)]);
-  if (salaryCalculation.socialSecurity > 0)
-    dedRows.push(["ประกันสังคม", formatNumber(salaryCalculation.socialSecurity)]);
-  if (salaryCalculation.overQuotaDeduction > 0)
-    dedRows.push([
-      "ลาเกินโควต้า",
-      formatNumber(salaryCalculation.overQuotaDeduction),
-    ]);
-  if (Array.isArray(data.customDeductions))
-    for (const d of data.customDeductions)
-      if (d?.amount > 0)
-        dedRows.push([d.label || "รายการหัก", formatNumber(d.amount)]);
-  // รายการหักประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
-  for (const it of salaryCalculation.recurringDeductions || []) {
-    if (it.amount > 0)
-      dedRows.push([it.label || "หักประจำ", formatNumber(it.amount)]);
-  }
+  // หมายเหตุ: PDF เดิม drop "หัก" prefix ใน deduction labels (เพราะ section
+  // header เป็น "รายการหัก" แล้ว) · catalog เก็บ "หัก..." → strip ตรงนี้
+  const dedRows: [string, string][] = dedCatalog.map((r) => [
+    r.sublabel
+      ? `${stripDeductionPrefix(r.label)}\n${r.sublabel}`
+      : stripDeductionPrefix(r.label),
+    formatNumber(r.value),
+  ]);
 
   /* ─── pdfmake doc definition ──────────────────────────── */
   return {

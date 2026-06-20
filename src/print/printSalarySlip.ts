@@ -1,5 +1,8 @@
 import { formatYmThai } from "../utils/dateUtils";
-import { rolePaysPieceCommission } from "../utils/salaryUtils";
+import {
+  applyHiddenFilter,
+  buildSlipRowsCatalog,
+} from "../utils/slipRows";
 import { buildSalarySlipDocDef } from "./pdfBuilders/salarySlipPDF";
 import { openPDFBlob, printHTML } from "./webviewHelpers";
 
@@ -17,6 +20,8 @@ function buildSalarySlipHTML(
     salaryCalculation,
     selectedMonth,
     monthApprovedAdvances,
+    hiddenEarnIds,
+    hiddenDedIds,
   }: any,
   opts: { includePrintControls?: boolean } = {},
 ) {
@@ -39,107 +44,38 @@ function buildSalarySlipHTML(
 
   const formatNumber = (value) => Number(value || 0).toLocaleString("th-TH");
 
-  // ── สร้างรายการรายรับ ──
-  const earnRows: { label: string; value: any }[] = [];
-  earnRows.push({
-    label: "เงินเดือนพื้นฐานปัจจุบัน",
-    value: salaryCalculation.baseSalary,
+  // Build จาก shared catalog (id + label + sublabel + value) · UI modal ใช้
+  // ตัวเดียวกันเพื่อ filter id ตรงกัน · ดู src/utils/slipRows.ts
+  const catalog = buildSlipRowsCatalog({
+    data,
+    salaryCalculation,
+    employeeRole,
   });
-  // ถ้าตำแหน่งไม่มี piece commission → ข้ามทั้ง piece + invite/transfer
-  if (rolePaysPieceCommission(employeeRole)) {
-    if (salaryCalculation.usesSinglePieceRate) {
-      // multi-item — 1 แถวต่อรายการค่าคอม (เฉพาะที่ > 0)
-      for (const item of salaryCalculation.pieceBreakdown || []) {
-        if (item.amount > 0)
-          earnRows.push({ label: item.label, value: item.amount });
-      }
-    } else {
-      // pool sales (multi-item · loop รวม custom)
-      for (const it of salaryCalculation.poolItemsBreakdown || []) {
-        if (it.amount > 0)
-          earnRows.push({ label: `ค่าคอม${it.label}`, value: it.amount });
-      }
-    }
-    // โบนัสอื่นๆ (multi-item) — แสดงทุก item ที่มี amount > 0
-    for (const bonus of salaryCalculation.bonusBreakdown || []) {
-      if (bonus.amount > 0)
-        earnRows.push({ label: `โบนัส${bonus.label}`, value: bonus.amount });
-    }
-  }
-  if (salaryCalculation.attendanceBonus > 0)
-    earnRows.push({
-      label: "โบนัสแห่งความขยัน (ไม่หยุด)",
-      value: salaryCalculation.attendanceBonus,
-    });
-  if ((salaryCalculation.coveragePay || 0) > 0) {
-    const brk = Array.isArray(data.coveragePayBreakdown)
-      ? data.coveragePayBreakdown
-          .map((b) => `${b.dutyName} ${b.count}×${formatNumber(b.rate)}`)
-          .join(", ")
-      : "";
-    earnRows.push({
-      label: brk
-        ? `เงินค่าแทน <span style="font-size:10px;color:#999;">(${brk})</span>`
-        : "เงินค่าแทน",
-      value: salaryCalculation.coveragePay,
-    });
-  }
-  // เงินเสาร์เปิดพิเศษ — ADMIN tick "จ่ายเพิ่ม" ในเสาร์เปิดพิเศษ + พนักงาน
-  // มาทำงาน (ไม่ลา) → + 1 dailyRate ต่อวัน
-  if ((salaryCalculation.extraOpenSaturdayBonus || 0) > 0) {
-    earnRows.push({
-      label: `เสาร์เปิดพิเศษ <span style="font-size:10px;color:#999;">(${salaryCalculation.extraOpenSaturdayDays} วัน)</span>`,
-      value: salaryCalculation.extraOpenSaturdayBonus,
-    });
-  }
-  // รายรับพิเศษเฉพาะเดือน (custom earnings) — admin เพิ่มในหน้าค่าคอม
-  if (Array.isArray(data.customEarnings))
-    for (const e of data.customEarnings)
-      if (e?.amount > 0)
-        earnRows.push({
-          label: e.label || "รายรับพิเศษ",
-          value: e.amount,
-        });
-  // รายรับประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
-  for (const it of salaryCalculation.recurringIncomes || []) {
-    if (it.amount > 0)
-      earnRows.push({ label: it.label || "รายรับประจำ", value: it.amount });
-  }
-
-  // ── รายการหัก ──
-  const dedRows: { label: string; value: any }[] = [];
-  if (salaryCalculation.advanceDeduction > 0) {
-    dedRows.push({
-      label: "หักเงินเบิกล่วงหน้า",
-      value: salaryCalculation.advanceDeduction,
-    });
-  }
-  if (salaryCalculation.loanDeduction > 0) {
-    dedRows.push({
-      label: "หักผ่อนเงินกู้",
-      value: salaryCalculation.loanDeduction,
-    });
-  }
-  if (salaryCalculation.socialSecurity > 0)
-    dedRows.push({
-      label: "หักประกันสังคม",
-      value: salaryCalculation.socialSecurity,
-    });
-  if (salaryCalculation.overQuotaDeduction > 0) {
-    dedRows.push({
-      label: "หักลาเกินโควต้า",
-      value: salaryCalculation.overQuotaDeduction,
-    });
-  }
-  if (Array.isArray(data.customDeductions))
-    for (const d of data.customDeductions)
-      if (d?.amount > 0)
-        dedRows.push({ label: d.label || "รายการหัก", value: d.amount });
-  // รายการหักประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ
-  for (const it of salaryCalculation.recurringDeductions || []) {
-    if (it.amount > 0)
-      dedRows.push({ label: it.label || "หักประจำ", value: it.amount });
-  }
+  // apply hidden filter (ถ้า user เลือก "รายละเอียดบางส่วน") · sum ที่ซ่อน
+  // → กระโดดไปอยู่ใน "รายรับอื่นๆ" / "รายการหักอื่นๆ" · เงินสุทธิเท่าเดิม
+  const earnCatalog = applyHiddenFilter(
+    catalog.earnRows,
+    hiddenEarnIds || new Set(),
+    "รายรับอื่นๆ",
+  );
+  const dedCatalog = applyHiddenFilter(
+    catalog.dedRows,
+    hiddenDedIds || new Set(),
+    "รายการหักอื่นๆ",
+  );
+  // HTML render: sublabel → `<span class="sublabel">(...)</span>`
+  const renderLabel = (row: { label: string; sublabel?: string }) =>
+    row.sublabel
+      ? `${row.label} <span style="font-size:10px;color:#999;">(${row.sublabel})</span>`
+      : row.label;
+  const earnRows = earnCatalog.map((r) => ({
+    label: renderLabel(r),
+    value: r.value,
+  }));
+  const dedRows = dedCatalog.map((r) => ({
+    label: renderLabel(r),
+    value: r.value,
+  }));
 
   const slipHTML = `<!doctype html>
 <html lang="th">
