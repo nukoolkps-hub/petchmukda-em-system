@@ -213,7 +213,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | เกณฑ์เข้า Pool (per item · admin custom) | default 80% ของ top item (PR #488+) |
 | เกณฑ์ได้เงินเดือนพื้นฐาน | ≥ 50% ของ top primary item (poolExclusion="all") |
 | วันลา "ฟรี" ก่อนเริ่มหัก % ใน Pool | 2 วันแรก (ไม่กระทบ) |
-| เพดานเบิกล่วงหน้า | 50% ของ baseSalary |
+| เพดานเบิกล่วงหน้า (ขึ้นตามอายุงาน) | <3y=50% · 3y=60% · 4y=70% · 5y=80% · 6y+=100% ของ effective base salary · 1 ครั้ง/เดือน · หักในเดือนที่เบิก |
 | โบนัสแห่งความขยัน (0 วันลา) | 2 × dailyRate |
 | โบนัสแห่งความขยัน (1 วันลา) | 1 × dailyRate |
 | โบนัสแห่งความขยัน (≥ 2 วันลา) | 0 |
@@ -225,13 +225,17 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 
 **ร้านหยุดวันเสาร์เป็นค่าตั้งต้น** · admin override ได้ผ่าน `/config/storeCalendar`:
 - `extraOpenSaturdays`: เสาร์ที่ admin เปิดพิเศษ (พนักงานมาทำงาน)
+- `paidExtraSaturdays`: เสาร์เปิดพิเศษ + **"จ่ายเพิ่ม 1 วัน"** (`saturdayExtraPayEarnings` ลงในสลิป) · ต้องเป็น subset ของ `extraOpenSaturdays`
 - `extraClosedWeekdays`: จ-ศ ที่ admin ปิดพิเศษ (อบรม/หยุดยาว ฯลฯ)
+- `extraClosedSundays`: อาทิตย์ที่ admin ปิดพิเศษ (ร้านปิด · ลาไม่นับ + ไม่หัก × 1.5)
 
 | วัน | สถานะ default | การลา |
 |---|---|---|
 | อาทิตย์ | เปิด (× 1.5) | หักทุกวัน × 1.5 dailyRate, ไม่นับโควต้า (กฎเดิม) |
+| อาทิตย์ ∈ extraClosedSundays | ปิด | **ไม่นับ · ไม่หัก × 1.5** |
 | **เสาร์** | **ปิด** | **ไม่นับ** (ลาวันร้านปิดไม่กระทบเงินเดือน) |
 | เสาร์ ∈ extraOpenSaturdays | เปิด | นับเหมือนวันธรรมดา (โควต้า 2 วัน/เดือน + เกินหัก × 1) |
+| เสาร์ ∈ paidExtraSaturdays | เปิด + จ่ายเพิ่ม | นับเหมือนวันธรรมดา + ทุกคนที่ทำงานวันนั้นได้ `dailyRate` เพิ่มในสลิป |
 | จ-ศ | เปิด | นับเข้าโควต้า · เกินหัก × 1 dailyRate |
 | จ-ศ ∈ extraClosedWeekdays | ปิด | ไม่นับ |
 
@@ -241,6 +245,18 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 - **UI admin:** Section "วันเปิด-ปิดร้าน" ใน sidebar (กลุ่ม "ปฏิทิน")
 
 Single source: `src/utils/storeCalendar.ts` · sync helper `applicableDuties` ใน duty client/server ผ่าน CI sync check (`scripts/check-duty-sync.mjs`)
+
+### Subsystems อื่นๆ (สรุปสั้น · เต็มที่ `docs/reference/business-rules.md`)
+
+| ระบบ | สรุป |
+|---|---|
+| **เงินกู้ผ่อนคืน** (`employeeLoans`) | admin สร้าง · กำหนด `principal` + `monthlyDeduction` + `startMonth` · ระบบหักอัตโนมัติทุกเดือนจนครบ (ledger `repayments[ym]`) · **FIFO** ตาม startMonth → id ถ้ามีหลายก้อน · admin upload สลิปโอน · พนักงานเปิดดูได้จาก loan card (PR #589-#591) |
+| **ขึ้นเงินเดือนประจำปี** | `annualRaiseAmount` (auto บวกทุก 1 ม.ค. ที่ครบ 1 ปี) + `annualRaises[year]` (per-year override) · `getEffectiveBaseSalary()` รวมยอดให้ "เงินเดือนพื้นฐานปัจจุบัน" · ใช้ใน slip + cert + advance limit |
+| **รายการประจำเดือน** | `recurringEarnings` (ค่าเดินทาง · เบี้ยขยัน · admin ตั้งใน profile · บวกทุกสลิป) · `recurringDeductions` (ค่าชุด · ค่าอาหาร · หักทุกสลิป) · จะถูกใช้จนกว่า admin จะลบ |
+| **หน้าที่ประจำ** (`duties` + `dutyAssignments`) | weekly/monthly rotation · `pickPrimary` เลือกคนทำตาม fairness (เคยทำน้อยสุดได้ก่อน) · `coveragePay` จ่ายแทนเมื่อ primary ลา · `applicableDuties` filter ด้วย storeCalendar ก่อน render · client/server sync ผ่าน `scripts/check-duty-sync.mjs` |
+| **ปิดรอบเงินเดือน (7 วัน)** | admin ยืนยันยอดเดือน X → 7 วันหลังจากนั้น เดือน X ปิดถาวร แก้ไม่ได้อีก (`isMonthLocked()` ใน `payrollLock.ts`) · กันแก้ย้อนหลัง · ระหว่าง grace period ยัง edit ได้ |
+| **หนังสือรับรองเงินเดือน** | พนักงานสั่งพิมพ์เองได้ใน /salary · `certCounters` (running counter ต่อปี) · ใช้ `getEffectiveBaseSalary` (เลขปัจจุบัน · ไม่ใช่เริ่มต้น) |
+| **`salaryDisabled` flag** | flag ใน employee doc → ปิดทั้งหมดของเงินเดือน (สำหรับฝึกงาน/Part-time/ลาออก) · slip ไม่ render รายการเลย |
 
 ## Conventions
 

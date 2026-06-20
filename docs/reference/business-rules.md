@@ -5,21 +5,26 @@ Config ทั้งหมดอยู่ใน `src/constants.ts` → `BUSINESS_
 ## สูตรเงินเดือน (calculateSalary)
 
 ```
-Earnings = baseSalary                  (0 ถ้า losesBaseSalary)
+Earnings = baseSalary                  (effective = baseSalary + Σ annualRaises ≤ year ·
+                                        0 ถ้า losesBaseSalary หรือ salaryDisabled)
          + Σ pieceBreakdown.amount      (multi-item piece commission · non-pool roles)
-         + Σ poolItemsBreakdown.amount  (multi-item pool sales · รวม custom items
-                                         · = normalSale + specialSale + buy +
-                                         customPoolCommission)
-         + Σ bonusBreakdown.amount      (multi-item "โบนัสอื่นๆ" · invite/transfer
-                                         + custom · default 2 รายการ)
-         + attendanceBonus              (0 ถ้า losesBaseSalary)
+         + Σ poolItemsBreakdown.amount  (multi-item pool sales · admin custom items)
+         + Σ bonusBreakdown.amount      (multi-item "โบนัสอื่นๆ" · admin custom +
+                                         default 2 รายการ · ไม่แบ่งกองกลาง)
+         + attendanceBonus              (0 ถ้า losesBaseSalary · 0/1/2× dailyRate)
          + coveragePay                  (เงินค่าแทน — coverage duty × จำนวนครั้งที่แทน)
+         + saturdayExtraPayEarnings     (เสาร์เปิดพิเศษที่ admin tick "จ่ายเพิ่ม" ·
+                                         dailyRate × จำนวนเสาร์ที่ทำงาน)
+         + Σ recurringEarnings          (รายรับประจำเดือน admin ตั้งใน employee profile ·
+                                         ใช้ทุกเดือนจนกว่าจะลบ · เช่น ค่าเดินทาง · เบี้ยขยัน)
+         + Σ customEarnings             (per-month admin เพิ่มเอง · ไม่เป็นประจำ)
 
 Deductions = overQuotaDeduction
-           + advanceDeduction
-           + loanDeduction         (เงินกู้ผ่อนคืน — หักเท่าที่มี FIFO)
+           + advanceDeduction       (รวม approved advances ที่ month === salary.month)
+           + loanDeduction          (เงินกู้ผ่อนคืน — หักเท่าที่มี FIFO ตาม startMonth)
            + socialSecurity
-           + customDeductions
+           + Σ recurringDeductions  (รายจ่ายประจำเดือน admin ตั้งใน employee profile)
+           + Σ customDeductions     (per-month admin เพิ่มเอง · ไม่เป็นประจำ)
 
 Net = Earnings - Deductions
 ```
@@ -211,8 +216,13 @@ Source: `src/utils/leaveUtils.ts` · `src/hooks/useLeaveForm.ts` · `src/compone
 
 ```ts
 interface StoreCalendar {
-  extraOpenSaturdays: string[];   // "YYYY-MM-DD"
-  extraClosedWeekdays: string[];  // "YYYY-MM-DD"
+  extraOpenSaturdays: string[];    // "YYYY-MM-DD" · เสาร์เปิดพิเศษ
+  paidExtraSaturdays: string[];    // "YYYY-MM-DD" · เสาร์เปิดพิเศษ + "จ่ายเพิ่ม 1 วัน"
+                                   //                (saturdayExtraPayEarnings ใน slip)
+                                   //                ต้องเป็น subset ของ extraOpenSaturdays
+  extraClosedWeekdays: string[];   // "YYYY-MM-DD" · จ-ศ ปิดพิเศษ (อบรม/หยุดยาว)
+  extraClosedSundays: string[];    // "YYYY-MM-DD" · อาทิตย์ปิดพิเศษ
+                                   //                (ลาไม่นับ + ไม่หัก × 1.5)
 }
 ```
 
@@ -220,9 +230,9 @@ interface StoreCalendar {
 
 | Day | Default | Override key | Counts as |
 |---|---|---|---|
-| อาทิตย์ | เปิด | — | × 1.5 ทุกวัน (กฎเดิม) |
-| **เสาร์** | **ปิด** | `extraOpenSaturdays` (เปิด) | ลาในวันร้านปิด = ไม่นับ · ลาในเสาร์เปิดพิเศษ = วันธรรมดา |
-| จ-ศ | เปิด | `extraClosedWeekdays` (ปิด) | ลาในวันร้านเปิด = นับ · ลาในวันปิดพิเศษ = ไม่นับ |
+| อาทิตย์ | เปิด (× 1.5) | `extraClosedSundays` (ปิด) | ลาในวันเปิด = หัก × 1.5 · ลาในอาทิตย์ปิดพิเศษ = ไม่นับ ไม่หัก |
+| **เสาร์** | **ปิด** | `extraOpenSaturdays` (เปิด) · `paidExtraSaturdays` (เปิด + จ่ายเพิ่ม) | ลาในวันปิด = ไม่นับ · ลาในเสาร์เปิดพิเศษ = วันธรรมดา · `paidExtraSaturdays` เพิ่ม `dailyRate` ลง `saturdayExtraPayEarnings` ของทุกคนที่ทำงานวันนั้น |
+| จ-ศ | เปิด | `extraClosedWeekdays` (ปิด) | ลาในวันเปิด = นับ · ลาในวันปิดพิเศษ = ไม่นับ |
 
 **Helper:**
 - `isStoreClosed(ymd, calendar)` — true เมื่อร้านปิด
@@ -240,10 +250,19 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
 
 ## ระบบเบิกเงินล่วงหน้า
 
-- เพดาน: 50% ของ baseSalary
+- **เพดาน % ของ effective base salary (รวม raises) — ขึ้นตามอายุงาน:**
+  | อายุงาน | เพดาน |
+  |---|---|
+  | <3 ปี | 50% |
+  | ครบ 3 ปี | 60% |
+  | ครบ 4 ปี | 70% |
+  | ครบ 5 ปี | 80% |
+  | ครบ 6 ปี+ | 100% |
+  Source: `src/utils/advanceUtils.ts` → `ADVANCE_LIMIT_TIERS`
+- **1 ครั้ง/เดือน** — pending/approved บล็อกยื่นใหม่ในเดือนเดียวกัน · rejected เท่านั้นที่ยื่นใหม่ได้
 - Status flow: `pending → approved / rejected`
-- Approved → หักจากเงินเดือนรอบถัดไป
-- พนักงาน**ขอเอง** · admin อนุมัติ/ปฏิเสธ
+- Approved → **หักจากเงินเดือน "ในเดือนที่เบิก"** (ไม่ใช่เดือนถัดไป) · advance.month = ตอนยื่น · `monthApprovedAdvances` รวมเป็น `advanceDeduction` ในสลิปเดือนเดียวกัน
+- พนักงาน**ขอเอง** · admin อนุมัติ/ปฏิเสธ + แนบสลิปการโอน (storage `loanSlips/{advanceId}/`)
 - บล็อกการเบิกในวันสุดท้ายของเดือน (วันทำเงินเดือน)
 - LINE notification: แจ้ง admin เมื่อมีคำขอ, แจ้งพนักงานเมื่อ approve/reject
 - Cleanup: Cloud Function ลบ advances เกิน 6 เดือน (ทุกวันที่ 1)

@@ -5,15 +5,20 @@ import type { PieceItem } from "../types";
 import { countWeekdayLeaves, getOverQuotaDays } from "./leaveUtils";
 
 /* ─── Role piece-commission policy ────────────────────────────────
-   ตำแหน่งเก็บค่าคอมแยก 3 รูปแบบ:
-   1. Pool sales — poolGroup ตั้ง → ใช้ normal/special/buy + invite/transfer
+   ตำแหน่งเก็บค่าคอม 3 รูปแบบ (โครงสร้างหลังจาก PR #488+ ใช้ custom items):
+   1. Pool sales — poolGroup ตั้ง → ใช้ `poolItems[]` (custom · admin add/remove)
+      แต่ละ item มี `kind: "pool"|"personal"` + `threshold` % + rate ต่อคน
+      "pool" เข้ากองกลางหารแบ่ง · "personal" ส่วนตัวใครทำคนนั้นได้
+      + `bonusItems[]` "โบนัสอื่นๆ" (ไม่เข้ากองกลาง · default 2 รายการ + admin custom)
    2. Multi piece — poolGroup ว่าง + pieceItems ≥ 1 → แต่ละรายการมี rate
-      (ต่อพนักงาน) + จำนวนชิ้น (ต่อเดือน) + invite/transfer
+      (ต่อพนักงาน) + จำนวนชิ้น (ต่อเดือน) + bonusItems
    3. ไม่มีค่าคอม — poolGroup ว่าง + ไม่มี pieceItems → เงินเดือนพื้นฐานอย่างเดียว
       (พนักงานทั่วไป รปภ. ทำความสะอาด)
    backward-compat: legacy role ที่มี pieceLabel (single) → migrate-on-read เป็น
    1 pieceItem id="default" ที่อ่าน rate จาก singlePieceRate + จำนวนจาก
-   singleRatePieces                                                            */
+   singleRatePieces · legacy field normalSalePieces/specialSalePieces/buyPieces +
+   normalSalePieceRate/specialSalePieceRate/buyPieceRate + invite/transfer fields
+   migrate-on-read เป็น poolItemPieces/poolItemRates Record + bonusItems Record */
 
 /** id ของ piece item เริ่มต้น (legacy single-rate) — map กับ singlePieceRate /
  *  singleRatePieces ของข้อมูลเก่า                                              */
@@ -456,31 +461,31 @@ export function buildRaiseHistory(
   return list.sort((a, b) => b.year - a.year); // ใหม่ → เก่า
 }
 
-/* ─── Pool Share Helper (สูตรตาม Excel) ──────────────────────────
-   ฝั่ง "ขาย"   = เกณฑ์ 80% ใช้ (ทั่วไป+พิเศษ) · กองกลางที่หารแบ่งใช้ "ทั่วไป" เท่านั้น
-                  − poolAdjustment.excludedNormalPieces (สินค้าโปรโมชั่น ฯลฯ)
-   ฝั่ง "รับซื้อ" = รับซื้อของแต่ละคน − poolAdjustment.excludedBuyPieces (MD ฯลฯ)
-                  ขาย-พิเศษ → ส่วนตัว: นับ 80% แต่ไม่เอาเข้ากองที่หารแบ่ง
-   poolAdjustment ระดับ "เดือน" ที่ admin ใส่แยก ไม่ใช่ per-employee — หักเฉพาะ
-   ยอดที่เข้ากอง ไม่กระทบเกณฑ์ 80% (พนักงานยังมีสิทธิ์อยู่ในกอง)
+/* ─── Pool Share Helper (per-item · admin custom items ตั้งแต่ PR #488+) ──
+   ตำแหน่งกำหนด `poolItems[]` แต่ละตัว = `{ id, label, kind, threshold }`
+   - kind="pool"     → เข้ากองกลาง (รวมเป็น totalItemPool แล้วหารแบ่ง · เคารพ threshold %)
+   - kind="personal" → ส่วนตัว (ใครทำคนนั้นได้ · นับ threshold แต่ไม่เข้ากองที่หารแบ่ง)
+   - threshold = % ของ top item (default 80%) · ต่ำกว่า → ตัดออกจาก pool item นั้น
+   - `primaryPoolItemId` = item ที่ใช้ check 50% สำหรับ "ขาดเงินเดือนพื้นฐาน" ตอน
+     poolExclusion="all" (ดู BASE_SALARY_THRESHOLD)
+   poolAdjustment ระดับ "เดือน" ที่ admin ใส่ — หักเฉพาะยอดที่เข้ากอง (`excludedByItemId[itemId]`)
+   ไม่กระทบเกณฑ์ threshold ของพนักงาน (พนักงานยังมีสิทธิ์อยู่ในกอง)
 
-   สูตรการแบ่งทำแยกฝั่งขายและฝั่งรับซื้อ:
+   สูตรการแบ่ง (ทำแยก per-item · ทั้ง kind=pool):
    - effectiveLeave = max(0, totalLeave − LEAVE_DEDUCTION_FREE_DAYS)
-     (2 วันแรกฟรี ไม่ถูกหัก ไม่ถูกเอามาเกลี่ย — โบนัสหยุดน้อยไม่เกี่ยว)
+     (2 วันแรกฟรี ไม่ถูกหัก ไม่ถูกเอามาเกลี่ย — โบนัสขยันไม่เกี่ยว)
    - เปอร์เซ็นต์ฐาน = 100 / จำนวนคนที่มีสิทธิ์ใน Pool
    - ตัวคูณหักวันลา = เปอร์เซ็นต์ฐาน / จำนวนวันทำงานต่อเดือน
    - เปอร์เซ็นต์หัก = effectiveLeave × ตัวคูณหักวันลา × (จำนวนคนที่มีสิทธิ์ - 1)
    - เปอร์เซ็นต์แบ่งให้เพื่อนร่วมงาน = เปอร์เซ็นต์หัก / (จำนวนคนที่มีสิทธิ์ - 1)
-   - เปอร์เซ็นต์สุทธิ = เปอร์เซ็นต์ฐาน - เปอร์เซ็นต์หัก + ผลรวมเปอร์เซ็นต์แบ่งจากเพื่อนร่วมงาน
-   - ชิ้นที่ได้ = เปอร์เซ็นต์สุทธิ × จำนวนชิ้นรวมใน Pool
+   - เปอร์เซ็นต์สุทธิ = เปอร์เซ็นต์ฐาน - เปอร์เซ็นต์หัก + Σ(% ที่เพื่อนร่วมงานแบ่งให้)
+   - ชิ้นที่ได้ = เปอร์เซ็นต์สุทธิ × จำนวนชิ้นรวมใน Pool item นั้น
 
    poolExclusion (Admin ตั้งให้แต่ละคน):
-   - "sell"  → ปิดฝั่งขาย → ตัดออกจาก Pool ขาย
-   - "buy"   → ปิดฝั่งรับซื้อ
-   - "both"  → ปิดทั้งคู่ + ถ้าขาย < 50% ของ Top → ไม่ได้เงินเดือนพื้นฐาน
-
-   กฎ 80%: ถ้าชิ้น (ทั่วไป+พิเศษ) น้อยกว่า 80% ของ Top → ตัดออกจาก Pool
-   ขาย-พิเศษ → ส่วนตัว: นับตอนเช็ก 80% แต่ไม่เอาเข้ากองที่หารแบ่ง */
+   - null               → ไม่ปิด · เข้าทุก pool item ตามสิทธิ์
+   - "all"              → ปิดทุก item · ถ้า primary < 50% ของ top primary → ไม่ได้เงินเดือนพื้นฐาน
+   - string[]           → ปิดเฉพาะ item ids ที่ระบุ
+   - legacy "sell"/"buy"/"both" → migrate-on-read (backward compat) */
 export function computePoolSharesForGroup({
   groupEmployeeIds,
   salaryData,
