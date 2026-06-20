@@ -196,6 +196,7 @@ export default function EmployeeLoansPanel({
       {showCreate && (
         <CreateLoanModal
           employeeDirectory={employeeDirectory}
+          employeeLoans={employeeLoans}
           onClose={() => setShowCreate(false)}
           onAddLoan={onAddLoan}
           onUpdateLoan={onUpdateLoan}
@@ -301,6 +302,7 @@ function Stat({
 
 function CreateLoanModal({
   employeeDirectory,
+  employeeLoans,
   onClose,
   onAddLoan,
   onUpdateLoan,
@@ -321,6 +323,14 @@ function CreateLoanModal({
   const monthlyNum = parseFloat(monthly) || 0;
   const estMonths = monthlyNum > 0 ? Math.ceil(principalNum / monthlyNum) : 0;
 
+  // กฎ "1 ก้อน/คน" — ถ้าพนักงานคนนี้ยังมี active loan (ยังผ่อนไม่ครบ) →
+  // ห้ามสร้างก้อนใหม่ · ต้องรอผ่อนครบหรือ admin ยกเลิกก้อนเดิมก่อน
+  // (cancelled / paid_off ไม่นับ · สร้างใหม่ได้)
+  const activeLoanForEmployee = (employeeLoans || []).find(
+    (l: any) => l.employeeId === employeeId && l.status === "active",
+  );
+  const hasActiveLoan = !!activeLoanForEmployee;
+
   async function pickSlip(file: File) {
     setResizing(true);
     try {
@@ -335,6 +345,10 @@ function CreateLoanModal({
 
   async function submit() {
     if (!employeeId) return setErr("กรุณาเลือกพนักงาน");
+    if (hasActiveLoan)
+      return setErr(
+        "พนักงานคนนี้มีเงินกู้ค้างผ่อนอยู่ · ต้องผ่อนครบก่อนค่อยกู้ใหม่",
+      );
     if (principalNum <= 0) return setErr("กรุณาระบุเงินต้น");
     if (monthlyNum <= 0) return setErr("กรุณาระบุยอดผ่อนต่อเดือน");
     if (monthlyNum > principalNum) return setErr("ยอดผ่อนต่อเดือนมากกว่าเงินต้น");
@@ -555,7 +569,18 @@ function CreateLoanModal({
         </label>
       )}
 
-      {estMonths > 0 && (
+      {hasActiveLoan && (
+        <div className="bg-red-lt rounded-[10px] px-3.5 py-2.5 mb-3 border border-[#C0392B40] text-sm text-red font-semibold leading-relaxed">
+          พนักงานคนนี้มีเงินกู้ค้างผ่อนอยู่ — เงินต้น{" "}
+          ฿{formatThaiNumber(activeLoanForEmployee.principal)} · คงเหลือ{" "}
+          ฿{formatThaiNumber(loanRemaining(activeLoanForEmployee))}
+          <div className="text-xs font-normal text-txt-mid mt-1">
+            กฎ: กู้ได้ครั้งละ 1 ก้อน · ต้องผ่อนครบก่อนค่อยกู้ใหม่
+          </div>
+        </div>
+      )}
+
+      {estMonths > 0 && !hasActiveLoan && (
         <div className="bg-gold-pale rounded-[10px] px-3.5 py-2.5 mb-3 border border-gold/25 text-sm text-txt-mid">
           ผ่อนประมาณ <b className="text-maroon">{estMonths} เดือน</b> จนครบ
           {monthlyNum > 0 &&
@@ -577,10 +602,18 @@ function CreateLoanModal({
         <button
           type="button"
           onClick={submit}
-          disabled={saving}
-          className={`flex-2 p-3.5 rounded-xl border-none bg-maroon text-white text-base font-bold font-[inherit] shadow-[0_4px_14px_rgba(123,28,28,0.25)] ${saving ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+          disabled={saving || hasActiveLoan}
+          className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold font-[inherit] ${
+            saving || hasActiveLoan
+              ? "bg-bdr text-txt-soft cursor-not-allowed"
+              : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)] cursor-pointer"
+          }`}
         >
-          {saving ? "กำลังบันทึก..." : "สร้างเงินกู้"}
+          {saving
+            ? "กำลังบันทึก..."
+            : hasActiveLoan
+              ? "มีเงินกู้ค้างอยู่"
+              : "สร้างเงินกู้"}
         </button>
       </div>
     </BaseModal>
