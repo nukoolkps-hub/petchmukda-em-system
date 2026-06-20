@@ -794,7 +794,7 @@ export default function PayrollSummaryPanel({
                 ) : (
                   <div className="px-3 py-2 bg-red-lt rounded-[9px] text-xs text-red font-semibold flex items-center gap-1.5 border border-[#C0392B30]">
                     <IconAlertTriangle size={12} strokeWidth={2.4} />
-                    พนักงานยังไม่กรอกข้อมูลธนาคาร
+                    ยังไม่ได้กรอกข้อมูลธนาคาร
                   </div>
                 )}
               </div>

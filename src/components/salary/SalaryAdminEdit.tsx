@@ -869,7 +869,7 @@ export default function SalaryAdminEdit({
 
           {/* members */}
           <div className="mt-2.5">
-            <div className="text-xs text-txt-soft mb-1.5">สมาชิกในกลุ่ม:</div>
+            <div className="text-xs text-txt-soft mb-1.5">คนในกลุ่ม:</div>
             <div className="flex flex-col gap-1">
               {poolGroupEmployees.map((g) => {
                 const gSal = salaryData[g.id]?.[selectedMonth];
