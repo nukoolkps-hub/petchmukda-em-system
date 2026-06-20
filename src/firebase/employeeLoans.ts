@@ -30,6 +30,8 @@ export interface EmployeeLoan {
   note: string;
   status: LoanStatus;
   repayments?: Record<string, number>; // { "YYYY-MM": amount } — เขียนตอนยืนยันยอด
+  /** สลิปโอนเงิน — admin อัปโหลดตอนสร้างเงินกู้ · พนักงานเปิดดูได้ */
+  slipImageUrl?: string;
   createdAt: string;
 }
 
