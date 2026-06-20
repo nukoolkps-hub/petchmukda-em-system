@@ -7,6 +7,7 @@ import { useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { advanceLimitPercent } from "../../utils/advanceUtils";
 import { formatThaiNumber } from "../../utils/format";
+import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
 
 /* ─── Advance Request Modal ────────────────────────────────────── */
@@ -32,10 +33,9 @@ export default function AdvanceRequestModal({
   const employeeSalary = employeeId
     ? salaryData[employeeId]?.[yearMonth]
     : null;
-  // วงเงินคิดจากเงินเดือนพื้นฐาน: เอาจากข้อมูลพนักงานปัจจุบันก่อน → ถ้าไม่มี
-  // ใช้ snapshot เดือนนี้ → ถ้าเดือนนี้ยังไม่ตั้งค่า (เช่นต้น/สิ้นเดือน) ใช้
-  // baseSalary จากเดือนล่าสุดที่มีข้อมูล. ใช้ || (ไม่ใช่ ??) — ค่า 0 ถือว่า
-  // "ยังไม่ได้ตั้ง" ให้ข้ามไป fallback กันวงเงินเป็น 0 จนปุ่มเทากดไม่ได้
+  // เงินเดือนพื้นฐาน "ปัจจุบัน" = baseSalary เริ่มต้น + ขึ้นเงินเดือนสะสมทุกปี
+  // (ไม่ใช่ baseSalary ดิบ ซึ่งเป็นค่าตอนเริ่มงาน) · ใช้ตัวเดียวกับใบสลิป
+  // fallback: snapshot เดือนนี้ → เดือนล่าสุด · กันวงเงิน = 0 ตอนยังไม่ตั้ง
   const latestSalary = employeeId
     ? salaryData[employeeId]?.[
         Object.keys(salaryData[employeeId] || {})
@@ -43,8 +43,16 @@ export default function AdvanceRequestModal({
           .reverse()[0]
       ]
     : null;
+  const currentBaseSalary = employee
+    ? getEffectiveBaseSalary({
+        baseSalary: employee.baseSalary ?? 0,
+        startWorkMonth: employee.startWorkMonth ?? null,
+        annualRaiseAmount: employee.annualRaiseAmount ?? 0,
+        annualRaises: employee.annualRaises ?? {},
+      })
+    : 0;
   const baseSalary =
-    employee?.baseSalary ||
+    currentBaseSalary ||
     employeeSalary?.baseSalary ||
     latestSalary?.baseSalary ||
     0;
@@ -150,7 +158,7 @@ export default function AdvanceRequestModal({
           <span className="text-sm text-txt-mid">
             วงเงินสูงสุด{" "}
             <span className="text-[11px] text-txt-soft">
-              ({Math.round(limitPercent * 100)}% ของเงินเดือนพื้นฐาน)
+              ({Math.round(limitPercent * 100)}% ของเงินเดือนพื้นฐานปัจจุบัน)
             </span>
           </span>
           <span className="text-sm font-bold text-maroon">
