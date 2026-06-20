@@ -652,11 +652,11 @@ export default function SalaryView({
                       key={loan.id}
                       className="bg-cream rounded-[10px] p-3 border border-bdr"
                     >
-                      <div className="flex items-center justify-between mb-1.5 gap-2">
-                        <div className="text-sm font-bold text-txt truncate flex-1">
-                          {loan.note || "เงินกู้"}
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-start justify-between mb-1.5 gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-txt truncate">
+                            {loan.note || "เงินกู้"}
+                          </div>
                           {done ? (
                             <span className="text-xs font-bold text-green">
                               ผ่อนครบแล้ว
@@ -666,24 +666,21 @@ export default function SalaryView({
                               เดือนนี้หัก − {formatThaiNumber(thisMonth)} ฿
                             </span>
                           ) : null}
-                          {loan.slipImageUrl && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setViewingLoanSlipUrl(loan.slipImageUrl)
-                              }
-                              aria-label="ดูสลิปโอนเงิน"
-                              title="สลิปโอนเงิน"
-                              className="w-7 h-7 rounded-full bg-maroon/10 flex items-center justify-center cursor-pointer border-none"
-                            >
-                              <IconReceipt
-                                size={13}
-                                className="text-maroon"
-                                strokeWidth={2.4}
-                              />
-                            </button>
-                          )}
                         </div>
+                        {loan.slipImageUrl && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setViewingLoanSlipUrl(loan.slipImageUrl)
+                            }
+                            aria-label="ดูสลิปโอนเงิน"
+                            title="สลิปโอนเงิน"
+                            className="shrink-0 inline-flex items-center gap-1 px-2 h-8 rounded-[9px] bg-maroon text-white text-xs font-bold cursor-pointer border-none font-[inherit] shadow-[0_2px_8px_rgba(123,28,28,0.2)]"
+                          >
+                            <IconReceipt size={13} strokeWidth={2.4} />
+                            สลิป
+                          </button>
+                        )}
                       </div>
                       <div className="h-1.5 rounded-full bg-cream-dk overflow-hidden mb-1.5">
                         <div
@@ -1239,11 +1236,11 @@ export default function SalaryView({
                     key={loan.id}
                     className="bg-cream rounded-[10px] p-3 border border-bdr"
                   >
-                    <div className="flex items-center justify-between mb-1.5 gap-2">
-                      <div className="text-sm font-bold text-txt truncate flex-1">
-                        {loan.note || "เงินกู้"}
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-start justify-between mb-1.5 gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-txt truncate">
+                          {loan.note || "เงินกู้"}
+                        </div>
                         {done ? (
                           <span className="text-xs font-bold text-green">
                             ผ่อนครบแล้ว
@@ -1253,24 +1250,21 @@ export default function SalaryView({
                             เดือนนี้หัก − {formatThaiNumber(thisMonth)} ฿
                           </span>
                         ) : null}
-                        {loan.slipImageUrl && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setViewingLoanSlipUrl(loan.slipImageUrl)
-                            }
-                            aria-label="ดูสลิปโอนเงิน"
-                            title="สลิปโอนเงิน"
-                            className="w-7 h-7 rounded-full bg-maroon/10 flex items-center justify-center cursor-pointer border-none"
-                          >
-                            <IconReceipt
-                              size={13}
-                              className="text-maroon"
-                              strokeWidth={2.4}
-                            />
-                          </button>
-                        )}
                       </div>
+                      {loan.slipImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setViewingLoanSlipUrl(loan.slipImageUrl)
+                          }
+                          aria-label="ดูสลิปโอนเงิน"
+                          title="สลิปโอนเงิน"
+                          className="shrink-0 inline-flex items-center gap-1 px-2 h-8 rounded-[9px] bg-maroon text-white text-xs font-bold cursor-pointer border-none font-[inherit] shadow-[0_2px_8px_rgba(123,28,28,0.2)]"
+                        >
+                          <IconReceipt size={13} strokeWidth={2.4} />
+                          สลิป
+                        </button>
+                      )}
                     </div>
                     <div className="h-1.5 rounded-full bg-cream-dk overflow-hidden mb-1.5">
                       <div

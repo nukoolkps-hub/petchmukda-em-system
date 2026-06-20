@@ -6,6 +6,7 @@ import {
   CircleCheck as IconCircleCheck,
   HandCoins as IconHandCoins,
   Plus as IconPlus,
+  Receipt as IconReceipt,
   Trash2 as IconTrash,
   Upload as IconUpload,
   X as IconX,
@@ -48,6 +49,8 @@ export default function EmployeeLoansPanel({
 }) {
   const [showCreate, setShowCreate] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<any>(null);
+  // url สลิปโอนเงินกู้ที่กำลังเปิดดู · null = ไม่เปิด
+  const [viewingSlipUrl, setViewingSlipUrl] = useState<string | null>(null);
 
   const loans = useMemo(
     () =>
@@ -125,6 +128,21 @@ export default function EmployeeLoansPanel({
                       </div>
                     )}
                   </div>
+                  {loan.slipImageUrl && (
+                    <button
+                      type="button"
+                      aria-label="ดูสลิปโอนเงิน"
+                      title="สลิปโอนเงิน"
+                      onClick={() => setViewingSlipUrl(loan.slipImageUrl ?? null)}
+                      className="w-8 h-8 shrink-0 rounded-[9px] bg-maroon/10 flex items-center justify-center cursor-pointer border-[1.5px] border-maroon/20"
+                    >
+                      <IconReceipt
+                        size={14}
+                        className="text-maroon"
+                        strokeWidth={2.2}
+                      />
+                    </button>
+                  )}
                   {done ? (
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-lt text-green inline-flex items-center gap-1 shrink-0">
                       <IconCircleCheck size={12} strokeWidth={2.5} />
@@ -232,6 +250,28 @@ export default function EmployeeLoansPanel({
               </button>
             </div>
           </div>
+        </BaseModal>
+      )}
+
+      {viewingSlipUrl && (
+        <BaseModal
+          onClose={() => setViewingSlipUrl(null)}
+          maxWidthClass="max-w-[500px]"
+          contentClassName="px-4 pt-4 pb-4"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <IconReceipt
+              size={18}
+              strokeWidth={2.2}
+              className="text-maroon"
+            />
+            <div className="font-bold text-base text-txt">สลิปโอนเงิน</div>
+          </div>
+          <img
+            src={viewingSlipUrl}
+            alt="สลิปโอนเงิน"
+            className="block w-full rounded-[10px] border border-bdr"
+          />
         </BaseModal>
       )}
     </div>
