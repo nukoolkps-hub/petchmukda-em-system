@@ -480,7 +480,7 @@ export function replayCoverageHistory(
 }
 
 /** คำนวณ coverage ของวันนี้ + คืน set คนที่ถูกดึงไปแทน (เพื่อให้ rotation
- *  ปล่อย slot weekly ของเขาแล้วหาคนอื่นแทน — cascade)                    */
+ *  ปล่อย slot weekly ของเขาแล้วหาเพื่อนร่วมงานแทน — cascade)                    */
 function computeCoverageForDay(
 	coverageDuties: Duty[],
 	todayYmd: string,
@@ -581,7 +581,7 @@ export function computeAllDutiesForDay(
 	);
 
 	// 2) คนที่ถูกดึงไปแทน → ถือว่า "ไม่ว่าง" สำหรับ weekly/monthly ของตัวเอง
-	//    (cascade: weekly ของเขาจะหาคนอื่นแทนผ่าน substitute logic เดิม)
+	//    (cascade: weekly ของเขาจะหาเพื่อนร่วมงานแทนผ่าน substitute logic เดิม)
 	const effLeaves =
 		pulled.size > 0
 			? [

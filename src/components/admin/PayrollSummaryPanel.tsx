@@ -246,7 +246,7 @@ export default function PayrollSummaryPanel({
   async function backfillPoolSnapshots() {
     if (!onSaveSalary) return;
     // เขียน snapshot ให้ทุกคนที่มีค่าคอมเดือนนี้ + ทุกคนที่อยู่ใน pool group
-    // (แม้ยังไม่กรอกค่าคอม) — เพื่อให้เพื่อนใน pool เห็นครบทุกคน ไม่งั้น
+    // (แม้ยังไม่กรอกค่าคอม) — เพื่อให้เพื่อนร่วมงานใน pool เห็นครบทุกคน ไม่งั้น
     // ฝั่งพนักงานจะนับสมาชิก pool ไม่ครบ → ส่วนแบ่งเพี้ยน
     const ids = new Set<string>();
     for (const row of rows) ids.add(row.employee.id);

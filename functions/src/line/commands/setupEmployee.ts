@@ -122,7 +122,7 @@ async function handleSetupEmployeeCommand({
 		// ⚠️ resolveDutyPool เรียงคน "มี displayOrder" ไว้ก่อนคน "ไม่มี" ดังนั้น
 		//   ตั้ง displayOrder เฉพาะเมื่อพนักงานเดิม "ทุกคน" มี displayOrder แล้ว
 		//   (admin เคยลากเรียง) — ไม่งั้นคนใหม่ที่ได้เลขจะกระโดดไปหน้าคน null
-		//   → ปล่อยว่าง ให้เรียงตามชื่อรวมกับคนอื่น (ไม่แทรกหน้า)
+		//   → ปล่อยว่าง ให้เรียงตามชื่อรวมกับเพื่อนร่วมงาน (ไม่แทรกหน้า)
 		const allEmpsSnap = await db.collection("employees").get();
 		const orders: number[] = [];
 		for (const d of allEmpsSnap.docs) {

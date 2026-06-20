@@ -176,13 +176,13 @@ service cloud.firestore {
     }
 
     // ─── Leaves ──────────────────────────────────────────────────
-    // อ่าน: ทุกคน signed-in (ปฏิทินทีม + กันลาทับวันเพื่อน)
+    // อ่าน: ทุกคน signed-in (ปฏิทินทีม + กันลาทับวันเพื่อนร่วมงาน)
     // สร้าง/ลบ: admin หรือเจ้าของ employee document
     // แก้ไข: admin only
     match /leaves/{leaveId} {
       allow read:   if isSignedIn();
       // สร้าง/แก้/ลบ ของเดือนที่ปิดรอบแล้ว (locked) ไม่ได้ — แม้แต่ admin
-      // admin สร้างให้พนักงานคนอื่นได้ (ลืมกดลา) · พนักงานสร้างของตัวเองได้
+      // admin สร้างให้เพื่อนร่วมงานได้ (ลืมกดลา) · พนักงานสร้างของตัวเองได้
       allow create: if (isAdmin() || isEmployeeOwner(request.resource.data.employeeId))
         && validLeaveCreate()
         && !monthLocked(request.resource.data.start[0:7]);
@@ -235,7 +235,7 @@ service cloud.firestore {
     match /poolSnapshots/{yearMonth} {
       allow read:  if isSignedIn();
       // เดือนปิดรอบแล้ว → snapshot ห้ามเปลี่ยน (กัน admin เผลอ save salary
-      // เดือนเก่าแล้วเด้ง pool ของพนักงานคนอื่นในเดือนนั้น)
+      // เดือนเก่าแล้วเด้ง pool ของเพื่อนร่วมงานในเดือนนั้น)
       allow write: if isAdmin() && !monthLocked(yearMonth);
     }
 
