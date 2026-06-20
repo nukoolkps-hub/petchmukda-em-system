@@ -48,6 +48,7 @@ import {
   getEffectiveBaseSalary,
   rolePaysPieceCommission,
 } from "../../utils/salaryUtils";
+import { buildSlipRowsCatalog } from "../../utils/slipRows";
 import AdvanceHistoryModal from "../modals/AdvanceHistoryModal";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import BankLogo from "../shared/BankLogo";
@@ -239,6 +240,14 @@ export default function SalaryView({
       openInExternalBrowser();
       return;
     }
+    // เปิด modal ให้เลือก "ทั้งหมด" หรือ "บางส่วน" ก่อนพิมพ์
+    setShowSlipPrintModal(true);
+  }
+
+  function doPrintSlip(opts: {
+    hiddenEarnIds?: Set<string>;
+    hiddenDedIds?: Set<string>;
+  }) {
     printSalarySlip({
       profile,
       employeeInfo,
@@ -248,12 +257,22 @@ export default function SalaryView({
       poolShare,
       selectedMonth,
       monthApprovedAdvances,
+      hiddenEarnIds: opts.hiddenEarnIds,
+      hiddenDedIds: opts.hiddenDedIds,
     });
   }
 
   const [showCertModal, setShowCertModal] = useState(false);
   const [showPoolFlow, setShowPoolFlow] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  // Slip print modal — ก่อนพิมพ์เลือก "ทั้งหมด" / "บางส่วน (เลือกรายการ)"
+  // บางส่วน → tick ออกได้ทีละรายการ · ยอดที่ tick ออกจะถูกรวมไว้ใน
+  // "รายรับอื่นๆ" / "รายการหักอื่นๆ" บนสลิป
+  const [showSlipPrintModal, setShowSlipPrintModal] = useState(false);
+  const [slipPrintMode, setSlipPrintMode] = useState<"full" | "partial">(
+    "full",
+  );
+  const [hiddenSlipIds, setHiddenSlipIds] = useState<Set<string>>(new Set());
   // url สลิปโอนเงินกู้ที่กำลังเปิดดู · null = ไม่เปิด
   const [viewingLoanSlipUrl, setViewingLoanSlipUrl] = useState<string | null>(
     null,
@@ -478,6 +497,157 @@ export default function SalaryView({
                 </>
               )}
             </span>
+          </button>
+        </div>
+      </div>
+    </BaseModal>
+  );
+
+  // ── Slip Print Options modal ─────────────────────────────────────
+  // เปิดก่อนพิมพ์สลิป · 2 mode: full (ทุกรายการ) / partial (เลือก checkbox)
+  // unticked items → รวมเป็น "รายรับอื่นๆ" / "รายการหักอื่นๆ" บนสลิป
+  const slipCatalog = useMemo(() => {
+    if (!data || !salaryCalculation)
+      return { earnRows: [], dedRows: [] };
+    return buildSlipRowsCatalog({
+      data,
+      salaryCalculation,
+      employeeRole,
+    });
+  }, [data, salaryCalculation, employeeRole]);
+  function toggleHidden(id: string) {
+    setHiddenSlipIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function closeSlipPrintModal() {
+    setShowSlipPrintModal(false);
+    setSlipPrintMode("full");
+    setHiddenSlipIds(new Set());
+  }
+  function confirmPrintSlip() {
+    const opts: {
+      hiddenEarnIds?: Set<string>;
+      hiddenDedIds?: Set<string>;
+    } = {};
+    if (slipPrintMode === "partial" && hiddenSlipIds.size > 0) {
+      const earnIds = new Set<string>();
+      const dedIds = new Set<string>();
+      for (const id of hiddenSlipIds) {
+        if (slipCatalog.earnRows.some((r) => r.id === id)) earnIds.add(id);
+        if (slipCatalog.dedRows.some((r) => r.id === id)) dedIds.add(id);
+      }
+      opts.hiddenEarnIds = earnIds;
+      opts.hiddenDedIds = dedIds;
+    }
+    closeSlipPrintModal();
+    doPrintSlip(opts);
+  }
+  const slipPrintModal = showSlipPrintModal && (
+    <BaseModal onClose={closeSlipPrintModal} maxWidthClass="max-w-[460px]">
+      <div className="bg-cream rounded-2xl p-5 w-full">
+        <div className="text-lg font-bold text-maroon mb-1 flex items-center gap-1.5">
+          <IconPrinter size={18} strokeWidth={2.4} />
+          พิมพ์สลิปเงินเดือน
+        </div>
+        <div className="text-sm text-txt-mid mb-3.5">
+          เลือกว่าจะให้แสดงรายการอะไรในสลิป — เงินสุทธิเท่าเดิม
+        </div>
+
+        {/* Mode picker — 2 radio buttons */}
+        <div className="flex flex-col gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => setSlipPrintMode("full")}
+            className={`text-left px-3.5 py-3 rounded-xl border-[1.5px] cursor-pointer font-[inherit] ${
+              slipPrintMode === "full"
+                ? "bg-maroon text-white border-maroon"
+                : "bg-white text-txt border-bdr"
+            }`}
+          >
+            <div className="text-sm font-bold">รายละเอียดทั้งหมด</div>
+            <div
+              className={`text-xs mt-0.5 ${slipPrintMode === "full" ? "text-white/80" : "text-txt-soft"}`}
+            >
+              พิมพ์ทุกรายการที่ ADMIN ยืนยันแล้ว (ค่าเริ่มต้น)
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSlipPrintMode("partial")}
+            className={`text-left px-3.5 py-3 rounded-xl border-[1.5px] cursor-pointer font-[inherit] ${
+              slipPrintMode === "partial"
+                ? "bg-maroon text-white border-maroon"
+                : "bg-white text-txt border-bdr"
+            }`}
+          >
+            <div className="text-sm font-bold">รายละเอียดบางส่วน</div>
+            <div
+              className={`text-xs mt-0.5 ${slipPrintMode === "partial" ? "text-white/80" : "text-txt-soft"}`}
+            >
+              เลือกรายการที่ต้องการ · ที่เหลือรวมเป็น "อื่นๆ"
+            </div>
+          </button>
+        </div>
+
+        {/* Checklist — แสดงเฉพาะ partial mode */}
+        {slipPrintMode === "partial" && (
+          <div className="bg-white rounded-xl border border-bdr p-3 mb-4 max-h-[44vh] overflow-y-auto">
+            {slipCatalog.earnRows.length > 0 && (
+              <>
+                <div className="text-xs font-bold text-green uppercase tracking-wide mb-2">
+                  รายรับ
+                </div>
+                <div className="flex flex-col gap-1.5 mb-3">
+                  {slipCatalog.earnRows.map((r) => (
+                    <SlipRowCheckbox
+                      key={r.id}
+                      row={r}
+                      checked={!hiddenSlipIds.has(r.id)}
+                      onToggle={() => toggleHidden(r.id)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            {slipCatalog.dedRows.length > 0 && (
+              <>
+                <div className="text-xs font-bold text-red uppercase tracking-wide mb-2">
+                  รายการหัก
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {slipCatalog.dedRows.map((r) => (
+                    <SlipRowCheckbox
+                      key={r.id}
+                      row={r}
+                      checked={!hiddenSlipIds.has(r.id)}
+                      onToggle={() => toggleHidden(r.id)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={closeSlipPrintModal}
+            className="flex-1 py-2.5 rounded-lg bg-white text-txt-mid text-sm font-bold border border-bdr cursor-pointer font-[inherit]"
+          >
+            ยกเลิก
+          </button>
+          <button
+            type="button"
+            onClick={confirmPrintSlip}
+            className="flex-1 py-2.5 rounded-lg bg-maroon text-white text-sm font-bold border-none cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5"
+          >
+            <IconPrinter size={14} strokeWidth={2.4} />
+            พิมพ์
           </button>
         </div>
       </div>
@@ -1051,6 +1221,7 @@ export default function SalaryView({
           />
         )}
         {certModal}
+        {slipPrintModal}
         {/* Loan slip modal · ปุ่ม "สลิป" บน loan card อยู่ใน early return นี้
             ด้วย ถ้าไม่ render ที่นี่ พนักงานที่ยังไม่มี salary doc กดแล้วไม่ขึ้น */}
         {viewingLoanSlipUrl && (
@@ -1709,6 +1880,7 @@ export default function SalaryView({
       </div>
 
       {certModal}
+      {slipPrintModal}
 
       {showHistory &&
         (() => {
@@ -1769,6 +1941,46 @@ const CERT_PURPOSE_OPTIONS = [
   "ขอเครดิตการ์ด",
   "ผ่อนสินค้า",
 ];
+
+/* ─── Slip Print Modal checkbox row ───────────────────────────── */
+
+function SlipRowCheckbox({
+  row,
+  checked,
+  onToggle,
+}: {
+  row: { id: string; label: string; sublabel?: string; value: number };
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <label
+      className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer border ${
+        checked ? "bg-cream border-bdr" : "bg-white border-bdr/40 opacity-60"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onToggle}
+        className="w-4 h-4 accent-maroon cursor-pointer"
+      />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-txt truncate">
+          {row.label}
+        </div>
+        {row.sublabel && (
+          <div className="text-[10px] text-txt-soft truncate">
+            {row.sublabel}
+          </div>
+        )}
+      </div>
+      <div className="text-sm font-bold text-maroon shrink-0 tabular-nums">
+        {row.value.toLocaleString("th-TH")} ฿
+      </div>
+    </label>
+  );
+}
 
 /* ─── Icon helpers ────────────────────────────────────────────── */
 
