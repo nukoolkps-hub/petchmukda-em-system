@@ -823,7 +823,33 @@ export default function ManualModal({ onClose }) {
             </p>
             <ul>
               <li>
-                <b>เพดาน:</b> 50% ของเงินเดือนพื้นฐาน
+                <b>เพดาน % ของเงินเดือนพื้นฐาน</b> — ขึ้นตามอายุงาน:
+                <div className="mt-1.5 rounded-[8px] border border-bdr bg-cream/50 overflow-hidden text-xs">
+                  <div className="grid grid-cols-2 gap-px bg-bdr/50">
+                    <div className="bg-cream/70 px-2 py-1 font-bold text-maroon">
+                      อายุงาน
+                    </div>
+                    <div className="bg-cream/70 px-2 py-1 font-bold text-maroon text-right">
+                      เพดาน
+                    </div>
+                    <div className="bg-white px-2 py-1">เริ่มงาน – &lt; 3 ปี</div>
+                    <div className="bg-white px-2 py-1 text-right font-bold">50%</div>
+                    <div className="bg-white px-2 py-1">ครบ 3 ปี</div>
+                    <div className="bg-white px-2 py-1 text-right font-bold">60%</div>
+                    <div className="bg-white px-2 py-1">ครบ 4 ปี</div>
+                    <div className="bg-white px-2 py-1 text-right font-bold">70%</div>
+                    <div className="bg-white px-2 py-1">ครบ 5 ปี</div>
+                    <div className="bg-white px-2 py-1 text-right font-bold">80%</div>
+                    <div className="bg-white px-2 py-1">ครบ 6 ปี ขึ้นไป</div>
+                    <div className="bg-white px-2 py-1 text-right font-bold text-green">
+                      100%
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <b>เบิกได้ครั้งเดียวต่อเดือน</b> — ยื่นแล้วต้องรอเดือนถัดไป
+                (รวมทั้งกรณีรออนุมัติและอนุมัติแล้ว · ปฏิเสธเท่านั้นที่ยื่นใหม่ได้)
               </li>
               <li>
                 ADMIN กดอนุมัติ + <b>แนบสลิปการโอน</b> → ระบบส่งให้พนักงานเห็นในแอปและ
