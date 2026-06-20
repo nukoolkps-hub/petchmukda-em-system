@@ -128,7 +128,10 @@ export default function AdvanceRequestModal({
       <div className="bg-gold-pale rounded-xl px-3.5 py-3 mb-3.5 border border-gold/25">
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-sm text-txt-mid">
-            วงเงินสูงสุด (50% ของเงินเดือน)
+            วงเงินสูงสุด{" "}
+            <span className="text-[11px] text-txt-soft">
+              (50% ของเงินเดือนพื้นฐาน)
+            </span>
           </span>
           <span className="text-sm font-bold text-maroon">
             {formatThaiNumber(maxAdvance)} ฿
