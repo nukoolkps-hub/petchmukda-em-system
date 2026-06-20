@@ -1,5 +1,6 @@
 import { THAI_MONTH_NAMES } from "../constants";
 import { formatTenure } from "../utils/dateUtils";
+import { getEffectiveBaseSalary } from "../utils/salaryUtils";
 import { buildCertificateDocDef } from "./pdfBuilders/salaryCertificatePDF";
 import { openPDFBlob, printHTML } from "./webviewHelpers";
 
@@ -15,8 +16,17 @@ function buildCertificateHTML(
   // ข้อมูล "ทางการ" ให้ใช้จาก employeeInfo (ที่ Admin ตั้งไว้) ก่อน profile (LINE)
   const employeeName = employeeInfo?.name || profile?.name || "-";
   const employeeRole = employeeInfo?.role || profile?.role || "-";
-  // เงินเดือนพื้นฐาน — ดึงจากข้อมูลพนักงาน (admin ตั้งใน "ข้อมูลพนักงาน")
-  const baseSalary = employeeInfo?.baseSalary || data?.baseSalary || 0;
+  // เงินเดือนพื้นฐาน "ปัจจุบัน" = baseSalary + raises สะสมถึงปีนี้
+  // (ไม่ใช่ baseSalary ดิบ — ต้องสะท้อนการขึ้นเงินเดือนประจำปี เพราะใบรับรอง
+  //  ใช้ยื่นกู้/สมัครงาน · ต้องเป็นเลขจริงของวันออกใบ)
+  const baseSalary = employeeInfo
+    ? getEffectiveBaseSalary({
+        baseSalary: employeeInfo.baseSalary ?? 0,
+        startWorkMonth: employeeInfo.startWorkMonth ?? null,
+        annualRaiseAmount: employeeInfo.annualRaiseAmount ?? 0,
+        annualRaises: employeeInfo.annualRaises ?? {},
+      }) || data?.baseSalary || 0
+    : data?.baseSalary || 0;
 
   // mode='pdf' → ไม่ต้องมีปุ่ม + auto-print
   const includePrintControls = opts.includePrintControls !== false;

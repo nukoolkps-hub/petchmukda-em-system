@@ -707,7 +707,7 @@ export default function SalaryView({
                   color={COLORS.green}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-txt-mid">เงินเดือนพื้นฐาน</div>
+                  <div className="text-sm text-txt-mid">เงินเดือนพื้นฐานปัจจุบัน</div>
                   <div className="text-[11px] text-txt-soft">
                     เรท/วัน ={" "}
                     {formatThaiNumber(
@@ -1273,7 +1273,7 @@ export default function SalaryView({
                 color={COLORS.green}
               />
             ),
-            main: "เงินเดือนพื้นฐาน",
+            main: "เงินเดือนพื้นฐานปัจจุบัน",
             sub: "",
             value: salaryCalculation.baseSalary,
           },
