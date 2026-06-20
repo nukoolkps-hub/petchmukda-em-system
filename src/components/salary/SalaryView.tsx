@@ -848,7 +848,7 @@ export default function SalaryView({
             </div>
             <div className="flex flex-col gap-2.5">
               {previewSalary.socialSecurity > 0 && (
-                <div className="flex items-center gap-2.5 py-1.5">
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
                   <IconBuildingBank
                     size={16}
                     strokeWidth={2.2}
@@ -864,7 +864,7 @@ export default function SalaryView({
                 </div>
               )}
               {previewSalary.overQuotaDeduction > 0 && (
-                <div className="flex items-center gap-2.5 py-1.5">
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
                   <IconClipboardList
                     size={16}
                     strokeWidth={2.2}
@@ -885,7 +885,7 @@ export default function SalaryView({
                 </div>
               )}
               {previewSalary.advanceDeduction > 0 && (
-                <div className="flex items-center gap-2.5 py-1.5">
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
                   <IconBanknote
                     size={16}
                     strokeWidth={2.2}
@@ -903,7 +903,7 @@ export default function SalaryView({
                 </div>
               )}
               {previewSalary.loanDeduction > 0 && (
-                <div className="flex items-center gap-2.5 py-1.5">
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
                   <IconHandCoins
                     size={16}
                     strokeWidth={2.2}
@@ -925,7 +925,7 @@ export default function SalaryView({
                 (it: any, i: number) => (
                   <div
                     key={`rd-${i}-${it.label}`}
-                    className="flex items-center gap-2.5 py-1.5"
+                    className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk"
                   >
                     <IconMinus
                       size={16}
