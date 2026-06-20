@@ -233,6 +233,9 @@ interface Item {
 หักจากเงินเดือนอัตโนมัติทุกเดือนจนครบ · ใช้ **ledger** (`repayments[ym]`)
 เก็บยอดที่หักจริงแต่ละเดือน → คงเหลือแม่นยำเสมอ
 
+**กฎ: 1 active loan / พนักงาน** — UI ใน CreateLoanModal block จากที่ตั้ง
+แต่แรก · admin สร้างใหม่ได้เฉพาะเมื่อก้อนเดิม `paid_off` หรือ `cancelled`
+
 | Field | Type | Description |
 |---|---|---|
 | employeeId | string | id พนักงาน |
@@ -243,13 +246,17 @@ interface Item {
 | note | string | เหตุผล |
 | status | `"active" \| "paid_off" \| "cancelled"` | สถานะ |
 | repayments | `Record<YYYY-MM, number>` | **ledger** — ยอดที่หักจริงแต่ละเดือน |
+| slipImageUrl | string? | URL สลิปการโอนที่ admin upload (storage path `loanSlips/{loanId}/`) |
 | createdAt | string (ISO) | เวลาสร้าง |
+| lineNotificationStatus | `"pending" \| "processing" \| "sent" \| "error" \| "skipped"` | สถานะ LINE notification ตอนสร้าง · worker `processLoanNotifications` |
+| lineNotificationType | `"created"` | ประเภท notification |
+| lineNotification* | various | ฟิลด์ tracking ของ scheduled worker (Sent/Attempts/Error/...) |
 
 **คงเหลือ:** `principal − Σ repayments` (helper `loanRemaining()`)
 
 **สูตรหัก:** ตอน `calculateSalary` ของแต่ละเดือน:
 1. คำนวณ `netBeforeLoan = earnings − (advance + ss + overQuota + custom)`
-2. วน loop active loans เรียง FIFO (`startMonth` → `id`):
+2. วน loop active loans เรียง FIFO (`startMonth` → `id`) — โดยปกติมีก้อนเดียว:
    - `due = min(monthlyDeduction, คงเหลือ ที่ไม่นับเดือนนี้)`
    - `take = min(due, avail)` ← cap ที่เงินสุทธิที่เหลือ
    - `avail -= take` · `loanRepayments[id] = take`

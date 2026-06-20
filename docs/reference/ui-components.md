@@ -102,10 +102,11 @@ Layout
 
 | File | Description |
 |---|---|
-| `print/printSalarySlip.ts` | สลิป — HTML print (popup) + `generateSalarySlipBlob()` สำหรับ freeze |
-| `print/printSalaryCertificate.ts` | ใบรับรองเงินเดือน — HTML print + PDF blob |
-| `print/pdfBuilders/salarySlipPDF.ts` | pdfmake docDef ของสลิป (ใช้ตอน freeze ขึ้น Storage) |
-| `print/pdfBuilders/salaryCertificatePDF.ts` | pdfmake docDef ของใบรับรอง |
+| `print/printSalarySlip.ts` | สลิป — HTML print (popup) + `generateSalarySlipBlob()` สำหรับ freeze · รองรับ `hiddenEarnIds`/`hiddenDedIds` filter (modal "บางส่วน") |
+| `print/printSalaryCertificate.ts` | ใบรับรองเงินเดือน — HTML print + PDF blob · รองรับ `salaryOverride` (clamp ห้ามเกิน effective base) |
+| `print/pdfBuilders/salarySlipPDF.ts` | pdfmake docDef ของสลิป (ใช้ตอน freeze ขึ้น Storage) · รองรับ hidden filter เหมือนกัน |
+| `print/pdfBuilders/salaryCertificatePDF.ts` | pdfmake docDef ของใบรับรอง · รองรับ `salaryOverride` |
+| `utils/slipRows.ts` | **Single source** ของรายการบนสลิป (id + label + sublabel + value) · ใช้ทั้ง print HTML/PDF + slip print modal · `buildSlipRowsCatalog()` + `applyHiddenFilter()` |
 | `utils/pdfFonts.ts` | Lazy-load Sarabun TTF จาก `/fonts/` → register ผ่าน `pdfMake.addVirtualFileSystem()` + `setFonts()` (pdfmake 0.3.x API) |
 
 ### Important: pdfmake 0.3.x API

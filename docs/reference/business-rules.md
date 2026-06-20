@@ -21,7 +21,7 @@ Earnings = baseSalary                  (effective = baseSalary + Σ annualRaises
 
 Deductions = overQuotaDeduction
            + advanceDeduction       (รวม approved advances ที่ month === salary.month)
-           + loanDeduction          (เงินกู้ผ่อนคืน — หักเท่าที่มี FIFO ตาม startMonth)
+           + loanDeduction          (เงินกู้ผ่อนคืน — 1 ก้อน/คน · หักเท่าที่มี)
            + socialSecurity
            + Σ recurringDeductions  (รายจ่ายประจำเดือน admin ตั้งใน employee profile)
            + Σ customDeductions     (per-month admin เพิ่มเอง · ไม่เป็นประจำ)
@@ -272,17 +272,33 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
 ต่างจากเบิกล่วงหน้า — **admin สร้างเอง** + หักจากเงินเดือนอัตโนมัติทุกเดือน
 จนครบ โดยใช้ **ledger** เก็บยอดที่หักจริงรายเดือน
 
+- **กฎสำคัญ: 1 active loan ต่อพนักงาน** — admin ห้ามสร้างใหม่จนกว่าก้อนเดิม
+  จะ `paid_off` หรือ `cancelled` · UI block ใน CreateLoanModal:
+  · banner แดงเตือน + ปุ่ม submit disabled
+  · dropdown พนักงาน — option ที่มี active loan ถูก `disabled` + suffix
+    "— มีเงินกู้ค้าง"
+  · default selection auto-switch ไปคนแรกที่ "ว่าง"
 - ฟิลด์หลัก: `principal` (เงินต้น) · `monthlyDeduction` (ผ่อนเดือนละ) ·
-  `startMonth` · `status` · `repayments[ym]` (ledger)
+  `startMonth` · `status` · `repayments[ym]` (ledger) · `slipImageUrl?`
+  (สลิปการโอน · admin upload ตอนสร้าง)
 - คงเหลือ = `principal − Σ repayments`
-- **สูตรหัก (FIFO):** เรียงตาม `startMonth` → `id` · ต่อก้อน:
+- **สูตรหัก:** ต่อเดือน:
   - `due = min(monthlyDeduction, คงเหลือ ไม่นับเดือนนี้)`
   - `take = min(due, เงินเดือนสุทธิที่เหลือ)` ← **หักเท่าที่มี** (cap)
+  - หมายเหตุ: code ยัง support FIFO หลายก้อน (`buildLoanContext` เรียงตาม
+    `startMonth` → `id`) เผื่อ admin cancel ก้อนแล้วเปิดใหม่กลางเดือน · แต่
+    UI ใหม่กรอง 1 ก้อน/คน → FIFO loop รัน 1 รอบ
 - บันทึก ledger ตอน admin "ยืนยันยอด" — `repayments[ym]` เขียน
   เป็น overwrite (idempotent re-confirm) + `status = "paid_off"` เมื่อครบ
 - Status flow: `active → paid_off / cancelled`
+- **LINE notification (ตอนสร้าง):** Cloud Function `processLoanNotifications`
+  (scheduled `* * * * *`) push flex message + รูปสลิป (ถ้ามี) ไปที่
+  `employee.lineUserId` · admin toggle เปิด/ปิดผ่าน `loanCreatedEnabled`
+- **พนักงานเปิดดูสลิป:** ปุ่ม "สลิป" มุมขวาบน loan card ใน /salary →
+  modal โชว์รูปเต็มจอ · storage rule `loanSlips/{loanId}/*` จำกัด read
+  เฉพาะ admin + loan owner
 
-Source: `src/firebase/employeeLoans.ts`, `src/utils/salaryUtils.ts` (`calculateSalary`)
+Source: `src/firebase/employeeLoans.ts`, `src/utils/salaryUtils.ts` (`calculateSalary`), `functions/src/loan/processLoanNotifications.ts`
 
 ## เงินค่าแทน (coverage pay)
 
