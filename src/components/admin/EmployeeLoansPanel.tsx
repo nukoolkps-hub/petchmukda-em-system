@@ -11,7 +11,7 @@ import {
   Upload as IconUpload,
   X as IconX,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { loanRemaining } from "../../firebase/employeeLoans";
 import { uploadLoanSlip } from "../../firebase/storage";
@@ -326,10 +326,26 @@ function CreateLoanModal({
   // กฎ "1 ก้อน/คน" — ถ้าพนักงานคนนี้ยังมี active loan (ยังผ่อนไม่ครบ) →
   // ห้ามสร้างก้อนใหม่ · ต้องรอผ่อนครบหรือ admin ยกเลิกก้อนเดิมก่อน
   // (cancelled / paid_off ไม่นับ · สร้างใหม่ได้)
-  const activeLoanForEmployee = (employeeLoans || []).find(
-    (l: any) => l.employeeId === employeeId && l.status === "active",
-  );
+  const activeLoanByEmployeeId = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const l of employeeLoans || []) {
+      if (l.status === "active") map.set(l.employeeId, l);
+    }
+    return map;
+  }, [employeeLoans]);
+  const activeLoanForEmployee = activeLoanByEmployeeId.get(employeeId) || null;
   const hasActiveLoan = !!activeLoanForEmployee;
+  // ตอนเปิด modal ครั้งแรก · ถ้า default employee (คนที่ 1) มี active loan
+  // → auto-switch ไปคนแรกที่ยัง "ว่าง" (กดเลือกได้ทันที · ไม่ต้องไล่หา)
+  useEffect(() => {
+    if (!hasActiveLoan) return;
+    const freeEmp = employeeDirectory.find(
+      (e: any) => !activeLoanByEmployeeId.has(e.id),
+    );
+    if (freeEmp && freeEmp.id !== employeeId) setEmployeeId(freeEmp.id);
+    // run เฉพาะตอน mount + dropdown list เปลี่ยน · กัน loop (ใส่ dep ตามจริง)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employeeDirectory, activeLoanByEmployeeId]);
 
   async function pickSlip(file: File) {
     setResizing(true);
@@ -449,11 +465,15 @@ function CreateLoanModal({
           onChange={(e) => setEmployeeId(e.target.value)}
           className={`${inputCls} appearance-none pr-10 cursor-pointer font-semibold`}
         >
-          {employeeDirectory.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.name}
-            </option>
-          ))}
+          {employeeDirectory.map((e) => {
+            const blocked = activeLoanByEmployeeId.has(e.id);
+            return (
+              <option key={e.id} value={e.id} disabled={blocked}>
+                {e.name}
+                {blocked ? "  — มีเงินกู้ค้าง" : ""}
+              </option>
+            );
+          })}
         </select>
         <IconChevronDown
           size={14}
