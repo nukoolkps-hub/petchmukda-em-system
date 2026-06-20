@@ -354,6 +354,25 @@ export default function PayrollSummaryPanel({
     if (updates.length) await Promise.allSettled(updates);
   }
 
+  /* ─── Denormalize netSalary ลง salary doc ─────────────────────────
+     สำหรับ AdvanceRequestModal เช็คว่าเดือนก่อนพนักงานติดลบไหม · ถ้าใช่
+     บล็อกเบิกจนกว่า admin จะ "ทำเครื่องหมายเคลียร์แล้ว" (deficitClearedAt)
+     เขียนเฉพาะตอนยืนยันยอด (= moment ที่ figure becomes official)
+     ถ้า net >= 0 → clear deficitClearedAt ทิ้ง (auto-uncleared) เผื่อ
+     admin re-confirm ใหม่หลังแก้ฟิลด์ให้ net เป็น 0 ขึ้นบวก                */
+  async function denormalizeNetSalaries() {
+    if (!onSaveSalary) return;
+    const updates = rows.map((row) => {
+      const net = row.salaryCalculation.netSalary;
+      return onSaveSalary(row.employee.id, selectedMonth, {
+        netSalary: net,
+        // net >= 0 → ไม่มี deficit · clear flag · null = ลบ field ใน Firestore
+        deficitClearedAt: net >= 0 ? null : undefined,
+      });
+    });
+    await Promise.allSettled(updates);
+  }
+
   async function confirmPayroll(
     totalForMonth: number,
     empCountForMonth: number,
@@ -388,6 +407,11 @@ export default function PayrollSummaryPanel({
         await backfillPoolSnapshots();
       } catch (err) {
         console.error("[PayrollSummary] backfill snapshots failed:", err);
+      }
+      try {
+        await denormalizeNetSalaries();
+      } catch (err) {
+        console.error("[PayrollSummary] denormalize net failed:", err);
       }
       try {
         await freezeAllSlips();
@@ -679,12 +703,18 @@ export default function PayrollSummaryPanel({
           ({
             employee,
             employeeRole,
+            data,
             salaryCalculation,
             advanceTotal,
             poolShare,
           }) => {
             const hasBank = employee.bank && employee.bankAccountNumber;
             const lostBase = poolShare?.losesBaseSalary;
+            // เงินสุทธิติดลบ — บล็อกเบิกล่วงหน้าเดือนถัดไป (ดู
+            // AdvanceRequestModal · prevMonthHadDeficit) จนกว่า admin จะกด
+            // "ทำเครื่องหมายเคลียร์แล้ว" (deficitClearedAt)
+            const hasDeficit = salaryCalculation.netSalary < 0;
+            const deficitCleared = !!data?.deficitClearedAt;
             return (
               <div
                 key={employee.id}
@@ -755,6 +785,53 @@ export default function PayrollSummaryPanel({
                     )}
                   </div>
                 </div>
+
+                {/* Deficit banner — เงินสุทธิติดลบ · มีปุ่ม "เคลียร์แล้ว"
+                    ให้ admin กดเพื่อ unblock การเบิกล่วงหน้าของพนักงานคนนั้น */}
+                {hasDeficit && (
+                  <div
+                    className={`mt-2 px-3 py-2 rounded-[9px] border text-xs flex items-center gap-2 ${
+                      deficitCleared
+                        ? "bg-green-lt border-green/30 text-green"
+                        : "bg-red-lt border-red/30 text-red"
+                    }`}
+                  >
+                    <IconAlertTriangle size={13} strokeWidth={2.4} />
+                    <div className="flex-1 leading-relaxed">
+                      {deficitCleared ? (
+                        <>
+                          <b>เคลียร์ยอดติดลบแล้ว</b> · พนักงานเบิกล่วงหน้า
+                          เดือนถัดไปได้
+                        </>
+                      ) : (
+                        <>
+                          <b>เงินสุทธิติดลบ</b> ฿
+                          {formatThaiNumber(-salaryCalculation.netSalary)} ·
+                          พนักงานเบิกล่วงหน้าเดือนถัดไปไม่ได้
+                        </>
+                      )}
+                    </div>
+                    {onSaveSalary && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onSaveSalary(employee.id, selectedMonth, {
+                            deficitClearedAt: deficitCleared
+                              ? null
+                              : new Date().toISOString(),
+                          })
+                        }
+                        className={`shrink-0 px-2.5 py-1 rounded-md text-[11px] font-bold cursor-pointer border font-[inherit] ${
+                          deficitCleared
+                            ? "bg-white text-green border-green/40"
+                            : "bg-white text-red border-red/40"
+                        }`}
+                      >
+                        {deficitCleared ? "ยกเลิกเคลียร์" : "ทำเครื่องหมายเคลียร์แล้ว"}
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* row 2: bank info with copy button */}
                 {hasBank ? (
