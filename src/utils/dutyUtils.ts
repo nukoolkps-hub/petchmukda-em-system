@@ -653,7 +653,7 @@ export function computeCoverageEarningsForMonth(
 /* ─── Forecast (ปฏิทินหน้าที่ล่วงหน้า) ──────────────────────────────
    คำนวณ "primary ของแต่ละ period ในอนาคต" — ใช้ pool ที่ resolve แล้ว
    (จาก server snapshot) ดังนั้นทั้ง admin/พนักงานคำนวณเองได้ client-side
-   โดยไม่ต้องอ่าน employees/leaves ของเพื่อน
+   โดยไม่ต้องอ่าน employees/leaves ของคนอื่น
 
    Forecast แสดงเฉพาะ primary ตาม rotation (deterministic) — ไม่รวม
    substitute/leave เพราะการลาในอนาคตยังไม่รู้ + เป็น schedule สำหรับ

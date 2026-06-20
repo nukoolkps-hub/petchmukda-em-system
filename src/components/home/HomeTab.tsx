@@ -290,7 +290,7 @@ export default function HomeTab({
 
 /* ─── หน้าที่วันนี้ — สำหรับ HomeTab พนักงาน ────────────────────────
    ใช้ server-computed snapshot · ฝั่งพนักงานอ่าน peer data (employees/
-   leaves) ของเพื่อนไม่ได้เพราะ Firestore rules → Cloud Function compute
+   leaves) ของคนอื่นไม่ได้เพราะ Firestore rules → Cloud Function compute
    ส่วนกลาง ส่ง safe projection (id/name/nickname/avatar/displayOrder
    เท่านั้น ไม่มี salary/bank/lineUserId)                                  */
 function DutyTodayCard({
@@ -395,7 +395,7 @@ function DutyTodayCard({
           </div>
         )}
 
-        {/* หน้าที่ของเพื่อน — exclude ตัวเอง เพราะมีในช่อง "ของคุณวันนี้" แล้ว
+        {/* หน้าที่ของคนอื่น — exclude ตัวเอง เพราะมีในช่อง "ของคุณวันนี้" แล้ว
             + ซ่อน coverage ที่เป้าหมายไม่ลา (ไม่มีอะไรเกิดขึ้น) */}
         {(() => {
           const otherAssignments = assignments.filter(
@@ -409,7 +409,7 @@ function DutyTodayCard({
             <div className="flex flex-col gap-1.5">
               {myDuties.length > 0 && (
                 <div className="text-xs font-bold text-txt-soft mb-0.5">
-                  ของเพื่อนๆ
+                  ของคนอื่นๆ
                 </div>
               )}
               {otherAssignments.map((a) => {

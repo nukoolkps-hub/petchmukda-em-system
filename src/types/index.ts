@@ -129,7 +129,7 @@ export interface SalaryMonth {
   slipFrozenAt?: string; // ISO timestamp ตอน freeze สลิป
   // ─── Pool snapshot ─────────────────────────────────────────
   // เขียนพร้อมกันตอน admin save salary เพื่อให้พนักงานคำนวณ pool ได้
-  // โดยไม่ต้องอ่าน employees/leaves ของเพื่อน (ซึ่งถูก rules ปิดไว้)
+  // โดยไม่ต้องอ่าน employees/leaves ของคนอื่น (ซึ่งถูก rules ปิดไว้)
   roleId?: string; // ใช้ map → role.poolGroup
   poolExclusion?: "sell" | "buy" | "both" | null;
   totalLeaveDays?: number; // weekday leaves + over-quota Sundays
