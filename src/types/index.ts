@@ -165,6 +165,10 @@ export interface AdvanceRequest {
   slipImageDataUrl?: string | null;
   slipImageUrl?: string | null;
   rejectionReason?: string;
+  /** ถ้า set = auto-carry advance สร้างโดยระบบเมื่อเงินสุทธิเดือนก่อนหน้า
+   *  ติดลบ (yyyy-mm ของเดือนที่ติดลบ) · status="approved" ตั้งแต่แรก ·
+   *  ไม่นับใน "1 ครั้ง/เดือน" rule ของ AdvanceRequestModal                  */
+  autoCarryFromMonth?: string;
   lineNotificationStatus?:
     | "pending"
     | "processing"

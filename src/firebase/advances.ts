@@ -102,6 +102,25 @@ export async function submitAdvance(request) {
   return docRef.id;
 }
 
+/* ─── Create auto-carry advance (เงินสุทธิติดลบ → ยกไปเดือนถัดไป) ───
+   ต่างจาก submitAdvance: status="approved" ตั้งแต่แรก · ไม่ต้องผ่าน admin
+   approve · ใส่ `autoCarryFromMonth` marker เพื่อ filter ใน UI         */
+export async function createAutoCarryAdvance(request) {
+  const now = new Date().toISOString();
+  const docRef = await addDoc(ref, {
+    ...request,
+    status: "approved",
+    submittedAt: now,
+    approvedAt: now,
+  });
+  return docRef.id;
+}
+
+/* ─── Update auto-carry advance amount (ถ้า admin re-confirm + net เปลี่ยน) ─ */
+export async function updateAutoCarryAdvanceAmount(id, amount) {
+  await updateDoc(doc(ref, id), { amount });
+}
+
 /* ─── Approve advance ──────────────────────────────────────── */
 export async function approveAdvance(id, slipImageUrl = null) {
   const advanceRef = doc(ref, id);

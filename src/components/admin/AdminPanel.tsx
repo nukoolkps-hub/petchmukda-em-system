@@ -55,6 +55,7 @@ export default function AdminPanel({
   onDeleteDuty,
   payrollConfirms,
   onSetPayrollConfirm,
+  onSyncAutoCarryAdvance,
   poolAdjustments,
   onSetPoolAdjustment,
   employeeLoans,
@@ -266,6 +267,7 @@ export default function AdminPanel({
           roles={roles}
           payrollConfirms={payrollConfirms}
           onSetPayrollConfirm={onSetPayrollConfirm}
+          onSyncAutoCarryAdvance={onSyncAutoCarryAdvance}
           poolAdjustments={poolAdjustments}
           employeeLoans={employeeLoans}
           storeCalendar={storeCalendar}

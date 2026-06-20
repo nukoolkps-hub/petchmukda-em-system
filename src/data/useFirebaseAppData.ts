@@ -366,6 +366,53 @@ export default function useFirebaseAppData({
     if (target && monthLocked(target.month)) throw new Error(LOCK_MSG);
     await advancesAPI.approveAdvance(id, slipImageUrl);
   }
+  /* ─── Auto-carry advances (deficit เดือนก่อน → advance เดือนถัดไป) ──
+     ใช้ตอน admin ยืนยันยอด · ถ้า salaryCalc.netSalary < 0 → สร้าง advance
+     status=approved ใน month ถัดไป · idempotent (update amount ถ้าเปลี่ยน) */
+  async function syncAutoCarryAdvance(args: {
+    sourceMonth: string;
+    nextMonth: string;
+    employeeId: string;
+    employeeName: string;
+    deficitAmount: number; // > 0 = สร้าง/update · 0 = ลบ (ถ้ามี)
+  }) {
+    if (monthLocked(args.nextMonth)) {
+      // เดือนถัดไป lock อยู่ → skip · log แต่ไม่ throw (best-effort)
+      console.warn(
+        `[syncAutoCarryAdvance] ${args.nextMonth} locked · skip carry from ${args.sourceMonth}`,
+      );
+      return;
+    }
+    const existing = advResult.data.find(
+      (a) =>
+        a.employeeId === args.employeeId &&
+        a.autoCarryFromMonth === args.sourceMonth,
+    );
+    if (args.deficitAmount > 0) {
+      if (existing) {
+        // update amount ถ้าเปลี่ยน (admin re-confirm หลังแก้ salary fields)
+        if (existing.amount !== args.deficitAmount) {
+          await advancesAPI.updateAutoCarryAdvanceAmount(
+            existing.id,
+            args.deficitAmount,
+          );
+        }
+      } else {
+        await advancesAPI.createAutoCarryAdvance({
+          employeeId: args.employeeId,
+          employeeName: args.employeeName,
+          amount: args.deficitAmount,
+          month: args.nextMonth,
+          reason: `ยกจากเงินสุทธิติดลบเดือน ${args.sourceMonth}`,
+          autoCarryFromMonth: args.sourceMonth,
+        });
+      }
+    } else if (existing) {
+      // net กลับมาเป็นบวก → ลบ auto-carry ที่สร้างไว้ก่อนหน้า
+      await advancesAPI.deleteAdvance(existing.id);
+    }
+  }
+
   async function rejectAdvance(id, reason = "") {
     const target = advResult.data.find((a) => a.id === id);
     if (target && monthLocked(target.month)) throw new Error(LOCK_MSG);
@@ -475,6 +522,7 @@ export default function useFirebaseAppData({
     updateAdvance,
     approveAdvance,
     rejectAdvance,
+    syncAutoCarryAdvance,
     upsertRole,
     upsertDuty,
     deleteDuty,
