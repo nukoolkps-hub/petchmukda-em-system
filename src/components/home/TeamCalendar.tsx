@@ -30,7 +30,7 @@ interface TeamCalendarProps {
   leaveEntries: LeaveEntry[];
   employeeDirectory: CalendarEmployee[];
   storeCalendar?: StoreCalendar | null;
-  /** id ของพนักงานที่กำลังดู — ใช้แยก "ของตัวเอง" กับ "ของเพื่อน" ในจุดวันลา
+  /** id ของพนักงานที่กำลังดู — ใช้แยก "ของตัวเอง" กับ "ของคนอื่น" ในจุดวันลา
    *  · null/undefined (เช่นฝั่ง admin) → ทุกดอตทึบเหมือนเดิม ไม่ highlight ตัวเอง */
   myEmployeeId?: string | null;
 }
@@ -364,7 +364,7 @@ export default function TeamCalendar({
                         leaveEntry.employeeNickname ||
                         livePeer?.name ||
                         leaveEntry.employeeName;
-                      // ของตัวเอง = ดอตทึบ · ของเพื่อน = ดอตวงแหวน (สีเดียวกัน)
+                      // ของตัวเอง = ดอตทึบ · ของคนอื่น = ดอตวงแหวน (สีเดียวกัน)
                       // myEmployeeId = null/undefined (admin) → ทุกอัน solid เหมือนเดิม
                       const dotColor = leaveType?.color || colors.gold;
                       const isOwn =
@@ -444,7 +444,7 @@ export default function TeamCalendar({
                     boxSizing: "border-box",
                   }}
                 />
-                <span className="text-sm text-txt-soft">ของเพื่อน</span>
+                <span className="text-sm text-txt-soft">ของคนอื่น</span>
               </div>
             </>
           )}

@@ -2,7 +2,7 @@
    Path: /dutyAssignmentsToday/snapshot
 
    ทำไม:
-   - Firestore rules ปิดให้พนักงานอ่าน employees/leaves ของเพื่อนไม่ได้
+   - Firestore rules ปิดให้พนักงานอ่าน employees/leaves ของคนอื่นไม่ได้
    - ฝั่ง client compute → activePool เหลือแค่ตัวเอง → rotation ผิด
    - Cloud Function (admin SDK) compute → เขียน snapshot → ทุกคนอ่านได้
 

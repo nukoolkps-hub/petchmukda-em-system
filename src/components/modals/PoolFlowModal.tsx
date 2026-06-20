@@ -116,7 +116,7 @@ export default function PoolFlowModal({
 
   // สมาชิกใน pool group ของเดือนนี้
   // admin: enumerate จาก employeeDirectory (มีครบ + ชื่อจริง)
-  // employee: enumerate จาก salaryData ตาม roleId snapshot (มีแค่ pieces ของเพื่อน
+  // employee: enumerate จาก salaryData ตาม roleId snapshot (มีแค่ pieces ของคนอื่น
   //           — ไม่มีชื่อ) + รวมตัวเองเสมอ
   const groupEmployeeIds = useMemo(() => {
     if (!activeGroup) return [];

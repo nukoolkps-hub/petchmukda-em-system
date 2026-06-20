@@ -188,7 +188,7 @@ export function useLeavesForScope({
   isAdmin: boolean;
   employeeId: string | null;
 }) {
-  // ทุกคน signed-in อ่าน leaves ได้ — ปฏิทินทีมโชว์ของเพื่อน +
+  // ทุกคน signed-in อ่าน leaves ได้ — ปฏิทินทีมโชว์ของคนอื่น +
   // กันใบลาทับวันเพื่อน · scope กรองที่ UI ตอนคำนวณเฉพาะตัว
   return useScopedSubscription(
     () => {

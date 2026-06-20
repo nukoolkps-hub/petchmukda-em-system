@@ -40,7 +40,7 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 | Field | Type | Description |
 |---|---|---|
 | employeeId | string | ref → employees (**join คีย์หลัก** · ใช้กรอง/ลูกอัพแทน employeeName ทุกที่ — กันโดน rename) |
-| employeeName | string | snapshot ชื่อจริง ตอนยื่นลา (สำหรับ peer view · พนักงานอ่าน employees ของเพื่อนไม่ได้) |
+| employeeName | string | snapshot ชื่อจริง ตอนยื่นลา (สำหรับ peer view · พนักงานอ่าน employees ของคนอื่นไม่ได้) |
 | employeeNickname | string \| null | snapshot ชื่อเล่น ตอนยื่นลา (null ถ้าไม่ได้ตั้งไว้) |
 | type | "personal" / "sick" | ประเภทลา |
 | start | string (YYYY-MM-DD) | วันเริ่มลา |
@@ -56,7 +56,7 @@ Database ID: `petchmukda-bot` (named database, ไม่ใช่ default)
 > `live.nickname → snapshot.employeeNickname → live.name → snapshot.employeeName`
 > · live = lookup จาก `employeeDirectory.find(e => e.id === lv.employeeId)`
 > · live ทับ snapshot → admin เพิ่มชื่อเล่น/เปลี่ยนชื่อภายหลัง ใบลาเก่าโชว์ค่าใหม่ทันที
-> · snapshot fallback — สำหรับ peer ที่พนักงานอ่าน employees doc ไม่ได้ (rules ปิด → directory ไม่มี record ของเพื่อน) ใช้ snapshot ใน leave doc แทน
+> · snapshot fallback — สำหรับ peer ที่พนักงานอ่าน employees doc ไม่ได้ (rules ปิด → directory ไม่มี record ของคนอื่น) ใช้ snapshot ใน leave doc แทน
 > · ใช้ pattern เดียวกันใน `TeamCalendar.tsx`, `LeaveListPanel.tsx`
 
 ### loginStates/{state} (CSRF defense — LINE Login)
@@ -378,8 +378,8 @@ interface Item {
 
 **Peer data สำหรับกองกลาง (Pool):**
 salary doc มี field อ่อนไหว (`note`, `customDeductions`,
-`socialSecurity`, `slipUrl`) — ปิดไม่ให้พนักงานอ่านของเพื่อน แต่ pool calc
-ต้องรู้ pieces + roleId + poolExclusion + วันลา ของเพื่อนทั้งกลุ่ม → ย้ายไปไว้ใน
+`socialSecurity`, `slipUrl`) — ปิดไม่ให้พนักงานอ่านของคนอื่น แต่ pool calc
+ต้องรู้ pieces + roleId + poolExclusion + วันลา ของคนอื่นทั้งกลุ่ม → ย้ายไปไว้ใน
 `poolSnapshots/{ym}` ที่อ่านได้ทุก signed-in (mirror ทุกครั้งที่ admin save salary)
 ดู [`../reference.md`](../reference.md) → "Privacy: salaries vs poolSnapshots"
 

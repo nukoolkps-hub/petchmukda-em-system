@@ -74,7 +74,7 @@ export default function useFirebaseAppData({
   const rolesResult = useRoles();
   const dutiesResult = useDuties();
   // dutyAssignmentsToday/snapshot — server-computed สำหรับ display ทั้ง 2 ฝั่ง
-  // (Firestore rules ปิดให้พนักงานอ่าน employees/leaves ของเพื่อนไม่ได้
+  // (Firestore rules ปิดให้พนักงานอ่าน employees/leaves ของคนอื่นไม่ได้
   // → client compute ผิด → ใช้ snapshot นี้แทน)
   const dutyAssignmentsResult = useDutyAssignments();
   const pcResult = usePayrollConfirmsForScope({ isAdmin });
@@ -84,7 +84,7 @@ export default function useFirebaseAppData({
   });
   // poolSnapshots: doc per month มี pieces + roleId + poolExclusion + leaveDays
   // ของทุกคน — เป็น public source สำหรับ pool calc ฝั่งพนักงาน (ที่ไม่ได้
-  // อ่าน salaries ของเพื่อน). admin ไม่ต้องใช้ก็ได้ — แต่ subscribe ทิ้งไว้
+  // อ่าน salaries ของคนอื่น). admin ไม่ต้องใช้ก็ได้ — แต่ subscribe ทิ้งไว้
   // ค่า read น้อย (1 doc/เดือน) ไม่กระทบ performance.
   const poolSnapResult = usePoolSnapshots();
   const poolAdjResult = usePoolAdjustments();
@@ -307,7 +307,7 @@ export default function useFirebaseAppData({
       totalLeaveDays,
     });
     // mirror non-sensitive pool fields ลง poolSnapshots/{ym} เพื่อให้พนักงานอ่าน
-    // pool ของเพื่อนได้โดยไม่ต้องเปิดสิทธิ์อ่าน salary ทั้งใบ. คำนวณ "snapshot
+    // pool ของคนอื่นได้โดยไม่ต้องเปิดสิทธิ์อ่าน salary ทั้งใบ. คำนวณ "snapshot
     // ที่จะอยู่ใน doc หลัง write" จากค่า in-memory โดยตรง — ไม่ต้อง re-read
     // (เร็วกว่า + ทนต่อ network glitch ระหว่าง write กับ read). merge:
     // existingSalary (frozen fields) ← rateSnapshot (live fields if !freeze)
