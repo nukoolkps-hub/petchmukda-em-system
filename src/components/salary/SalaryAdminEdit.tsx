@@ -1,5 +1,6 @@
 import {
   AlertTriangle as IconAlertTriangle,
+  Ban as IconBan,
   Banknote as IconBanknote,
   Briefcase as IconBriefcase,
   Landmark as IconBuildingBank,
@@ -647,41 +648,39 @@ export default function SalaryAdminEdit({
             </span>
           </div>
           <div className="text-xs text-txt-mid mb-2 leading-relaxed">
-            ตัดสิทธิ์ฝั่งขาย/รับซื้อ แยกกัน · &lt; 80% ของ Top = ตัดออก
+            แต่ละ pool item คิดแยกกัน · &lt; threshold ของ Top = ตัดออก
             <br />
             แบ่งกองกลางตามสูตร: % ได้ = Base − % หัก + Σ(% ที่เพื่อนร่วมงานแบ่งให้)
           </div>
 
-          {/* Admin-locked: ปิดสิทธิ์ Pool */}
+          {/* Admin-locked: ปิดสิทธิ์ Pool — รองรับทั้ง "all"/legacy "both" + per-item
+              array · per-item แสดง label ของ item ที่ถูกปิดจริง ไม่ hardcode ฝั่ง */}
           {poolShare.poolExclusion &&
             (() => {
               const exc = poolShare.poolExclusion;
-              const labels = {
-                sell: {
-                  Icon: IconDiamond,
-                  title: "ปิดฝั่งขายโดย ADMIN",
-                  desc: "ไม่ได้กองกลางฝั่งขาย · ฝั่งรับซื้อยังใช้กฎ 80% ปกติ",
-                },
-                buy: {
-                  Icon: IconShoppingBag,
-                  title: "ปิดฝั่งรับซื้อโดย ADMIN",
-                  desc: "ไม่ได้กองกลางฝั่งรับซื้อ · ฝั่งขายยังใช้กฎ 80% ปกติ",
-                },
-                both: {
-                  Icon: IconLock,
-                  title: "ปิดทั้งคู่โดย ADMIN",
-                  desc: "ไม่ได้กองกลางทั้ง 2 ฝั่ง · ได้แค่ขาย-พิเศษ",
-                },
-              };
-              const info = labels[exc] || labels.both;
-              const ExclusionIcon = info.Icon;
+              const poolItemsCfg = rolePoolItems(employeeRole);
+              const { excludedIds, isAll } = resolvePoolExclusionItemIds(
+                exc as any,
+                poolItemsCfg,
+              );
+              if (excludedIds.size === 0) return null;
+              const excludedItems = poolItemsCfg.filter((it) =>
+                excludedIds.has(it.id),
+              );
+              const title = isAll
+                ? "ปิดสิทธิ์ทั้งหมดโดย ADMIN"
+                : `ปิดบางรายการโดย ADMIN (${excludedItems.length} รายการ)`;
+              const desc = isAll
+                ? "ไม่ได้กองกลางเลย · ถ้ายอด primary item < 50% ของ top → ไม่ได้เงินเดือนพื้นฐาน"
+                : excludedItems.map((it) => it.label).join(" · ");
+              const ExclusionIcon = isAll ? IconLock : IconBan;
               return (
                 <div className="rounded-[9px] px-3 py-2.5 mb-1.5 text-sm text-red font-bold leading-relaxed flex items-center gap-2 bg-[linear-gradient(135deg,#C0392B15,#C0392B25)] border-[1.5px] border-[#C0392B50]">
                   <ExclusionIcon size={18} strokeWidth={2.4} />
                   <div className="flex-1">
-                    <div>{info.title}</div>
+                    <div>{title}</div>
                     <div className="font-medium text-[10.5px] mt-0.5 text-[#C0392BCC]">
-                      {info.desc}
+                      {desc}
                     </div>
                   </div>
                 </div>

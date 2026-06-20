@@ -24,16 +24,12 @@ import {
   rolePoolItems,
 } from "../../utils/salaryUtils";
 
-function poolExclusionLabel(ex?: string | string[] | null): string {
-  if (!ex) return "";
-  if (Array.isArray(ex)) {
-    if (ex.length === 0) return "";
-    return `${ex.length} รายการ`;
-  }
-  if (ex === "all" || ex === "both") return "ทั้งหมด";
-  if (ex === "sell") return "ขายทั่วไป";
-  if (ex === "buy") return "รับซื้อ";
-  return "";
+/* "ไม่เข้ากองกลาง" footer label · `all`/legacy `both` → "ทั้งหมด" ·
+   ที่เหลือ (array หรือ legacy `sell`/`buy`) → "N รายการ" จาก resolved count
+   (resolvePoolExclusionItemIds map legacy sell→[normal,special] · buy→[buy]) */
+function poolExclusionLabel(isAll: boolean, count: number): string {
+  if (count === 0) return "";
+  return isAll ? "ทั้งหมด" : `${count} รายการ`;
 }
 
 function RateRow({
@@ -96,10 +92,8 @@ export default function PositionRateCard({ employee, role }: Props) {
   const tenure = formatTenure(employee?.startWorkMonth);
   // pool items + excluded ids (admin ปิดให้พนักงานคนนี้) · ใช้ขีดทับ
   const poolItemsCfg = role.poolGroup ? rolePoolItems(role) : [];
-  const { excludedIds: poolExcludedIds } = resolvePoolExclusionItemIds(
-    employee?.poolExclusion as any,
-    poolItemsCfg,
-  );
+  const { excludedIds: poolExcludedIds, isAll: poolExcludedIsAll } =
+    resolvePoolExclusionItemIds(employee?.poolExclusion as any, poolItemsCfg);
   // นับเฉพาะ kind=pool ที่ถูก exclude (personal items ไม่นับ · inherent)
   const excludedPoolItemsCount = poolItemsCfg.filter(
     (it) => it.kind === "pool" && poolExcludedIds.has(it.id),
@@ -203,12 +197,7 @@ export default function PositionRateCard({ employee, role }: Props) {
           <div className="flex items-center gap-1.5 text-[11px] text-amber font-semibold pt-1.5 mt-1 border-t border-bdr/40">
             <IconCircleSlash size={12} strokeWidth={2.5} />
             ไม่เข้ากองกลาง:{" "}
-            {Array.isArray(employee?.poolExclusion) ||
-            (typeof employee?.poolExclusion === "string" &&
-              employee.poolExclusion !== "all" &&
-              employee.poolExclusion !== "both")
-              ? `${excludedPoolItemsCount} รายการ`
-              : poolExclusionLabel(employee?.poolExclusion as any)}
+            {poolExclusionLabel(poolExcludedIsAll, excludedPoolItemsCount)}
           </div>
         )}
       </div>

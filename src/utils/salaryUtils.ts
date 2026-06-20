@@ -640,7 +640,7 @@ export function computePoolSharesForGroup({
   const topPrimaryPieces = topItemPieces[primaryItemId] ?? 0;
   const primaryBaseSalaryThreshold = topPrimaryPieces * BASE_SALARY_THRESHOLD;
 
-  // --- Step 1: per-item eligibility (รวม legacy ฝั่งขาย/ฝั่งรับซื้อ) ---
+  // --- Step 1: per-item eligibility (resolve legacy + per-item array) ---
   // resolve poolExclusion → set ของ item ids ที่โดน exclude ต่อพนักงาน
   const exclusionByEmp: Record<string, Set<string>> = {};
   activeIds.forEach((employeeId) => {
@@ -734,7 +734,7 @@ export function computePoolSharesForGroup({
   totalSellPoolPieces = Math.max(0, totalSellPoolPieces - excludedNormal);
   totalBuyPoolPieces = Math.max(0, totalBuyPoolPieces - excludedBuy);
 
-  // --- Step 3: คำนวณตามสูตร Excel แยก 2 ฝั่ง ---
+  // --- Step 3: คำนวณตามสูตร Excel · per-pool-item (ลูปทุก kind=pool) ---
   function computeShares(poolEligibility, totalPoolPieces) {
     const eligibleEmployeeIds = activeIds.filter(
       (employeeId) => poolEligibility[employeeId],
