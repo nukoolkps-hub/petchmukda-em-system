@@ -13,6 +13,7 @@ import {
   Bell as IconBell,
   CheckCircle2 as IconCheckCircle,
   Clock as IconClock,
+  HandCoins as IconHandCoins,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -59,7 +60,8 @@ export default function LineBotNotificationsPanel({
     field:
       | "dailySummaryEnabled"
       | "advanceRequestEnabled"
-      | "advanceApprovalEnabled",
+      | "advanceApprovalEnabled"
+      | "loanCreatedEnabled",
   ) {
     const next = !isOn(field);
     // Flip ทันที (optimistic) — switch เคลื่อนทันที ผู้ใช้ไม่รู้สึกหน่วง
@@ -116,6 +118,14 @@ export default function LineBotNotificationsPanel({
           enabled={isOn("advanceApprovalEnabled")}
           disabled={loading}
           onToggle={() => toggle("advanceApprovalEnabled")}
+        />
+        <ToggleRow
+          icon={IconHandCoins}
+          title="เงินกู้ใหม่"
+          description="แจ้งพนักงานเมื่อ ADMIN สร้างเงินกู้ผ่อนคืนให้ (พร้อมสลิปการโอนถ้าแนบไว้)"
+          enabled={isOn("loanCreatedEnabled")}
+          disabled={loading}
+          onToggle={() => toggle("loanCreatedEnabled")}
         />
       </div>
     </div>

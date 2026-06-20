@@ -33,6 +33,18 @@ export interface EmployeeLoan {
   /** สลิปโอนเงิน — admin อัปโหลดตอนสร้างเงินกู้ · พนักงานเปิดดูได้ */
   slipImageUrl?: string;
   createdAt: string;
+  /* LINE notification fields — worker `processLoanNotifications` พิม่ม `pending`
+   * แล้วเปลี่ยนเป็น `processing` → `sent`/`error`/`skipped` · admin set ตอนสร้าง
+   * เงินกู้ใหม่ (ผ่าน EmployeeLoansPanel) */
+  lineNotificationStatus?: "pending" | "processing" | "sent" | "error" | "skipped";
+  lineNotificationType?: "created";
+  lineNotificationRequestedAt?: string;
+  lineNotificationSentAt?: string;
+  lineNotificationLastError?: string | null;
+  lineNotificationSkippedReason?: string | null;
+  lineNotificationAttempts?: number;
+  lineNotificationSlipImagePushFailed?: boolean;
+  lineNotificationSlipImageError?: string | null;
 }
 
 /* ─── Subscribe (admin = ทุกคน) ────────────────────────────── */
