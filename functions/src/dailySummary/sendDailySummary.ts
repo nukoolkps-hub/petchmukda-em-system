@@ -62,6 +62,15 @@ export const sendDailySummary = onSchedule(
 		}
 		const ymd = bangkokYmd(new Date());
 		const db = getAppFirestore();
+		// วันเสาร์: ส่งเฉพาะเสาร์ที่ ADMIN กำหนด "เปิดพิเศษ" · เสาร์ปกติ
+		// (ร้านปิด) ข้าม กันรบกวน · ใช้ใน scheduled path เท่านั้น · LINE
+		// command "ทดสอบแจ้งเตือน" ของ admin ไม่ถูก skip (รัน runDailySummary ตรง)
+		if (await shouldSkipSaturday(db, ymd)) {
+			console.log(
+				`[sendDailySummary] เสาร์ปกติ (${ymd}) — ADMIN ไม่ได้เปิดพิเศษ · skipping`,
+			);
+			return;
+		}
 		const claimed = await claimToday(db, ymd);
 		if (!claimed) {
 			console.log(`[sendDailySummary] already sent for ${ymd}, skipping`);
@@ -201,6 +210,19 @@ export async function runDailySummary(
 	}
 
 	return results;
+}
+
+/** เสาร์ปกติ (ไม่ใช่เสาร์เปิดพิเศษ) → skip การส่ง daily summary
+ *  อ่าน config/storeCalendar.extraOpenSaturdays · ถ้าวันนี้เป็นเสาร์และ
+ *  ไม่อยู่ในรายการ extraOpenSaturdays → return true (ข้าม)
+ *  วันอื่น (จ-ศ, อา) ส่งปกติเหมือนเดิม                                     */
+async function shouldSkipSaturday(db: Firestore, ymd: string): Promise<boolean> {
+	const [y, m, d] = ymd.split("-").map(Number);
+	const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+	if (dow !== 6) return false; // ไม่ใช่เสาร์ → ส่งปกติ
+	const snap = await db.doc("config/storeCalendar").get();
+	const extraOpen = (snap.data()?.extraOpenSaturdays as string[] | undefined) || [];
+	return !extraOpen.includes(ymd);
 }
 
 /** Atomic claim ของวันนี้ — กัน scheduler ยิงซ้ำส่งสแปม */
