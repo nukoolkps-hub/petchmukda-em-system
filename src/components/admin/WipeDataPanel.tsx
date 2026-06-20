@@ -31,7 +31,7 @@ const COLLECTIONS_TO_DELETE: { name: string; label: string }[] = [
   { name: "advances", label: "เบิกเงินล่วงหน้า" },
   { name: "employeeLoans", label: "เงินกู้" },
   { name: "payrollConfirms", label: "ยืนยันยอดรอบเงินเดือน" },
-  { name: "poolSnapshots", label: "Snapshot กองกลาง (ข้อมูลเพื่อนร่วมงานร่วมงานใน pool calc)" },
+  { name: "poolSnapshots", label: "Snapshot กองกลาง (ข้อมูลเพื่อนร่วมงานใน pool calc)" },
   { name: "poolAdjustments", label: "รายการหักกองกลาง" },
   { name: "dutyAssignmentsToday", label: "Cache เวรประจำวัน" },
   { name: "certCounters", label: "ตัวนับใบรับรอง" },

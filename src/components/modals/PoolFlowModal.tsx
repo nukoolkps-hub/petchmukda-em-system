@@ -175,7 +175,7 @@ export default function PoolFlowModal({
     ],
   );
 
-  // ชื่อแสดงผล (admin = ชื่อจริง · พนักงาน = "คุณ" / "เพื่อนร่วมทีม #n")
+  // ชื่อแสดงผล (admin = ชื่อจริง · พนักงาน = "คุณ" / "เพื่อนร่วมงาน #n")
   const nameOf = useMemo(() => {
     const sorted = [...groupEmployeeIds].sort();
     let peerNo = 0;
@@ -192,7 +192,7 @@ export default function PoolFlowModal({
         };
       } else {
         peerNo += 1;
-        labels[id] = { name: `เพื่อนร่วมทีม #${peerNo}`, isSelf: false };
+        labels[id] = { name: `เพื่อนร่วมงาน #${peerNo}`, isSelf: false };
       }
     });
     return labels;

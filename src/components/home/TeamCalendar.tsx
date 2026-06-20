@@ -465,7 +465,7 @@ export default function TeamCalendar({
           <div className="text-txt-soft text-sm mt-2 text-center">
             <span className="inline-flex items-center gap-1">
               <IconSparkles size={14} strokeWidth={2.4} />
-              ไม่มีพนักงานลาในวันนี้
+              ไม่มีใครลาวันนี้
             </span>
           </div>
         ) : (

@@ -98,7 +98,7 @@ function TodayRow({
             ? `⚠ ไม่มีคนในตำแหน่ง ${coverageRoleName} — กรุณาตรวจสอบการตั้งค่า`
             : `${coverageRoleName}ไม่ลาวันนี้ — ไม่ต้องมีคนแทน`
         : assignment?.reason === "all_on_leave"
-          ? "ทุกคนใน pool ลาวันนี้"
+          ? "ทุกคนในกลุ่มลาวันนี้"
           : "ยังไม่ได้ตั้ง pool"}
     </div>
   );
