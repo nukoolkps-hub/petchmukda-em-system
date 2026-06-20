@@ -62,11 +62,20 @@ export default function AdvanceRequestModal({
 
   // คำขอที่ไม่ใช่ "rejected" ในเดือนนี้ (pending + approved)
   // กฎ: 1 ครั้ง/เดือน — มีคำขอที่ไม่ rejected อยู่แล้ว = ห้ามยื่นใหม่
+  // auto-carry advance (autoCarryFromMonth ตั้ง · ระบบสร้างให้ตอน admin
+  // ยืนยันยอด net<0) → exempt จาก "1/month" rule (พนักงานไม่ได้ยื่น) แต่
+  // ยังนับใน alreadyRequested (กินวงเงิน tier ตามจริง)
   const myReqs = (advanceRequests || []).filter((r) => r.month === yearMonth);
   const activeReqs = myReqs.filter((r) => r.status !== "rejected");
   const alreadyRequested = activeReqs.reduce((s, r) => s + r.amount, 0);
   const remaining = Math.max(0, maxAdvance - alreadyRequested);
-  const alreadyRequestedThisMonth = activeReqs.length > 0;
+  const userActiveReqs = activeReqs.filter((r) => !r.autoCarryFromMonth);
+  const alreadyRequestedThisMonth = userActiveReqs.length > 0;
+  const autoCarryReqs = activeReqs.filter((r) => !!r.autoCarryFromMonth);
+  const autoCarryAmount = autoCarryReqs.reduce((s, r) => s + r.amount, 0);
+  const autoCarryFrom = autoCarryReqs[0]?.autoCarryFromMonth as
+    | string
+    | undefined;
 
   // เช็คเงินสุทธิเดือนที่แล้วติดลบไหม · ถ้าใช่ + admin ยังไม่ "เคลียร์" →
   // บล็อกเบิกเดือนนี้ (กัน chain หนี้ · พนักงานต้องเคลียร์ก่อน) ·
@@ -155,6 +164,21 @@ export default function AdvanceRequestModal({
           <div className="text-sm text-txt-mid leading-normal">
             <b className="text-amber">วันสุดท้ายของเดือน</b> เป็นวันทำเงินเดือน —
             เบิกล่วงหน้าไม่ได้ในวันนี้ เพื่อกันความสับสนในรอบจ่ายเงิน
+          </div>
+        </div>
+      )}
+
+      {autoCarryAmount > 0 && !payrollLocked && (
+        <div className="bg-gold-pale rounded-xl px-3.5 py-3 mb-3.5 border border-gold/30 flex items-start gap-2">
+          <IconAlertTriangle
+            size={16}
+            className="text-maroon mt-0.5 shrink-0"
+            strokeWidth={2.4}
+          />
+          <div className="text-sm text-txt-mid leading-normal">
+            <b className="text-maroon">ยกมาจากเดือน {autoCarryFrom}</b> ฿
+            {formatThaiNumber(autoCarryAmount)} · จะถูกหักจากเงินเดือน
+            เดือนนี้อัตโนมัติ (ระบบสร้างให้)
           </div>
         </div>
       )}

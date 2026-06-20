@@ -136,6 +136,7 @@ export default function LeaveApp() {
     upsertDuty,
     deleteDuty,
     setPayrollConfirm,
+    syncAutoCarryAdvance,
   } = data;
   const { duties, dutyAssignmentsToday, storeCalendar } = data;
 
@@ -499,6 +500,7 @@ export default function LeaveApp() {
                       onUpdateLoan={updateEmployeeLoan}
                       onDeleteLoan={deleteEmployeeLoan}
                       onSetPayrollConfirm={setPayrollConfirm}
+                      onSyncAutoCarryAdvance={syncAutoCarryAdvance}
                       storeCalendar={storeCalendar}
                       onUpdateStoreCalendar={updateStoreCalendarAction}
                       showToast={showToast}

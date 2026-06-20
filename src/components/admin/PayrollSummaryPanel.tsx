@@ -48,6 +48,7 @@ export default function PayrollSummaryPanel({
   storeCalendar,
   onSetPayrollConfirm,
   onSaveSalary,
+  onSyncAutoCarryAdvance,
   // onUpdateLoan ไม่ใช้แล้ว — recordLoanRepaymentTx เขียน Firestore ตรง (transaction)
   // เดือนที่ดู (controlled โดย AdminPanel) — share กับ section อื่น
   selectedMonth,
@@ -373,6 +374,30 @@ export default function PayrollSummaryPanel({
     await Promise.allSettled(updates);
   }
 
+  /* ─── Sync auto-carry advance ─────────────────────────────────────
+     ถ้า net < 0 → สร้าง/update advance ใน month ถัดไป (status=approved
+     · autoCarryFromMonth=selectedMonth) · พนักงานจะถูกหักยอด deficit
+     จากเงินเดือนเดือนถัดไปอัตโนมัติ
+     ถ้า net >= 0 → ลบ auto-carry ที่อาจมี (เคย confirm net<0 แล้วแก้กลับ)  */
+  async function syncAutoCarryAdvances() {
+    if (!onSyncAutoCarryAdvance) return;
+    // เดือนถัดไป — ม.ค. ถัดไปปีถัดไป
+    const [y, m] = selectedMonth.split("-").map(Number);
+    const d = new Date(y, m, 1); // m index = next month (เพราะ m เดิม = 1-based, JS = 0-based)
+    const nextMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const updates = rows.map((row) => {
+      const net = row.salaryCalculation.netSalary;
+      return onSyncAutoCarryAdvance({
+        sourceMonth: selectedMonth,
+        nextMonth,
+        employeeId: row.employee.id,
+        employeeName: row.employee.nickname || row.employee.name || "",
+        deficitAmount: net < 0 ? -net : 0,
+      });
+    });
+    await Promise.allSettled(updates);
+  }
+
   async function confirmPayroll(
     totalForMonth: number,
     empCountForMonth: number,
@@ -412,6 +437,11 @@ export default function PayrollSummaryPanel({
         await denormalizeNetSalaries();
       } catch (err) {
         console.error("[PayrollSummary] denormalize net failed:", err);
+      }
+      try {
+        await syncAutoCarryAdvances();
+      } catch (err) {
+        console.error("[PayrollSummary] sync auto-carry failed:", err);
       }
       try {
         await freezeAllSlips();
@@ -786,8 +816,11 @@ export default function PayrollSummaryPanel({
                   </div>
                 </div>
 
-                {/* Deficit banner — เงินสุทธิติดลบ · มีปุ่ม "เคลียร์แล้ว"
-                    ให้ admin กดเพื่อ unblock การเบิกล่วงหน้าของพนักงานคนนั้น */}
+                {/* Deficit banner — เงินสุทธิติดลบ
+                    หลังยืนยันยอด: ระบบจะ auto-carry เป็นเบิกล่วงหน้าเดือน
+                    ถัดไปอัตโนมัติ + บล็อกพนักงานยื่นเบิกใหม่ (กัน chain หนี้)
+                    Admin กด "เคลียร์แล้ว" เพื่อปลดล็อกการเบิกใหม่ (ไม่กระทบ
+                    auto-carry · ยังหักเหมือนเดิม)                              */}
                 {hasDeficit && (
                   <div
                     className={`mt-2 px-3 py-2 rounded-[9px] border text-xs flex items-center gap-2 ${
@@ -800,14 +833,17 @@ export default function PayrollSummaryPanel({
                     <div className="flex-1 leading-relaxed">
                       {deficitCleared ? (
                         <>
-                          <b>เคลียร์ยอดติดลบแล้ว</b> · พนักงานเบิกล่วงหน้า
-                          เดือนถัดไปได้
+                          <b>เคลียร์ยอดติดลบแล้ว</b> · พนักงานยื่นเบิกใหม่
+                          เดือนถัดไปได้ (auto-carry ฿
+                          {formatThaiNumber(-salaryCalculation.netSalary)}{" "}
+                          ยังหักปกติ)
                         </>
                       ) : (
                         <>
                           <b>เงินสุทธิติดลบ</b> ฿
                           {formatThaiNumber(-salaryCalculation.netSalary)} ·
-                          พนักงานเบิกล่วงหน้าเดือนถัดไปไม่ได้
+                          ยกเป็นเบิกล่วงหน้าเดือนถัดไปอัตโนมัติ + บล็อกพนักงาน
+                          ยื่นเบิกใหม่
                         </>
                       )}
                     </div>
