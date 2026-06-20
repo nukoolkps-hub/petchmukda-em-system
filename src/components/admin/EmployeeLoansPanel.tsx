@@ -7,13 +7,16 @@ import {
   HandCoins as IconHandCoins,
   Plus as IconPlus,
   Trash2 as IconTrash,
+  Upload as IconUpload,
   X as IconX,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { loanRemaining } from "../../firebase/employeeLoans";
+import { uploadLoanSlip } from "../../firebase/storage";
 import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
+import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 
@@ -177,6 +180,7 @@ export default function EmployeeLoansPanel({
           employeeDirectory={employeeDirectory}
           onClose={() => setShowCreate(false)}
           onAddLoan={onAddLoan}
+          onUpdateLoan={onUpdateLoan}
           showToast={showToast}
         />
       )}
@@ -255,18 +259,39 @@ function Stat({
   );
 }
 
-function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
+function CreateLoanModal({
+  employeeDirectory,
+  onClose,
+  onAddLoan,
+  onUpdateLoan,
+  showToast,
+}) {
   const [employeeId, setEmployeeId] = useState(employeeDirectory[0]?.id || "");
   const [principal, setPrincipal] = useState("");
   const [monthly, setMonthly] = useState("");
   const [startMonth, setStartMonth] = useState(currentYearMonth);
   const [note, setNote] = useState("");
+  // slipDataUrl: resized image (preview + upload payload) · null = ยังไม่เลือก
+  const [slipDataUrl, setSlipDataUrl] = useState<string | null>(null);
+  const [resizing, setResizing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
   const principalNum = parseFloat(principal) || 0;
   const monthlyNum = parseFloat(monthly) || 0;
   const estMonths = monthlyNum > 0 ? Math.ceil(principalNum / monthlyNum) : 0;
+
+  async function pickSlip(file: File) {
+    setResizing(true);
+    try {
+      const dataUrl = await resizeSlip(file);
+      setSlipDataUrl(dataUrl);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "อ่านรูปไม่สำเร็จ");
+    } finally {
+      setResizing(false);
+    }
+  }
 
   async function submit() {
     if (!employeeId) return setErr("กรุณาเลือกพนักงาน");
@@ -277,7 +302,7 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
     setSaving(true);
     try {
       const emp = employeeDirectory.find((e) => e.id === employeeId);
-      await onAddLoan({
+      const loanId = await onAddLoan({
         employeeId,
         // snapshot ชื่อ ตอนสร้าง · ใช้ fallback ถ้าพนักงานถูกลบทีหลัง
         // นำ nickname ก่อน เพราะเป็นชื่อเล่นที่ใช้ใน UI · ตรงกับ pattern leave/advance
@@ -288,6 +313,21 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
         note: note.trim(),
         status: "active",
       });
+      // อัปโหลดสลิป (ถ้ามี) · ต้องมี loanId แล้วจึงรู้ path เก็บใน Storage
+      // ถ้า upload fail → loan ยังถูกสร้าง · แจ้ง toast แต่ไม่ rollback
+      if (slipDataUrl && loanId) {
+        try {
+          const url = await uploadLoanSlip(loanId, slipDataUrl);
+          await onUpdateLoan(loanId, { slipImageUrl: url });
+        } catch (e) {
+          console.error("[CreateLoanModal] upload slip failed:", e);
+          showToast?.(
+            "สร้างเงินกู้แล้ว แต่อัปโหลดสลิปไม่สำเร็จ — แก้ไขภายหลังได้",
+          );
+          onClose();
+          return;
+        }
+      }
       showToast?.("สร้างเงินกู้แล้ว");
       onClose();
     } catch (error) {
@@ -409,6 +449,50 @@ function CreateLoanModal({ employeeDirectory, onClose, onAddLoan, showToast }) {
         placeholder="เช่น เงินกู้ฉุกเฉิน, ยืมค่ารักษา"
         className={`${inputCls} mb-3`}
       />
+
+      {/* สลิปโอนเงิน — optional · พนักงานเปิดดูได้จาก card เงินกู้ */}
+      <label className="block text-sm text-txt-mid font-semibold mb-1.5">
+        สลิปโอนเงิน <span className="text-txt-soft font-normal">(ถ้ามี)</span>
+      </label>
+      {slipDataUrl ? (
+        <div className="relative mb-3 rounded-[10px] border border-bdr overflow-hidden bg-cream">
+          <img
+            src={slipDataUrl}
+            alt="สลิปโอนเงิน"
+            className="block max-h-[220px] w-full object-contain"
+          />
+          <button
+            type="button"
+            onClick={() => setSlipDataUrl(null)}
+            aria-label="ลบสลิป"
+            className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white border border-bdr flex items-center justify-center cursor-pointer shadow"
+          >
+            <IconX size={14} className="text-txt-mid" strokeWidth={2.4} />
+          </button>
+        </div>
+      ) : (
+        <label className="block px-3.5 py-2.5 mb-3 rounded-[10px] border-[1.5px] border-dashed border-gold/40 bg-gold-pale text-maroon text-sm font-semibold cursor-pointer font-[inherit] text-center">
+          {resizing ? (
+            "กำลังย่อรูป..."
+          ) : (
+            <span className="inline-flex items-center gap-1.5">
+              <IconUpload size={14} strokeWidth={2.4} />
+              เลือกรูปสลิป
+            </span>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            disabled={resizing}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) pickSlip(f);
+              e.target.value = "";
+            }}
+            className="hidden"
+          />
+        </label>
+      )}
 
       {estMonths > 0 && (
         <div className="bg-gold-pale rounded-[10px] px-3.5 py-2.5 mb-3 border border-gold/25 text-sm text-txt-mid">

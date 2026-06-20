@@ -34,6 +34,17 @@ export async function uploadAdvanceSlip(
   );
 }
 
+export async function uploadLoanSlip(
+  loanId: string | number,
+  dataUrl: string,
+) {
+  const id = safeSegment(loanId);
+  return await uploadDataUrl(
+    `loanSlips/${id}/slip-${Date.now()}.jpg`,
+    dataUrl,
+  );
+}
+
 /* ─── Salary slip PDF (freeze ตอน Admin ยืนยันยอด) ──────────────
    Path คงที่ salarySlips/{employeeId}/{YYYY-MM}.pdf
    → ยืนยันยอดใหม่ทับไฟล์เดิม ไม่สะสมไฟล์ขยะ

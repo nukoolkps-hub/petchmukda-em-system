@@ -27,6 +27,12 @@ service firebase.storage {
       );
     }
 
+    function isLoanOwner(loanId) {
+      return isEmployeeOwner(
+        firestore.get(/databases/petchmukda-bot/documents/employeeLoans/$(loanId)).data.employeeId
+      );
+    }
+
     match /avatars/{employeeId}/{fileName} {
       allow read: if isSignedIn();
       allow write: if (isAdmin() || isEmployeeOwner(employeeId)) && isImageUpload();
@@ -34,6 +40,11 @@ service firebase.storage {
 
     match /advanceSlips/{advanceId}/{fileName} {
       allow read: if isAdmin() || isAdvanceOwner(advanceId);
+      allow write: if isAdmin() && isImageUpload();
+    }
+
+    match /loanSlips/{loanId}/{fileName} {
+      allow read: if isAdmin() || isLoanOwner(loanId);
       allow write: if isAdmin() && isImageUpload();
     }
 
