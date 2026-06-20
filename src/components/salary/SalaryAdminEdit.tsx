@@ -856,24 +856,14 @@ export default function SalaryAdminEdit({
             </div>
           </div>
 
-          {/* members */}
+          {/* members — loop pool items (kind=pool) เป็น badges ต่อคน ·
+              flex-wrap รองรับ items >3 · personal items ไม่แสดง (ส่วนตัว
+              ไม่มี threshold check) */}
           <div className="mt-2.5">
             <div className="text-xs text-txt-soft mb-1.5">คนในกลุ่ม:</div>
             <div className="flex flex-col gap-1">
               {poolGroupEmployees.map((g) => {
                 const gSal = salaryData[g.id]?.[selectedMonth];
-                const gSell =
-                  (gSal?.normalSalePieces || 0) +
-                  (gSal?.specialSalePieces || 0);
-                const gBuy = gSal?.buyPieces || 0;
-                const gES =
-                  poolShare.topSellPieces === 0
-                    ? true
-                    : gSell >= poolShare.sellEligibilityThreshold;
-                const gEB =
-                  poolShare.topBuyPieces === 0
-                    ? true
-                    : gBuy >= poolShare.buyEligibilityThreshold;
                 const isMe = g.id === selectedEmployeeId;
                 return (
                   <div
@@ -885,31 +875,40 @@ export default function SalaryAdminEdit({
                     >
                       {g.name}
                     </span>
-                    <div
-                      className={`shrink-0 min-w-[54px] px-2 py-1 rounded-md flex flex-col items-center justify-center leading-tight ${gES ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
-                    >
-                      <span className="text-[10px] font-semibold opacity-80 inline-flex items-center gap-0.5">
-                        ขาย
-                        {gES ? (
-                          <IconCheck size={9} strokeWidth={3} />
-                        ) : (
-                          <IconX size={9} strokeWidth={3} />
-                        )}
-                      </span>
-                      <span className="text-sm font-extrabold">{gSell}</span>
-                    </div>
-                    <div
-                      className={`shrink-0 min-w-[54px] px-2 py-1 rounded-md flex flex-col items-center justify-center leading-tight ${gEB ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
-                    >
-                      <span className="text-[10px] font-semibold opacity-80 inline-flex items-center gap-0.5">
-                        ซื้อ
-                        {gEB ? (
-                          <IconCheck size={9} strokeWidth={3} />
-                        ) : (
-                          <IconX size={9} strokeWidth={3} />
-                        )}
-                      </span>
-                      <span className="text-sm font-extrabold">{gBuy}</span>
+                    <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
+                      {rolePoolItems(employeeRole)
+                        .filter((it) => it.kind === "pool")
+                        .map((item) => {
+                          const pieces = resolvePoolItemPieces(item.id, gSal);
+                          const topPieces =
+                            poolShare.topItemPieces?.[item.id] || 0;
+                          const thresholdPct = item.threshold ?? 80;
+                          const thresholdPieces =
+                            topPieces > 0
+                              ? (topPieces * thresholdPct) / 100
+                              : 0;
+                          const eligible =
+                            topPieces === 0 || pieces >= thresholdPieces;
+                          return (
+                            <div
+                              key={item.id}
+                              title={`${item.label} · ${pieces} ชิ้น · ${eligible ? "ผ่านเกณฑ์" : `ต้องการ ≥ ${thresholdPieces.toFixed(1)} (${thresholdPct}% ของ ${topPieces})`}`}
+                              className={`shrink-0 min-w-[54px] px-2 py-1 rounded-md flex flex-col items-center justify-center leading-tight ${eligible ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                            >
+                              <span className="text-[10px] font-semibold opacity-80 inline-flex items-center gap-0.5 max-w-[64px]">
+                                <span className="truncate">{item.label}</span>
+                                {eligible ? (
+                                  <IconCheck size={9} strokeWidth={3} />
+                                ) : (
+                                  <IconX size={9} strokeWidth={3} />
+                                )}
+                              </span>
+                              <span className="text-sm font-extrabold">
+                                {pieces}
+                              </span>
+                            </div>
+                          );
+                        })}
                     </div>
                   </div>
                 );
