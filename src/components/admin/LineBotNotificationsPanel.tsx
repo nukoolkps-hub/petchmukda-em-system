@@ -1,10 +1,16 @@
 /* ─── LINE Bot Notifications Panel ─────────────────────────────
    Admin toggle เปิด-ปิดการแจ้งเตือนรายประเภท
 
-   3 toggle:
-   - dailySummaryEnabled    — สรุปประจำวัน 07:30 push เข้ากลุ่ม
-   - advanceRequestEnabled  — แจ้งเตือน admin เมื่อพนักงานยื่นเบิกเงิน
-   - advanceApprovalEnabled — แจ้งเตือนพนักงานเมื่ออนุมัติ/ปฏิเสธ
+   4 toggles:
+   - dailySummaryEnabled    — สรุปประจำวัน 07:30 push เข้ากลุ่ม (3 กลุ่ม ·
+                              we r mukda ได้ครบ · อีก 2 ส่งเฉพาะมี event ·
+                              เสาร์ปกติข้าม)
+   - advanceRequestEnabled  — แจ้ง ADMIN เมื่อพนักงานยื่นเบิกเงิน + clipboard
+                              copy เลขบัญชี
+   - advanceApprovalEnabled — แจ้งพนักงานเมื่อ admin อนุมัติ/ปฏิเสธ ·
+                              approve → แนบสลิปการโอน · reject → เหตุผล
+   - loanCreatedEnabled     — แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ +
+                              สลิปการโอน (ถ้าแนบไว้)
 
    Default semantic: missing field / true = enabled (backward compat).      */
 
@@ -98,31 +104,31 @@ export default function LineBotNotificationsPanel({
         <ToggleRow
           icon={IconClock}
           title="สรุปประจำวัน 07:30"
-          description="bot push เข้า we r mukda (ภารกิจ + คนหยุด + เคล็ดลับ) ทุกเช้า · Various Tasks + KS Apartment ส่งเฉพาะวันที่มี event ใน Google Calendar"
+          description="Bot push เข้า 3 กลุ่ม LINE · we r mukda ได้ครบชุด (ภารกิจ + คนหยุดวันนี้ + เคล็ดลับมืออาชีพจาก Claude) ทุกเช้า · Various Tasks + KS Apartment ส่งเฉพาะวันที่มี event ใน Google Calendar · ข้ามวันเสาร์ปกติ (ส่งเฉพาะเสาร์เปิดพิเศษ)"
           enabled={isOn("dailySummaryEnabled")}
           disabled={loading}
           onToggle={() => toggle("dailySummaryEnabled")}
         />
         <ToggleRow
           icon={IconBanknote}
-          title="คำขอเบิกเงินล่วงหน้า"
-          description="แจ้ง ADMIN เมื่อพนักงานยื่นเบิกเงินใหม่"
+          title="คำขอเบิกเงินใหม่ → ADMIN"
+          description="แจ้ง ADMIN ทันทีเมื่อพนักงานยื่นคำขอ · แสดงจำนวนเงิน · เหตุผล · เดือน · ชื่อธนาคาร + เลขบัญชี · มีปุ่มคัดลอกเลขบัญชีในแชท"
           enabled={isOn("advanceRequestEnabled")}
           disabled={loading}
           onToggle={() => toggle("advanceRequestEnabled")}
         />
         <ToggleRow
           icon={IconCheckCircle}
-          title="ผลอนุมัติคำขอเบิกเงิน"
-          description="แจ้งพนักงานเมื่อ ADMIN อนุมัติหรือปฏิเสธคำขอ"
+          title="ผลอนุมัติเบิกเงิน → พนักงาน"
+          description="แจ้งพนักงานเมื่อ ADMIN อนุมัติ/ปฏิเสธคำขอ · อนุมัติ → แนบสลิปการโอนที่ ADMIN อัปโหลด · ปฏิเสธ → แนบเหตุผลปฏิเสธ · worker ตรวจทุกนาที"
           enabled={isOn("advanceApprovalEnabled")}
           disabled={loading}
           onToggle={() => toggle("advanceApprovalEnabled")}
         />
         <ToggleRow
           icon={IconHandCoins}
-          title="เงินกู้ใหม่"
-          description="แจ้งพนักงานเมื่อ ADMIN สร้างเงินกู้ผ่อนคืนให้ (พร้อมสลิปการโอนถ้าแนบไว้)"
+          title="เงินกู้ใหม่ → พนักงาน"
+          description="แจ้งพนักงานเมื่อ ADMIN สร้างเงินกู้ผ่อนคืน · แสดงเงินต้น · ผ่อนเดือนละ · เริ่มหัก · จำนวนเดือน + แนบสลิปการโอน (ถ้า ADMIN อัปโหลดไว้) · worker ตรวจทุกนาที"
           enabled={isOn("loanCreatedEnabled")}
           disabled={loading}
           onToggle={() => toggle("loanCreatedEnabled")}
