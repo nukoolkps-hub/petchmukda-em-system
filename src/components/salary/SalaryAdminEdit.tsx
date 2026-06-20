@@ -649,7 +649,7 @@ export default function SalaryAdminEdit({
           <div className="text-xs text-txt-mid mb-2 leading-relaxed">
             ตัดสิทธิ์ฝั่งขาย/รับซื้อ แยกกัน · &lt; 80% ของ Top = ตัดออก
             <br />
-            แบ่งกองกลางตามสูตร: % ได้ = Base − % หัก + Σ% แบ่งให้เพื่อนร่วมงาน
+            แบ่งกองกลางตามสูตร: % ได้ = Base − % หัก + Σ(% ที่เพื่อนร่วมงานแบ่งให้)
           </div>
 
           {/* Admin-locked: ปิดสิทธิ์ Pool */}
@@ -858,7 +858,7 @@ export default function SalaryAdminEdit({
             )}
 
             <div className="mt-1.5 px-2 py-1.5 rounded-md text-xs text-maroon text-center font-semibold leading-relaxed bg-[#C9973A15]">
-              สูตร: % ที่ได้ = Base − % การหัก + Σ(% แบ่งให้เพื่อนร่วมงาน)
+              สูตร: % ที่ได้ = Base − % การหัก + Σ(% ที่เพื่อนร่วมงานแบ่งให้)
               <br />
               <span className="inline-flex items-center gap-1">
                 <IconSparkles size={11} strokeWidth={2.4} />

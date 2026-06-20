@@ -116,8 +116,8 @@ primaryPoolItemId: "normal"
 6. **ตัวคูณหักวันลา:** `leaveDeductionFactor = baseSharePercent / 30` (per item · ต่างกันตาม n)
 7. **วันลาที่ใช้คำนวณ:** `effectiveLeave[i] = max(0, totalLeave[i] − 2)` — 2 วันแรกฟรี
 8. **% หัก** ของแต่ละคน: `leaveDeductionPercent[i] = effectiveLeave[i] × leaveDeductionFactor × (n − 1)`
-9. **% แบ่งเพื่อน:** `redistributedPercent[i] = leaveDeductionPercent[i] / (n − 1)`
-10. **% สุทธิ:** `finalSharePercent[i] = base − myDeduction + Σ(redistributed จากคนอื่น)`
+9. **% แบ่งให้เพื่อนร่วมงาน:** `redistributedPercent[i] = leaveDeductionPercent[i] / (n − 1)`
+10. **% สุทธิ:** `finalSharePercent[i] = base − myDeduction + Σ(% ที่เพื่อนร่วมงานแบ่งให้)`
 11. **Pool รวม** ของ item: `grossItemPool[itemId] = Σ pieces ทุกคน` · หัก `excludedByItemId[itemId]` (จาก `poolAdjustments`) → `totalItemPool[itemId]`
 12. **ชิ้นที่ได้:** `allocatedPieces[i] = (finalSharePercent[i] / 100) × totalItemPool[itemId]`
 
