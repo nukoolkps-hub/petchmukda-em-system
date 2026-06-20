@@ -537,6 +537,8 @@ export default function SalaryView({
       const earnIds = new Set<string>();
       const dedIds = new Set<string>();
       for (const id of hiddenSlipIds) {
+        // "base" lock — เงินเดือนพื้นฐานต้องโชว์เสมอ · กันเคสที่ id หลุดเข้ามา
+        if (id === "base") continue;
         if (slipCatalog.earnRows.some((r) => r.id === id)) earnIds.add(id);
         if (slipCatalog.dedRows.some((r) => r.id === id)) dedIds.add(id);
       }
@@ -606,7 +608,8 @@ export default function SalaryView({
                     <SlipRowCheckbox
                       key={r.id}
                       row={r}
-                      checked={!hiddenSlipIds.has(r.id)}
+                      checked={r.id === "base" || !hiddenSlipIds.has(r.id)}
+                      locked={r.id === "base"}
                       onToggle={() => toggleHidden(r.id)}
                     />
                   ))}
@@ -1947,27 +1950,40 @@ const CERT_PURPOSE_OPTIONS = [
 function SlipRowCheckbox({
   row,
   checked,
+  locked,
   onToggle,
 }: {
   row: { id: string; label: string; sublabel?: string; value: number };
   checked: boolean;
+  /** locked = ติ๊กออกไม่ได้ (เช่น เงินเดือนพื้นฐาน · ฟิลด์หลักต้องโชว์เสมอ) */
+  locked?: boolean;
   onToggle: () => void;
 }) {
   return (
     <label
-      className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer border ${
-        checked ? "bg-cream border-bdr" : "bg-white border-bdr/40 opacity-60"
+      className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg border ${
+        locked
+          ? "bg-cream/70 border-bdr cursor-not-allowed"
+          : checked
+            ? "bg-cream border-bdr cursor-pointer"
+            : "bg-white border-bdr/40 opacity-60 cursor-pointer"
       }`}
     >
       <input
         type="checkbox"
         checked={checked}
-        onChange={onToggle}
-        className="w-4 h-4 accent-maroon cursor-pointer"
+        disabled={locked}
+        onChange={locked ? undefined : onToggle}
+        className={`w-4 h-4 accent-maroon ${locked ? "cursor-not-allowed" : "cursor-pointer"}`}
       />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold text-txt truncate">
           {row.label}
+          {locked && (
+            <span className="ml-1.5 text-[10px] font-normal text-txt-soft">
+              (บังคับแสดง)
+            </span>
+          )}
         </div>
         {row.sublabel && (
           <div className="text-[10px] text-txt-soft truncate">
