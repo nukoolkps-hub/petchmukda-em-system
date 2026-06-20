@@ -47,7 +47,10 @@ export function buildSalarySlipDocDef({
 
   /* ─── สร้าง earnings rows ─────────────────────────────── */
   const earnRows: [string, string][] = [];
-  earnRows.push(["เงินเดือนพื้นฐาน", formatNumber(salaryCalculation.baseSalary)]);
+  earnRows.push([
+    "เงินเดือนพื้นฐานปัจจุบัน",
+    formatNumber(salaryCalculation.baseSalary),
+  ]);
   // ตำแหน่งไม่มี piece commission → ข้ามทั้ง piece + invite/transfer
   if (rolePaysPieceCommission(employeeRole)) {
     if (salaryCalculation.usesSinglePieceRate) {

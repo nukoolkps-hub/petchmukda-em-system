@@ -113,7 +113,7 @@ export default function PositionRateCard({ employee, role }: Props) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <div className="text-sm font-bold text-txt truncate">
-              เงินเดือนพื้นฐาน · อัตราค่าคอม
+              เงินเดือนพื้นฐานปัจจุบัน · อัตราค่าคอม
             </div>
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green/10 text-green text-[9px] font-extrabold uppercase tracking-wider shrink-0">
               <span className="relative flex h-1.5 w-1.5">
@@ -139,7 +139,7 @@ export default function PositionRateCard({ employee, role }: Props) {
       </summary>
       <div className="px-4 pb-3 pt-2 border-t border-bdr/40 space-y-1.5">
         <RateRow
-          label="เงินเดือนพื้นฐาน"
+          label="เงินเดือนพื้นฐานปัจจุบัน"
           value={getEffectiveBaseSalary(employee)}
           suffix="฿/เดือน"
         />

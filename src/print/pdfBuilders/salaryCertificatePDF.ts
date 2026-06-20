@@ -2,6 +2,7 @@
    หนังสือรับรองเงินเดือน — เป็น PDF text-searchable จริง          */
 
 import { THAI_MONTH_NAMES } from "../../constants";
+import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
 
 const COLORS = {
   maroon: "#7B1C1C",
@@ -71,8 +72,16 @@ export function buildCertificateDocDef({
   // ข้อมูล "ทางการ" ให้ใช้จาก employeeInfo (ที่ Admin ตั้งไว้) ก่อน profile (LINE)
   const employeeName = employeeInfo?.name || profile?.name || "-";
   const employeeRole = employeeInfo?.role || profile?.role || "-";
-  // เงินเดือนพื้นฐานดึงจากข้อมูลพนักงาน (data.baseSalary เลิกใช้แล้ว — fallback ไว้เผื่อ)
-  const baseSalary = employeeInfo?.baseSalary || data?.baseSalary || 0;
+  // เงินเดือนพื้นฐาน "ปัจจุบัน" = baseSalary + raises สะสมถึงปีนี้
+  // ใบรับรองใช้ยื่นกู้/สมัครงาน → ต้องเป็นเลขจริงของวันออกใบ ไม่ใช่ค่าเริ่มต้น
+  const baseSalary = employeeInfo
+    ? getEffectiveBaseSalary({
+        baseSalary: employeeInfo.baseSalary ?? 0,
+        startWorkMonth: employeeInfo.startWorkMonth ?? null,
+        annualRaiseAmount: employeeInfo.annualRaiseAmount ?? 0,
+        annualRaises: employeeInfo.annualRaises ?? {},
+      }) || data?.baseSalary || 0
+    : data?.baseSalary || 0;
   const prefix = employeeInfo?.prefix || profile?.prefix || "นางสาว";
   const printDate = new Date().toLocaleDateString("th-TH", {
     day: "numeric",

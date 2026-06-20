@@ -41,7 +41,10 @@ function buildSalarySlipHTML(
 
   // ── สร้างรายการรายรับ ──
   const earnRows: { label: string; value: any }[] = [];
-  earnRows.push({ label: "เงินเดือนพื้นฐาน", value: salaryCalculation.baseSalary });
+  earnRows.push({
+    label: "เงินเดือนพื้นฐานปัจจุบัน",
+    value: salaryCalculation.baseSalary,
+  });
   // ถ้าตำแหน่งไม่มี piece commission → ข้ามทั้ง piece + invite/transfer
   if (rolePaysPieceCommission(employeeRole)) {
     if (salaryCalculation.usesSinglePieceRate) {
