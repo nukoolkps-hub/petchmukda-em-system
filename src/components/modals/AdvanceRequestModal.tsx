@@ -4,7 +4,8 @@ import {
   MessageCircle as IconMessageCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { BUSINESS_RULES, COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { COLORS, THAI_MONTH_NAMES } from "../../constants";
+import { advanceLimitPercent } from "../../utils/advanceUtils";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
 
@@ -47,16 +48,17 @@ export default function AdvanceRequestModal({
     employeeSalary?.baseSalary ||
     latestSalary?.baseSalary ||
     0;
-  const maxAdvance = Math.floor(
-    baseSalary * BUSINESS_RULES.ADVANCE_LIMIT_PERCENT,
-  );
+  // เพดาน % ตามอายุงาน — 0-3y=50% · 3y=60% · 4y=70% · 5y=80% · 6y+=100%
+  const limitPercent = advanceLimitPercent(employee?.startWorkMonth);
+  const maxAdvance = Math.floor(baseSalary * limitPercent);
 
-  // total already approved this month
+  // คำขอที่ไม่ใช่ "rejected" ในเดือนนี้ (pending + approved)
+  // กฎ: 1 ครั้ง/เดือน — มีคำขอที่ไม่ rejected อยู่แล้ว = ห้ามยื่นใหม่
   const myReqs = (advanceRequests || []).filter((r) => r.month === yearMonth);
-  const alreadyRequested = myReqs
-    .filter((r) => r.status !== "rejected")
-    .reduce((s, r) => s + r.amount, 0);
+  const activeReqs = myReqs.filter((r) => r.status !== "rejected");
+  const alreadyRequested = activeReqs.reduce((s, r) => s + r.amount, 0);
   const remaining = Math.max(0, maxAdvance - alreadyRequested);
+  const alreadyRequestedThisMonth = activeReqs.length > 0;
 
   // บล็อกเบิกเฉพาะวันสุดท้ายของเดือน (เป็นวันทำเงินเดือน) — กันสับสนในรอบจ่าย
   // เช่น เดือน 30 วัน → บล็อกวันที่ 30 · เดือน 31 วัน → บล็อกวันที่ 31
@@ -74,6 +76,10 @@ export default function AdvanceRequestModal({
   function submit() {
     if (payrollLocked) {
       setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
+      return;
+    }
+    if (alreadyRequestedThisMonth) {
+      setErr("เบิกได้ครั้งเดียวต่อเดือน — เดือนนี้มีคำขอแล้ว");
       return;
     }
     const amountValue = parseFloat(amount) || 0;
@@ -124,13 +130,27 @@ export default function AdvanceRequestModal({
         </div>
       )}
 
+      {alreadyRequestedThisMonth && !payrollLocked && (
+        <div className="bg-amber-lt rounded-xl px-3.5 py-3 mb-3.5 border border-amber/30 flex items-start gap-2">
+          <IconAlertTriangle
+            size={16}
+            className="text-amber mt-0.5 shrink-0"
+            strokeWidth={2.4}
+          />
+          <div className="text-sm text-txt-mid leading-normal">
+            <b className="text-amber">เบิกได้ครั้งเดียวต่อเดือน</b> —
+            เดือนนี้มีคำขอแล้ว · ต้องรอเดือนถัดไป
+          </div>
+        </div>
+      )}
+
       {/* limit info */}
       <div className="bg-gold-pale rounded-xl px-3.5 py-3 mb-3.5 border border-gold/25">
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-sm text-txt-mid">
             วงเงินสูงสุด{" "}
             <span className="text-[11px] text-txt-soft">
-              (50% ของเงินเดือนพื้นฐาน)
+              ({Math.round(limitPercent * 100)}% ของเงินเดือนพื้นฐาน)
             </span>
           </span>
           <span className="text-sm font-bold text-maroon">
@@ -231,6 +251,10 @@ export default function AdvanceRequestModal({
               setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
               return;
             }
+            if (alreadyRequestedThisMonth) {
+              setErr("เบิกได้ครั้งเดียวต่อเดือน — เดือนนี้มีคำขอแล้ว");
+              return;
+            }
             if (remaining <= 0) {
               setErr("เบิกครบวงเงินของเดือนนี้แล้ว — ต้องรอเดือนถัดไป");
               return;
@@ -239,16 +263,18 @@ export default function AdvanceRequestModal({
           }}
           className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5
             ${
-              payrollLocked || remaining <= 0
+              payrollLocked || alreadyRequestedThisMonth || remaining <= 0
                 ? "bg-bdr text-txt-soft shadow-none"
                 : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
             }`}
         >
           {payrollLocked
             ? "วันทำเงินเดือน — เบิกไม่ได้"
-            : remaining <= 0
-              ? "เต็มวงเงินแล้ว"
-              : "ส่งคำขอผ่าน LINE"}
+            : alreadyRequestedThisMonth
+              ? "เดือนนี้เบิกแล้ว"
+              : remaining <= 0
+                ? "เต็มวงเงินแล้ว"
+                : "ส่งคำขอผ่าน LINE"}
         </button>
       </div>
     </BaseModal>
