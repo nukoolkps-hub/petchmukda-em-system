@@ -506,11 +506,14 @@ function PoolItemFlow({
 }
 
 /* ─── bits ──────────────────────────────────────────────────────── */
-function exclusionLabel(ex: string | null | undefined): string {
-  if (ex === "both") return "ปิดทั้งคู่";
-  if (ex === "sell") return "ปิดฝั่งขาย";
-  if (ex === "buy") return "ปิดฝั่งรับซื้อ";
-  return "";
+function exclusionLabel(
+  ex: string | string[] | null | undefined,
+): string {
+  if (!ex) return "";
+  if (ex === "all" || ex === "both") return "ปิดทั้งหมด";
+  // legacy sell/buy + new per-item array → generic "ปิดบางรายการ" (รายชื่อ
+  // item เฉพาะอยู่ในหน้า admin · ที่นี่ summary พอ)
+  return "ปิดบางรายการ";
 }
 
 function StepLabel({ n, text }: { n: number; text: string }) {

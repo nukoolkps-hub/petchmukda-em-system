@@ -710,61 +710,44 @@ export default function SalaryAdminEdit({
             </div>
           )}
 
-          {/* not eligible warnings (เฉพาะคนที่ไม่ถูก Admin ปิดในฝั่งนั้น) */}
-          {poolShare.poolExclusion !== "sell" &&
-            poolShare.poolExclusion !== "both" &&
-            !poolShare.eligibleForSellPool && (
-              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-1.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40] flex items-start gap-1.5">
-                <IconAlertTriangle
-                  size={14}
-                  strokeWidth={2.4}
-                  className="shrink-0 mt-0.5"
-                />
-                <div className="flex-1">
-                  ฝั่งขาย: ไม่ได้รับชิ้นจากกองกลาง
-                  <div className="font-medium text-xs mt-0.5">
-                    ขาย {poolShare.employeeSellPieces} ชิ้น ·{" "}
-                    {poolShare.topSellPieces > 0
-                      ? (
-                          (poolShare.employeeSellPieces /
-                            poolShare.topSellPieces) *
-                          100
-                        ).toFixed(1)
-                      : "0"}
-                    % ของ Top {poolShare.topSellPieces} (ขั้นต่ำ{" "}
-                    {poolShare.sellEligibilityThreshold.toFixed(1)})
+          {/* not eligible warnings — loop pool items (kind=pool) ที่
+              ผ่าน threshold ไม่ได้ + ยังไม่ถูก admin exclude */}
+          {rolePoolItems(employeeRole)
+            .filter((it) => it.kind === "pool")
+            .map((item) => {
+              const itemShare = poolShare.itemShares?.[item.id];
+              const isExcluded = (poolShare.excludedItemIds || []).includes(
+                item.id,
+              );
+              if (isExcluded || itemShare?.eligible) return null;
+              const myPieces = poolShare.itemPieces?.[item.id] || 0;
+              const topPieces = poolShare.topItemPieces?.[item.id] || 0;
+              const thresholdPct = item.threshold ?? 80;
+              const thresholdPieces = (topPieces * thresholdPct) / 100;
+              const myPercent =
+                topPieces > 0 ? (myPieces / topPieces) * 100 : 0;
+              return (
+                <div
+                  key={item.id}
+                  className="bg-red-lt rounded-[9px] px-3 py-2 mb-1.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40] flex items-start gap-1.5"
+                >
+                  <IconAlertTriangle
+                    size={14}
+                    strokeWidth={2.4}
+                    className="shrink-0 mt-0.5"
+                  />
+                  <div className="flex-1">
+                    {item.label}: ไม่ได้รับชิ้นจากกองกลาง
+                    <div className="font-medium text-xs mt-0.5">
+                      {myPieces} ชิ้น · {myPercent.toFixed(1)}% ของ Top{" "}
+                      {topPieces} (ขั้นต่ำ {thresholdPieces.toFixed(1)})
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          {poolShare.poolExclusion !== "buy" &&
-            poolShare.poolExclusion !== "both" &&
-            !poolShare.eligibleForBuyPool && (
-              <div className="bg-red-lt rounded-[9px] px-3 py-2 mb-2.5 text-sm text-red font-semibold leading-relaxed border border-[#C0392B40] flex items-start gap-1.5">
-                <IconAlertTriangle
-                  size={14}
-                  strokeWidth={2.4}
-                  className="shrink-0 mt-0.5"
-                />
-                <div className="flex-1">
-                  ฝั่งรับซื้อ: ไม่ได้รับชิ้นจากกองกลาง
-                  <div className="font-medium text-xs mt-0.5">
-                    รับซื้อ {poolShare.employeeBuyPieces} ชิ้น ·{" "}
-                    {poolShare.topBuyPieces > 0
-                      ? (
-                          (poolShare.employeeBuyPieces /
-                            poolShare.topBuyPieces) *
-                          100
-                        ).toFixed(1)
-                      : "0"}
-                    % ของ Top {poolShare.topBuyPieces} (ขั้นต่ำ{" "}
-                    {poolShare.buyEligibilityThreshold.toFixed(1)})
-                  </div>
-                </div>
-              </div>
-            )}
+              );
+            })}
 
-          {/* this employee's share */}
+          {/* this employee's share — loop ทุก pool items */}
           <div className="bg-white rounded-[10px] px-3 py-2.5 border border-bdr">
             <div className="flex justify-between text-sm mb-[5px]">
               <span className="text-txt-mid">หยุดทั้งหมด</span>
@@ -774,94 +757,101 @@ export default function SalaryAdminEdit({
             </div>
             <div className="h-px bg-bdr my-1.5" />
 
-            {/* ฝั่งขาย */}
-            {poolShare.eligibleForSellPool && (
-              <div className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]">
-                <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
-                  <span className="inline-flex items-center gap-1">
-                    <IconDiamond size={12} strokeWidth={2.4} />
-                    ฝั่งขาย ({poolShare.eligibleSellEmployeeCount} คน · Base{" "}
-                    {poolShare.sellBaseSharePercent.toFixed(1)}%)
-                  </span>
-                  <span>{poolShare.sellSharePercent.toFixed(2)}%</span>
-                </div>
-                <div className="text-xs text-txt-soft leading-relaxed">
-                  หัก: <b>{poolShare.sellLeaveDeductionPercent.toFixed(2)}%</b> ·
-                  แบ่งให้เพื่อนร่วมงาน:{" "}
-                  <b>{poolShare.sellRedistributedPercent.toFixed(2)}%</b>
-                  <br />
-                  ได้ชิ้น:{" "}
-                  <b className="text-green">
-                    {salaryCalculation.normalSalePieces.toFixed(1)}
-                  </b>{" "}
-                  / {poolShare.totalSellPoolPieces}
-                  {poolShare.excludedNormalPieces > 0 && (
-                    <span className="text-red">
-                      {" "}
-                      (กอง {poolShare.grossSellPoolPieces} −{" "}
-                      {poolShare.excludedNormalPieces} ={" "}
-                      {poolShare.totalSellPoolPieces})
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-            {!poolShare.eligibleForSellPool && (
-              <div className="mb-1.5 px-2 py-1.5 bg-red-lt rounded-[7px] text-xs text-red font-semibold flex items-center gap-1">
-                <IconDiamond size={12} strokeWidth={2.4} />
-                ฝั่งขาย:
-                <IconX size={12} strokeWidth={3} />
-                ไม่ได้รับชิ้นจากกองกลาง
-              </div>
-            )}
+            {rolePoolItems(employeeRole).map((item) => {
+              const itemShare = poolShare.itemShares?.[item.id];
+              if (!itemShare) return null;
+              const myPieces = poolShare.itemPieces?.[item.id] || 0;
 
-            {/* ฝั่งรับซื้อ */}
-            {poolShare.eligibleForBuyPool && (
-              <div className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]">
-                <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
-                  <span className="inline-flex items-center gap-1">
-                    <IconShoppingBag size={12} strokeWidth={2.4} />
-                    ฝั่งรับซื้อ ({poolShare.eligibleBuyEmployeeCount} คน · Base{" "}
-                    {poolShare.buyBaseSharePercent.toFixed(1)}%)
-                  </span>
-                  <span>{poolShare.buySharePercent.toFixed(2)}%</span>
-                </div>
-                <div className="text-xs text-txt-soft leading-relaxed">
-                  หัก: <b>{poolShare.buyLeaveDeductionPercent.toFixed(2)}%</b> ·
-                  แบ่งให้เพื่อนร่วมงาน:{" "}
-                  <b>{poolShare.buyRedistributedPercent.toFixed(2)}%</b>
-                  <br />
-                  ได้ชิ้น:{" "}
-                  <b className="text-green">
-                    {salaryCalculation.buyPieces.toFixed(1)}
-                  </b>{" "}
-                  / {poolShare.totalBuyPoolPieces}
-                  {poolShare.excludedBuyPieces > 0 && (
-                    <span className="text-red">
-                      {" "}
-                      (กอง {poolShare.grossBuyPoolPieces} −{" "}
-                      {poolShare.excludedBuyPieces} ={" "}
-                      {poolShare.totalBuyPoolPieces})
+              // ส่วนตัว — ใครทำคนนั้นได้ · ไม่แบ่งกองกลาง
+              if (item.kind === "personal") {
+                return (
+                  <div
+                    key={item.id}
+                    className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]"
+                  >
+                    <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
+                      <span className="inline-flex items-center gap-1">
+                        <IconSparkles size={12} strokeWidth={2.4} />
+                        {item.label}{" "}
+                        <span className="text-txt-soft font-normal">
+                          (ส่วนตัว)
+                        </span>
+                      </span>
+                      <span className="text-green">
+                        {itemShare.allocatedPieces.toFixed(1)} ชิ้น
+                      </span>
+                    </div>
+                    <div className="text-xs text-txt-soft leading-relaxed">
+                      ใครทำคนนั้นได้ · ไม่เข้ากองกลาง
+                    </div>
+                  </div>
+                );
+              }
+
+              // kind=pool · ผ่าน threshold ไม่ได้ → red strip
+              if (!itemShare.eligible) {
+                return (
+                  <div
+                    key={item.id}
+                    className="mb-1.5 px-2 py-1.5 bg-red-lt rounded-[7px] text-xs text-red font-semibold flex items-center gap-1"
+                  >
+                    <IconDiamond size={12} strokeWidth={2.4} />
+                    {item.label}:
+                    <IconX size={12} strokeWidth={3} />
+                    ไม่ได้รับชิ้นจากกองกลาง
+                  </div>
+                );
+              }
+
+              // kind=pool · eligible · แสดง breakdown เต็ม
+              const eligibleCount =
+                poolShare.eligibleCountByItemId?.[item.id] || 0;
+              const baseSharePct =
+                poolShare.baseSharePercentByItemId?.[item.id] || 0;
+              const grossPool = poolShare.grossItemPool?.[item.id] || 0;
+              const totalPool = poolShare.totalItemPool?.[item.id] || 0;
+              const excludedPieces = grossPool - totalPool;
+              return (
+                <div
+                  key={item.id}
+                  className="mb-1.5 px-2 py-1.5 bg-cream rounded-[7px]"
+                >
+                  <div className="text-xs font-bold text-maroon mb-[3px] flex justify-between">
+                    <span className="inline-flex items-center gap-1">
+                      <IconDiamond size={12} strokeWidth={2.4} />
+                      {item.label} ({eligibleCount} คน · Base{" "}
+                      {baseSharePct.toFixed(1)}%)
                     </span>
-                  )}
+                    <span>{itemShare.finalSharePercent.toFixed(2)}%</span>
+                  </div>
+                  <div className="text-xs text-txt-soft leading-relaxed">
+                    หัก:{" "}
+                    <b>{itemShare.leaveDeductionPercent.toFixed(2)}%</b> ·
+                    แบ่งให้เพื่อนร่วมงาน:{" "}
+                    <b>{itemShare.redistributedPercent.toFixed(2)}%</b>
+                    <br />
+                    ได้ชิ้น:{" "}
+                    <b className="text-green">
+                      {itemShare.allocatedPieces.toFixed(1)}
+                    </b>{" "}
+                    / {totalPool}
+                    {excludedPieces > 0 && (
+                      <span className="text-red">
+                        {" "}
+                        (กอง {grossPool} − {excludedPieces} = {totalPool})
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-            {!poolShare.eligibleForBuyPool && (
-              <div className="px-2 py-1.5 bg-red-lt rounded-[7px] text-xs text-red font-semibold flex items-center gap-1">
-                <IconShoppingBag size={12} strokeWidth={2.4} />
-                ฝั่งรับซื้อ:
-                <IconX size={12} strokeWidth={3} />
-                ไม่ได้รับชิ้นจากกองกลาง
-              </div>
-            )}
+              );
+            })}
 
             <div className="mt-1.5 px-2 py-1.5 rounded-md text-xs text-maroon text-center font-semibold leading-relaxed bg-[#C9973A15]">
               สูตร: % ที่ได้ = Base − % การหัก + Σ(% ที่เพื่อนร่วมงานแบ่งให้)
               <br />
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 text-txt-soft font-normal">
                 <IconSparkles size={11} strokeWidth={2.4} />
-                ขาย-พิเศษ ส่วนตัว — ไม่เข้ากองกลาง
+                รายการ "ส่วนตัว" — ใครทำคนนั้นได้ · ไม่เข้ากองกลาง
               </span>
             </div>
           </div>
