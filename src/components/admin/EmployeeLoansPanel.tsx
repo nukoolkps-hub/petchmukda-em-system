@@ -355,20 +355,41 @@ function CreateLoanModal({
       });
       // อัปโหลดสลิป (ถ้ามี) · ต้องมี loanId แล้วจึงรู้ path เก็บใน Storage
       // ถ้า upload fail → loan ยังถูกสร้าง · แจ้ง toast แต่ไม่ rollback
+      let slipImageUrl: string | null = null;
+      let slipUploadFailed = false;
       if (slipDataUrl && loanId) {
         try {
-          const url = await uploadLoanSlip(loanId, slipDataUrl);
-          await onUpdateLoan(loanId, { slipImageUrl: url });
+          slipImageUrl = await uploadLoanSlip(loanId, slipDataUrl);
         } catch (e) {
           console.error("[CreateLoanModal] upload slip failed:", e);
-          showToast?.(
-            "สร้างเงินกู้แล้ว แต่อัปโหลดสลิปไม่สำเร็จ — แก้ไขภายหลังได้",
-          );
-          onClose();
-          return;
+          slipUploadFailed = true;
         }
       }
-      showToast?.("สร้างเงินกู้แล้ว");
+      // อัปเดต doc ครั้งเดียวพร้อม slipImageUrl (ถ้าอัปโหลดสำเร็จ) + ตั้งค่า
+      // notification fields → worker `processLoanNotifications` จะหยิบไป
+      // push LINE ให้พนักงานคนนั้น (พร้อมรูปสลิปถ้ามี · ดู functions/src/loan/)
+      if (loanId) {
+        const updateFields: Record<string, unknown> = {
+          lineNotificationStatus: "pending",
+          lineNotificationType: "created",
+          lineNotificationRequestedAt: new Date().toISOString(),
+          lineNotificationLastError: null,
+          lineNotificationSkippedReason: null,
+        };
+        if (slipImageUrl) updateFields.slipImageUrl = slipImageUrl;
+        try {
+          await onUpdateLoan(loanId, updateFields);
+        } catch (e) {
+          console.error("[CreateLoanModal] update notification flag failed:", e);
+        }
+      }
+      if (slipUploadFailed) {
+        showToast?.(
+          "สร้างเงินกู้แล้ว แต่อัปโหลดสลิปไม่สำเร็จ — แก้ไขภายหลังได้",
+        );
+      } else {
+        showToast?.("สร้างเงินกู้แล้ว · กำลังแจ้ง LINE พนักงาน");
+      }
       onClose();
     } catch (error) {
       setErr(error instanceof Error ? error.message : "บันทึกไม่สำเร็จ");

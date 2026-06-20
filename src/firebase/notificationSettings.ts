@@ -12,6 +12,8 @@ export interface NotificationSettings {
   dailySummaryEnabled?: boolean;
   advanceRequestEnabled?: boolean;
   advanceApprovalEnabled?: boolean;
+  /** แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ (พร้อมสลิปการโอน ถ้ามี) */
+  loanCreatedEnabled?: boolean;
   updatedAt?: unknown;
   updatedBy?: string;
 }
