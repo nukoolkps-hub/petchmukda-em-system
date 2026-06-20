@@ -45,6 +45,7 @@ import {
   calculateSalary,
   computeExtraOpenSaturdayWorkedDates,
   computePoolSharesForGroup,
+  getEffectiveBaseSalary,
   rolePaysPieceCommission,
 } from "../../utils/salaryUtils";
 import AdvanceHistoryModal from "../modals/AdvanceHistoryModal";
@@ -262,6 +263,10 @@ export default function SalaryView({
     "ยื่นกู้สินเชื่อ",
   );
   const [customPurpose, setCustomPurpose] = useState("");
+  // เงินเดือนที่จะใส่ในใบรับรอง · default = ปัจจุบัน (effective base) ·
+  // ผู้ใช้แก้ลงได้ (เช่น ยื่นกู้บัตรเครดิตที่ไม่อยากโชว์ยอดเต็ม) แต่ห้ามเกิน
+  // (server-side clamp ในตัว print function อีกชั้น)
+  const [salaryOverrideText, setSalaryOverrideText] = useState("");
 
   function handlePrintCert() {
     // ใบรับรองเงินเดือนใช้ employeeInfo (เงินเดือนพื้นฐาน · ตำแหน่ง · ชื่อ ·
@@ -287,6 +292,26 @@ export default function SalaryView({
   }, [data]);
 
   const [issuingCert, setIssuingCert] = useState(false);
+
+  // เงินเดือนปัจจุบัน (effective) — เพดานยอด override ใน modal ใบรับรอง
+  const certMaxSalary = employeeInfo
+    ? getEffectiveBaseSalary({
+        baseSalary: employeeInfo.baseSalary ?? 0,
+        startWorkMonth: employeeInfo.startWorkMonth ?? null,
+        annualRaiseAmount: employeeInfo.annualRaiseAmount ?? 0,
+        annualRaises: employeeInfo.annualRaises ?? {},
+      }) || 0
+    : 0;
+  // parse + clamp · 0 = ใช้ค่า default (effective)
+  const salaryOverrideNum = (() => {
+    const raw = parseFloat(salaryOverrideText.replace(/,/g, ""));
+    if (!Number.isFinite(raw) || raw <= 0) return 0;
+    return Math.min(raw, certMaxSalary);
+  })();
+  const salaryOverrideExceeds = (() => {
+    const raw = parseFloat(salaryOverrideText.replace(/,/g, ""));
+    return Number.isFinite(raw) && raw > certMaxSalary;
+  })();
 
   async function confirmPrintCert() {
     if (isLineWebview()) {
@@ -315,6 +340,8 @@ export default function SalaryView({
       data,
       purpose,
       refNo,
+      // ส่ง override ถ้า user กรอก · ฟังก์ชัน print clamp อีกชั้น (defense)
+      salaryOverride: salaryOverrideNum > 0 ? salaryOverrideNum : undefined,
     });
   }
 
@@ -388,6 +415,41 @@ export default function SalaryView({
           placeholder="พิมพ์วัตถุประสงค์ที่ต้องการ..."
           className="w-full px-3 py-2.5 mb-4 rounded-lg border-[1.5px] border-bdr text-sm font-[inherit] bg-white outline-none focus:border-maroon"
         />
+
+        {/* เงินเดือนที่จะใส่ในใบ — default = ปัจจุบัน · ลดลงได้แต่ห้ามเกิน */}
+        <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5">
+          เงินเดือนที่จะระบุในใบรับรอง
+        </div>
+        <div className="relative mb-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-maroon font-bold">
+            ฿
+          </span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={salaryOverrideText}
+            onChange={(e) => setSalaryOverrideText(e.target.value)}
+            placeholder={formatThaiNumber(certMaxSalary)}
+            className={`w-full pl-8 pr-3 py-2.5 rounded-lg border-[1.5px] text-sm font-[inherit] bg-white outline-none ${salaryOverrideExceeds ? "border-red focus:border-red" : "border-bdr focus:border-maroon"}`}
+          />
+        </div>
+        <div className="text-[11px] text-txt-soft mb-4">
+          {salaryOverrideExceeds ? (
+            <span className="text-red font-semibold">
+              เกินเงินเดือนพื้นฐานปัจจุบัน · ระบบจะใช้ ฿
+              {formatThaiNumber(certMaxSalary)} แทน
+            </span>
+          ) : salaryOverrideNum > 0 && salaryOverrideNum < certMaxSalary ? (
+            <span>
+              ระบุน้อยกว่าจริง · ปัจจุบัน ฿{formatThaiNumber(certMaxSalary)}
+            </span>
+          ) : (
+            <span>
+              เว้นว่าง = ใช้เงินเดือนพื้นฐานปัจจุบัน ฿
+              {formatThaiNumber(certMaxSalary)} · ห้ามระบุมากกว่านี้
+            </span>
+          )}
+        </div>
 
         <div className="flex gap-2">
           <button
