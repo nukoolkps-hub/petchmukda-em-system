@@ -57,11 +57,25 @@ functions/src/line/
 | `bootstrapAdmin` | Callable | Bootstrap admin คนแรก |
 | `seedLineConfigFromEnv` | Callable | Seed LINE config (emulator only) |
 | `notifyAdvanceRequest` | Callable | แจ้ง admin คำขอเบิกเงิน |
-| `processAdvanceNotifications` | Scheduled (every minute) | ส่ง LINE notification approve/reject |
+| `processAdvanceNotifications` | Scheduled (every minute) | ส่ง LINE notification approve/reject (+ รูปสลิป) |
+| `processLoanNotifications` | Scheduled (every minute) | แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ (+ รูปสลิป) |
 | `onLeaveCreated` | Firestore trigger | อัพเดท leave stats |
 | `onAdvanceCreated` | Firestore trigger | แจ้ง admin advance ใหม่ |
 | `monthlyPayrollSummary` | Scheduled (28th, 23:00) | สรุปเงินเดือนรายเดือน |
 | `cleanupOldAdvances` | Scheduled (1st, 02:00) | ลบ advances เก่า > 6 เดือน |
+
+## Notification toggles (`config/notifications`)
+
+Admin เปิด/ปิด notification รายประเภทผ่าน `/admin?section=line-notifications`
+· เก็บใน `config/notifications` doc · default semantic: missing field /
+`true` = enabled (backward compat) · เฉพาะ `=== false` ที่ถือว่า disabled
+
+| Field | Default | ผล |
+|---|---|---|
+| `dailySummaryEnabled` | true | สรุปประจำวัน 07:30 push 3 กลุ่ม LINE (เสาร์ปกติข้าม) |
+| `advanceRequestEnabled` | true | แจ้ง ADMIN เมื่อพนักงานยื่นเบิก (+ clipboard เลขบัญชี) |
+| `advanceApprovalEnabled` | true | แจ้งพนักงานเมื่อ approve/reject (+ รูปสลิป) |
+| `loanCreatedEnabled` | true | แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ (+ รูปสลิป) |
 
 ## LINE Login Flow (Detail)
 
