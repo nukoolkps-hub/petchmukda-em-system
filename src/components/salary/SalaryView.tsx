@@ -989,6 +989,29 @@ export default function SalaryView({
           />
         )}
         {certModal}
+        {/* Loan slip modal · ปุ่ม "สลิป" บน loan card อยู่ใน early return นี้
+            ด้วย ถ้าไม่ render ที่นี่ พนักงานที่ยังไม่มี salary doc กดแล้วไม่ขึ้น */}
+        {viewingLoanSlipUrl && (
+          <BaseModal
+            onClose={() => setViewingLoanSlipUrl(null)}
+            maxWidthClass="max-w-[500px]"
+            contentClassName="px-4 pt-4 pb-4"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <IconReceipt
+                size={18}
+                strokeWidth={2.2}
+                className="text-maroon"
+              />
+              <div className="font-bold text-base text-txt">สลิปโอนเงิน</div>
+            </div>
+            <img
+              src={viewingLoanSlipUrl}
+              alt="สลิปโอนเงิน"
+              className="block w-full rounded-[10px] border border-bdr"
+            />
+          </BaseModal>
+        )}
       </div>
     );
   }
