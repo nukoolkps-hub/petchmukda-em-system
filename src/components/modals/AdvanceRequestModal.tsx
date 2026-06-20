@@ -68,6 +68,21 @@ export default function AdvanceRequestModal({
   const remaining = Math.max(0, maxAdvance - alreadyRequested);
   const alreadyRequestedThisMonth = activeReqs.length > 0;
 
+  // เช็คเงินสุทธิเดือนที่แล้วติดลบไหม · ถ้าใช่ + admin ยังไม่ "เคลียร์" →
+  // บล็อกเบิกเดือนนี้ (กัน chain หนี้ · พนักงานต้องเคลียร์ก่อน) ·
+  // netSalary + deficitClearedAt denormalize ลง salary doc ตอน admin
+  // ยืนยันยอด (ดู PayrollSummaryPanel.denormalizeNetSalaries)
+  const prevYearMonth = (() => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  })();
+  const prevSalary = employeeId ? salaryData[employeeId]?.[prevYearMonth] : null;
+  const prevNetSalary =
+    typeof prevSalary?.netSalary === "number" ? prevSalary.netSalary : 0;
+  const prevDeficitCleared = !!prevSalary?.deficitClearedAt;
+  const prevMonthHadDeficit = prevNetSalary < 0 && !prevDeficitCleared;
+  const prevMonthDeficitAmount = prevMonthHadDeficit ? -prevNetSalary : 0;
+
   // บล็อกเบิกเฉพาะวันสุดท้ายของเดือน (เป็นวันทำเงินเดือน) — กันสับสนในรอบจ่าย
   // เช่น เดือน 30 วัน → บล็อกวันที่ 30 · เดือน 31 วัน → บล็อกวันที่ 31
   const daysInMonth = new Date(
@@ -84,6 +99,12 @@ export default function AdvanceRequestModal({
   function submit() {
     if (payrollLocked) {
       setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
+      return;
+    }
+    if (prevMonthHadDeficit) {
+      setErr(
+        `เดือนก่อนเงินสุทธิติดลบ ฿${formatThaiNumber(prevMonthDeficitAmount)} · ติดต่อ ADMIN เคลียร์ก่อน`,
+      );
       return;
     }
     if (alreadyRequestedThisMonth) {
@@ -138,7 +159,22 @@ export default function AdvanceRequestModal({
         </div>
       )}
 
-      {alreadyRequestedThisMonth && !payrollLocked && (
+      {prevMonthHadDeficit && !payrollLocked && (
+        <div className="bg-red-lt rounded-xl px-3.5 py-3 mb-3.5 border border-red/30 flex items-start gap-2">
+          <IconAlertTriangle
+            size={16}
+            className="text-red mt-0.5 shrink-0"
+            strokeWidth={2.4}
+          />
+          <div className="text-sm text-txt-mid leading-normal">
+            <b className="text-red">เดือนก่อนเงินสุทธิติดลบ</b>{" "}
+            ฿{formatThaiNumber(prevMonthDeficitAmount)} · เบิกล่วงหน้าเดือนนี้
+            ไม่ได้จนกว่าจะเคลียร์ · <b>ติดต่อ ADMIN</b>
+          </div>
+        </div>
+      )}
+
+      {alreadyRequestedThisMonth && !payrollLocked && !prevMonthHadDeficit && (
         <div className="bg-amber-lt rounded-xl px-3.5 py-3 mb-3.5 border border-amber/30 flex items-start gap-2">
           <IconAlertTriangle
             size={16}
@@ -259,6 +295,12 @@ export default function AdvanceRequestModal({
               setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
               return;
             }
+            if (prevMonthHadDeficit) {
+              setErr(
+                `เดือนก่อนเงินสุทธิติดลบ ฿${formatThaiNumber(prevMonthDeficitAmount)} · ติดต่อ ADMIN เคลียร์ก่อน`,
+              );
+              return;
+            }
             if (alreadyRequestedThisMonth) {
               setErr("เบิกได้ครั้งเดียวต่อเดือน — เดือนนี้มีคำขอแล้ว");
               return;
@@ -271,18 +313,23 @@ export default function AdvanceRequestModal({
           }}
           className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5
             ${
-              payrollLocked || alreadyRequestedThisMonth || remaining <= 0
+              payrollLocked ||
+              prevMonthHadDeficit ||
+              alreadyRequestedThisMonth ||
+              remaining <= 0
                 ? "bg-bdr text-txt-soft shadow-none"
                 : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
             }`}
         >
           {payrollLocked
             ? "วันทำเงินเดือน — เบิกไม่ได้"
-            : alreadyRequestedThisMonth
-              ? "เดือนนี้เบิกแล้ว"
-              : remaining <= 0
-                ? "เต็มวงเงินแล้ว"
-                : "ส่งคำขอผ่าน LINE"}
+            : prevMonthHadDeficit
+              ? "เดือนก่อนติดลบ — เบิกไม่ได้"
+              : alreadyRequestedThisMonth
+                ? "เดือนนี้เบิกแล้ว"
+                : remaining <= 0
+                  ? "เต็มวงเงินแล้ว"
+                  : "ส่งคำขอผ่าน LINE"}
         </button>
       </div>
     </BaseModal>
