@@ -825,7 +825,7 @@ export default function ManualModal({ onClose }) {
             </p>
             <ul>
               <li>
-                <b>เพดาน % ของเงินเดือนพื้นฐาน</b> — ขึ้นตามอายุงาน:
+                <b>เพดาน % ของเงินเดือนพื้นฐานปัจจุบัน</b> — ขึ้นตามอายุงาน:
                 <div className="mt-1.5 mb-2.5 rounded-[8px] border border-bdr bg-cream/50 overflow-hidden text-xs">
                   <div className="grid grid-cols-2 gap-px bg-bdr/50">
                     <div className="bg-cream/70 px-2 py-1 font-bold text-maroon">
@@ -1180,7 +1180,7 @@ export default function ManualModal({ onClose }) {
                 <b>ระบุเงินเดือนเองได้</b> — เว้นว่าง = ใช้ "เงินเดือนพื้นฐาน ปัจจุบัน" ·
                 กรอกได้ถ้าอยากระบุยอด <b>ต่ำกว่าจริง</b> (เช่น
                 ไม่อยากโชว์ยอดเต็มในใบสมัครบัตรเครดิต) ·{" "}
-                <b className="text-red">ห้ามกรอกมากกว่าจริง</b> — ระบบจะลดยอด
+                <b className="text-red">ห้ามกรอกมากกว่ายอดจริง</b> — ระบบจะลดยอด
                 ลงให้เท่าจริงอัตโนมัติ
               </li>
               <li>
