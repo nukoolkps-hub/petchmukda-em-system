@@ -360,52 +360,6 @@ function buildLeavesSection(
 		{ type: "separator", margin: "10px", color: GOLD_PALE },
 	];
 
-<<<<<<< Updated upstream
-	leaves.forEach((leave, index) => {
-		if (index > 0)
-			itemContents.push({ type: "separator", margin: "6px", color: GOLD_PALE });
-		itemContents.push({
-			type: "box",
-			layout: "vertical",
-			backgroundColor: CREAM_TINT,
-			cornerRadius: "8px",
-			paddingAll: "10px",
-			margin: "6px",
-			contents: [
-				{
-					type: "box",
-					layout: "horizontal",
-					alignItems: "center",
-					contents: [
-						{
-							type: "text",
-							text: "•",
-							color: accent,
-							weight: "bold",
-							size: "md",
-							flex: 0,
-						},
-						{
-							type: "text",
-							text: ` ${leave.nickname}`,
-							color: TEXT_DK,
-							size: "md",
-							weight: "bold",
-							flex: 1,
-							wrap: true,
-						},
-					],
-				},
-				{
-					type: "text",
-					text: `${leave.kindLabel} · ${leave.dateLabel}`,
-					color: TEXT_MID,
-					size: "xs",
-					margin: "2px",
-				},
-			],
-		});
-=======
 	// รายชื่อ inline · format: "ชื่อ(ประเภทลา) ชื่อ(ประเภทลา) ..."
 	// ไม่โชว์วันที่ (ลาหลายวัน) · กระชับใน 1 text · wrap อัตโนมัติถ้าเกิน
 	const inlineList = leaves
@@ -428,7 +382,6 @@ function buildLeavesSection(
 				wrap: true,
 			},
 		],
->>>>>>> Stashed changes
 	});
 
 	return {
