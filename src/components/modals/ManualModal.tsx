@@ -946,8 +946,8 @@ export default function ManualModal({ onClose }) {
             </p>
             <ul>
               <li>
-                <b className="text-maroon">กู้ได้ครั้งละ 1 ก้อน</b> ต่อคน · ต้อง
-                ผ่อนครบก้อนเดิมก่อนค่อยกู้ใหม่ได้
+                <b className="text-maroon">กู้ได้ครั้งละ 1 ยอด</b> ต่อคน · ต้อง
+                ผ่อนครบยอดเดิมก่อนค่อยกู้ใหม่ได้
               </li>
               <li>
                 ADMIN สามารถ <b>แนบสลิปการโอนเงิน</b> ตอนสร้างเงินกู้ได้
@@ -980,7 +980,7 @@ export default function ManualModal({ onClose }) {
                 </li>
                 <li>
                   ผ่อนครบ → สถานะเปลี่ยนเป็น <b>"ผ่อนครบแล้ว"</b> อัตโนมัติ · ADMIN
-                  ค่อยสร้างก้อนใหม่ได้
+                  ค่อยสร้างยอดใหม่ได้
                 </li>
               </ul>
               <p className="mt-2 text-xs text-txt-soft">
