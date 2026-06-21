@@ -309,7 +309,7 @@ export default function AdminAdvancePanel({
                     </div>
                   </div>
                   <span
-                    className="text-xs font-semibold px-2.5 py-[3px] rounded-[20px] whitespace-nowrap"
+                    className="text-xs font-semibold px-2.5 py-1 rounded-[20px] whitespace-nowrap"
                     style={{ background: s.bg, color: s.color }}
                   >
                     {s.label}

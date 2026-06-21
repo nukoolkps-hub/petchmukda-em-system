@@ -289,7 +289,7 @@ function Stat({
   highlight?: boolean;
 }) {
   return (
-    <div className="bg-cream rounded-[9px] py-1.5">
+    <div className="bg-cream rounded-[9px] px-2 py-2">
       <div className="text-[10px] text-txt-soft">{label}</div>
       <div
         className={`text-sm font-extrabold ${highlight ? "text-maroon" : "text-txt"}`}

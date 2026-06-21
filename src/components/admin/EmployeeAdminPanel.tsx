@@ -79,7 +79,7 @@ export default function EmployeeAdminPanel({
       <div className="flex items-center justify-between mb-3.5 gap-2">
         <div className="text-sm text-txt-soft">กดที่ชื่อพนักงานเพื่อเปิดหน้าต่างแก้ไข</div>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2.5">
         {employeeDirectory.map((employee) => {
           const dirty = hasEmployeeDraft(editingRole, employee.id);
           return (
