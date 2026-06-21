@@ -45,6 +45,7 @@ import {
 } from "../../utils/salaryUtils";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import BaseModal from "../shared/BaseModal";
+import MoneyInput from "../shared/MoneyInput";
 import MonthChevronNav from "../shared/MonthChevronNav";
 import EmployeeCardGrid from "./EmployeeCardGrid";
 import PoolAdjustmentModal from "./PoolAdjustmentModal";
@@ -78,7 +79,9 @@ function RecurringRow({
         <span className="text-xs text-txt-soft">
           {isIncome ? "รายรับประจำจากข้อมูลพนักงาน" : "หักประจำจากข้อมูลพนักงาน"}
         </span>
-        <span className={`text-base font-semibold whitespace-nowrap ${toneClass}`}>
+        <span
+          className={`text-base font-semibold whitespace-nowrap ${toneClass}`}
+        >
           {isIncome ? "+" : "−"} {formatThaiNumber(item.amount)} ฿
         </span>
       </div>
@@ -825,8 +828,7 @@ export default function SalaryAdminEdit({
                     <span>{itemShare.finalSharePercent.toFixed(2)}%</span>
                   </div>
                   <div className="text-xs text-txt-soft leading-relaxed">
-                    หัก:{" "}
-                    <b>{itemShare.leaveDeductionPercent.toFixed(2)}%</b> ·
+                    หัก: <b>{itemShare.leaveDeductionPercent.toFixed(2)}%</b> ·
                     แบ่งให้เพื่อนร่วมงาน:{" "}
                     <b>{itemShare.redistributedPercent.toFixed(2)}%</b>
                     <br />
@@ -1442,8 +1444,8 @@ export default function SalaryAdminEdit({
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-txt-soft font-semibold">
-                    เสาร์เปิดพิเศษ ({salaryCalculation.extraOpenSaturdayDays}{" "}
-                    วัน × {formatThaiNumber(
+                    เสาร์เปิดพิเศษ ({salaryCalculation.extraOpenSaturdayDays} วัน ×{" "}
+                    {formatThaiNumber(
                       Math.round(salaryCalculation.dailySalaryRate),
                     )}{" "}
                     ฿)
@@ -1469,12 +1471,10 @@ export default function SalaryAdminEdit({
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
                   ฿
                 </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
+                <MoneyInput
                   min="0"
                   value={data[f.key] || ""}
-                  onChange={(e) => update(f.key, e.target.value)}
+                  onChange={(raw) => update(f.key, raw)}
                   className="w-full py-2.5 pr-3.5 pl-[30px] rounded-[10px] border border-bdr text-base font-semibold outline-none font-[inherit] text-txt bg-cream"
                 />
               </div>
@@ -1488,19 +1488,15 @@ export default function SalaryAdminEdit({
             <div
               className={`font-bold mb-1 flex items-center gap-1.5 ${salaryCalculation.attendanceBonus > 0 ? "text-green" : "text-txt-mid"}`}
             >
-              <IconStar
-                size={14}
-                strokeWidth={2.4}
-                color={COLORS.green}
-              />
+              <IconStar size={14} strokeWidth={2.4} color={COLORS.green} />
               โบนัสแห่งความขยัน (ไม่หยุด){" "}
               <span className="text-xs font-semibold px-[7px] py-0.5 rounded-[20px] text-maroon ml-auto bg-[#C9973A30]">
                 อัตโนมัติ
               </span>
             </div>
             <div className="text-txt-mid">
-              เรท/วัน = {formatThaiNumber(salaryCalculation.baseSalary || 0)} ฿ ÷ 30
-              ={" "}
+              เรท/วัน = {formatThaiNumber(salaryCalculation.baseSalary || 0)} ฿ ÷
+              30 ={" "}
               <b>
                 {formatThaiNumber(
                   Math.round(salaryCalculation.dailySalaryRate || 0),
@@ -1545,14 +1541,12 @@ export default function SalaryAdminEdit({
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
                     ฿
                   </span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
+                  <MoneyInput
                     min="0"
                     value={item?.amount || ""}
                     disabled={locked}
-                    onChange={(e) =>
-                      updateCustomEarning(index, "amount", e.target.value)
+                    onChange={(raw) =>
+                      updateCustomEarning(index, "amount", raw)
                     }
                     className={`w-full py-2.5 pr-2 pl-[26px] rounded-[10px] border border-bdr text-sm font-bold text-right outline-none font-[inherit] text-txt bg-cream ${locked ? "opacity-60 cursor-not-allowed" : ""}`}
                   />
@@ -1584,7 +1578,11 @@ export default function SalaryAdminEdit({
               profile · admin แก้/ลบที่หน้า "พนักงาน" · อยู่ล่างสุดตามที่ ADMIN ขอ */}
           {salaryCalculation.recurringIncomes?.map(
             (it: { label: string; amount: number }, i: number) => (
-              <RecurringRow key={`ri-${i}-${it.label}`} item={it} kind="income" />
+              <RecurringRow
+                key={`ri-${i}-${it.label}`}
+                item={it}
+                kind="income"
+              />
             ),
           )}
         </div>
@@ -1627,8 +1625,8 @@ export default function SalaryAdminEdit({
               </span>
             </div>
             <div>
-              เรท/วัน = {formatThaiNumber(salaryCalculation.baseSalary || 0)} ฿ ÷ 30
-              ={" "}
+              เรท/วัน = {formatThaiNumber(salaryCalculation.baseSalary || 0)} ฿ ÷
+              30 ={" "}
               <b>
                 {formatThaiNumber(
                   Math.round(salaryCalculation.dailySalaryRate || 0),
@@ -1771,14 +1769,12 @@ export default function SalaryAdminEdit({
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold">
                   ฿
                 </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
+                <MoneyInput
                   min="0"
                   value={item?.amount || ""}
                   disabled={locked}
-                  onChange={(e) =>
-                    updateCustomDeduction(index, "amount", e.target.value)
+                  onChange={(raw) =>
+                    updateCustomDeduction(index, "amount", raw)
                   }
                   className={`w-full py-2.5 pr-2 pl-[26px] rounded-[10px] border border-bdr text-sm font-bold text-right outline-none font-[inherit] text-txt bg-cream ${locked ? "opacity-60 cursor-not-allowed" : ""}`}
                 />

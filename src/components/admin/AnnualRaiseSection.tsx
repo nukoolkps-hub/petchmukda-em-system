@@ -9,6 +9,7 @@ import {
   RotateCcw as IconRevert,
   TrendingUp as IconTrendingUp,
 } from "lucide-react";
+import MoneyInput from "../shared/MoneyInput";
 
 interface RaiseRow {
   year: number; // ค.ศ.
@@ -74,9 +75,7 @@ export default function AnnualRaiseSection({
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
               ฿
             </span>
-            <input
-              type="text"
-              inputMode="decimal"
+            <MoneyInput
               min="0"
               placeholder="0"
               value={
@@ -84,7 +83,7 @@ export default function AnnualRaiseSection({
                   ? draftAutoAmount
                   : savedAutoAmount
               }
-              onChange={(e) => onChangeAutoAmount(e.target.value)}
+              onChange={(raw) => onChangeAutoAmount(raw)}
               className={`w-full py-[9px] pr-3 pl-7 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-maroon text-right border-[1.5px] tabular-nums ${draftAutoAmount !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
             />
           </div>
@@ -124,13 +123,10 @@ export default function AnnualRaiseSection({
                           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-txt-soft text-xs font-semibold pointer-events-none">
                             +฿
                           </span>
-                          <input
-                            type="text"
-                            inputMode="decimal"
+                          <MoneyInput
                             min="0"
                             value={currentRaises[String(year)] ?? 0}
-                            onChange={(e) => {
-                              const raw = e.target.value;
+                            onChange={(raw) => {
                               const next = { ...currentRaises };
                               if (raw === "") {
                                 next[String(year)] = 0;

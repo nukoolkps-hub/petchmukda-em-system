@@ -4,10 +4,14 @@
    useMemo เพื่อ compute ใหม่เมื่อ inputs เปลี่ยน                       */
 
 import { Calculator as IconCalc } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CalcField, CalcOutput } from "../../content/knowledge/types";
 import { useGoldPrice } from "../../firebase/hooks/useFirestore";
-import { formatThaiNumber } from "../../utils/format";
+import {
+  caretPosFromDigits,
+  formatThaiNumber,
+  formatTypedNumber,
+} from "../../utils/format";
 import MathText from "./MathText";
 
 interface Props {
@@ -75,6 +79,21 @@ export default function Calculator({
   // raw text ตอนกำลังพิมพ์ — preserve "3." ระหว่างพิมพ์ทศนิยม (Number("3.")=3
   // จะทำให้ค่าสูญหายระหว่างพิมพ์) · clear เมื่อ blur
   const [rawTexts, setRawTexts] = useState<Record<string, string>>({});
+  // หลังใส่ comma สดๆ ตอนพิมพ์ ต้องคืนตำแหน่ง cursor (comma ที่แทรกเข้ามา
+  // ทำให้ index เลื่อน) — เก็บ "จำนวนตัวอักษรสำคัญ (เลข/จุด/ลบ) ก่อน cursor"
+  // แล้ว map กลับเป็น index ใน string ที่ format แล้วใน useLayoutEffect
+  const pendingCaret = useRef<{ id: string; digits: number } | null>(null);
+  useLayoutEffect(() => {
+    const p = pendingCaret.current;
+    if (!p) return;
+    pendingCaret.current = null;
+    const el = document.getElementById(
+      `calc-${p.id}`,
+    ) as HTMLInputElement | null;
+    if (!el) return;
+    const pos = caretPosFromDigits(el.value, p.digits);
+    el.setSelectionRange(pos, pos);
+  });
 
   // ช่อง "ราคาทอง" / "ราคารับซื้อ" / "ราคาเงิน" → sync กับราคา live
   useEffect(() => {
@@ -260,7 +279,7 @@ export default function Calculator({
                     value={
                       focusedField === field.id &&
                       rawTexts[field.id] !== undefined
-                        ? rawTexts[field.id]
+                        ? formatTypedNumber(rawTexts[field.id])
                         : Number.isNaN(values[field.id])
                           ? ""
                           : values[field.id].toLocaleString("th-TH", {
@@ -286,6 +305,17 @@ export default function Calculator({
                       });
                     }}
                     onChange={(e) => {
+                      // เก็บตำแหน่ง cursor เป็น "จำนวนตัวอักษรสำคัญก่อน cursor"
+                      // เพื่อคืนตำแหน่งหลัง comma ถูกแทรก (ดู useLayoutEffect)
+                      const caret =
+                        e.target.selectionStart ?? e.target.value.length;
+                      const digitsBefore = e.target.value
+                        .slice(0, caret)
+                        .replace(/[^\d.-]/g, "").length;
+                      pendingCaret.current = {
+                        id: field.id,
+                        digits: digitsBefore,
+                      };
                       // user แก้เอง → หยุด sync ราคา live ให้ field นี้
                       if (
                         field.goldPriceDefault ||
