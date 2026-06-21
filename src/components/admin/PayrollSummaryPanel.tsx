@@ -819,8 +819,10 @@ export default function PayrollSummaryPanel({
                 {/* Deficit banner — เงินสุทธิติดลบ
                     หลังยืนยันยอด: ระบบจะ auto-carry เป็นเบิกล่วงหน้าเดือน
                     ถัดไปอัตโนมัติ + บล็อกพนักงานยื่นเบิกใหม่ (กัน chain หนี้)
-                    Admin กด "เคลียร์แล้ว" เพื่อปลดล็อกการเบิกใหม่ (ไม่กระทบ
-                    auto-carry · ยังหักเหมือนเดิม)                              */}
+                    Admin "อนุญาตให้ยื่นเบิกใหม่" เพื่อปลดเฉพาะการบล็อก
+                    (ไม่ได้เคลียร์ยอด · auto-carry ยังหักเหมือนเดิม) ·
+                    field name `deficitClearedAt` = legacy, semantic =
+                    "advance-unlock-at"                                          */}
                 {hasDeficit && (
                   <div
                     className={`mt-2 px-3 py-2 rounded-[9px] border text-xs flex items-center gap-2 ${
@@ -833,10 +835,9 @@ export default function PayrollSummaryPanel({
                     <div className="flex-1 leading-relaxed">
                       {deficitCleared ? (
                         <>
-                          <b>เคลียร์ยอดติดลบแล้ว</b> · พนักงานยื่นเบิกใหม่
-                          เดือนถัดไปได้ (auto-carry ฿
+                          <b>อนุญาตให้ยื่นเบิกใหม่แล้ว</b> · auto-carry ฿
                           {formatThaiNumber(-salaryCalculation.netSalary)}{" "}
-                          ยังหักปกติ)
+                          ยังหักจากเดือนถัดไปปกติ
                         </>
                       ) : (
                         <>
@@ -863,7 +864,9 @@ export default function PayrollSummaryPanel({
                             : "bg-white text-red border-red/40"
                         }`}
                       >
-                        {deficitCleared ? "ยกเลิกเคลียร์" : "ทำเครื่องหมายเคลียร์แล้ว"}
+                        {deficitCleared
+                          ? "ยกเลิกการอนุญาต"
+                          : "อนุญาตให้ยื่นเบิกใหม่"}
                       </button>
                     )}
                   </div>
