@@ -360,6 +360,7 @@ function buildLeavesSection(
 		{ type: "separator", margin: "10px", color: GOLD_PALE },
 	];
 
+<<<<<<< Updated upstream
 	leaves.forEach((leave, index) => {
 		if (index > 0)
 			itemContents.push({ type: "separator", margin: "6px", color: GOLD_PALE });
@@ -404,6 +405,30 @@ function buildLeavesSection(
 				},
 			],
 		});
+=======
+	// รายชื่อ inline · format: "ชื่อ(ประเภทลา) ชื่อ(ประเภทลา) ..."
+	// ไม่โชว์วันที่ (ลาหลายวัน) · กระชับใน 1 text · wrap อัตโนมัติถ้าเกิน
+	const inlineList = leaves
+		.map((leave) => `${leave.nickname}(${leave.kindLabel})`)
+		.join(" ");
+	itemContents.push({
+		type: "box",
+		layout: "vertical",
+		backgroundColor: CREAM_TINT,
+		cornerRadius: "8px",
+		paddingAll: "10px",
+		margin: "6px",
+		contents: [
+			{
+				type: "text",
+				text: inlineList,
+				color: TEXT_DK,
+				size: "sm",
+				weight: "bold",
+				wrap: true,
+			},
+		],
+>>>>>>> Stashed changes
 	});
 
 	return {
