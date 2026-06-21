@@ -90,6 +90,9 @@ Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth
 | coveragePay | number | เงินค่าแทน (coverage duty) จาก `computeCoverageEarningsForMonth` |
 | coveragePayBreakdown | `{empId,count,total,...}[]` | breakdown ค่าแทน · preserve เดิมถ้า re-save (PR #516) |
 | note | string | หมายเหตุ |
+| **Deficit tracking** | | *เขียนตอน admin ยืนยันยอด (PR #614)* |
+| netSalary | number | denormalized `earnings - deductions` (เป็นลบได้) · ใช้ใน AdvanceRequestModal เช็คเดือนก่อนติดลบไหม |
+| deficitClearedAt | string \| null | ISO timestamp ตอน admin กด "อนุญาตให้ยื่นเบิกใหม่" · ปลด block พนักงานยื่นเบิกเดือนถัดไป · ไม่กระทบ auto-carry advance (ยังหักปกติ) |
 | **Snapshot fields** | | *เขียนอัตโนมัติตอน save salary — ล็อกอดีต* |
 | roleId | string | snapshot ของ `employees.roleId` ตอน save |
 | poolExclusion | string \| string[] \| null | snapshot exclusion (รองรับ array + legacy variants) |
@@ -131,6 +134,7 @@ Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth
 | rejectionReason | string | เหตุผลปฏิเสธ |
 | slipImageUrl | string | URL สลิปโอนเงิน |
 | lineNotificationStatus | string | สถานะ LINE notification |
+| autoCarryFromMonth | string (YYYY-MM) | (optional) ถ้า set = auto-carry advance สร้างโดยระบบเมื่อ `salary[sourceMonth].netSalary < 0` · status="approved" ตั้งแต่แรก · exempt จาก "1/month" rule · นับใน tier limit (PR #614) |
 
 ### roles
 

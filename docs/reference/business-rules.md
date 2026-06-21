@@ -259,13 +259,39 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
   | ครบ 5 ปี | 80% |
   | ครบ 6 ปี+ | 100% |
   Source: `src/utils/advanceUtils.ts` → `ADVANCE_LIMIT_TIERS`
-- **1 ครั้ง/เดือน** — pending/approved บล็อกยื่นใหม่ในเดือนเดียวกัน · rejected เท่านั้นที่ยื่นใหม่ได้
+- **1 ครั้ง/เดือน** — pending/approved บล็อกยื่นใหม่ในเดือนเดียวกัน · rejected เท่านั้นที่ยื่นใหม่ได้ · auto-carry (`autoCarryFromMonth` ตั้ง) ไม่นับ
 - Status flow: `pending → approved / rejected`
 - Approved → **หักจากเงินเดือน "ในเดือนที่เบิก"** (ไม่ใช่เดือนถัดไป) · advance.month = ตอนยื่น · `monthApprovedAdvances` รวมเป็น `advanceDeduction` ในสลิปเดือนเดียวกัน
 - พนักงาน**ขอเอง** · admin อนุมัติ/ปฏิเสธ + แนบสลิปการโอน (storage `loanSlips/{advanceId}/`)
 - บล็อกการเบิกในวันสุดท้ายของเดือน (วันทำเงินเดือน)
 - LINE notification: แจ้ง admin เมื่อมีคำขอ, แจ้งพนักงานเมื่อ approve/reject
 - Cleanup: Cloud Function ลบ advances เกิน 6 เดือน (ทุกวันที่ 1)
+
+### Auto-carry advance (เงินสุทธิติดลบ → ยกไปเดือนถัดไป)
+
+**ปัญหาที่แก้:** ถ้า earnings - deductions < 0 ในเดือน X (เช่น advance ทุก ๆ tier + ค่าหักอื่นเกิน earnings) · เงินสุทธิ "ติดลบ" บนกระดาษ · ต้องจัดการนอกระบบ + กัน chain หนี้
+
+**Flow:**
+1. Admin ยืนยันยอดเดือน X · `salary.netSalary < 0`
+2. `denormalizeNetSalaries()` เขียน `salary.netSalary` (เป็นลบได้) + clear `deficitClearedAt: null`
+3. `syncAutoCarryAdvances()` สร้าง advance ใหม่ใน month X+1:
+   - `status: "approved"` (ไม่ผ่าน pending)
+   - `amount: |net|`
+   - `autoCarryFromMonth: "X"` (marker)
+   - `reason: "ยกจากเงินสุทธิติดลบเดือน X"`
+4. AdvanceRequestModal:
+   - **บล็อก**พนักงานยื่นเบิกใหม่ในเดือน X+1 (banner แดง · ปุ่ม disabled)
+   - แสดง info banner: "ยกมาจากเดือน X ฿N · จะถูกหักอัตโนมัติ"
+   - auto-carry ไม่นับใน "1/month" rule (system-generated) แต่นับใน tier limit
+5. Admin override (ปุ่ม "อนุญาตให้ยื่นเบิกใหม่"): set `salary.deficitClearedAt = ISO`
+   - ปลด**เฉพาะการบล็อก**ยื่นเบิกใหม่ · auto-carry ยังหักปกติ
+6. Admin re-confirm หลังแก้ salary fields ให้ net เป็นบวก:
+   - `syncAutoCarryAdvance(deficit=0)` → **ลบ** auto-carry advance
+   - `denormalizeNetSalaries()` set `deficitClearedAt: null`
+
+**Idempotency:** `syncAutoCarryAdvance` เช็ค existing advance ที่ `autoCarryFromMonth === sourceMonth + employeeId` → update amount ถ้าเปลี่ยน · create ใหม่ถ้าไม่มี · ลบถ้า deficit = 0
+
+Source: `src/data/useFirebaseAppData.ts` (`syncAutoCarryAdvance`) · `src/components/admin/PayrollSummaryPanel.tsx` (denormalize + sync + UI) · `src/components/modals/AdvanceRequestModal.tsx` (block + info)
 
 ## ระบบเงินกู้ผ่อนคืน (`employeeLoans`)
 
