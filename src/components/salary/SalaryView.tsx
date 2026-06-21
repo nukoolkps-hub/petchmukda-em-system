@@ -10,8 +10,8 @@ import {
   Diamond as IconDiamond,
   FileText as IconFileText,
   HandCoins as IconHandCoins,
-  Lightbulb as IconLightbulb,
   Handshake as IconHandshake,
+  Lightbulb as IconLightbulb,
   Minus as IconMinus,
   Network as IconNetwork,
   StickyNote as IconNote,
@@ -455,17 +455,15 @@ export default function SalaryView({
         <div className="text-[11px] text-txt-soft mb-4">
           {salaryOverrideExceeds ? (
             <span className="text-red font-semibold">
-              เกินเงินเดือนพื้นฐานปัจจุบัน · ระบบจะใช้ ฿
-              {formatThaiNumber(certMaxSalary)} แทน
+              เกินเงินเดือนพื้นฐานปัจจุบัน · ระบบจะใช้ ฿{formatThaiNumber(certMaxSalary)}{" "}
+              แทน
             </span>
           ) : salaryOverrideNum > 0 && salaryOverrideNum < certMaxSalary ? (
-            <span>
-              ระบุน้อยกว่าจริง · ปัจจุบัน ฿{formatThaiNumber(certMaxSalary)}
-            </span>
+            <span>ระบุน้อยกว่าจริง · ปัจจุบัน ฿{formatThaiNumber(certMaxSalary)}</span>
           ) : (
             <span>
-              เว้นว่าง = ใช้เงินเดือนพื้นฐานปัจจุบัน ฿
-              {formatThaiNumber(certMaxSalary)} · ห้ามระบุมากกว่านี้
+              เว้นว่าง = ใช้เงินเดือนพื้นฐานปัจจุบัน ฿{formatThaiNumber(certMaxSalary)} ·
+              ห้ามระบุมากกว่านี้
             </span>
           )}
         </div>
@@ -507,8 +505,7 @@ export default function SalaryView({
   // เปิดก่อนพิมพ์สลิป · 2 mode: full (ทุกรายการ) / partial (เลือก checkbox)
   // unticked items → รวมเป็น "รายรับอื่นๆ" / "รายการหักอื่นๆ" บนสลิป
   const slipCatalog = useMemo(() => {
-    if (!data || !salaryCalculation)
-      return { earnRows: [], dedRows: [] };
+    if (!data || !salaryCalculation) return { earnRows: [], dedRows: [] };
     return buildSlipRowsCatalog({
       data,
       salaryCalculation,
@@ -859,23 +856,15 @@ export default function SalaryView({
                   strokeWidth={2.2}
                   color={COLORS.maroon}
                 />
-                <div className="font-bold text-base text-txt">
-                  เงินกู้ของคุณ
-                </div>
+                <div className="font-bold text-base text-txt">เงินกู้ของคุณ</div>
               </div>
               <div className="flex flex-col gap-2.5">
                 {myLoans.map((loan) => {
-                  const remaining = loanRemainingAsOfMonth(
-                    loan,
-                    selectedMonth,
-                  );
+                  const remaining = loanRemainingAsOfMonth(loan, selectedMonth);
                   const paid = (loan.principal || 0) - remaining;
                   const pct =
                     loan.principal > 0
-                      ? Math.min(
-                          100,
-                          Math.round((paid / loan.principal) * 100),
-                        )
+                      ? Math.min(100, Math.round((paid / loan.principal) * 100))
                       : 0;
                   const thisMonth =
                     previewSalary?.loanBreakdown?.find(
@@ -925,8 +914,7 @@ export default function SalaryView({
                       </div>
                       <div className="flex justify-between text-xs text-txt-soft">
                         <span>
-                          ผ่อนเดือนละ{" "}
-                          {formatThaiNumber(loan.monthlyDeduction)} ฿
+                          ผ่อนเดือนละ {formatThaiNumber(loan.monthlyDeduction)} ฿
                         </span>
                         <span>
                           คงเหลือ{" "}
@@ -997,18 +985,14 @@ export default function SalaryView({
                         : "text-txt-soft"
                     }`}
                   >
-                    +{" "}
-                    {formatThaiNumber(previewSalary.attendanceBonus || 0)}{" "}
-                    ฿
+                    + {formatThaiNumber(previewSalary.attendanceBonus || 0)} ฿
                   </span>
                 </div>
                 <div className="text-xs text-txt-mid leading-relaxed pl-6">
                   ลาวันธรรมดาเดือนนี้:{" "}
                   <b
                     className={
-                      previewSalary.leaveDays >= 2
-                        ? "text-red"
-                        : "text-green"
+                      previewSalary.leaveDays >= 2 ? "text-red" : "text-green"
                     }
                   >
                     {previewSalary.leaveDays} วัน
@@ -1041,9 +1025,7 @@ export default function SalaryView({
                     color={COLORS.green}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-txt-mid">
-                      เสาร์เปิดพิเศษ
-                    </div>
+                    <div className="text-sm text-txt-mid">เสาร์เปิดพิเศษ</div>
                     <div className="text-[11px] text-txt-soft">
                       {previewSalary.extraOpenSaturdayDays} วัน ×{" "}
                       {formatThaiNumber(
@@ -1053,9 +1035,7 @@ export default function SalaryView({
                     </div>
                   </div>
                   <span className="text-base font-semibold text-green whitespace-nowrap">
-                    +{" "}
-                    {formatThaiNumber(previewSalary.extraOpenSaturdayBonus)}{" "}
-                    ฿
+                    + {formatThaiNumber(previewSalary.extraOpenSaturdayBonus)} ฿
                   </span>
                 </div>
               )}
@@ -1084,7 +1064,6 @@ export default function SalaryView({
                   </div>
                 ),
               )}
-
             </div>
             <div className="flex justify-between items-center pt-3 border-t-[1.5px] border-cream-dk mt-2">
               <span className="text-sm font-bold text-txt">รวมรายรับ</span>
@@ -1127,12 +1106,10 @@ export default function SalaryView({
                     color={COLORS.red}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-txt-mid">
-                      หักลาเกินโควต้า
-                    </div>
+                    <div className="text-sm text-txt-mid">หักลาเกินโควต้า</div>
                     <div className="text-[11px] text-txt-soft">
-                      เกินวันธรรมดา {previewSalary.weekdayOverQuotaDays} +
-                      อาทิตย์ {previewSalary.sundayOverQuotaDays} วัน
+                      เกินวันธรรมดา {previewSalary.weekdayOverQuotaDays} + อาทิตย์{" "}
+                      {previewSalary.sundayOverQuotaDays} วัน
                     </div>
                   </div>
                   <span className="text-base font-semibold text-red whitespace-nowrap">
@@ -1183,11 +1160,7 @@ export default function SalaryView({
                     key={`rd-${i}-${it.label}`}
                     className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk"
                   >
-                    <IconMinus
-                      size={16}
-                      strokeWidth={2.2}
-                      color={COLORS.red}
-                    />
+                    <IconMinus size={16} strokeWidth={2.2} color={COLORS.red} />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-txt-mid">{it.label}</div>
                       <div className="text-[11px] text-txt-soft">
@@ -1287,7 +1260,7 @@ export default function SalaryView({
           />
           <div className="text-xs text-txt leading-snug">
             <b>ตัวเลขประมาณการ</b> — ADMIN ยังไม่ได้ยืนยันยอด ตัวเลขอาจ เปลี่ยนแปลงได้ ·
-            พิมพ์สลิป/ใบรับรอง
+            พิมพ์สลิป
             {employeeRole?.poolGroup ? " + แผนผังเงินเดือน" : ""} เปิดได้หลังยืนยันยอด
           </div>
         </div>
@@ -1563,11 +1536,7 @@ export default function SalaryView({
         {[
           {
             icon: (
-              <IconBriefcase
-                size={16}
-                strokeWidth={2.2}
-                color={COLORS.green}
-              />
+              <IconBriefcase size={16} strokeWidth={2.2} color={COLORS.green} />
             ),
             main: "เงินเดือนพื้นฐานปัจจุบัน",
             sub: "",
@@ -1626,11 +1595,7 @@ export default function SalaryView({
                         : IconDiamond;
                   return {
                     icon: (
-                      <Icon
-                        size={16}
-                        strokeWidth={2.2}
-                        color={COLORS.green}
-                      />
+                      <Icon size={16} strokeWidth={2.2} color={COLORS.green} />
                     ),
                     main: `ค่าคอม${it.label}`,
                     sub,
@@ -1675,11 +1640,7 @@ export default function SalaryView({
           },
           {
             icon: (
-              <IconHandshake
-                size={16}
-                strokeWidth={2.2}
-                color={COLORS.green}
-              />
+              <IconHandshake size={16} strokeWidth={2.2} color={COLORS.green} />
             ),
             main: "เงินค่าแทน",
             sub:
@@ -1687,11 +1648,7 @@ export default function SalaryView({
               data.coveragePayBreakdown.length > 0
                 ? data.coveragePayBreakdown
                     .map(
-                      (b: {
-                        dutyName: string;
-                        count: number;
-                        rate: number;
-                      }) =>
+                      (b: { dutyName: string; count: number; rate: number }) =>
                         `${b.dutyName} ${b.count}×${formatThaiNumber(b.rate)}`,
                     )
                     .join(" · ")
@@ -1918,11 +1875,7 @@ export default function SalaryView({
           contentClassName="px-4 pt-4 pb-4"
         >
           <div className="flex items-center gap-2 mb-3">
-            <IconReceipt
-              size={18}
-              strokeWidth={2.2}
-              className="text-maroon"
-            />
+            <IconReceipt size={18} strokeWidth={2.2} className="text-maroon" />
             <div className="font-bold text-base text-txt">สลิปโอนเงิน</div>
           </div>
           <img
