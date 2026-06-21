@@ -72,10 +72,10 @@ export async function fetchTodayLeaves(
 		const kindLabel = leave.type === "sick" ? "ลาป่วย" : "ลากิจ";
 		const start = String(leave.start || "");
 		const end = String(leave.end || "");
+		// วันเดียว → ไม่ต้องโชว์วันที่ในบรรทัด 2 (caller render เป็น "" ถ้าเป็น
+		// "" จะ skip render บรรทัด · ลด clutter)
 		const dateLabel =
-			start === end
-				? "วันเดียว"
-				: `${formatShortDate(start)} – ${formatShortDate(end)}`;
+			start === end ? "" : `${formatShortDate(start)} – ${formatShortDate(end)}`;
 		return { nickname, kindLabel, dateLabel };
 	});
 }

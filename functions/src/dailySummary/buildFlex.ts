@@ -386,7 +386,7 @@ function buildLeavesSection(
 						},
 						{
 							type: "text",
-							text: ` ${leave.nickname}`,
+							text: ` ${leave.nickname} · ${leave.kindLabel}`,
 							color: TEXT_DK,
 							size: "md",
 							weight: "bold",
@@ -395,13 +395,19 @@ function buildLeavesSection(
 						},
 					],
 				},
-				{
-					type: "text",
-					text: `${leave.kindLabel} · ${leave.dateLabel}`,
-					color: TEXT_MID,
-					size: "xs",
-					margin: "2px",
-				},
+				// บรรทัดวันที่ — โชว์เฉพาะลาหลายวัน (วันเดียว dateLabel=""
+				// จาก leaves.ts → skip render กัน clutter)
+				...(leave.dateLabel
+					? [
+							{
+								type: "text" as const,
+								text: leave.dateLabel,
+								color: TEXT_MID,
+								size: "xs",
+								margin: "2px",
+							},
+						]
+					: []),
 			],
 		});
 	});
