@@ -5,8 +5,27 @@ on:
     branches: [main]
 
 jobs:
+  test:
+    name: Test (frontend utils)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm test
+
   deploy-hosting:
     name: Deploy Hosting
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -42,6 +61,7 @@ jobs:
 
   deploy-functions:
     name: Deploy Functions
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -68,6 +88,7 @@ jobs:
 
   deploy-firestore-rules:
     name: Deploy Firestore Rules
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -85,6 +106,7 @@ jobs:
 
   deploy-storage-rules:
     name: Deploy Storage Rules
+    needs: test
     runs-on: ubuntu-latest
 
     steps:

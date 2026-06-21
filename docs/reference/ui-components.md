@@ -75,6 +75,7 @@ Layout
 | GoldDivider | `shared/GoldDivider.tsx` | Decorative divider with diamond center |
 | MosaicPattern | `shared/MosaicPattern.tsx` | SVG mosaic decoration (sidebar/header) |
 | Layout | `shared/Layout.tsx` | Section/Card/Box utility components |
+| MoneyInput | `shared/MoneyInput.tsx` | ช่องกรอกเงิน — ใส่ comma ทันทีตอนพิมพ์ (1,234,567) + คง cursor + รองรับ decimal/ติดลบ · drop-in แทน `<input inputMode="decimal">` · emit raw string (ไม่มี comma) · helper `formatTypedNumber`/`caretPosFromDigits` ใน `utils/format.ts` (shared กับ Calculator) |
 
 ## Modals
 

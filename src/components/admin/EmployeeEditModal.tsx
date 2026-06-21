@@ -37,6 +37,7 @@ import {
 import AvatarCircle from "../shared/AvatarCircle";
 import BankPicker from "../shared/BankPicker";
 import BaseModal from "../shared/BaseModal";
+import MoneyInput from "../shared/MoneyInput";
 import AnnualRaiseSection from "./AnnualRaiseSection";
 import { clearEmployeeDraft } from "./employeeEditFields";
 import RecurringItemsEditor, {
@@ -688,19 +689,17 @@ export default function EmployeeEditModal({
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
                   ฿
                 </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
+                <MoneyInput
                   min="0"
                   value={
                     editingBaseSalary !== undefined
                       ? editingBaseSalary
                       : (employee.baseSalary ?? "")
                   }
-                  onChange={(e) =>
+                  onChange={(raw) =>
                     setEditingRole((previousEditingRole) => ({
                       ...previousEditingRole,
-                      [`${employee.id}:baseSalary`]: e.target.value,
+                      [`${employee.id}:baseSalary`]: raw,
                     }))
                   }
                   className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingBaseSalary !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
@@ -725,19 +724,17 @@ export default function EmployeeEditModal({
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-soft text-sm font-semibold pointer-events-none">
                   ฿
                 </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
+                <MoneyInput
                   min="0"
                   value={
                     editingSocialSecurity !== undefined
                       ? editingSocialSecurity
                       : (employee.socialSecurity ?? "")
                   }
-                  onChange={(e) =>
+                  onChange={(raw) =>
                     setEditingRole((previousEditingRole) => ({
                       ...previousEditingRole,
-                      [`${employee.id}:socialSecurity`]: e.target.value,
+                      [`${employee.id}:socialSecurity`]: raw,
                     }))
                   }
                   className={`w-full py-[9px] pr-3 pl-[30px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt text-right border-[1.5px] ${editingSocialSecurity !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
@@ -881,12 +878,10 @@ export default function EmployeeEditModal({
                             />
                             {item.label}
                           </label>
-                          <input
-                            type="text"
-                            inputMode="decimal"
+                          <MoneyInput
                             min="0"
                             value={rateValue(item.id)}
-                            onChange={(e) => setRate(item.id, e.target.value)}
+                            onChange={(raw) => setRate(item.id, raw)}
                             className={`w-full px-3 py-[9px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingPieceRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
                           />
                         </div>
@@ -1153,13 +1148,11 @@ export default function EmployeeEditModal({
                                     </div>
                                   )}
                                 </label>
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
+                                <MoneyInput
                                   min="0"
                                   value={itemDisabled ? "" : valueOf()}
                                   disabled={itemDisabled}
-                                  onChange={(ev) => setRate(ev.target.value)}
+                                  onChange={(raw) => setRate(raw)}
                                   className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-center border-[1.5px] ${
                                     itemDisabled
                                       ? "text-txt-soft bg-cream-dk cursor-not-allowed border-bdr"
@@ -1223,21 +1216,14 @@ export default function EmployeeEditModal({
                   </div>
                   <div className="flex flex-col gap-2">
                     {bonusItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-2"
-                      >
+                      <div key={item.id} className="flex items-center gap-2">
                         <label className="text-sm font-semibold text-txt min-w-[130px] leading-tight">
                           {item.label}
                         </label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
+                        <MoneyInput
                           min="0"
                           value={bonusRateValue(item.id)}
-                          onChange={(e) =>
-                            setBonusRate(item.id, e.target.value)
-                          }
+                          onChange={(raw) => setBonusRate(item.id, raw)}
                           className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt bg-white text-center border-[1.5px] ${editingBonusRates?.[item.id] !== undefined ? "border-gold" : "border-bdr"}`}
                         />
                       </div>
