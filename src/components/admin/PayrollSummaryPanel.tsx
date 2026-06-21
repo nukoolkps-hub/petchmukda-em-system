@@ -13,7 +13,7 @@ import {
   Search as IconSearch,
   ShoppingBag as IconShoppingBag,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { COLORS } from "../../constants";
 import {
   buildLoanContext,
@@ -325,6 +325,20 @@ export default function PayrollSummaryPanel({
     .sort()
     .join("|");
 
+  // figure ล่าสุด (สด) ของเดือนนี้ — เก็บใน ref เพื่อให้ background job ของ
+  // confirmPayroll re-stamp ยอดยืนยันให้ตรงกับข้อมูลที่ "นิ่งแล้ว" หลัง
+  // backfillPoolSnapshots ได้ (ดู confirmPayroll → auto-settle)
+  const liveTotal = rows.reduce((s, r) => s + r.salaryCalculation.netSalary, 0);
+  const liveCount = rows.length;
+  const liveFigureRef = useRef({ total: 0, count: 0, sig: "" });
+  useEffect(() => {
+    liveFigureRef.current = {
+      total: liveTotal,
+      count: liveCount,
+      sig: breakdownSig,
+    };
+  }, [liveTotal, liveCount, breakdownSig]);
+
   // ยืนยันยอด (ใช้ร่วมทั้งปุ่มยืนยันครั้งแรกและยืนยันใหม่) — กันกดซ้ำด้วย submitting
   // การยืนยันครั้งแรกถามผ่าน pendingConfirm modal ก่อน (ไม่ใช่ native confirm)
   // ขั้นที่ผู้ใช้รอ: onSetPayrollConfirm เดี่ยว (เขียน 1 doc — เร็ว) เสร็จแล้ว
@@ -405,9 +419,10 @@ export default function PayrollSummaryPanel({
   ) {
     if (advanceDataBlocked || submitting) return;
     setSubmitting(true);
+    const confirmedAt = new Date().toISOString();
     try {
       await onSetPayrollConfirm(selectedMonth, {
-        confirmedAt: new Date().toISOString(),
+        confirmedAt,
         totalAmount: totalForMonth,
         employeeCount: empCountForMonth,
         breakdownSig,
@@ -448,6 +463,32 @@ export default function PayrollSummaryPanel({
       } catch (err) {
         console.error("[PayrollSummary] freeze slips failed:", err);
         showToast?.("บันทึกสลิปเข้าระบบไม่สำเร็จบางส่วน");
+      }
+      // ─── Auto-settle: re-stamp ยอดยืนยันให้ตรงข้อมูลที่นิ่งแล้ว ───────
+      // backfillPoolSnapshots/denormalize เขียน salary docs ของสมาชิก pool
+      // ใหม่ → ส่วนแบ่งกองกลาง recompute → ยอดสด drift จากยอดตอนกดยืนยัน
+      // เล็กน้อย (ไม่ใช่ admin แก้เอง) → แบนเนอร์เด้ง "ข้อมูลเปลี่ยนหลังยืนยัน"
+      // ทันที. รอ subscription ส่งข้อมูลใหม่ให้นิ่ง แล้ว re-stamp ยอด/ลายเซ็น
+      // ให้ตรง — setPayrollConfirm preserve firstConfirmedAt/lockAtMs →
+      // เดดไลน์ปิดรอบ 7 วันไม่ขยับ. เขียนครั้งเดียว (ไม่ลูป: payrollConfirms
+      // ไม่กระทบ salaryData) · ถือว่ายอดหลัง backfill = ยอด official ที่ถูกต้อง
+      try {
+        await new Promise((r) => setTimeout(r, 1500));
+        const f = liveFigureRef.current;
+        const drifted =
+          f.total !== totalForMonth ||
+          f.count !== empCountForMonth ||
+          f.sig !== breakdownSig;
+        if (drifted) {
+          await onSetPayrollConfirm(selectedMonth, {
+            confirmedAt,
+            totalAmount: f.total,
+            employeeCount: f.count,
+            breakdownSig: f.sig,
+          });
+        }
+      } catch (err) {
+        console.error("[PayrollSummary] auto-settle confirm failed:", err);
       }
     })();
   }
@@ -843,8 +884,7 @@ export default function PayrollSummaryPanel({
                         <>
                           <b>เงินสุทธิติดลบ</b> ฿
                           {formatThaiNumber(-salaryCalculation.netSalary)} ·
-                          ยกเป็นเบิกล่วงหน้าเดือนถัดไปอัตโนมัติ + บล็อกพนักงาน
-                          ยื่นเบิกใหม่
+                          ยกเป็นเบิกล่วงหน้าเดือนถัดไปอัตโนมัติ + บล็อกพนักงาน ยื่นเบิกใหม่
                         </>
                       )}
                     </div>
@@ -864,9 +904,7 @@ export default function PayrollSummaryPanel({
                             : "bg-white text-red border-red/40"
                         }`}
                       >
-                        {deficitCleared
-                          ? "ยกเลิกการอนุญาต"
-                          : "อนุญาตให้ยื่นเบิกใหม่"}
+                        {deficitCleared ? "ยกเลิกการอนุญาต" : "อนุญาตให้ยื่นเบิกใหม่"}
                       </button>
                     )}
                   </div>
