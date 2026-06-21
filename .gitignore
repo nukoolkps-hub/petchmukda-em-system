@@ -9,6 +9,9 @@ dist-ssr/
 .firebase/
 *.local
 
+# Test coverage
+coverage/
+
 # Logs
 logs/
 *.log
