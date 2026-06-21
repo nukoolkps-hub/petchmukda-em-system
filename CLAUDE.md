@@ -22,9 +22,17 @@ npm run dev          # Frontend + Firebase Emulators
 npm run build        # Production build (output: dist/) — copy public/fonts ด้วย
 npm run typecheck    # TypeScript check
 npm run check        # Biome lint + format
+npm test             # Vitest — unit tests (รันครั้งเดียว)
+npm run test:watch   # Vitest watch mode
+npm run test:coverage # Vitest + coverage report (v8 · scope src/utils)
 ```
 
 Deploy เกิดอัตโนมัติบน push เข้า `main` — ไม่มีการรัน `firebase deploy` ด้วยมือ (ดู Deployment ด้านล่าง)
+
+**Testing:** Vitest (`vitest.config.ts` · node env · test ไฟล์อยู่ข้าง source: `*.test.ts`) ·
+โฟกัส pure business logic ใน `src/utils/` (เงินเดือน/กองกลาง/วันลา/หน้าที่/ราคาทอง) ·
+`.github/workflows/deploy.yml` มี job `test` (typecheck + `npm test`) ที่ทุก deploy job `needs:` —
+เทสต์ fail = ไม่ deploy · เขียนเทสต์เพิ่มเมื่อแก้ logic ใน `src/utils/`
 
 ## Architecture
 
@@ -77,7 +85,7 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 - **Other:** `secret` (PIN/รหัส dot mask)
 
 **Calculator UX:**
-- input ใช้ `type="text" inputMode="decimal"` · format ด้วย comma (1,234,567) ตอน blur · raw ขณะ focus เพื่อรองรับ "3.79" decimal
+- input ใช้ `type="text" inputMode="decimal"` · format ด้วย comma (1,234,567) **ทันทีขณะพิมพ์** (live · ไม่รอ blur) · ยังรองรับ "3.79" decimal · คง cursor หลังแทรก comma (ใช้ `formatTypedNumber` + `caretPosFromDigits` จาก `src/utils/format.ts`)
 - `rawTexts` state preserve text ขณะพิมพ์ (กัน "3." กลายเป็น "3" ตอน parse)
 - default value ใส่เฉพาะ gold/silver price + option dropdowns · field อื่น (labor, grams, etc.) ว่าง · user กรอกเอง
 - badge "ราคาวันนี้" แสดงเมื่อ value == live (ทั้งตอนยังไม่แตะ + ตอนแก้กลับมาเท่าราคาวันนี้) · เขียว = sell · แดง = buy
@@ -193,11 +201,13 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `src/firebase/goldPrice.ts` | `/config/goldPrice` doc — subscribe/update + `triggerFetchGoldPriceNow` callable |
 | `src/firebase/laborCost.ts` / `blockCost.ts` / `loyaltyPoints.ts` | `/config/{laborCost,blockCost,loyaltyPoints}` docs — admin-editable inline ในความรู้ต่างๆ · sync ทุก live table + calc |
 | `src/utils/changePriceUtils.ts` | สูตรค่าเปลี่ยน นน. เท่ากัน + ราคาขาย/รับซื้อ 96.5% · `CHANGE_PRICE_WEIGHTS` + `SHORTCUT_MULTIPLIERS` (shared sell+buy) · `computeBuyPrice96` ใช้ `gold.buyPrice` (fallback sell) · `ceilTo50` |
+| `src/utils/format.ts` | `formatThaiNumber` + `formatTypedNumber` (ใส่ comma live ขณะพิมพ์ คงทศนิยม/ติดลบ) + `caretPosFromDigits` (คืนตำแหน่ง cursor หลังแทรก comma) — shared โดย Calculator + MoneyInput |
+| `src/components/shared/MoneyInput.tsx` | ช่องกรอกเงิน reusable — drop-in แทน `<input inputMode="decimal">` · ใส่ comma ทันทีตอนพิมพ์ + คง cursor · emit raw (ไม่มี comma) กลับ parent · ใช้ใน EmployeeEditModal, AnnualRaiseSection, SalaryAdminEdit |
 | `src/content/knowledge/index.ts` | เนื้อหา "ความรู้ต่างๆ" hardcode 20+ sections (มาตรฐานน้ำหนัก, ค่าแรง, ขาย, รับซื้อ, จำนำ, VAT, ฯลฯ) |
 | `src/content/knowledge/types.ts` | block types: h3 · p · list · table (`colWidths`/`colAlign`) · formula · example · live-example · calculator · change-price-table · sell-price-96-table · buy-price-96-table · labor-cost-table · block-cost-table · loyalty-points-redeem-table · secret · callout · image · steps |
 | `src/components/knowledge/KnowledgeView.tsx` | Accordion render + search box (filter section.title) |
 | `src/components/knowledge/KnowledgeBlock.tsx` | Block dispatch — render แต่ละ block type · callout รองรับ multi-line ผ่าน `whitespace-pre-line` |
-| `src/components/knowledge/Calculator.tsx` | Live calculator block — `goldPriceDefault`/`buyPriceDefault`/`silverSell+BuyPriceDefault` sync ราคา live · `disabledWhen` conditional disable · comma thousand-separator + decimal preserve (rawTexts state) · badge "ราคาวันนี้" สีแยกขายเขียว/รับซื้อแดง · แสดงเมื่อ value = live |
+| `src/components/knowledge/Calculator.tsx` | Live calculator block — `goldPriceDefault`/`buyPriceDefault`/`silverSell+BuyPriceDefault` sync ราคา live · `disabledWhen` conditional disable · comma thousand-separator **live ขณะพิมพ์** + decimal preserve (rawTexts state) + คง cursor · badge "ราคาวันนี้" สีแยกขายเขียว/รับซื้อแดง · แสดงเมื่อ value = live |
 | `src/components/knowledge/LiveExample.tsx` / `MathText.tsx` | example อิงราคาวันนี้ (sell/buy/silverBuy/labor) · wrap +/−/×/÷/= ใน font-mono · MathText รองรับ `**bold**` |
 | `src/components/knowledge/GoldPriceHeader.tsx` / `ChangePriceTable.tsx` / `SellPrice96Table.tsx` / `BuyPrice96Table.tsx` | Live tables ใน "ความรู้ต่างๆ" · BuyPrice96Table ใช้ `gold.buyPrice` (ไม่ใช่ pricePerBaht) · GoldPriceHeader มีปุ่ม refresh ทั้งทอง+เงิน (toast แสดงราคาก่อน/หลัง) |
 | `src/components/knowledge/LaborCostTable.tsx` / `BlockCostTable.tsx` / `LoyaltyPointsRedeemTable.tsx` | Admin-editable live tables — inline edit + sync ทุก signed-in |
