@@ -825,7 +825,7 @@ export default function ManualModal({ onClose }) {
             </p>
             <ul>
               <li>
-                <b>เพดาน % ของเงินเดือนพื้นฐาน</b> — ขึ้นตามอายุงาน:
+                <b>เพดาน % ของเงินเดือนพื้นฐานปัจจุบัน</b> — ขึ้นตามอายุงาน:
                 <div className="mt-1.5 mb-2.5 rounded-[8px] border border-bdr bg-cream/50 overflow-hidden text-xs">
                   <div className="grid grid-cols-2 gap-px bg-bdr/50">
                     <div className="bg-cream/70 px-2 py-1 font-bold text-maroon">
