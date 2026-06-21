@@ -77,8 +77,8 @@ export default function AdvanceRequestModal({
     | string
     | undefined;
 
-  // เช็คเงินสุทธิเดือนที่แล้วติดลบไหม · ถ้าใช่ + admin ยังไม่ "เคลียร์" →
-  // บล็อกเบิกเดือนนี้ (กัน chain หนี้ · พนักงานต้องเคลียร์ก่อน) ·
+  // เช็คเงินสุทธิเดือนที่แล้วติดลบไหม · ถ้าใช่ + admin ยังไม่ "อนุญาต" →
+  // บล็อกเบิกเดือนนี้ (กัน chain หนี้ · ต้องให้ admin อนุญาตก่อน) ·
   // netSalary + deficitClearedAt denormalize ลง salary doc ตอน admin
   // ยืนยันยอด (ดู PayrollSummaryPanel.denormalizeNetSalaries)
   const prevYearMonth = (() => {
@@ -112,7 +112,7 @@ export default function AdvanceRequestModal({
     }
     if (prevMonthHadDeficit) {
       setErr(
-        `เดือนก่อนเงินสุทธิติดลบ ฿${formatThaiNumber(prevMonthDeficitAmount)} · ติดต่อ ADMIN เคลียร์ก่อน`,
+        `เดือนก่อนเงินสุทธิติดลบ ฿${formatThaiNumber(prevMonthDeficitAmount)} · ติดต่อ ADMIN ขออนุญาตก่อน`,
       );
       return;
     }
@@ -193,7 +193,7 @@ export default function AdvanceRequestModal({
           <div className="text-sm text-txt-mid leading-normal">
             <b className="text-red">เดือนก่อนเงินสุทธิติดลบ</b>{" "}
             ฿{formatThaiNumber(prevMonthDeficitAmount)} · เบิกล่วงหน้าเดือนนี้
-            ไม่ได้จนกว่าจะเคลียร์ · <b>ติดต่อ ADMIN</b>
+            ไม่ได้จนกว่า ADMIN จะ <b>"อนุญาตให้ยื่นเบิกใหม่"</b>
           </div>
         </div>
       )}
@@ -321,7 +321,7 @@ export default function AdvanceRequestModal({
             }
             if (prevMonthHadDeficit) {
               setErr(
-                `เดือนก่อนเงินสุทธิติดลบ ฿${formatThaiNumber(prevMonthDeficitAmount)} · ติดต่อ ADMIN เคลียร์ก่อน`,
+                `เดือนก่อนเงินสุทธิติดลบ ฿${formatThaiNumber(prevMonthDeficitAmount)} · ติดต่อ ADMIN ขออนุญาตก่อน`,
               );
               return;
             }
