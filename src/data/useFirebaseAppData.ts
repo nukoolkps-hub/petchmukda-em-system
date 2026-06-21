@@ -149,8 +149,37 @@ export default function useFirebaseAppData({
 
   /* ─── Employees ─────────────────────────────────────────── */
   async function updateEmployee(id, fields) {
+    // เก็บค่าก่อนแก้ไว้เทียบ · ใช้ตัดสินใจว่าต้อง auto-refresh salary snapshot
+    // ของเดือนปัจจุบันไหม (กรณี admin แก้ baseSalary แต่ salary doc ยังโชว์เก่า)
+    const before = employeeResult.data.find((e) => e.id === id);
     await employeesAPI.updateEmployee(id, fields);
     triggerRecomputeDutyAssignments();
+    // ถ้าแก้ field ที่กระทบเงินเดือนพื้นฐาน (baseSalary / annualRaiseAmount /
+    // annualRaises) → re-stamp snapshot ของเดือนปัจจุบันที่ยังไม่ยืนยัน · ให้
+    // admin เห็นเลขใหม่ทันทีใน SalaryAdminEdit · ไม่ต้องไปกด save salary เอง
+    const baseAffectingChanged =
+      ("baseSalary" in fields && fields.baseSalary !== before?.baseSalary) ||
+      ("annualRaiseAmount" in fields &&
+        fields.annualRaiseAmount !== before?.annualRaiseAmount) ||
+      "annualRaises" in fields;
+    if (baseAffectingChanged) {
+      const ym = (() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      })();
+      const existing = salResult.data?.[id]?.[ym];
+      const confirmed = !!pcResult.data?.[ym]?.confirmedAt;
+      if (existing && !confirmed) {
+        try {
+          await updateSalary(id, ym, {});
+        } catch (err) {
+          console.warn(
+            `[updateEmployee] auto-refresh ${id}/${ym} salary snapshot failed:`,
+            err,
+          );
+        }
+      }
+    }
   }
   async function upsertEmployee(employee) {
     const id = await employeesAPI.upsertEmployee(employee.id, employee);
@@ -221,11 +250,13 @@ export default function useFirebaseAppData({
     const hasRateSnapshot =
       existingSalary != null && existingSalary.baseSalary != null;
     const freezeSnapshot = isMonthConfirmed && hasRateSnapshot;
-    // กฎเสริม: baseSalary ของเดือนที่ "เคย save" แล้ว → ห้าม re-stamp จาก
-    // getEffectiveBaseSalary ใหม่ ถึงแม้เดือนยังไม่ยืนยัน — ป้องกัน raise
-    // ปีปัจจุบัน (เช่น admin เพิ่ม annualRaises["2026"]) ย้อนเข้าเดือนเก่า
-    // โดยไม่ตั้งใจ. เดือนที่ไม่เคยมี snapshot → ใช้ค่า effective ปกติ
-    const preserveBaseSalary = !freezeSnapshot && hasRateSnapshot;
+    // coveragePay: preserve เดิมถ้ามี snapshot อยู่แล้ว (กัน admin re-save
+    // unconfirmed month แล้ว coverage stamp ใหม่จากสถานะ leaves ปัจจุบัน ·
+    // เคยทำให้ past month earnings ขยับเงียบ · audit bug E)
+    // baseSalary: ไม่ preserve แล้ว — re-stamp ทุกครั้งจาก effective ปัจจุบัน
+    // เพื่อเคารพการแก้ baseSalary / annualRaises ใน profile (admin คาดหวังเห็น
+    // ยอดสด ไม่ stuck) · เดือนที่ยืนยันแล้ว freeze ผ่าน freezeSnapshot ปกติ
+    const preserveCoverage = !freezeSnapshot && hasRateSnapshot;
 
     // ดึง field ที่ระบบจัดการเองออกจาก fields ที่ caller ส่งมา (กันส่งค่าเก่าทับ)
     const {
@@ -277,15 +308,13 @@ export default function useFirebaseAppData({
           // coveragePay: preserve เดิมถ้ามี snapshot อยู่แล้ว (กัน admin
           // re-save unconfirmed month แล้ว coverage stamp ใหม่จากสถานะ leaves
           // ปัจจุบัน · เคยทำให้ past month earnings ขยับเงียบ · audit bug E)
-          coveragePay: preserveBaseSalary
+          coveragePay: preserveCoverage
             ? (existingSalary.coveragePay ?? coverage.total)
             : coverage.total,
-          coveragePayBreakdown: preserveBaseSalary
+          coveragePayBreakdown: preserveCoverage
             ? (existingSalary.coveragePayBreakdown ?? coverage.breakdown)
             : coverage.breakdown,
-          baseSalary: preserveBaseSalary
-            ? existingSalary.baseSalary
-            : getEffectiveBaseSalary(employee, yearMonth),
+          baseSalary: getEffectiveBaseSalary(employee, yearMonth),
           singlePieceRate: employee.singlePieceRate ?? 0,
           // snapshot อัตราต่อรายการ (multi-item piece) — freeze rate ของเดือนนั้น
           pieceRates: employee.pieceRates ?? {},
