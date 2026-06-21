@@ -58,7 +58,7 @@ export default function ManualModal({ onClose }) {
       </div>
 
       {/* tabs */}
-      <div className="grid grid-cols-2 bg-cream-dk rounded-[11px] p-1 mb-3.5 gap-0.5">
+      <div className="grid grid-cols-2 bg-cream-dk rounded-[11px] p-1 mb-3.5 gap-1">
         {[
           {
             id: "leave",

@@ -260,7 +260,7 @@ export default function AdvanceRequestModal({
       </div>
 
       {/* quick buttons */}
-      <div className="flex gap-1.5 mb-3.5">
+      <div className="flex gap-2 mb-3.5">
         {[500, 1000, 2000, 3000]
           .filter((v, i, a) => v > 0 && a.indexOf(v) === i)
           .slice(0, 4)

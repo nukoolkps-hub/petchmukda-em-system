@@ -462,7 +462,7 @@ function PoolItemFlow({
 
       {/* Step 3 + 4: % สุทธิ + ชิ้นที่ได้จริง */}
       <StepLabel n={3} text="หักวันลาที่เกิน 2 (2 วันแรกฟรี) → เกลี่ยให้เพื่อน → ได้ชิ้นจริง" />
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         {members
           .filter((m) => m.eligible)
           .map((m) => {

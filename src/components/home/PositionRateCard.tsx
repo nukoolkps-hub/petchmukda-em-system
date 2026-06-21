@@ -141,7 +141,7 @@ export default function PositionRateCard({ employee, role }: Props) {
         {(role.poolGroup ||
           (rolePaysPieceCommission(role) &&
             rolePieceItems(role).length > 0)) && (
-          <div className="text-[11px] font-extrabold text-maroon uppercase tracking-wider pt-1 mt-1 border-t border-bdr/40">
+          <div className="text-[11px] font-extrabold text-maroon uppercase tracking-wider pt-2 mt-2 border-t border-bdr/40">
             ค่าคอม
           </div>
         )}
@@ -178,7 +178,7 @@ export default function PositionRateCard({ employee, role }: Props) {
             : null}
         {/* ── หัวข้อ "โบนัสอื่นๆ" — โผล่เฉพาะถ้ามี bonus items ── */}
         {rolePaysPieceCommission(role) && roleBonusItems(role).length > 0 && (
-          <div className="text-[11px] font-extrabold text-maroon uppercase tracking-wider pt-1 mt-1 border-t border-bdr/40">
+          <div className="text-[11px] font-extrabold text-maroon uppercase tracking-wider pt-2 mt-2 border-t border-bdr/40">
             โบนัสอื่นๆ
           </div>
         )}

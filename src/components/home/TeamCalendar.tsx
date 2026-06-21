@@ -399,7 +399,7 @@ export default function TeamCalendar({
         </div>
         <div className="flex gap-3.5 mt-3.5 pt-3 border-t border-cream-dk flex-wrap">
           {LEAVE_TYPES.map((lt) => (
-            <div key={lt.id} className="flex items-center gap-[5px]">
+            <div key={lt.id} className="flex items-center gap-1.5">
               <div
                 className="w-2.5 h-2.5 rounded-full"
                 style={{ background: lt.color }}
@@ -407,14 +407,14 @@ export default function TeamCalendar({
               <span className="text-sm text-txt-soft">{lt.label}</span>
             </div>
           ))}
-          <div className="flex items-center gap-[5px]">
+          <div className="flex items-center gap-1.5">
             <div
               className="w-2.5 h-2.5 rounded-[3px] border border-bdr"
               style={{ background: colors.creamDark }}
             />
             <span className="text-sm text-txt-soft">ร้านปิด</span>
           </div>
-          <div className="flex items-center gap-[5px]">
+          <div className="flex items-center gap-1.5">
             <div
               className="w-2.5 h-2.5 rounded-[3px]"
               style={{ background: colors.greenLight }}
@@ -424,7 +424,7 @@ export default function TeamCalendar({
           {/* แยกของตัวเอง vs เพื่อน — เฉพาะฝั่งพนักงาน */}
           {myEmployeeId && (
             <>
-              <div className="flex items-center gap-[5px]">
+              <div className="flex items-center gap-1.5">
                 <div
                   className="w-2.5 h-2.5 rounded-full"
                   style={{
@@ -435,7 +435,7 @@ export default function TeamCalendar({
                 />
                 <span className="text-sm text-txt-soft">ของคุณ</span>
               </div>
-              <div className="flex items-center gap-[5px]">
+              <div className="flex items-center gap-1.5">
                 <div
                   className="w-2.5 h-2.5 rounded-full"
                   style={{
