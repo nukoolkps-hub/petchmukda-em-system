@@ -47,6 +47,11 @@ import {
   monthOf,
   PAYROLL_EDIT_GRACE_MS,
 } from "../utils/payrollLock";
+import {
+  roleBonusItems,
+  rolePieceItems,
+  rolePoolItems,
+} from "../utils/salaryUtils";
 
 interface FirebaseAppDataOptions {
   authUid?: string;
@@ -194,7 +199,18 @@ export default function useFirebaseAppData({
       // fields ใหม่ลง before ให้ re-stamp/recompute ใช้เรทใหม่ ไม่ใช่เรทเก่าใน state
       const freshEmployee = { ...(before || {}), ...fields, id };
       // รายการ "อะไรเปลี่ยนบ้าง" (human-readable) สำหรับบันทึก changeLog เดือน grace
-      const changeStrings = diffSalaryFields(before, fields);
+      // map id→ชื่อรายการ จาก role → โชว์ "ค่าคอมขายเพชร" แทน id ดิบ "(p_1781...)"
+      const labelRole = rolesResult.data.find(
+        (r) => r.id === (fields.roleId ?? before?.roleId),
+      );
+      const toLabelMap = (items: { id: string; label: string }[]) =>
+        Object.fromEntries(items.map((it) => [it.id, it.label]));
+      const itemLabels = {
+        poolItemRates: toLabelMap(rolePoolItems(labelRole)),
+        pieceRates: toLabelMap(rolePieceItems(labelRole)),
+        bonusRates: toLabelMap(roleBonusItems(labelRole)),
+      };
+      const changeStrings = diffSalaryFields(before, fields, itemLabels);
       const now = new Date();
       const currentYm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const empSalaries = salResult.data?.[id] || {};
