@@ -215,6 +215,9 @@ export default function HomeTab({
               ลากิจ + ลาป่วย รวม 2 วัน/เดือน
             </span>
           </div>
+          <div className="w-full text-xs text-txt-soft mt-1">
+            นับเฉพาะวันธรรมดา · วันอาทิตย์หักแยก (ไม่กินโควต้า)
+          </div>
         </div>
 
         {/* banner – แสดงตั้งแต่ครั้งที่ 2 เป็นต้นไป */}

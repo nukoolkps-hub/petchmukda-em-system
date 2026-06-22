@@ -193,6 +193,9 @@ export default function RequestTab({
           <div className="text-sm text-txt-soft mt-0.5">
             ลากิจ + ลาป่วย รวม 2 วัน/เดือน
           </div>
+          <div className="text-xs text-txt-soft mt-0.5">
+            นับเฉพาะวันธรรมดา · วันอาทิตย์หักแยก (ไม่กินโควต้า)
+          </div>
         </div>
         <div className="text-right shrink-0">
           <div
