@@ -527,44 +527,31 @@ export default function SalaryAdminEdit({
   if (!salaryCalculation)
     return <div className="p-5 text-txt-soft text-center">ไม่มีข้อมูลเงินเดือน</div>;
 
-  const pieceCommissionTotal =
-    (salaryCalculation.singleRateCommission || 0) +
-    (salaryCalculation.normalSaleCommission || 0) +
-    (salaryCalculation.specialSaleCommission || 0) +
-    (salaryCalculation.buyCommission || 0);
-
-  // breakdown ของ "รวมค่าคอมตามจำนวนชิ้น" — แสดงว่ามาจากชิ้นไหน × เรท
   const sc = salaryCalculation;
+  // breakdown ของ "รวมค่าคอมตามจำนวนชิ้น" — แสดงว่ามาจากชิ้นไหน × เรท ·
+  // pool role อ่านจาก poolItemsBreakdown (รวม custom item ที่ admin เพิ่ม) ·
+  // เดิม hardcode normal/special/buy → custom item หาย + ยอดรวมต่ำกว่า net จริง
   const commissionBreakdown = !rolePaysPieceCommission(employeeRole)
     ? []
     : sc.usesSinglePieceRate
-      ? // multi-item — 1 แถวต่อรายการค่าคอม
-        (sc.pieceBreakdown || []).map((b) => ({
+      ? (sc.pieceBreakdown || []).map((b) => ({
           label: b.label,
           pieces: b.pieces,
           rate: b.rate,
           amount: b.amount,
         }))
-      : [
-          {
-            label: "ขาย (ทั่วไป)",
-            pieces: sc.normalSalePieces,
-            rate: sc.normalSalePieceRate,
-            amount: sc.normalSaleCommission,
-          },
-          {
-            label: "ขาย (พิเศษ)",
-            pieces: sc.specialSalePieces,
-            rate: sc.specialSalePieceRate,
-            amount: sc.specialSaleCommission,
-          },
-          {
-            label: "รับซื้อ",
-            pieces: sc.buyPieces,
-            rate: sc.buyPieceRate,
-            amount: sc.buyCommission,
-          },
-        ];
+      : (sc.poolItemsBreakdown || []).map((b) => ({
+          label: b.label,
+          pieces: b.pieces,
+          rate: b.rate,
+          amount: b.amount,
+        }));
+  // ยอดรวม = ผลรวม breakdown (รวม custom pool item) → ตรงกับส่วน commission
+  // ใน earnings/net เสมอ
+  const pieceCommissionTotal = commissionBreakdown.reduce(
+    (s, b) => s + (b.amount || 0),
+    0,
+  );
   // โบนัสอื่นๆ (multi-item) — มาจาก salaryCalculation.bonusBreakdown โดยตรง
   // ไม่ผูกกับ piece commission · admin ตั้ง bonusItems แยกได้
   const memberBonusBreakdown = (sc.bonusBreakdown || []).map((b) => ({
@@ -763,7 +750,6 @@ export default function SalaryAdminEdit({
             {rolePoolItems(employeeRole).map((item) => {
               const itemShare = poolShare.itemShares?.[item.id];
               if (!itemShare) return null;
-              const myPieces = poolShare.itemPieces?.[item.id] || 0;
 
               // ส่วนตัว — ใครทำคนนั้นได้ · ไม่แบ่งกองกลาง
               if (item.kind === "personal") {
