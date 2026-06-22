@@ -928,14 +928,21 @@ export default function useFirebaseAppData({
   }
   async function updateStoreCalendar(cal) {
     const prev = storeCalendarResult.data;
+    const changedDates = diffCalendarDates(prev, cal);
+    // กันแก้ปฏิทินย้อนหลังเดือนที่ปิดรอบถาวร — ปฏิทินเป็น config กลาง · ถ้าแก้วันใน
+    // เดือน locked หน้าจอจะ recompute สด (view คิดจากปฏิทินปัจจุบัน) แต่ net ที่
+    // freeze ไม่ขยับ → ตัวเลขเพี้ยน · บล็อกทั้ง batch ถ้ามีวันใดอยู่ในเดือน locked
+    for (const d of changedDates) {
+      if (monthLocked(d.slice(0, 7))) {
+        throw new Error(`ปฏิทินวันที่ ${d} อยู่ในเดือนที่ปิดรอบแล้ว — แก้ไขไม่ได้`);
+      }
+    }
     await storeCalendarAPI.updateStoreCalendar(cal);
     triggerRecomputeDutyAssignments(); // duty filter ขึ้นกับ calendar
     // ปฏิทินกระทบเงินทุกคนในเดือนนั้น (จ่ายเพิ่มเสาร์พิเศษ + ฐานนับวันลา/×1.5) →
     // re-settle เดือนที่ยืนยันแล้วยังไม่ปิดรอบ + log (admin เท่านั้น)
     if (!isAdmin) return;
-    const affectedMonths = new Set(
-      [...diffCalendarDates(prev, cal)].map((d) => d.slice(0, 7)),
-    );
+    const affectedMonths = new Set([...changedDates].map((d) => d.slice(0, 7)));
     // เรียงเก่า→ใหม่ + sequential — กัน auto-carry race ข้ามเดือน (เหมือน updateEmployee)
     const months = [...affectedMonths]
       .filter((ym) => pcResult.data?.[ym]?.confirmedAt && !monthLocked(ym))

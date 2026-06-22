@@ -188,180 +188,180 @@ export default function AdminPanel({
 
       {/* Section content · keyed by section → fadeIn re-triggers on swap */}
       <div key={section} className="animate-[fadeIn_0.18s_ease-out]">
+        {/* ── POSITIONS section ── */}
+        {section === "positions" && (
+          <RolesAdminPanel
+            roles={roles}
+            employeeDirectory={employeeDirectory}
+            onUpdateEmployeeRole={onUpdateRole}
+            onUpsertRole={onUpsertRole}
+            onDeleteRole={onDeleteRole}
+            showToast={showToast}
+          />
+        )}
 
-      {/* ── POSITIONS section ── */}
-      {section === "positions" && (
-        <RolesAdminPanel
-          roles={roles}
-          employeeDirectory={employeeDirectory}
-          onUpdateEmployeeRole={onUpdateRole}
-          onUpsertRole={onUpsertRole}
-          onDeleteRole={onDeleteRole}
-          showToast={showToast}
-        />
-      )}
+        {/* ── DUTY SCHEDULE section ── */}
+        {section === "duty-schedule" && (
+          <DutySchedulePanel
+            duties={duties || []}
+            dutyAssignmentsToday={dutyAssignmentsToday}
+            roles={roles || []}
+            employeeDirectory={employeeDirectory}
+            onUpsertDuty={onUpsertDuty}
+            onDeleteDuty={onDeleteDuty}
+            showToast={showToast}
+          />
+        )}
 
-      {/* ── DUTY SCHEDULE section ── */}
-      {section === "duty-schedule" && (
-        <DutySchedulePanel
-          duties={duties || []}
-          dutyAssignmentsToday={dutyAssignmentsToday}
-          roles={roles || []}
-          employeeDirectory={employeeDirectory}
-          onUpsertDuty={onUpsertDuty}
-          onDeleteDuty={onDeleteDuty}
-          showToast={showToast}
-        />
-      )}
+        {/* ── CALENDAR VIEW section (ปฏิทินรวม — ลาทุกคน + วันเปิด-ปิดร้าน) ── */}
+        {section === "calendar-view" && (
+          <TeamCalendar
+            leaveEntries={allLeaves}
+            employeeDirectory={employeeDirectory}
+            storeCalendar={storeCalendar}
+          />
+        )}
 
-      {/* ── CALENDAR VIEW section (ปฏิทินรวม — ลาทุกคน + วันเปิด-ปิดร้าน) ── */}
-      {section === "calendar-view" && (
-        <TeamCalendar
-          leaveEntries={allLeaves}
-          employeeDirectory={employeeDirectory}
-          storeCalendar={storeCalendar}
-        />
-      )}
+        {/* ── KNOWLEDGE section (ความรู้ต่างๆ) ── */}
+        {section === "knowledge" && (
+          <KnowledgeView isAdmin showToast={showToast} />
+        )}
 
-      {/* ── KNOWLEDGE section (ความรู้ต่างๆ) ── */}
-      {section === "knowledge" && (
-        <KnowledgeView isAdmin showToast={showToast} />
-      )}
+        {/* ── STORE CALENDAR section (วันเปิด-ปิดร้าน) ── */}
+        {section === "store-calendar" && (
+          <StoreCalendarPanel
+            storeCalendar={storeCalendar}
+            onUpdate={onUpdateStoreCalendar}
+            allLeaves={allLeaves}
+            employeeDirectory={employeeDirectory}
+            onDeleteLeave={onDelete}
+            payrollConfirms={payrollConfirms}
+            showToast={showToast}
+          />
+        )}
 
-      {/* ── STORE CALENDAR section (วันเปิด-ปิดร้าน) ── */}
-      {section === "store-calendar" && (
-        <StoreCalendarPanel
-          storeCalendar={storeCalendar}
-          onUpdate={onUpdateStoreCalendar}
-          allLeaves={allLeaves}
-          employeeDirectory={employeeDirectory}
-          onDeleteLeave={onDelete}
-          showToast={showToast}
-        />
-      )}
+        {/* ── LINE BOT > NOTIFICATIONS section ── */}
+        {section === "linebot-notifications" && (
+          <LineBotNotificationsPanel showToast={showToast} />
+        )}
 
-      {/* ── LINE BOT > NOTIFICATIONS section ── */}
-      {section === "linebot-notifications" && (
-        <LineBotNotificationsPanel showToast={showToast} />
-      )}
+        {/* ── LINE BOT > COMMANDS section ── */}
+        {section === "linebot-commands" && <LineBotCommandsPanel />}
 
-      {/* ── LINE BOT > COMMANDS section ── */}
-      {section === "linebot-commands" && <LineBotCommandsPanel />}
+        {section === "backup" && <BackupPanel showToast={showToast} />}
 
-      {section === "backup" && <BackupPanel showToast={showToast} />}
+        {section === "wipe-data" && (
+          <WipeDataPanel
+            employeeDirectory={employeeDirectory}
+            showToast={showToast}
+          />
+        )}
 
-      {section === "wipe-data" && (
-        <WipeDataPanel
-          employeeDirectory={employeeDirectory}
-          showToast={showToast}
-        />
-      )}
+        {/* ── PAYROLL SUMMARY section ── */}
+        {section === "payroll" && (
+          <PayrollSummaryPanel
+            employeeDirectory={employeeDirectory}
+            salaryData={salaryData}
+            allLeaves={allLeaves}
+            advanceRequests={advanceRequests}
+            roles={roles}
+            payrollConfirms={payrollConfirms}
+            onSetPayrollConfirm={onSetPayrollConfirm}
+            onSyncAutoCarryAdvance={onSyncAutoCarryAdvance}
+            poolAdjustments={poolAdjustments}
+            employeeLoans={employeeLoans}
+            storeCalendar={storeCalendar}
+            onSaveSalary={onSaveSalary}
+            selectedMonth={adminMonth}
+            onSelectMonth={setAdminMonth}
+            showToast={showToast}
+          />
+        )}
 
-      {/* ── PAYROLL SUMMARY section ── */}
-      {section === "payroll" && (
-        <PayrollSummaryPanel
-          employeeDirectory={employeeDirectory}
-          salaryData={salaryData}
-          allLeaves={allLeaves}
-          advanceRequests={advanceRequests}
-          roles={roles}
-          payrollConfirms={payrollConfirms}
-          onSetPayrollConfirm={onSetPayrollConfirm}
-          onSyncAutoCarryAdvance={onSyncAutoCarryAdvance}
-          poolAdjustments={poolAdjustments}
-          employeeLoans={employeeLoans}
-          storeCalendar={storeCalendar}
-          onSaveSalary={onSaveSalary}
-          selectedMonth={adminMonth}
-          onSelectMonth={setAdminMonth}
-          showToast={showToast}
-        />
-      )}
+        {/* ── ADVANCE section ── */}
+        {section === "advance" && (
+          <AdminAdvancePanel
+            advanceRequests={advanceRequests || []}
+            employeeDirectory={employeeDirectory}
+            onUpdate={onUpdateAdvance}
+            showToast={showToast}
+          />
+        )}
 
-      {/* ── ADVANCE section ── */}
-      {section === "advance" && (
-        <AdminAdvancePanel
-          advanceRequests={advanceRequests || []}
-          employeeDirectory={employeeDirectory}
-          onUpdate={onUpdateAdvance}
-          showToast={showToast}
-        />
-      )}
+        {/* ── LOANS section (เงินกู้ผ่อนคืน) ── */}
+        {section === "loans" && (
+          <EmployeeLoansPanel
+            employeeLoans={employeeLoans || []}
+            employeeDirectory={employeeDirectory}
+            onAddLoan={onAddLoan}
+            onUpdateLoan={onUpdateLoan}
+            onDeleteLoan={onDeleteLoan}
+            showToast={showToast}
+          />
+        )}
 
-      {/* ── LOANS section (เงินกู้ผ่อนคืน) ── */}
-      {section === "loans" && (
-        <EmployeeLoansPanel
-          employeeLoans={employeeLoans || []}
-          employeeDirectory={employeeDirectory}
-          onAddLoan={onAddLoan}
-          onUpdateLoan={onUpdateLoan}
-          onDeleteLoan={onDeleteLoan}
-          showToast={showToast}
-        />
-      )}
+        {/* ── SALARY edit section ── */}
+        {section === "salary" && (
+          <SalaryAdminEdit
+            employeeDirectory={employeeDirectory}
+            salaryData={salaryData}
+            setSalaryData={setSalaryData}
+            onSaveSalary={onSaveSalary}
+            allLeaves={allLeaves}
+            advanceRequests={advanceRequests}
+            roles={roles}
+            payrollConfirms={payrollConfirms}
+            poolAdjustments={poolAdjustments}
+            onSetPoolAdjustment={onSetPoolAdjustment}
+            employeeLoans={employeeLoans}
+            storeCalendar={storeCalendar}
+            onReorderEmployees={onReorderEmployees}
+            setUnsavedDirty={setUnsavedDirty}
+            selectedMonth={adminMonth}
+            onSelectMonth={setAdminMonth}
+            showToast={showToast}
+          />
+        )}
 
-      {/* ── SALARY edit section ── */}
-      {section === "salary" && (
-        <SalaryAdminEdit
-          employeeDirectory={employeeDirectory}
-          salaryData={salaryData}
-          setSalaryData={setSalaryData}
-          onSaveSalary={onSaveSalary}
-          allLeaves={allLeaves}
-          advanceRequests={advanceRequests}
-          roles={roles}
-          payrollConfirms={payrollConfirms}
-          poolAdjustments={poolAdjustments}
-          onSetPoolAdjustment={onSetPoolAdjustment}
-          employeeLoans={employeeLoans}
-          storeCalendar={storeCalendar}
-          onReorderEmployees={onReorderEmployees}
-          setUnsavedDirty={setUnsavedDirty}
-          selectedMonth={adminMonth}
-          onSelectMonth={setAdminMonth}
-          showToast={showToast}
-        />
-      )}
+        {/* ── SUMMARY section ── */}
+        {section === "summary" && (
+          <LeaveSummaryPanel
+            allLeaves={allLeaves}
+            employeeDirectory={employeeDirectory}
+            storeCalendar={storeCalendar}
+            selectedMonth={adminMonth}
+            onSelectMonth={setAdminMonth}
+          />
+        )}
 
-      {/* ── SUMMARY section ── */}
-      {section === "summary" && (
-        <LeaveSummaryPanel
-          allLeaves={allLeaves}
-          employeeDirectory={employeeDirectory}
-          storeCalendar={storeCalendar}
-          selectedMonth={adminMonth}
-          onSelectMonth={setAdminMonth}
-        />
-      )}
+        {/* ── LEAVES section ── */}
+        {section === "leaves" && (
+          <LeaveListPanel
+            allLeaves={allLeaves}
+            employeeDirectory={employeeDirectory}
+            payrollConfirms={payrollConfirms}
+            storeCalendar={storeCalendar}
+            onDelete={onDelete}
+            onAddLeave={onAddLeave}
+            selectedMonth={adminMonth}
+            onSelectMonth={setAdminMonth}
+            showToast={showToast}
+          />
+        )}
 
-      {/* ── LEAVES section ── */}
-      {section === "leaves" && (
-        <LeaveListPanel
-          allLeaves={allLeaves}
-          employeeDirectory={employeeDirectory}
-          payrollConfirms={payrollConfirms}
-          storeCalendar={storeCalendar}
-          onDelete={onDelete}
-          onAddLeave={onAddLeave}
-          selectedMonth={adminMonth}
-          onSelectMonth={setAdminMonth}
-          showToast={showToast}
-        />
-      )}
-
-      {/* ── EMPLOYEE (พนักงาน) section ── */}
-      {section === "roles" && (
-        <EmployeeAdminPanel
-          employeeDirectory={employeeDirectory}
-          roles={roles}
-          onUpdateRole={onUpdateRole}
-          onDeleteEmployee={onDeleteEmployee}
-          editingRole={employeeEditingRole}
-          setEditingRole={setEmployeeEditingRole}
-          editingEmpId={employeeEditingId}
-          setEditingEmpId={setEmployeeEditingId}
-        />
-      )}
+        {/* ── EMPLOYEE (พนักงาน) section ── */}
+        {section === "roles" && (
+          <EmployeeAdminPanel
+            employeeDirectory={employeeDirectory}
+            roles={roles}
+            onUpdateRole={onUpdateRole}
+            onDeleteEmployee={onDeleteEmployee}
+            editingRole={employeeEditingRole}
+            setEditingRole={setEmployeeEditingRole}
+            editingEmpId={employeeEditingId}
+            setEditingEmpId={setEmployeeEditingId}
+          />
+        )}
       </div>
     </div>
   );

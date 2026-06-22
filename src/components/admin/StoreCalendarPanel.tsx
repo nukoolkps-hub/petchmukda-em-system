@@ -23,6 +23,7 @@ import {
   dateRange,
   fmtShortWithWeekday,
 } from "../../utils/dateUtils";
+import { isMonthLocked } from "../../utils/payrollLock";
 import BaseModal from "../shared/BaseModal";
 import CalendarPicker from "../shared/CalendarPicker";
 import MonthChevronNav from "../shared/MonthChevronNav";
@@ -39,8 +40,13 @@ interface Props {
   /** ลบใบลา · ใช้ใน cascade-delete ตอนลบวันออกจากปฏิทิน
    *  (ใบลาที่ครอบวันนั้นถูกลบทิ้งด้วย กัน frozen lv.days mismatch recompute) */
   onDeleteLeave: (id: string | number) => void | Promise<void>;
+  /** payrollConfirms — กันแก้ปฏิทินในเดือนที่ปิดรอบถาวร (net ที่ freeze ไม่ขยับ
+   *  ตามปฏิทินใหม่ → ตัวเลขเพี้ยน) · per-month lock check */
+  payrollConfirms?: Record<string, any>;
   showToast?: (msg: string) => void;
 }
+
+const CAL_LOCK_MSG = "เดือนนี้ปิดรอบแล้ว — แก้ปฏิทินไม่ได้";
 
 /** alias สำหรับใช้ชื่อเดิมใน panel นี้ */
 const fmtYmd = fmtShortWithWeekday;
@@ -104,8 +110,12 @@ export default function StoreCalendarPanel({
   allLeaves,
   employeeDirectory,
   onDeleteLeave,
+  payrollConfirms,
   showToast,
 }: Props) {
+  // เดือน (YYYY-MM) นั้นปิดรอบถาวรแล้วไหม — กันลบ/toggle วันในเดือนนั้น
+  const isYmdLocked = (ymd: string) =>
+    isMonthLocked(payrollConfirms?.[ymd.slice(0, 7)]);
   const [adding, setAdding] = useState<"sat" | "wd" | "sun" | null>(null);
   const [satPick, setSatPick] = useState("");
   // วันธรรมดาปิดพิเศษ — เลือกเป็นช่วงได้ (เช่น อบรม จ-ศ ทั้งสัปดาห์)
@@ -272,7 +282,7 @@ export default function StoreCalendarPanel({
       showToast?.("ลบแล้ว");
     } catch (e) {
       console.error(e);
-      showToast?.("ลบไม่สำเร็จ");
+      showToast?.(e instanceof Error ? e.message : "ลบไม่สำเร็จ");
     } finally {
       setBusy(false);
     }
@@ -281,6 +291,10 @@ export default function StoreCalendarPanel({
   /** ตรวจใบลาก่อนลบ · ถ้ามี → confirm modal · ไม่มี → ลบเลย */
   function requestRemove(field: keyof StoreCalendar, ymd: string) {
     if (busy) return;
+    if (isYmdLocked(ymd)) {
+      showToast?.(CAL_LOCK_MSG);
+      return;
+    }
     const leaves = leavesOnDate(ymd, allLeaves);
     if (leaves.length === 0) {
       remove(field, ymd);
@@ -318,7 +332,7 @@ export default function StoreCalendarPanel({
       showToast?.(`ลบใบลา ${leaves.length} ใบ + ลบวันออกจากปฏิทินแล้ว`);
     } catch (e) {
       console.error(e);
-      showToast?.("ลบไม่สำเร็จ — ลองอีกครั้ง");
+      showToast?.(e instanceof Error ? e.message : "ลบไม่สำเร็จ — ลองอีกครั้ง");
     } finally {
       setBusy(false);
     }
@@ -326,6 +340,10 @@ export default function StoreCalendarPanel({
 
   async function togglePaid(ymd: string) {
     if (busy) return;
+    if (isYmdLocked(ymd)) {
+      showToast?.(CAL_LOCK_MSG);
+      return;
+    }
     setBusy(true);
     try {
       const paid = new Set(storeCalendar.paidExtraSaturdays ?? []);
@@ -337,7 +355,7 @@ export default function StoreCalendarPanel({
       });
     } catch (e) {
       console.error(e);
-      showToast?.("บันทึกไม่สำเร็จ");
+      showToast?.(e instanceof Error ? e.message : "บันทึกไม่สำเร็จ");
     } finally {
       setBusy(false);
     }
@@ -399,6 +417,14 @@ export default function StoreCalendarPanel({
           subtitle={monthlyCount > 0 ? `${monthlyCount} รายการ` : "ไม่มีรายการ"}
         />
       </div>
+
+      {/* เดือนนี้ปิดรอบถาวรแล้ว → แก้ปฏิทินไม่ได้ (net ที่ freeze ไม่ขยับตาม) */}
+      {isMonthLocked(payrollConfirms?.[selectedMonth]) && (
+        <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-[10px] border border-red/25 bg-red-lt text-red text-xs font-semibold">
+          <IconAlertTriangle size={15} strokeWidth={2.4} />
+          เดือนนี้ปิดรอบแล้ว — แก้ปฏิทินไม่ได้
+        </div>
+      )}
 
       {/* เสาร์เปิดพิเศษ */}
       <div className="rounded-[12px] border border-bdr bg-white">
