@@ -154,22 +154,44 @@ export default function useFirebaseAppData({
     const before = employeeResult.data.find((e) => e.id === id);
     await employeesAPI.updateEmployee(id, fields);
     triggerRecomputeDutyAssignments();
-    // ถ้าแก้ field ที่กระทบเงินเดือนพื้นฐาน (baseSalary / annualRaiseAmount /
-    // annualRaises) → re-stamp snapshot ของเดือนปัจจุบันที่ยังไม่ยืนยัน · ให้
-    // admin เห็นเลขใหม่ทันทีใน SalaryAdminEdit · ไม่ต้องไปกด save salary เอง
-    const baseAffectingChanged =
-      ("baseSalary" in fields && fields.baseSalary !== before?.baseSalary) ||
-      ("annualRaiseAmount" in fields &&
-        fields.annualRaiseAmount !== before?.annualRaiseAmount) ||
-      "annualRaises" in fields;
-    if (baseAffectingChanged) {
+    // ถ้าแก้ field ที่กระทบเงินเดือนพื้นฐาน/เรทค่าคอม/ตำแหน่ง → re-stamp snapshot
+    // ของเดือนปัจจุบันที่ยังไม่ปิดรอบถาวร · ให้ admin เห็นเลขใหม่ทันทีใน
+    // SalaryAdminEdit / หน้าเงินเดือน · ไม่ต้องไปกด save salary เอง
+    // - scalar: trigger เฉพาะเมื่อค่าจริงเปลี่ยน (กัน write ซ้ำโดยไม่จำเป็น)
+    // - object/array (map เรท, annualRaises, poolExclusion): trigger เมื่อมี key
+    //   ส่งมา (เทียบ deep ยาก · re-stamp ซ้ำเป็น idempotent ไม่เสียหาย)
+    const scalarRateFields = [
+      "baseSalary",
+      "annualRaiseAmount",
+      "roleId",
+      "singlePieceRate",
+      "normalSalePieceRate",
+      "specialSalePieceRate",
+      "buyPieceRate",
+      "invitePieceRate",
+      "transferPieceRate",
+      "socialSecurity",
+    ];
+    const objectRateFields = [
+      "annualRaises",
+      "poolExclusion",
+      "pieceRates",
+      "poolItemRates",
+      "bonusRates",
+    ];
+    const salaryAffectingChanged =
+      scalarRateFields.some(
+        (k) => k in fields && (fields as any)[k] !== (before as any)?.[k],
+      ) || objectRateFields.some((k) => k in fields);
+    if (salaryAffectingChanged) {
       const ym = (() => {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       })();
       const existing = salResult.data?.[id]?.[ym];
-      const confirmed = !!pcResult.data?.[ym]?.confirmedAt;
-      if (existing && !confirmed) {
+      // เดือนปัจจุบันยังไม่ปิดรอบถาวร (พ้น 7 วันหลังยืนยัน) → re-stamp ได้
+      // (รวม grace period: ยืนยันแล้วแต่ยังไม่ครบ 7 วัน · กฎ "ยังแก้ได้")
+      if (existing && !monthLocked(ym)) {
         try {
           await updateSalary(id, ym, {});
         } catch (err) {
@@ -241,15 +263,17 @@ export default function useFirebaseAppData({
     const overInfo = getOverQuotaDays(monthLeaves, storeCalendarResult.data);
     const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
 
-    // กฎ "ล็อกเมื่อยืนยันยอดแล้ว": ถ้าเดือนนี้ถูกยืนยันยอดแล้ว + มี snapshot เรท
-    // อยู่แล้ว → ห้าม re-stamp เรท/ตำแหน่ง (เก็บค่าเดิมที่ frozen ไว้) เพื่อกัน
-    // การเผลอแก้เดือนเก่าหลังเปลี่ยนตำแหน่งแล้วตัวเลขอดีตเพี้ยน. งวดที่ยังไม่
-    // ยืนยัน (เปิดอยู่) ยัง stamp ค่าสดตามปกติ (แก้ข้อมูลพนักงานแล้ว re-save ได้)
+    // กฎ "ล็อกเมื่อปิดรอบถาวร": freeze เรท/ตำแหน่งเฉพาะเดือนที่ปิดรอบถาวรแล้ว
+    // (พ้น grace 7 วัน) — เดือนพวกนี้ถูก block ที่ต้นฟังก์ชันอยู่แล้ว (throw)
+    // ระหว่าง grace period (ยืนยันยอดแล้วแต่ยังไม่ครบ 7 วัน) ตามกฎ "ยังแก้ได้"
+    // → ยัง re-stamp เรทสดทุกครั้ง เพื่อให้ admin แก้ rate ค่าคอม/ตำแหน่ง ใน
+    // โปรไฟล์ แล้วเงินเดือนเดือนนั้นอัปเดตตาม (ไม่ค้างที่ค่าตอนกดยืนยันยอด)
+    // เดิมเช็ค isMonthConfirmed → freeze ทันทีที่ยืนยัน ทำให้แก้เรทใน grace
+    // period ไม่มีผล (bug)
     const existingSalary = salResult.data?.[employeeId]?.[yearMonth];
-    const isMonthConfirmed = !!pcResult.data?.[yearMonth];
     const hasRateSnapshot =
       existingSalary != null && existingSalary.baseSalary != null;
-    const freezeSnapshot = isMonthConfirmed && hasRateSnapshot;
+    const freezeSnapshot = monthLocked(yearMonth) && hasRateSnapshot;
     // coveragePay: preserve เดิมถ้ามี snapshot อยู่แล้ว (กัน admin re-save
     // unconfirmed month แล้ว coverage stamp ใหม่จากสถานะ leaves ปัจจุบัน ·
     // เคยทำให้ past month earnings ขยับเงียบ · audit bug E)
