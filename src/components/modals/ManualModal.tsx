@@ -201,6 +201,73 @@ export default function ManualModal({ onClose }) {
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
+                <IconCalendarRange size={16} strokeWidth={2.4} />
+                ตัวเลขวันลาบนหน้าแรก — นับ 2 แบบ
+              </span>
+            }
+            color={COLORS.maroon}
+          >
+            <p>
+              หน้าแรกโชว์จำนวนวันลา 2 ที่ · <b>นับคนละแบบ</b> — ถ้าเลขไม่เท่ากัน{" "}
+              <b className="text-green">ไม่ใช่ error</b> (เกิดเมื่อมีลาวันอาทิตย์)
+            </p>
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconClipboardList size={14} strokeWidth={2.4} />
+                  การ์ด "โควต้าการลา X / 2 วัน"
+                </span>
+              }
+              color={COLORS.text}
+            >
+              <ul>
+                <li>
+                  นับ <b>เฉพาะวันธรรมดา</b> ที่ใช้โควต้า · <b>วันอาทิตย์ไม่นับ</b> (หัก ×
+                  1.5 แยกต่างหาก)
+                </li>
+                <li>ไว้ดูว่าเหลือโควต้ากี่วัน + เตือนเมื่อลาเกิน</li>
+              </ul>
+            </Card>
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconCalendar size={14} strokeWidth={2.4} />
+                  ชิป "ลากิจ / ลาป่วย เดือนนี้ X วัน"
+                </span>
+              }
+              color={COLORS.text}
+            >
+              <ul>
+                <li>
+                  นับ <b>จำนวนวันลาจริง</b> แยกตามประเภท
+                </li>
+                <li>
+                  <b>รวมวันอาทิตย์ที่ร้านเปิด</b> + เสาร์เปิดพิเศษ · <b>ตัดวันร้านปิด</b> ออก
+                </li>
+                <li>
+                  เป็นแค่ตัวบอกจำนวนวัน · <b>ไม่เกี่ยวกับการคิดเงิน</b>
+                </li>
+              </ul>
+            </Card>
+            <p className="mt-1.5 text-xs text-txt-soft">
+              <b>ตัวอย่าง:</b> เดือนนี้ลากิจ วันธรรมดา 5 + อาทิตย์ 1 → การ์ดโควต้าโชว์{" "}
+              <b>5</b> · ชิปลากิจโชว์ <b>6</b> (ถูกต้องทั้งคู่)
+            </p>
+            <Box bg={COLORS.creamDark} border={`${COLORS.gold}40`}>
+              <div className="flex items-center gap-1.5 text-maroon font-bold mb-1">
+                <IconSun size={14} strokeWidth={2.4} />
+                ในประวัติการลา — ป้าย "อาทิตย์ ×1.5"
+              </div>
+              <p>
+                ใบลาที่ตรง/คร่อม <b>วันอาทิตย์ที่ร้านเปิด</b> จะมีป้าย <b>"อาทิตย์ ×1.5"</b>{" "}
+                เตือนว่าวันนั้นถูกหัก × 1.5 และไม่กินโควต้า วันธรรมดา
+              </p>
+            </Box>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
                 <IconStore size={16} strokeWidth={2.4} />
                 วันเสาร์ — ร้านปกติหยุด
               </span>
