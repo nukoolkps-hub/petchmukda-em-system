@@ -145,10 +145,26 @@ export default function useFirebaseAppData({
   const LOCK_MSG = "เดือนนี้ปิดรอบแล้ว (พ้น 7 วันหลังยืนยันยอด) — แก้ไขไม่ได้";
 
   /* ─── Leaves (real-time → no local setState needed) ────── */
+  // คำอธิบายช่วงวันลาแบบสั้นสำหรับ changeLog
+  function leaveRangeText(lv: { start: string; end: string }) {
+    return lv.start === lv.end ? lv.start : `${lv.start}–${lv.end}`;
+  }
   async function addLeave(leave) {
     if (monthLocked(monthOf(leave?.start))) throw new Error(LOCK_MSG);
     const id = await leavesAPI.addLeave(leave);
     triggerRecomputeDutyAssignments();
+    // ลาในเดือนที่ยืนยันยอดแล้ว (grace) → over-quota/โบนัสขยัน + pool เปลี่ยน →
+    // re-settle ทั้งเดือน + log (admin เท่านั้น · in-memory leaves ยัง stale →
+    // เติม leave ใหม่เข้าไปเอง)
+    const ym = monthOf(leave?.start);
+    if (isAdmin && pcResult.data?.[ym]?.confirmedAt && !monthLocked(ym)) {
+      const emp = employeeResult.data.find((e) => e.id === leave.employeeId);
+      await syncConfirmedMonth(ym, {
+        allLeaves: [...leavesResult.data, { id, ...leave }],
+        employeeName: emp?.nickname || emp?.name || leave.employeeId,
+        changeStrings: [`เพิ่มวันลา ${leaveRangeText(leave)}`],
+      });
+    }
     return id;
   }
   async function deleteLeave(id) {
@@ -156,6 +172,20 @@ export default function useFirebaseAppData({
     if (target && monthLocked(monthOf(target.start))) throw new Error(LOCK_MSG);
     await leavesAPI.deleteLeave(id);
     triggerRecomputeDutyAssignments();
+    const ym = target ? monthOf(target.start) : "";
+    if (
+      target &&
+      isAdmin &&
+      pcResult.data?.[ym]?.confirmedAt &&
+      !monthLocked(ym)
+    ) {
+      const emp = employeeResult.data.find((e) => e.id === target.employeeId);
+      await syncConfirmedMonth(ym, {
+        allLeaves: leavesResult.data.filter((l) => l.id !== id),
+        employeeName: emp?.nickname || emp?.name || target.employeeId,
+        changeStrings: [`ลบวันลา ${leaveRangeText(target)}`],
+      });
+    }
   }
 
   /* ─── Employees ─────────────────────────────────────────── */
@@ -175,6 +205,7 @@ export default function useFirebaseAppData({
       "baseSalary",
       "annualRaiseAmount",
       "roleId",
+      "salaryDisabled",
       "singlePieceRate",
       "normalSalePieceRate",
       "specialSalePieceRate",
@@ -466,59 +497,74 @@ export default function useFirebaseAppData({
         ...rateSnapshot,
         totalLeaveDays,
       };
-      await syncConfirmedMonth(
-        employeeId,
-        yearMonth,
-        newDoc,
-        employeeResult.data,
-        employee.nickname || employee.name || employeeId,
+      await syncConfirmedMonth(yearMonth, {
+        salaryDataPatch: { [employeeId]: newDoc },
+        employeeName: employee.nickname || employee.name || employeeId,
         changeStrings,
-      );
+      });
     }
   }
 
-  /* ─── Core: หลังแก้ข้อมูลเดือน grace → settle + sync ยอดทางการ + log ─────
-     ใช้ร่วมทั้งการแก้เรท/ตำแหน่ง (updateEmployee) และแก้จำนวนชิ้น (SalaryAdminEdit)
-     patchedDoc = salary doc ใหม่ของคนที่แก้ (in-memory salResult ยัง stale) ·
-     directory = employee directory (patched เฉพาะเคสแก้ profile) ·
-     คำนวณยอดทั้งเดือนใหม่ (computeMonthSummary) → settle คนที่แก้ → re-stamp
-     payrollConfirms (preserve firstConfirmedAt/lockAtMs) → append changeLog    */
+  /* ─── Core: re-settle เดือน grace ที่ยืนยันแล้วทั้งเดือน → sync + log ─────
+     เรียกหลังมีการแก้ใดๆ ที่กระทบ net/ยอดของเดือนที่ยืนยันยอดแล้ว (เรท/ชิ้น/ลา/
+     เงินกู้/เบิก/หักกองกลาง/ปิดสิทธิ์) · ADMIN เท่านั้น (เขียน payrollConfirms +
+     salaries ของทุกคน)
+     - settle "ทุกแถว" (ไม่ใช่แค่คนที่แก้) เพราะการเกลี่ยกองกลาง/หักกองกลาง
+       กระทบ net ของเพื่อนทั้งกลุ่ม → denorm/auto-carry/loan ledger ต้องตรงทุกคน
+     - override (in-memory subscription ยัง stale หลัง write): salaryDataPatch /
+       directory / allLeaves / employeeLoans / poolAdjustment
+     - re-stamp payrollConfirms (preserve firstConfirmedAt/lockAtMs) + changeLog */
   async function syncConfirmedMonth(
-    employeeId,
-    yearMonth,
-    patchedDoc,
-    directory,
-    employeeName: string,
-    changeStrings: string[],
+    yearMonth: string,
+    opts: {
+      salaryDataPatch?: Record<string, any>;
+      directory?: any[];
+      allLeaves?: any[];
+      employeeLoans?: any[];
+      poolAdjustment?: any;
+      employeeName: string;
+      changeStrings: string[];
+    },
   ) {
-    const patchedSalaryData = {
-      ...salResult.data,
-      [employeeId]: {
-        ...(salResult.data?.[employeeId] || {}),
-        [yearMonth]: patchedDoc,
-      },
-    };
+    // เฉพาะ admin + เดือนที่ยืนยันยอดแล้ว (ยังไม่ปิดรอบ) เท่านั้น
+    if (!isAdmin) return;
+    const existingConfirm = pcResult.data?.[yearMonth];
+    if (!existingConfirm?.confirmedAt || monthLocked(yearMonth)) return;
+
+    const directory = opts.directory ?? employeeResult.data;
+    const allLeaves = opts.allLeaves ?? leavesResult.data;
+    const employeeLoans = opts.employeeLoans ?? loansResult.data;
+    const poolAdjustment =
+      opts.poolAdjustment !== undefined
+        ? opts.poolAdjustment
+        : (poolAdjResult.data?.[yearMonth] ?? null);
+    let salaryData = salResult.data;
+    if (opts.salaryDataPatch) {
+      salaryData = { ...salResult.data };
+      for (const [id, doc] of Object.entries(opts.salaryDataPatch)) {
+        salaryData[id] = { ...(salResult.data?.[id] || {}), [yearMonth]: doc };
+      }
+    }
     // approved advances อ่าน on-demand — admin subscription (advResult) เป็น
-    // pending-only จึงหัก advance ไม่ได้ถ้าใช้มัน (ทำให้ net/ยอดสูงเกินจริง)
+    // pending-only จึงหัก advance ไม่ได้ถ้าใช้มัน (net/ยอดสูงเกินจริง)
     const monthApprovedAdvances =
       await advancesAPI.getApprovedAdvancesByMonth(yearMonth);
     const summary = computeMonthSummary({
       activeEmployees: directory.filter((e) => !e.salaryDisabled),
       yearMonth,
-      salaryData: patchedSalaryData,
-      allLeaves: leavesResult.data,
+      salaryData,
+      allLeaves,
       employeeDirectory: directory,
       roles: rolesResult.data,
-      employeeLoans: loansResult.data,
+      employeeLoans,
       monthApprovedAdvances,
-      poolAdjustment: poolAdjResult.data?.[yearMonth] || null,
+      poolAdjustment,
       storeCalendar: storeCalendarResult.data,
     });
-    // 1) settle แถวของคนที่แก้ · ห่อ try/catch — ledger fail ต้องไม่บล็อก sync
-    const row = summary.rows.find((r) => r.employee.id === employeeId);
-    if (row?.salaryCalculation) {
-      try {
-        await settleEmployeeMonth(row, yearMonth, loansResult.data, {
+    // 1) settle ทุกแถว (denorm net + auto-carry + loan ledger) · best-effort
+    await Promise.allSettled(
+      summary.rows.map((row) =>
+        settleEmployeeMonth(row, yearMonth, employeeLoans, {
           saveNetDenorm: (id, ym, net, clearDeficit) =>
             salariesAPI.updateSalary(
               id,
@@ -530,39 +576,39 @@ export default function useFirebaseAppData({
           syncAutoCarry: (args) => syncAutoCarryAdvance(args),
           recordLoanRepayment: (loanId, ym, amount) =>
             employeeLoansAPI.recordLoanRepaymentTx(loanId, ym, amount),
+        }).catch((err) =>
+          console.error(
+            `[syncConfirmedMonth] settle ${row.employee.id} failed:`,
+            err,
+          ),
+        ),
+      ),
+    );
+    // 2) auto-sync ยอดทางการ → แบนเนอร์ drift ไม่เด้ง + ยอดไม่ค้างผิดตอนล็อก
+    const totalBefore = existingConfirm.totalAmount ?? 0;
+    await setPayrollConfirm(yearMonth, {
+      confirmedAt: existingConfirm.confirmedAt,
+      totalAmount: summary.total,
+      employeeCount: summary.count,
+      breakdownSig: summary.breakdownSig,
+    });
+    // 3) บันทึกประวัติการแก้หลังยืนยัน — เฉพาะเมื่อมีผลจริง
+    if (opts.changeStrings.length > 0 || totalBefore !== summary.total) {
+      try {
+        await payrollConfirmsAPI.appendPayrollChangeLog(yearMonth, {
+          at: new Date().toISOString(),
+          employeeName: opts.employeeName,
+          changes: opts.changeStrings,
+          totalBefore,
+          totalAfter: summary.total,
         });
       } catch (err) {
-        console.error("[syncConfirmedMonth] settle employee failed:", err);
-      }
-    }
-    // 2) auto-sync ยอดทางการ → แบนเนอร์ drift ไม่เด้ง + ยอดไม่ค้างผิดตอนล็อก
-    const existingConfirm = pcResult.data?.[yearMonth];
-    if (existingConfirm?.confirmedAt) {
-      const totalBefore = existingConfirm.totalAmount ?? 0;
-      await setPayrollConfirm(yearMonth, {
-        confirmedAt: existingConfirm.confirmedAt,
-        totalAmount: summary.total,
-        employeeCount: summary.count,
-        breakdownSig: summary.breakdownSig,
-      });
-      // 3) บันทึกประวัติการแก้หลังยืนยัน — เฉพาะเมื่อมีผลจริง
-      if (changeStrings.length > 0 || totalBefore !== summary.total) {
-        try {
-          await payrollConfirmsAPI.appendPayrollChangeLog(yearMonth, {
-            at: new Date().toISOString(),
-            employeeName,
-            changes: changeStrings,
-            totalBefore,
-            totalAfter: summary.total,
-          });
-        } catch (err) {
-          console.warn("[syncConfirmedMonth] append change log failed:", err);
-        }
+        console.warn("[syncConfirmedMonth] append change log failed:", err);
       }
     }
   }
 
-  /* ─── แก้เรท/ตำแหน่ง (จาก updateEmployee) → re-settle เดือน grace ──────
+  /* ─── แก้เรท/ตำแหน่ง/ปิดสิทธิ์ (จาก updateEmployee) → re-settle เดือน grace ──
      freshEmployee: ร่าง employee หลัง merge fields ใหม่ (subscription ยัง stale) */
   async function resettleAndSyncMonth(
     employeeId,
@@ -574,23 +620,23 @@ export default function useFirebaseAppData({
     const directory = employeeResult.data.map((e) =>
       e.id === employeeId ? freshEmployee : e,
     );
-    // overlay เรท/ตำแหน่ง/exclusion ใหม่ลง salary doc — pool grouping/roleId ของ
-    // เดือนนี้ต้องใช้ค่าใหม่ (เคสเปลี่ยน roleId/poolExclusion ใน grace month)
+    // overlay เรท/ตำแหน่ง/exclusion/ปิดสิทธิ์ ใหม่ลง salary doc — pool grouping/
+    // eligibility ของเดือนนี้ต้องใช้ค่าใหม่ (computePoolSharesForGroup อ่าน
+    // snapshot salary ก่อน)
     const stale = salResult.data?.[employeeId]?.[yearMonth] || {};
     const dataOverride = {
       ...stale,
       roleId: freshEmployee.roleId ?? null,
       poolExclusion: freshEmployee.poolExclusion ?? null,
+      salaryDisabled: !!freshEmployee.salaryDisabled,
       ...buildRateFieldsSnapshot(freshEmployee, yearMonth),
     };
-    await syncConfirmedMonth(
-      employeeId,
-      yearMonth,
-      dataOverride,
+    await syncConfirmedMonth(yearMonth, {
+      salaryDataPatch: { [employeeId]: dataOverride },
       directory,
-      freshEmployee.nickname || freshEmployee.name || employeeId,
+      employeeName: freshEmployee.nickname || freshEmployee.name || employeeId,
       changeStrings,
-    );
+    });
   }
 
   /* ─── Advances ──────────────────────────────────────────── */
@@ -615,6 +661,16 @@ export default function useFirebaseAppData({
     const target = advResult.data.find((a) => a.id === id);
     if (target && monthLocked(target.month)) throw new Error(LOCK_MSG);
     await advancesAPI.approveAdvance(id, slipImageUrl);
+    // อนุมัติเบิกในเดือนที่ยืนยันแล้ว (grace) → หักเบิกเพิ่ม → net เปลี่ยน ·
+    // getApprovedAdvancesByMonth อ่านสด (เห็นตัวที่เพิ่งอนุมัติ) → ไม่ต้อง override
+    const ym = target?.month;
+    if (target && pcResult.data?.[ym]?.confirmedAt && !monthLocked(ym)) {
+      const emp = employeeResult.data.find((e) => e.id === target.employeeId);
+      await syncConfirmedMonth(ym, {
+        employeeName: emp?.nickname || emp?.name || target.employeeId,
+        changeStrings: [`อนุมัติเบิกล่วงหน้า ${target.amount} ฿`],
+      });
+    }
   }
   /* ─── Auto-carry advances (deficit เดือนก่อน → advance เดือนถัดไป) ──
      ใช้ตอน admin ยืนยันยอด · ถ้า salaryCalc.netSalary < 0 → สร้าง advance
@@ -681,14 +737,57 @@ export default function useFirebaseAppData({
   }
 
   /* ─── Employee Loans (เงินกู้ผ่อนคืน — admin สร้าง) ────────── */
+  // resync ทุกเดือน grace ของพนักงานคนหนึ่ง (ใช้ตอนแก้เงินกู้ — กระทบหักผ่อน
+  // ต่อเดือน · loan เป็นการหักส่วนตัว ไม่กระทบ pool เพื่อน แต่ settle ทั้งเดือน
+  // ก็ idempotent กับคนอื่น) · employeeLoansOverride = loans หลังแก้ (state stale)
+  async function resyncEmployeeGraceMonths(
+    employeeId: string,
+    employeeLoansOverride: any[],
+    changeStrings: string[],
+  ) {
+    if (!isAdmin) return;
+    const emp = employeeResult.data.find((e) => e.id === employeeId);
+    const months = Object.keys(salResult.data?.[employeeId] || {})
+      .filter((ym) => pcResult.data?.[ym]?.confirmedAt && !monthLocked(ym))
+      .sort();
+    for (const ym of months) {
+      await syncConfirmedMonth(ym, {
+        employeeLoans: employeeLoansOverride,
+        employeeName: emp?.nickname || emp?.name || employeeId,
+        changeStrings,
+      });
+    }
+  }
   async function addEmployeeLoan(loan) {
-    return await employeeLoansAPI.addEmployeeLoan(loan);
+    const id = await employeeLoansAPI.addEmployeeLoan(loan);
+    await resyncEmployeeGraceMonths(
+      loan.employeeId,
+      [...loansResult.data, { id, ...loan }],
+      ["เพิ่มเงินกู้ผ่อนคืน"],
+    );
+    return id;
   }
   async function updateEmployeeLoan(id, fields) {
     await employeeLoansAPI.updateEmployeeLoan(id, fields);
+    const loan = loansResult.data.find((l) => l.id === id);
+    if (loan) {
+      await resyncEmployeeGraceMonths(
+        loan.employeeId,
+        loansResult.data.map((l) => (l.id === id ? { ...l, ...fields } : l)),
+        ["แก้เงินกู้ผ่อนคืน"],
+      );
+    }
   }
   async function deleteEmployeeLoan(id) {
+    const loan = loansResult.data.find((l) => l.id === id);
     await employeeLoansAPI.deleteEmployeeLoan(id);
+    if (loan) {
+      await resyncEmployeeGraceMonths(
+        loan.employeeId,
+        loansResult.data.filter((l) => l.id !== id),
+        ["ลบเงินกู้ผ่อนคืน"],
+      );
+    }
   }
 
   /* ─── Roles ─────────────────────────────────────────────── */
@@ -730,7 +829,18 @@ export default function useFirebaseAppData({
   /* ─── Pool Adjustments (หักจากกองกลาง ระดับเดือน) ────────── */
   async function setPoolAdjustment(yearMonth, fields) {
     if (monthLocked(yearMonth)) throw new Error(LOCK_MSG);
-    await poolAdjustmentsAPI.setPoolAdjustment(yearMonth, fields);
+    // ใช้ items ที่ sanitize แล้ว (บาง item ถูก drop/clamp) เป็น override —
+    // ไม่ใช่ raw fields ไม่งั้น net จะคิดจาก item ที่ doc ไม่ได้เก็บจริง
+    const saved = await poolAdjustmentsAPI.setPoolAdjustment(yearMonth, fields);
+    // หักกองกลางในเดือนที่ยืนยันแล้ว (grace) → กระทบ pool share ทุกคนในกลุ่ม →
+    // re-settle ทั้งเดือน + log (poolAdjustment override เพราะ state ยัง stale)
+    if (pcResult.data?.[yearMonth]?.confirmedAt && !monthLocked(yearMonth)) {
+      await syncConfirmedMonth(yearMonth, {
+        poolAdjustment: saved,
+        employeeName: "หักกองกลาง",
+        changeStrings: ["แก้รายการหักกองกลาง"],
+      });
+    }
   }
 
   /* ─── Store calendar (ปฏิทินเปิด-ปิดร้าน — admin manage) ─── */

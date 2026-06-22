@@ -139,4 +139,8 @@ export async function setPoolAdjustment(
     items,
     updatedAt: Date.now(),
   });
+  // คืน items หลัง sanitize — caller (grace-period re-settle) ต้องใช้ค่าที่
+  // "ถูกเก็บจริง" ไม่ใช่ raw fields (บาง item ถูก drop/clamp) ไม่งั้น net ที่
+  // settle จะคิดจาก item ที่ doc ไม่มี → ยอดเพี้ยนค้าง
+  return { items } as PoolAdjustment;
 }

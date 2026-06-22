@@ -386,6 +386,12 @@ export function diffSalaryFields(
       }
     }
   }
+  if (
+    "salaryDisabled" in fields &&
+    !!b.salaryDisabled !== !!fields.salaryDisabled
+  ) {
+    out.push(fields.salaryDisabled ? "ปิดสิทธิ์เงินเดือน" : "เปิดสิทธิ์เงินเดือน");
+  }
   if ("poolExclusion" in fields) {
     const fmt = (v: any) =>
       v == null
