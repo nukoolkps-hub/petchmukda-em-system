@@ -344,8 +344,14 @@ const SALARY_MAP_LABELS: Record<string, string> = {
 };
 
 /** สร้างรายการ "อะไรเปลี่ยนบ้าง" (human-readable) จาก before → fields ที่ส่งแก้ ·
- *  ใช้บันทึก changeLog ของเดือน grace · ครอบ scalar + map เรท + poolExclusion   */
-export function diffSalaryFields(before: any, fields: any): string[] {
+ *  ใช้บันทึก changeLog ของเดือน grace · ครอบ scalar + map เรท + poolExclusion
+ *  itemLabels: map id→ชื่อรายการ ต่อ field (poolItemRates/pieceRates/bonusRates)
+ *  เพื่อโชว์ชื่อ ("ค่าคอมขายเพชร") แทน id ดิบ ("ค่าคอม(p_1781...)")               */
+export function diffSalaryFields(
+  before: any,
+  fields: any,
+  itemLabels?: Record<string, Record<string, string>>,
+): string[] {
   const out: string[] = [];
   const b = before || {};
   for (const [key, label] of Object.entries(SALARY_FIELD_LABELS)) {
@@ -373,9 +379,10 @@ export function diffSalaryFields(before: any, fields: any): string[] {
       const o = Number(oldMap[id]) || 0;
       const n = Number(newMap[id]) || 0;
       if (o !== n) {
-        out.push(
-          `${label}(${id}) ${formatThaiNumber(o)} → ${formatThaiNumber(n)}`,
-        );
+        // โชว์ชื่อรายการถ้ามี ("ค่าคอมขายเพชร") · ไม่มี → fallback id ดิบ
+        const itemLabel = itemLabels?.[key]?.[id];
+        const shown = itemLabel ? `${label}${itemLabel}` : `${label}(${id})`;
+        out.push(`${shown} ${formatThaiNumber(o)} → ${formatThaiNumber(n)}`);
       }
     }
   }

@@ -347,12 +347,20 @@ describe("diffSalaryFields", () => {
     );
     expect(out).toEqual(["เงินเดือนพื้นฐาน 30,000 → 32,000"]);
   });
-  it("describes per-key map changes (poolItemRates)", () => {
+  it("describes per-key map changes (poolItemRates) — id fallback when no labels", () => {
     const out = diffSalaryFields(
       { poolItemRates: { normal: 40, buy: 10 } },
       { poolItemRates: { normal: 50, buy: 10 } },
     );
     expect(out).toEqual(["ค่าคอม(normal) 40 → 50"]);
+  });
+  it("uses the item label when provided (instead of raw id)", () => {
+    const out = diffSalaryFields(
+      { poolItemRates: { p_123: 12 } },
+      { poolItemRates: { p_123: 15 } },
+      { poolItemRates: { p_123: "ขายเพชร" } },
+    );
+    expect(out).toEqual(["ค่าคอมขายเพชร 12 → 15"]);
   });
   it("describes poolExclusion changes", () => {
     const out = diffSalaryFields(
