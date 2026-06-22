@@ -21,8 +21,10 @@ import type {
   Role,
   StoreCalendar,
 } from "../../types";
+import { dateRange } from "../../utils/dateUtils";
 import { countWeekdayLeaves } from "../../utils/leaveUtils";
 import { isRichTextEmpty } from "../../utils/sanitizeRichText";
+import { isStoreClosed } from "../../utils/storeCalendar";
 import DutyForecastModal from "../modals/DutyForecastModal";
 import RoleMainDutiesModal from "../modals/RoleMainDutiesModal";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -236,16 +238,30 @@ export default function HomeTab({
         )}
       </div>
 
-      {/* leave type mini stats */}
+      {/* leave type mini stats — นับ "วันลา" จากปฏิทิน แยกตามประเภท ·
+          ตัดวันร้านปิด (เสาร์ปิด/วันปิดพิเศษ) ออก เพราะลาวันร้านปิด
+          ไม่นับ · วันอาทิตย์ที่ร้านเปิดยังนับ · ไม่เกี่ยวกับ logic เงินเดือน */}
       <div className="grid grid-cols-2 gap-2.5 mb-1.5">
         {LEAVE_TYPES.map((lt) => {
           const usedType = profile
-            ? allLeaves.filter(
-                (lv) =>
-                  lv.employeeId === profile.id &&
-                  lv.type === lt.id &&
-                  lv.start.startsWith(yearMonth),
-              ).length
+            ? allLeaves
+                .filter(
+                  (lv) =>
+                    lv.employeeId === profile.id &&
+                    lv.type === lt.id &&
+                    lv.start.slice(0, 7) <= yearMonth &&
+                    lv.end.slice(0, 7) >= yearMonth,
+                )
+                .reduce(
+                  (sum, lv) =>
+                    sum +
+                    dateRange(lv.start, lv.end).filter(
+                      (d) =>
+                        d.startsWith(yearMonth) &&
+                        !isStoreClosed(d, storeCalendar),
+                    ).length,
+                  0,
+                )
             : 0;
           return (
             <div
