@@ -363,6 +363,19 @@ describe("diffSalaryFields", () => {
     );
     expect(out).toEqual(["ค่าคอมขายเพชร 12 → 15"]);
   });
+  it("roleId: โชว์ชื่อตำแหน่งจาก itemLabels (fallback id ดิบถ้าไม่มี map)", () => {
+    expect(
+      diffSalaryFields(
+        { roleId: "r_1" },
+        { roleId: "r_2" },
+        { roleId: { r_1: "ช่างทอง", r_2: "พนักงานขาย" } },
+      ),
+    ).toEqual(["ตำแหน่ง: ช่างทอง → พนักงานขาย"]);
+    // ไม่มี map → fallback id ดิบ
+    expect(diffSalaryFields({ roleId: "r_1" }, { roleId: "r_2" })).toEqual([
+      "ตำแหน่ง: r_1 → r_2",
+    ]);
+  });
   it("describes salaryDisabled toggle", () => {
     expect(diffSalaryFields({}, { salaryDisabled: true })).toEqual([
       "ปิดสิทธิ์เงินเดือน",

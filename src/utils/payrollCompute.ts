@@ -360,7 +360,10 @@ export function diffSalaryFields(
     const newV = fields[key];
     if (key === "roleId") {
       if ((oldV ?? null) === (newV ?? null)) continue;
-      out.push(`${label}: ${oldV ?? "-"} → ${newV ?? "-"}`);
+      // โชว์ชื่อตำแหน่ง ("ช่างทอง") แทน id ดิบ ("r_1781...") ถ้า caller ส่ง map มา
+      const roleName = (id: any) =>
+        id == null ? "-" : (itemLabels?.roleId?.[id] ?? id);
+      out.push(`${label}: ${roleName(oldV)} → ${roleName(newV)}`);
     } else {
       // coerce ตัวเลขก่อนเทียบ — form อาจส่ง rate เป็น string ("30000") ขณะที่
       // ของเดิมเป็น number 30000 → กัน changeLog หลอก "30,000 → 30,000"

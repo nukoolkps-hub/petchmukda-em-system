@@ -289,6 +289,8 @@ export default function useFirebaseAppData({
         poolItemRates: toLabelMap(rolePoolItems(labelRole)),
         pieceRates: toLabelMap(rolePieceItems(labelRole)),
         bonusRates: toLabelMap(roleBonusItems(labelRole)),
+        // map id ตำแหน่ง → ชื่อ (changeLog โชว์ "ช่างทอง" แทน id ดิบ)
+        roleId: Object.fromEntries(rolesResult.data.map((r) => [r.id, r.name])),
       };
       const changeStrings = diffSalaryFields(before, fields, itemLabels);
       const now = new Date();
