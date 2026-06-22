@@ -1220,10 +1220,17 @@ export function calculateSalary(
         0,
       )
     : 0;
-  // รายการประจำเดือนของพนักงาน (recurringItems) — ตั้งครั้งเดียวที่
-  // employee doc ใช้ทุกๆ เดือนจนกว่าจะลบ. แยก income/deduction.
+  // รายการประจำเดือนของพนักงาน (recurringItems) — แยก income/deduction.
+  // อ่าน snapshot ใน salary doc ก่อนเสมอ (frozen ต่อเดือน) → admin เพิ่ม/ลบ
+  // recurring ในอนาคต ไม่ทำให้สลิป/ยอดเดือนเก่า (โดยเฉพาะที่ปิดรอบแล้ว) เพี้ยน
+  // จาก denorm netSalary ที่ freeze ไว้ · fallback live (rates) เฉพาะเดือนที่ยัง
+  // ไม่มี snapshot (data เก่าก่อน feature นี้ / งวดเปิดที่ยังไม่ save)
   const recurringItems: { type: string; label: string; amount: number }[] =
-    Array.isArray(rates?.recurringItems) ? rates.recurringItems : [];
+    Array.isArray(salary?.recurringItems)
+      ? salary.recurringItems
+      : Array.isArray(rates?.recurringItems)
+        ? rates.recurringItems
+        : [];
   const recurringIncomes = recurringItems
     .filter((it) => it.type === "income")
     .map((it) => ({
