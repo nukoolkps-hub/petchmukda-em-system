@@ -368,6 +368,12 @@ describe("diffSalaryFields", () => {
       [],
     );
   });
+  it("coerces numeric strings so a string-vs-number no-op is not logged", () => {
+    // form may submit baseSalary as a string "30000" while stored is 30000
+    expect(
+      diffSalaryFields({ baseSalary: 30000 }, { baseSalary: "30000" }),
+    ).toEqual([]);
+  });
 });
 
 describe("buildPoolSharesByGroup", () => {

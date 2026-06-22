@@ -73,7 +73,10 @@ export async function appendPayrollChangeLog(
   const docRef = doc(ref, yearMonth);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(docRef);
-    const prev = (snap.exists() ? snap.data().changeLog : null) ?? [];
+    // doc ถูกลบไป (race: ยกเลิกยืนยันยอด) → no-op · ไม่สร้าง doc ที่ขาด confirm
+    // fields (confirmedAt/lockAtMs) ขึ้นมาใหม่
+    if (!snap.exists()) return;
+    const prev = snap.data().changeLog ?? [];
     const next = [...prev, entry].slice(-CHANGE_LOG_CAP);
     tx.set(docRef, { changeLog: next, updatedAt: Date.now() }, { merge: true });
   });

@@ -347,13 +347,16 @@ export function diffSalaryFields(before: any, fields: any): string[] {
     if (!(key in fields)) continue;
     const oldV = b[key];
     const newV = fields[key];
-    if (oldV === newV) continue;
     if (key === "roleId") {
+      if ((oldV ?? null) === (newV ?? null)) continue;
       out.push(`${label}: ${oldV ?? "-"} → ${newV ?? "-"}`);
     } else {
-      out.push(
-        `${label} ${formatThaiNumber(Number(oldV) || 0)} → ${formatThaiNumber(Number(newV) || 0)}`,
-      );
+      // coerce ตัวเลขก่อนเทียบ — form อาจส่ง rate เป็น string ("30000") ขณะที่
+      // ของเดิมเป็น number 30000 → กัน changeLog หลอก "30,000 → 30,000"
+      const o = Number(oldV) || 0;
+      const n = Number(newV) || 0;
+      if (o === n) continue;
+      out.push(`${label} ${formatThaiNumber(o)} → ${formatThaiNumber(n)}`);
     }
   }
   for (const [key, label] of Object.entries(SALARY_MAP_LABELS)) {

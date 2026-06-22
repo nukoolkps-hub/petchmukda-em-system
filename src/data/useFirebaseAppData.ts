@@ -458,9 +458,10 @@ export default function useFirebaseAppData({
         [yearMonth]: dataOverride,
       },
     };
-    const monthApprovedAdvances = advResult.data.filter(
-      (a) => a.month === yearMonth && a.status === "approved",
-    );
+    // approved advances อ่าน on-demand — admin subscription (advResult) เป็น
+    // pending-only จึงหัก advance ไม่ได้ถ้าใช้มัน (ทำให้ net/ยอดสูงเกินจริง)
+    const monthApprovedAdvances =
+      await advancesAPI.getApprovedAdvancesByMonth(yearMonth);
     // คำนวณยอดทั้งเดือนใหม่ (ทุกคน) ด้วย shared helper — ได้ rows + total + sig
     // ชุดเดียวกับที่ PayrollSummaryPanel จะเห็นหลัง subscription อัปเดต
     const summary = computeMonthSummary({
@@ -475,23 +476,29 @@ export default function useFirebaseAppData({
       poolAdjustment: poolAdjResult.data?.[yearMonth] || null,
       storeCalendar: storeCalendarResult.data,
     });
-    // 1) settle เฉพาะแถวของคนที่แก้ (คนอื่นเรทไม่เปลี่ยน → net เท่าเดิม)
+    // 1) settle เฉพาะแถวของคนที่แก้ (คนอื่นเรทไม่เปลี่ยน → net เท่าเดิม) ·
+    // ห่อ try/catch แยก — ถ้า ledger write fail ต้องไม่บล็อกการ sync ยอดทางการ
+    // (ข้อ 2) ไม่งั้นแบนเนอร์ค้าง + ยอดทางการผิดถาวรตอนเดือนล็อก
     const row = summary.rows.find((r) => r.employee.id === employeeId);
     if (row?.salaryCalculation) {
-      await settleEmployeeMonth(row, yearMonth, loansResult.data, {
-        // denorm net ด้วย low-level write (re-stamp ทำไปแล้วก่อนเรียก resettle)
-        saveNetDenorm: (id, ym, net, clearDeficit) =>
-          salariesAPI.updateSalary(
-            id,
-            ym,
-            clearDeficit
-              ? { netSalary: net, deficitClearedAt: null }
-              : { netSalary: net },
-          ),
-        syncAutoCarry: (args) => syncAutoCarryAdvance(args),
-        recordLoanRepayment: (loanId, ym, amount) =>
-          employeeLoansAPI.recordLoanRepaymentTx(loanId, ym, amount),
-      });
+      try {
+        await settleEmployeeMonth(row, yearMonth, loansResult.data, {
+          // denorm net ด้วย low-level write (re-stamp ทำไปแล้วก่อนเรียก resettle)
+          saveNetDenorm: (id, ym, net, clearDeficit) =>
+            salariesAPI.updateSalary(
+              id,
+              ym,
+              clearDeficit
+                ? { netSalary: net, deficitClearedAt: null }
+                : { netSalary: net },
+            ),
+          syncAutoCarry: (args) => syncAutoCarryAdvance(args),
+          recordLoanRepayment: (loanId, ym, amount) =>
+            employeeLoansAPI.recordLoanRepaymentTx(loanId, ym, amount),
+        });
+      } catch (err) {
+        console.error("[resettleAndSyncMonth] settle employee failed:", err);
+      }
     }
     // 2) auto-sync "ยอดทางการ" ของเดือนนี้ให้ตรงยอดสด → แบนเนอร์ drift ไม่เด้ง +
     //    ยอดทางการไม่ค้างผิดตอนเดือนล็อก · setPayrollConfirm preserve
@@ -563,11 +570,16 @@ export default function useFirebaseAppData({
       );
       return;
     }
-    const existing = advResult.data.find(
-      (a) =>
-        a.employeeId === args.employeeId &&
-        a.autoCarryFromMonth === args.sourceMonth,
+    // หา auto-carry เดิมด้วย targeted query (on-demand) — auto-carry เป็น
+    // status="approved" จึงไม่อยู่ใน admin pending subscription (advResult) ·
+    // เคยใช้ advResult.find → หาไม่เจอ → สร้างซ้ำ/ลบไม่ได้ (bug). cleanup
+    // duplicate ที่อาจค้างจากของเดิมด้วย (เก็บตัวแรก ลบที่เหลือ)
+    const existingList = await advancesAPI.getAutoCarryAdvances(
+      args.employeeId,
+      args.sourceMonth,
     );
+    const existing = existingList[0] as any;
+    const duplicates = existingList.slice(1) as any[];
     if (args.deficitAmount > 0) {
       if (existing) {
         // update amount ถ้าเปลี่ยน (admin re-confirm หลังแก้ salary fields)
@@ -587,9 +599,15 @@ export default function useFirebaseAppData({
           autoCarryFromMonth: args.sourceMonth,
         });
       }
-    } else if (existing) {
-      // net กลับมาเป็นบวก → ลบ auto-carry ที่สร้างไว้ก่อนหน้า
-      await advancesAPI.deleteAdvance(existing.id);
+      // ลบ auto-carry ซ้ำที่อาจค้างไว้
+      await Promise.allSettled(
+        duplicates.map((d) => advancesAPI.deleteAdvance(d.id)),
+      );
+    } else if (existingList.length > 0) {
+      // net กลับมาเป็นบวก → ลบ auto-carry ทุกตัวที่สร้างไว้ก่อนหน้า
+      await Promise.allSettled(
+        existingList.map((d) => advancesAPI.deleteAdvance(d.id)),
+      );
     }
   }
 
