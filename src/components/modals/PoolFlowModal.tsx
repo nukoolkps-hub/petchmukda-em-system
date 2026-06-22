@@ -408,7 +408,7 @@ function PoolItemFlow({
               {m.leaveDays > 2 && (
                 <span className="text-red font-semibold">
                   {" "}
-                  (หัก {m.leaveDays - 2})
+                  (หักกองกลาง {m.leaveDays - 2})
                 </span>
               )}
             </div>
@@ -420,6 +420,10 @@ function PoolItemFlow({
             )}
           </div>
         ))}
+      </div>
+      <div className="text-[10px] text-txt-soft mt-1.5 leading-snug">
+        * วันลาตรงนี้ <b>นับรวมวันอาทิตย์</b> (ใช้คำนวณหักกองกลาง) — ต่างจากเลข "โควต้า"
+        ในหน้ายื่นลาที่นับเฉพาะวันธรรมดา · 2 วันแรกฟรี ไม่หัก
       </div>
 
       <Arrow />
@@ -506,9 +510,7 @@ function PoolItemFlow({
 }
 
 /* ─── bits ──────────────────────────────────────────────────────── */
-function exclusionLabel(
-  ex: string | string[] | null | undefined,
-): string {
+function exclusionLabel(ex: string | string[] | null | undefined): string {
   if (!ex) return "";
   if (ex === "all" || ex === "both") return "ปิดทั้งหมด";
   // legacy sell/buy + new per-item array → generic "ปิดบางรายการ" (รายชื่อ
