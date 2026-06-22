@@ -7,6 +7,8 @@
 |---|---|
 | [`reference/business-rules.md`](reference/business-rules.md) | จะแก้สูตรเงินเดือน / กองกลาง / วันลา / โบนัส / **เงินกู้ผ่อนคืน** / **หักกองกลาง** / **กฎปิดรอบ 7 วัน** / **auto re-settle เดือน grace** |
 | [`reference/testing.md`](reference/testing.md) | จะแก้ logic ใน `src/utils/` — กลยุทธ์เทสต์, invariants (เงินไม่เพี้ยน), idempotency ของ grace re-settle |
+| [`reference/troubleshooting.md`](reference/troubleshooting.md) | เจออาการผิดปกติ (กองกลางเพี้ยน, ยอดเปลี่ยน, ราคาทองไม่มา, deploy fail) — runbook วิธีแก้ |
+| [`reference/glossary.md`](reference/glossary.md) | ไม่แน่ใจคำไทย (UI) ตรงกับ identifier ไหนใน code |
 | [`reference/firebase-collections.md`](reference/firebase-collections.md) | จะแตะ Firestore schema, security rules, subscription scope |
 | [`reference/line-integration.md`](reference/line-integration.md) | จะแก้ LINE Bot webhook, command, หรือ auth flow |
 | [`reference/ui-components.md`](reference/ui-components.md) | จะหา component, shared layout, หรือ modal pattern |
