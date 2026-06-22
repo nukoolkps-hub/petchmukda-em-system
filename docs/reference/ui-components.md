@@ -41,12 +41,13 @@ Layout
     ├── HomeTab
     │   ├── PositionRateCard (เงินเดือนพื้นฐาน + อัตราค่าคอม · LIVE badge)
     │   ├── DutyTodayCard (หน้าที่วันนี้)
-    │   ├── LeaveTypeCard (quota display)
+    │   ├── Quota card (โควต้า weekday · countWeekdayLeaves)
+    │   ├── Leave type mini stats (chip "ลากิจ/ลาป่วย เดือนนี้" — นับ "วัน" ที่ร้านเปิด แยกตามประเภท · ตัดวันร้านปิด · ไม่เกี่ยวกับเงิน)
     │   └── TeamCalendar (monthly view — ใบลาทุกคน)
     ├── RequestTab
     │   ├── Leave type selection
     │   ├── CalendarPicker (start/end)
-    │   └── Leave history (เลื่อนรายเดือน ‹/› · default เดือนปัจจุบัน)
+    │   └── Leave history (เลื่อนรายเดือน ‹/› · default เดือนปัจจุบัน · badge "อาทิตย์ ×1.5" บนใบลาที่คร่อมอาทิตย์เปิด)
     ├── SalaryView
     │   ├── MonthChevronNav (เลื่อน ‹/› + แตะ label เปิด picker เลือกเดือน/ปี)
     │   ├── Earnings breakdown
