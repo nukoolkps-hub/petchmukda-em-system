@@ -325,7 +325,6 @@ function PoolItemFlow({
   nameOf: Record<string, any>;
 }) {
   const sample = shares[groupEmployeeIds[0]];
-  const itemShare = sample.itemShares?.[itemId];
   const totalPool = sample.totalItemPool?.[itemId] ?? 0;
   const grossPool = sample.grossItemPool?.[itemId] ?? totalPool;
   const excludedTotal = Math.max(0, grossPool - totalPool);
@@ -361,7 +360,6 @@ function PoolItemFlow({
         sharePercent: itemShareForEmp?.finalSharePercent ?? 0,
         allocated: itemShareForEmp?.allocatedPieces ?? 0,
         excluded,
-        exclusion: s.poolExclusion,
       };
     })
     .sort((a, b) => b.pieces - a.pieces);
@@ -393,10 +391,10 @@ function PoolItemFlow({
             }`}
           >
             <div className="text-xs font-bold text-txt truncate">{m.name}</div>
-            {m.exclusion && (
+            {m.excluded && (
               <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-red bg-red-lt rounded px-1 py-0.5 mt-0.5">
                 <IconBan size={9} strokeWidth={2.6} />
-                {exclusionLabel(m.exclusion)}
+                ถูกปิดรายการนี้
               </span>
             )}
             <div className="text-base font-extrabold text-maroon leading-tight">
@@ -510,14 +508,6 @@ function PoolItemFlow({
 }
 
 /* ─── bits ──────────────────────────────────────────────────────── */
-function exclusionLabel(ex: string | string[] | null | undefined): string {
-  if (!ex) return "";
-  if (ex === "all" || ex === "both") return "ปิดทั้งหมด";
-  // legacy sell/buy + new per-item array → generic "ปิดบางรายการ" (รายชื่อ
-  // item เฉพาะอยู่ในหน้า admin · ที่นี่ summary พอ)
-  return "ปิดบางรายการ";
-}
-
 function StepLabel({ n, text }: { n: number; text: string }) {
   return (
     <div className="flex items-center gap-2 mb-2 mt-0.5">
