@@ -92,6 +92,35 @@ export async function getAllAdvances() {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+/* ─── Get approved advances for a payroll month (one-time) ──────
+   ใช้ใน data layer (auto-settle เดือน grace) ที่ admin subscription เป็น
+   pending-only — จึงต้องอ่าน approved แบบ on-demand เพื่อหักเบิกให้ถูก       */
+export async function getApprovedAdvancesByMonth(yearMonth) {
+  const snap = await getDocs(
+    query(
+      ref,
+      where("status", "==", "approved"),
+      where("month", "==", yearMonth),
+    ),
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/* ─── Get auto-carry advance(s) ของพนักงาน 1 คนที่ยกมาจากเดือน X (one-time) ─
+   auto-carry เป็น status="approved" จึงไม่อยู่ใน admin pending subscription ·
+   ใช้หา doc เดิมเพื่อ update/delete แทนการ find จาก state (กันสร้างซ้ำ)        */
+export async function getAutoCarryAdvances(employeeId, autoCarryFromMonth) {
+  const snap = await getDocs(
+    query(
+      ref,
+      where("employeeId", "==", employeeId),
+      where("autoCarryFromMonth", "==", autoCarryFromMonth),
+      where("status", "==", "approved"),
+    ),
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 /* ─── Submit new advance request ───────────────────────────── */
 export async function submitAdvance(request) {
   const docRef = await addDoc(ref, {

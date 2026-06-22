@@ -306,10 +306,23 @@ export interface GoldPrice {
   lastFetchErrorAt: number; // ms epoch (0 = ไม่มี)
 }
 
+export interface PayrollChangeLogEntry {
+  at: string; // ISO timestamp ของการแก้หลังยืนยัน
+  employeeName: string;
+  changes: string[]; // รายการที่แก้ (human-readable) เช่น "ค่าคอมขายทั่วไป 40 → 50"
+  totalBefore: number;
+  totalAfter: number;
+}
+
 export interface PayrollConfirmEntry {
   confirmedAt: string;
   totalAmount: number;
   employeeCount: number;
+  firstConfirmedAt?: string;
+  lockAtMs?: number;
+  breakdownSig?: string;
+  // ประวัติการแก้ไขหลังยืนยันยอด (auto-settle เดือน grace) — โชว์ในปุ่มประวัติ
+  changeLog?: PayrollChangeLogEntry[];
 }
 
 export type PayrollConfirms = Record<string, PayrollConfirmEntry>;

@@ -8,6 +8,7 @@ import {
   Copy as IconCopy,
   CreditCard as IconCreditCard,
   Diamond as IconDiamond,
+  History as IconHistory,
   Lock as IconLock,
   RefreshCw as IconRefresh,
   Search as IconSearch,
@@ -20,6 +21,7 @@ import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
 import {
   buildPoolSharesByGroup,
+  computeBreakdownSig,
   computeEmployeeMonthRow,
   settleEmployeeMonth,
 } from "../../utils/payrollCompute";
@@ -55,6 +57,8 @@ export default function PayrollSummaryPanel({
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // เปิด modal ประวัติการแก้ไขหลังยืนยัน (auto-settle เดือน grace)
+  const [showHistory, setShowHistory] = useState(false);
   // กล่องยืนยันในแอป (แทน native confirm ที่เพี้ยน/ถูกบล็อกใน mobile webview)
   const [pendingConfirm, setPendingConfirm] = useState<{
     total: number;
@@ -244,11 +248,9 @@ export default function PayrollSummaryPanel({
   }
 
   // ลายเซ็นยอดต่อคน — ใช้เทียบว่า "ข้อมูลเปลี่ยนหลังยืนยัน" แม้ยอดรวม/จำนวนคน
-  // เท่าเดิมแต่มีการเกลี่ย pool ระหว่างคน (sort by id กันลำดับสลับ)
-  const breakdownSig = rows
-    .map((r) => `${r.employee.id}:${Math.round(r.salaryCalculation.netSalary)}`)
-    .sort()
-    .join("|");
+  // เท่าเดิมแต่มีการเกลี่ย pool ระหว่างคน · shared helper (single source กับ
+  // auto-sync ใน useFirebaseAppData → sig ต้องตรงกันเป๊ะ)
+  const breakdownSig = computeBreakdownSig(rows);
 
   // figure ล่าสุด (สด) ของเดือนนี้ — เก็บใน ref เพื่อให้ background job ของ
   // confirmPayroll re-stamp ยอดยืนยันให้ตรงกับข้อมูลที่ "นิ่งแล้ว" หลัง
@@ -507,6 +509,20 @@ export default function PayrollSummaryPanel({
             minute: "2-digit",
           });
           const lock = getPayrollLock(confirmed);
+          // ประวัติการแก้ไขหลังยืนยัน (auto-settle เดือน grace) — ปุ่มมุมขวาการ์ด
+          const changeLog = confirmed.changeLog ?? [];
+          const historyBtn =
+            changeLog.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setShowHistory(true)}
+                title="ประวัติการแก้ไขหลังยืนยัน"
+                className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-bdr bg-white text-xs font-bold text-txt-mid font-[inherit] cursor-pointer"
+              >
+                <IconHistory size={13} strokeWidth={2.4} />
+                ประวัติ ({changeLog.length})
+              </button>
+            ) : null;
 
           // ปิดรอบถาวรแล้ว (พ้น 7 วันหลังยืนยันครั้งแรก) — แก้ไขไม่ได้
           if (lock.locked) {
@@ -527,6 +543,7 @@ export default function PayrollSummaryPanel({
                       {confirmed.employeeCount} คน · แก้ไขไม่ได้แล้ว
                     </div>
                   </div>
+                  {historyBtn}
                 </div>
               </div>
             );
@@ -576,6 +593,7 @@ export default function PayrollSummaryPanel({
                     {dateText}
                   </div>
                 </div>
+                {historyBtn}
               </div>
               {isStale ? (
                 <>
@@ -891,6 +909,71 @@ export default function PayrollSummaryPanel({
               ยืนยัน
             </button>
           </div>
+        </BaseModal>
+      )}
+
+      {/* ประวัติการแก้ไขหลังยืนยัน (auto-settle เดือน grace) */}
+      {showHistory && (
+        <BaseModal
+          onClose={() => setShowHistory(false)}
+          zIndexClass="z-1000"
+          maxWidthClass="max-w-[400px]"
+          overlayClassName="px-6 bg-[rgba(45,26,14,0.55)] backdrop-blur-xs"
+          contentClassName="rounded-[20px] px-5 py-6"
+        >
+          <div className="font-bold text-base text-maroon mb-1 flex items-center gap-1.5">
+            <IconHistory size={18} strokeWidth={2.4} />
+            ประวัติการแก้ไขหลังยืนยัน
+          </div>
+          <div className="text-xs text-txt-soft mb-3">
+            รายการที่แก้หลังกดยืนยันยอด (ยอดอัปเดตอัตโนมัติแล้ว)
+          </div>
+          <div className="flex flex-col gap-2.5 max-h-[60vh] overflow-y-auto">
+            {[...(payrollConfirms?.[selectedMonth]?.changeLog ?? [])]
+              .reverse()
+              .map((entry, i) => {
+                const t = new Date(entry.at).toLocaleString("th-TH", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                return (
+                  <div
+                    key={`${entry.at}-${i}`}
+                    className="rounded-[10px] border border-bdr bg-cream px-3 py-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-bold text-sm text-txt">
+                        {entry.employeeName}
+                      </span>
+                      <span className="text-[11px] text-txt-soft">{t}</span>
+                    </div>
+                    {entry.changes.length > 0 && (
+                      <ul className="text-xs text-txt-mid list-disc pl-4 mb-1.5 space-y-0.5">
+                        {entry.changes.map((c, j) => (
+                          <li key={j}>{c}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className="text-xs text-txt-soft">
+                      ยอดรวม {formatThaiNumber(entry.totalBefore)} →{" "}
+                      <b className="text-maroon">
+                        {formatThaiNumber(entry.totalAfter)} ฿
+                      </b>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowHistory(false)}
+            className="mt-4 w-full p-3 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit]"
+          >
+            ปิด
+          </button>
         </BaseModal>
       )}
     </div>
