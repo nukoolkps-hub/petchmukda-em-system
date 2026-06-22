@@ -2,11 +2,9 @@ import {
   ArrowDown as IconArrowDown,
   Ban as IconBan,
   ChevronDown as IconChevronDown,
-  Diamond as IconDiamond,
   Layers as IconLayers,
   Lock as IconLock,
   Network as IconNetwork,
-  ShoppingBag as IconShoppingBag,
   TrendingDown as IconTrendingDown,
   Users as IconUsers,
 } from "lucide-react";
@@ -14,6 +12,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import type { Employee, Role } from "../../types";
 import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
+import { getPoolItemIcon } from "../../utils/poolItemIcon";
 import {
   computePoolSharesForGroup,
   LEGACY_POOL_BUY_ID,
@@ -279,13 +278,10 @@ export default function PoolFlowModal({
               key={it.id}
               itemId={it.id}
               title={it.label}
-              titleIcon={
-                it.id === LEGACY_POOL_BUY_ID ? (
-                  <IconShoppingBag size={15} strokeWidth={2.4} />
-                ) : (
-                  <IconDiamond size={15} strokeWidth={2.4} />
-                )
-              }
+              titleIcon={(() => {
+                const ItemIcon = getPoolItemIcon(it.id);
+                return <ItemIcon size={15} strokeWidth={2.4} />;
+              })()}
               groupEmployeeIds={groupEmployeeIds}
               shares={shares}
               nameOf={nameOf}

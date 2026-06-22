@@ -16,7 +16,6 @@ import {
   Network as IconNetwork,
   Package as IconPackage,
   Plus as IconPlus,
-  ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
   Star as IconStar,
   Ticket as IconTicket,
@@ -32,6 +31,7 @@ import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
 import { getPayrollLock } from "../../utils/payrollLock";
+import { getPoolItemIcon } from "../../utils/poolItemIcon";
 import {
   calculateSalary,
   computeExtraOpenSaturdayWorkedDates,
@@ -1119,14 +1119,7 @@ export default function SalaryAdminEdit({
                 // (กัน past month ที่ rate ตอนนั้นกับตอนนี้ต่างกัน · admin/
                 // employee จะเห็น rate ของเดือนนั้นๆ ตรงกับ commission calc)
                 const rate = resolvePoolItemRate(it.id, data, employeeInfo);
-                const Icon =
-                  it.id === "normal"
-                    ? IconDiamond
-                    : it.id === "special"
-                      ? IconSparkles
-                      : it.id === "buy"
-                        ? IconShoppingBag
-                        : IconDiamond;
+                const Icon = getPoolItemIcon(it.id);
                 return (
                   <div
                     key={it.id}

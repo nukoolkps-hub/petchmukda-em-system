@@ -7,7 +7,6 @@ import {
   CirclePlus as IconCirclePlus,
   ClipboardList as IconClipboardList,
   Clock as IconClock,
-  Diamond as IconDiamond,
   FileText as IconFileText,
   HandCoins as IconHandCoins,
   Handshake as IconHandshake,
@@ -21,7 +20,6 @@ import {
   Printer as IconPrinter,
   Receipt as IconReceipt,
   RefreshCw as IconRefresh,
-  ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
   Star as IconStar,
   Ticket as IconTicket,
@@ -41,6 +39,7 @@ import {
 import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
+import { getPoolItemIcon } from "../../utils/poolItemIcon";
 import {
   calculateSalary,
   computeExtraOpenSaturdayWorkedDates,
@@ -1587,12 +1586,7 @@ export default function SalaryView({
                   } else {
                     sub = `${it.pieces} ชิ้น × ${formatThaiNumber(it.rate)} ฿`;
                   }
-                  const Icon =
-                    it.id === "buy"
-                      ? IconShoppingBag
-                      : it.id === "special"
-                        ? IconSparkles
-                        : IconDiamond;
+                  const Icon = getPoolItemIcon(it.id);
                   return {
                     icon: (
                       <Icon size={16} strokeWidth={2.2} color={COLORS.green} />
