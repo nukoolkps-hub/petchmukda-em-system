@@ -374,6 +374,35 @@ describe("diffSalaryFields", () => {
       diffSalaryFields({ salaryDisabled: true }, { salaryDisabled: true }),
     ).toEqual([]);
   });
+  it("describes recurringItems add/remove/change", () => {
+    const before = {
+      recurringItems: [
+        { id: "a", type: "income", label: "ค่าเดินทาง", amount: 500 },
+        { id: "b", type: "deduction", label: "ค่าชุด", amount: 200 },
+      ],
+    };
+    const after = {
+      recurringItems: [
+        // a: amount changed
+        { id: "a", type: "income", label: "ค่าเดินทาง", amount: 800 },
+        // b removed
+        // c added
+        { id: "c", type: "deduction", label: "ค่าอาหาร", amount: 300 },
+      ],
+    };
+    const out = diffSalaryFields(before, after);
+    expect(out).toContain('รายรับประจำ "ค่าเดินทาง" 500 → 800 ฿');
+    expect(out).toContain('ลบรายการหักประจำ "ค่าชุด"');
+    expect(out).toContain('เพิ่มรายการหักประจำ "ค่าอาหาร" 300 ฿');
+    expect(out).toHaveLength(3);
+  });
+  it("describes annualRaises per-year changes", () => {
+    const out = diffSalaryFields(
+      { annualRaises: { "2025": 1000 } },
+      { annualRaises: { "2025": 1000, "2026": 1500 } },
+    );
+    expect(out).toEqual(["ปรับขึ้นเงินเดือนปี 2026: 0 → 1,500"]);
+  });
   it("describes poolExclusion changes", () => {
     const out = diffSalaryFields(
       { poolExclusion: null },
