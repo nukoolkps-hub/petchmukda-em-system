@@ -155,8 +155,8 @@ export default function useFirebaseAppData({
     await employeesAPI.updateEmployee(id, fields);
     triggerRecomputeDutyAssignments();
     // ถ้าแก้ field ที่กระทบเงินเดือนพื้นฐาน/เรทค่าคอม/ตำแหน่ง → re-stamp snapshot
-    // ของเดือนปัจจุบันที่ยังไม่ปิดรอบถาวร · ให้ admin เห็นเลขใหม่ทันทีใน
-    // SalaryAdminEdit / หน้าเงินเดือน · ไม่ต้องไปกด save salary เอง
+    // ของทุกเดือนที่ยังอยู่ในหน้าต่างแก้ไข (ดู targets ด้านล่าง) · ให้ admin เห็น
+    // เลขใหม่ทันทีใน SalaryAdminEdit / หน้าเงินเดือน · ไม่ต้องไปกด save salary เอง
     // - scalar: trigger เฉพาะเมื่อค่าจริงเปลี่ยน (กัน write ซ้ำโดยไม่จำเป็น)
     // - object/array (map เรท, annualRaises, poolExclusion): trigger เมื่อมี key
     //   ส่งมา (เทียบ deep ยาก · re-stamp ซ้ำเป็น idempotent ไม่เสียหาย)
@@ -184,23 +184,32 @@ export default function useFirebaseAppData({
         (k) => k in fields && (fields as any)[k] !== (before as any)?.[k],
       ) || objectRateFields.some((k) => k in fields);
     if (salaryAffectingChanged) {
-      const ym = (() => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      })();
-      const existing = salResult.data?.[id]?.[ym];
-      // เดือนปัจจุบันยังไม่ปิดรอบถาวร (พ้น 7 วันหลังยืนยัน) → re-stamp ได้
-      // (รวม grace period: ยืนยันแล้วแต่ยังไม่ครบ 7 วัน · กฎ "ยังแก้ได้")
-      if (existing && !monthLocked(ym)) {
-        try {
-          await updateSalary(id, ym, {});
-        } catch (err) {
-          console.warn(
-            `[updateEmployee] auto-refresh ${id}/${ym} salary snapshot failed:`,
-            err,
-          );
-        }
-      }
+      const now = new Date();
+      const currentYm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const empSalaries = salResult.data?.[id] || {};
+      // re-stamp ทุกเดือนที่ "ยังอยู่ในหน้าต่างแก้ไข" = เดือนปัจจุบัน + เดือนที่
+      // ยืนยันยอดแล้วแต่ยังไม่ปิดรอบถาวร (grace period 7 วัน) · ครอบเคสจริง
+      // "ยืนยันเดือนก่อนตอนต้นเดือนถัดไป" โดยไม่ต้องไปกดบันทึกเดือนนั้นเอง
+      // ข้าม:
+      //  - เดือนที่ปิดรอบถาวร (locked) → ห้ามแตะ (updateSalary throw อยู่แล้ว)
+      //  - เดือนเปิดเก่าที่ "ไม่เคยยืนยัน" + ไม่ใช่เดือนปัจจุบัน → กันแก้ประวัติ
+      //    ย้อนหลังโดยไม่ตั้งใจ (เดือนนั้นควรคงrate ของยุคนั้น · admin จะ
+      //    re-stamp เองตอนเปิดเดือนนั้น save/ยืนยัน)
+      const targets = Object.keys(empSalaries).filter((ym) => {
+        if (monthLocked(ym)) return false;
+        const confirmed = !!pcResult.data?.[ym]?.confirmedAt;
+        return ym === currentYm || confirmed;
+      });
+      await Promise.allSettled(
+        targets.map((ym) =>
+          updateSalary(id, ym, {}).catch((err) => {
+            console.warn(
+              `[updateEmployee] auto-refresh ${id}/${ym} salary snapshot failed:`,
+              err,
+            );
+          }),
+        ),
+      );
     }
   }
   async function upsertEmployee(employee) {
