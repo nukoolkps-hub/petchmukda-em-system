@@ -363,6 +363,17 @@ describe("diffSalaryFields", () => {
     );
     expect(out).toEqual(["ค่าคอมขายเพชร 12 → 15"]);
   });
+  it("describes salaryDisabled toggle", () => {
+    expect(diffSalaryFields({}, { salaryDisabled: true })).toEqual([
+      "ปิดสิทธิ์เงินเดือน",
+    ]);
+    expect(
+      diffSalaryFields({ salaryDisabled: true }, { salaryDisabled: false }),
+    ).toEqual(["เปิดสิทธิ์เงินเดือน"]);
+    expect(
+      diffSalaryFields({ salaryDisabled: true }, { salaryDisabled: true }),
+    ).toEqual([]);
+  });
   it("describes poolExclusion changes", () => {
     const out = diffSalaryFields(
       { poolExclusion: null },
