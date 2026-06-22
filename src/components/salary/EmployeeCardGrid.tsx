@@ -90,16 +90,18 @@ export default function EmployeeCardGrid({
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 mb-3.5">
           {orderedEmployees.map((employee) => {
             const monthData = salaryData[employee.id]?.[selectedMonth];
-            // มีจำนวนชิ้น multi-item (piecePieces) ไหม
-            const hasPieceData =
-              monthData?.piecePieces &&
-              Object.values(monthData.piecePieces).some(
-                (v) => (Number(v) || 0) > 0,
-              );
+            // มีจำนวนชิ้น multi-item ไหม — เช็คทั้ง piecePieces (non-pool),
+            // poolItemPieces (pool · รวม custom item) และ bonusCounts (custom
+            // bonus) · เดิมเช็คแค่ legacy normal/special/buy → พนักงานที่มีแต่
+            // custom pool/bonus item จะถูกมองว่า "ไม่มีข้อมูล" (badge ผิด)
+            const someValPositive = (m?: Record<string, unknown> | null) =>
+              !!m && Object.values(m).some((v) => (Number(v) || 0) > 0);
             const hasData = !!(
               monthData &&
               ((monthData.singleRatePieces || 0) > 0 ||
-                hasPieceData ||
+                someValPositive(monthData.piecePieces) ||
+                someValPositive(monthData.poolItemPieces) ||
+                someValPositive(monthData.bonusCounts) ||
                 (monthData.normalSalePieces || 0) > 0 ||
                 (monthData.specialSalePieces || 0) > 0 ||
                 (monthData.buyPieces || 0) > 0 ||
