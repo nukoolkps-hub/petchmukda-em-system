@@ -393,14 +393,17 @@ export function diffSalaryFields(
     out.push(fields.salaryDisabled ? "ปิดสิทธิ์เงินเดือน" : "เปิดสิทธิ์เงินเดือน");
   }
   if ("poolExclusion" in fields) {
-    const fmt = (v: any) =>
-      v == null
-        ? "ปกติ"
-        : Array.isArray(v)
-          ? v.length
-            ? v.join(", ")
-            : "ปกติ"
-          : String(v);
+    // แปลง id รายการ → ชื่อไทย ("normal" → "ขายทั่วไป") · legacy sell/buy รองรับ
+    const labelMap = itemLabels?.poolItemRates || {};
+    const idLabel = (id: string) =>
+      labelMap[id] || (id === "sell" ? "ขายทั่วไป" : id === "buy" ? "รับซื้อ" : id);
+    const fmt = (v: any): string => {
+      if (v == null) return "ไม่ปิด";
+      if (v === "all" || v === "both") return "ปิดทั้งหมด";
+      if (Array.isArray(v))
+        return v.length ? `ปิด: ${v.map(idLabel).join(", ")}` : "ไม่ปิด";
+      return `ปิด: ${idLabel(String(v))}`;
+    };
     const o = fmt(b.poolExclusion);
     const n = fmt(fields.poolExclusion);
     if (o !== n) out.push(`การปิดสิทธิ์กองกลาง: ${o} → ${n}`);

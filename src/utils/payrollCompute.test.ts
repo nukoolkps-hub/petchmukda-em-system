@@ -403,14 +403,32 @@ describe("diffSalaryFields", () => {
     );
     expect(out).toEqual(["ปรับขึ้นเงินเดือนปี 2026: 0 → 1,500"]);
   });
-  it("describes poolExclusion changes", () => {
+  it("describes poolExclusion changes (legacy buy → ชื่อไทย)", () => {
     const out = diffSalaryFields(
       { poolExclusion: null },
-      {
-        poolExclusion: ["buy"],
-      },
+      { poolExclusion: ["buy"] },
     );
-    expect(out).toEqual(["การปิดสิทธิ์กองกลาง: ปกติ → buy"]);
+    expect(out).toEqual(["การปิดสิทธิ์กองกลาง: ไม่ปิด → ปิด: รับซื้อ"]);
+  });
+  it("แปลง id รายการ → ชื่อไทยจาก itemLabels", () => {
+    const out = diffSalaryFields(
+      { poolExclusion: null },
+      { poolExclusion: ["normal"] },
+      { poolItemRates: { normal: "ขายทั่วไป" } },
+    );
+    expect(out).toEqual(["การปิดสิทธิ์กองกลาง: ไม่ปิด → ปิด: ขายทั่วไป"]);
+  });
+  it('poolExclusion "all" → ปิดทั้งหมด · ล้างกลับ → ไม่ปิด', () => {
+    expect(
+      diffSalaryFields({ poolExclusion: null }, { poolExclusion: "all" }),
+    ).toEqual(["การปิดสิทธิ์กองกลาง: ไม่ปิด → ปิดทั้งหมด"]);
+    expect(
+      diffSalaryFields(
+        { poolExclusion: ["normal"] },
+        { poolExclusion: [] },
+        { poolItemRates: { normal: "ขายทั่วไป" } },
+      ),
+    ).toEqual(["การปิดสิทธิ์กองกลาง: ปิด: ขายทั่วไป → ไม่ปิด"]);
   });
   it("returns empty when nothing relevant changed", () => {
     expect(diffSalaryFields({ baseSalary: 30000 }, { nickname: "x" })).toEqual(
