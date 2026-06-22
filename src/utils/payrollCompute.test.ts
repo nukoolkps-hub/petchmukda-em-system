@@ -140,6 +140,46 @@ describe("computeEmployeeMonthRow", () => {
     expect(row?.salaryCalculation.netSalary).toBe(27000);
   });
 
+  it("derives pool exclusion from salaryData (resettle patches salaryData to control the pool result)", () => {
+    const role = {
+      id: "sales",
+      poolGroup: "p",
+      poolItems: [
+        { id: "normal", label: "ขาย", kind: "personal", threshold: 80 },
+      ],
+    };
+    const employee = {
+      id: "e1",
+      roleId: "sales",
+      baseSalary: 30000,
+      poolItemRates: { normal: 10 },
+    };
+    // snapshot excludes the 'normal' item → its commission must be 0 ·
+    // proves patching salaryData (the resettle fix) controls eligibility, not
+    // just the employee's own rate
+    const salaryData = {
+      e1: {
+        [YM]: {
+          baseSalary: 30000,
+          poolItemRates: { normal: 10 },
+          poolItemPieces: { normal: 100 },
+          poolExclusion: ["normal"],
+        },
+      },
+    };
+    const row = computeEmployeeMonthRow({
+      ...baseArgs,
+      roles: [role],
+      employee,
+      salaryData,
+      employeeDirectory: [employee],
+    });
+    const normalRow = row?.salaryCalculation.poolItemsBreakdown.find(
+      (b: any) => b.id === "normal",
+    );
+    expect(normalRow.amount).toBe(0);
+  });
+
   it("honours dataOverride (fresh rate) over the in-memory salaryData snapshot", () => {
     const role = {
       id: "sales",

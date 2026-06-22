@@ -430,8 +430,9 @@ export default function useFirebaseAppData({
     const directory = employeeResult.data.map((e) =>
       e.id === employeeId ? freshEmployee : e,
     );
-    // overlay เรทใหม่ลง salary doc (in-memory ยังเรทเก่า) — resolve*Rate อ่าน
-    // snapshot ก่อน live จึงต้องยัดเรทใหม่เข้า data
+    // overlay เรท/ตำแหน่ง/exclusion ใหม่ลง salary doc (in-memory ยังเก่า) —
+    // resolve*Rate + roleIdForMonth + computePoolSharesForGroup อ่าน snapshot
+    // ก่อน live จึงต้องยัดค่าใหม่เข้า data ของคนที่เพิ่งแก้
     const stale = salResult.data?.[employeeId]?.[yearMonth] || {};
     const dataOverride = {
       ...stale,
@@ -439,13 +440,25 @@ export default function useFirebaseAppData({
       poolExclusion: freshEmployee.poolExclusion ?? null,
       ...buildRateFieldsSnapshot(freshEmployee, yearMonth),
     };
+    // patch salaryData ของคนที่เพิ่งแก้ ด้วย dataOverride ก่อนส่งเข้า compute —
+    // ไม่งั้น pool grouping / eligibility / roleId ของเดือนนี้ ใช้ snapshot เก่า
+    // (เคส admin เปลี่ยน roleId หรือ poolExclusion ใน grace month) แล้ว net/
+    // auto-carry settle ผิด role/exclusion · คนอื่นใน group ใช้ snapshot เดิม
+    // (ไม่ได้แก้ → ถูกต้องอยู่แล้ว)
+    const patchedSalaryData = {
+      ...salResult.data,
+      [employeeId]: {
+        ...(salResult.data?.[employeeId] || {}),
+        [yearMonth]: dataOverride,
+      },
+    };
     const monthApprovedAdvances = advResult.data.filter(
       (a) => a.month === yearMonth && a.status === "approved",
     );
     const row = computeEmployeeMonthRow({
       employee: freshEmployee,
       yearMonth,
-      salaryData: salResult.data,
+      salaryData: patchedSalaryData,
       allLeaves: leavesResult.data,
       employeeDirectory: directory,
       roles: rolesResult.data,
