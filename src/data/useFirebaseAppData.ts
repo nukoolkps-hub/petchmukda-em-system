@@ -829,12 +829,14 @@ export default function useFirebaseAppData({
   /* ─── Pool Adjustments (หักจากกองกลาง ระดับเดือน) ────────── */
   async function setPoolAdjustment(yearMonth, fields) {
     if (monthLocked(yearMonth)) throw new Error(LOCK_MSG);
-    await poolAdjustmentsAPI.setPoolAdjustment(yearMonth, fields);
+    // ใช้ items ที่ sanitize แล้ว (บาง item ถูก drop/clamp) เป็น override —
+    // ไม่ใช่ raw fields ไม่งั้น net จะคิดจาก item ที่ doc ไม่ได้เก็บจริง
+    const saved = await poolAdjustmentsAPI.setPoolAdjustment(yearMonth, fields);
     // หักกองกลางในเดือนที่ยืนยันแล้ว (grace) → กระทบ pool share ทุกคนในกลุ่ม →
     // re-settle ทั้งเดือน + log (poolAdjustment override เพราะ state ยัง stale)
     if (pcResult.data?.[yearMonth]?.confirmedAt && !monthLocked(yearMonth)) {
       await syncConfirmedMonth(yearMonth, {
-        poolAdjustment: fields,
+        poolAdjustment: saved,
         employeeName: "หักกองกลาง",
         changeStrings: ["แก้รายการหักกองกลาง"],
       });
