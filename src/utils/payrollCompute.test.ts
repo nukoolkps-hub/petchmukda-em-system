@@ -6,6 +6,7 @@ import {
   computeBreakdownSig,
   computeEmployeeMonthRow,
   computeMonthSummary,
+  diffSalaryCounts,
   diffSalaryFields,
   groupEmployeesByPool,
   nextMonthOf,
@@ -375,6 +376,21 @@ describe("diffSalaryFields", () => {
     expect(diffSalaryFields({ baseSalary: 30000 }, { nickname: "x" })).toEqual(
       [],
     );
+  });
+  it("diffSalaryCounts describes piece/bonus count changes with item labels", () => {
+    const out = diffSalaryCounts(
+      { poolItemPieces: { p_1: 10 }, bonusCounts: { invite: 1 } },
+      { poolItemPieces: { p_1: 12 }, bonusCounts: { invite: 1 } },
+      { poolItemPieces: { p_1: "ขายทั่วไป" }, bonusCounts: { invite: "เชิญบัตร" } },
+    );
+    expect(out).toEqual(["ขายทั่วไป 10 → 12 ชิ้น"]);
+  });
+  it("diffSalaryCounts falls back to id + uses ครั้ง for bonus", () => {
+    const out = diffSalaryCounts(
+      { bonusCounts: { invite: 0 } },
+      { bonusCounts: { invite: 3 } },
+    );
+    expect(out).toEqual(["invite 0 → 3 ครั้ง"]);
   });
   it("coerces numeric strings so a string-vs-number no-op is not logged", () => {
     // form may submit baseSalary as a string "30000" while stored is 30000

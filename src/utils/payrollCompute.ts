@@ -402,6 +402,58 @@ export function diffSalaryFields(
   return out;
 }
 
+/** diff "จำนวนชิ้น/ครั้ง" ต่อ item (poolItemPieces/piecePieces/bonusCounts) จาก
+ *  before → after · ใช้บันทึก changeLog เมื่อ admin แก้จำนวนใน SalaryAdminEdit
+ *  itemLabels: map id→ชื่อ ต่อ field (โชว์ชื่อรายการแทน id ดิบ)                   */
+export function diffSalaryCounts(
+  before: any,
+  after: any,
+  itemLabels?: Record<string, Record<string, string>>,
+): string[] {
+  const out: string[] = [];
+  const b = before || {};
+  const a = after || {};
+  const maps: { key: string; unit: string }[] = [
+    { key: "poolItemPieces", unit: "ชิ้น" },
+    { key: "piecePieces", unit: "ชิ้น" },
+    { key: "bonusCounts", unit: "ครั้ง" },
+  ];
+  for (const { key, unit } of maps) {
+    if (!(key in a)) continue;
+    const oldMap = (b[key] as Record<string, number>) || {};
+    const newMap = (a[key] as Record<string, number>) || {};
+    const ids = new Set([...Object.keys(oldMap), ...Object.keys(newMap)]);
+    for (const id of ids) {
+      const o = Number(oldMap[id]) || 0;
+      const n = Number(newMap[id]) || 0;
+      if (o === n) continue;
+      const name = itemLabels?.[key]?.[id] ?? id;
+      out.push(
+        `${name} ${formatThaiNumber(o)} → ${formatThaiNumber(n)} ${unit}`,
+      );
+    }
+  }
+  // รายรับ/รายการหักพิเศษ (array) — diff ที่ "ยอดรวม" (ไม่มี id เสถียรต่อแถว)
+  const sums: { key: string; label: string }[] = [
+    { key: "customEarnings", label: "รายรับพิเศษ" },
+    { key: "customDeductions", label: "รายการหักพิเศษ" },
+  ];
+  for (const { key, label } of sums) {
+    if (!(key in a)) continue;
+    const sum = (arr: any) =>
+      (Array.isArray(arr) ? arr : []).reduce(
+        (s: number, it: any) => s + (Number(it?.amount) || 0),
+        0,
+      );
+    const o = sum(b[key]);
+    const n = sum(a[key]);
+    if (o !== n) {
+      out.push(`${label} ${formatThaiNumber(o)} → ${formatThaiNumber(n)} ฿`);
+    }
+  }
+  return out;
+}
+
 /** settle 1 แถว/เดือน — denorm netSalary + auto-carry + loan ledger
  *  inject writer ทั้งหมด (ไม่แตะ Firestore เอง · pure orchestration) เพื่อให้ทั้ง
  *  confirm flow และ auto-settle เดือน grace เขียนด้วย logic เดียวกัน
