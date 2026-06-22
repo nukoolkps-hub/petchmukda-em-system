@@ -8,6 +8,7 @@ import {
   ChevronRight as IconChevronRight,
   ClipboardList as IconClipboardList,
   ShieldCheck as IconShieldCheck,
+  Sun as IconSun,
   Trash2 as IconTrash,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -15,6 +16,7 @@ import { BUSINESS_RULES, COLORS, LEAVE_TYPES } from "../../constants";
 import type { LeaveEntry, StoreCalendar } from "../../types";
 import { addDaysYmd, fmtDate, isFuture, todayYmd } from "../../utils/dateUtils";
 import { countWeekdayLeaves } from "../../utils/leaveUtils";
+import { isStoreClosed, isSunday } from "../../utils/storeCalendar";
 import ConfirmModal from "../modals/ConfirmModal";
 import SubmitLeaveConfirmModal from "../modals/SubmitLeaveConfirmModal";
 import CalendarPicker from "../shared/CalendarPicker";
@@ -24,6 +26,21 @@ import LeaveTypeCard from "./LeaveTypeCard";
 
 /** ลาป่วยล่วงหน้าได้สูงสุด 2 อาทิตย์ */
 const SICK_LEAVE_MAX_AHEAD_DAYS = 14;
+
+/** ใบลานี้คร่อมวันอาทิตย์ที่ "ร้านเปิด" ไหม — อาทิตย์เปิดจะถูกหัก × 1.5
+ *  (อาทิตย์ปิดพิเศษใน extraClosedSundays ไม่นับ เพราะร้านปิด ลาไม่กระทบ) */
+function hasDeductibleSunday(
+  start: string,
+  end: string,
+  calendar?: StoreCalendar | null,
+): boolean {
+  let d = start;
+  while (d <= end) {
+    if (isSunday(d) && !isStoreClosed(d, calendar)) return true;
+    d = addDaysYmd(d, 1);
+  }
+  return false;
+}
 
 interface RequestTabProps {
   profile: any;
@@ -398,6 +415,12 @@ export default function RequestTab({
                           <span className="text-xs font-extrabold tracking-wide px-1.5 py-0.5 rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
                             <IconShieldCheck size={10} strokeWidth={2.6} />
                             ADMIN
+                          </span>
+                        )}
+                        {hasDeductibleSunday(h.start, h.end, storeCalendar) && (
+                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-0.5 rounded-[10px] bg-amber-lt text-amber border border-amber/40 inline-flex items-center gap-0.5">
+                            <IconSun size={10} strokeWidth={2.6} />
+                            อาทิตย์ ×1.5
                           </span>
                         )}
                       </div>
