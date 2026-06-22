@@ -205,30 +205,35 @@ export default function useFirebaseAppData({
       //  - เดือนเปิดเก่าที่ "ไม่เคยยืนยัน" + ไม่ใช่เดือนปัจจุบัน → กันแก้ประวัติ
       //    ย้อนหลังโดยไม่ตั้งใจ (เดือนนั้นควรคงrate ของยุคนั้น · admin จะ
       //    re-stamp เองตอนเปิดเดือนนั้น save/ยืนยัน)
-      const targets = Object.keys(empSalaries).filter((ym) => {
-        if (monthLocked(ym)) return false;
-        const confirmed = !!pcResult.data?.[ym]?.confirmedAt;
-        return ym === currentYm || confirmed;
-      });
-      await Promise.allSettled(
-        targets.map(async (ym) => {
-          try {
-            await updateSalary(id, ym, {}, freshEmployee);
-            // เดือน grace (ยืนยันแล้วยังไม่ปิดรอบ) → settle net/auto-carry/loan
-            // ledger + sync ยอดทางการ + บันทึก changeLog ให้ตรงเรทใหม่ทันที ·
-            // กัน drift ค้างถาวรตอนเดือนล็อก · เดือนปัจจุบันที่ยังไม่ยืนยันยังไม่มี
-            // denorm/ยอดทางการ ให้ settle จึงข้าม
-            if (pcResult.data?.[ym]?.confirmedAt) {
-              await resettleAndSyncMonth(id, ym, freshEmployee, changeStrings);
-            }
-          } catch (err) {
-            console.warn(
-              `[updateEmployee] auto-refresh ${id}/${ym} salary snapshot failed:`,
-              err,
-            );
+      // เรียงเก่า→ใหม่ + ทำ "ตามลำดับ" (ไม่ขนาน) — เพราะ resettle ของเดือน X
+      // สร้าง auto-carry เข้าเดือน X+1 · ถ้าทั้งสองเป็น grace แล้วรันขนานกัน
+      // เดือน X+1 อาจอ่าน approved advances ก่อน carry ของ X ถูกเขียน → ยอด
+      // X+1 ไม่นิ่ง (race). sequential → X เขียน carry เสร็จก่อน X+1 อ่าน (อ่าน
+      // จาก Firestore สด เห็น carry) → ยอดทางการ X+1 ถูกต้อง
+      const targets = Object.keys(empSalaries)
+        .filter((ym) => {
+          if (monthLocked(ym)) return false;
+          const confirmed = !!pcResult.data?.[ym]?.confirmedAt;
+          return ym === currentYm || confirmed;
+        })
+        .sort();
+      for (const ym of targets) {
+        try {
+          await updateSalary(id, ym, {}, freshEmployee);
+          // เดือน grace (ยืนยันแล้วยังไม่ปิดรอบ) → settle net/auto-carry/loan
+          // ledger + sync ยอดทางการ + บันทึก changeLog ให้ตรงเรทใหม่ทันที ·
+          // กัน drift ค้างถาวรตอนเดือนล็อก · เดือนปัจจุบันที่ยังไม่ยืนยันยังไม่มี
+          // denorm/ยอดทางการ ให้ settle จึงข้าม
+          if (pcResult.data?.[ym]?.confirmedAt) {
+            await resettleAndSyncMonth(id, ym, freshEmployee, changeStrings);
           }
-        }),
-      );
+        } catch (err) {
+          console.warn(
+            `[updateEmployee] auto-refresh ${id}/${ym} salary snapshot failed:`,
+            err,
+          );
+        }
+      }
     }
   }
   async function upsertEmployee(employee) {
@@ -580,20 +585,20 @@ export default function useFirebaseAppData({
     );
     const existing = existingList[0] as any;
     const duplicates = existingList.slice(1) as any[];
-    if (args.deficitAmount > 0) {
+    // ปัดเป็นจำนวนเต็มบาท — net เป็น float ได้ (coveragePay/recurring) · กัน
+    // updateAutoCarryAdvanceAmount เขียนซ้ำจาก rounding noise (1200 vs 1200.0001)
+    const deficit = Math.round(args.deficitAmount);
+    if (deficit > 0) {
       if (existing) {
         // update amount ถ้าเปลี่ยน (admin re-confirm หลังแก้ salary fields)
-        if (existing.amount !== args.deficitAmount) {
-          await advancesAPI.updateAutoCarryAdvanceAmount(
-            existing.id,
-            args.deficitAmount,
-          );
+        if (Math.round(existing.amount) !== deficit) {
+          await advancesAPI.updateAutoCarryAdvanceAmount(existing.id, deficit);
         }
       } else {
         await advancesAPI.createAutoCarryAdvance({
           employeeId: args.employeeId,
           employeeName: args.employeeName,
-          amount: args.deficitAmount,
+          amount: deficit,
           month: args.nextMonth,
           reason: `ยกจากเงินสุทธิติดลบเดือน ${args.sourceMonth}`,
           autoCarryFromMonth: args.sourceMonth,

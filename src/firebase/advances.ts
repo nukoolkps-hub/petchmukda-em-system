@@ -115,6 +115,7 @@ export async function getAutoCarryAdvances(employeeId, autoCarryFromMonth) {
       ref,
       where("employeeId", "==", employeeId),
       where("autoCarryFromMonth", "==", autoCarryFromMonth),
+      where("status", "==", "approved"),
     ),
   );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
