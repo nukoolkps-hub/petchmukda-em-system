@@ -36,7 +36,12 @@ export interface EmployeeLoan {
   /* LINE notification fields — worker `processLoanNotifications` พิม่ม `pending`
    * แล้วเปลี่ยนเป็น `processing` → `sent`/`error`/`skipped` · admin set ตอนสร้าง
    * เงินกู้ใหม่ (ผ่าน EmployeeLoansPanel) */
-  lineNotificationStatus?: "pending" | "processing" | "sent" | "error" | "skipped";
+  lineNotificationStatus?:
+    | "pending"
+    | "processing"
+    | "sent"
+    | "error"
+    | "skipped";
   lineNotificationType?: "created";
   lineNotificationRequestedAt?: string;
   lineNotificationSentAt?: string;
@@ -134,23 +139,10 @@ export async function recordLoanRepaymentTx(
   });
 }
 
-/* สร้าง loanContext ให้ calculateSalary — เงินกู้ของพนักงานคนนี้ที่ยังไม่ยกเลิก */
-export function buildLoanContext(
-  allLoans: EmployeeLoan[] | undefined,
-  employeeId: string,
-  yearMonth: string,
-) {
-  const loans = (allLoans || [])
-    .filter((l) => l.employeeId === employeeId && l.status !== "cancelled")
-    .map((l) => ({
-      id: l.id,
-      monthlyDeduction: l.monthlyDeduction,
-      principal: l.principal,
-      startMonth: l.startMonth,
-      repayments: l.repayments,
-    }));
-  return { yearMonth, loans };
-}
+/* สร้าง loanContext ให้ calculateSalary — canonical ย้ายไป utils/payrollCompute
+   (pure · single source) · re-export ที่นี่ให้ component เดิมที่ import จาก
+   firebase/employeeLoans ใช้ต่อได้โดยไม่ต้องแก้ */
+export { buildLoanContext } from "../utils/payrollCompute";
 
 /* คงเหลือ = เงินต้น − ผลรวมที่ผ่อนแล้ว */
 export function loanRemaining(loan: EmployeeLoan): number {

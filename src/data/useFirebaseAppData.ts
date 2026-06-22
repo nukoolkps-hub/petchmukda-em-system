@@ -37,39 +37,19 @@ import {
 } from "../utils/dutyUtils";
 import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
 import {
+  buildRateFieldsSnapshot,
+  computeEmployeeMonthRow,
+  settleEmployeeMonth,
+} from "../utils/payrollCompute";
+import {
   isMonthLocked,
   monthOf,
   PAYROLL_EDIT_GRACE_MS,
 } from "../utils/payrollLock";
-import {
-  calculateSalary,
-  computeExtraOpenSaturdayWorkedDates,
-  computePoolSharesForGroup,
-  getEffectiveBaseSalary,
-} from "../utils/salaryUtils";
 
 interface FirebaseAppDataOptions {
   authUid?: string;
   isAdmin?: boolean;
-}
-
-/** field "เรท/เงินเดือนพื้นฐาน" ที่ snapshot ลง salary doc — single source ใช้ทั้ง
- *  updateSalary (re-stamp) + resettleConfirmedMonth (overlay ก่อน recompute net)
- *  · แยกเป็น pure helper กัน field list แตกเป็น 2 ชุดแล้ว diverge */
-function buildRateFieldsSnapshot(employee: any, yearMonth: string) {
-  return {
-    baseSalary: getEffectiveBaseSalary(employee, yearMonth),
-    singlePieceRate: employee.singlePieceRate ?? 0,
-    pieceRates: employee.pieceRates ?? {},
-    normalSalePieceRate: employee.normalSalePieceRate ?? 0,
-    specialSalePieceRate: employee.specialSalePieceRate ?? 0,
-    buyPieceRate: employee.buyPieceRate ?? 0,
-    invitePieceRate: employee.invitePieceRate ?? 0,
-    transferPieceRate: employee.transferPieceRate ?? 0,
-    bonusRates: employee.bonusRates ?? {},
-    poolItemRates: employee.poolItemRates ?? {},
-    socialSecurity: employee.socialSecurity ?? 0,
-  };
 }
 
 export default function useFirebaseAppData({
@@ -441,128 +421,55 @@ export default function useFirebaseAppData({
   /* ─── Auto-settle เดือนที่ยืนยันแล้วแต่ยังไม่ปิดรอบ (grace) ──────────
      หลัง re-stamp เรทใหม่ → recompute net / auto-carry / loan ledger ของเดือน
      นั้นให้ตรงเรทใหม่ทันที โดยไม่ต้องรอ admin กด "ยืนยันยอดใหม่" (ปุ่มจะหายเมื่อ
-     ปิดรอบ → กัน drift ค้างถาวร) · ใช้ helper ชุดเดียวกับ confirm pipeline
-     (calculateSalary + computePoolSharesForGroup + syncAutoCarryAdvance +
-     recordLoanRepaymentTx) เพื่อให้ผลตรงกับการกดยืนยันยอดใหม่เป๊ะ ·
+     ปิดรอบ → กัน drift ค้างถาวร) · ใช้ shared computeEmployeeMonthRow +
+     settleEmployeeMonth ชุดเดียวกับ confirm pipeline (PayrollSummaryPanel)
+     เพื่อให้ผลตรงกับการกดยืนยันยอดใหม่เป๊ะ — ไม่ duplicate logic
      freshEmployee: ร่าง employee หลัง merge fields ใหม่ (subscription ยัง stale) */
   async function resettleConfirmedMonth(employeeId, yearMonth, freshEmployee) {
-    const role =
-      rolesResult.data.find((r) => r.id === (freshEmployee.roleId ?? null)) ||
-      null;
     // patched directory — แทนคนที่เพิ่งแก้ด้วย freshEmployee (state ยังเก่า)
     const directory = employeeResult.data.map((e) =>
       e.id === employeeId ? freshEmployee : e,
     );
-    // salary doc เดือนนั้น overlay เรทใหม่ — resolve*Rate อ่าน snapshot ก่อน live
-    // จึงต้องยัดเรทใหม่ลง data (in-memory salaryData ยังเป็นเรทเก่า)
+    // overlay เรทใหม่ลง salary doc (in-memory ยังเรทเก่า) — resolve*Rate อ่าน
+    // snapshot ก่อน live จึงต้องยัดเรทใหม่เข้า data
     const stale = salResult.data?.[employeeId]?.[yearMonth] || {};
-    const data = {
+    const dataOverride = {
       ...stale,
       roleId: freshEmployee.roleId ?? null,
       poolExclusion: freshEmployee.poolExclusion ?? null,
       ...buildRateFieldsSnapshot(freshEmployee, yearMonth),
     };
-    const monthLeaves = leavesResult.data.filter(
-      (lv) => lv.employeeId === employeeId && lv.start.startsWith(yearMonth),
+    const monthApprovedAdvances = advResult.data.filter(
+      (a) => a.month === yearMonth && a.status === "approved",
     );
-    const overInfo = getOverQuotaDays(monthLeaves, storeCalendarResult.data);
-    const totalLeaveDays = countWeekdayLeaves(
-      monthLeaves,
-      storeCalendarResult.data,
-    );
-    const approvedAdvanceTotal = advResult.data
-      .filter(
-        (a) =>
-          a.employeeId === employeeId &&
-          a.month === yearMonth &&
-          a.status === "approved",
-      )
-      .reduce((s, a) => s + (a.amount || 0), 0);
-    // pool share — จำนวนชิ้นไม่เปลี่ยนตามเรท ใช้ salaryData เดิมได้ · patched dir
-    // เผื่อ roleId/poolExclusion ของคนนี้เปลี่ยน
-    let poolShare = null;
-    if (role?.poolGroup) {
-      const roleIdForMonth = (emp) =>
-        salResult.data?.[emp.id]?.[yearMonth]?.roleId ?? emp.roleId;
-      const groupIds = directory
-        .filter((e) => !e.salaryDisabled)
-        .filter(
-          (e) =>
-            rolesResult.data.find((r) => r.id === roleIdForMonth(e))
-              ?.poolGroup === role.poolGroup,
-        )
-        .map((e) => e.id);
-      const shares = computePoolSharesForGroup({
-        groupEmployeeIds: groupIds,
-        salaryData: salResult.data,
-        allLeaves: leavesResult.data,
-        yearMonth,
-        employeeDirectory: directory,
-        roles: rolesResult.data,
-        poolAdjustment: (poolAdjResult.data?.[yearMonth] || null) as any,
-        poolGroup: role.poolGroup,
-        storeCalendar: storeCalendarResult.data,
-      });
-      poolShare = shares[employeeId] ?? null;
-    }
-    const monthExclusions = (poolAdjResult.data?.[yearMonth]?.items || [])
-      .filter((it: any) => it.kind === "piece" && it.employeeId === employeeId)
-      .map((it: any) => ({
-        pieceItemId: it.pieceItemId,
-        pieces: Number(it.pieces) || 0,
-        label: it.label,
-      }));
-    const extraSatWorked = computeExtraOpenSaturdayWorkedDates(
+    const row = computeEmployeeMonthRow({
+      employee: freshEmployee,
       yearMonth,
-      storeCalendarResult.data,
-      monthLeaves,
-    );
-    const calc = calculateSalary(
-      data,
-      overInfo,
-      freshEmployee,
-      totalLeaveDays,
-      approvedAdvanceTotal,
-      poolShare,
-      role,
-      employeeLoansAPI.buildLoanContext(
-        loansResult.data,
-        employeeId,
-        yearMonth,
-      ),
-      monthExclusions,
-      { workedDates: extraSatWorked },
-    );
-    if (!calc) return;
-    const net = calc.netSalary;
-    // 1) denorm netSalary (+ deficitClearedAt) — เลี่ยงส่ง undefined (โปรเจกต์ไม่
-    //    เปิด ignoreUndefinedProperties) · net<0 → คงค่า flag เดิม ไม่แตะ
-    const denorm: Record<string, any> = { netSalary: net };
-    if (net >= 0) denorm.deficitClearedAt = null;
-    await salariesAPI.updateSalary(employeeId, yearMonth, denorm);
-    // 2) auto-carry advance เดือนถัดไป (สร้าง/อัปเดต/ลบ ตาม deficit ใหม่)
-    const [yy, mm] = yearMonth.split("-").map(Number);
-    const nx = new Date(yy, mm, 1); // mm (1-based) → index = เดือนถัดไป
-    const nextMonth = `${nx.getFullYear()}-${String(nx.getMonth() + 1).padStart(2, "0")}`;
-    await syncAutoCarryAdvance({
-      sourceMonth: yearMonth,
-      nextMonth,
-      employeeId,
-      employeeName: freshEmployee.nickname || freshEmployee.name || "",
-      deficitAmount: net < 0 ? -net : 0,
+      salaryData: salResult.data,
+      allLeaves: leavesResult.data,
+      employeeDirectory: directory,
+      roles: rolesResult.data,
+      employeeLoans: loansResult.data,
+      monthApprovedAdvances,
+      poolAdjustment: poolAdjResult.data?.[yearMonth] || null,
+      storeCalendar: storeCalendarResult.data,
+      dataOverride,
     });
-    // 3) loan ledger — repayments[ym] = ยอดหักจริงเดือนนี้ (idempotent)
-    const reps = calc.loanRepayments || {};
-    const empLoans = (loansResult.data || []).filter(
-      (l) => l.employeeId === employeeId && l.status !== "cancelled",
-    );
-    for (const loan of empLoans) {
-      const amt = reps[loan.id] || 0;
-      const prev = loan.repayments?.[yearMonth] || 0;
-      if (amt !== prev) {
-        await employeeLoansAPI.recordLoanRepaymentTx(loan.id, yearMonth, amt);
-      }
-    }
+    if (!row?.salaryCalculation) return;
+    await settleEmployeeMonth(row, yearMonth, loansResult.data, {
+      // denorm net ด้วย low-level write (re-stamp ทำไปแล้วก่อนเรียก resettle)
+      saveNetDenorm: (id, ym, net, clearDeficit) =>
+        salariesAPI.updateSalary(
+          id,
+          ym,
+          clearDeficit
+            ? { netSalary: net, deficitClearedAt: null }
+            : { netSalary: net },
+        ),
+      syncAutoCarry: (args) => syncAutoCarryAdvance(args),
+      recordLoanRepayment: (loanId, ym, amount) =>
+        employeeLoansAPI.recordLoanRepaymentTx(loanId, ym, amount),
+    });
   }
 
   /* ─── Advances ──────────────────────────────────────────── */
