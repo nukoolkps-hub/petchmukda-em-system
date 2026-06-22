@@ -37,11 +37,15 @@ import {
 } from "../utils/dutyUtils";
 import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
 import {
+  buildRateFieldsSnapshot,
+  computeEmployeeMonthRow,
+  settleEmployeeMonth,
+} from "../utils/payrollCompute";
+import {
   isMonthLocked,
   monthOf,
   PAYROLL_EDIT_GRACE_MS,
 } from "../utils/payrollLock";
-import { getEffectiveBaseSalary } from "../utils/salaryUtils";
 
 interface FirebaseAppDataOptions {
   authUid?: string;
@@ -155,8 +159,8 @@ export default function useFirebaseAppData({
     await employeesAPI.updateEmployee(id, fields);
     triggerRecomputeDutyAssignments();
     // ถ้าแก้ field ที่กระทบเงินเดือนพื้นฐาน/เรทค่าคอม/ตำแหน่ง → re-stamp snapshot
-    // ของเดือนปัจจุบันที่ยังไม่ปิดรอบถาวร · ให้ admin เห็นเลขใหม่ทันทีใน
-    // SalaryAdminEdit / หน้าเงินเดือน · ไม่ต้องไปกด save salary เอง
+    // ของทุกเดือนที่ยังอยู่ในหน้าต่างแก้ไข (ดู targets ด้านล่าง) · ให้ admin เห็น
+    // เลขใหม่ทันทีใน SalaryAdminEdit / หน้าเงินเดือน · ไม่ต้องไปกด save salary เอง
     // - scalar: trigger เฉพาะเมื่อค่าจริงเปลี่ยน (กัน write ซ้ำโดยไม่จำเป็น)
     // - object/array (map เรท, annualRaises, poolExclusion): trigger เมื่อมี key
     //   ส่งมา (เทียบ deep ยาก · re-stamp ซ้ำเป็น idempotent ไม่เสียหาย)
@@ -184,23 +188,44 @@ export default function useFirebaseAppData({
         (k) => k in fields && (fields as any)[k] !== (before as any)?.[k],
       ) || objectRateFields.some((k) => k in fields);
     if (salaryAffectingChanged) {
-      const ym = (() => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      })();
-      const existing = salResult.data?.[id]?.[ym];
-      // เดือนปัจจุบันยังไม่ปิดรอบถาวร (พ้น 7 วันหลังยืนยัน) → re-stamp ได้
-      // (รวม grace period: ยืนยันแล้วแต่ยังไม่ครบ 7 วัน · กฎ "ยังแก้ได้")
-      if (existing && !monthLocked(ym)) {
-        try {
-          await updateSalary(id, ym, {});
-        } catch (err) {
-          console.warn(
-            `[updateEmployee] auto-refresh ${id}/${ym} salary snapshot failed:`,
-            err,
-          );
-        }
-      }
+      // subscription (employeeResult.data) ยัง stale ทันทีหลัง write — merge
+      // fields ใหม่ลง before ให้ re-stamp/recompute ใช้เรทใหม่ ไม่ใช่เรทเก่าใน state
+      const freshEmployee = { ...(before || {}), ...fields, id };
+      const now = new Date();
+      const currentYm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const empSalaries = salResult.data?.[id] || {};
+      // re-stamp ทุกเดือนที่ "ยังอยู่ในหน้าต่างแก้ไข" = เดือนปัจจุบัน + เดือนที่
+      // ยืนยันยอดแล้วแต่ยังไม่ปิดรอบถาวร (grace period 7 วัน) · ครอบเคสจริง
+      // "ยืนยันเดือนก่อนตอนต้นเดือนถัดไป" โดยไม่ต้องไปกดบันทึกเดือนนั้นเอง
+      // ข้าม:
+      //  - เดือนที่ปิดรอบถาวร (locked) → ห้ามแตะ (updateSalary throw อยู่แล้ว)
+      //  - เดือนเปิดเก่าที่ "ไม่เคยยืนยัน" + ไม่ใช่เดือนปัจจุบัน → กันแก้ประวัติ
+      //    ย้อนหลังโดยไม่ตั้งใจ (เดือนนั้นควรคงrate ของยุคนั้น · admin จะ
+      //    re-stamp เองตอนเปิดเดือนนั้น save/ยืนยัน)
+      const targets = Object.keys(empSalaries).filter((ym) => {
+        if (monthLocked(ym)) return false;
+        const confirmed = !!pcResult.data?.[ym]?.confirmedAt;
+        return ym === currentYm || confirmed;
+      });
+      await Promise.allSettled(
+        targets.map(async (ym) => {
+          try {
+            await updateSalary(id, ym, {}, freshEmployee);
+            // เดือน grace (ยืนยันแล้วยังไม่ปิดรอบ) → settle net/auto-carry/loan
+            // ledger ให้ตรงเรทใหม่ทันที · กัน drift ค้างถาวรตอนเดือนล็อก
+            // (ปุ่ม "ยืนยันยอดใหม่" จะหายไป) · เดือนปัจจุบันที่ยังไม่ยืนยันยังไม่มี
+            // denorm/auto-carry ให้ settle จึงข้าม
+            if (pcResult.data?.[ym]?.confirmedAt) {
+              await resettleConfirmedMonth(id, ym, freshEmployee);
+            }
+          } catch (err) {
+            console.warn(
+              `[updateEmployee] auto-refresh ${id}/${ym} salary snapshot failed:`,
+              err,
+            );
+          }
+        }),
+      );
     }
   }
   async function upsertEmployee(employee) {
@@ -218,14 +243,23 @@ export default function useFirebaseAppData({
   }
 
   /* ─── Salaries ──────────────────────────────────────────── */
-  async function updateSalary(employeeId, yearMonth, fields) {
+  async function updateSalary(
+    employeeId,
+    yearMonth,
+    fields,
+    employeeOverride?,
+  ) {
     // ปิดรอบแล้ว (พ้น 7 วันหลังยืนยันยอด) → ห้ามแก้ค่าคอม/เงินเดือนเดือนนั้น
     if (monthLocked(yearMonth)) throw new Error(LOCK_MSG);
     // snapshot roleId / poolExclusion / เรท / leave days ลง salary doc ของเดือน
     // นั้น เพื่อให้ (1) พนักงานคำนวณ pool ได้โดยไม่ต้องอ่าน employees/leaves ของ
     // เพื่อน และ (2) ข้อมูลเงินเดือนในอดีต "ล็อก" ไม่ขยับเมื่อเปลี่ยนตำแหน่ง/เรท
     // ในอนาคต
-    const employee = employeeResult.data.find((e) => e.id === employeeId);
+    // employeeOverride: ใช้ตอน caller เพิ่งแก้ employee แล้วเรียกต่อทันที — state
+    // subscription (employeeResult.data) ยัง stale อยู่ใน closure เดิม จึงต้อง
+    // ส่งร่าง employee ที่ merge fields ใหม่แล้วเข้ามาตรงๆ (กัน re-stamp เรทเก่า)
+    const employee =
+      employeeOverride ?? employeeResult.data.find((e) => e.id === employeeId);
     if (!employee) {
       // ไม่เจอ employee (ถูกลบ / data ยังโหลดไม่เสร็จ) → เขียนเฉพาะ fields
       // ที่ caller ส่งมา · DON'T touch snapshot fields · ไม่งั้น stomp ของเก่า
@@ -338,20 +372,8 @@ export default function useFirebaseAppData({
           coveragePayBreakdown: preserveCoverage
             ? (existingSalary.coveragePayBreakdown ?? coverage.breakdown)
             : coverage.breakdown,
-          baseSalary: getEffectiveBaseSalary(employee, yearMonth),
-          singlePieceRate: employee.singlePieceRate ?? 0,
-          // snapshot อัตราต่อรายการ (multi-item piece) — freeze rate ของเดือนนั้น
-          pieceRates: employee.pieceRates ?? {},
-          normalSalePieceRate: employee.normalSalePieceRate ?? 0,
-          specialSalePieceRate: employee.specialSalePieceRate ?? 0,
-          buyPieceRate: employee.buyPieceRate ?? 0,
-          invitePieceRate: employee.invitePieceRate ?? 0,
-          transferPieceRate: employee.transferPieceRate ?? 0,
-          // snapshot โบนัสอื่นๆ (multi-item) — freeze rate ของเดือนนั้น
-          bonusRates: employee.bonusRates ?? {},
-          // snapshot pool items (multi-item) — freeze rate ของเดือนนั้น
-          poolItemRates: employee.poolItemRates ?? {},
-          socialSecurity: employee.socialSecurity ?? 0,
+          // เรท/เงินเดือนพื้นฐาน — freeze ของเดือนนั้น (single source helper)
+          ...buildRateFieldsSnapshot(employee, yearMonth),
         };
 
     await salariesAPI.updateSalary(employeeId, yearMonth, {
@@ -394,6 +416,73 @@ export default function useFirebaseAppData({
         "บันทึกเงินเดือนสำเร็จ แต่ sync pool snapshot ไม่ได้ — กรุณา save อีกครั้ง",
       );
     }
+  }
+
+  /* ─── Auto-settle เดือนที่ยืนยันแล้วแต่ยังไม่ปิดรอบ (grace) ──────────
+     หลัง re-stamp เรทใหม่ → recompute net / auto-carry / loan ledger ของเดือน
+     นั้นให้ตรงเรทใหม่ทันที โดยไม่ต้องรอ admin กด "ยืนยันยอดใหม่" (ปุ่มจะหายเมื่อ
+     ปิดรอบ → กัน drift ค้างถาวร) · ใช้ shared computeEmployeeMonthRow +
+     settleEmployeeMonth ชุดเดียวกับ confirm pipeline (PayrollSummaryPanel)
+     เพื่อให้ผลตรงกับการกดยืนยันยอดใหม่เป๊ะ — ไม่ duplicate logic
+     freshEmployee: ร่าง employee หลัง merge fields ใหม่ (subscription ยัง stale) */
+  async function resettleConfirmedMonth(employeeId, yearMonth, freshEmployee) {
+    // patched directory — แทนคนที่เพิ่งแก้ด้วย freshEmployee (state ยังเก่า)
+    const directory = employeeResult.data.map((e) =>
+      e.id === employeeId ? freshEmployee : e,
+    );
+    // overlay เรท/ตำแหน่ง/exclusion ใหม่ลง salary doc (in-memory ยังเก่า) —
+    // resolve*Rate + roleIdForMonth + computePoolSharesForGroup อ่าน snapshot
+    // ก่อน live จึงต้องยัดค่าใหม่เข้า data ของคนที่เพิ่งแก้
+    const stale = salResult.data?.[employeeId]?.[yearMonth] || {};
+    const dataOverride = {
+      ...stale,
+      roleId: freshEmployee.roleId ?? null,
+      poolExclusion: freshEmployee.poolExclusion ?? null,
+      ...buildRateFieldsSnapshot(freshEmployee, yearMonth),
+    };
+    // patch salaryData ของคนที่เพิ่งแก้ ด้วย dataOverride ก่อนส่งเข้า compute —
+    // ไม่งั้น pool grouping / eligibility / roleId ของเดือนนี้ ใช้ snapshot เก่า
+    // (เคส admin เปลี่ยน roleId หรือ poolExclusion ใน grace month) แล้ว net/
+    // auto-carry settle ผิด role/exclusion · คนอื่นใน group ใช้ snapshot เดิม
+    // (ไม่ได้แก้ → ถูกต้องอยู่แล้ว)
+    const patchedSalaryData = {
+      ...salResult.data,
+      [employeeId]: {
+        ...(salResult.data?.[employeeId] || {}),
+        [yearMonth]: dataOverride,
+      },
+    };
+    const monthApprovedAdvances = advResult.data.filter(
+      (a) => a.month === yearMonth && a.status === "approved",
+    );
+    const row = computeEmployeeMonthRow({
+      employee: freshEmployee,
+      yearMonth,
+      salaryData: patchedSalaryData,
+      allLeaves: leavesResult.data,
+      employeeDirectory: directory,
+      roles: rolesResult.data,
+      employeeLoans: loansResult.data,
+      monthApprovedAdvances,
+      poolAdjustment: poolAdjResult.data?.[yearMonth] || null,
+      storeCalendar: storeCalendarResult.data,
+      dataOverride,
+    });
+    if (!row?.salaryCalculation) return;
+    await settleEmployeeMonth(row, yearMonth, loansResult.data, {
+      // denorm net ด้วย low-level write (re-stamp ทำไปแล้วก่อนเรียก resettle)
+      saveNetDenorm: (id, ym, net, clearDeficit) =>
+        salariesAPI.updateSalary(
+          id,
+          ym,
+          clearDeficit
+            ? { netSalary: net, deficitClearedAt: null }
+            : { netSalary: net },
+        ),
+      syncAutoCarry: (args) => syncAutoCarryAdvance(args),
+      recordLoanRepayment: (loanId, ym, amount) =>
+        employeeLoansAPI.recordLoanRepaymentTx(loanId, ym, amount),
+    });
   }
 
   /* ─── Advances ──────────────────────────────────────────── */

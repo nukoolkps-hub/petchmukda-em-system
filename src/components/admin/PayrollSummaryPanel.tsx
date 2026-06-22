@@ -15,19 +15,15 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { COLORS } from "../../constants";
-import {
-  buildLoanContext,
-  recordLoanRepaymentTx,
-} from "../../firebase/employeeLoans";
+import { recordLoanRepaymentTx } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatThaiNumber } from "../../utils/format";
-import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
-import { getPayrollLock } from "../../utils/payrollLock";
 import {
-  calculateSalary,
-  computeExtraOpenSaturdayWorkedDates,
-  computePoolSharesForGroup,
-} from "../../utils/salaryUtils";
+  buildPoolSharesByGroup,
+  computeEmployeeMonthRow,
+  settleEmployeeMonth,
+} from "../../utils/payrollCompute";
+import { getPayrollLock } from "../../utils/payrollLock";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
@@ -97,111 +93,40 @@ export default function PayrollSummaryPanel({
      คำนวณเงินเดือนทุกคนใหม่ เฉพาะตอน salaryData/leaves/advances/roles เปลี่ยน
      สำคัญมาก — ก่อน memo: re-run ทุกครั้งที่กด/พิมพ์ในหน้านี้                */
   const rows = useMemo(() => {
-    // ตำแหน่งของแต่ละคน "ณ เดือนนั้น" — อ่าน roleId จาก snapshot ใน salary doc
-    // ก่อน (frozen) fallback เป็น roleId ปัจจุบัน → เปลี่ยนตำแหน่งในอนาคตไม่
-    // ทำให้การจัดกลุ่ม pool ของเดือนเก่าเปลี่ยน
-    const roleIdForMonth = (employee) =>
-      salaryData[employee.id]?.[selectedMonth]?.roleId ?? employee.roleId;
-
     // กรองพนักงานที่ "ปิดสิทธิ์ระบบเงินเดือน" ออก — ใช้แค่ระบบลา ไม่อยู่ใน
     // payroll/pool calculation ใดๆ
     const activeEmps = employeeDirectory.filter((e) => !e.salaryDisabled);
-
-    // group employees by role for shared Pool
-    const groupedEmpsByPool = {};
-    activeEmps.forEach((employee) => {
-      const r = roles.find((rl) => rl.id === roleIdForMonth(employee));
-      if (r?.poolGroup) {
-        if (!groupedEmpsByPool[r.poolGroup])
-          groupedEmpsByPool[r.poolGroup] = [];
-        groupedEmpsByPool[r.poolGroup].push(employee.id);
-      }
+    // pool shares "ครั้งเดียวต่อกลุ่ม" (hoist · O(G) ไม่ใช่ O(G²)) — เลขชุดเดียว
+    // ทั้งกลุ่ม · ใช้ shared helper เดียวกับ resettle (single source)
+    const sharesByPoolGroup = buildPoolSharesByGroup({
+      activeEmployees: activeEmps,
+      yearMonth: selectedMonth,
+      salaryData,
+      allLeaves,
+      employeeDirectory,
+      roles,
+      poolAdjustment: poolAdjustments?.[selectedMonth] || null,
+      storeCalendar,
     });
-
-    // คำนวณ pool shares "ครั้งเดียวต่อกลุ่ม" (ไม่ใช่ต่อคน) — เดิมเรียก
-    // computePoolSharesForGroup ใน loop ต่อพนักงาน = O(G²) ต่อกลุ่ม ·
-    // hoist ออกมา cache ตาม poolGroup → O(G) + เลขชุดเดียวกันทั้งกลุ่ม
-    const sharesByPoolGroup: Record<string, Record<string, any>> = {};
-    for (const [poolGroup, groupIds] of Object.entries(groupedEmpsByPool)) {
-      sharesByPoolGroup[poolGroup] = computePoolSharesForGroup({
-        groupEmployeeIds: groupIds as string[],
-        salaryData,
-        allLeaves,
-        yearMonth: selectedMonth,
-        employeeDirectory,
-        roles,
-        poolAdjustment: poolAdjustments?.[selectedMonth] || null,
-        poolGroup,
-        storeCalendar,
-      });
-    }
-
-    // compute each employee's netSalary salary
+    const monthApprovedAdvances = monthlyApprovedAdvances.data || [];
+    // compute each employee's netSalary — ผ่าน shared computeEmployeeMonthRow
     return activeEmps
-      .map((employee) => {
-        const employeeRole = roles.find(
-          (r) => r.id === roleIdForMonth(employee),
-        );
-        const data = salaryData[employee.id]?.[selectedMonth] || null;
-        const monthLeaves = allLeaves.filter(
-          (lv) =>
-            lv.employeeId === employee.id && lv.start.startsWith(selectedMonth),
-        );
-        const overInfo = getOverQuotaDays(monthLeaves, storeCalendar);
-        const totalLeaveDays = countWeekdayLeaves(monthLeaves, storeCalendar);
-        const monthApprovedAdvances = (
-          monthlyApprovedAdvances.data || []
-        ).filter((r) => r.employeeId === employee.id);
-        const approvedAdvanceTotal = monthApprovedAdvances.reduce(
-          (s, r) => s + r.amount,
-          0,
-        );
-
-        let poolShare = null;
-        if (employeeRole?.poolGroup) {
-          poolShare =
-            sharesByPoolGroup[employeeRole.poolGroup]?.[employee.id] ?? null;
-        }
-        // รายการยกเว้นค่าคอม "ระดับ piece" สำหรับพนักงานคนนี้ (multi-item)
-        const monthExclusions = (poolAdjustments?.[selectedMonth]?.items || [])
-          .filter(
-            (it: any) => it.kind === "piece" && it.employeeId === employee.id,
-          )
-          .map((it: any) => ({
-            pieceItemId: it.pieceItemId,
-            pieces: Number(it.pieces) || 0,
-            label: it.label,
-          }));
-        const extraSatWorked = computeExtraOpenSaturdayWorkedDates(
-          selectedMonth,
-          storeCalendar,
-          monthLeaves,
-        );
-        const salaryCalculation = data
-          ? calculateSalary(
-              data,
-              overInfo,
-              employee,
-              totalLeaveDays,
-              approvedAdvanceTotal,
-              poolShare,
-              employeeRole,
-              buildLoanContext(employeeLoans, employee.id, selectedMonth),
-              monthExclusions,
-              { workedDates: extraSatWorked },
-            )
-          : null;
-        return {
+      .map((employee) =>
+        computeEmployeeMonthRow({
           employee,
-          employeeRole,
-          data,
-          salaryCalculation,
-          advanceTotal: approvedAdvanceTotal,
+          yearMonth: selectedMonth,
+          salaryData,
+          allLeaves,
+          employeeDirectory,
+          roles,
+          employeeLoans,
           monthApprovedAdvances,
-          poolShare,
-        };
-      })
-      .filter((r) => r.salaryCalculation);
+          poolAdjustment: poolAdjustments?.[selectedMonth] || null,
+          storeCalendar,
+          poolSharesByGroup: sharesByPoolGroup,
+        }),
+      )
+      .filter((r): r is NonNullable<typeof r> => !!r?.salaryCalculation);
   }, [
     employeeDirectory,
     roles,
@@ -344,72 +269,44 @@ export default function PayrollSummaryPanel({
   // ขั้นที่ผู้ใช้รอ: onSetPayrollConfirm เดี่ยว (เขียน 1 doc — เร็ว) เสร็จแล้ว
   // ปลดล็อกปุ่ม ส่วน backfill snapshots + freeze สลิปทำเบื้องหลัง best-effort
   // กันบล็อก UI / แย่ network กับการบันทึกเดือนอื่นที่ admin อาจทำพร้อมกัน
-  /* ─── บันทึก ledger การผ่อนเงินกู้ของเดือนนี้ ────────────────────
-     เขียน repayments[selectedMonth] = ยอดหักจริง (จาก salaryCalculation)
-     + อัพเดต status เป็น paid_off เมื่อผ่อนครบ · idempotent: re-confirm
-     เดือนเดิม overwrite ค่าเดิม (ข้ามถ้าไม่เปลี่ยน)
-     ใช้ transaction (recordLoanRepaymentTx) เพื่อกัน race: ถ้า admin
-     2 sessions ยืนยัน 2 เดือนพร้อมกัน → spread เก่าทับใหม่ (เด้ง entry หาย)
-     ตอนนี้ Firestore atomic merge ไม่ทับ entry อื่นแล้ว                  */
-  async function recordLoanRepayments() {
-    const ym = selectedMonth;
-    const updates: Promise<unknown>[] = [];
-    for (const row of rows) {
-      const reps = row.salaryCalculation.loanRepayments || {};
-      const empLoans = (employeeLoans || []).filter(
-        (l) => l.employeeId === row.employee.id && l.status !== "cancelled",
-      );
-      for (const loan of empLoans) {
-        const amt = reps[loan.id] || 0;
-        const prev = loan.repayments?.[ym] || 0;
-        if (amt === prev) continue;
-        updates.push(recordLoanRepaymentTx(loan.id, ym, amt));
-      }
-    }
-    if (updates.length) await Promise.allSettled(updates);
-  }
-
-  /* ─── Denormalize netSalary ลง salary doc ─────────────────────────
-     สำหรับ AdvanceRequestModal เช็คว่าเดือนก่อนพนักงานติดลบไหม · ถ้าใช่
-     บล็อกเบิกจนกว่า admin จะ "ทำเครื่องหมายเคลียร์แล้ว" (deficitClearedAt)
-     เขียนเฉพาะตอนยืนยันยอด (= moment ที่ figure becomes official)
-     ถ้า net >= 0 → clear deficitClearedAt ทิ้ง (auto-uncleared) เผื่อ
-     admin re-confirm ใหม่หลังแก้ฟิลด์ให้ net เป็น 0 ขึ้นบวก                */
-  async function denormalizeNetSalaries() {
-    if (!onSaveSalary) return;
-    const updates = rows.map((row) => {
-      const net = row.salaryCalculation.netSalary;
-      return onSaveSalary(row.employee.id, selectedMonth, {
-        netSalary: net,
-        // net >= 0 → ไม่มี deficit · clear flag · null = ลบ field ใน Firestore
-        deficitClearedAt: net >= 0 ? null : undefined,
-      });
-    });
-    await Promise.allSettled(updates);
-  }
-
-  /* ─── Sync auto-carry advance ─────────────────────────────────────
-     ถ้า net < 0 → สร้าง/update advance ใน month ถัดไป (status=approved
-     · autoCarryFromMonth=selectedMonth) · พนักงานจะถูกหักยอด deficit
-     จากเงินเดือนเดือนถัดไปอัตโนมัติ
-     ถ้า net >= 0 → ลบ auto-carry ที่อาจมี (เคย confirm net<0 แล้วแก้กลับ)  */
-  async function syncAutoCarryAdvances() {
-    if (!onSyncAutoCarryAdvance) return;
-    // เดือนถัดไป — ม.ค. ถัดไปปีถัดไป
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const d = new Date(y, m, 1); // m index = next month (เพราะ m เดิม = 1-based, JS = 0-based)
-    const nextMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const updates = rows.map((row) => {
-      const net = row.salaryCalculation.netSalary;
-      return onSyncAutoCarryAdvance({
-        sourceMonth: selectedMonth,
-        nextMonth,
-        employeeId: row.employee.id,
-        employeeName: row.employee.nickname || row.employee.name || "",
-        deficitAmount: net < 0 ? -net : 0,
-      });
-    });
-    await Promise.allSettled(updates);
+  /* ─── Settle ทุกแถว: denorm netSalary + auto-carry + loan ledger ──────
+     ใช้ shared settleEmployeeMonth (single source เดียวกับ auto-settle เดือน
+     grace ใน useFirebaseAppData.resettleConfirmedMonth) · idempotent ·
+     best-effort ต่อแถว (Promise.allSettled)
+     - denorm netSalary: สำหรับ AdvanceRequestModal เช็ค deficit เดือนก่อน ·
+       net>=0 → clear deficitClearedAt · net<0 → ไม่แตะ (ไม่ส่ง undefined)
+     - auto-carry: net<0 → สร้าง/อัปเดต advance เดือนถัดไป · net>=0 → ลบทิ้ง
+     - loan ledger: repayments[ym] ผ่าน recordLoanRepaymentTx (transaction กัน
+       race ตอน admin 2 sessions ยืนยัน 2 เดือนพร้อมกัน · idempotent)         */
+  async function settleAllRows() {
+    const writers = {
+      saveNetDenorm: (
+        empId: string,
+        ym: string,
+        net: number,
+        clearDeficit: boolean,
+      ) =>
+        onSaveSalary
+          ? onSaveSalary(
+              empId,
+              ym,
+              clearDeficit
+                ? { netSalary: net, deficitClearedAt: null }
+                : { netSalary: net },
+            )
+          : Promise.resolve(),
+      syncAutoCarry: (args: any) =>
+        onSyncAutoCarryAdvance
+          ? onSyncAutoCarryAdvance(args)
+          : Promise.resolve(),
+      recordLoanRepayment: (loanId: string, ym: string, amount: number) =>
+        recordLoanRepaymentTx(loanId, ym, amount),
+    };
+    await Promise.allSettled(
+      rows.map((row) =>
+        settleEmployeeMonth(row, selectedMonth, employeeLoans, writers),
+      ),
+    );
   }
 
   async function confirmPayroll(
@@ -438,25 +335,17 @@ export default function PayrollSummaryPanel({
 
     // งานเบื้องหลัง — ไม่ await ให้ปุ่มกลับมาใช้ได้ทันที
     (async () => {
-      try {
-        await recordLoanRepayments();
-      } catch (err) {
-        console.error("[PayrollSummary] record loan repayments failed:", err);
-      }
+      // backfill snapshot ก่อน settle — ให้ pool peers เห็นครบ (computePool ฝั่ง
+      // พนักงานถูกต้อง) ก่อน denorm/auto-carry/loan ledger
       try {
         await backfillPoolSnapshots();
       } catch (err) {
         console.error("[PayrollSummary] backfill snapshots failed:", err);
       }
       try {
-        await denormalizeNetSalaries();
+        await settleAllRows();
       } catch (err) {
-        console.error("[PayrollSummary] denormalize net failed:", err);
-      }
-      try {
-        await syncAutoCarryAdvances();
-      } catch (err) {
-        console.error("[PayrollSummary] sync auto-carry failed:", err);
+        console.error("[PayrollSummary] settle rows failed:", err);
       }
       try {
         await freezeAllSlips();
