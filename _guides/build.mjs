@@ -250,7 +250,7 @@ function buildLogin() {
   // --- two method cards ---
   s += text(60, y + 10, "เลือกวิธีเข้าระบบ", { size: 30, weight: 700, fill: C.maroon });
   y += 40;
-  const gap = 28, mw = (W - 120 - gap) / 2, mh = 168;
+  const gap = 28, mw = (W - 120 - gap) / 2, mh = 150;
   // method 1 — LINE Bot (recommended)
   s += card(60, y, mw, mh, 24);
   s += rrect(60, y, mw, 10, 5, C.lineGreen);
@@ -259,7 +259,7 @@ function buildLogin() {
   const r1 = chip(60 + 100, y + 34, "แนะนำ", { bg: C.greenBg, fill: "#1B5E36", size: 18, h: 32 });
   s += r1.svg;
   s += text(60 + 100, y + 96, "ผ่าน LINE Bot", { size: 28, weight: 700, fill: C.maroon });
-  s += paragraph(60 + 32, y + 130, "แตะแถบเมนู \"FOR STAFF\" ในแชทบอท", { size: 22, fill: C.sub, maxW: mw - 60 }).svg;
+  s += paragraph(60 + 32, y + 126, "แตะแถบเมนู \"FOR STAFF\" ในแชทบอท", { size: 22, fill: C.sub, maxW: mw - 60 }).svg;
   // method 2 — web link
   const m2x = 60 + mw + gap;
   s += card(m2x, y, mw, mh, 24);
@@ -275,7 +275,7 @@ function buildLogin() {
   s += text(86, y + 30, "วิธีที่ 1 — เข้าผ่าน LINE Bot", { size: 28, weight: 700, fill: C.maroon });
   y += 56;
 
-  const pw = 372, ph = 660;
+  const pw = 360, ph = 540;
   const px = W - 60 - pw, py = y;
   s += phone(px, py, pw, ph, lineChatScreen);
 
@@ -300,9 +300,6 @@ function buildLogin() {
   s += text(60 + Math.min(colW, 320) / 2 + 18, lb + 39, "Login ด้วย LINE", { size: 23, weight: 700, fill: "#FFFFFF", anchor: "middle" });
 
   let yBottom = Math.max(sy, py + ph + 30);
-  const c0 = callout(60, yBottom, W - 120, "อีกทาง: เปิดเบราว์เซอร์แล้วพิมพ์ petchmukda-bot.web.app ก็เข้าได้เหมือนกัน — แล้วกด \"Login ด้วย LINE\"", { ic: "smartphone", accent: C.gold });
-  s += c0.svg;
-  yBottom += c0.h + 16;
   const co = callout(60, yBottom, W - 120, "ใช้บัญชี LINE ที่ลงทะเบียนกับร้านเท่านั้น — ถ้าขึ้น \"ยังไม่พบข้อมูลพนักงาน\" ให้แจ้งแอดมินเพื่อเชื่อมบัญชีให้", { ic: "info", accent: C.maroon, bg: C.redBg, tcol: C.maroon });
   s += co.svg;
   yBottom += co.h + 24;
