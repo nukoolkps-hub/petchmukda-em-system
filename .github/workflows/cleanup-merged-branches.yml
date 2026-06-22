@@ -1,0 +1,75 @@
+name: Cleanup merged branches
+
+# One-time housekeeping: delete remote branches whose pull request was merged.
+# Safe by design — only deletes branches that have at least one MERGED PR
+# (their changes already live in main and are recoverable via the PR).
+# Defaults to dry-run: it only lists what it would delete until you run it
+# again with "dry_run = false".
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List only, do not delete (uncheck to actually delete)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete branches whose PR was merged
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          echo "Repository: $REPO"
+          echo "Dry run:    $DRY_RUN"
+          echo
+
+          # Head refs of every merged PR (deduped).
+          gh api --paginate "repos/$REPO/pulls?state=closed&per_page=100" \
+            --jq '.[] | select(.merged_at != null) | .head.ref' \
+            | sort -u > merged.txt
+
+          total=$(wc -l < merged.txt | tr -d ' ')
+          echo "Branches with a merged PR: $total"
+          echo "-----------------------------------------"
+
+          deleted=0
+          skipped=0
+          while IFS= read -r b; do
+            [ -z "$b" ] && continue
+            [ "$b" = "main" ] && continue
+
+            # Skip if the branch no longer exists on the remote.
+            if ! gh api "repos/$REPO/branches/$b" >/dev/null 2>&1; then
+              skipped=$((skipped + 1))
+              continue
+            fi
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "would delete: $b"
+            else
+              if gh api -X DELETE "repos/$REPO/git/refs/heads/$b" >/dev/null 2>&1; then
+                echo "deleted: $b"
+                deleted=$((deleted + 1))
+              else
+                echo "FAILED to delete (maybe protected): $b"
+              fi
+            fi
+          done < merged.txt
+
+          echo "-----------------------------------------"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run complete. Re-run with dry_run unchecked to delete."
+          else
+            echo "Done. Deleted: $deleted  ·  Already gone/skipped: $skipped"
+          fi
