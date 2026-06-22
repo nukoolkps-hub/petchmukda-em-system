@@ -93,6 +93,58 @@ function callout(x, y, w, txt, o = {}) {
   return { svg: s, h };
 }
 
+// LINE chat mockup showing the "FOR STAFF" rich menu at the bottom.
+function lineChatScreen(ix, iy, iw, ih) {
+  const lineBg = "#8CABD8"; // LINE chat wallpaper blue
+  let p = rrect(ix, iy, iw, ih, 0, lineBg);
+  // top bar
+  p += rrect(ix, iy, iw, 56, 0, "#FFFFFF");
+  p += text(ix + 18, iy + 36, "‹", { size: 28, weight: 700, fill: "#333" });
+  p += text(ix + 38, iy + 35, "99+", { size: 16, weight: 600, fill: "#FFF" });
+  p += rrect(ix + 32, iy + 18, 44, 24, 12, C.green);
+  p += text(ix + 54, iy + 35, "99+", { size: 15, weight: 700, fill: "#FFF", anchor: "middle" });
+  p += text(ix + 90, iy + 36, "PETCHMUKDA BOT", { size: 19, weight: 700, fill: "#222" });
+  p += text(ix + iw - 18, iy + 36, "☰", { size: 22, fill: "#555", anchor: "end" });
+  // a flex bubble (advance request) — simplified
+  let by = iy + 78;
+  const bw = iw - 80;
+  p += rrect(ix + 18, by, 40, 40, 20, "#C9973A"); // bot avatar
+  p += gem(ix + 24, by + 10, 28);
+  const bx = ix + 70;
+  p += `<rect x="${bx}" y="${by}" width="${bw}" height="172" rx="14" fill="#FFFFFF"/>`;
+  p += rrect(bx, by, bw, 60, 14, C.maroon);
+  p += rrect(bx, by + 30, bw, 30, 0, C.maroon);
+  p += text(bx + 18, by + 30, "คำขอเบิกเงินล่วงหน้า", { size: 17, weight: 700, fill: "#FFF" });
+  p += text(bx + 18, by + 50, "ห้างเพชรทองมุกดา", { size: 13, fill: C.goldLt });
+  p += rrect(bx + 16, by + 74, bw - 32, 44, 8, C.goldPale);
+  p += text(bx + 28, by + 102, "฿1,000", { size: 26, weight: 700, fill: C.maroon });
+  p += text(bx + 18, by + 140, "พนักงาน   ฉรินทรญ์ นาคราช", { size: 14, fill: "#555" });
+  p += rrect(bx, by + 158, bw, 14, 0, "#FFFFFF");
+  // rich menu banner at very bottom (the highlight)
+  const rmH = 150;
+  const rmY = iy + ih - rmH - 44;
+  p += `<defs><linearGradient id="rm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${C.maroon}"/><stop offset="1" stop-color="${C.maroonDk2}"/></linearGradient></defs>`;
+  p += `<rect x="${ix}" y="${rmY}" width="${iw}" height="${rmH}" fill="url(#rm)"/>`;
+  // decorative shapes
+  p += circle(ix + 40, rmY + 30, 26, C.gold, { opacity: 0.18 });
+  p += circle(ix + iw - 50, rmY + rmH - 26, 34, C.gold, { opacity: 0.12 });
+  p += text(ix + iw - 30, rmY + 40, "✕", { size: 16, fill: C.gold, anchor: "end" });
+  // white FOR STAFF button
+  const fw = iw - 80, fx = ix + 40, fy = rmY + 36;
+  p += rrect(fx, fy, fw, 64, 14, "#FFFFFF");
+  p += text(ix + iw / 2, fy + 44, "FOR STAFF", { size: 30, weight: 700, fill: C.maroon, anchor: "middle", spacing: "2" });
+  p += text(ix + iw / 2, rmY + rmH - 16, "ห้างเพชรทองมุกดา", { size: 14, fill: C.goldLt, anchor: "middle" });
+  // bottom menu toggle bar
+  p += rrect(ix, iy + ih - 44, iw, 44, 0, "#FFFFFF");
+  p += rrect(ix + 16, iy + ih - 36, 28, 28, 6, "#EEE");
+  p += text(ix + iw / 2, iy + ih - 16, "เมนู ▾", { size: 18, weight: 600, fill: "#333", anchor: "middle" });
+  // tap target highlight ring on the FOR STAFF button
+  p += rrect(fx - 6, fy - 6, fw + 12, 76, 18, "none", { stroke: C.goldLt, sw: 4 });
+  p += icon("cursor", ix + iw / 2 + 30, fy + 30, 38, C.gold, 2.4);
+  p += circle(ix + iw / 2 + 30, fy + 30, 26, "#FFF", { opacity: 0.25 });
+  return p;
+}
+
 // phone frame; cb(ix,iy,iw,ih) returns inner svg
 function phone(x, y, w, h, cb) {
   const r = 46;
@@ -169,7 +221,7 @@ function buildCover() {
   y += th * 2 + gap + 40;
 
   // login note
-  const co = callout(60, y, W - 120, "เข้าระบบครั้งแรก: เปิดเว็บแล้วกดปุ่มสีเขียว \"Login ด้วย LINE\" ด้วยบัญชี LINE ที่ลงทะเบียนกับร้าน", { ic: "lineChat", accent: C.lineGreen, bg: "#E8F8EE", tcol: "#1B5E36" });
+  const co = callout(60, y, W - 120, "เข้าระบบ: แตะเมนู \"FOR STAFF\" ใน LINE Bot ของร้าน (หรือเปิดลิงก์เว็บ) แล้วกดปุ่มเขียว \"Login ด้วย LINE\"", { ic: "lineChat", accent: C.lineGreen, bg: "#E8F8EE", tcol: "#1B5E36" });
   s += co.svg;
   y += co.h + 30;
 
@@ -191,53 +243,67 @@ function buildCover() {
 // ============================================================
 function buildLogin() {
   let s = "";
-  const h = header("วิธีเข้าสู่ระบบ", "ล็อกอินด้วยบัญชี LINE", "1 / 5", "login");
+  const h = header("วิธีเข้าสู่ระบบ", "เข้าได้ 2 ทาง — แนะนำผ่าน LINE Bot", "1 / 5", "login");
   s += h.svg;
-  const top = h.h + 36;
+  let y = h.h + 36;
 
-  // phone mockup on right showing login screen
-  const pw = 360, ph = 600;
-  const px = W - 60 - pw, py = top;
-  s += phone(px, py, pw, ph, (ix, iy, iw, ih) => {
-    let p = rrect(ix, iy, iw, ih, 0, C.cream);
-    p += gem(ix + iw / 2 - 34, iy + 70, 68);
-    p += text(ix + iw / 2, iy + 190, "ห้างเพชรทองมุกดา", { size: 26, weight: 700, fill: C.maroon, anchor: "middle" });
-    p += text(ix + iw / 2, iy + 222, "ระบบพนักงาน", { size: 18, fill: C.sub, anchor: "middle" });
-    p += text(ix + iw / 2, iy + 300, "ยินดีต้อนรับ", { size: 24, weight: 600, fill: C.ink, anchor: "middle" });
-    p += text(ix + iw / 2, iy + 332, "ลงชื่อเข้าใช้ด้วยบัญชี LINE", { size: 17, fill: C.sub, anchor: "middle" });
-    // green LINE button
-    const bw = iw - 80, bx = ix + 40, by = iy + 380;
-    p += rrect(bx, by, bw, 64, 14, C.lineGreen);
-    p += icon("lineChat", bx + 28, by + 16, 32, "#FFFFFF", 0);
-    p += text(bx + bw / 2 + 16, by + 42, "Login ด้วย LINE", { size: 24, weight: 700, fill: "#FFFFFF", anchor: "middle" });
-    // cursor
-    p += icon("cursor", bx + bw / 2 + 60, by + 36, 34, C.maroon, 2);
-    p += circle(bx + bw / 2 + 60, by + 36, 24, C.maroon, { opacity: 0.12 });
-    return p;
-  });
+  // --- two method cards ---
+  s += text(60, y + 10, "เลือกวิธีเข้าระบบ", { size: 30, weight: 700, fill: C.maroon });
+  y += 40;
+  const gap = 28, mw = (W - 120 - gap) / 2, mh = 168;
+  // method 1 — LINE Bot (recommended)
+  s += card(60, y, mw, mh, 24);
+  s += rrect(60, y, mw, 10, 5, C.lineGreen);
+  s += circle(60 + 56, y + 70, 36, "#E8F8EE");
+  s += icon("lineChat", 60 + 56 - 20, y + 70 - 20, 40, C.lineGreen, 0);
+  const r1 = chip(60 + 100, y + 34, "แนะนำ", { bg: C.greenBg, fill: "#1B5E36", size: 18, h: 32 });
+  s += r1.svg;
+  s += text(60 + 100, y + 96, "ผ่าน LINE Bot", { size: 28, weight: 700, fill: C.maroon });
+  s += paragraph(60 + 32, y + 130, "แตะแถบเมนู \"FOR STAFF\" ในแชทบอท", { size: 22, fill: C.sub, maxW: mw - 60 }).svg;
+  // method 2 — web link
+  const m2x = 60 + mw + gap;
+  s += card(m2x, y, mw, mh, 24);
+  s += rrect(m2x, y, mw, 10, 5, C.gold);
+  s += circle(m2x + 56, y + 70, 36, C.goldPale);
+  s += icon("smartphone", m2x + 56 - 16, y + 70 - 20, 38, C.gold, 2);
+  s += text(m2x + 100, y + 60, "เปิดลิงก์เว็บ", { size: 28, weight: 700, fill: C.maroon });
+  s += paragraph(m2x + 32, y + 100, "พิมพ์ petchmukda-bot.web.app ในเบราว์เซอร์มือถือ", { size: 22, fill: C.sub, maxW: mw - 60 }).svg;
+  y += mh + 40;
 
-  // steps on left
-  let y = top + 6;
+  // --- highlighted method: LINE Bot, phone mockup + steps ---
+  s += rrect(60, y, 8, 36, 4, C.lineGreen);
+  s += text(86, y + 30, "วิธีที่ 1 — เข้าผ่าน LINE Bot", { size: 28, weight: 700, fill: C.maroon });
+  y += 56;
+
+  const pw = 372, ph = 660;
+  const px = W - 60 - pw, py = y;
+  s += phone(px, py, pw, ph, lineChatScreen);
+
   const colW = px - 60 - 40;
+  let sy = y + 4;
   const steps = [
-    ["เปิดลิงก์ของระบบ", "พิมพ์ petchmukda-bot.web.app บนมือถือ หรือกดลิงก์ที่ร้านส่งให้ใน LINE"],
-    ["กดปุ่มสีเขียว", "แตะปุ่ม \"Login ด้วย LINE\" ที่อยู่กลางจอ"],
-    ["กดอนุญาต", "ถ้า LINE ถามให้ยืนยัน ให้กด \"อนุญาต\" เพื่อเชื่อมต่อบัญชี"],
-    ["เข้าระบบสำเร็จ", "ระบบพาเข้าหน้าแรกอัตโนมัติ ครั้งต่อไปไม่ต้องล็อกอินซ้ำ"],
+    ["เปิดแชท \"PETCHMUKDA BOT\"", "เข้าแอป LINE แล้วเปิดห้องแชทของบอทร้าน"],
+    ["แตะแถบสีแดง \"FOR STAFF\"", "อยู่ด้านล่างสุดของจอ · ถ้าไม่เห็น ให้แตะคำว่า \"เมนู ▾\" เพื่อกางเมนูออกมาก่อน"],
+    ["เว็บแอปเปิดขึ้นในไลน์", "ระบบจะเปิดหน้าเข้าสู่ระบบให้อัตโนมัติ"],
+    ["กดปุ่มเขียว \"Login ด้วย LINE\"", "ถ้าถามให้ยืนยัน กด \"อนุญาต\" → เข้าหน้าแรกทันที"],
   ];
   steps.forEach((st, i) => {
-    const r = step(60, y, i + 1, st[0], st[1], { w: colW });
+    const r = step(60, sy, i + 1, st[0], st[1], { w: colW });
     s += r.svg;
-    // connector line to next
-    if (i < steps.length - 1) {
-      const nextY = y + r.h + 24;
-      s += `<line x1="94" y1="${y + 70}" x2="94" y2="${nextY + 6}" stroke="${C.goldPale}" stroke-width="3"/>`;
-    }
-    y += r.h + 24;
+    if (i < steps.length - 1) s += `<line x1="94" y1="${sy + 70}" x2="94" y2="${sy + r.h + 30}" stroke="${C.goldPale}" stroke-width="3"/>`;
+    sy += r.h + 24;
   });
+  // small green login button illustration under steps
+  const lb = sy + 6;
+  s += rrect(60, lb, Math.min(colW, 320), 60, 14, C.lineGreen);
+  s += icon("lineChat", 84, lb + 16, 30, "#FFFFFF", 0);
+  s += text(60 + Math.min(colW, 320) / 2 + 18, lb + 39, "Login ด้วย LINE", { size: 23, weight: 700, fill: "#FFFFFF", anchor: "middle" });
 
-  let yBottom = Math.max(y, py + ph + 30);
-  const co = callout(60, yBottom, W - 120, "ใช้บัญชี LINE ที่ลงทะเบียนกับร้านเท่านั้น — ถ้าขึ้นข้อความ \"ยังไม่พบข้อมูลพนักงาน\" ให้แจ้งแอดมินเพื่อเชื่อมบัญชีให้", { ic: "info", accent: C.gold });
+  let yBottom = Math.max(sy, py + ph + 30);
+  const c0 = callout(60, yBottom, W - 120, "อีกทาง: เปิดเบราว์เซอร์แล้วพิมพ์ petchmukda-bot.web.app ก็เข้าได้เหมือนกัน — แล้วกด \"Login ด้วย LINE\"", { ic: "smartphone", accent: C.gold });
+  s += c0.svg;
+  yBottom += c0.h + 16;
+  const co = callout(60, yBottom, W - 120, "ใช้บัญชี LINE ที่ลงทะเบียนกับร้านเท่านั้น — ถ้าขึ้น \"ยังไม่พบข้อมูลพนักงาน\" ให้แจ้งแอดมินเพื่อเชื่อมบัญชีให้", { ic: "info", accent: C.maroon, bg: C.redBg, tcol: C.maroon });
   s += co.svg;
   yBottom += co.h + 24;
 
