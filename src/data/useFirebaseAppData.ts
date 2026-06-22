@@ -160,17 +160,16 @@ export default function useFirebaseAppData({
     employeeId: string,
     yearMonth: string,
     overrideLeaves: any[],
+    overrideCalendar?: any,
   ) {
     const existing = salResult.data?.[employeeId]?.[yearMonth];
     if (!existing) return null;
+    const calendar = overrideCalendar ?? storeCalendarResult.data;
     const monthLeaves = overrideLeaves.filter(
       (l) => l.employeeId === employeeId && l.start.startsWith(yearMonth),
     );
-    const weekdayLeaves = countWeekdayLeaves(
-      monthLeaves,
-      storeCalendarResult.data,
-    );
-    const overInfo = getOverQuotaDays(monthLeaves, storeCalendarResult.data);
+    const weekdayLeaves = countWeekdayLeaves(monthLeaves, calendar);
+    const overInfo = getOverQuotaDays(monthLeaves, calendar);
     const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
     if (existing.totalLeaveDays === totalLeaveDays) return existing;
     await salariesAPI.updateSalary(employeeId, yearMonth, { totalLeaveDays });
@@ -561,7 +560,7 @@ export default function useFirebaseAppData({
      - settle "ทุกแถว" (ไม่ใช่แค่คนที่แก้) เพราะการเกลี่ยกองกลาง/หักกองกลาง
        กระทบ net ของเพื่อนทั้งกลุ่ม → denorm/auto-carry/loan ledger ต้องตรงทุกคน
      - override (in-memory subscription ยัง stale หลัง write): salaryDataPatch /
-       directory / allLeaves / employeeLoans / poolAdjustment
+       directory / allLeaves / employeeLoans / poolAdjustment / storeCalendar
      - re-stamp payrollConfirms (preserve firstConfirmedAt/lockAtMs) + changeLog */
   async function syncConfirmedMonth(
     yearMonth: string,
@@ -571,6 +570,7 @@ export default function useFirebaseAppData({
       allLeaves?: any[];
       employeeLoans?: any[];
       poolAdjustment?: any;
+      storeCalendar?: any;
       employeeName: string;
       changeStrings: string[];
     },
@@ -587,6 +587,7 @@ export default function useFirebaseAppData({
       opts.poolAdjustment !== undefined
         ? opts.poolAdjustment
         : (poolAdjResult.data?.[yearMonth] ?? null);
+    const storeCalendar = opts.storeCalendar ?? storeCalendarResult.data;
     let salaryData = salResult.data;
     if (opts.salaryDataPatch) {
       salaryData = { ...salResult.data };
@@ -608,7 +609,7 @@ export default function useFirebaseAppData({
       employeeLoans,
       monthApprovedAdvances,
       poolAdjustment,
-      storeCalendar: storeCalendarResult.data,
+      storeCalendar,
     });
     // 1) settle ทุกแถว (denorm net + auto-carry + loan ledger) · best-effort
     await Promise.allSettled(
@@ -783,6 +784,21 @@ export default function useFirebaseAppData({
     const target = advResult.data.find((a) => a.id === id);
     if (target && monthLocked(target.month)) throw new Error(LOCK_MSG);
     await advancesAPI.rejectAdvance(id, reason);
+    // safety net: ถ้าปฏิเสธเบิกที่ "อนุมัติแล้ว" ในเดือน grace → ยอดหักหายไป →
+    // re-settle (getApprovedAdvancesByMonth อ่านสด ไม่เห็นตัวที่เพิ่งปฏิเสธ) ·
+    // UI ปัจจุบันให้ปฏิเสธเฉพาะรายการ pending (ยังไม่ถูกหัก) → ปกติเป็น no-op
+    const ym = target?.month;
+    if (
+      target?.status === "approved" &&
+      pcResult.data?.[ym]?.confirmedAt &&
+      !monthLocked(ym)
+    ) {
+      const emp = employeeResult.data.find((e) => e.id === target.employeeId);
+      await syncConfirmedMonth(ym, {
+        employeeName: emp?.nickname || emp?.name || target.employeeId,
+        changeStrings: [`ปฏิเสธเบิกล่วงหน้า ${target.amount} ฿`],
+      });
+    }
   }
 
   /* ─── Employee Loans (เงินกู้ผ่อนคืน — admin สร้าง) ────────── */
@@ -893,9 +909,58 @@ export default function useFirebaseAppData({
   }
 
   /* ─── Store calendar (ปฏิทินเปิด-ปิดร้าน — admin manage) ─── */
+  // วันที่ (YYYY-MM-DD) ที่ต่างกันระหว่างปฏิทินเก่า/ใหม่ (symmetric diff ทุก array)
+  function diffCalendarDates(a: any, b: any): Set<string> {
+    const keys = [
+      "extraOpenSaturdays",
+      "extraClosedWeekdays",
+      "paidExtraSaturdays",
+      "extraClosedSundays",
+    ];
+    const changed = new Set<string>();
+    for (const k of keys) {
+      const sa = new Set<string>(a?.[k] || []);
+      const sb = new Set<string>(b?.[k] || []);
+      for (const d of sa) if (!sb.has(d)) changed.add(d);
+      for (const d of sb) if (!sa.has(d)) changed.add(d);
+    }
+    return changed;
+  }
   async function updateStoreCalendar(cal) {
+    const prev = storeCalendarResult.data;
     await storeCalendarAPI.updateStoreCalendar(cal);
     triggerRecomputeDutyAssignments(); // duty filter ขึ้นกับ calendar
+    // ปฏิทินกระทบเงินทุกคนในเดือนนั้น (จ่ายเพิ่มเสาร์พิเศษ + ฐานนับวันลา/×1.5) →
+    // re-settle เดือนที่ยืนยันแล้วยังไม่ปิดรอบ + log (admin เท่านั้น)
+    if (!isAdmin) return;
+    const affectedMonths = new Set(
+      [...diffCalendarDates(prev, cal)].map((d) => d.slice(0, 7)),
+    );
+    // เรียงเก่า→ใหม่ + sequential — กัน auto-carry race ข้ามเดือน (เหมือน updateEmployee)
+    const months = [...affectedMonths]
+      .filter((ym) => pcResult.data?.[ym]?.confirmedAt && !monthLocked(ym))
+      .sort();
+    for (const ym of months) {
+      // calendar ใหม่ → การนับวันลาเปลี่ยน → restamp totalLeaveDays ทุกคนที่มี
+      // salary doc เดือนนั้น (pool leave-deduction อ่าน snapshot) · no-op ถ้าไม่เปลี่ยน
+      const patch: Record<string, any> = {};
+      for (const empId of Object.keys(salResult.data || {})) {
+        if (!salResult.data[empId]?.[ym]) continue;
+        const patched = await restampLeaveSnapshot(
+          empId,
+          ym,
+          leavesResult.data,
+          cal,
+        );
+        if (patched) patch[empId] = patched;
+      }
+      await syncConfirmedMonth(ym, {
+        storeCalendar: cal,
+        salaryDataPatch: Object.keys(patch).length ? patch : undefined,
+        employeeName: "ปฏิทินร้าน",
+        changeStrings: ["แก้ปฏิทินเปิด-ปิดร้าน"],
+      });
+    }
   }
 
   /* ─── Legacy setters (deprecated — แต่ component เก่าใช้) ───

@@ -405,6 +405,52 @@ export function diffSalaryFields(
     const n = fmt(fields.poolExclusion);
     if (o !== n) out.push(`การปิดสิทธิ์กองกลาง: ${o} → ${n}`);
   }
+  // รายการประจำเดือน (ค่าเดินทาง/เบี้ยขยัน/ค่าชุด/ค่าอาหาร) — diff ต่อ item ตาม id
+  if ("recurringItems" in fields) {
+    const kindLabel = (t: string) =>
+      t === "deduction" ? "รายการหักประจำ" : "รายรับประจำ";
+    const oldArr: any[] = Array.isArray(b.recurringItems)
+      ? b.recurringItems
+      : [];
+    const newArr: any[] = Array.isArray(fields.recurringItems)
+      ? fields.recurringItems
+      : [];
+    const oldById = new Map(oldArr.map((it) => [it.id, it]));
+    const newById = new Map(newArr.map((it) => [it.id, it]));
+    for (const id of new Set([...oldById.keys(), ...newById.keys()])) {
+      const o = oldById.get(id);
+      const n = newById.get(id);
+      if (o && !n) {
+        out.push(`ลบ${kindLabel(o.type)} "${o.label}"`);
+      } else if (!o && n) {
+        out.push(
+          `เพิ่ม${kindLabel(n.type)} "${n.label}" ${formatThaiNumber(Number(n.amount) || 0)} ฿`,
+        );
+      } else if (
+        o &&
+        n &&
+        (Number(o.amount) || 0) !== (Number(n.amount) || 0)
+      ) {
+        out.push(
+          `${kindLabel(n.type)} "${n.label}" ${formatThaiNumber(Number(o.amount) || 0)} → ${formatThaiNumber(Number(n.amount) || 0)} ฿`,
+        );
+      }
+    }
+  }
+  // ขึ้นเงินเดือนรายปี (override ต่อปี) — diff ต่อปี
+  if ("annualRaises" in fields) {
+    const o = (b.annualRaises || {}) as Record<string, number>;
+    const n = (fields.annualRaises || {}) as Record<string, number>;
+    for (const y of new Set([...Object.keys(o), ...Object.keys(n)])) {
+      const ov = Number(o[y]) || 0;
+      const nv = Number(n[y]) || 0;
+      if (ov !== nv) {
+        out.push(
+          `ปรับขึ้นเงินเดือนปี ${y}: ${formatThaiNumber(ov)} → ${formatThaiNumber(nv)}`,
+        );
+      }
+    }
+  }
   return out;
 }
 
