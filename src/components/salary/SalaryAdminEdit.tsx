@@ -500,7 +500,18 @@ export default function SalaryAdminEdit({
     setSaving(true);
     try {
       if (onSaveSalary) {
-        await onSaveSalary(selectedEmployeeId, selectedMonth, nextMonthData);
+        // resyncConfirmed: ถ้าเดือนนี้ยืนยันยอดแล้ว (grace) → ให้ data layer
+        // settle + sync ยอดทางการ + บันทึกประวัติการแก้จำนวนชิ้น ให้ consistent
+        // กับการแก้เรท (เดือนเปิด/ยังไม่ยืนยัน → flag ไม่มีผล)
+        await onSaveSalary(
+          selectedEmployeeId,
+          selectedMonth,
+          nextMonthData,
+          undefined,
+          {
+            resyncConfirmed: true,
+          },
+        );
       } else {
         setSalaryData((d) => {
           const next = { ...d };
