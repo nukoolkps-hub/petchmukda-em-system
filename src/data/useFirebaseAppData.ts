@@ -183,6 +183,7 @@ export default function useFirebaseAppData({
       "pieceRates",
       "poolItemRates",
       "bonusRates",
+      "recurringItems",
     ];
     const salaryAffectingChanged =
       scalarRateFields.some(
@@ -288,6 +289,7 @@ export default function useFirebaseAppData({
         bonusRates: _br,
         poolItemRates: _pir,
         socialSecurity: _soc,
+        recurringItems: _ri,
         ...safeFields
       } = fields || {};
       await salariesAPI.updateSalary(employeeId, yearMonth, safeFields);
@@ -340,6 +342,7 @@ export default function useFirebaseAppData({
       bonusRates: _ignoredBonusRates,
       poolItemRates: _ignoredPoolItemRates,
       socialSecurity: _ignoredSocialSecurity,
+      recurringItems: _ignoredRecurringItems,
       ...callerFields
     } = fields || {};
 

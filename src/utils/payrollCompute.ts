@@ -69,6 +69,11 @@ export function buildRateFieldsSnapshot(employee: any, yearMonth: string) {
     bonusRates: employee.bonusRates ?? {},
     poolItemRates: employee.poolItemRates ?? {},
     socialSecurity: employee.socialSecurity ?? 0,
+    // freeze รายการประจำเดือน (ค่าเดินทาง/ค่าอาหาร ฯลฯ) ต่อเดือน — กันสลิป
+    // เดือนเก่าเพี้ยนเมื่อ admin เพิ่ม/ลบ recurring ในอนาคต
+    recurringItems: Array.isArray(employee.recurringItems)
+      ? employee.recurringItems
+      : [],
   };
 }
 
