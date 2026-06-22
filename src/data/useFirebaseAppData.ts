@@ -149,6 +149,41 @@ export default function useFirebaseAppData({
   function leaveRangeText(lv: { start: string; end: string }) {
     return lv.start === lv.end ? lv.start : `${lv.start}–${lv.end}`;
   }
+  // re-stamp snapshot totalLeaveDays ของพนักงานคนหนึ่ง จาก leaves ที่ override
+  // (in-memory ยัง stale หลังเพิ่ม/ลบใบลา) — จำเป็นเพราะ computePoolSharesForGroup
+  // อ่าน leave จาก salary snapshot ก่อน (ไม่ใช่ live leaves) → ถ้าไม่ restamp
+  // การหักกองกลางจากวันลาจะค้างค่าเก่า (ทั้งที่ over-quota/โบนัสขยันอัปเดตแล้ว)
+  // เขียนทั้ง salary doc + mirror poolSnapshot (peer ฝั่งพนักงานอ่าน pool คนนี้)
+  // คืน salary doc ใหม่ให้ใส่ salaryDataPatch · null ถ้าไม่มี snapshot เดิม
+  // (pool calc fallback ใช้ live leaves อยู่แล้ว — ไม่ต้อง restamp)
+  async function restampLeaveSnapshot(
+    employeeId: string,
+    yearMonth: string,
+    overrideLeaves: any[],
+  ) {
+    const existing = salResult.data?.[employeeId]?.[yearMonth];
+    if (!existing) return null;
+    const monthLeaves = overrideLeaves.filter(
+      (l) => l.employeeId === employeeId && l.start.startsWith(yearMonth),
+    );
+    const weekdayLeaves = countWeekdayLeaves(
+      monthLeaves,
+      storeCalendarResult.data,
+    );
+    const overInfo = getOverQuotaDays(monthLeaves, storeCalendarResult.data);
+    const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
+    if (existing.totalLeaveDays === totalLeaveDays) return existing;
+    await salariesAPI.updateSalary(employeeId, yearMonth, { totalLeaveDays });
+    const patched = { ...existing, totalLeaveDays };
+    try {
+      await poolSnapshotsAPI.upsertPoolSnapshot(yearMonth, employeeId, {
+        totalLeaveDays,
+      });
+    } catch (err) {
+      console.error("[restampLeaveSnapshot] poolSnapshot mirror failed:", err);
+    }
+    return patched;
+  }
   async function addLeave(leave) {
     if (monthLocked(monthOf(leave?.start))) throw new Error(LOCK_MSG);
     const id = await leavesAPI.addLeave(leave);
@@ -159,8 +194,15 @@ export default function useFirebaseAppData({
     const ym = monthOf(leave?.start);
     if (isAdmin && pcResult.data?.[ym]?.confirmedAt && !monthLocked(ym)) {
       const emp = employeeResult.data.find((e) => e.id === leave.employeeId);
+      const newLeaves = [...leavesResult.data, { id, ...leave }];
+      const patched = await restampLeaveSnapshot(
+        leave.employeeId,
+        ym,
+        newLeaves,
+      );
       await syncConfirmedMonth(ym, {
-        allLeaves: [...leavesResult.data, { id, ...leave }],
+        allLeaves: newLeaves,
+        salaryDataPatch: patched ? { [leave.employeeId]: patched } : undefined,
         employeeName: emp?.nickname || emp?.name || leave.employeeId,
         changeStrings: [`เพิ่มวันลา ${leaveRangeText(leave)}`],
       });
@@ -180,8 +222,15 @@ export default function useFirebaseAppData({
       !monthLocked(ym)
     ) {
       const emp = employeeResult.data.find((e) => e.id === target.employeeId);
+      const newLeaves = leavesResult.data.filter((l) => l.id !== id);
+      const patched = await restampLeaveSnapshot(
+        target.employeeId,
+        ym,
+        newLeaves,
+      );
       await syncConfirmedMonth(ym, {
-        allLeaves: leavesResult.data.filter((l) => l.id !== id),
+        allLeaves: newLeaves,
+        salaryDataPatch: patched ? { [target.employeeId]: patched } : undefined,
         employeeName: emp?.nickname || emp?.name || target.employeeId,
         changeStrings: [`ลบวันลา ${leaveRangeText(target)}`],
       });
