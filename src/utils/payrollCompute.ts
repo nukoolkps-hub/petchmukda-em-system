@@ -9,6 +9,7 @@
 
    pure 100% (ไม่ import firebase) → unit-test ได้ใต้ node                       */
 
+import { formatThaiNumber } from "./format";
 import { countWeekdayLeaves, getOverQuotaDays } from "./leaveUtils";
 import {
   calculateSalary,
@@ -252,6 +253,138 @@ export function computeEmployeeMonthRow({
     advanceTotal: approvedAdvanceTotal,
     monthApprovedAdvances: monthApprovedForEmp,
   };
+}
+
+/** ลายเซ็นยอดต่อคน — ใช้เทียบ "ข้อมูลเปลี่ยนหลังยืนยัน" + sync ยอดทางการ ·
+ *  single source (เดิม inline ใน PayrollSummaryPanel) · sort กันลำดับสลับ      */
+export function computeBreakdownSig(rows: EmployeeMonthRow[]): string {
+  return rows
+    .map((r) => `${r.employee.id}:${Math.round(r.salaryCalculation.netSalary)}`)
+    .sort()
+    .join("|");
+}
+
+/** สรุปยอดทั้งเดือน (total/count/sig + rows) — ใช้ทั้ง PayrollSummaryPanel
+ *  (live figure) และ auto-sync ยอดทางการตอนแก้เรทในเดือน grace                */
+export function computeMonthSummary(args: {
+  activeEmployees: any[];
+  yearMonth: string;
+  salaryData: any;
+  allLeaves: any[];
+  employeeDirectory: any[];
+  roles: any[];
+  employeeLoans: any[];
+  monthApprovedAdvances: any[];
+  poolAdjustment: any;
+  storeCalendar: any;
+}): {
+  total: number;
+  count: number;
+  breakdownSig: string;
+  rows: EmployeeMonthRow[];
+} {
+  const poolSharesByGroup = buildPoolSharesByGroup({
+    activeEmployees: args.activeEmployees,
+    yearMonth: args.yearMonth,
+    salaryData: args.salaryData,
+    allLeaves: args.allLeaves,
+    employeeDirectory: args.employeeDirectory,
+    roles: args.roles,
+    poolAdjustment: args.poolAdjustment,
+    storeCalendar: args.storeCalendar,
+  });
+  const rows = args.activeEmployees
+    .map((employee) =>
+      computeEmployeeMonthRow({
+        employee,
+        yearMonth: args.yearMonth,
+        salaryData: args.salaryData,
+        allLeaves: args.allLeaves,
+        employeeDirectory: args.employeeDirectory,
+        roles: args.roles,
+        employeeLoans: args.employeeLoans,
+        monthApprovedAdvances: args.monthApprovedAdvances,
+        poolAdjustment: args.poolAdjustment,
+        storeCalendar: args.storeCalendar,
+        poolSharesByGroup,
+      }),
+    )
+    .filter((r): r is EmployeeMonthRow => !!r?.salaryCalculation);
+  const total = rows.reduce((s, r) => s + r.salaryCalculation.netSalary, 0);
+  return {
+    total,
+    count: rows.length,
+    breakdownSig: computeBreakdownSig(rows),
+    rows,
+  };
+}
+
+/* ─── Human-readable diff ของ field ที่กระทบเงินเดือน (สำหรับ changeLog) ──── */
+const SALARY_FIELD_LABELS: Record<string, string> = {
+  baseSalary: "เงินเดือนพื้นฐาน",
+  annualRaiseAmount: "ขึ้นเงินเดือนประจำปี",
+  socialSecurity: "ประกันสังคม",
+  singlePieceRate: "ค่าคอมต่อชิ้น",
+  normalSalePieceRate: "ค่าคอมขายทั่วไป",
+  specialSalePieceRate: "ค่าคอมขายพิเศษ",
+  buyPieceRate: "ค่าคอมรับซื้อ",
+  invitePieceRate: "ค่าเชิญบัตร",
+  transferPieceRate: "ค่าย้ายบัตร",
+  roleId: "ตำแหน่ง",
+};
+const SALARY_MAP_LABELS: Record<string, string> = {
+  poolItemRates: "ค่าคอม",
+  pieceRates: "เรท",
+  bonusRates: "โบนัส",
+};
+
+/** สร้างรายการ "อะไรเปลี่ยนบ้าง" (human-readable) จาก before → fields ที่ส่งแก้ ·
+ *  ใช้บันทึก changeLog ของเดือน grace · ครอบ scalar + map เรท + poolExclusion   */
+export function diffSalaryFields(before: any, fields: any): string[] {
+  const out: string[] = [];
+  const b = before || {};
+  for (const [key, label] of Object.entries(SALARY_FIELD_LABELS)) {
+    if (!(key in fields)) continue;
+    const oldV = b[key];
+    const newV = fields[key];
+    if (oldV === newV) continue;
+    if (key === "roleId") {
+      out.push(`${label}: ${oldV ?? "-"} → ${newV ?? "-"}`);
+    } else {
+      out.push(
+        `${label} ${formatThaiNumber(Number(oldV) || 0)} → ${formatThaiNumber(Number(newV) || 0)}`,
+      );
+    }
+  }
+  for (const [key, label] of Object.entries(SALARY_MAP_LABELS)) {
+    if (!(key in fields)) continue;
+    const oldMap = (b[key] as Record<string, number>) || {};
+    const newMap = (fields[key] as Record<string, number>) || {};
+    const ids = new Set([...Object.keys(oldMap), ...Object.keys(newMap)]);
+    for (const id of ids) {
+      const o = Number(oldMap[id]) || 0;
+      const n = Number(newMap[id]) || 0;
+      if (o !== n) {
+        out.push(
+          `${label}(${id}) ${formatThaiNumber(o)} → ${formatThaiNumber(n)}`,
+        );
+      }
+    }
+  }
+  if ("poolExclusion" in fields) {
+    const fmt = (v: any) =>
+      v == null
+        ? "ปกติ"
+        : Array.isArray(v)
+          ? v.length
+            ? v.join(", ")
+            : "ปกติ"
+          : String(v);
+    const o = fmt(b.poolExclusion);
+    const n = fmt(fields.poolExclusion);
+    if (o !== n) out.push(`การปิดสิทธิ์กองกลาง: ${o} → ${n}`);
+  }
+  return out;
 }
 
 /** settle 1 แถว/เดือน — denorm netSalary + auto-carry + loan ledger

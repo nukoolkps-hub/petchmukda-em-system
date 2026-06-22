@@ -3,7 +3,10 @@ import {
   buildLoanContext,
   buildPoolSharesByGroup,
   buildRateFieldsSnapshot,
+  computeBreakdownSig,
   computeEmployeeMonthRow,
+  computeMonthSummary,
+  diffSalaryFields,
   groupEmployeesByPool,
   nextMonthOf,
   roleIdForMonth,
@@ -292,6 +295,78 @@ describe("settleEmployeeMonth", () => {
     });
     expect(recordLoanRepayment).toHaveBeenCalledTimes(1);
     expect(recordLoanRepayment).toHaveBeenCalledWith("l1", YM, 150);
+  });
+});
+
+describe("computeBreakdownSig", () => {
+  it("is order-independent (sorted by employee id) and rounds net", () => {
+    const mk = (id: string, net: number) =>
+      ({ employee: { id }, salaryCalculation: { netSalary: net } }) as any;
+    const a = computeBreakdownSig([mk("b", 100.4), mk("a", 200.6)]);
+    const b = computeBreakdownSig([mk("a", 200.6), mk("b", 100.4)]);
+    expect(a).toBe(b);
+    expect(a).toBe("a:201|b:100");
+  });
+});
+
+describe("computeMonthSummary", () => {
+  it("sums net across active employees and returns count + sig", () => {
+    const emps = [
+      { id: "a", roleId: "staff", baseSalary: 30000 },
+      { id: "b", roleId: "staff", baseSalary: 30000 },
+    ];
+    const salaryData = {
+      a: { [YM]: { baseSalary: 30000 } },
+      b: { [YM]: { baseSalary: 30000 } },
+    };
+    const s = computeMonthSummary({
+      activeEmployees: emps,
+      yearMonth: YM,
+      salaryData,
+      allLeaves: [],
+      employeeDirectory: emps,
+      roles: [{ id: "staff" }],
+      employeeLoans: [],
+      monthApprovedAdvances: [],
+      poolAdjustment: null,
+      storeCalendar: null,
+    });
+    // each: 30000 base + 2000 attendance = 32000 → total 64000, 2 คน
+    expect(s.total).toBe(64000);
+    expect(s.count).toBe(2);
+    expect(s.breakdownSig).toBe("a:32000|b:32000");
+    expect(s.rows).toHaveLength(2);
+  });
+});
+
+describe("diffSalaryFields", () => {
+  it("describes scalar rate changes only when changed", () => {
+    const out = diffSalaryFields(
+      { baseSalary: 30000, socialSecurity: 750 },
+      { baseSalary: 32000, socialSecurity: 750 },
+    );
+    expect(out).toEqual(["เงินเดือนพื้นฐาน 30,000 → 32,000"]);
+  });
+  it("describes per-key map changes (poolItemRates)", () => {
+    const out = diffSalaryFields(
+      { poolItemRates: { normal: 40, buy: 10 } },
+      { poolItemRates: { normal: 50, buy: 10 } },
+    );
+    expect(out).toEqual(["ค่าคอม(normal) 40 → 50"]);
+  });
+  it("describes poolExclusion changes", () => {
+    const out = diffSalaryFields(
+      { poolExclusion: null },
+      {
+        poolExclusion: ["buy"],
+      },
+    );
+    expect(out).toEqual(["การปิดสิทธิ์กองกลาง: ปกติ → buy"]);
+  });
+  it("returns empty when nothing relevant changed", () => {
+    expect(diffSalaryFields({ baseSalary: 30000 }, { nickname: "x" })).toEqual(
+      [],
+    );
   });
 });
 
