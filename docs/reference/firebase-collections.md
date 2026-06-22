@@ -167,13 +167,19 @@ interface PoolItem {
 | confirmedAt | string (ISO) | เวลายืนยัน (ล่าสุด — อัปเดตเมื่อ "ยืนยันยอดใหม่") |
 | firstConfirmedAt | string (ISO) | เวลายืนยัน **ครั้งแรก** — ไม่รีเซ็ตเมื่อยืนยันใหม่ ใช้คิด grace 7 วัน |
 | lockAtMs | number | `firstConfirmedAt + 7 วัน` (ms) — พ้นแล้วเดือนนี้ "ปิดรอบถาวร" |
-| totalAmount | number | ยอดรวม |
+| totalAmount | number | ยอดรวม (re-stamp อัตโนมัติเมื่อมีการแก้ระหว่าง grace) |
 | employeeCount | number | จำนวนพนักงาน |
 | breakdownSig | string | ลายเซ็น `{id:netSalary}` ทุกคน — ใช้เทียบว่า "ข้อมูลเปลี่ยนหลังยืนยัน" |
+| changeLog | array (cap 100) | ประวัติการแก้ไขหลังยืนยัน (grace) · ต่อรายการ: `{ at, employeeName, changes[], totalBefore, totalAfter }` · append ผ่าน `appendPayrollChangeLog()` (transaction) |
 
 > **ปิดรอบ 7 วัน:** เมื่อ `request.time > lockAtMs` → ห้ามแก้ค่าคอม/ลา/เบิก/
 > ยืนยันใหม่ ของเดือนนั้น (บังคับทั้ง UI ผ่าน `src/utils/payrollLock.ts` และ
 > firestore.rules ผ่านฟังก์ชัน `monthLocked(ym)`)
+>
+> **แก้ระหว่าง grace (ยืนยันแล้วยังไม่ปิดรอบ) → auto re-settle:** การแก้ใดๆ ที่กระทบ
+> ยอดของเดือน grace จะ re-settle **ทุกแถว** ในเดือนนั้น + re-stamp `totalAmount`/
+> `breakdownSig` + append `changeLog` อัตโนมัติ (admin เท่านั้น) ดู
+> business-rules.md → "แก้ระหว่าง grace → auto re-settle + ประวัติ"
 
 ### poolSnapshots/{YYYY-MM}
 
