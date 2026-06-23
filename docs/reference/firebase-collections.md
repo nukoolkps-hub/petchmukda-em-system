@@ -283,6 +283,23 @@ interface Item {
 | LINE_LOGIN_CHANNEL_SECRET | LINE Login Channel Secret |
 | LINE_CHANNEL_ACCESS_TOKEN | Messaging API Access Token |
 | LINE_CHANNEL_SECRET | Messaging API Channel Secret |
+| GITHUB_BACKUP_TOKEN | GitHub PAT (scope `contents:write`) สำหรับ backup → GitHub |
+| GITHUB_BACKUP_REPO | `"owner/repo"` ปลายทางเก็บ backup |
+| GITHUB_BACKUP_BRANCH | branch ปลายทาง (default `"main"`) |
+
+### config/backupStatus
+
+สถานะ backup ล่าสุด (เขียนโดย `backupToGitHub.ts` · subscribe ใน admin ผ่าน
+`src/firebase/backup.ts`) · ดู `business-rules.md` → "สำรองข้อมูล + ล้างข้อมูล"
+
+| Field | Type | Description |
+|---|---|---|
+| ok / stored | boolean | สำเร็จ / เขียนไฟล์ลง GitHub แล้ว |
+| path / repo / branch | string | ปลายทางไฟล์ backup |
+| totalDocs / sizeBytes | number | จำนวน doc + ขนาดที่สำรอง |
+| reason / error | string | เหตุผล (no-change ฯลฯ) / error ล่าสุด |
+| lastSuccessAt / lastAttemptAt | number | ms epoch |
+| triggeredBy | string | `"scheduled"` หรือ `"manual:{uid}"` |
 
 ### config/storeCalendar
 
@@ -391,6 +408,7 @@ interface Item {
 | config/blockCost | all signed-in | admin only |
 | config/loyaltyPoints | all signed-in | admin only |
 | config/notifications | admin only | admin only |
+| config/backupStatus | admin only | blocked (เขียนโดย Cloud Function · Admin SDK) |
 | config/* (อื่นๆ) | blocked | blocked (Functions ใช้ Admin SDK) |
 
 **Peer data สำหรับกองกลาง (Pool):**

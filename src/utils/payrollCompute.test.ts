@@ -6,11 +6,17 @@ import {
   computeBreakdownSig,
   computeEmployeeMonthRow,
   computeMonthSummary,
+  diffCalendarChanges,
+  diffLoanFields,
+  diffPoolAdjustment,
   diffSalaryCounts,
   diffSalaryFields,
   groupEmployeesByPool,
+  loanSummary,
   nextMonthOf,
   roleIdForMonth,
+  SALARY_AFFECTING_OBJECT_FIELDS,
+  SALARY_AFFECTING_SCALAR_FIELDS,
   settleEmployeeMonth,
 } from "./payrollCompute";
 
@@ -468,6 +474,189 @@ describe("diffSalaryFields", () => {
     expect(
       diffSalaryFields({ baseSalary: 30000 }, { baseSalary: "30000" }),
     ).toEqual([]);
+  });
+});
+
+/* ─── Guard: trigger list (SALARY_AFFECTING_*) ต้องตรงกับ diffSalaryFields ─────
+   ป้องกัน drift — เพิ่ม field ที่กระทบเงินเดือนแล้วลืมสอน diffSalaryFields ให้
+   อธิบาย → re-settle ทำงานแต่ changeLog ขึ้นรายการว่าง (ยอดขยับ ไม่มีคำอธิบาย)
+   เทสต์นี้ fail ทันทีถ้า:
+   - เพิ่ม field ใน canonical list แต่ไม่ใส่ตัวอย่างใน SAMPLE_CHANGED
+   - field ใด field หนึ่งเปลี่ยนแล้ว diffSalaryFields คืน array ว่าง            */
+describe("diffSalaryFields covers every salary-affecting field", () => {
+  // before → fields(after) ที่ทำให้ field นั้น "เปลี่ยน" 1 ตัว (ต้องได้คำอธิบาย ≥ 1)
+  const SAMPLE_CHANGED: Record<string, { before: any; after: any }> = {
+    baseSalary: { before: { baseSalary: 0 }, after: { baseSalary: 1 } },
+    annualRaiseAmount: {
+      before: { annualRaiseAmount: 0 },
+      after: { annualRaiseAmount: 1 },
+    },
+    roleId: { before: { roleId: "r_a" }, after: { roleId: "r_b" } },
+    salaryDisabled: {
+      before: { salaryDisabled: false },
+      after: { salaryDisabled: true },
+    },
+    singlePieceRate: {
+      before: { singlePieceRate: 0 },
+      after: { singlePieceRate: 1 },
+    },
+    normalSalePieceRate: {
+      before: { normalSalePieceRate: 0 },
+      after: { normalSalePieceRate: 1 },
+    },
+    specialSalePieceRate: {
+      before: { specialSalePieceRate: 0 },
+      after: { specialSalePieceRate: 1 },
+    },
+    buyPieceRate: { before: { buyPieceRate: 0 }, after: { buyPieceRate: 1 } },
+    invitePieceRate: {
+      before: { invitePieceRate: 0 },
+      after: { invitePieceRate: 1 },
+    },
+    transferPieceRate: {
+      before: { transferPieceRate: 0 },
+      after: { transferPieceRate: 1 },
+    },
+    socialSecurity: {
+      before: { socialSecurity: 0 },
+      after: { socialSecurity: 1 },
+    },
+    annualRaises: {
+      before: {},
+      after: { annualRaises: { "2026": 1000 } },
+    },
+    poolExclusion: {
+      before: { poolExclusion: null },
+      after: { poolExclusion: "all" },
+    },
+    pieceRates: { before: {}, after: { pieceRates: { x: 1 } } },
+    poolItemRates: { before: {}, after: { poolItemRates: { x: 1 } } },
+    bonusRates: { before: {}, after: { bonusRates: { x: 1 } } },
+    recurringItems: {
+      before: {},
+      after: {
+        recurringItems: [
+          { id: "r1", type: "earning", label: "ค่าเดินทาง", amount: 100 },
+        ],
+      },
+    },
+  };
+
+  const allFields = [
+    ...SALARY_AFFECTING_SCALAR_FIELDS,
+    ...SALARY_AFFECTING_OBJECT_FIELDS,
+  ];
+
+  it("has a sample for every canonical field (and no stale extras)", () => {
+    expect(Object.keys(SAMPLE_CHANGED).sort()).toEqual([...allFields].sort());
+  });
+
+  it.each(
+    allFields,
+  )("produces a non-empty changeLog description for %s", (field) => {
+    const sample = SAMPLE_CHANGED[field];
+    expect(sample, `missing SAMPLE_CHANGED for ${field}`).toBeDefined();
+    const out = diffSalaryFields(sample.before, sample.after);
+    expect(out.length, `diffSalaryFields ไม่อธิบาย "${field}"`).toBeGreaterThan(
+      0,
+    );
+  });
+});
+
+describe("diffPoolAdjustment", () => {
+  it("reports added / removed / changed-pieces items by id with labels", () => {
+    const prev = {
+      items: [
+        { id: "i1", label: "หักค่าเสีย", pieces: 5 },
+        { id: "i2", label: "หักของหาย", pieces: 2 },
+      ],
+    };
+    const next = {
+      items: [
+        { id: "i1", label: "หักค่าเสีย", pieces: 8 }, // changed
+        { id: "i3", label: "หักใหม่", pieces: 3 }, // added (i2 removed)
+      ],
+    };
+    expect(diffPoolAdjustment(prev, next)).toEqual([
+      'หักกองกลาง "หักค่าเสีย" 5 → 8 ชิ้น',
+      'หักกองกลาง: ลบ "หักของหาย" (2 ชิ้น)',
+      'หักกองกลาง: เพิ่ม "หักใหม่" 3 ชิ้น',
+    ]);
+  });
+  it("ignores label-only edits (pieces unchanged) and handles null prev", () => {
+    expect(
+      diffPoolAdjustment(
+        { items: [{ id: "i1", label: "เก่า", pieces: 5 }] },
+        { items: [{ id: "i1", label: "ใหม่", pieces: 5 }] },
+      ),
+    ).toEqual([]);
+    expect(
+      diffPoolAdjustment(null, { items: [{ id: "i1", pieces: 4 }] }),
+    ).toEqual(['หักกองกลาง: เพิ่ม "(ไม่ระบุ)" 4 ชิ้น']);
+  });
+});
+
+describe("diffCalendarChanges", () => {
+  it("groups open/close/paid date changes by month", () => {
+    const prev = {
+      extraOpenSaturdays: ["2026-06-06"],
+      paidExtraSaturdays: [],
+    };
+    const next = {
+      extraOpenSaturdays: ["2026-06-13"], // 06-06 removed, 06-13 added
+      paidExtraSaturdays: ["2026-06-13"], // added
+      extraClosedWeekdays: ["2026-07-01"], // added (different month)
+    };
+    const out = diffCalendarChanges(prev, next);
+    expect(out["2026-06"]).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("เปิดเสาร์พิเศษ"),
+        expect.stringContaining("ยกเลิกเปิดเสาร์พิเศษ"),
+        expect.stringContaining("จ่ายเพิ่มเสาร์พิเศษ"),
+      ]),
+    );
+    expect(out["2026-07"]).toEqual([expect.stringContaining("ปิดวันธรรมดาพิเศษ")]);
+  });
+  it("returns empty object when nothing changed", () => {
+    const cal = { extraOpenSaturdays: ["2026-06-06"] };
+    expect(diffCalendarChanges(cal, cal)).toEqual({});
+  });
+});
+
+describe("diffLoanFields / loanSummary", () => {
+  it("describes principal / monthly / startMonth / status changes", () => {
+    const before = {
+      principal: 10000,
+      monthlyDeduction: 1000,
+      startMonth: "2026-06",
+      status: "active",
+    };
+    expect(
+      diffLoanFields(before, {
+        principal: 12000,
+        monthlyDeduction: 1500,
+        startMonth: "2026-07",
+        status: "cancelled",
+      }),
+    ).toEqual([
+      "เงินต้น 10,000 → 12,000 ฿",
+      "หักต่อเดือน 1,000 → 1,500 ฿",
+      "เดือนเริ่มหัก 2026-06 → 2026-07",
+      "สถานะเงินกู้ กำลังผ่อน → ยกเลิก",
+    ]);
+  });
+  it("only reports fields present in the patch", () => {
+    expect(
+      diffLoanFields(
+        { principal: 10000, monthlyDeduction: 1000 },
+        { monthlyDeduction: 1200 },
+      ),
+    ).toEqual(["หักต่อเดือน 1,000 → 1,200 ฿"]);
+  });
+  it("loanSummary formats principal + monthly deduction", () => {
+    expect(loanSummary({ principal: 20000, monthlyDeduction: 2500 })).toBe(
+      "เงินต้น 20,000 ฿ · หักเดือนละ 2,500 ฿",
+    );
   });
 });
 

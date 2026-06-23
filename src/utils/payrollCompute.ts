@@ -9,6 +9,7 @@
 
    pure 100% (ไม่ import firebase) → unit-test ได้ใต้ node                       */
 
+import { fmtShort } from "./dateUtils";
 import { formatThaiNumber } from "./format";
 import { countWeekdayLeaves, getOverQuotaDays } from "./leaveUtils";
 import {
@@ -324,6 +325,36 @@ export function computeMonthSummary(args: {
   };
 }
 
+/* ─── field ของ employee ที่ "กระทบเงินเดือน" — single source of truth ──────
+   ใช้ 2 ที่ที่ต้องตรงกันเสมอ:
+   1. useFirebaseAppData.updateEmployee → trigger re-settle เดือน grace
+   2. diffSalaryFields (ด้านล่าง) → ต้องอธิบาย field ที่เปลี่ยนได้ทุกตัว
+   ── เพิ่ม field ใหม่ที่นี่ที่เดียว · เทสต์ "diffSalaryFields covers ทุก field"
+      ใน payrollCompute.test.ts จะ fail ถ้าลืมสอน diffSalaryFields ให้อธิบายมัน
+   - scalar: trigger เมื่อค่า "เปลี่ยนจริง" (เทียบ !==)
+   - object/array: trigger เมื่อมี key ส่งมา (deep-compare ยาก · re-stamp idempotent) */
+export const SALARY_AFFECTING_SCALAR_FIELDS = [
+  "baseSalary",
+  "annualRaiseAmount",
+  "roleId",
+  "salaryDisabled",
+  "singlePieceRate",
+  "normalSalePieceRate",
+  "specialSalePieceRate",
+  "buyPieceRate",
+  "invitePieceRate",
+  "transferPieceRate",
+  "socialSecurity",
+] as const;
+export const SALARY_AFFECTING_OBJECT_FIELDS = [
+  "annualRaises",
+  "poolExclusion",
+  "pieceRates",
+  "poolItemRates",
+  "bonusRates",
+  "recurringItems",
+] as const;
+
 /* ─── Human-readable diff ของ field ที่กระทบเงินเดือน (สำหรับ changeLog) ──── */
 const SALARY_FIELD_LABELS: Record<string, string> = {
   baseSalary: "เงินเดือนพื้นฐาน",
@@ -510,6 +541,122 @@ export function diffSalaryCounts(
     }
   }
   return out;
+}
+
+/** diff รายการ "หักกองกลาง" (PoolAdjustmentEntry) prev → next ต่อ item id ·
+ *  ใช้บันทึก changeLog เมื่อ admin แก้รายการหักกองกลางในเดือน grace ·
+ *  รายงาน เพิ่ม/ลบ/แก้จำนวนชิ้น (จำนวนชิ้นคือสิ่งที่กระทบการเกลี่ยกองกลาง)        */
+export function diffPoolAdjustment(prev: any, next: any): string[] {
+  const out: string[] = [];
+  const prevItems: any[] = Array.isArray(prev?.items) ? prev.items : [];
+  const nextItems: any[] = Array.isArray(next?.items) ? next.items : [];
+  const oldById = new Map(prevItems.map((it) => [it.id, it]));
+  const newById = new Map(nextItems.map((it) => [it.id, it]));
+  const nameOf = (it: any) => (it?.label || "").trim() || "(ไม่ระบุ)";
+  const pcs = (it: any) => Number(it?.pieces) || 0;
+  for (const id of new Set([...oldById.keys(), ...newById.keys()])) {
+    const o = oldById.get(id);
+    const n = newById.get(id);
+    if (o && !n) {
+      out.push(`หักกองกลาง: ลบ "${nameOf(o)}" (${formatThaiNumber(pcs(o))} ชิ้น)`);
+    } else if (!o && n) {
+      out.push(`หักกองกลาง: เพิ่ม "${nameOf(n)}" ${formatThaiNumber(pcs(n))} ชิ้น`);
+    } else if (o && n && pcs(o) !== pcs(n)) {
+      out.push(
+        `หักกองกลาง "${nameOf(n)}" ${formatThaiNumber(pcs(o))} → ${formatThaiNumber(pcs(n))} ชิ้น`,
+      );
+    }
+  }
+  return out;
+}
+
+/** label เปิด/ปิด ต่อ array ของ storeCalendar (สำหรับ changeLog) */
+const CALENDAR_DATE_LABELS: Record<string, { added: string; removed: string }> =
+  {
+    extraOpenSaturdays: {
+      added: "เปิดเสาร์พิเศษ",
+      removed: "ยกเลิกเปิดเสาร์พิเศษ",
+    },
+    paidExtraSaturdays: {
+      added: "จ่ายเพิ่มเสาร์พิเศษ",
+      removed: "ยกเลิกจ่ายเพิ่มเสาร์พิเศษ",
+    },
+    extraClosedWeekdays: {
+      added: "ปิดวันธรรมดาพิเศษ",
+      removed: "ยกเลิกปิดวันธรรมดาพิเศษ",
+    },
+    extraClosedSundays: {
+      added: "ปิดวันอาทิตย์พิเศษ",
+      removed: "ยกเลิกปิดวันอาทิตย์พิเศษ",
+    },
+  };
+
+/** diff ปฏิทินเปิด-ปิดร้าน prev → next เป็นข้อความต่อเดือน (key = "YYYY-MM") ·
+ *  ใช้บันทึก changeLog ของแต่ละเดือน grace ที่ได้รับผลกระทบ — แทนข้อความรวม
+ *  "แก้ปฏิทินเปิด-ปิดร้าน" ให้รู้ว่าวันไหนเปลี่ยนเป็นอะไร                          */
+export function diffCalendarChanges(
+  prev: any,
+  next: any,
+): Record<string, string[]> {
+  const byMonth: Record<string, string[]> = {};
+  const push = (ymd: string, text: string) => {
+    const ym = ymd.slice(0, 7);
+    if (!byMonth[ym]) byMonth[ym] = [];
+    byMonth[ym].push(text);
+  };
+  for (const [key, labels] of Object.entries(CALENDAR_DATE_LABELS)) {
+    const sa = new Set<string>(prev?.[key] || []);
+    const sb = new Set<string>(next?.[key] || []);
+    for (const d of sb)
+      if (!sa.has(d)) push(d, `${labels.added} ${fmtShort(d)}`);
+    for (const d of sa)
+      if (!sb.has(d)) push(d, `${labels.removed} ${fmtShort(d)}`);
+  }
+  return byMonth;
+}
+
+/** สถานะเงินกู้ → ไทย (changeLog) */
+const LOAN_STATUS_LABELS: Record<string, string> = {
+  active: "กำลังผ่อน",
+  paid_off: "ผ่อนครบแล้ว",
+  cancelled: "ยกเลิก",
+};
+
+/** diff field ของเงินกู้ผ่อนคืน before → fields ที่แก้ · ใช้บันทึก changeLog
+ *  เมื่อ admin แก้เงินกู้ในเดือน grace · ครอบ เงินต้น/หักต่อเดือน/เดือนเริ่ม/สถานะ */
+export function diffLoanFields(before: any, fields: any): string[] {
+  const out: string[] = [];
+  const b = before || {};
+  const moneyFields: { key: string; label: string }[] = [
+    { key: "principal", label: "เงินต้น" },
+    { key: "monthlyDeduction", label: "หักต่อเดือน" },
+  ];
+  for (const { key, label } of moneyFields) {
+    if (!(key in fields)) continue;
+    const o = Number(b[key]) || 0;
+    const n = Number(fields[key]) || 0;
+    if (o !== n) {
+      out.push(`${label} ${formatThaiNumber(o)} → ${formatThaiNumber(n)} ฿`);
+    }
+  }
+  if (
+    "startMonth" in fields &&
+    (b.startMonth ?? "") !== (fields.startMonth ?? "")
+  ) {
+    out.push(`เดือนเริ่มหัก ${b.startMonth ?? "-"} → ${fields.startMonth ?? "-"}`);
+  }
+  if ("status" in fields && (b.status ?? "") !== (fields.status ?? "")) {
+    const lbl = (s: any) => LOAN_STATUS_LABELS[s] ?? s ?? "-";
+    out.push(`สถานะเงินกู้ ${lbl(b.status)} → ${lbl(fields.status)}`);
+  }
+  return out;
+}
+
+/** ข้อความสรุปเงินกู้ 1 ก้อน (เพิ่ม/ลบ) สำหรับ changeLog */
+export function loanSummary(loan: any): string {
+  const principal = formatThaiNumber(Number(loan?.principal) || 0);
+  const monthly = formatThaiNumber(Number(loan?.monthlyDeduction) || 0);
+  return `เงินต้น ${principal} ฿ · หักเดือนละ ${monthly} ฿`;
 }
 
 /** settle 1 แถว/เดือน — denorm netSalary + auto-carry + loan ledger
