@@ -1,7 +1,6 @@
 import {
   ArrowDown as IconArrowDown,
   Ban as IconBan,
-  ChevronDown as IconChevronDown,
   Diamond as IconDiamond,
   Layers as IconLayers,
   Lock as IconLock,
@@ -20,6 +19,7 @@ import {
   LEGACY_POOL_NORMAL_ID,
 } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
+import ThemedSelect from "../shared/ThemedSelect";
 
 interface PoolFlowModalProps {
   onClose: () => void;
@@ -562,24 +562,14 @@ function Dropdown({
 }) {
   return (
     <div className="relative">
-      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft">
+      <span className="absolute z-10 left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft">
         {icon}
       </span>
-      <select
+      <ThemedSelect
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="appearance-none cursor-pointer pl-7 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] outline-none"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <IconChevronDown
-        size={12}
-        strokeWidth={2.4}
-        className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+        onChange={onChange}
+        options={options}
+        className="inline-flex items-center pl-7 pr-7 py-[7px] rounded-[9px] border border-bdr text-sm font-semibold text-txt bg-cream font-[inherit] cursor-pointer text-left"
       />
     </div>
   );

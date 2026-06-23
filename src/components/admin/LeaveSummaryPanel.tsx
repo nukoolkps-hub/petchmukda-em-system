@@ -3,7 +3,6 @@ import {
   Briefcase as IconBriefcase,
   CalendarDays as IconCalendar,
   CalendarRange as IconCalendarRange,
-  ChevronDown as IconChevronDown,
   Cross as IconCross,
   Sun as IconSun,
 } from "lucide-react";
@@ -13,6 +12,7 @@ import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
 import { fmtDateWithWeekday, todayYmd, toYMD } from "../../utils/dateUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import MonthChevronNav from "../shared/MonthChevronNav";
+import ThemedSelect from "../shared/ThemedSelect";
 
 /* ─── แสดง breakdown วันธรรมดา/อาทิตย์ บรรทัดเดียว ใต้ยอดรวมวันลา ──── */
 function LeaveDayBreakdown({
@@ -294,24 +294,15 @@ export default function LeaveSummaryPanel({
             <IconCalendar size={16} strokeWidth={2.4} />
             สรุปรายปี
           </div>
-          <div className="relative inline-block">
-            <select
-              value={selYear}
-              onChange={(e) => setSelYear(e.target.value)}
-              className="appearance-none cursor-pointer pl-2.5 pr-7 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] outline-none"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  ปี {parseInt(y, 10) + 543}
-                </option>
-              ))}
-            </select>
-            <IconChevronDown
-              size={12}
-              strokeWidth={2.4}
-              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-            />
-          </div>
+          <ThemedSelect
+            value={selYear}
+            onChange={setSelYear}
+            options={years.map((y) => ({
+              value: y,
+              label: `ปี ${parseInt(y, 10) + 543}`,
+            }))}
+            className="inline-flex items-center pl-2.5 pr-7 py-1.5 rounded-lg border border-bdr text-sm text-txt bg-cream font-[inherit] cursor-pointer text-left"
+          />
         </div>
         {employeeDirectory.length === 0 && (
           <div className="text-txt-soft text-sm text-center py-4">ไม่มีข้อมูล</div>

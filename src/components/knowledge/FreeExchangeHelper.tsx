@@ -11,6 +11,7 @@ import {
   ArrowLeftRight as IconExchange,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import ThemedSelect from "../shared/ThemedSelect";
 import MathText from "./MathText";
 
 const WEIGHT_OPTIONS = [
@@ -91,23 +92,13 @@ export default function FreeExchangeHelper() {
     placeholder: string,
   ) {
     return (
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="appearance-none w-full cursor-pointer pl-3 pr-8 py-2 rounded-[8px] border-[1.5px] border-bdr text-sm font-bold text-maroon bg-white font-[inherit] outline-none focus:border-maroon"
-        >
-          <option value="">{placeholder}</option>
-          {WEIGHT_OPTIONS.map((w) => (
-            <option key={w} value={w}>
-              {w}
-            </option>
-          ))}
-        </select>
-        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft text-xs">
-          ▼
-        </div>
-      </div>
+      <ThemedSelect
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        options={WEIGHT_OPTIONS.map((w) => ({ value: w, label: w }))}
+        className="w-full flex items-center pl-3 pr-8 py-2 rounded-[8px] border-[1.5px] border-bdr text-sm font-bold text-maroon bg-white font-[inherit] cursor-pointer text-left"
+      />
     );
   }
 

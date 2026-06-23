@@ -2,7 +2,6 @@
    admin สร้างเงินกู้ให้พนักงาน — กำหนดเงินต้น + ผ่อนเดือนละ X → ระบบจะหัก
    จากเงินเดือนอัตโนมัติทุกเดือนจนครบ (Stage B). หน้านี้: list + create/cancel  */
 import {
-  ChevronDown as IconChevronDown,
   CircleCheck as IconCircleCheck,
   HandCoins as IconHandCoins,
   Plus as IconPlus,
@@ -20,6 +19,7 @@ import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
+import ThemedSelect from "../shared/ThemedSelect";
 
 function monthLabel(ym: string) {
   const [y, mo] = String(ym || "").split("-");
@@ -133,7 +133,9 @@ export default function EmployeeLoansPanel({
                       type="button"
                       aria-label="ดูสลิปโอนเงิน"
                       title="สลิปโอนเงิน"
-                      onClick={() => setViewingSlipUrl(loan.slipImageUrl ?? null)}
+                      onClick={() =>
+                        setViewingSlipUrl(loan.slipImageUrl ?? null)
+                      }
                       className="w-8 h-8 shrink-0 rounded-[9px] bg-maroon/10 flex items-center justify-center cursor-pointer border-[1.5px] border-maroon/20"
                     >
                       <IconReceipt
@@ -261,11 +263,7 @@ export default function EmployeeLoansPanel({
           contentClassName="px-4 pt-4 pb-4"
         >
           <div className="flex items-center gap-2 mb-3">
-            <IconReceipt
-              size={18}
-              strokeWidth={2.2}
-              className="text-maroon"
-            />
+            <IconReceipt size={18} strokeWidth={2.2} className="text-maroon" />
             <div className="font-bold text-base text-txt">สลิปโอนเงิน</div>
           </div>
           <img
@@ -362,9 +360,7 @@ function CreateLoanModal({
   async function submit() {
     if (!employeeId) return setErr("กรุณาเลือกพนักงาน");
     if (hasActiveLoan)
-      return setErr(
-        "พนักงานคนนี้มีเงินกู้ค้างผ่อนอยู่ · ต้องผ่อนครบก่อนค่อยกู้ใหม่",
-      );
+      return setErr("พนักงานคนนี้มีเงินกู้ค้างผ่อนอยู่ · ต้องผ่อนครบก่อนค่อยกู้ใหม่");
     if (principalNum <= 0) return setErr("กรุณาระบุเงินต้น");
     if (monthlyNum <= 0) return setErr("กรุณาระบุยอดผ่อนต่อเดือน");
     if (monthlyNum > principalNum) return setErr("ยอดผ่อนต่อเดือนมากกว่าเงินต้น");
@@ -410,13 +406,14 @@ function CreateLoanModal({
         try {
           await onUpdateLoan(loanId, updateFields);
         } catch (e) {
-          console.error("[CreateLoanModal] update notification flag failed:", e);
+          console.error(
+            "[CreateLoanModal] update notification flag failed:",
+            e,
+          );
         }
       }
       if (slipUploadFailed) {
-        showToast?.(
-          "สร้างเงินกู้แล้ว แต่อัปโหลดสลิปไม่สำเร็จ — แก้ไขภายหลังได้",
-        );
+        showToast?.("สร้างเงินกู้แล้ว แต่อัปโหลดสลิปไม่สำเร็จ — แก้ไขภายหลังได้");
       } else {
         showToast?.("สร้างเงินกู้แล้ว · กำลังแจ้ง LINE พนักงาน");
       }
@@ -459,26 +456,19 @@ function CreateLoanModal({
       <label className="block text-sm text-txt-mid font-semibold mb-1.5">
         พนักงาน
       </label>
-      <div className="relative mb-3">
-        <select
+      <div className="mb-3">
+        <ThemedSelect
           value={employeeId}
-          onChange={(e) => setEmployeeId(e.target.value)}
-          className={`${inputCls} appearance-none pr-10 cursor-pointer font-semibold`}
-        >
-          {employeeDirectory.map((e) => {
+          onChange={setEmployeeId}
+          options={employeeDirectory.map((e) => {
             const blocked = activeLoanByEmployeeId.has(e.id);
-            return (
-              <option key={e.id} value={e.id} disabled={blocked}>
-                {e.name}
-                {blocked ? "  — มีเงินกู้ค้าง" : ""}
-              </option>
-            );
+            return {
+              value: e.id,
+              label: `${e.name}${blocked ? "  — มีเงินกู้ค้าง" : ""}`,
+              disabled: blocked,
+            };
           })}
-        </select>
-        <IconChevronDown
-          size={14}
-          strokeWidth={2.4}
-          className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+          className={`${inputCls} pr-10 cursor-pointer font-semibold flex items-center text-left`}
         />
       </div>
 
@@ -514,22 +504,15 @@ function CreateLoanModal({
       <label className="block text-sm text-txt-mid font-semibold mb-1.5">
         เริ่มหักเดือน
       </label>
-      <div className="relative mb-3">
-        <select
+      <div className="mb-3">
+        <ThemedSelect
           value={startMonth}
-          onChange={(e) => setStartMonth(e.target.value)}
-          className={`${inputCls} appearance-none pr-10 cursor-pointer font-semibold`}
-        >
-          {monthOptions().map((m) => (
-            <option key={m} value={m}>
-              {monthLabel(m)}
-            </option>
-          ))}
-        </select>
-        <IconChevronDown
-          size={14}
-          strokeWidth={2.4}
-          className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+          onChange={setStartMonth}
+          options={monthOptions().map((m) => ({
+            value: m,
+            label: monthLabel(m),
+          }))}
+          className={`${inputCls} pr-10 cursor-pointer font-semibold flex items-center text-left`}
         />
       </div>
 
@@ -591,9 +574,9 @@ function CreateLoanModal({
 
       {hasActiveLoan && (
         <div className="bg-red-lt rounded-[10px] px-3.5 py-2.5 mb-3 border border-[#C0392B40] text-sm text-red font-semibold leading-relaxed">
-          พนักงานคนนี้มีเงินกู้ค้างผ่อนอยู่ — เงินต้น{" "}
-          ฿{formatThaiNumber(activeLoanForEmployee.principal)} · คงเหลือ{" "}
-          ฿{formatThaiNumber(loanRemaining(activeLoanForEmployee))}
+          พนักงานคนนี้มีเงินกู้ค้างผ่อนอยู่ — เงินต้น ฿
+          {formatThaiNumber(activeLoanForEmployee.principal)} · คงเหลือ ฿
+          {formatThaiNumber(loanRemaining(activeLoanForEmployee))}
           <div className="text-xs font-normal text-txt-mid mt-1">
             กฎ: กู้ได้ครั้งละ 1 ก้อน · ต้องผ่อนครบก่อนค่อยกู้ใหม่
           </div>
@@ -629,11 +612,7 @@ function CreateLoanModal({
               : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)] cursor-pointer"
           }`}
         >
-          {saving
-            ? "กำลังบันทึก..."
-            : hasActiveLoan
-              ? "มีเงินกู้ค้างอยู่"
-              : "สร้างเงินกู้"}
+          {saving ? "กำลังบันทึก..." : hasActiveLoan ? "มีเงินกู้ค้างอยู่" : "สร้างเงินกู้"}
         </button>
       </div>
     </BaseModal>
