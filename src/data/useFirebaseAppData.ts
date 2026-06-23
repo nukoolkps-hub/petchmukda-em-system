@@ -45,6 +45,8 @@ import {
   diffSalaryCounts,
   diffSalaryFields,
   loanSummary,
+  SALARY_AFFECTING_OBJECT_FIELDS,
+  SALARY_AFFECTING_SCALAR_FIELDS,
   settleEmployeeMonth,
 } from "../utils/payrollCompute";
 import {
@@ -253,31 +255,11 @@ export default function useFirebaseAppData({
     // - scalar: trigger เฉพาะเมื่อค่าจริงเปลี่ยน (กัน write ซ้ำโดยไม่จำเป็น)
     // - object/array (map เรท, annualRaises, poolExclusion): trigger เมื่อมี key
     //   ส่งมา (เทียบ deep ยาก · re-stamp ซ้ำเป็น idempotent ไม่เสียหาย)
-    const scalarRateFields = [
-      "baseSalary",
-      "annualRaiseAmount",
-      "roleId",
-      "salaryDisabled",
-      "singlePieceRate",
-      "normalSalePieceRate",
-      "specialSalePieceRate",
-      "buyPieceRate",
-      "invitePieceRate",
-      "transferPieceRate",
-      "socialSecurity",
-    ];
-    const objectRateFields = [
-      "annualRaises",
-      "poolExclusion",
-      "pieceRates",
-      "poolItemRates",
-      "bonusRates",
-      "recurringItems",
-    ];
+    // list มาจาก payrollCompute (single source · ตรงกับ diffSalaryFields เสมอ)
     const salaryAffectingChanged =
-      scalarRateFields.some(
+      SALARY_AFFECTING_SCALAR_FIELDS.some(
         (k) => k in fields && (fields as any)[k] !== (before as any)?.[k],
-      ) || objectRateFields.some((k) => k in fields);
+      ) || SALARY_AFFECTING_OBJECT_FIELDS.some((k) => k in fields);
     if (salaryAffectingChanged) {
       // subscription (employeeResult.data) ยัง stale ทันทีหลัง write — merge
       // fields ใหม่ลง before ให้ re-stamp/recompute ใช้เรทใหม่ ไม่ใช่เรทเก่าใน state

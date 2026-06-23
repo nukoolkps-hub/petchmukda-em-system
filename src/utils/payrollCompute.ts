@@ -325,6 +325,36 @@ export function computeMonthSummary(args: {
   };
 }
 
+/* ─── field ของ employee ที่ "กระทบเงินเดือน" — single source of truth ──────
+   ใช้ 2 ที่ที่ต้องตรงกันเสมอ:
+   1. useFirebaseAppData.updateEmployee → trigger re-settle เดือน grace
+   2. diffSalaryFields (ด้านล่าง) → ต้องอธิบาย field ที่เปลี่ยนได้ทุกตัว
+   ── เพิ่ม field ใหม่ที่นี่ที่เดียว · เทสต์ "diffSalaryFields covers ทุก field"
+      ใน payrollCompute.test.ts จะ fail ถ้าลืมสอน diffSalaryFields ให้อธิบายมัน
+   - scalar: trigger เมื่อค่า "เปลี่ยนจริง" (เทียบ !==)
+   - object/array: trigger เมื่อมี key ส่งมา (deep-compare ยาก · re-stamp idempotent) */
+export const SALARY_AFFECTING_SCALAR_FIELDS = [
+  "baseSalary",
+  "annualRaiseAmount",
+  "roleId",
+  "salaryDisabled",
+  "singlePieceRate",
+  "normalSalePieceRate",
+  "specialSalePieceRate",
+  "buyPieceRate",
+  "invitePieceRate",
+  "transferPieceRate",
+  "socialSecurity",
+] as const;
+export const SALARY_AFFECTING_OBJECT_FIELDS = [
+  "annualRaises",
+  "poolExclusion",
+  "pieceRates",
+  "poolItemRates",
+  "bonusRates",
+  "recurringItems",
+] as const;
+
 /* ─── Human-readable diff ของ field ที่กระทบเงินเดือน (สำหรับ changeLog) ──── */
 const SALARY_FIELD_LABELS: Record<string, string> = {
   baseSalary: "เงินเดือนพื้นฐาน",

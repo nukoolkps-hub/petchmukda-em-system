@@ -15,6 +15,8 @@ import {
   loanSummary,
   nextMonthOf,
   roleIdForMonth,
+  SALARY_AFFECTING_OBJECT_FIELDS,
+  SALARY_AFFECTING_SCALAR_FIELDS,
   settleEmployeeMonth,
 } from "./payrollCompute";
 
@@ -472,6 +474,92 @@ describe("diffSalaryFields", () => {
     expect(
       diffSalaryFields({ baseSalary: 30000 }, { baseSalary: "30000" }),
     ).toEqual([]);
+  });
+});
+
+/* ─── Guard: trigger list (SALARY_AFFECTING_*) ต้องตรงกับ diffSalaryFields ─────
+   ป้องกัน drift — เพิ่ม field ที่กระทบเงินเดือนแล้วลืมสอน diffSalaryFields ให้
+   อธิบาย → re-settle ทำงานแต่ changeLog ขึ้นรายการว่าง (ยอดขยับ ไม่มีคำอธิบาย)
+   เทสต์นี้ fail ทันทีถ้า:
+   - เพิ่ม field ใน canonical list แต่ไม่ใส่ตัวอย่างใน SAMPLE_CHANGED
+   - field ใด field หนึ่งเปลี่ยนแล้ว diffSalaryFields คืน array ว่าง            */
+describe("diffSalaryFields covers every salary-affecting field", () => {
+  // before → fields(after) ที่ทำให้ field นั้น "เปลี่ยน" 1 ตัว (ต้องได้คำอธิบาย ≥ 1)
+  const SAMPLE_CHANGED: Record<string, { before: any; after: any }> = {
+    baseSalary: { before: { baseSalary: 0 }, after: { baseSalary: 1 } },
+    annualRaiseAmount: {
+      before: { annualRaiseAmount: 0 },
+      after: { annualRaiseAmount: 1 },
+    },
+    roleId: { before: { roleId: "r_a" }, after: { roleId: "r_b" } },
+    salaryDisabled: {
+      before: { salaryDisabled: false },
+      after: { salaryDisabled: true },
+    },
+    singlePieceRate: {
+      before: { singlePieceRate: 0 },
+      after: { singlePieceRate: 1 },
+    },
+    normalSalePieceRate: {
+      before: { normalSalePieceRate: 0 },
+      after: { normalSalePieceRate: 1 },
+    },
+    specialSalePieceRate: {
+      before: { specialSalePieceRate: 0 },
+      after: { specialSalePieceRate: 1 },
+    },
+    buyPieceRate: { before: { buyPieceRate: 0 }, after: { buyPieceRate: 1 } },
+    invitePieceRate: {
+      before: { invitePieceRate: 0 },
+      after: { invitePieceRate: 1 },
+    },
+    transferPieceRate: {
+      before: { transferPieceRate: 0 },
+      after: { transferPieceRate: 1 },
+    },
+    socialSecurity: {
+      before: { socialSecurity: 0 },
+      after: { socialSecurity: 1 },
+    },
+    annualRaises: {
+      before: {},
+      after: { annualRaises: { "2026": 1000 } },
+    },
+    poolExclusion: {
+      before: { poolExclusion: null },
+      after: { poolExclusion: "all" },
+    },
+    pieceRates: { before: {}, after: { pieceRates: { x: 1 } } },
+    poolItemRates: { before: {}, after: { poolItemRates: { x: 1 } } },
+    bonusRates: { before: {}, after: { bonusRates: { x: 1 } } },
+    recurringItems: {
+      before: {},
+      after: {
+        recurringItems: [
+          { id: "r1", type: "earning", label: "ค่าเดินทาง", amount: 100 },
+        ],
+      },
+    },
+  };
+
+  const allFields = [
+    ...SALARY_AFFECTING_SCALAR_FIELDS,
+    ...SALARY_AFFECTING_OBJECT_FIELDS,
+  ];
+
+  it("has a sample for every canonical field (and no stale extras)", () => {
+    expect(Object.keys(SAMPLE_CHANGED).sort()).toEqual([...allFields].sort());
+  });
+
+  it.each(
+    allFields,
+  )("produces a non-empty changeLog description for %s", (field) => {
+    const sample = SAMPLE_CHANGED[field];
+    expect(sample, `missing SAMPLE_CHANGED for ${field}`).toBeDefined();
+    const out = diffSalaryFields(sample.before, sample.after);
+    expect(out.length, `diffSalaryFields ไม่อธิบาย "${field}"`).toBeGreaterThan(
+      0,
+    );
   });
 });
 
