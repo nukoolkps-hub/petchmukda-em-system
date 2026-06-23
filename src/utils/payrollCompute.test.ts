@@ -6,9 +6,13 @@ import {
   computeBreakdownSig,
   computeEmployeeMonthRow,
   computeMonthSummary,
+  diffCalendarChanges,
+  diffLoanFields,
+  diffPoolAdjustment,
   diffSalaryCounts,
   diffSalaryFields,
   groupEmployeesByPool,
+  loanSummary,
   nextMonthOf,
   roleIdForMonth,
   settleEmployeeMonth,
@@ -468,6 +472,103 @@ describe("diffSalaryFields", () => {
     expect(
       diffSalaryFields({ baseSalary: 30000 }, { baseSalary: "30000" }),
     ).toEqual([]);
+  });
+});
+
+describe("diffPoolAdjustment", () => {
+  it("reports added / removed / changed-pieces items by id with labels", () => {
+    const prev = {
+      items: [
+        { id: "i1", label: "หักค่าเสีย", pieces: 5 },
+        { id: "i2", label: "หักของหาย", pieces: 2 },
+      ],
+    };
+    const next = {
+      items: [
+        { id: "i1", label: "หักค่าเสีย", pieces: 8 }, // changed
+        { id: "i3", label: "หักใหม่", pieces: 3 }, // added (i2 removed)
+      ],
+    };
+    expect(diffPoolAdjustment(prev, next)).toEqual([
+      'หักกองกลาง "หักค่าเสีย" 5 → 8 ชิ้น',
+      'หักกองกลาง: ลบ "หักของหาย" (2 ชิ้น)',
+      'หักกองกลาง: เพิ่ม "หักใหม่" 3 ชิ้น',
+    ]);
+  });
+  it("ignores label-only edits (pieces unchanged) and handles null prev", () => {
+    expect(
+      diffPoolAdjustment(
+        { items: [{ id: "i1", label: "เก่า", pieces: 5 }] },
+        { items: [{ id: "i1", label: "ใหม่", pieces: 5 }] },
+      ),
+    ).toEqual([]);
+    expect(
+      diffPoolAdjustment(null, { items: [{ id: "i1", pieces: 4 }] }),
+    ).toEqual(['หักกองกลาง: เพิ่ม "(ไม่ระบุ)" 4 ชิ้น']);
+  });
+});
+
+describe("diffCalendarChanges", () => {
+  it("groups open/close/paid date changes by month", () => {
+    const prev = {
+      extraOpenSaturdays: ["2026-06-06"],
+      paidExtraSaturdays: [],
+    };
+    const next = {
+      extraOpenSaturdays: ["2026-06-13"], // 06-06 removed, 06-13 added
+      paidExtraSaturdays: ["2026-06-13"], // added
+      extraClosedWeekdays: ["2026-07-01"], // added (different month)
+    };
+    const out = diffCalendarChanges(prev, next);
+    expect(out["2026-06"]).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("เปิดเสาร์พิเศษ"),
+        expect.stringContaining("ยกเลิกเปิดเสาร์พิเศษ"),
+        expect.stringContaining("จ่ายเพิ่มเสาร์พิเศษ"),
+      ]),
+    );
+    expect(out["2026-07"]).toEqual([expect.stringContaining("ปิดวันธรรมดาพิเศษ")]);
+  });
+  it("returns empty object when nothing changed", () => {
+    const cal = { extraOpenSaturdays: ["2026-06-06"] };
+    expect(diffCalendarChanges(cal, cal)).toEqual({});
+  });
+});
+
+describe("diffLoanFields / loanSummary", () => {
+  it("describes principal / monthly / startMonth / status changes", () => {
+    const before = {
+      principal: 10000,
+      monthlyDeduction: 1000,
+      startMonth: "2026-06",
+      status: "active",
+    };
+    expect(
+      diffLoanFields(before, {
+        principal: 12000,
+        monthlyDeduction: 1500,
+        startMonth: "2026-07",
+        status: "cancelled",
+      }),
+    ).toEqual([
+      "เงินต้น 10,000 → 12,000 ฿",
+      "หักต่อเดือน 1,000 → 1,500 ฿",
+      "เดือนเริ่มหัก 2026-06 → 2026-07",
+      "สถานะเงินกู้ กำลังผ่อน → ยกเลิก",
+    ]);
+  });
+  it("only reports fields present in the patch", () => {
+    expect(
+      diffLoanFields(
+        { principal: 10000, monthlyDeduction: 1000 },
+        { monthlyDeduction: 1200 },
+      ),
+    ).toEqual(["หักต่อเดือน 1,000 → 1,200 ฿"]);
+  });
+  it("loanSummary formats principal + monthly deduction", () => {
+    expect(loanSummary({ principal: 20000, monthlyDeduction: 2500 })).toBe(
+      "เงินต้น 20,000 ฿ · หักเดือนละ 2,500 ฿",
+    );
   });
 });
 

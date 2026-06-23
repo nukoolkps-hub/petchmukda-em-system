@@ -39,8 +39,12 @@ import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
 import {
   buildRateFieldsSnapshot,
   computeMonthSummary,
+  diffCalendarChanges,
+  diffLoanFields,
+  diffPoolAdjustment,
   diffSalaryCounts,
   diffSalaryFields,
+  loanSummary,
   settleEmployeeMonth,
 } from "../utils/payrollCompute";
 import {
@@ -830,18 +834,21 @@ export default function useFirebaseAppData({
     await resyncEmployeeGraceMonths(
       loan.employeeId,
       [...loansResult.data, { id, ...loan }],
-      ["เพิ่มเงินกู้ผ่อนคืน"],
+      [`เพิ่มเงินกู้ผ่อนคืน — ${loanSummary(loan)}`],
     );
     return id;
   }
   async function updateEmployeeLoan(id, fields) {
-    await employeeLoansAPI.updateEmployeeLoan(id, fields);
     const loan = loansResult.data.find((l) => l.id === id);
+    await employeeLoansAPI.updateEmployeeLoan(id, fields);
     if (loan) {
+      // diff รายละเอียด (เงินต้น/หักต่อเดือน/เดือนเริ่ม/สถานะ) — fallback ข้อความ
+      // รวมถ้าไม่มี field ที่ track เปลี่ยน
+      const diffs = diffLoanFields(loan, fields);
       await resyncEmployeeGraceMonths(
         loan.employeeId,
         loansResult.data.map((l) => (l.id === id ? { ...l, ...fields } : l)),
-        ["แก้เงินกู้ผ่อนคืน"],
+        diffs.length ? diffs.map((s) => `แก้เงินกู้ผ่อนคืน — ${s}`) : ["แก้เงินกู้ผ่อนคืน"],
       );
     }
   }
@@ -852,7 +859,7 @@ export default function useFirebaseAppData({
       await resyncEmployeeGraceMonths(
         loan.employeeId,
         loansResult.data.filter((l) => l.id !== id),
-        ["ลบเงินกู้ผ่อนคืน"],
+        [`ลบเงินกู้ผ่อนคืน — ${loanSummary(loan)}`],
       );
     }
   }
@@ -896,16 +903,22 @@ export default function useFirebaseAppData({
   /* ─── Pool Adjustments (หักจากกองกลาง ระดับเดือน) ────────── */
   async function setPoolAdjustment(yearMonth, fields) {
     if (monthLocked(yearMonth)) throw new Error(LOCK_MSG);
+    const prevAdjustment = poolAdjResult.data?.[yearMonth] ?? null;
     // ใช้ items ที่ sanitize แล้ว (บาง item ถูก drop/clamp) เป็น override —
     // ไม่ใช่ raw fields ไม่งั้น net จะคิดจาก item ที่ doc ไม่ได้เก็บจริง
     const saved = await poolAdjustmentsAPI.setPoolAdjustment(yearMonth, fields);
     // หักกองกลางในเดือนที่ยืนยันแล้ว (grace) → กระทบ pool share ทุกคนในกลุ่ม →
     // re-settle ทั้งเดือน + log (poolAdjustment override เพราะ state ยัง stale)
     if (pcResult.data?.[yearMonth]?.confirmedAt && !monthLocked(yearMonth)) {
+      // รายละเอียดว่าหักรายการไหน เพิ่ม/ลบ/แก้จำนวนชิ้น — fallback ข้อความรวมถ้า
+      // diff ว่าง (เช่น แก้แค่ label) แต่ net ขยับ
+      const changeStrings = diffPoolAdjustment(prevAdjustment, saved);
       await syncConfirmedMonth(yearMonth, {
         poolAdjustment: saved,
         employeeName: "หักกองกลาง",
-        changeStrings: ["แก้รายการหักกองกลาง"],
+        changeStrings: changeStrings.length
+          ? changeStrings
+          : ["แก้รายการหักกองกลาง"],
       });
     }
   }
@@ -944,6 +957,8 @@ export default function useFirebaseAppData({
     // ปฏิทินกระทบเงินทุกคนในเดือนนั้น (จ่ายเพิ่มเสาร์พิเศษ + ฐานนับวันลา/×1.5) →
     // re-settle เดือนที่ยืนยันแล้วยังไม่ปิดรอบ + log (admin เท่านั้น)
     if (!isAdmin) return;
+    // รายละเอียดวันที่เปลี่ยน ต่อเดือน (เปิด/ปิด/จ่ายเพิ่ม) — แทนข้อความรวม
+    const changesByMonth = diffCalendarChanges(prev, cal);
     const affectedMonths = new Set([...changedDates].map((d) => d.slice(0, 7)));
     // เรียงเก่า→ใหม่ + sequential — กัน auto-carry race ข้ามเดือน (เหมือน updateEmployee)
     const months = [...affectedMonths]
@@ -967,7 +982,9 @@ export default function useFirebaseAppData({
         storeCalendar: cal,
         salaryDataPatch: Object.keys(patch).length ? patch : undefined,
         employeeName: "ปฏิทินร้าน",
-        changeStrings: ["แก้ปฏิทินเปิด-ปิดร้าน"],
+        changeStrings: changesByMonth[ym]?.length
+          ? changesByMonth[ym]
+          : ["แก้ปฏิทินเปิด-ปิดร้าน"],
       });
     }
   }
