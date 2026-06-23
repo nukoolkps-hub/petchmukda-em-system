@@ -107,20 +107,20 @@ export default function LeaveSummaryPanel({
   // key = `${empId}:${type}` — chip ที่ถูกกดให้แสดงรายการวัน
   const [expandedChip, setExpandedChip] = useState<string | null>(null);
 
-  // navMonths = current ∪ selectedMonth ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
-  // (selectedMonth อยู่ใน list เสมอ → effectiveMonth = selectedMonth ตรงๆ)
+  // months = เดือนที่กำลังดู ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
+  // โชว์เฉพาะเดือนที่มีข้อมูล (ไม่ยัดเดือนปัจจุบันที่ว่าง) · selectedMonth คงไว้
+  // เสมอ → effectiveMonth = selectedMonth ตรงๆ
   const months: string[] = useMemo(
     () =>
       [
         ...new Set([
-          currentMonth,
           selectedMonth,
           ...(allLeaves.map((lv) => lv.start.slice(0, 7)) as string[]),
         ]),
       ]
         .sort()
         .reverse(),
-    [allLeaves, currentMonth, selectedMonth],
+    [allLeaves, selectedMonth],
   );
   const effectiveMonth = months.includes(selectedMonth)
     ? selectedMonth

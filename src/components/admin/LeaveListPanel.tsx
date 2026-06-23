@@ -21,7 +21,6 @@ import {
   countWorkdays,
   fmtDateWithWeekday,
   isFuture,
-  todayYmd,
 } from "../../utils/dateUtils";
 import { isMonthLocked, monthOf } from "../../utils/payrollLock";
 import ConfirmModal from "../modals/ConfirmModal";
@@ -57,21 +56,20 @@ export default function LeaveListPanel({
   onSelectMonth,
   showToast,
 }: LeaveListPanelProps) {
-  const currentMonth = todayYmd().slice(0, 7);
   const [confirmLeave, setConfirmLeave] = useState<any>(null);
 
-  // navMonths = เดือนปัจจุบัน ∪ เดือนที่ถูกเลือก ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
-  // selectedMonth อยู่ใน list เสมอ → effectiveMonth = selectedMonth ตรงๆ
+  // navMonths = เดือนที่กำลังดู ∪ เดือนที่มีใบลา · เรียงใหม่→เก่า
+  // โชว์เฉพาะเดือนที่มีข้อมูล (ไม่ยัดเดือนปัจจุบันที่ว่าง) · selectedMonth คงไว้
+  // เสมอเพื่อให้ effectiveMonth = selectedMonth ตรงๆ + ลูกศรไม่หลุด list
   const navMonths = useMemo(
     () =>
       Array.from(
         new Set([
-          currentMonth,
           selectedMonth,
           ...allLeaves.map((lv) => lv.start.slice(0, 7)),
         ]),
       ).sort((a, b) => b.localeCompare(a)),
-    [allLeaves, currentMonth, selectedMonth],
+    [allLeaves, selectedMonth],
   );
   const effectiveMonth = selectedMonth;
 

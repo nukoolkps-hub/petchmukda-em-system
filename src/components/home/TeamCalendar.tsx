@@ -20,6 +20,19 @@ import type { Employee, LeaveEntry, StoreCalendar } from "../../types";
 import { dateRange, toYMD as toDateKey } from "../../utils/dateUtils";
 import { isStoreClosed } from "../../utils/storeCalendar";
 import AvatarCircle from "../shared/AvatarCircle";
+import {
+  CAL_NAV_BTN,
+  CAL_OPTION_IDLE,
+  CAL_OPTION_SELECTED,
+  CAL_SELECTED_DAY_BG,
+  CAL_SELECTED_DAY_BORDER,
+  CAL_SELECTED_DAY_SHADOW,
+  CAL_SELECTED_DAY_TEXT,
+  CAL_TODAY_BG,
+  CAL_TODAY_BORDER,
+  CAL_TODAY_TEXT,
+  calWeekdayClass,
+} from "../shared/calendarTheme";
 
 type CalendarEmployee = Pick<
   Employee,
@@ -119,10 +132,7 @@ export default function TeamCalendar({
             </div>
           </div>
           <div ref={pickerRef} className="relative flex items-center gap-2">
-            <button
-              onClick={showPreviousMonth}
-              className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
-            >
+            <button onClick={showPreviousMonth} className={CAL_NAV_BTN}>
               <IconChevronLeft
                 size={12}
                 color={colors.textMedium}
@@ -139,10 +149,7 @@ export default function TeamCalendar({
             >
               {thaiMonthNames[visibleMonth]} {visibleYear + 543}
             </button>
-            <button
-              onClick={showNextMonth}
-              className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
-            >
+            <button onClick={showNextMonth} className={CAL_NAV_BTN}>
               <IconChevronRight
                 size={12}
                 color={colors.textMedium}
@@ -197,9 +204,7 @@ export default function TeamCalendar({
                           setPickerOpen(false);
                         }}
                         className={`py-2 px-1 rounded-[8px] text-sm font-semibold cursor-pointer font-[inherit] transition-colors ${
-                          isSel
-                            ? "bg-maroon text-white"
-                            : "bg-transparent text-txt-mid hover:bg-cream"
+                          isSel ? CAL_OPTION_SELECTED : CAL_OPTION_IDLE
                         }`}
                       >
                         {label}
@@ -213,10 +218,7 @@ export default function TeamCalendar({
         </div>
         <div className="grid grid-cols-7 mb-1.5">
           {thaiShortDayNames.map((dayName, dayIndex) => (
-            <div
-              key={dayName}
-              className={`text-center text-sm font-bold py-[3px] ${dayIndex === 6 ? "text-txt-soft/70" : "text-txt-soft"}`}
-            >
+            <div key={dayName} className={calWeekdayClass(dayIndex === 6)}>
               {dayName}
             </div>
           ))}
@@ -257,27 +259,26 @@ export default function TeamCalendar({
                 className="min-h-[62px] rounded-[10px] px-0.5 pt-[5px] pb-1 cursor-pointer transition-[background-color,border-color,box-shadow] duration-150"
                 style={{
                   background: isSelectedDate
-                    ? colors.goldPale
+                    ? CAL_SELECTED_DAY_BG
                     : storeClosed
                       ? colors.creamDark
                       : isExtraOpenSat
                         ? colors.greenLight
                         : isToday
-                          ? "#E8E8E8"
+                          ? CAL_TODAY_BG
                           : colors.white,
                   border: `1.5px solid ${
                     isSelectedDate
-                      ? `${colors.gold}70`
+                      ? CAL_SELECTED_DAY_BORDER
                       : isToday
-                        ? "#C8C8C8"
+                        ? CAL_TODAY_BORDER
                         : hasLeaveEntries
-                          ? `${colors.gold}70`
+                          ? CAL_SELECTED_DAY_BORDER
                           : "transparent"
                   }`,
-                  boxShadow: isSelectedDate
-                    ? `0 1px 4px ${colors.gold}25`
-                    : hasLeaveEntries
-                      ? `0 1px 4px ${colors.gold}25`
+                  boxShadow:
+                    isSelectedDate || hasLeaveEntries
+                      ? CAL_SELECTED_DAY_SHADOW
                       : "none",
                 }}
               >
@@ -286,7 +287,7 @@ export default function TeamCalendar({
                   style={{
                     fontWeight: isToday || isSelectedDate ? 800 : 500,
                     color: isSelectedDate
-                      ? colors.gold
+                      ? CAL_SELECTED_DAY_TEXT
                       : storeClosed
                         ? `${colors.textSoft}80`
                         : isExtraOpenSat
@@ -294,7 +295,7 @@ export default function TeamCalendar({
                           : isWeekend
                             ? `${colors.textSoft}80`
                             : isToday
-                              ? "#666"
+                              ? CAL_TODAY_TEXT
                               : colors.text,
                   }}
                 >

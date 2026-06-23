@@ -15,6 +15,18 @@ import {
 import { useClickOutside } from "../../hooks/useClickOutside";
 import type { StoreCalendar } from "../../types";
 import { fmtShort, toYMD } from "../../utils/dateUtils";
+import {
+  CAL_NAV_BTN,
+  CAL_SELECTED_DAY_BG,
+  CAL_SELECTED_DAY_BORDER,
+  CAL_SELECTED_DAY_SHADOW,
+  CAL_SELECTED_DAY_TEXT,
+  CAL_TITLE,
+  CAL_TODAY_BG,
+  CAL_TODAY_BORDER,
+  CAL_TODAY_TEXT,
+  calWeekdayClass,
+} from "./calendarTheme";
 
 interface Props {
   value: string;
@@ -190,25 +202,17 @@ export default function CalendarPicker({
           }
         >
           <div className="flex items-center justify-between mb-3.5">
-            <button
-              type="button"
-              onClick={prevM}
-              className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
-            >
+            <button type="button" onClick={prevM} className={CAL_NAV_BTN}>
               <IconChevronLeft
                 size={14}
                 color={COLORS.textMedium}
                 strokeWidth={2.5}
               />
             </button>
-            <div className="font-bold text-base text-maroon">
+            <div className={CAL_TITLE}>
               {THAI_MONTH_NAMES[vm]} {vy + 543}
             </div>
-            <button
-              type="button"
-              onClick={nextM}
-              className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center"
-            >
+            <button type="button" onClick={nextM} className={CAL_NAV_BTN}>
               <IconChevronRight
                 size={14}
                 color={COLORS.textMedium}
@@ -220,7 +224,7 @@ export default function CalendarPicker({
             {THAI_SHORT_WEEKDAY_NAMES.map((d, i) => (
               <div
                 key={d}
-                className={`text-center text-sm font-semibold py-1 ${disableSaturdays && i === 6 ? "text-txt-soft/40" : "text-txt-soft"}`}
+                className={calWeekdayClass(disableSaturdays && i === 6)}
               >
                 {d}
               </div>
@@ -235,28 +239,34 @@ export default function CalendarPicker({
                   type="button"
                   key={i}
                   onClick={() => ok && d !== null && pick(d)}
-                  className={`h-[34px] rounded-lg font-[inherit] text-sm border-none
+                  className={`h-[34px] rounded-[10px] font-[inherit] text-sm border-[1.5px]
                   ${d === null ? "cursor-default" : ok ? "cursor-pointer" : "cursor-not-allowed"}
                   ${st === "selected" || st === "today" ? "font-bold" : "font-normal"}`}
                   style={{
                     background:
                       st === "selected"
-                        ? `linear-gradient(135deg,${COLORS.gold},${COLORS.goldLight})`
+                        ? CAL_SELECTED_DAY_BG
                         : st === "today"
-                          ? "#E8E8E8"
+                          ? CAL_TODAY_BG
+                          : "transparent",
+                    borderColor:
+                      st === "selected"
+                        ? CAL_SELECTED_DAY_BORDER
+                        : st === "today"
+                          ? CAL_TODAY_BORDER
                           : "transparent",
                     color:
                       d === null
                         ? "transparent"
                         : st === "selected"
-                          ? "#fff"
+                          ? CAL_SELECTED_DAY_TEXT
                           : st === "disabled" || st === "weekend"
                             ? COLORS.border
                             : st === "today"
-                              ? "#666"
+                              ? CAL_TODAY_TEXT
                               : COLORS.text,
                     boxShadow:
-                      st === "selected" ? `0 2px 8px ${COLORS.gold}50` : "none",
+                      st === "selected" ? CAL_SELECTED_DAY_SHADOW : "none",
                   }}
                 >
                   {d === null ? "" : d}

@@ -10,6 +10,7 @@ import {
 import { useRef, useState } from "react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { useClickOutside } from "../../hooks/useClickOutside";
+import { CAL_OPTION_IDLE, CAL_OPTION_SELECTED } from "./calendarTheme";
 
 interface Props {
   value: string; // "YYYY-MM"
@@ -102,9 +103,7 @@ export default function ThaiMonthPicker({
                   setOpen(false);
                 }}
                 className={`w-full text-left py-2 px-3 rounded-[7px] text-sm font-semibold cursor-pointer font-[inherit] transition-colors ${
-                  isSel
-                    ? "bg-maroon text-white"
-                    : "bg-transparent text-txt-mid hover:bg-cream"
+                  isSel ? CAL_OPTION_SELECTED : CAL_OPTION_IDLE
                 }`}
               >
                 {opt.label}

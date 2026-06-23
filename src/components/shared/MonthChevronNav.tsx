@@ -13,6 +13,11 @@ import { useMemo, useRef, useState } from "react";
 import { THAI_MONTH_SHORT_NAMES } from "../../constants";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import { formatYmThai } from "../../utils/dateUtils";
+import {
+  CAL_NAV_BTN,
+  CAL_OPTION_IDLE,
+  CAL_OPTION_SELECTED,
+} from "./calendarTheme";
 
 interface Props {
   months: string[]; // "YYYY-MM" · เรียงใหม่→เก่า
@@ -64,7 +69,7 @@ export default function MonthChevronNav({
         aria-label="เดือนก่อนหน้า"
         disabled={!hasOlder}
         onClick={() => hasOlder && onSelect(months[idx + 1])}
-        className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+        className={CAL_NAV_BTN}
       >
         <IconChevronLeft size={14} strokeWidth={2.5} className="text-txt-mid" />
       </button>
@@ -85,7 +90,7 @@ export default function MonthChevronNav({
         aria-label="เดือนถัดไป"
         disabled={!hasNewer}
         onClick={() => hasNewer && onSelect(months[idx - 1])}
-        className="w-8 h-8 rounded-lg border border-bdr bg-cream cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+        className={CAL_NAV_BTN}
       >
         <IconChevronRight
           size={14}
@@ -114,9 +119,7 @@ export default function MonthChevronNav({
                         setOpen(false);
                       }}
                       className={`py-2 px-1 rounded-[8px] text-sm font-semibold cursor-pointer font-[inherit] transition-colors ${
-                        isSel
-                          ? "bg-maroon text-white"
-                          : "bg-transparent text-txt-mid hover:bg-cream"
+                        isSel ? CAL_OPTION_SELECTED : CAL_OPTION_IDLE
                       }`}
                     >
                       {THAI_MONTH_SHORT_NAMES[mm - 1]}
