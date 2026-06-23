@@ -19,6 +19,7 @@ read -r -d '' CTX << 'CONTEXT' || true
 - docs/reference/testing.md — invariants (เงินไม่เพี้ยน) + idempotency · อ่านก่อนแก้ logic ใน src/utils/
 - docs/reference/troubleshooting.md + glossary.md — runbook + คำศัพท์ไทย↔code
 - docs/reference/firebase-collections.md / line-integration.md / ui-components.md — ตามงานที่ทำ
+- docs/reference/knowledge-content.md — อ่านก่อนแก้/เพิ่มเนื้อหา "ความรู้ต่างๆ" (src/content/knowledge/)
 กฎสำคัญ: เป็นระบบเงินเดือนจริง — เมื่อแก้ logic ใน src/utils/ ต้องเพิ่ม/อัปเดตเทสต์ แล้วรัน
 "npm run typecheck && npm test && npx biome check" ให้ผ่านก่อน push เสมอ
 CONTEXT
