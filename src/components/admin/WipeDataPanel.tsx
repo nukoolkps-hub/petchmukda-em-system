@@ -8,8 +8,8 @@
 import {
   AlertTriangle as IconAlert,
   Check as IconCheck,
-  HardDrive as IconHardDrive,
   Eraser as IconEraser,
+  HardDrive as IconHardDrive,
   History as IconHistory,
   ShieldCheck as IconShield,
   Trash2 as IconTrash,
@@ -31,12 +31,16 @@ const COLLECTIONS_TO_DELETE: { name: string; label: string }[] = [
   { name: "advances", label: "เบิกเงินล่วงหน้า" },
   { name: "employeeLoans", label: "เงินกู้" },
   { name: "payrollConfirms", label: "ยืนยันยอดรอบเงินเดือน" },
-  { name: "poolSnapshots", label: "Snapshot กองกลาง (ข้อมูลเพื่อนร่วมงานใน pool calc)" },
+  {
+    name: "poolSnapshots",
+    label: "Snapshot กองกลาง (ข้อมูลเพื่อนร่วมงานใน pool calc)",
+  },
   { name: "poolAdjustments", label: "รายการหักกองกลาง" },
   { name: "dutyAssignmentsToday", label: "Cache เวรประจำวัน" },
   { name: "certCounters", label: "ตัวนับใบรับรอง" },
   { name: "recentTips", label: "เคล็ดลับ Claude (ที่ส่งไปแล้ว)" },
   { name: "dailySummarySent", label: "Log สรุปประจำวัน" },
+  { name: "stats", label: "สถิติวันลารายเดือน (leaveCount)" },
 ];
 
 const COLLECTIONS_KEPT: string[] = [

@@ -3,9 +3,10 @@
  *
  * ลบ: employees + months subcollection · leaves · advances · employeeLoans ·
  *      payrollConfirms · poolSnapshots · poolAdjustments · dutyAssignmentsToday ·
- *      certCounters · recentTips · dailySummarySent
+ *      certCounters · recentTips · dailySummarySent · stats (leaveCount/เดือน)
  *
- * ไม่แตะ: /config/* · /roles · /duties (config + master data)
+ * ไม่แตะ: /config/* · /roles · /duties (config + master data) ·
+ *         /loginStates (token login ชั่วคราว · single-use · หมดอายุเอง 10 นาที)
  *
  * ป้องกัน:
  *   - admin custom claim
@@ -28,6 +29,9 @@ const TOP_LEVEL_COLLECTIONS = [
 	"certCounters",
 	"recentTips",
 	"dailySummarySent",
+	// stats/{YYYY-MM} — leaveCount ต่อเดือน (เขียนโดย onLeaveCreated) · ต้องล้าง
+	// ไม่งั้น counter นับต่อจากของเก่าเมื่อ start fresh
+	"stats",
 ];
 
 // subcollection ของ employees/{id}/months — เก็บสลิปเงินเดือนแยกตามเดือน
