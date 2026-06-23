@@ -199,7 +199,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `functions/src/line/` | LINE Bot webhook + commands (`ทดสอบแจ้งเตือน`, `คำสั่ง`, `ไอดีกลุ่ม`, ฯลฯ) |
 | `functions/src/dailySummary/` | สรุปประจำวัน 07:30 — Google Calendar + คนหยุด + เคล็ดลับ Claude |
 | `functions/src/maintenance/cleanupOldTips.ts` | ลบ `recentTips` ที่เก่ากว่า 60 วัน (กัน collection โต) |
-| `functions/src/maintenance/wipeTestData.ts` / `wipeEmployeeData.ts` | ล้างข้อมูล (start-fresh) ทั้งระบบ / รายคน · admin + confirm `"ล้างข้อมูล"` (ดู business-rules → "สำรองข้อมูล + ล้างข้อมูล") |
+| `functions/src/maintenance/wipeTestData.ts` / `wipeEmployeeData.ts` | ล้างข้อมูล (start-fresh) ทั้งระบบ / รายคน · admin + confirm `"ล้างข้อมูล"` · `TOP_LEVEL_COLLECTIONS` ต้องครบทุก collection พนักงาน/transactional (รวม `stats` ที่ `onLeaveCreated` เขียน) ไม่งั้นข้อมูลค้างหลัง start fresh (ดู business-rules → "สำรองข้อมูล + ล้างข้อมูล") |
 | `functions/src/backup/backupToGitHub.ts` | สำรอง Firestore → GitHub (scheduled Sun 03:00 + manual) · status ลง `/config/backupStatus` |
 | `src/components/admin/WipeDataPanel.tsx` + `src/firebase/wipeTestData.ts` / `backup.ts` | UI ล้างข้อมูล (2 mode · 2-step confirm) + client wrapper สำรอง/ล้างข้อมูล |
 | `functions/src/goldPrice/fetchGoldPrice.ts` | ดึงราคาทองคำสมาคมทุก 15 นาที (scheduled) + manual trigger (onCall) — source chain: mukdagold → HSH |
