@@ -335,3 +335,4 @@ Cloud Functions `sendDailySummary` ส่ง flex สรุปประจำว
 - `docs/reference/firebase-collections.md` — Firestore schema (รวม `/config/goldPrice`) + security rules
 - `docs/reference/line-integration.md` — LINE Bot commands, webhook, auth
 - `docs/reference/ui-components.md` — Component tree + shared components + Knowledge view
+- `docs/reference/knowledge-content.md` — เนื้อหา "ความรู้ต่างๆ": สารบัญ 29 sections + block types + tone + วิธีแก้/เพิ่ม (อ่านก่อนแตะ `src/content/knowledge/`)

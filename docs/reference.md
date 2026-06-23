@@ -12,6 +12,7 @@
 | [`reference/firebase-collections.md`](reference/firebase-collections.md) | จะแตะ Firestore schema, security rules, subscription scope |
 | [`reference/line-integration.md`](reference/line-integration.md) | จะแก้ LINE Bot webhook, command, หรือ auth flow |
 | [`reference/ui-components.md`](reference/ui-components.md) | จะหา component, shared layout, หรือ modal pattern |
+| [`reference/knowledge-content.md`](reference/knowledge-content.md) | จะแก้/เพิ่มเนื้อหา "ความรู้ต่างๆ" (`/knowledge`) — สารบัญ 29 sections + block types + tone + วิธีแก้ |
 | **ด้านล่างในไฟล์นี้** | จะแตะระบบ **กองกลาง (Pool)** + **leaves snapshot pattern** (privacy, terminology, data flow) |
 
 ---
