@@ -75,6 +75,9 @@ export default function LeaveListPanel({
 
   /* ─── Add-leave form (collapsible) ─── */
   const [addOpen, setAddOpen] = useState(false);
+  // true เมื่อ expand เสร็จ → ปลด overflow ให้ CalendarPicker popup ล้นออกได้
+  // (ระหว่าง animate ต้อง overflow-hidden เพื่อ clip ความสูง)
+  const [addSettled, setAddSettled] = useState(false);
   const [addEmpId, setAddEmpId] = useState("");
   const [addType, setAddType] = useState<LeaveKind>("personal");
   const [addStart, setAddStart] = useState("");
@@ -120,6 +123,7 @@ export default function LeaveListPanel({
         `เพิ่มการลาให้ ${emp.nickname || emp.name} แล้ว (${previewDays} วัน)`,
       );
       resetForm();
+      setAddSettled(false);
       setAddOpen(false);
     } catch (err) {
       console.error("[LeaveList] addLeave failed:", err);
@@ -168,15 +172,19 @@ export default function LeaveListPanel({
           onSelect={onSelectMonth}
         />
       </div>
-      {/* เพิ่มการลา — collapsible (สำหรับพนักงานที่ลืมกดลา)
-          ไม่ใช้ overflow-hidden เพราะ CalendarPicker popup ต้องล้นออกขอบฟอร์ม
-          ได้ · header button มี rounded-t เอง · body ปิดเองเมื่อล้น */}
+      {/* เพิ่มการลา — collapsible (สำหรับพนักงานที่ลืมกดลา) · expand แบบ smooth
+          ด้วย grid-rows trick (เหมือน accordion ความรู้ฯ) · overflow-hidden
+          เฉพาะตอน animate แล้วปลดเป็น visible ตอน expand เสร็จ ให้ CalendarPicker
+          popup ล้นออกขอบฟอร์มได้ (addSettled) */}
       <div className="mb-3.5 rounded-[14px] border border-bdr bg-white">
         <button
           type="button"
           onClick={() => {
             // ปิดฟอร์ม → ทิ้ง draft (parity กับปุ่ม "ยกเลิก" inside form)
-            if (addOpen) resetForm();
+            if (addOpen) {
+              resetForm();
+              setAddSettled(false); // clip ระหว่างยุบ
+            }
             setAddOpen((v) => !v);
           }}
           aria-expanded={addOpen}
@@ -196,112 +204,131 @@ export default function LeaveListPanel({
             className={`shrink-0 transition-transform duration-200 ${addOpen ? "rotate-180" : ""}`}
           />
         </button>
-        {addOpen && (
-          <div className="p-3.5 border-t border-bdr/40 flex flex-col gap-2.5">
-            <div className="relative">
-              <select
-                value={addEmpId}
-                onChange={(e) => setAddEmpId(e.target.value)}
-                className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
-              >
-                <option value="">— เลือกพนักงาน —</option>
-                {employeeDirectory.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.nickname || emp.name}
-                  </option>
-                ))}
-              </select>
-              <IconChevronDown
-                size={14}
-                strokeWidth={2.4}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-              />
-            </div>
-            <div className="relative">
-              <select
-                value={addType}
-                onChange={(e) => setAddType(e.target.value as LeaveKind)}
-                className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
-              >
-                {LEAVE_TYPES.map((lt) => (
-                  <option key={lt.id} value={lt.id}>
-                    {lt.label}
-                  </option>
-                ))}
-              </select>
-              <IconChevronDown
-                size={14}
-                strokeWidth={2.4}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-              />
-            </div>
-            <div className="flex gap-2">
-              <div className="flex-1 min-w-0">
-                <div className="text-[11px] text-txt-soft font-semibold mb-1">
-                  ตั้งแต่
+        {/* grid-rows trick: animate ความสูง smooth (เหมือน accordion ความรู้ฯ) ·
+            content mount เสมอ · overflow-hidden เฉพาะตอน animate แล้วปลดเป็น
+            visible เมื่อ expand เสร็จ (CalendarPicker popup ต้องล้นออกได้) */}
+        <div
+          className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+            addOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          }`}
+          aria-hidden={!addOpen}
+          onTransitionEnd={(e) => {
+            if (e.propertyName === "grid-template-rows" && addOpen)
+              setAddSettled(true);
+          }}
+        >
+          <div
+            className={
+              addOpen && addSettled ? "overflow-visible" : "overflow-hidden"
+            }
+          >
+            <div className="p-3.5 border-t border-bdr/40 flex flex-col gap-2.5">
+              <div className="relative">
+                <select
+                  value={addEmpId}
+                  onChange={(e) => setAddEmpId(e.target.value)}
+                  className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
+                >
+                  <option value="">— เลือกพนักงาน —</option>
+                  {employeeDirectory.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.nickname || emp.name}
+                    </option>
+                  ))}
+                </select>
+                <IconChevronDown
+                  size={14}
+                  strokeWidth={2.4}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                />
+              </div>
+              <div className="relative">
+                <select
+                  value={addType}
+                  onChange={(e) => setAddType(e.target.value as LeaveKind)}
+                  className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
+                >
+                  {LEAVE_TYPES.map((lt) => (
+                    <option key={lt.id} value={lt.id}>
+                      {lt.label}
+                    </option>
+                  ))}
+                </select>
+                <IconChevronDown
+                  size={14}
+                  strokeWidth={2.4}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                />
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-txt-soft font-semibold mb-1">
+                    ตั้งแต่
+                  </div>
+                  <CalendarPicker
+                    value={addStart}
+                    onChange={(v) => {
+                      setAddStart(v);
+                      if (!addEnd || addEnd < v) setAddEnd(v);
+                    }}
+                    storeCalendar={storeCalendar}
+                    size="sm"
+                  />
                 </div>
-                <CalendarPicker
-                  value={addStart}
-                  onChange={(v) => {
-                    setAddStart(v);
-                    if (!addEnd || addEnd < v) setAddEnd(v);
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-txt-soft font-semibold mb-1">
+                    ถึง
+                  </div>
+                  <CalendarPicker
+                    value={addEnd}
+                    onChange={setAddEnd}
+                    minDate={addStart || undefined}
+                    storeCalendar={storeCalendar}
+                    size="sm"
+                  />
+                </div>
+              </div>
+              <input
+                type="text"
+                value={addReason}
+                onChange={(e) => setAddReason(e.target.value)}
+                placeholder="เหตุผล (ถ้ามี) — เช่น 'ลืมกดลา'"
+                className="w-full px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
+              />
+              {addStart && addEnd && (
+                <div className="text-xs text-txt-mid bg-cream/50 rounded-[8px] px-3 py-2">
+                  จำนวนวันลา (ไม่รวมวันที่ร้านปิด):{" "}
+                  <span className="font-extrabold text-maroon">
+                    {previewDays} วัน
+                  </span>
+                </div>
+              )}
+              <div className="flex gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetForm();
+                    setAddSettled(false);
+                    setAddOpen(false);
                   }}
-                  storeCalendar={storeCalendar}
-                  size="sm"
-                />
+                  className="flex-1 px-3 py-2.5 rounded-[10px] border border-bdr bg-white text-txt-mid text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
+                >
+                  <IconX size={13} strokeWidth={2.5} className="inline mr-1" />
+                  ยกเลิก
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAdd}
+                  disabled={!canSubmit}
+                  className="flex-2 px-3 py-2.5 rounded-[10px] bg-maroon text-white text-sm font-extrabold cursor-pointer font-[inherit] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-transform inline-flex items-center justify-center gap-1.5"
+                >
+                  <IconPlus size={14} strokeWidth={2.5} />
+                  {saving ? "กำลังบันทึก..." : "เพิ่มการลา"}
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[11px] text-txt-soft font-semibold mb-1">
-                  ถึง
-                </div>
-                <CalendarPicker
-                  value={addEnd}
-                  onChange={setAddEnd}
-                  minDate={addStart || undefined}
-                  storeCalendar={storeCalendar}
-                  size="sm"
-                />
-              </div>
-            </div>
-            <input
-              type="text"
-              value={addReason}
-              onChange={(e) => setAddReason(e.target.value)}
-              placeholder="เหตุผล (ถ้ามี) — เช่น 'ลืมกดลา'"
-              className="w-full px-3 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
-            />
-            {addStart && addEnd && (
-              <div className="text-xs text-txt-mid bg-cream/50 rounded-[8px] px-3 py-2">
-                จำนวนวันลา (ไม่รวมวันที่ร้านปิด):{" "}
-                <span className="font-extrabold text-maroon">
-                  {previewDays} วัน
-                </span>
-              </div>
-            )}
-            <div className="flex gap-2 mt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  resetForm();
-                  setAddOpen(false);
-                }}
-                className="flex-1 px-3 py-2.5 rounded-[10px] border border-bdr bg-white text-txt-mid text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
-              >
-                <IconX size={13} strokeWidth={2.5} className="inline mr-1" />
-                ยกเลิก
-              </button>
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={!canSubmit}
-                className="flex-2 px-3 py-2.5 rounded-[10px] bg-maroon text-white text-sm font-extrabold cursor-pointer font-[inherit] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-transform inline-flex items-center justify-center gap-1.5"
-              >
-                <IconPlus size={14} strokeWidth={2.5} />
-                {saving ? "กำลังบันทึก..." : "เพิ่มการลา"}
-              </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {filteredLeaves.length === 0 && (
