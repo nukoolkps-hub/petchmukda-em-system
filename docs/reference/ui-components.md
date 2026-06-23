@@ -70,13 +70,41 @@ Layout
 | AvatarCircle | `shared/AvatarCircle.tsx` | Avatar renderer (text/emoji/image) |
 | PositionRateCard | `home/PositionRateCard.tsx` | การ์ดตำแหน่ง + เงินเดือนพื้นฐาน + อัตราค่าคอม (ปัจจุบัน · LIVE) — หน้าแรก |
 | BaseModal | `shared/BaseModal.tsx` | Modal dialog with backdrop blur |
-| CalendarPicker | `shared/CalendarPicker.tsx` | Date picker with Thai month names |
+| **calendarTheme** | `shared/calendarTheme.ts` | **Single source ของ "theme ปฏิทินทั้งระบบ"** — token ที่ใช้ร่วมกันโดย CalendarPicker · TeamCalendar · MonthChevronNav · ThaiMonthPicker (ดู "Calendar theme" ด้านล่าง) |
+| CalendarPicker | `shared/CalendarPicker.tsx` | Date picker (Thai month) — ใช้ token จาก `calendarTheme` |
+| MonthChevronNav | `shared/MonthChevronNav.tsx` | ตัวเลือกเดือน ‹/› + popover · `months` = list เดือนที่เลือกได้ (caller ส่ง **เฉพาะเดือนที่มีข้อมูล**) |
+| ThaiMonthPicker | `shared/ThaiMonthPicker.tsx` | Dropdown เลือกเดือน (พ.ศ.) · ใช้ตั้ง anchor (range ‑monthsBack..+monthsAhead · ไม่ filter ข้อมูล) |
 | Diamond | `shared/Diamond.tsx` | Diamond SVG icon (brand element) |
 | ErrorBoundary | `shared/ErrorBoundary.tsx` | React error boundary with fallback UI |
 | GoldDivider | `shared/GoldDivider.tsx` | Decorative divider with diamond center |
 | MosaicPattern | `shared/MosaicPattern.tsx` | SVG mosaic decoration (sidebar/header) |
 | Layout | `shared/Layout.tsx` | Section/Card/Box utility components |
 | MoneyInput | `shared/MoneyInput.tsx` | ช่องกรอกเงิน — ใส่ comma ทันทีตอนพิมพ์ (1,234,567) + คง cursor + รองรับ decimal/ติดลบ · drop-in แทน `<input inputMode="decimal">` · emit raw string (ไม่มี comma) · helper `formatTypedNumber`/`caretPosFromDigits` ใน `utils/format.ts` (shared กับ Calculator) |
+
+### Calendar theme (ปฏิทินทั้งระบบ — `shared/calendarTheme.ts`)
+
+ทุก "ปฏิทิน + ตัวเลือกเดือน" ใช้ **token ชุดเดียวกัน** จาก `calendarTheme.ts` (maroon + gold brand) —
+แก้สี/สไตล์ปฏิทินที่ไฟล์นี้ที่เดียว สะท้อนทุกที่ · ครอบ: `CalendarPicker` · `TeamCalendar` ·
+`MonthChevronNav` · `ThaiMonthPicker`
+
+| Token | ใช้กับ |
+|---|---|
+| `CAL_NAV_BTN` | ปุ่มลูกศรเลื่อนเดือน ‹ › (รวม `disabled`) |
+| `CAL_TITLE` | หัวข้อเดือน/ปี (maroon) |
+| `calWeekdayClass(isSaturday)` | weekday header · เสาร์หรี่สี (`text-txt-soft/50`) |
+| `CAL_OPTION_SELECTED` / `CAL_OPTION_IDLE` | ปุ่มเดือนใน dropdown — **selected = maroon ทึบ + ตัวขาว** (contrast ดีสุด) |
+| `CAL_TODAY_BG/BORDER/TEXT` | วันนี้ (เทาอ่อน) |
+| `CAL_SELECTED_DAY_BG/BORDER/TEXT/SHADOW` | **วัน (day cell) ที่เลือก = ทอง soft** (goldPale bg + gold border + gold text) |
+
+**กฎสี:** วันที่เลือกในปฏิทินกริด = ทอง soft · เดือนที่เลือกใน dropdown = maroon · วันนี้ = เทา
+— เพิ่มปฏิทิน/ตัวเลือกวันที่ใหม่ ให้ดึง token จาก `calendarTheme` (อย่า hardcode สีซ้ำ)
+
+**ตัวเลือกเดือน — โชว์เฉพาะเดือนที่มีข้อมูล:** caller ของ `MonthChevronNav` ส่ง `months` =
+เดือนที่มีข้อมูลจริง (สลิป/ใบลา) ∪ เดือนที่กำลังดู เท่านั้น · **ไม่ยัดเดือนปัจจุบันที่ว่าง** →
+ลูกศร/popover เลื่อนไปเจอหน้าว่างไม่ได้ · `SalaryView`/`PayrollSummaryPanel` อิง `salaryData` keys
+(มีสลิป) · `LeaveListPanel`/`LeaveSummaryPanel` อิงเดือนที่มีใบลา · admin creation surfaces
+(`SalaryAdminEdit`, `StoreCalendarPanel`, `ThaiMonthPicker` ใน DutyEditModal) ยังโชว์เดือน
+ปัจจุบัน/อนาคตได้ (ต้องสร้างข้อมูลใหม่)
 
 ## Modals
 
