@@ -63,6 +63,10 @@ functions/src/line/
 | `onAdvanceCreated` | Firestore trigger | แจ้ง admin advance ใหม่ |
 | `monthlyPayrollSummary` | Scheduled (28th, 23:00) | สรุปเงินเดือนรายเดือน |
 | `cleanupOldAdvances` | Scheduled (1st, 02:00) | ลบ advances เก่า > 6 เดือน |
+| `backupFirestoreScheduled` | Scheduled (Sun 03:00) | สำรอง Firestore → GitHub (ดู "สำรองข้อมูล + ล้างข้อมูล") |
+| `triggerFirestoreBackupNow` | Callable (admin) | สำรอง Firestore → GitHub แบบ manual |
+| `wipeTestData` | Callable (admin) | ล้างข้อมูลทั้งระบบ (start-fresh · confirm `"ล้างข้อมูล"`) |
+| `wipeEmployeeData` | Callable (admin) | ล้างข้อมูลพนักงานรายคน (confirm `"ล้างข้อมูล"`) |
 
 ## Notification toggles (`config/notifications`)
 
