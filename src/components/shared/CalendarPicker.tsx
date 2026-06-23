@@ -198,7 +198,7 @@ export default function CalendarPicker({
           className={
             inline
               ? "mt-1.5 bg-white rounded-2xl px-4 pt-4.5 pb-3.5 border border-bdr animate-[calFade_0.18s_ease]"
-              : `absolute top-[calc(100%+6px)] ${alignRight ? "right-0" : "left-0"} z-[400] w-[280px] max-w-[calc(100vw-1rem)] bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]`
+              : `absolute top-[calc(100%+6px)] ${alignRight ? "right-0" : "left-0"} z-[400] w-full min-w-[280px] max-w-[calc(100vw-1rem)] bg-white rounded-2xl px-4 pt-4.5 pb-3.5 shadow-[0_16px_48px_rgba(90,30,10,0.15)] border border-bdr animate-[calFade_0.18s_ease]`
           }
         >
           <div className="flex items-center justify-between mb-3.5">
