@@ -8,7 +8,6 @@
 
    Modal global (ไม่ผูกพนักงาน) — admin จัดการทุก exclusion ของเดือนได้ที่นี่    */
 import {
-  ChevronDown as IconChevronDown,
   Lock as IconLock,
   Minus as IconMinus,
   Plus as IconPlus,
@@ -23,6 +22,7 @@ import {
   rolePieceItems,
 } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
+import ThemedSelect from "../shared/ThemedSelect";
 
 interface Item {
   id: string;
@@ -502,9 +502,7 @@ export default function PoolAdjustmentModal({
 }
 
 const selectCls =
-  "w-full appearance-none pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold outline-none font-[inherit] bg-white text-txt cursor-pointer disabled:bg-cream-dk disabled:text-txt-soft disabled:cursor-not-allowed";
-const chevronCls =
-  "absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft";
+  "w-full flex items-center pl-2.5 pr-7 py-2 rounded-[8px] border border-bdr text-sm font-semibold font-[inherit] bg-white text-txt cursor-pointer text-left disabled:bg-cream-dk disabled:text-txt-soft disabled:cursor-not-allowed";
 
 function PoolRow({
   item,
@@ -522,63 +520,54 @@ function PoolRow({
   return (
     <div className="rounded-[10px] p-2.5 border border-bdr bg-cream/60 flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <div className="relative flex-1 min-w-0">
-          <select
-            value={item.poolGroup}
+        <div className="flex-1 min-w-0">
+          <ThemedSelect
+            value={item.poolGroup ?? ""}
             disabled={locked}
-            onChange={(e) => onUpdate({ poolGroup: e.target.value })}
+            onChange={(v) => onUpdate({ poolGroup: v })}
+            options={poolGroups.map((g) => ({ value: g.id, label: g.label }))}
             className={selectCls}
-          >
-            {poolGroups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.label}
-              </option>
-            ))}
-          </select>
-          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+          />
         </div>
-        <div className="relative">
-          {(() => {
-            // pool items ของ group ที่ admin เลือก (kind=pool เท่านั้น)
-            // legacy fallback: ถ้าไม่มี items → normal/buy hardcoded
-            const group = poolGroups.find((g) => g.id === item.poolGroup);
-            const groupItems =
-              group?.items && group.items.length > 0
-                ? group.items
-                : [
-                    { id: "normal", label: "ขาย (ทั่วไป)" },
-                    { id: "buy", label: "รับซื้อ" },
-                  ];
-            const currentItemId =
-              item.poolItemId || (item.side === "buy" ? "buy" : "normal");
-            return (
-              <select
+        {(() => {
+          // pool items ของ group ที่ admin เลือก (kind=pool เท่านั้น)
+          // legacy fallback: ถ้าไม่มี items → normal/buy hardcoded
+          const group = poolGroups.find((g) => g.id === item.poolGroup);
+          const groupItems =
+            group?.items && group.items.length > 0
+              ? group.items
+              : [
+                  { id: "normal", label: "ขาย (ทั่วไป)" },
+                  { id: "buy", label: "รับซื้อ" },
+                ];
+          const currentItemId =
+            item.poolItemId || (item.side === "buy" ? "buy" : "normal");
+          return (
+            <div className="flex-1 min-w-0">
+              <ThemedSelect
                 value={currentItemId}
                 disabled={locked}
-                onChange={(e) =>
+                onChange={(v) =>
                   onUpdate({
-                    poolItemId: e.target.value,
+                    poolItemId: v,
                     // sync legacy side สำหรับ backward-compat
                     side:
-                      e.target.value === "buy"
+                      v === "buy"
                         ? "buy"
-                        : e.target.value === "normal"
+                        : v === "normal"
                           ? "normal"
                           : item.side,
                   })
                 }
+                options={groupItems.map((it) => ({
+                  value: it.id,
+                  label: it.label,
+                }))}
                 className={selectCls}
-              >
-                {groupItems.map((it) => (
-                  <option key={it.id} value={it.id}>
-                    {it.label}
-                  </option>
-                ))}
-              </select>
-            );
-          })()}
-          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
-        </div>
+              />
+            </div>
+          );
+        })()}
         {!locked && (
           <button
             type="button"
@@ -641,25 +630,26 @@ function PieceRow({
   return (
     <div className="rounded-[10px] p-2.5 border border-bdr bg-cream/60 flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <div className="relative flex-1 min-w-0">
-          <select
-            value={item.roleId}
+        <div className="flex-1 min-w-0">
+          <ThemedSelect
+            value={item.roleId ?? ""}
             disabled={locked}
-            onChange={(e) => onUpdate({ roleId: e.target.value })}
+            onChange={(v) => onUpdate({ roleId: v })}
+            options={[
+              ...pieceRoles.map((r) => ({ value: r.id, label: r.name })),
+              ...(roleIsOrphan
+                ? [
+                    {
+                      value: item.roleId ?? "",
+                      label: orphanRole
+                        ? `${orphanRole.name} (เก่า)`
+                        : "(ตำแหน่งเก่า)",
+                    },
+                  ]
+                : []),
+            ]}
             className={selectCls}
-          >
-            {pieceRoles.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-            {roleIsOrphan && (
-              <option value={item.roleId}>
-                {orphanRole ? `${orphanRole.name} (เก่า)` : "(ตำแหน่งเก่า)"}
-              </option>
-            )}
-          </select>
-          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+          />
         </div>
         {!locked && (
           <button
@@ -673,63 +663,60 @@ function PieceRow({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <div className="relative flex-1 min-w-0">
-          <select
-            value={item.employeeId}
+        <div className="flex-1 min-w-0">
+          <ThemedSelect
+            value={item.employeeId ?? ""}
             disabled={locked || (emps.length === 0 && !empIsOrphan)}
-            onChange={(e) => onUpdate({ employeeId: e.target.value })}
+            onChange={(v) => onUpdate({ employeeId: v })}
+            options={
+              emps.length === 0 && !empIsOrphan
+                ? [{ value: "", label: "— ไม่มีพนักงาน —" }]
+                : [
+                    ...emps.map((e) => ({
+                      value: e.id,
+                      label: e.nickname || e.name,
+                    })),
+                    ...(empIsOrphan
+                      ? [
+                          {
+                            value: item.employeeId ?? "",
+                            label: orphanEmp
+                              ? `${orphanEmp.nickname || orphanEmp.name} (ย้ายแล้ว)`
+                              : item.employeeName
+                                ? `${item.employeeName} (ลบแล้ว)`
+                                : "(พนักงานเก่า)",
+                          },
+                        ]
+                      : []),
+                  ]
+            }
             className={selectCls}
-          >
-            {emps.length === 0 && !empIsOrphan ? (
-              <option value="">— ไม่มีพนักงาน —</option>
-            ) : (
-              <>
-                {emps.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.nickname || e.name}
-                  </option>
-                ))}
-                {empIsOrphan && (
-                  <option value={item.employeeId}>
-                    {orphanEmp
-                      ? `${orphanEmp.nickname || orphanEmp.name} (ย้ายแล้ว)`
-                      : item.employeeName
-                        ? `${item.employeeName} (ลบแล้ว)`
-                        : "(พนักงานเก่า)"}
-                  </option>
-                )}
-              </>
-            )}
-          </select>
-          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+          />
         </div>
-        <div className="relative flex-1 min-w-0">
-          <select
-            value={item.pieceItemId}
+        <div className="flex-1 min-w-0">
+          <ThemedSelect
+            value={item.pieceItemId ?? ""}
             disabled={locked || (its.length === 0 && !itemIsOrphan)}
-            onChange={(e) => onUpdate({ pieceItemId: e.target.value })}
+            onChange={(v) => onUpdate({ pieceItemId: v })}
+            options={
+              its.length === 0 && !itemIsOrphan
+                ? [{ value: "", label: "— ไม่มีรายการ —" }]
+                : [
+                    ...its.map((it) => ({ value: it.id, label: it.label })),
+                    ...(itemIsOrphan
+                      ? [
+                          {
+                            value: item.pieceItemId ?? "",
+                            label: item.pieceItemLabel
+                              ? `${item.pieceItemLabel} (ลบแล้ว)`
+                              : "(รายการเก่า)",
+                          },
+                        ]
+                      : []),
+                  ]
+            }
             className={selectCls}
-          >
-            {its.length === 0 && !itemIsOrphan ? (
-              <option value="">— ไม่มีรายการ —</option>
-            ) : (
-              <>
-                {its.map((it) => (
-                  <option key={it.id} value={it.id}>
-                    {it.label}
-                  </option>
-                ))}
-                {itemIsOrphan && (
-                  <option value={item.pieceItemId}>
-                    {item.pieceItemLabel
-                      ? `${item.pieceItemLabel} (ลบแล้ว)`
-                      : "(รายการเก่า)"}
-                  </option>
-                )}
-              </>
-            )}
-          </select>
-          <IconChevronDown size={12} strokeWidth={2.4} className={chevronCls} />
+          />
         </div>
       </div>
       <PiecesAndLabelRow item={item} locked={locked} onUpdate={onUpdate} />

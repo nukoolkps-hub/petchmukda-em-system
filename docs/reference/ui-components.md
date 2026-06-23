@@ -80,6 +80,10 @@ Layout
 | MosaicPattern | `shared/MosaicPattern.tsx` | SVG mosaic decoration (sidebar/header) |
 | Layout | `shared/Layout.tsx` | Section/Card/Box utility components |
 | MoneyInput | `shared/MoneyInput.tsx` | ช่องกรอกเงิน — ใส่ comma ทันทีตอนพิมพ์ (1,234,567) + คง cursor + รองรับ decimal/ติดลบ · drop-in แทน `<input inputMode="decimal">` · emit raw string (ไม่มี comma) · helper `formatTypedNumber`/`caretPosFromDigits` ใน `utils/format.ts` (shared กับ Calculator) |
+| ThemedSelect | `shared/ThemedSelect.tsx` | **dropdown ที่ใช้แทน native `<select>` ทุกที่** — popover ใช้ฟอนต์ Prompt + theme (selected = gold-pale/maroon) แทน OS-native list · API: `value`/`onChange(value)`/`options:{value,label,disabled?}[]`/`placeholder`/`disabled`/`className`/`maxHeightPx` · flip-up + scroll อัตโนมัติเมื่อ space ไม่พอ |
+| BankPicker | `shared/BankPicker.tsx` | dropdown เลือกธนาคาร (โลโก้ + ชื่อ) — custom (native `<option>` รับแต่ text) |
+
+> **กฎ: ห้ามใช้ native `<select>` ใน UI** — popover ของ native ใช้ system font + ไม่เข้า theme (เห็นชัดบน mobile) · ใช้ `ThemedSelect` เสมอ (ตัวเลือกเดือนใช้ `MonthChevronNav`/`ThaiMonthPicker` · ธนาคารใช้ `BankPicker`)
 
 ### Calendar theme (ปฏิทินทั้งระบบ — `shared/calendarTheme.ts`)
 

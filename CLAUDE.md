@@ -11,6 +11,7 @@
 - **Storage:** Firebase Storage
 - **Linting:** Biome
 - **Icons:** `lucide-react` (อันเดียวทั้งระบบ — ไม่ผสมชุดอื่น) · **ห้ามใช้ emoji เป็น icon ใน UI** (label, heading, button, warning ฯลฯ) ทุกที่ต้อง Lucide เท่านั้น · ยกเว้น content/text ที่ความหมายเป็น emoji จริงๆ (เช่น avatar emoji picker, leave-type icons ใน `constants.ts`)
+- **Dropdown:** **ห้ามใช้ native `<select>` ใน UI** — popover ใช้ system font + ไม่เข้า theme (เห็นชัดบน mobile) · ใช้ `ThemedSelect` (`src/components/shared/ThemedSelect.tsx`) เสมอ · ตัวเลือกเดือนใช้ `MonthChevronNav`/`ThaiMonthPicker` · ธนาคารใช้ `BankPicker`
 - **PDF:** pdfmake 0.3.x — Thai font Sarabun self-host ที่ `public/fonts/`
   - register ผ่าน `pdfMake.addVirtualFileSystem()` + `setFonts()` (ไม่ใช่ `.vfs` แบบ 0.1.x)
 - **Routing:** react-router-dom v7 (HashRouter)
@@ -209,6 +210,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `src/utils/format.ts` | `formatThaiNumber` + `formatTypedNumber` (ใส่ comma live ขณะพิมพ์ คงทศนิยม/ติดลบ) + `caretPosFromDigits` (คืนตำแหน่ง cursor หลังแทรก comma) — shared โดย Calculator + MoneyInput |
 | `src/components/shared/MoneyInput.tsx` | ช่องกรอกเงิน reusable — drop-in แทน `<input inputMode="decimal">` · ใส่ comma ทันทีตอนพิมพ์ + คง cursor · emit raw (ไม่มี comma) กลับ parent · ใช้ใน EmployeeEditModal, AnnualRaiseSection, SalaryAdminEdit |
 | `src/components/shared/calendarTheme.ts` | **Single source ของ theme ปฏิทินทั้งระบบ** (maroon+gold) — token ใช้ร่วมโดย CalendarPicker · TeamCalendar · MonthChevronNav · ThaiMonthPicker · day cell เลือก = ทอง soft · เดือน dropdown เลือก = maroon · วันนี้ = เทา · ดู `docs/reference/ui-components.md` → "Calendar theme" |
+| `src/components/shared/ThemedSelect.tsx` | dropdown ใช้แทน native `<select>` **ทุกที่** — popover ฟอนต์ Prompt + theme (selected = gold-pale/maroon) · `value`/`onChange`/`options:{value,label,disabled?}[]`/`placeholder`/`disabled`/`className` · flip-up + scroll อัตโนมัติ · ดู `docs/reference/ui-components.md` → "ห้ามใช้ native `<select>`" |
 | `src/content/knowledge/index.ts` | เนื้อหา "ความรู้ต่างๆ" hardcode 20+ sections (มาตรฐานน้ำหนัก, ค่าแรง, ขาย, รับซื้อ, จำนำ, VAT, ฯลฯ) |
 | `src/content/knowledge/types.ts` | block types: h3 · p · list · table (`colWidths`/`colAlign`) · formula · example · live-example · calculator · change-price-table · sell-price-96-table · buy-price-96-table · labor-cost-table · block-cost-table · loyalty-points-redeem-table · secret · callout · image · steps |
 | `src/components/knowledge/KnowledgeView.tsx` | Accordion render + search box (filter section.title) |

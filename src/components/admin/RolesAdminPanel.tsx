@@ -197,18 +197,19 @@ function PoolItemsEditor({
             </button>
           </div>
           <div className="flex gap-1.5 items-center text-xs">
-            <select
+            <ThemedSelect
               value={item.kind}
-              onChange={(ev) => {
+              onChange={(v) => {
                 const next = items.slice();
-                next[idx] = { ...item, kind: ev.target.value as any } as any;
+                next[idx] = { ...item, kind: v as any } as any;
                 onChange(next as any);
               }}
-              className="px-1.5 py-1 rounded-md border border-bdr text-xs font-[inherit] bg-white"
-            >
-              <option value="pool">แชร์กองกลาง</option>
-              <option value="personal">ส่วนตัว</option>
-            </select>
+              options={[
+                { value: "pool", label: "แชร์กองกลาง" },
+                { value: "personal", label: "ส่วนตัว" },
+              ]}
+              className="inline-flex items-center px-1.5 pr-6 py-1 rounded-md border border-bdr text-xs text-txt bg-white font-[inherit] cursor-pointer text-left"
+            />
             <div className="flex items-center gap-1 ml-auto">
               <span className="text-txt-soft">เกณฑ์เข้ากอง:</span>
               <input
@@ -561,9 +562,7 @@ export default function RolesAdminPanel({
                     strokeWidth={2.2}
                     color={COLORS.textSoft}
                   />
-                  <span className="text-sm font-bold text-txt">
-                    ส่วนตัว
-                  </span>
+                  <span className="text-sm font-bold text-txt">ส่วนตัว</span>
                   <span className="text-xs text-txt-soft ml-auto">
                     ใช้ piece rate / ไม่มีค่าคอม
                   </span>

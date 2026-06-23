@@ -5,7 +5,6 @@ import {
   Landmark as IconBuildingBank,
   CalendarDays as IconCalendar,
   Check as IconCheck,
-  ChevronDown as IconChevronDown,
   CircleDollarSign as IconCircleDollarSign,
   Copy as IconCopy,
   Lightbulb as IconLightbulb,
@@ -38,6 +37,7 @@ import AvatarCircle from "../shared/AvatarCircle";
 import BankPicker from "../shared/BankPicker";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
+import ThemedSelect from "../shared/ThemedSelect";
 import AnnualRaiseSection from "./AnnualRaiseSection";
 import { clearEmployeeDraft } from "./employeeEditFields";
 import RecurringItemsEditor, {
@@ -366,29 +366,25 @@ export default function EmployeeEditModal({
                 </span>
               </label>
               <div className="flex gap-2">
-                <div className="relative shrink-0 w-[110px]">
-                  <select
+                <div className="shrink-0 w-[110px]">
+                  <ThemedSelect
                     value={
                       editingPrefix !== undefined
                         ? editingPrefix
                         : employee.prefix || "นางสาว"
                     }
-                    onChange={(e) =>
+                    onChange={(v) =>
                       setEditingRole((previousEditingRole) => ({
                         ...previousEditingRole,
-                        [`${employee.id}:prefix`]: e.target.value,
+                        [`${employee.id}:prefix`]: v,
                       }))
                     }
-                    className={`appearance-none cursor-pointer w-full py-[9px] pl-2.5 pr-7 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] ${editingPrefix !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
-                  >
-                    <option value="นางสาว">นางสาว</option>
-                    <option value="นาง">นาง</option>
-                    <option value="นาย">นาย</option>
-                  </select>
-                  <IconChevronDown
-                    size={12}
-                    strokeWidth={2.4}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                    options={[
+                      { value: "นางสาว", label: "นางสาว" },
+                      { value: "นาง", label: "นาง" },
+                      { value: "นาย", label: "นาย" },
+                    ]}
+                    className={`w-full flex items-center py-[9px] pl-2.5 pr-7 rounded-[9px] text-sm leading-normal font-bold font-[inherit] text-txt border-[1.5px] cursor-pointer text-left ${editingPrefix !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
                   />
                 </div>
                 <input
@@ -622,49 +618,28 @@ export default function EmployeeEditModal({
                     : "border-bdr bg-cream";
                 return (
                   <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <select
+                    <div className="flex-1">
+                      <ThemedSelect
                         value={curMonth}
-                        onChange={(e) =>
-                          setYM(curYear || String(nowYear), e.target.value)
-                        }
-                        className={`appearance-none cursor-pointer w-full py-[9px] pl-3 pr-7 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
-                      >
-                        <option value="">เดือน</option>
-                        {thaiMonths.map((mn, i) => (
-                          <option
-                            key={mn}
-                            value={String(i + 1).padStart(2, "0")}
-                          >
-                            {mn}
-                          </option>
-                        ))}
-                      </select>
-                      <IconChevronDown
-                        size={12}
-                        strokeWidth={2.4}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                        placeholder="เดือน"
+                        onChange={(v) => setYM(curYear || String(nowYear), v)}
+                        options={thaiMonths.map((mn, i) => ({
+                          value: String(i + 1).padStart(2, "0"),
+                          label: mn,
+                        }))}
+                        className={`w-full flex items-center py-[9px] pl-3 pr-7 rounded-[9px] text-sm leading-normal font-bold font-[inherit] text-txt border-[1.5px] cursor-pointer text-left ${dirtyCls}`}
                       />
                     </div>
-                    <div className="relative flex-1">
-                      <select
+                    <div className="flex-1">
+                      <ThemedSelect
                         value={curYear}
-                        onChange={(e) =>
-                          setYM(e.target.value, curMonth || "01")
-                        }
-                        className={`appearance-none cursor-pointer w-full py-[9px] pl-3 pr-7 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] ${dirtyCls}`}
-                      >
-                        <option value="">ปี (พ.ศ.)</option>
-                        {years.map((y) => (
-                          <option key={y} value={String(y)}>
-                            {y + 543}
-                          </option>
-                        ))}
-                      </select>
-                      <IconChevronDown
-                        size={12}
-                        strokeWidth={2.4}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+                        placeholder="ปี (พ.ศ.)"
+                        onChange={(v) => setYM(v, curMonth || "01")}
+                        options={years.map((y) => ({
+                          value: String(y),
+                          label: String(y + 543),
+                        }))}
+                        className={`w-full flex items-center py-[9px] pl-3 pr-7 rounded-[9px] text-sm leading-normal font-bold font-[inherit] text-txt border-[1.5px] cursor-pointer text-left ${dirtyCls}`}
                       />
                     </div>
                   </div>

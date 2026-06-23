@@ -12,6 +12,7 @@ import {
   formatThaiNumber,
   formatTypedNumber,
 } from "../../utils/format";
+import ThemedSelect from "../shared/ThemedSelect";
 import MathText from "./MathText";
 
 interface Props {
@@ -244,24 +245,21 @@ export default function Calculator({
               </label>
               <div className="flex items-center gap-1.5">
                 {field.options ? (
-                  <select
-                    id={`calc-${field.id}`}
-                    value={values[field.id] ?? 0}
+                  <ThemedSelect
+                    value={String(values[field.id] ?? 0)}
                     disabled={disabled}
-                    onChange={(e) =>
-                      setValues((v) => ({
-                        ...v,
-                        [field.id]: Number(e.target.value),
+                    onChange={(v) =>
+                      setValues((prev) => ({
+                        ...prev,
+                        [field.id]: Number(v),
                       }))
                     }
-                    className={`w-[142px] px-2 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt font-[inherit] outline-none truncate ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white cursor-pointer"}`}
-                  >
-                    {field.options.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={field.options.map((opt) => ({
+                      value: String(opt.value),
+                      label: opt.label,
+                    }))}
+                    className={`w-[142px] flex items-center px-2 pr-7 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt font-[inherit] truncate text-left ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white cursor-pointer"}`}
+                  />
                 ) : field.readOnly ? (
                   // readOnly → render เป็นตัวเลขเฉยๆ ไม่มี input box (auto-calc)
                   <span className="w-28 px-2 py-1 text-sm font-bold text-txt text-right tabular-nums">

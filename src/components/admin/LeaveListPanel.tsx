@@ -27,6 +27,7 @@ import ConfirmModal from "../modals/ConfirmModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import CalendarPicker from "../shared/CalendarPicker";
 import MonthChevronNav from "../shared/MonthChevronNav";
+import ThemedSelect from "../shared/ThemedSelect";
 
 interface LeaveListPanelProps {
   allLeaves: LeaveEntry[];
@@ -223,43 +224,25 @@ export default function LeaveListPanel({
             }
           >
             <div className="p-3.5 border-t border-bdr/40 flex flex-col gap-2.5">
-              <div className="relative">
-                <select
-                  value={addEmpId}
-                  onChange={(e) => setAddEmpId(e.target.value)}
-                  className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
-                >
-                  <option value="">— เลือกพนักงาน —</option>
-                  {employeeDirectory.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.nickname || emp.name}
-                    </option>
-                  ))}
-                </select>
-                <IconChevronDown
-                  size={14}
-                  strokeWidth={2.4}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-                />
-              </div>
-              <div className="relative">
-                <select
-                  value={addType}
-                  onChange={(e) => setAddType(e.target.value as LeaveKind)}
-                  className="appearance-none cursor-pointer w-full pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] outline-none focus:border-maroon"
-                >
-                  {LEAVE_TYPES.map((lt) => (
-                    <option key={lt.id} value={lt.id}>
-                      {lt.label}
-                    </option>
-                  ))}
-                </select>
-                <IconChevronDown
-                  size={14}
-                  strokeWidth={2.4}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
-                />
-              </div>
+              <ThemedSelect
+                value={addEmpId}
+                onChange={setAddEmpId}
+                placeholder="— เลือกพนักงาน —"
+                options={employeeDirectory.map((emp) => ({
+                  value: emp.id,
+                  label: emp.nickname || emp.name,
+                }))}
+                className="w-full flex items-center pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] cursor-pointer text-left"
+              />
+              <ThemedSelect
+                value={addType}
+                onChange={(v) => setAddType(v as LeaveKind)}
+                options={LEAVE_TYPES.map((lt) => ({
+                  value: lt.id,
+                  label: lt.label,
+                }))}
+                className="w-full flex items-center pl-3 pr-8 py-2.5 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt bg-white font-[inherit] cursor-pointer text-left"
+              />
               <div className="flex gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-[11px] text-txt-soft font-semibold mb-1">
