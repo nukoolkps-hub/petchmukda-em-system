@@ -15,6 +15,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import AdminPanel from "./components/admin/AdminPanel";
+import EmployeeViewPreview from "./components/admin/EmployeeViewPreview";
 import HomeTab from "./components/home/HomeTab";
 import RequestTab from "./components/home/RequestTab";
 import SuccessScreen from "./components/home/SuccessScreen";
@@ -157,8 +158,52 @@ export default function LeaveApp() {
     showToast,
   });
   const currentEmployeeId = employeeId || "";
-  const myAdvanceRequests = currentEmployeeId
-    ? advanceRequests.filter((r) => r.employeeId === currentEmployeeId)
+
+  /* ─── "ดูมุมมองพนักงาน" (admin preview) ─────────────────────────
+     admin เลือกพนักงาน → render หน้าตาแบบที่พนักงานคนนั้นเห็น (read-only)
+     · ไม่แตะ rules (admin อ่านข้อมูลทุกคนได้อยู่แล้ว) · view* vars override
+     เฉพาะตอน render — data layer ยังโหลดแบบ admin (ทุกคน) ตามเดิม */
+  const [previewEmpId, setPreviewEmpId] = useState<string | null>(null);
+  const previewing = isAdmin && !!previewEmpId;
+  const previewEmployee = previewing
+    ? (employeeDirectory.find((e) => e.id === previewEmpId) ?? null)
+    : null;
+  // ถ้าพนักงานที่กำลัง preview ถูกลบ → ออกจากโหมด
+  useEffect(() => {
+    if (previewEmpId && !employeeDirectory.some((e) => e.id === previewEmpId))
+      setPreviewEmpId(null);
+  }, [previewEmpId, employeeDirectory]);
+
+  const viewIsAdmin = isAdmin && !previewing;
+  const viewEmployee = previewing ? previewEmployee : currentEmployee;
+  const viewEmployeeId = previewing ? (previewEmpId ?? "") : currentEmployeeId;
+  const viewProfile =
+    previewing && previewEmployee
+      ? {
+          id: previewEmployee.id,
+          name: previewEmployee.name,
+          avatar: previewEmployee.avatar || previewEmployee.name.slice(0, 2),
+          avatarType: previewEmployee.avatarType || "text",
+          avatarImageUrl: previewEmployee.avatarImageUrl ?? null,
+          role: previewEmployee.role || "-",
+          bank: previewEmployee.bank || "",
+          bankAccountNumber: previewEmployee.bankAccountNumber || "",
+        }
+      : profile;
+  const viewSalaryDisabled = previewing
+    ? !!previewEmployee?.salaryDisabled
+    : salaryDisabled;
+  // กันเผลอบันทึก/ส่งระหว่าง preview (โหมดดูอย่างเดียว)
+  function blockInPreview(): boolean {
+    if (previewing) {
+      showToast("อยู่ในโหมดดูมุมมองพนักงาน — บันทึก/ส่งไม่ได้");
+      return true;
+    }
+    return false;
+  }
+
+  const myAdvanceRequests = viewEmployeeId
+    ? advanceRequests.filter((r) => r.employeeId === viewEmployeeId)
     : [];
 
   /* ─── Bank account required — บังคับให้ตั้งค่าก่อนใช้งาน ───── */
@@ -185,13 +230,13 @@ export default function LeaveApp() {
 
   /* ─── Leave form hook ──────────────────────────────────────── */
   const leaveForm = useLeaveForm({
-    profileName: profile?.name || null,
+    profileName: viewProfile?.name || null,
     allLeaves,
     employeeDirectory,
     storeCalendar,
     addLeave: addLeaveAction,
     deleteLeave: deleteLeaveAction,
-    authUid: currentEmployeeId,
+    authUid: viewEmployeeId,
     showToast,
   });
 
@@ -284,7 +329,10 @@ export default function LeaveApp() {
   }, [isAdmin, salaryDisabled, tab, navigate]);
 
   /* ─── Nav items ────────────────────────────────────────────── */
-  const navItems = getNavItems({ isAdmin, salaryDisabled });
+  const navItems = getNavItems({
+    isAdmin: viewIsAdmin,
+    salaryDisabled: viewSalaryDisabled,
+  });
 
   /* ─── Loading & Error states ───────────────────────────────── */
   if (loading || !adminChecked) {
@@ -323,19 +371,19 @@ export default function LeaveApp() {
       <div className="leave-app-root">
         {/* ══ SIDEBAR (desktop only) ══ */}
         <Sidebar
-          profile={profile}
-          isAdmin={isAdmin}
+          profile={viewProfile}
+          isAdmin={viewIsAdmin}
           navItems={navItems}
           holding={false}
           onEditProfile={() => {
-            if (!isAdmin) setShowEditProfile(true);
+            if (!isAdmin && !previewing) setShowEditProfile(true);
           }}
           onSignOut={authSignOut}
           startHold={() => {}}
           endHold={() => {}}
           onRingComplete={() => {}}
-          adminSection={isAdmin ? adminSection : undefined}
-          onAdminSectionChange={isAdmin ? tryChangeAdminSection : undefined}
+          adminSection={viewIsAdmin ? adminSection : undefined}
+          onAdminSectionChange={viewIsAdmin ? tryChangeAdminSection : undefined}
           adminPendingAdvanceCount={
             (advanceRequests || []).filter((r) => r.status === "pending").length
           }
@@ -345,18 +393,18 @@ export default function LeaveApp() {
         <div className="leave-main">
           {/* Desktop top bar */}
           <DesktopHeader
-            profile={profile}
-            isAdmin={isAdmin}
+            profile={viewProfile}
+            isAdmin={viewIsAdmin}
             onShowManual={() => setShowManual(true)}
           />
 
           {/* Mobile Header */}
           <MobileHeader
-            profile={profile}
-            isAdmin={isAdmin}
+            profile={viewProfile}
+            isAdmin={viewIsAdmin}
             holding={false}
             onEditProfile={() => {
-              if (!isAdmin) setShowEditProfile(true);
+              if (!isAdmin && !previewing) setShowEditProfile(true);
             }}
             onShowManual={() => setShowManual(true)}
             startHold={() => {}}
@@ -371,14 +419,14 @@ export default function LeaveApp() {
               <Route
                 path="/home"
                 element={
-                  isAdmin ? (
+                  viewIsAdmin ? (
                     <Navigate to="/admin" replace />
                   ) : (
                     <HomeTab
-                      profile={profile}
+                      profile={viewProfile}
                       allLeaves={allLeaves}
                       employeeDirectory={employeeDirectory}
-                      currentEmployee={currentEmployee}
+                      currentEmployee={viewEmployee}
                       roles={roles}
                       duties={duties}
                       dutyAssignmentsToday={dutyAssignmentsToday}
@@ -392,7 +440,7 @@ export default function LeaveApp() {
               <Route
                 path="/request"
                 element={
-                  isAdmin ? (
+                  viewIsAdmin ? (
                     <Navigate to="/admin" replace />
                   ) : leaveForm.submitted ? (
                     <SuccessScreen
@@ -402,7 +450,7 @@ export default function LeaveApp() {
                     />
                   ) : (
                     <RequestTab
-                      profile={profile}
+                      profile={viewProfile}
                       allLeaves={allLeaves}
                       form={leaveForm.form}
                       setForm={leaveForm.setForm}
@@ -416,9 +464,15 @@ export default function LeaveApp() {
                       remain={leaveForm.remain}
                       overLimit={leaveForm.overLimit}
                       onValidate={leaveForm.validateAndSetErrors}
-                      onSubmit={() => profile && leaveForm.submit(profile)}
+                      onSubmit={() => {
+                        if (blockInPreview()) return;
+                        if (viewProfile) leaveForm.submit(viewProfile);
+                      }}
                       onResetForm={leaveForm.reset}
-                      onDelete={leaveForm.handleDelete}
+                      onDelete={(id: string | number) => {
+                        if (blockInPreview()) return;
+                        leaveForm.handleDelete(id);
+                      }}
                       storeCalendar={storeCalendar}
                     />
                   )
@@ -429,20 +483,23 @@ export default function LeaveApp() {
               <Route
                 path="/salary"
                 element={
-                  isAdmin ? (
+                  viewIsAdmin ? (
                     <Navigate to="/admin" replace />
-                  ) : salaryDisabled ? (
+                  ) : viewSalaryDisabled ? (
                     <Navigate to="/home" replace />
                   ) : (
                     <div className="min-h-full">
                       <SalaryView
-                        profile={profile}
-                        employeeId={currentEmployeeId}
+                        profile={viewProfile}
+                        employeeId={viewEmployeeId}
                         salaryData={salaryData}
                         allLeaves={allLeaves}
                         employeeDirectory={employeeDirectory}
                         advanceRequests={myAdvanceRequests}
-                        onOpenAdvance={() => setShowAdvanceModal(true)}
+                        onOpenAdvance={() => {
+                          if (blockInPreview()) return;
+                          setShowAdvanceModal(true);
+                        }}
                         roles={roles}
                         payrollConfirms={payrollConfirms}
                         poolAdjustments={poolAdjustments}
@@ -459,7 +516,7 @@ export default function LeaveApp() {
               <Route
                 path="/knowledge"
                 element={
-                  <KnowledgeView isAdmin={isAdmin} showToast={showToast} />
+                  <KnowledgeView isAdmin={viewIsAdmin} showToast={showToast} />
                 }
               />
 
@@ -467,7 +524,7 @@ export default function LeaveApp() {
               <Route
                 path="/admin"
                 element={
-                  isAdmin ? (
+                  viewIsAdmin ? (
                     <AdminPanel
                       section={adminSection}
                       onSectionChange={tryChangeAdminSection}
@@ -514,7 +571,9 @@ export default function LeaveApp() {
               {/* Catch-all: redirect to home */}
               <Route
                 path="*"
-                element={<Navigate to={isAdmin ? "/admin" : "/home"} replace />}
+                element={
+                  <Navigate to={viewIsAdmin ? "/admin" : "/home"} replace />
+                }
               />
             </Routes>
           </div>
@@ -541,9 +600,9 @@ export default function LeaveApp() {
 
           {showAdvanceModal && (
             <AdvanceRequestModal
-              profile={profile}
-              employee={currentEmployee}
-              employeeId={currentEmployeeId}
+              profile={viewProfile}
+              employee={viewEmployee}
+              employeeId={viewEmployeeId}
               salaryData={salaryData}
               advanceRequests={myAdvanceRequests}
               onSubmit={handleSubmitAdvance}
@@ -552,6 +611,15 @@ export default function LeaveApp() {
           )}
 
           {showManual && <ManualModal onClose={() => setShowManual(false)} />}
+
+          {/* ปุ่ม/แบนเนอร์ "ดูมุมมองพนักงาน" — เฉพาะ admin จริง */}
+          {isAdmin && (
+            <EmployeeViewPreview
+              employees={employeeDirectory}
+              previewEmpId={previewEmpId}
+              onSelect={setPreviewEmpId}
+            />
+          )}
 
           {pendingSection && (
             <BaseModal
