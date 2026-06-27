@@ -1959,6 +1959,34 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
     ],
   },
+
+  /* ── 15b. Print ใบเสร็จ AEON (รายละเอียดรายการอนุมัติ) ── */
+  {
+    id: "aeon-receipt-print",
+    title: "Print ใบเสร็จ AEON (รายละเอียดรายการอนุมัติ)",
+    Icon: IconPrinter,
+    blocks: [
+      {
+        type: "p",
+        text: "วิธีพิมพ์ใบเสร็จ (รายละเอียดรายการอนุมัติ) ของรายการผ่อนชำระ AEON ผ่าน Website i-Dealer",
+      },
+      {
+        type: "steps",
+        items: [
+          "เข้าเมนู บริการ → ตรวจสอบและยกเลิกรายการผ่อนชำระและชำระเต็ม",
+          'กด "ดูรายละเอียดรายการ" (รูปแว่นขยาย) ที่รายการที่ต้องการ',
+          'จะมี Tab "File downloaded" ขึ้นมา → กด "Open"',
+          'กดปุ่ม 3 จุด มุมบนขวา → กด "Print"',
+          "กด Icon เครื่องพิมพ์ เพื่อสั่งพิมพ์",
+        ],
+      },
+      {
+        type: "callout",
+        tone: "note",
+        text: 'ต้องเข้าระบบ i-Dealer ก่อน — ดูข้อมูล Login ที่หัวข้อ "ผ่อน AEON ผ่าน Website i-Dealer"',
+      },
+    ],
+  },
 ];
 
 /* sidebar/summary helper */
