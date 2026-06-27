@@ -98,6 +98,19 @@ export default function KnowledgeBlockView({
           className={`text-sm leading-relaxed mb-2.5 ${block.muted ? "text-txt-soft" : "text-txt"}`}
         >
           <MathText>{block.text}</MathText>
+          {block.link && (
+            <>
+              {" "}
+              <a
+                href={block.link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-maroon underline decoration-gold/60 underline-offset-2 break-all hover:text-maroon-dk"
+              >
+                {block.link.text}
+              </a>
+            </>
+          )}
         </p>
       );
 

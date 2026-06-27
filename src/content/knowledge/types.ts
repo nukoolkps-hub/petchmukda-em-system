@@ -66,7 +66,14 @@ export type KnowledgeBlock =
         | "silver-text"
         | "nak-text";
     }
-  | { type: "p"; text: string; muted?: boolean; adminOnly?: boolean }
+  | {
+      type: "p";
+      text: string;
+      muted?: boolean;
+      adminOnly?: boolean;
+      /** ลิงก์ต่อท้ายข้อความ (เปิดแท็บใหม่) — เช่น "Website:" + ลิงก์ i-Dealer */
+      link?: { text: string; href: string };
+    }
   | { type: "list"; items: string[]; ordered?: boolean }
   | {
       type: "table";
