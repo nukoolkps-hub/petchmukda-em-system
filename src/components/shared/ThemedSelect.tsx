@@ -100,7 +100,7 @@ export default function ThemedSelect({
         <IconChevronDown
           size={12}
           strokeWidth={2.4}
-          className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft"
+          className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-txt-soft transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
