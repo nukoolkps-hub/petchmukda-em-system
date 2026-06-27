@@ -3,7 +3,7 @@
 สารบัญ + context ของเนื้อหา "ความรู้ต่างๆ" — **อ่านไฟล์นี้ก่อนแก้ knowledge content**
 เพื่อรู้ว่าแต่ละ section อยู่ตรงไหน ใช้ block อะไร พึ่งราคา live ไหม และต้องระวังอะไร
 
-- **เนื้อหา (source of truth):** `src/content/knowledge/index.ts` (hardcode · 29 sections · ~1,950 บรรทัด)
+- **เนื้อหา (source of truth):** `src/content/knowledge/index.ts` (hardcode · 30 sections · ~1,950 บรรทัด)
 - **block types:** `src/content/knowledge/types.ts`
 - **render:** `KnowledgeView.tsx` (accordion + search) → `KnowledgeBlock.tsx` (dispatch ตาม `block.type`)
 - **สถาปัตยกรรม component เต็ม:** ดู [`ui-components.md`](ui-components.md) → "Knowledge view" (ไฟล์นี้ไม่ duplicate)
@@ -39,7 +39,7 @@ type KnowledgeSection = {
 > เพิ่ม block type ใหม่ = ต้องแก้ 2 ที่: union ใน `types.ts` + `case` ใน `KnowledgeBlock.tsx`
 > (ถ้า live ต้องผูก hook `useGoldPrice`/`useLaborCost`/ฯลฯ ใน component ของ block นั้น)
 
-## สารบัญ 29 sections (จัดกลุ่ม)
+## สารบัญ 30 sections (จัดกลุ่ม)
 
 `live?` = มี block ที่คำนวณสด/subscribe ราคา · `tone` = วัสดุ (ว่าง = ทอง/maroon default) · `line` = บรรทัดเริ่มใน `index.ts`
 
@@ -92,6 +92,7 @@ type KnowledgeSection = {
 | `cash-out` | รูดบัตรเปลี่ยนเป็นเงินสด | callout, example, calculator | ✓ | — | 1501 |
 | `vat` | ภาษี VAT ทองรูปพรรณ 96.5% | h3, list, live-example, calculator | ✓ | — | 1544 |
 | `aeon` | ผ่อน AEON ผ่าน Website i-Dealer | h3, p, **secret**, callout, image, steps, list | — | — | 1867 |
+| `aeon-receipt-print` | Print ใบเสร็จ AEON (รายละเอียดรายการอนุมัติ) | p, steps, callout | — | — | 1962 |
 
 ### เครื่องตรวจ % โลหะ
 | id | title | blocks | live? | tone | line |
