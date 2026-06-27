@@ -97,7 +97,7 @@ export default function FreeExchangeHelper() {
         onChange={onChange}
         placeholder={placeholder}
         options={WEIGHT_OPTIONS.map((w) => ({ value: w, label: w }))}
-        inline
+        menuFixed
         className="w-full flex items-center pl-3 pr-8 py-2 rounded-[8px] border-[1.5px] border-bdr text-sm font-bold text-maroon bg-white font-[inherit] cursor-pointer text-left"
       />
     );
