@@ -68,17 +68,24 @@ export default function ThemedSelect({
   /** ตำแหน่ง overlay (เฉพาะ menuFixed) — คำนวณจาก rect ตอนเปิด */
   const [fixedPos, setFixedPos] = useState<FixedPos | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  /** ref ของ list (overlay) — กัน scroll ภายใน list ไปสั่งปิด dropdown */
+  const listRef = useRef<HTMLDivElement>(null);
   useClickOutside(wrapRef, () => setOpen(false), open, true);
 
-  // menuFixed: ปิดเมื่อ scroll/resize — กันตำแหน่งค้างผิดที่
+  // menuFixed: ปิดเมื่อ scroll หน้าเพจ/resize — กันตำแหน่งค้างผิดที่
+  // (ข้าม scroll ที่เกิดภายในตัว list เอง เพื่อให้เลื่อนดูตัวเลือกได้)
   useEffect(() => {
     if (!open || !menuFixed) return;
-    const close = () => setOpen(false);
-    window.addEventListener("scroll", close, true);
-    window.addEventListener("resize", close);
+    const onScroll = (e: Event) => {
+      if (listRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    const onResize = () => setOpen(false);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
     return () => {
-      window.removeEventListener("scroll", close, true);
-      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
     };
   }, [open, menuFixed]);
 
@@ -137,6 +144,7 @@ export default function ThemedSelect({
 
       {open && (
         <div
+          ref={listRef}
           role="listbox"
           style={
             menuFixed && fixedPos
