@@ -1985,6 +1985,37 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         tone: "note",
         text: 'ต้องเข้าระบบ i-Dealer ก่อน — ดูข้อมูล Login ที่หัวข้อ "ผ่อน AEON ผ่าน Website i-Dealer"',
       },
+      { type: "h3", text: "รูปประกอบ" },
+      {
+        type: "image",
+        src: "/knowledge/aeon-receipt-menu.jpg",
+        alt: "เมนู บริการ → ตรวจสอบและยกเลิกรายการผ่อนชำระและชำระเต็ม",
+        caption: "1. บริการ → ตรวจสอบและยกเลิกรายการผ่อนชำระและชำระเต็ม",
+      },
+      {
+        type: "image",
+        src: "/knowledge/aeon-receipt-list.jpg",
+        alt: "ปุ่มดูรายละเอียดรายการ (แว่นขยาย)",
+        caption: '2. กด "ดูรายละเอียดรายการ" (รูปแว่นขยาย)',
+      },
+      {
+        type: "image",
+        src: "/knowledge/aeon-receipt-download.jpg",
+        alt: "Tab File downloaded → Open",
+        caption: '3. Tab "File downloaded" ขึ้นมา → กด "Open"',
+      },
+      {
+        type: "image",
+        src: "/knowledge/aeon-receipt-print-menu.jpg",
+        alt: "ปุ่ม 3 จุด → Print",
+        caption: '4. กดปุ่ม 3 จุด มุมบนขวา → "Print"',
+      },
+      {
+        type: "image",
+        src: "/knowledge/aeon-receipt-print-dialog.jpg",
+        alt: "กด Icon เครื่องพิมพ์ เพื่อสั่งพิมพ์",
+        caption: "5. กด Icon เครื่องพิมพ์ เพื่อสั่งพิมพ์",
+      },
     ],
   },
 ];

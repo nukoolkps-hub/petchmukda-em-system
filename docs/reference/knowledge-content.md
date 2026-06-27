@@ -92,7 +92,7 @@ type KnowledgeSection = {
 | `cash-out` | รูดบัตรเปลี่ยนเป็นเงินสด | callout, example, calculator | ✓ | — | 1501 |
 | `vat` | ภาษี VAT ทองรูปพรรณ 96.5% | h3, list, live-example, calculator | ✓ | — | 1544 |
 | `aeon` | ผ่อน AEON ผ่าน Website i-Dealer | h3, p, **secret**, callout, image, steps, list | — | — | 1867 |
-| `aeon-receipt-print` | Print ใบเสร็จ AEON (รายละเอียดรายการอนุมัติ) | p, steps, callout | — | — | 1962 |
+| `aeon-receipt-print` | Print ใบเสร็จ AEON (รายละเอียดรายการอนุมัติ) | p, steps, callout, h3, image | — | — | 1962 |
 
 ### เครื่องตรวจ % โลหะ
 | id | title | blocks | live? | tone | line |
