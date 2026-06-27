@@ -1896,7 +1896,14 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     Icon: IconQrCode,
     blocks: [
       { type: "h3", text: "ข้อมูล Login" },
-      { type: "p", text: "Website: i-Dealer" },
+      {
+        type: "p",
+        text: "Website:",
+        link: {
+          text: "i-Dealer",
+          href: "https://www.aeon.co.th/i-Dealer/Login",
+        },
+      },
       { type: "secret", label: "รหัสร้านค้า", value: "509699" },
       { type: "secret", label: "รหัสผ่าน", value: "Aeonmd@10010gd" },
       {
