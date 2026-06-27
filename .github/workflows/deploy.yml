@@ -80,17 +80,14 @@ jobs:
 
       - run: npm run build --prefix functions
 
-      # เขียน service account key ลงไฟล์ + ชี้ GOOGLE_APPLICATION_CREDENTIALS
-      # (เลียนแบบวิธีที่ FirebaseExtended/action-hosting-deploy ทำสำเร็จ —
-      # firebase-tools อ่าน ADC จาก google-github-actions/auth@v2 ไม่เจอ)
-      - name: Write service account key
-        run: echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa-key.json"
+      # firebase-tools CLI อ่าน GOOGLE_APPLICATION_CREDENTIALS/ADC ใน CI ไม่ติด
+      # (bug firebase/firebase-tools#10726 — autoAuth timeout) → ใช้ w9jds
+      # action ที่รับ GCP_SA_KEY (json หรือ base64 ก็ได้) แทน
+      - uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions --project petchmukda-bot --force
         env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
-      - run: npx -y firebase-tools@13.32.0 deploy --only functions --project petchmukda-bot --force
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa-key.json
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
   deploy-firestore-rules:
     name: Deploy Firestore Rules
@@ -100,18 +97,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: w9jds/firebase-action@master
         with:
-          node-version: 22
-
-      - name: Write service account key
-        run: echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa-key.json"
+          args: deploy --only firestore:petchmukda-bot:rules --project petchmukda-bot --force
         env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
-      - run: npx -y firebase-tools@13.32.0 deploy --only firestore:petchmukda-bot:rules --project petchmukda-bot --force
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa-key.json
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
   deploy-storage-rules:
     name: Deploy Storage Rules
@@ -121,15 +111,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: w9jds/firebase-action@master
         with:
-          node-version: 22
-
-      - name: Write service account key
-        run: echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa-key.json"
+          args: deploy --only storage --project petchmukda-bot
         env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
-      - run: npx -y firebase-tools@13.32.0 deploy --only storage --project petchmukda-bot
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa-key.json
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
