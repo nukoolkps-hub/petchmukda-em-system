@@ -88,11 +88,11 @@ export default function ThemedSelect({
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className={
+        className={`relative ${
           className ??
           `pl-2.5 pr-7 py-[7px] rounded-lg border border-bdr text-sm font-semibold outline-none font-[inherit] bg-cream text-txt cursor-pointer text-left w-full flex items-center
             ${disabled ? "opacity-60 cursor-not-allowed" : ""}`
-        }
+        }`}
       >
         <span className="flex-1 min-w-0 truncate">
           {selected ? selected.label : placeholder}
