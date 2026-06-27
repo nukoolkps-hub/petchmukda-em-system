@@ -258,7 +258,7 @@ export default function Calculator({
                       value: String(opt.value),
                       label: opt.label,
                     }))}
-                    menuFixed
+                    inline
                     className={`w-[142px] flex items-center px-2 pr-7 py-1 rounded-[7px] border border-bdr text-sm font-bold text-txt font-[inherit] truncate text-left ${disabled ? "bg-cream-dk cursor-not-allowed" : "bg-white cursor-pointer"}`}
                   />
                 ) : field.readOnly ? (
