@@ -11,7 +11,7 @@
    - className: เพิ่ม class นอก default style                                  */
 
 import { ChevronDown as IconChevronDown } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useClickOutside } from "../../hooks/useClickOutside";
 
 /** สูงสุดของ dropdown (default) · ปรับได้ผ่าน prop maxHeightPx */
@@ -36,18 +36,11 @@ interface ThemedSelectProps {
   /** ความสูงสูงสุดของ dropdown (px) · default 280 (~7-8 รายการ) ·
    *  ส่งค่ามากขึ้นเพื่อโชว์รายการมากขึ้นก่อน scroll */
   maxHeightPx?: number;
-  /** render เมนูแบบ position:fixed (คำนวณตำแหน่งจาก viewport) — ใช้เมื่อ
-   *  ThemedSelect อยู่ใน container ที่มี overflow-hidden (เช่น accordion
-   *  ความรู้ต่างๆ) ที่จะ clip popover แบบ absolute · ปิดเมื่อ scroll
-   *  อย่าใช้ใน ancestor ที่มี CSS transform (fixed จะอิง element นั้นแทน) */
-  menuFixed?: boolean;
-}
-
-interface FixedPos {
-  left: number;
-  width: number;
-  top?: number;
-  bottom?: number;
+  /** render รายการแบบ inline (in-flow · ดัน sibling ลง / การ์ดขยายออก)
+   *  แทน popover แบบ absolute · ใช้เมื่ออยู่ใน container ที่มี overflow-hidden
+   *  (เช่น accordion ความรู้ต่างๆ) ที่จะ clip popover ลอย — เหมือนปฏิทิน
+   *  inline ใน DateDiffHelper */
+  inline?: boolean;
 }
 
 export default function ThemedSelect({
@@ -58,35 +51,22 @@ export default function ThemedSelect({
   disabled = false,
   className,
   maxHeightPx = DEFAULT_MAX_DROPDOWN_HEIGHT,
-  menuFixed = false,
+  inline = false,
 }: ThemedSelectProps) {
   const [open, setOpen] = useState(false);
   /** flip up เมื่อ space ข้างล่างไม่พอ — กัน dropdown ตกขอบ + ชน tab bar */
   const [openUp, setOpenUp] = useState(false);
   /** max-height ปรับตาม space จริง · กัน scroll หาย */
   const [maxHeight, setMaxHeight] = useState(maxHeightPx);
-  /** ตำแหน่ง fixed (เฉพาะ menuFixed) — คำนวณจาก rect ตอนเปิด */
-  const [fixedPos, setFixedPos] = useState<FixedPos | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   useClickOutside(wrapRef, () => setOpen(false), open, true);
-
-  // menuFixed: ปิดเมื่อ scroll/resize — กันตำแหน่งค้างผิดที่
-  useEffect(() => {
-    if (!open || !menuFixed) return;
-    const close = () => setOpen(false);
-    window.addEventListener("scroll", close, true);
-    window.addEventListener("resize", close);
-    return () => {
-      window.removeEventListener("scroll", close, true);
-      window.removeEventListener("resize", close);
-    };
-  }, [open, menuFixed]);
 
   const selected = options.find((o) => o.value === value) || null;
 
   function toggleOpen() {
     if (disabled) return;
-    if (!open && wrapRef.current) {
+    // inline ไม่ต้องคำนวณ flip/space — render ในกระแสปกติ
+    if (!open && !inline && wrapRef.current) {
       const rect = wrapRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN;
       const spaceAbove = rect.top - VIEWPORT_MARGIN;
@@ -95,17 +75,6 @@ export default function ThemedSelect({
       setOpenUp(flip);
       setMaxHeight(
         Math.max(120, Math.min(maxHeightPx, flip ? spaceAbove : spaceBelow)),
-      );
-      setFixedPos(
-        menuFixed
-          ? {
-              left: rect.left,
-              width: rect.width,
-              ...(flip
-                ? { bottom: window.innerHeight - rect.top + 4 }
-                : { top: rect.bottom + 4 }),
-            }
-          : null,
       );
     }
     setOpen((p) => !p);
@@ -138,22 +107,10 @@ export default function ThemedSelect({
       {open && (
         <div
           role="listbox"
-          style={
-            menuFixed && fixedPos
-              ? {
-                  maxHeight: `${maxHeight}px`,
-                  position: "fixed",
-                  left: `${fixedPos.left}px`,
-                  width: `${fixedPos.width}px`,
-                  ...(fixedPos.top !== undefined
-                    ? { top: `${fixedPos.top}px` }
-                    : { bottom: `${fixedPos.bottom}px` }),
-                }
-              : { maxHeight: `${maxHeight}px` }
-          }
+          style={{ maxHeight: `${inline ? maxHeightPx : maxHeight}px` }}
           className={
-            menuFixed && fixedPos
-              ? "z-50 overflow-y-auto bg-white border border-bdr rounded-lg shadow-[0_8px_24px_rgba(45,26,14,0.15)] font-[inherit]"
+            inline
+              ? "mt-1 overflow-y-auto bg-white border border-bdr rounded-lg shadow-[0_4px_16px_rgba(45,26,14,0.1)] font-[inherit]"
               : `absolute z-50 left-0 right-0 overflow-y-auto bg-white border border-bdr rounded-lg shadow-[0_8px_24px_rgba(45,26,14,0.15)] font-[inherit] ${openUp ? "bottom-full mb-1" : "top-full mt-1"}`
           }
         >
