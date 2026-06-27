@@ -52,12 +52,14 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: "G-YYB26ELHDY"
           VITE_FIRESTORE_DATABASE_ID: "petchmukda-bot"
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      # ใช้ w9jds เหมือน job อื่น — FirebaseExtended/action-hosting-deploy
+      # ติด flaky retry-after-success (premature close → retry release POST →
+      # 400 "is the current active version") ทำให้ job แดงทั้งที่ deploy สำเร็จ
+      - uses: w9jds/firebase-action@master
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: petchmukda-bot
+          args: deploy --only hosting --project petchmukda-bot
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
   deploy-functions:
     name: Deploy Functions
