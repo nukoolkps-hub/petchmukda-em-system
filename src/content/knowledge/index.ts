@@ -1939,7 +1939,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       },
       {
         type: "image",
-        src: "/knowledge/aeon-qr.png",
+        src: "/knowledge/aeon-qr-blurred.png",
         alt: "QR Code ให้ลูกค้าสแกน",
         caption: "หลังกดส่งข้อมูล → ลูกค้า scan QR จ่ายผ่านมือถือ",
       },
