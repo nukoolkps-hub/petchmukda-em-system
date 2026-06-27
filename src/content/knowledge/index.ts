@@ -1926,22 +1926,25 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         type: "image",
         src: "/knowledge/aeon-home.jpg",
         alt: "หน้าแรกหลัง login",
+        caption: "1. หน้าแรกหลัง login",
       },
       {
         type: "image",
         src: "/knowledge/aeon-menu.jpg",
         alt: "เมนูบริการ",
+        caption: "2. บริการ → ทำรายการผ่อนชำระ (คิวอาร์โค้ด)",
       },
       {
         type: "image",
         src: "/knowledge/aeon-form.jpg",
         alt: "ฟอร์มทำรายการผ่อน",
+        caption: "3. เลือกโปรแกรม + ใส่จำนวนเงิน/งวด → กดส่งข้อมูล",
       },
       {
         type: "image",
         src: "/knowledge/aeon-qr-blurred.png",
         alt: "QR Code ให้ลูกค้าสแกน",
-        caption: "หลังกดส่งข้อมูล → ลูกค้า scan QR จ่ายผ่านมือถือ",
+        caption: "4. ลูกค้า scan QR จ่ายผ่านมือถือ",
       },
       { type: "h3", text: "บัตรที่ใช้ได้" },
       {
