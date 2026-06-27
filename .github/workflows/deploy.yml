@@ -80,11 +80,17 @@ jobs:
 
       - run: npm run build --prefix functions
 
-      - uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      # เขียน service account key ลงไฟล์ + ชี้ GOOGLE_APPLICATION_CREDENTIALS
+      # (เลียนแบบวิธีที่ FirebaseExtended/action-hosting-deploy ทำสำเร็จ —
+      # firebase-tools อ่าน ADC จาก google-github-actions/auth@v2 ไม่เจอ)
+      - name: Write service account key
+        run: echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa-key.json"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - run: npx -y firebase-tools@13.32.0 deploy --only functions --project petchmukda-bot --force
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa-key.json
 
   deploy-firestore-rules:
     name: Deploy Firestore Rules
@@ -98,11 +104,14 @@ jobs:
         with:
           node-version: 22
 
-      - uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Write service account key
+        run: echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa-key.json"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - run: npx -y firebase-tools@13.32.0 deploy --only firestore:petchmukda-bot:rules --project petchmukda-bot --force
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa-key.json
 
   deploy-storage-rules:
     name: Deploy Storage Rules
@@ -116,8 +125,11 @@ jobs:
         with:
           node-version: 22
 
-      - uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Write service account key
+        run: echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa-key.json"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - run: npx -y firebase-tools@13.32.0 deploy --only storage --project petchmukda-bot
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa-key.json
