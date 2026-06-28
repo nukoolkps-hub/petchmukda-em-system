@@ -85,7 +85,9 @@ export default function AdvanceRequestModal({
     const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   })();
-  const prevSalary = employeeId ? salaryData[employeeId]?.[prevYearMonth] : null;
+  const prevSalary = employeeId
+    ? salaryData[employeeId]?.[prevYearMonth]
+    : null;
   const prevNetSalary =
     typeof prevSalary?.netSalary === "number" ? prevSalary.netSalary : 0;
   const prevDeficitCleared = !!prevSalary?.deficitClearedAt;
@@ -120,7 +122,8 @@ export default function AdvanceRequestModal({
       setErr("เบิกได้ครั้งเดียวต่อเดือน — เดือนนี้มีคำขอแล้ว");
       return;
     }
-    const amountValue = parseFloat(amount) || 0;
+    // strip comma ก่อน parse — ผู้ใช้พิมพ์ "1,000" (ฟอร์แมตที่แสดง) ต้องได้ 1000
+    const amountValue = parseFloat(amount.replace(/,/g, "")) || 0;
     if (amountValue <= 0) {
       setErr("กรุณาระบุจำนวนเงินที่ต้องการเบิก");
       return;
@@ -177,8 +180,8 @@ export default function AdvanceRequestModal({
           />
           <div className="text-sm text-txt-mid leading-normal">
             <b className="text-maroon">ยกมาจากเดือน {autoCarryFrom}</b> ฿
-            {formatThaiNumber(autoCarryAmount)} · จะถูกหักจากเงินเดือน
-            เดือนนี้อัตโนมัติ (ระบบสร้างให้)
+            {formatThaiNumber(autoCarryAmount)} · จะถูกหักจากเงินเดือน เดือนนี้อัตโนมัติ
+            (ระบบสร้างให้)
           </div>
         </div>
       )}
@@ -191,8 +194,8 @@ export default function AdvanceRequestModal({
             strokeWidth={2.4}
           />
           <div className="text-sm text-txt-mid leading-normal">
-            <b className="text-red">เดือนก่อนเงินสุทธิติดลบ</b>{" "}
-            ฿{formatThaiNumber(prevMonthDeficitAmount)} · เบิกล่วงหน้าเดือนนี้
+            <b className="text-red">เดือนก่อนเงินสุทธิติดลบ</b> ฿
+            {formatThaiNumber(prevMonthDeficitAmount)} · เบิกล่วงหน้าเดือนนี้
             ไม่ได้จนกว่า ADMIN จะ <b>"อนุญาตให้ยื่นเบิกใหม่"</b>
           </div>
         </div>
@@ -206,8 +209,8 @@ export default function AdvanceRequestModal({
             strokeWidth={2.4}
           />
           <div className="text-sm text-txt-mid leading-normal">
-            <b className="text-amber">เบิกได้ครั้งเดียวต่อเดือน</b> —
-            เดือนนี้มีคำขอแล้ว · ต้องรอเดือนถัดไป
+            <b className="text-amber">เบิกได้ครั้งเดียวต่อเดือน</b> — เดือนนี้มีคำขอแล้ว ·
+            ต้องรอเดือนถัดไป
           </div>
         </div>
       )}

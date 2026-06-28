@@ -30,7 +30,11 @@ import { buildLoanContext } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
-import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
+import {
+  countWeekdayLeaves,
+  getOverQuotaDays,
+  leaveOverlapsMonth,
+} from "../../utils/leaveUtils";
 import { getPayrollLock } from "../../utils/payrollLock";
 import {
   calculateSalary,
@@ -203,19 +207,19 @@ export default function SalaryAdminEdit({
         ? allLeaves.filter(
             (lv) =>
               lv.employeeId === employeeInfo.id &&
-              lv.start.startsWith(selectedMonth),
+              leaveOverlapsMonth(lv, selectedMonth),
           )
         : [],
     [employeeInfo, allLeaves, selectedMonth],
   );
   const overInfo = useMemo(
-    () => getOverQuotaDays(monthLeaves, storeCalendar),
-    [monthLeaves, storeCalendar],
+    () => getOverQuotaDays(monthLeaves, storeCalendar, selectedMonth),
+    [monthLeaves, storeCalendar, selectedMonth],
   );
   const overTotalDays = overInfo.weekdays + overInfo.sundays;
   const totalLeaveDays = useMemo(
-    () => countWeekdayLeaves(monthLeaves, storeCalendar),
-    [monthLeaves, storeCalendar],
+    () => countWeekdayLeaves(monthLeaves, storeCalendar, selectedMonth),
+    [monthLeaves, storeCalendar, selectedMonth],
   );
   const monthApprovedAdvances = (monthlyApprovedAdvances.data || []).filter(
     (r) => r.employeeId === selectedEmployeeId,

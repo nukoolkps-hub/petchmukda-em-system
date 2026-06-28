@@ -11,7 +11,11 @@
 
 import { fmtShort } from "./dateUtils";
 import { formatThaiNumber } from "./format";
-import { countWeekdayLeaves, getOverQuotaDays } from "./leaveUtils";
+import {
+  countWeekdayLeaves,
+  getOverQuotaDays,
+  leaveOverlapsMonth,
+} from "./leaveUtils";
 import {
   calculateSalary,
   computeExtraOpenSaturdayWorkedDates,
@@ -195,10 +199,14 @@ export function computeEmployeeMonthRow({
   if (!data) return null;
 
   const monthLeaves = (allLeaves || []).filter(
-    (lv) => lv.employeeId === employee.id && lv.start.startsWith(yearMonth),
+    (lv) => lv.employeeId === employee.id && leaveOverlapsMonth(lv, yearMonth),
   );
-  const overInfo = getOverQuotaDays(monthLeaves, storeCalendar);
-  const totalLeaveDays = countWeekdayLeaves(monthLeaves, storeCalendar);
+  const overInfo = getOverQuotaDays(monthLeaves, storeCalendar, yearMonth);
+  const totalLeaveDays = countWeekdayLeaves(
+    monthLeaves,
+    storeCalendar,
+    yearMonth,
+  );
   const monthApprovedForEmp = (monthApprovedAdvances || []).filter(
     (r) => r.employeeId === employee.id,
   );

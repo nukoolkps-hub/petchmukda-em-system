@@ -2,7 +2,11 @@
 
 import { BUSINESS_RULES } from "../constants";
 import type { PieceItem } from "../types";
-import { countWeekdayLeaves, getOverQuotaDays } from "./leaveUtils";
+import {
+  countWeekdayLeaves,
+  getOverQuotaDays,
+  leaveOverlapsMonth,
+} from "./leaveUtils";
 
 /* ─── Role piece-commission policy ────────────────────────────────
    ตำแหน่งเก็บค่าคอม 3 รูปแบบ (โครงสร้างหลังจาก PR #488+ ใช้ custom items):
@@ -612,10 +616,15 @@ export function computePoolSharesForGroup({
     } else if (employee) {
       const monthLeaves = allLeaves.filter(
         (leave) =>
-          leave.employeeId === employeeId && leave.start.startsWith(yearMonth),
+          leave.employeeId === employeeId &&
+          leaveOverlapsMonth(leave, yearMonth),
       );
-      const weekdayLeaves = countWeekdayLeaves(monthLeaves, storeCalendar);
-      const overInfo = getOverQuotaDays(monthLeaves, storeCalendar);
+      const weekdayLeaves = countWeekdayLeaves(
+        monthLeaves,
+        storeCalendar,
+        yearMonth,
+      );
+      const overInfo = getOverQuotaDays(monthLeaves, storeCalendar, yearMonth);
       // วันหยุดรวมตาม Excel = ปกติ + อาทิตย์ทั้งหมด (ไม่ใช่แค่ที่เกินโควต้า)
       totalLeave[employeeId] = weekdayLeaves + (overInfo.sundays || 0);
     } else {

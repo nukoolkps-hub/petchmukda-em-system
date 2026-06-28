@@ -35,7 +35,11 @@ import {
   computeCoverageEarningsForMonth,
   employeeHasPoolExemptDuty,
 } from "../utils/dutyUtils";
-import { countWeekdayLeaves, getOverQuotaDays } from "../utils/leaveUtils";
+import {
+  countWeekdayLeaves,
+  getOverQuotaDays,
+  leaveOverlapsMonth,
+} from "../utils/leaveUtils";
 import {
   buildRateFieldsSnapshot,
   computeMonthSummary,
@@ -172,10 +176,10 @@ export default function useFirebaseAppData({
     if (!existing) return null;
     const calendar = overrideCalendar ?? storeCalendarResult.data;
     const monthLeaves = overrideLeaves.filter(
-      (l) => l.employeeId === employeeId && l.start.startsWith(yearMonth),
+      (l) => l.employeeId === employeeId && leaveOverlapsMonth(l, yearMonth),
     );
-    const weekdayLeaves = countWeekdayLeaves(monthLeaves, calendar);
-    const overInfo = getOverQuotaDays(monthLeaves, calendar);
+    const weekdayLeaves = countWeekdayLeaves(monthLeaves, calendar, yearMonth);
+    const overInfo = getOverQuotaDays(monthLeaves, calendar, yearMonth);
     const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
     if (existing.totalLeaveDays === totalLeaveDays) return existing;
     await salariesAPI.updateSalary(employeeId, yearMonth, { totalLeaveDays });
@@ -383,13 +387,18 @@ export default function useFirebaseAppData({
     // join ลาด้วย employeeId (ไม่ใช่ชื่อ) — ทนต่อการเปลี่ยนชื่อ/ชื่อซ้ำ
     const monthLeaves = leavesResult.data.filter(
       (leave) =>
-        leave.employeeId === employeeId && leave.start.startsWith(yearMonth),
+        leave.employeeId === employeeId && leaveOverlapsMonth(leave, yearMonth),
     );
     const weekdayLeaves = countWeekdayLeaves(
       monthLeaves,
       storeCalendarResult.data,
+      yearMonth,
     );
-    const overInfo = getOverQuotaDays(monthLeaves, storeCalendarResult.data);
+    const overInfo = getOverQuotaDays(
+      monthLeaves,
+      storeCalendarResult.data,
+      yearMonth,
+    );
     const totalLeaveDays = weekdayLeaves + (overInfo.sundays || 0);
 
     // กฎ "ล็อกเมื่อปิดรอบถาวร": freeze เรท/ตำแหน่งเฉพาะเดือนที่ปิดรอบถาวรแล้ว

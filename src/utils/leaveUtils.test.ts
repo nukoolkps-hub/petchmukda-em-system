@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { StoreCalendar } from "../types";
-import { countWeekdayLeaves, getOverQuotaDays } from "./leaveUtils";
+import {
+  countWeekdayLeaves,
+  getOverQuotaDays,
+  leaveOverlapsMonth,
+} from "./leaveUtils";
 
 // June 2026: Mon 08 → Fri 12 are five consecutive weekdays.
 // Sat 06 / Sat 13 are Saturdays; Sun 07 / Sun 14 are Sundays.
@@ -80,5 +84,42 @@ describe("getOverQuotaDays", () => {
     // Mon 08 → Sun 14: weekdays Mon-Fri (5) → 3 over quota; Sat 13 closed; Sun 14 charged
     const res = getOverQuotaDays([{ start: "2026-06-08", end: "2026-06-14" }]);
     expect(res).toEqual({ weekdays: 3, sundays: 1 });
+  });
+});
+
+// ── Cross-month leave: clamp + overlap (bug fix) ──
+// Leave Fri 29 May → Wed 03 Jun 2026:
+//   May 29 Fri (weekday) · May 30 Sat (closed) · May 31 Sun (charged)
+//   Jun 01 Mon · Jun 02 Tue · Jun 03 Wed (weekdays)
+describe("cross-month leave clamping", () => {
+  const crossLeave = [{ start: "2026-05-29", end: "2026-06-03" }];
+
+  it("leaveOverlapsMonth matches both touched months, not others", () => {
+    expect(leaveOverlapsMonth(crossLeave[0], "2026-05")).toBe(true);
+    expect(leaveOverlapsMonth(crossLeave[0], "2026-06")).toBe(true);
+    expect(leaveOverlapsMonth(crossLeave[0], "2026-04")).toBe(false);
+    expect(leaveOverlapsMonth(crossLeave[0], "2026-07")).toBe(false);
+  });
+
+  it("countWeekdayLeaves clamps to the given month", () => {
+    // May: only Fri 29 → 1
+    expect(countWeekdayLeaves(crossLeave, null, "2026-05")).toBe(1);
+    // June: Mon 01, Tue 02, Wed 03 → 3
+    expect(countWeekdayLeaves(crossLeave, null, "2026-06")).toBe(3);
+    // no clamp (legacy) → counts the whole range = 1 + 3 = 4
+    expect(countWeekdayLeaves(crossLeave, null)).toBe(4);
+  });
+
+  it("getOverQuotaDays clamps to the given month (each month its own days)", () => {
+    // May: 1 weekday (under 2-day quota) + Sun 31 charged
+    expect(getOverQuotaDays(crossLeave, null, "2026-05")).toEqual({
+      weekdays: 0,
+      sundays: 1,
+    });
+    // June: 3 weekdays → 1 over quota, no Sunday
+    expect(getOverQuotaDays(crossLeave, null, "2026-06")).toEqual({
+      weekdays: 1,
+      sundays: 0,
+    });
   });
 });

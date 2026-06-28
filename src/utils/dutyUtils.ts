@@ -223,17 +223,20 @@ function isOnLeave(leaves: LeaveEntry[], empId: string, ymd: string): boolean {
  *  จะได้ตรงกับ rotation จริงเสมอ (single source of truth)               */
 export function resolveDutyPool(duty: Duty, employees: Employee[]): Employee[] {
   const excluded = new Set(duty.excludedEmpIds || []);
-  // คน poolExclusion="both" (ปิดทั้งคู่ — ไม่อยู่ในกองกลาง + ใช้เกณฑ์ 50%
-  // เงินเดือนพื้นฐาน) ห้ามทำ monthly duty — ติดทั้งเดือนแล้วเสี่ยงหลุด 50%
-  // โดย exemption ช่วยไม่ได้ (exemption ยกเว้นแค่เกณฑ์ 80%)
-  const blockBoth = duty.period === "monthly";
+  // คนที่ปิดกองกลาง "ทั้งหมด" (poolExclusion = "all" · legacy "both")
+  // ห้ามทำ monthly duty — ติดทั้งเดือนแล้วเสี่ยงหลุดเกณฑ์ 50% เงินเดือน
+  // พื้นฐาน โดย exemption ช่วยไม่ได้ (exemption ยกเว้นแค่เกณฑ์ 80%)
+  const blockMonthly = duty.period === "monthly";
   return employees
     .filter(
       (e) =>
         e.roleId === duty.roleId &&
         !e.salaryDisabled &&
         !excluded.has(e.id) &&
-        !(blockBoth && e.poolExclusion === "both"),
+        !(
+          blockMonthly &&
+          (e.poolExclusion === "all" || e.poolExclusion === "both")
+        ),
     )
     .sort((a, b) => {
       const ao = typeof a.displayOrder === "number" ? a.displayOrder : null;

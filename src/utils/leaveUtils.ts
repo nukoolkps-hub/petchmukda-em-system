@@ -17,11 +17,29 @@ function isCountableWeekday(
   return isQuotaCountableDay(dateToYmd(date), calendar);
 }
 
+/** ใบลา (อาจคร่อมเดือน) "แตะ" เดือน yearMonth (YYYY-MM) ไหม
+ *  ใช้คัดใบลาเข้าเดือนสำหรับ "คำนวณเงิน" — ใบลาคร่อม 2 เดือน (เช่น 30 พ.ค.
+ *  → 3 มิ.ย.) ต้องนับเข้าทั้งสองเดือน (เดิมใช้ start.startsWith จับเฉพาะเดือน
+ *  เริ่ม → เดือนปลายมองไม่เห็น เงินเพี้ยน) · ต้องใช้คู่กับ arg yearMonth ใน
+ *  countWeekdayLeaves/getOverQuotaDays เพื่อ clamp ให้แต่ละเดือนนับเฉพาะวัน
+ *  ของตัวเอง */
+export function leaveOverlapsMonth(
+  leave: { start: string; end: string },
+  yearMonth: string,
+): boolean {
+  return (
+    leave.start.slice(0, 7) <= yearMonth && leave.end.slice(0, 7) >= yearMonth
+  );
+}
+
 /* นับเฉพาะวันลาที่ "ตรงกับวันทำงาน" (ใช้กับโบนัสขยัน + รวมเข้าโควต้า)
-   - calendar = undefined → ใช้กฎเดิม (Mon-Fri นับ · เสาร์-อาทิตย์ข้าม)   */
+   - calendar = undefined → ใช้กฎเดิม (Mon-Fri นับ · เสาร์-อาทิตย์ข้าม)
+   - yearMonth (YYYY-MM) → นับเฉพาะวันที่อยู่ในเดือนนั้น (clamp ใบลาคร่อมเดือน
+     ให้แต่ละเดือนนับเฉพาะวันของตัวเอง) · undefined = นับทุกวันในช่วง (เดิม)  */
 export function countWeekdayLeaves(
   monthLeaves: { start: string; end: string }[],
   calendar?: StoreCalendar | null,
+  yearMonth?: string,
 ) {
   let n = 0;
   monthLeaves.forEach((lv) => {
@@ -29,7 +47,11 @@ export function countWeekdayLeaves(
     const e = new Date(`${lv.end}T00:00:00`);
     const c = new Date(s);
     while (c <= e) {
-      if (isCountableWeekday(c, calendar)) n++;
+      if (
+        (!yearMonth || dateToYmd(c).slice(0, 7) === yearMonth) &&
+        isCountableWeekday(c, calendar)
+      )
+        n++;
       c.setDate(c.getDate() + 1);
     }
   });
@@ -48,6 +70,7 @@ export function countWeekdayLeaves(
 export function getOverQuotaDays(
   monthLeaves: { start: string; end: string }[],
   calendar?: StoreCalendar | null,
+  yearMonth?: string,
 ) {
   // เก็บวันที่ "วันทำงาน" ที่ลาทั้งหมด (chronological) · dedupe กันใบลาทับ
   const workDayDates: string[] = [];
@@ -58,16 +81,19 @@ export function getOverQuotaDays(
     const e = new Date(`${lv.end}T00:00:00`);
     const c = new Date(s);
     while (c <= e) {
-      const dow = c.getDay();
-      if (dow === 0) {
-        // อาทิตย์ที่ร้านเปิด → หักทันที (× 1.5) · อาทิตย์ปิดพิเศษ → ข้าม ไม่หัก
-        if (!isStoreClosed(dateToYmd(c), calendar)) sundays++;
-      } else if (isCountableWeekday(c, calendar)) {
-        workDayDates.push(
-          `${c.getFullYear()}-${String(c.getMonth() + 1).padStart(2, "0")}-${String(c.getDate()).padStart(2, "0")}`,
-        );
+      // clamp ใบลาคร่อมเดือน — นับเฉพาะวันที่อยู่ในเดือน yearMonth (ถ้าระบุ)
+      if (!yearMonth || dateToYmd(c).slice(0, 7) === yearMonth) {
+        const dow = c.getDay();
+        if (dow === 0) {
+          // อาทิตย์ที่ร้านเปิด → หักทันที (× 1.5) · อาทิตย์ปิดพิเศษ → ข้าม ไม่หัก
+          if (!isStoreClosed(dateToYmd(c), calendar)) sundays++;
+        } else if (isCountableWeekday(c, calendar)) {
+          workDayDates.push(
+            `${c.getFullYear()}-${String(c.getMonth() + 1).padStart(2, "0")}-${String(c.getDate()).padStart(2, "0")}`,
+          );
+        }
+        // วันที่ร้านปิด → ข้าม ไม่นับ ไม่หัก
       }
-      // วันที่ร้านปิด → ข้าม ไม่นับ ไม่หัก
       c.setDate(c.getDate() + 1);
     }
   });

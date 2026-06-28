@@ -40,7 +40,11 @@ import {
 } from "../../print/webviewHelpers";
 import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
-import { countWeekdayLeaves, getOverQuotaDays } from "../../utils/leaveUtils";
+import {
+  countWeekdayLeaves,
+  getOverQuotaDays,
+  leaveOverlapsMonth,
+} from "../../utils/leaveUtils";
 import {
   calculateSalary,
   computeExtraOpenSaturdayWorkedDates,
@@ -70,6 +74,7 @@ export default function SalaryView({
   employeeLoans,
   storeCalendar,
   showToast,
+  previewing = false,
 }) {
   const currentYM = currentYearMonth();
   // lookup ด้วย employeeId เสมอ — profile.name อาจไม่ตรง employee.name หลัง rename
@@ -120,11 +125,19 @@ export default function SalaryView({
       ? allLeaves.filter(
           (leave) =>
             leave.employeeId === salaryEmployeeId &&
-            leave.start.startsWith(selectedMonth),
+            leaveOverlapsMonth(leave, selectedMonth),
         )
       : [];
-    const overQuotaInfo = getOverQuotaDays(monthLeaves, storeCalendar);
-    const leaveDays = countWeekdayLeaves(monthLeaves, storeCalendar);
+    const overQuotaInfo = getOverQuotaDays(
+      monthLeaves,
+      storeCalendar,
+      selectedMonth,
+    );
+    const leaveDays = countWeekdayLeaves(
+      monthLeaves,
+      storeCalendar,
+      selectedMonth,
+    );
     const approvedAdvancesForMonth = (advanceRequests || []).filter(
       (advanceRequest) =>
         advanceRequest.month === selectedMonth &&
@@ -139,7 +152,9 @@ export default function SalaryView({
       // ฝั่งพนักงานมี employeeDirectory แค่ตัวเอง (rules) → ใช้ snapshot
       // ใน salary doc ของแต่ละเดือน หาคนที่ poolGroup ตรงกัน
       const groupIdSet = new Set<string>();
-      groupIdSet.add(employeeInfo.id);
+      // employeeInfo อาจ undefined (เช่น admin preview พนักงานที่เพิ่งถูกลบ —
+      // race 1 เฟรมก่อน redirect) แม้ employeeRole resolve ได้จาก data.roleId
+      if (employeeInfo) groupIdSet.add(employeeInfo.id);
       Object.keys(salaryData).forEach((peerId) => {
         const peerSalary = salaryData[peerId]?.[selectedMonth];
         if (!peerSalary?.roleId) return;
@@ -288,6 +303,12 @@ export default function SalaryView({
   const [salaryOverrideText, setSalaryOverrideText] = useState("");
 
   function handlePrintCert() {
+    // โหมด "ดูมุมมองพนักงาน" (admin preview) = ดูอย่างเดียว — กันการพิมพ์
+    // ใบรับรองที่จะ "เดินเลขรัน" (certCounters) เป็นการเขียน Firestore จริง
+    if (previewing) {
+      showToast?.("อยู่ในโหมดดูมุมมองพนักงาน — พิมพ์ใบรับรองไม่ได้");
+      return;
+    }
     // ใบรับรองเงินเดือนใช้ employeeInfo (เงินเดือนพื้นฐาน · ตำแหน่ง · ชื่อ ·
     // วันเริ่มงาน) จาก admin config — ไม่ต้องรอ salary doc รายเดือน
     // (printSalaryCertificate ใช้ employeeInfo.baseSalary ก่อน · data?.baseSalary

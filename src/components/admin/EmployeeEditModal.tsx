@@ -226,18 +226,23 @@ export default function EmployeeEditModal({
       }
       await onUpdateRole(employee.id, "poolItemRates", cleaned);
     }
-    if (editingBaseSalary !== undefined)
+    if (editingBaseSalary !== undefined) {
+      // clamp >= 0 — กันค่าติดลบ/garbage ที่จะทำให้คำนวณเงินทั้งระบบเพี้ยน
+      const v = parseFloat(editingBaseSalary);
       await onUpdateRole(
         employee.id,
         "baseSalary",
-        parseFloat(editingBaseSalary) || 0,
+        Number.isFinite(v) && v >= 0 ? v : 0,
       );
-    if (editingSocialSecurity !== undefined)
+    }
+    if (editingSocialSecurity !== undefined) {
+      const v = parseFloat(editingSocialSecurity);
       await onUpdateRole(
         employee.id,
         "socialSecurity",
-        parseFloat(editingSocialSecurity) || 0,
+        Number.isFinite(v) && v >= 0 ? v : 0,
       );
+    }
     if (editingStartWorkMonth !== undefined)
       await onUpdateRole(employee.id, "startWorkMonth", editingStartWorkMonth);
     if (editingPrefix !== undefined)

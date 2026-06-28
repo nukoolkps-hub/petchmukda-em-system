@@ -15,7 +15,7 @@ import { useMemo, useState } from "react";
 import { BUSINESS_RULES, COLORS, LEAVE_TYPES } from "../../constants";
 import type { LeaveEntry, StoreCalendar } from "../../types";
 import { addDaysYmd, fmtDate, isFuture, todayYmd } from "../../utils/dateUtils";
-import { countWeekdayLeaves } from "../../utils/leaveUtils";
+import { countWeekdayLeaves, leaveOverlapsMonth } from "../../utils/leaveUtils";
 import { isStoreClosed, isSunday } from "../../utils/storeCalendar";
 import ConfirmModal from "../modals/ConfirmModal";
 import SubmitLeaveConfirmModal from "../modals/SubmitLeaveConfirmModal";
@@ -178,10 +178,14 @@ export default function RequestTab({
   const monthLeavesForQuota = profile
     ? allLeaves.filter(
         (lv: LeaveEntry) =>
-          lv.employeeId === profile.id && lv.start.startsWith(currentMonth),
+          lv.employeeId === profile.id && leaveOverlapsMonth(lv, currentMonth),
       )
     : [];
-  const usedThisMonth = countWeekdayLeaves(monthLeavesForQuota, storeCalendar);
+  const usedThisMonth = countWeekdayLeaves(
+    monthLeavesForQuota,
+    storeCalendar,
+    currentMonth,
+  );
   const quota = BUSINESS_RULES.WEEKDAY_LEAVE_QUOTA;
   const rem = quota - usedThisMonth;
   const overQuota = usedThisMonth >= quota;
