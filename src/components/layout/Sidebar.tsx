@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { COLORS } from "../../constants";
+import AppLogo from "../shared/AppLogo";
 import AvatarCircle from "../shared/AvatarCircle";
-import Diamond from "../shared/Diamond";
 import MemphisPattern from "../shared/MemphisPattern";
 import {
   ADMIN_NAV_GROUPS,
@@ -99,7 +99,7 @@ export default function Sidebar({
                 />
               </svg>
             )}
-            <Diamond size={18} color={holding ? "#fff" : COLORS.goldLight} />
+            <AppLogo size={28} />
           </div>
           <div>
             <div className="text-gold-lt font-extrabold text-base leading-none">
