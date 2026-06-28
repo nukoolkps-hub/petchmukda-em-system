@@ -3,6 +3,7 @@
 import {
   BookOpen as IconBook2,
   Pencil as IconEdit,
+  Eye as IconEye,
   FileText as IconFileText,
   Shield as IconShield,
   User as IconUser,
@@ -20,6 +21,8 @@ interface MobileHeaderProps {
   holding: boolean;
   onEditProfile: () => void;
   onShowManual: () => void;
+  /** admin (จริง · ยังไม่ preview) → ปุ่ม "ดูมุมมองพนักงาน" ข้างปุ่มคู่มือ */
+  onPreviewEmployee?: () => void;
   startHold: () => void;
   endHold: () => void;
   onRingComplete: () => void;
@@ -31,6 +34,7 @@ export default function MobileHeader({
   holding,
   onEditProfile,
   onShowManual,
+  onPreviewEmployee,
   startHold,
   endHold,
   onRingComplete,
@@ -106,14 +110,26 @@ export default function MobileHeader({
           )}
         </div>
         {(tab === "home" || tab === "admin") && (
-          <button
-            onClick={onShowManual}
-            title="คู่มือการใช้งาน"
-            className="flex items-center gap-1.5 px-[11px] py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-xs font-semibold shrink-0 whitespace-nowrap"
-          >
-            <IconBook2 size={16} color="#fff" strokeWidth={2.2} />
-            คู่มือ
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onPreviewEmployee && (
+              <button
+                onClick={onPreviewEmployee}
+                title="ดูมุมมองพนักงาน"
+                aria-label="ดูมุมมองพนักงาน"
+                className="flex items-center justify-center w-9 h-9 rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit]"
+              >
+                <IconEye size={18} color="#fff" strokeWidth={2.2} />
+              </button>
+            )}
+            <button
+              onClick={onShowManual}
+              title="คู่มือการใช้งาน"
+              aria-label="คู่มือการใช้งาน"
+              className="flex items-center justify-center w-9 h-9 rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit]"
+            >
+              <IconBook2 size={18} color="#fff" strokeWidth={2.2} />
+            </button>
+          </div>
         )}
         {tab === "salary" && (
           <button

@@ -164,6 +164,7 @@ export default function LeaveApp() {
      · ไม่แตะ rules (admin อ่านข้อมูลทุกคนได้อยู่แล้ว) · view* vars override
      เฉพาะตอน render — data layer ยังโหลดแบบ admin (ทุกคน) ตามเดิม */
   const [previewEmpId, setPreviewEmpId] = useState<string | null>(null);
+  const [previewPickerOpen, setPreviewPickerOpen] = useState(false);
   const previewing = isAdmin && !!previewEmpId;
   const previewEmployee = previewing
     ? (employeeDirectory.find((e) => e.id === previewEmpId) ?? null)
@@ -396,6 +397,11 @@ export default function LeaveApp() {
             profile={viewProfile}
             isAdmin={viewIsAdmin}
             onShowManual={() => setShowManual(true)}
+            onPreviewEmployee={
+              isAdmin && !previewing
+                ? () => setPreviewPickerOpen(true)
+                : undefined
+            }
           />
 
           {/* Mobile Header */}
@@ -407,6 +413,11 @@ export default function LeaveApp() {
               if (!isAdmin && !previewing) setShowEditProfile(true);
             }}
             onShowManual={() => setShowManual(true)}
+            onPreviewEmployee={
+              isAdmin && !previewing
+                ? () => setPreviewPickerOpen(true)
+                : undefined
+            }
             startHold={() => {}}
             endHold={() => {}}
             onRingComplete={() => {}}
@@ -612,12 +623,15 @@ export default function LeaveApp() {
 
           {showManual && <ManualModal onClose={() => setShowManual(false)} />}
 
-          {/* ปุ่ม/แบนเนอร์ "ดูมุมมองพนักงาน" — เฉพาะ admin จริง */}
+          {/* แบนเนอร์/ตัวเลือก "ดูมุมมองพนักงาน" — เฉพาะ admin จริง
+              (ปุ่มเข้าโหมดอยู่บน header ข้างปุ่มคู่มือ) */}
           {isAdmin && (
             <EmployeeViewPreview
               employees={employeeDirectory}
               previewEmpId={previewEmpId}
               onSelect={setPreviewEmpId}
+              pickerOpen={previewPickerOpen}
+              onPickerOpenChange={setPreviewPickerOpen}
             />
           )}
 
