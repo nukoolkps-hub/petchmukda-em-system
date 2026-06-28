@@ -22,7 +22,7 @@ import type {
   StoreCalendar,
 } from "../../types";
 import { dateRange } from "../../utils/dateUtils";
-import { countWeekdayLeaves } from "../../utils/leaveUtils";
+import { countWeekdayLeaves, leaveOverlapsMonth } from "../../utils/leaveUtils";
 import { isRichTextEmpty } from "../../utils/sanitizeRichText";
 import { isStoreClosed } from "../../utils/storeCalendar";
 import DutyForecastModal from "../modals/DutyForecastModal";
@@ -66,10 +66,15 @@ export default function HomeTab({
        1 ใบลา 4 วันธรรมดา = 4 ไม่ใช่ 1 · sunday แยกหัก × 1.5 ไม่นับโควต้า */
   const monthLeavesForQuota = profile
     ? allLeaves.filter(
-        (lv) => lv.employeeId === profile.id && lv.start.startsWith(yearMonth),
+        (lv) =>
+          lv.employeeId === profile.id && leaveOverlapsMonth(lv, yearMonth),
       )
     : [];
-  const usedThisMonth = countWeekdayLeaves(monthLeavesForQuota, storeCalendar);
+  const usedThisMonth = countWeekdayLeaves(
+    monthLeavesForQuota,
+    storeCalendar,
+    yearMonth,
+  );
   const quota = BUSINESS_RULES.WEEKDAY_LEAVE_QUOTA;
   const remaining = quota - usedThisMonth;
   const overQuotaDeduction = remaining < 0;

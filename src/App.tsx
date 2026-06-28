@@ -517,6 +517,7 @@ export default function LeaveApp() {
                         employeeLoans={employeeLoans}
                         storeCalendar={storeCalendar}
                         showToast={showToast}
+                        previewing={previewing}
                       />
                     </div>
                   )
