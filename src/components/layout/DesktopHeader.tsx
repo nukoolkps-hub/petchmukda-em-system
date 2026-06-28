@@ -1,6 +1,6 @@
 /* ─── DesktopHeader — Top bar for desktop layout ─────────────── */
 
-import { BookOpen as IconBook2 } from "lucide-react";
+import { BookOpen as IconBook2, Eye as IconEye } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import MemphisPattern from "../shared/MemphisPattern";
 import { PAGE_TITLES } from "./navConfig";
@@ -9,12 +9,15 @@ interface DesktopHeaderProps {
   profile: any;
   isAdmin?: boolean;
   onShowManual: () => void;
+  /** admin (จริง · ยังไม่ preview) → ปุ่ม "ดูมุมมองพนักงาน" ข้างปุ่มคู่มือ */
+  onPreviewEmployee?: () => void;
 }
 
 export default function DesktopHeader({
   profile,
   isAdmin = false,
   onShowManual,
+  onPreviewEmployee,
 }: DesktopHeaderProps) {
   const tab = useLocation().pathname.replace("/", "") || "home";
 
@@ -36,6 +39,16 @@ export default function DesktopHeader({
           )}
         </div>
         <div className="flex items-center gap-2.5">
+          {onPreviewEmployee && (
+            <button
+              onClick={onPreviewEmployee}
+              title="ดูมุมมองพนักงาน"
+              className="flex items-center gap-2 px-3 py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-sm font-semibold shrink-0 whitespace-nowrap"
+            >
+              <IconEye size={18} color="#fff" strokeWidth={2.2} />
+              ดูมุมมองพนักงาน
+            </button>
+          )}
           <button
             onClick={onShowManual}
             title="คู่มือการใช้งาน"
