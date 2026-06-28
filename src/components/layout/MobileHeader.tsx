@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { COLORS } from "../../constants";
+import AppLogo from "../shared/AppLogo";
 import AvatarCircle from "../shared/AvatarCircle";
-import Diamond from "../shared/Diamond";
 import MemphisPattern from "../shared/MemphisPattern";
 import { PAGE_TITLES } from "./navConfig";
 
@@ -89,10 +89,7 @@ export default function MobileHeader({
                     />
                   </svg>
                 )}
-                <Diamond
-                  size={20}
-                  color={holding ? "#fff" : COLORS.goldLight}
-                />
+                <AppLogo size={30} />
               </div>
               <div>
                 <div className="text-gold-lt font-extrabold text-lg leading-none tracking-tight">
