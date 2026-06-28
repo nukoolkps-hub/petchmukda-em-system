@@ -1,12 +1,18 @@
 /* ─── Sortable employee cards ─────────────────────────────────────
    ใช้ใน SalaryAdminEdit — drag-reorder พนักงาน · optimistic local
    ลำดับ → sync ลง Firestore หลังลากเสร็จ · click ยังทำงานเป็น select
-   (PointerSensor distance: 6 → ต้องลากเกิน 6px จึงเริ่ม drag) */
+   (PointerSensor distance: 6 → ต้องลากเกิน 6px จึงเริ่ม drag)
+
+   ใช้ DragOverlay: การ์ดที่ลากถูกโคลนเป็น overlay ลอยตามนิ้ว · ต้นฉบับใน
+   กริดจางลง (placeholder) · ตอนวาง dnd-kit เล่น drop animation ลื่นๆ ลงช่อง
+   ปลายทาง — กัน "กระตุก" จากการ reorder array พร้อมกับ animate transform   */
 
 import {
   closestCenter,
   DndContext,
   type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
@@ -32,6 +38,24 @@ interface Props {
   selectedMonth: string;
 }
 
+/** มีจำนวนชิ้น/ข้อมูลค่าคอมของเดือนนี้ไหม (รวม multi-item + legacy) */
+function cardHasData(monthData?: Record<string, any> | null): boolean {
+  const someValPositive = (m?: Record<string, unknown> | null) =>
+    !!m && Object.values(m).some((v) => (Number(v) || 0) > 0);
+  return !!(
+    monthData &&
+    ((monthData.singleRatePieces || 0) > 0 ||
+      someValPositive(monthData.piecePieces) ||
+      someValPositive(monthData.poolItemPieces) ||
+      someValPositive(monthData.bonusCounts) ||
+      (monthData.normalSalePieces || 0) > 0 ||
+      (monthData.specialSalePieces || 0) > 0 ||
+      (monthData.buyPieces || 0) > 0 ||
+      (monthData.invitePieces || 0) > 0 ||
+      (monthData.transferPieces || 0) > 0)
+  );
+}
+
 export default function EmployeeCardGrid({
   employees,
   selectedId,
@@ -41,6 +65,7 @@ export default function EmployeeCardGrid({
   selectedMonth,
 }: Props) {
   const [localOrder, setLocalOrder] = useState<string[] | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   // sync ลำดับจาก props เมื่อ employees เปลี่ยน — ทิ้ง localOrder ถ้ามี id
   // หายไป/เพิ่มใหม่ (เช่น Firestore sync มา)
@@ -67,6 +92,7 @@ export default function EmployeeCardGrid({
   );
 
   function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = ids.indexOf(String(active.id));
@@ -80,50 +106,50 @@ export default function EmployeeCardGrid({
     });
   }
 
+  const activeEmployee = activeId
+    ? orderedEmployees.find((e) => e.id === activeId)
+    : null;
+
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={(e: DragStartEvent) => setActiveId(String(e.active.id))}
       onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveId(null)}
     >
       <SortableContext items={ids} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 mb-3.5">
-          {orderedEmployees.map((employee) => {
-            const monthData = salaryData[employee.id]?.[selectedMonth];
-            // มีจำนวนชิ้น multi-item ไหม — เช็คทั้ง piecePieces (non-pool),
-            // poolItemPieces (pool · รวม custom item) และ bonusCounts (custom
-            // bonus) · เดิมเช็คแค่ legacy normal/special/buy → พนักงานที่มีแต่
-            // custom pool/bonus item จะถูกมองว่า "ไม่มีข้อมูล" (badge ผิด)
-            const someValPositive = (m?: Record<string, unknown> | null) =>
-              !!m && Object.values(m).some((v) => (Number(v) || 0) > 0);
-            const hasData = !!(
-              monthData &&
-              ((monthData.singleRatePieces || 0) > 0 ||
-                someValPositive(monthData.piecePieces) ||
-                someValPositive(monthData.poolItemPieces) ||
-                someValPositive(monthData.bonusCounts) ||
-                (monthData.normalSalePieces || 0) > 0 ||
-                (monthData.specialSalePieces || 0) > 0 ||
-                (monthData.buyPieces || 0) > 0 ||
-                (monthData.invitePieces || 0) > 0 ||
-                (monthData.transferPieces || 0) > 0)
-            );
-            return (
-              <SortableEmployeeCard
-                key={employee.id}
-                employee={employee}
-                selected={employee.id === selectedId}
-                hasData={hasData}
-                onSelect={() => onSelect(employee.id)}
-              />
-            );
-          })}
+          {orderedEmployees.map((employee) => (
+            <SortableEmployeeCard
+              key={employee.id}
+              employee={employee}
+              selected={employee.id === selectedId}
+              hasData={cardHasData(salaryData[employee.id]?.[selectedMonth])}
+              onSelect={() => onSelect(employee.id)}
+            />
+          ))}
         </div>
       </SortableContext>
+
+      {/* overlay: การ์ดที่ลากลอยตามนิ้ว + drop animation ลื่น */}
+      <DragOverlay>
+        {activeEmployee ? (
+          <EmployeeCardView
+            employee={activeEmployee}
+            selected={activeEmployee.id === selectedId}
+            hasData={cardHasData(
+              salaryData[activeEmployee.id]?.[selectedMonth],
+            )}
+            overlay
+          />
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }
 
+/* การ์ดที่ลากได้ (อยู่ในกริด) — ขณะลาก ต้นฉบับจางลงเป็น placeholder */
 function SortableEmployeeCard({ employee, selected, hasData, onSelect }: any) {
   const {
     attributes,
@@ -133,19 +159,11 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }: any) {
     transition,
     isDragging,
   } = useSortable({ id: employee.id });
-  // จัดการ transition ที่ inline style เดียว — ไม่ใช้ Tailwind transition-*
-  // กัน 2 transition rule applies ต่อ transform property พร้อมกัน
-  // (เคยมี Tailwind class transition-transform + dnd-kit inline transition
-  //  → drop animation อาจขัดกัน)
-  //
-  // 3 state:
-  // - isDragging:     transition "none" → ตามนิ้วทันที
-  // - drop animation: dnd-kit ส่ง transition prop มา → ใช้ตามนั้น
-  // - idle (press):   fallback "transform 150ms ease-out" → active:scale smooth
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: isDragging ? "none" : transition || "transform 150ms ease-out",
-    zIndex: isDragging ? 50 : undefined,
+    transition,
+    // ต้นฉบับขณะลาก → จางเป็น placeholder (overlay แสดงตัวจริงตามนิ้ว)
+    opacity: isDragging ? 0.35 : 1,
   };
   return (
     <button
@@ -155,14 +173,38 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }: any) {
       {...attributes}
       {...listeners}
       style={style}
-      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none select-none [-webkit-touch-callout:none] [-webkit-user-select:none] ${
+      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] cursor-pointer font-[inherit] touch-none select-none [-webkit-touch-callout:none] [-webkit-user-select:none] transition-transform duration-100 ${
         isDragging ? "" : "active:scale-[1.03]"
       } ${
         selected
           ? "border-gold bg-gold-pale shadow-[0_2px_8px_rgba(201,151,58,0.25)]"
           : "border-bdr bg-white"
-      } ${isDragging ? "opacity-80 scale-[1.06] shadow-[0_8px_22px_rgba(123,28,28,0.22)]" : ""}`}
+      }`}
     >
+      <CardInner employee={employee} selected={selected} hasData={hasData} />
+    </button>
+  );
+}
+
+/* การ์ดสำหรับ DragOverlay (static · ยกลอย) */
+function EmployeeCardView({ employee, selected, hasData, overlay }: any) {
+  return (
+    <div
+      className={`relative flex flex-col items-center gap-1.5 px-2 pt-3 pb-2.5 rounded-xl border-[1.5px] font-[inherit] select-none ${
+        overlay ? "cursor-grabbing scale-[1.06]" : ""
+      } ${
+        selected ? "border-gold bg-gold-pale" : "border-bdr bg-white"
+      } ${overlay ? "shadow-[0_10px_26px_rgba(123,28,28,0.28)]" : ""}`}
+    >
+      <CardInner employee={employee} selected={selected} hasData={hasData} />
+    </div>
+  );
+}
+
+/* เนื้อในการ์ด (ใช้ร่วม sortable + overlay) */
+function CardInner({ employee, selected, hasData }: any) {
+  return (
+    <>
       <span
         aria-label={hasData ? "บันทึกแล้ว" : "ยังไม่บันทึก"}
         title={hasData ? "บันทึกแล้ว" : "ยังไม่บันทึก"}
@@ -189,6 +231,6 @@ function SortableEmployeeCard({ employee, selected, hasData, onSelect }: any) {
           {employee.role || "-"}
         </div>
       </div>
-    </button>
+    </>
   );
 }
