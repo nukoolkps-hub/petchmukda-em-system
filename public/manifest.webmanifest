@@ -1,0 +1,26 @@
+{
+  "name": "ห้างเพชรทองมุกดา — ระบบพนักงาน",
+  "short_name": "EM มุกดา",
+  "description": "ระบบพนักงานห้างเพชรทองมุกดา — ลา เงินเดือน ค่าคอม เบิกล่วงหน้า",
+  "lang": "th",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FDF8F0",
+  "theme_color": "#7B1C1C",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "maskable"
+    }
+  ]
+}
