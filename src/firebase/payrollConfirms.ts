@@ -7,7 +7,6 @@ import {
   getDocs,
   onSnapshot,
   runTransaction,
-  setDoc,
 } from "firebase/firestore";
 import type { PayrollChangeLogEntry } from "../types";
 import { COLLECTIONS, db } from "./config";
@@ -43,25 +42,38 @@ export async function getAllPayrollConfirms() {
 }
 
 export async function setPayrollConfirm(yearMonth, summary) {
-  // merge:true — กัน wipe field อื่น (เช่น changeLog) ที่เขียนแยกผ่าน
-  // appendPayrollChangeLog · field summary เขียนทับชุดเดิมตามปกติ
-  await setDoc(
-    doc(ref, yearMonth),
-    {
-      yearMonth,
-      confirmedAt: summary.confirmedAt,
-      totalAmount: summary.totalAmount,
-      employeeCount: summary.employeeCount,
-      breakdownSig: summary.breakdownSig ?? null,
-      // ล็อกถาวร: firstConfirmedAt = ยืนยันครั้งแรก (ไม่รีเซ็ต) ·
-      // lockAtMs = เวลาที่เดือนนี้จะแก้ไม่ได้ (firstConfirmedAt + 7 วัน)
-      // ใช้ทั้ง UI และ firestore.rules (เทียบ request.time.toMillis())
-      firstConfirmedAt: summary.firstConfirmedAt ?? summary.confirmedAt,
-      lockAtMs: summary.lockAtMs ?? null,
-      updatedAt: Date.now(),
-    },
-    { merge: true },
-  );
+  // transaction — อ่าน doc server-side แล้ว "เขียนครั้งเดียว" (write-once) ให้
+  // firstConfirmedAt/lockAtMs · กัน race 2 admin ยืนยันเดือนเดียวกันพร้อมกัน
+  // (เดิม read client cache → ต่างคนต่างเขียน → เดดไลน์ล็อกเพี้ยน) · merge ฟิลด์
+  // อื่น (เช่น changeLog ที่เขียนแยก) ไม่ถูก wipe
+  const docRef = doc(ref, yearMonth);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(docRef);
+    const prev = snap.exists() ? snap.data() : null;
+    // firstConfirmedAt + lockAtMs = ยืนยัน "ครั้งแรก" เท่านั้น — ถ้ามีอยู่แล้ว
+    // (อีก session เขียนไปก่อน) ใช้ของเดิมเสมอ เพื่อให้เดดไลน์ล็อกอิงครั้งแรก
+    const firstConfirmedAt =
+      prev?.firstConfirmedAt ?? summary.firstConfirmedAt ?? summary.confirmedAt;
+    const lockAtMs =
+      typeof prev?.lockAtMs === "number"
+        ? prev.lockAtMs
+        : (summary.lockAtMs ?? null);
+    tx.set(
+      docRef,
+      {
+        yearMonth,
+        confirmedAt: summary.confirmedAt,
+        totalAmount: summary.totalAmount,
+        employeeCount: summary.employeeCount,
+        breakdownSig: summary.breakdownSig ?? null,
+        // ใช้ทั้ง UI และ firestore.rules (เทียบ request.time.toMillis())
+        firstConfirmedAt,
+        lockAtMs,
+        updatedAt: Date.now(),
+      },
+      { merge: true },
+    );
+  });
 }
 
 /** append 1 รายการลง changeLog ของเดือนนั้น (auto-settle หลังยืนยัน) ·

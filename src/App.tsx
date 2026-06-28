@@ -105,7 +105,11 @@ export default function LeaveApp() {
   }, [authUser]);
 
   /* ─── Data layer (Firebase) ────────────────────────────────── */
-  const data = useAppData({ authUid: authUser?.uid || "", isAdmin });
+  const data = useAppData({
+    authUid: authUser?.uid || "",
+    isAdmin,
+    onWarning: showToast,
+  });
   const {
     allLeaves,
     employeeDirectory,
