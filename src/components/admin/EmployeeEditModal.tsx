@@ -73,18 +73,20 @@ export default function EmployeeEditModal({
   const [activeTab, setActiveTab] = useState<"personal" | "salary">("personal");
   const editingSinglePieceRate = editingRole[`${employee.id}:singlePieceRate`];
   // bonusRates (multi-item โบนัสอื่นๆ) — map เดียวเหมือน pieceRates
+  // ค่าใน draft เก็บเป็น raw string ระหว่างพิมพ์ (คงจุดทศนิยม เช่น "2.5") ·
+  // parse เป็น number ตอน save (Number(v)) — เหมือน baseSalary
   const editingBonusRates = editingRole[`${employee.id}:bonusRates`] as
-    | Record<string, number>
+    | Record<string, number | string>
     | undefined;
 
   // poolItemRates (multi-item pool sales) — map เดียวเหมือน pieceRates/bonusRates
   const editingPoolItemRates = editingRole[`${employee.id}:poolItemRates`] as
-    | Record<string, number>
+    | Record<string, number | string>
     | undefined;
 
   // pieceRates (multi-item) — เก็บทั้ง map ใน draft key เดียว
   const editingPieceRates = editingRole[`${employee.id}:pieceRates`] as
-    | Record<string, number>
+    | Record<string, number | string>
     | undefined;
   const editingBaseSalary = editingRole[`${employee.id}:baseSalary`];
   const editingSocialSecurity = editingRole[`${employee.id}:socialSecurity`];
@@ -801,7 +803,7 @@ export default function EmployeeEditModal({
                 const pieceItems = rolePieceItems(employeeRole);
                 // ค่า rate ปัจจุบันของ item (draft → live pieceRates → legacy
                 // singlePieceRate สำหรับ id "default")
-                const rateValue = (itemId: string): number | "" => {
+                const rateValue = (itemId: string): number | string => {
                   if (
                     editingPieceRates &&
                     editingPieceRates[itemId] !== undefined
@@ -823,7 +825,7 @@ export default function EmployeeEditModal({
                   setEditingRole((prev) => {
                     const base =
                       (prev[`${employee.id}:pieceRates`] as
-                        | Record<string, number>
+                        | Record<string, number | string>
                         | undefined) ??
                       employee.pieceRates ??
                       (roleUsesLegacyDefault && employee.singlePieceRate != null
@@ -833,7 +835,8 @@ export default function EmployeeEditModal({
                       ...prev,
                       [`${employee.id}:pieceRates`]: {
                         ...base,
-                        [itemId]: parseFloat(raw) || 0,
+                        // เก็บ raw string คงจุดทศนิยมระหว่างพิมพ์ · parse ตอน save
+                        [itemId]: raw,
                       },
                     };
                   });
@@ -1082,7 +1085,7 @@ export default function EmployeeEditModal({
                           return poolItemsForRates.map((it) => {
                             const itemDisabled =
                               excIds.has(it.id) && it.kind === "pool";
-                            const valueOf = (): number | "" => {
+                            const valueOf = (): number | string => {
                               if (
                                 editingPoolItemRates &&
                                 editingPoolItemRates[it.id] !== undefined
@@ -1103,7 +1106,7 @@ export default function EmployeeEditModal({
                               setEditingRole((prev) => {
                                 const base =
                                   (prev[`${employee.id}:poolItemRates`] as
-                                    | Record<string, number>
+                                    | Record<string, number | string>
                                     | undefined) ??
                                   employee.poolItemRates ??
                                   {};
@@ -1111,7 +1114,8 @@ export default function EmployeeEditModal({
                                   ...prev,
                                   [`${employee.id}:poolItemRates`]: {
                                     ...base,
-                                    [it.id]: parseFloat(raw) || 0,
+                                    // raw string คงจุดทศนิยม · parse ตอน save
+                                    [it.id]: raw,
                                   },
                                 };
                               });
@@ -1155,7 +1159,7 @@ export default function EmployeeEditModal({
             {(() => {
               const bonusItems = roleBonusItems(employeeRole);
               if (bonusItems.length === 0) return null;
-              const bonusRateValue = (itemId: string): number | "" => {
+              const bonusRateValue = (itemId: string): number | string => {
                 if (
                   editingBonusRates &&
                   editingBonusRates[itemId] !== undefined
@@ -1172,7 +1176,7 @@ export default function EmployeeEditModal({
                 setEditingRole((prev) => {
                   const base =
                     (prev[`${employee.id}:bonusRates`] as
-                      | Record<string, number>
+                      | Record<string, number | string>
                       | undefined) ??
                     employee.bonusRates ??
                     {};
@@ -1180,7 +1184,8 @@ export default function EmployeeEditModal({
                     ...prev,
                     [`${employee.id}:bonusRates`]: {
                       ...base,
-                      [itemId]: parseFloat(raw) || 0,
+                      // raw string คงจุดทศนิยม · parse ตอน save
+                      [itemId]: raw,
                     },
                   };
                 });
