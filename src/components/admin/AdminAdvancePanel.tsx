@@ -51,6 +51,7 @@ export default function AdminAdvancePanel({
   const [filter, setFilter] = useState<AdvanceFilter>("pending");
   const [selectedMonth, setSelectedMonth] = useState(currentYearMonth);
   const [confirmReject, setConfirmReject] = useState<any>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null); // request.id ที่เพิ่งกด copy
   const [uploadingSlip, setUploadingSlip] = useState<string | number | null>(
     null,
@@ -124,14 +125,17 @@ export default function AdminAdvancePanel({
   }
 
   async function handleReject(request) {
+    const reason = rejectReason.trim();
     // ปิด modal ทันที (optimistic) — ถ้า fail จะเปิดใหม่พร้อม toast บอก
     setConfirmReject(null);
+    setRejectReason("");
     try {
       await onUpdate(
         request.id,
         {
           status: "rejected",
           rejectedAt: new Date().toISOString(),
+          ...(reason ? { rejectionReason: reason } : {}),
         },
         request,
       );
@@ -139,7 +143,8 @@ export default function AdminAdvancePanel({
     } catch (err) {
       console.error("[AdminAdvancePanel] reject failed:", err);
       showToast?.("ปฏิเสธไม่สำเร็จ — ลองอีกครั้ง");
-      // Rollback: เปิด modal ใหม่ให้ user retry ได้
+      // Rollback: เปิด modal ใหม่ให้ user retry ได้ (คงเหตุผลที่พิมพ์ไว้)
+      setRejectReason(reason);
       setConfirmReject(request);
     }
   }
@@ -444,7 +449,10 @@ export default function AdminAdvancePanel({
 
       {confirmReject && (
         <BaseModal
-          onClose={() => setConfirmReject(null)}
+          onClose={() => {
+            setConfirmReject(null);
+            setRejectReason("");
+          }}
           maxWidthClass="max-w-[340px]"
           contentClassName="px-6 py-7"
         >
@@ -463,9 +471,19 @@ export default function AdminAdvancePanel({
               return live?.nickname || live?.name || confirmReject.employeeName;
             })()} · ฿{formatThaiNumber(confirmReject.amount)}
           </div>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="เหตุผลที่ปฏิเสธ (ไม่บังคับ) — จะแจ้งให้พนักงานทราบ"
+            rows={2}
+            className="w-full mb-4 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt font-[inherit] outline-none bg-white focus:border-maroon resize-none"
+          />
           <div className="flex gap-2.5">
             <button
-              onClick={() => setConfirmReject(null)}
+              onClick={() => {
+                setConfirmReject(null);
+                setRejectReason("");
+              }}
               className="flex-1 p-3 rounded-xl border-[1.5px] border-bdr bg-white text-txt-mid text-sm font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
             >
               ยกเลิก

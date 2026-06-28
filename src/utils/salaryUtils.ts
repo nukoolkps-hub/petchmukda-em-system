@@ -1212,9 +1212,10 @@ export function calculateSalary(
   const losesBaseSalary = !!poolShare?.losesBaseSalary;
   const baseSalary = losesBaseSalary ? 0 : baseSalaryAmount;
 
-  // โบนัสแห่งความขยัน — totalLeaveDays รวม sundays อยู่แล้ว
-  // (useFirebaseAppData L213: totalLeaveDays = weekdayLeaves + overInfo.sundays)
-  // เดิมบวก sundayOverQuotaDays ซ้ำ → Sunday นับ 2 เท่า → bonus ผิด
+  // โบนัสแห่งความขยัน — totalLeaveDays ที่ส่งเข้ามาเป็น "วันลาวันธรรมดา"
+  // (weekday) เท่านั้น · ทุก caller ส่งผลจาก countWeekdayLeaves (SalaryView,
+  // SalaryAdminEdit, payrollCompute) → วันลา "วันอาทิตย์" ไม่ตัดโบนัสขยัน
+  // เป็นเจตนาตามนโยบาย (อาทิตย์ถูกหัก ×1.5 แยกต่างหากอยู่แล้ว ไม่หักซ้ำ)
   // ถ้า losesBaseSalary → ไม่ได้ bonus (base = 0 อยู่แล้ว · กัน paying
   // 2× dailyRate ให้คนที่ไม่ควรได้ base · CRITICAL)
   const leaveDays = totalLeaveDays || 0;

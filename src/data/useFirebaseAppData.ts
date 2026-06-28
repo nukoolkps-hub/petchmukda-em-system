@@ -31,6 +31,7 @@ import * as poolSnapshotsAPI from "../firebase/poolSnapshots";
 import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
 import * as storeCalendarAPI from "../firebase/storeCalendar";
+import { wipeEmployeeData } from "../firebase/wipeTestData";
 import {
   computeCoverageEarningsForMonth,
   employeeHasPoolExemptDuty,
@@ -67,11 +68,14 @@ import {
 interface FirebaseAppDataOptions {
   authUid?: string;
   isAdmin?: boolean;
+  /** แจ้งเตือนแบบ non-fatal (เช่น sync poolSnapshot ล้มเหลวบางส่วน) → toast */
+  onWarning?: (msg: string) => void;
 }
 
 export default function useFirebaseAppData({
   authUid = "",
   isAdmin = false,
+  onWarning,
 }: FirebaseAppDataOptions = {}) {
   const employeeResult = useEmployeesForScope({ isAdmin, authUid });
   const currentEmployee =
@@ -190,6 +194,9 @@ export default function useFirebaseAppData({
       });
     } catch (err) {
       console.error("[restampLeaveSnapshot] poolSnapshot mirror failed:", err);
+      onWarning?.(
+        "เตือน: sync ข้อมูลวันลา (กองกลาง) ไม่สำเร็จ — เพื่อนร่วมงานอาจเห็นยอดเก่า ลองแก้อีกครั้ง",
+      );
     }
     return patched;
   }
@@ -306,6 +313,7 @@ export default function useFirebaseAppData({
           return ym === currentYm || confirmed;
         })
         .sort();
+      const restampFailedMonths: string[] = [];
       for (const ym of targets) {
         try {
           await updateSalary(id, ym, {}, freshEmployee);
@@ -321,7 +329,13 @@ export default function useFirebaseAppData({
             `[updateEmployee] auto-refresh ${id}/${ym} salary snapshot failed:`,
             err,
           );
+          restampFailedMonths.push(ym);
         }
+      }
+      if (restampFailedMonths.length > 0) {
+        onWarning?.(
+          `เตือน: อัปเดตยอดเงินเดือนบางเดือนไม่สำเร็จ (${restampFailedMonths.join(", ")}) — ลองบันทึกอีกครั้ง`,
+        );
       }
     }
   }
@@ -331,7 +345,10 @@ export default function useFirebaseAppData({
     return id;
   }
   async function deleteEmployee(id) {
-    await employeesAPI.deleteEmployee(id);
+    // ลบข้อมูลพ่วงทั้งหมด (ลา/เบิก/กู้/เงินเดือนรายเดือน + purge poolSnapshots)
+    // ผ่าน cloud function แทนการลบเฉพาะ doc พนักงาน — กันข้อมูลค้าง + กองกลาง
+    // (pool) ของเพื่อนเพี้ยนจาก snapshot ที่ยังอ้างถึงคนที่ถูกลบ
+    await wipeEmployeeData([id]);
     triggerRecomputeDutyAssignments();
   }
   async function reorderEmployees(orderedIds) {
