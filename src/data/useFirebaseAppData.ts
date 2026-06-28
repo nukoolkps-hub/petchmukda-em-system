@@ -875,6 +875,18 @@ export default function useFirebaseAppData({
   /* ─── Roles ─────────────────────────────────────────────── */
   async function upsertRole(role) {
     await rolesAPI.upsertRole(role);
+    // propagate ชื่อตำแหน่งใหม่ → denormalized employee.role ของทุกคนในตำแหน่งนี้
+    // (กันชื่อค้างในหน้าพนักงาน/สลิป/หนังสือรับรอง เมื่อ admin เปลี่ยนชื่อตำแหน่ง)
+    if (role?.id && role?.name) {
+      const stale = employeeResult.data.filter(
+        (e) => e.roleId === role.id && e.role !== role.name,
+      );
+      await Promise.all(
+        stale.map((e) =>
+          employeesAPI.updateEmployee(e.id, { role: role.name }),
+        ),
+      );
+    }
   }
   async function upsertDuty(id, data) {
     const newId = await dutiesAPI.upsertDuty(id, data);
