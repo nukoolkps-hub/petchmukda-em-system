@@ -138,14 +138,12 @@ export default function EmployeeAdminPanel({
   return (
     <div>
       <div className="flex items-center justify-between mb-3.5 gap-2">
-        <div className="text-sm text-txt-soft">
-          กดที่ชื่อพนักงานเพื่อแก้ไข · ลากปุ่ม{" "}
-          <IconGrip
-            size={13}
-            strokeWidth={2.4}
-            className="inline-block align-text-bottom"
-          />{" "}
-          เพื่อเรียงลำดับ
+        {/* flex + items-center → ไอคอน grip จัดกึ่งกลางบรรทัดเป๊ะ ไม่ลอย
+            (vertical-align บน inline SVG ไม่ตรงกับ baseline ฟอนต์ไทย) */}
+        <div className="text-sm text-txt-soft flex flex-wrap items-center gap-x-1">
+          <span>กดที่ชื่อพนักงานเพื่อแก้ไข · ลากปุ่ม</span>
+          <IconGrip size={13} strokeWidth={2.4} className="shrink-0" />
+          <span>เพื่อเรียงลำดับ</span>
         </div>
       </div>
       <DndContext
