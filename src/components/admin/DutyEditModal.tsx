@@ -111,8 +111,21 @@ export default function DutyEditModal({
       )
     : [];
 
+  // monthly: คนที่ปิดกองกลาง "ทั้งหมด" (poolExclusion = "all" · legacy "both")
+  // ถูกตัดออกจากรอบเดือนอัตโนมัติ (ติดทั้งเดือนเสี่ยงหลุดเกณฑ์ 50% เงินเดือน) —
+  // ตรงกับ resolveDutyPool ฝั่งคำนวณจริง · แสดงในพรีวิวให้เลขตรงกับการ์ด
+  const autoBlockedIds = new Set(
+    period === "monthly"
+      ? rotationPool
+          .filter(
+            (e) => e.poolExclusion === "all" || e.poolExclusion === "both",
+          )
+          .map((e) => e.id)
+      : [],
+  );
+
   const includedCount = rotationPool.filter(
-    (e) => !excludedIds.has(e.id),
+    (e) => !excludedIds.has(e.id) && !autoBlockedIds.has(e.id),
   ).length;
 
   const canSave =
@@ -218,6 +231,7 @@ export default function DutyEditModal({
             rotationPool={rotationPool}
             excludedIds={excludedIds}
             toggleExclude={toggleExclude}
+            autoBlockedIds={autoBlockedIds}
             includedCount={includedCount}
             grantsPoolEligibility={grantsPoolEligibility}
             setGrantsPoolEligibility={setGrantsPoolEligibility}
@@ -460,6 +474,7 @@ function RotationFields({
   rotationPool,
   excludedIds,
   toggleExclude,
+  autoBlockedIds,
   includedCount,
   grantsPoolEligibility,
   setGrantsPoolEligibility,
@@ -477,6 +492,7 @@ function RotationFields({
   rotationPool: Employee[];
   excludedIds: Set<string>;
   toggleExclude: (id: string) => void;
+  autoBlockedIds: Set<string>;
   includedCount: number;
   grantsPoolEligibility: boolean;
   setGrantsPoolEligibility: (v: boolean) => void;
@@ -592,16 +608,27 @@ function RotationFields({
           </div>
           <div className="flex flex-wrap gap-1.5">
             {rotationPool.map((emp) => {
+              const isAutoBlocked = autoBlockedIds.has(emp.id);
               const isExcluded = excludedIds.has(emp.id);
+              const off = isAutoBlocked || isExcluded;
               return (
                 <button
                   key={emp.id}
                   type="button"
-                  onClick={() => toggleExclude(emp.id)}
-                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold cursor-pointer font-[inherit] border transition-all active:scale-[0.96] ${
-                    isExcluded
-                      ? "bg-cream-dk/40 text-txt-soft border-bdr line-through opacity-60"
-                      : "bg-white text-txt-mid border-bdr hover:border-maroon"
+                  // คนที่ปิดกองกลางทั้งหมด → ตัดออกอัตโนมัติในรอบเดือน · กดสลับไม่ได้
+                  disabled={isAutoBlocked}
+                  onClick={() => !isAutoBlocked && toggleExclude(emp.id)}
+                  title={
+                    isAutoBlocked
+                      ? "ปิดกองกลางทั้งหมด — ไม่เข้ารอบหน้าที่ประจำเดือน"
+                      : undefined
+                  }
+                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold font-[inherit] border transition-all ${
+                    isAutoBlocked
+                      ? "bg-cream-dk/40 text-txt-soft border-bdr line-through opacity-60 cursor-not-allowed"
+                      : off
+                        ? "bg-cream-dk/40 text-txt-soft border-bdr line-through opacity-60 cursor-pointer active:scale-[0.96]"
+                        : "bg-white text-txt-mid border-bdr hover:border-maroon cursor-pointer active:scale-[0.96]"
                   }`}
                 >
                   <AvatarCircle
@@ -613,13 +640,25 @@ function RotationFields({
                     border="none"
                   />
                   {emp.nickname || emp.name}
-                  {isExcluded && (
-                    <IconX size={11} strokeWidth={2.4} className="ml-0.5" />
+                  {isAutoBlocked ? (
+                    <span className="ml-0.5 not-italic no-underline font-bold text-[9px]">
+                      ปิดกองกลาง
+                    </span>
+                  ) : (
+                    isExcluded && (
+                      <IconX size={11} strokeWidth={2.4} className="ml-0.5" />
+                    )
                   )}
                 </button>
               );
             })}
           </div>
+          {autoBlockedIds.size > 0 && (
+            <div className="text-[11px] text-txt-soft mt-2 leading-snug">
+              คนที่ขึ้น "ปิดกองกลาง" ปิดกองกลางทั้งหมดไว้ จึงไม่เข้ารอบหน้าที่ประจำเดือนอัตโนมัติ
+              (ติดทั้งเดือนเสี่ยงหลุดเกณฑ์เงินเดือนพื้นฐาน 50%)
+            </div>
+          )}
         </div>
       )}
     </>
