@@ -315,7 +315,6 @@ export default function AdminPanel({
             onSetPoolAdjustment={onSetPoolAdjustment}
             employeeLoans={employeeLoans}
             storeCalendar={storeCalendar}
-            onReorderEmployees={onReorderEmployees}
             setUnsavedDirty={setUnsavedDirty}
             selectedMonth={adminMonth}
             onSelectMonth={setAdminMonth}
@@ -356,6 +355,7 @@ export default function AdminPanel({
             roles={roles}
             onUpdateRole={onUpdateRole}
             onDeleteEmployee={onDeleteEmployee}
+            onReorderEmployees={onReorderEmployees}
             editingRole={employeeEditingRole}
             setEditingRole={setEmployeeEditingRole}
             editingEmpId={employeeEditingId}
