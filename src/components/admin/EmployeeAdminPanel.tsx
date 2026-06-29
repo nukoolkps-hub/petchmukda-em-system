@@ -255,21 +255,39 @@ function SortableEmployeeRow({
     transition,
     isDragging,
   } = useSortable({ id: employee.id });
+
+  // pressing = กดค้างที่ปุ่มจับลากแล้ว แต่ยังไม่ขยับถึง threshold (6px)
+  // → ใช้โชว์เอฟเฟกต์ "ยกลอย" ทันทีที่กด ให้รู้ว่ากำลังจะเลื่อนแถวไหน
+  const [pressing, setPressing] = useState(false);
+  // ปล่อยนิ้ว/ยกเลิกที่ไหนก็ได้ → เลิก pressing (pointerup อาจไม่ยิงที่ตัวปุ่ม
+  // เพราะ drag จับ pointer ไปที่ window แล้ว)
+  useEffect(() => {
+    if (!pressing) return;
+    const clear = () => setPressing(false);
+    window.addEventListener("pointerup", clear);
+    window.addEventListener("pointercancel", clear);
+    return () => {
+      window.removeEventListener("pointerup", clear);
+      window.removeEventListener("pointercancel", clear);
+    };
+  }, [pressing]);
+
+  const lifted = pressing || isDragging;
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1 : undefined,
+    opacity: isDragging ? 0.92 : 1,
+    zIndex: lifted ? 30 : undefined,
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`w-full flex items-center gap-2 pr-2 rounded-2xl shadow-[0_2px_8px_rgba(90,30,10,0.06)] border bg-white ${
-        isDragging
-          ? "border-gold shadow-[0_8px_22px_rgba(123,28,28,0.18)]"
-          : "border-bdr"
+      className={`w-full flex items-center gap-2 pr-2 rounded-2xl border transition-[transform,box-shadow,background-color,border-color] duration-150 ${
+        lifted
+          ? "border-gold bg-gold-pale scale-[1.02] shadow-[0_10px_26px_rgba(123,28,28,0.22)]"
+          : "border-bdr bg-white shadow-[0_2px_8px_rgba(90,30,10,0.06)]"
       }`}
     >
       <button
@@ -375,13 +393,21 @@ function SortableEmployeeRow({
           className="shrink-0"
         />
       </button>
-      {/* drag handle — แตะค้างแล้วลากเพื่อเรียงลำดับ */}
+      {/* drag handle — แตะค้างแล้วลากเพื่อเรียงลำดับ
+          onPointerDown: เปิดเอฟเฟกต์ "ยกลอย" ทันที + ยังเรียก listener เดิม
+          ของ dnd-kit ต่อ (spread มาก่อนแล้ว override → ต้องเรียกเองในนี้) */}
       <button
         type="button"
         aria-label="ลากเพื่อเรียงลำดับ"
         {...attributes}
         {...listeners}
-        className="shrink-0 self-stretch px-1.5 flex items-center text-txt-soft cursor-grab active:cursor-grabbing touch-none font-[inherit] rounded-r-2xl hover:bg-cream/70"
+        onPointerDown={(e) => {
+          setPressing(true);
+          (listeners as any)?.onPointerDown?.(e);
+        }}
+        className={`shrink-0 self-stretch px-1.5 flex items-center cursor-grab active:cursor-grabbing touch-none font-[inherit] rounded-r-2xl transition-colors duration-150 ${
+          lifted ? "text-maroon" : "text-txt-soft hover:bg-cream/70"
+        }`}
       >
         <IconGrip size={18} strokeWidth={2.2} />
       </button>
