@@ -1039,6 +1039,7 @@ export default function useFirebaseAppData({
     advancesLoading: advResult.loading,
     dutiesLoading: dutiesResult.loading,
     loansLoading: loansResult.loading,
+    rolesLoading: rolesResult.loading,
 
     // Legacy setters (warn instead of update)
     setAllLeaves: noop,

@@ -14,6 +14,7 @@ import { toYMD } from "../../utils/dateUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
+import Spinner from "../shared/Spinner";
 import ThaiMonthPicker from "../shared/ThaiMonthPicker";
 import ToggleSwitch from "../shared/ToggleSwitch";
 
@@ -299,12 +300,13 @@ export default function DutyEditModal({
                 setSaving(false);
               }
             }}
-            className={`flex-1 py-3.5 rounded-2xl border-none text-white text-base font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform ${
+            className={`flex-1 py-3.5 rounded-2xl border-none text-white text-base font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform inline-flex items-center justify-center gap-2 ${
               canSave && !saving
                 ? "bg-maroon shadow-maroon-glow"
                 : "bg-bdr cursor-not-allowed"
             }`}
           >
+            {saving && <Spinner size={16} />}
             {saving ? "กำลังบันทึก..." : "บันทึก"}
           </button>
         </div>

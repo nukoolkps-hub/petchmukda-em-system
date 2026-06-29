@@ -19,6 +19,7 @@ import {
 import { useState } from "react";
 import { wipeEmployeeData, wipeTestData } from "../../firebase/wipeTestData";
 import type { Employee } from "../../types";
+import Spinner from "../shared/Spinner";
 
 interface Props {
   employeeDirectory?: Employee[];
@@ -490,8 +491,9 @@ export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
                   type="button"
                   onClick={handleConfirm}
                   disabled={!canConfirm || running}
-                  className="flex-1 px-4 py-2.5 rounded-[10px] bg-red text-white font-extrabold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 rounded-[10px] bg-red text-white font-extrabold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                 >
+                  {running && <Spinner size={16} />}
                   {running ? "กำลังลบ..." : "ยืนยันล้างข้อมูล"}
                 </button>
               </div>
