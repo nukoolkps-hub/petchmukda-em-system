@@ -27,6 +27,7 @@ import { isMonthLocked } from "../../utils/payrollLock";
 import BaseModal from "../shared/BaseModal";
 import CalendarPicker from "../shared/CalendarPicker";
 import MonthChevronNav from "../shared/MonthChevronNav";
+import Spinner from "../shared/Spinner";
 import ThemedSelect from "../shared/ThemedSelect";
 
 /** ความสูง dropdown เสาร์/อาทิตย์ — โชว์ ~10 รายการก่อน scroll (6 เดือนมีหลายวัน) */
@@ -972,8 +973,9 @@ export default function StoreCalendarPanel({
                   await cascadeRemove(target.field, target.ymd, target.leaves);
                 }}
                 disabled={busy}
-                className={`flex-1 py-2.5 rounded-lg bg-red text-white text-sm font-bold border-none font-[inherit] shadow-[0_3px_10px_rgba(192,57,43,0.25)] ${busy ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+                className={`flex-1 py-2.5 rounded-lg bg-red text-white text-sm font-bold border-none font-[inherit] shadow-[0_3px_10px_rgba(192,57,43,0.25)] inline-flex items-center justify-center gap-1.5 ${busy ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
               >
+                {busy && <Spinner size={14} />}
                 {busy ? "กำลังลบ..." : "ลบใบลา + ลบวัน"}
               </button>
             </div>

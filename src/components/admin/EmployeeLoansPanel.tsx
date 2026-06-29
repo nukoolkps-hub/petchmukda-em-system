@@ -21,6 +21,7 @@ import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
 import { SkeletonRow } from "../shared/Skeleton";
+import Spinner from "../shared/Spinner";
 import ThemedSelect from "../shared/ThemedSelect";
 
 function monthLabel(ym: string) {
@@ -616,12 +617,13 @@ function CreateLoanModal({
           type="button"
           onClick={submit}
           disabled={saving || hasActiveLoan}
-          className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold font-[inherit] ${
+          className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold font-[inherit] inline-flex items-center justify-center gap-2 ${
             saving || hasActiveLoan
               ? "bg-bdr text-txt-soft cursor-not-allowed"
               : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)] cursor-pointer"
           }`}
         >
+          {saving && <Spinner size={18} />}
           {saving ? "กำลังบันทึก..." : hasActiveLoan ? "มีเงินกู้ค้างอยู่" : "สร้างเงินกู้"}
         </button>
       </div>

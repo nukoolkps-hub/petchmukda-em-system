@@ -39,6 +39,7 @@ export default function AdminPanel({
   advancesLoading,
   dutiesLoading,
   loansLoading,
+  rolesLoading,
   employeeDirectory,
   onDelete,
   onAddLeave,
@@ -196,6 +197,7 @@ export default function AdminPanel({
         {section === "positions" && (
           <RolesAdminPanel
             roles={roles}
+            rolesLoading={rolesLoading}
             employeeDirectory={employeeDirectory}
             onUpdateEmployeeRole={onUpdateRole}
             onUpsertRole={onUpsertRole}

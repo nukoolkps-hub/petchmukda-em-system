@@ -438,7 +438,13 @@ export default function PayrollSummaryPanel({
           <div
             className={`text-3xl font-extrabold text-gold-lt tracking-[-0.02em] mb-2 transition-opacity duration-200 ${advanceDataBlocked ? "opacity-40" : ""}`}
           >
-            {formatThaiNumber(totalPayout)} ฿
+            <span
+              key={Math.round(totalPayout)}
+              className="inline-block animate-[valuePop_0.28s_ease-out]"
+            >
+              {formatThaiNumber(totalPayout)}
+            </span>{" "}
+            ฿
           </div>
           {totalAdvance > 0 && !advanceDataBlocked && (
             <div className="text-sm text-gold-lt/60 pt-2 border-t border-gold-lt/15 flex items-center gap-1.5">

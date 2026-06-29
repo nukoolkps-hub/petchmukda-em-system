@@ -22,6 +22,7 @@ import {
   rolePieceItems,
 } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
+import Spinner from "../shared/Spinner";
 import ThemedSelect from "../shared/ThemedSelect";
 
 interface Item {
@@ -493,7 +494,11 @@ export default function PoolAdjustmentModal({
               : "bg-maroon text-white cursor-pointer shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
           }`}
         >
-          {locked && <IconLock size={14} strokeWidth={2.5} />}
+          {locked ? (
+            <IconLock size={14} strokeWidth={2.5} />
+          ) : saving ? (
+            <Spinner size={14} />
+          ) : null}
           {locked ? "ปิดรอบแล้ว" : saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>
       </div>

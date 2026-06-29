@@ -24,6 +24,7 @@ import {
 } from "../../utils/sanitizeRichText";
 import AvatarCircle from "../shared/AvatarCircle";
 import RichTextEditor from "../shared/RichTextEditor";
+import { SkeletonRow } from "../shared/Skeleton";
 import ThemedSelect from "../shared/ThemedSelect";
 
 /** สร้าง id ใหม่ของ piece item (คงที่ตลอดอายุ — อ้าง rate/จำนวนชิ้น) */
@@ -267,6 +268,7 @@ function cleanMainDuties(html: string | null | undefined): string | null {
 /* ─── Admin: Roles Management Panel ────────────────────────────── */
 export default function RolesAdminPanel({
   roles,
+  rolesLoading,
   employeeDirectory,
   onUpdateEmployeeRole,
   onUpsertRole,
@@ -528,6 +530,14 @@ export default function RolesAdminPanel({
           >
             บันทึกตำแหน่ง
           </button>
+        </div>
+      )}
+
+      {/* skeleton ระหว่าง roles ยังโหลด (กัน blank ก่อนข้อมูลมา) */}
+      {rolesLoading && roles.length === 0 && (
+        <div className="flex flex-col gap-2.5 animate-[fadeIn_0.18s_ease-out]">
+          <SkeletonRow />
+          <SkeletonRow />
         </div>
       )}
 

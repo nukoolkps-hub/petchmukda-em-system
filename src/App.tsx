@@ -130,6 +130,7 @@ export default function LeaveApp() {
     advancesLoading,
     dutiesLoading,
     loansLoading,
+    rolesLoading,
     setSalaryData,
     updateEmployee,
     deleteEmployee,
@@ -568,6 +569,7 @@ export default function LeaveApp() {
                         advancesLoading={advancesLoading}
                         dutiesLoading={dutiesLoading}
                         loansLoading={loansLoading}
+                        rolesLoading={rolesLoading}
                         employeeDirectory={employeeDirectory}
                         onDelete={leaveForm.handleDelete}
                         onAddLeave={addLeaveAction}
