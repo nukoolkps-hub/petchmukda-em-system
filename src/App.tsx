@@ -126,6 +126,8 @@ export default function LeaveApp() {
     deleteEmployeeLoan,
     loading,
     error,
+    leavesLoading,
+    advancesLoading,
     setSalaryData,
     updateEmployee,
     deleteEmployee,
@@ -560,6 +562,8 @@ export default function LeaveApp() {
                         unsavedDirty={adminUnsavedDirty}
                         onUnsavedDirtyChange={setAdminUnsavedDirty}
                         allLeaves={allLeaves}
+                        leavesLoading={leavesLoading}
+                        advancesLoading={advancesLoading}
                         employeeDirectory={employeeDirectory}
                         onDelete={leaveForm.handleDelete}
                         onAddLeave={addLeaveAction}
