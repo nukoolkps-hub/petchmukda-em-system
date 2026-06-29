@@ -26,7 +26,10 @@ export default function MoneyInput({ value, onChange, ...rest }: Props) {
     if (digits == null) return;
     pendingDigits.current = null;
     const el = ref.current;
-    if (!el) return;
+    // คืนตำแหน่ง cursor เฉพาะตอน field นี้ถูก focus อยู่จริง — กัน caret ถูก
+    // ดึงไปตำแหน่งเก่าเมื่อ re-render จากเหตุอื่น (live data/parent state) ทำให้
+    // cursor เด้งผิดที่
+    if (!el || el !== document.activeElement) return;
     const pos = caretPosFromDigits(el.value, digits);
     el.setSelectionRange(pos, pos);
   });

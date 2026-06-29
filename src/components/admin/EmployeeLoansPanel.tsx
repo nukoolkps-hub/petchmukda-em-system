@@ -19,6 +19,7 @@ import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
+import MoneyInput from "../shared/MoneyInput";
 import ThemedSelect from "../shared/ThemedSelect";
 
 function monthLabel(ym: string) {
@@ -483,11 +484,9 @@ function CreateLoanModal({
           <label className="block text-sm text-txt-mid font-semibold mb-1.5">
             เงินต้น (บาท)
           </label>
-          <input
-            type="text"
-            inputMode="decimal"
+          <MoneyInput
             value={principal}
-            onChange={(e) => setPrincipal(e.target.value)}
+            onChange={setPrincipal}
             placeholder="0"
             className={inputCls}
           />
@@ -496,11 +495,9 @@ function CreateLoanModal({
           <label className="block text-sm text-txt-mid font-semibold mb-1.5">
             ผ่อนเดือนละ (บาท)
           </label>
-          <input
-            type="text"
-            inputMode="decimal"
+          <MoneyInput
             value={monthly}
-            onChange={(e) => setMonthly(e.target.value)}
+            onChange={setMonthly}
             placeholder="0"
             className={inputCls}
           />

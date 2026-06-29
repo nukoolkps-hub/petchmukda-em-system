@@ -13,6 +13,7 @@ import type { Duty, Employee, Role } from "../../types";
 import { toYMD } from "../../utils/dateUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
+import MoneyInput from "../shared/MoneyInput";
 import ThaiMonthPicker from "../shared/ThaiMonthPicker";
 import ToggleSwitch from "../shared/ToggleSwitch";
 
@@ -441,12 +442,10 @@ function CoverageFields({
         </label>
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-txt-soft">฿</span>
-          <input
-            type="text"
-            inputMode="numeric"
+          <MoneyInput
             min="0"
             value={coveragePayInput}
-            onChange={(e) => setCoveragePayInput(e.target.value)}
+            onChange={setCoveragePayInput}
             placeholder="0"
             className="flex-1 py-[9px] px-3 rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-txt border-[1.5px] border-bdr bg-white"
           />
