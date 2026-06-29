@@ -258,7 +258,7 @@ export default function RequestTab({
           ))}
         </div>
         {errors.type && (
-          <div className="text-red text-sm mt-2 inline-flex items-center gap-1">
+          <div className="text-red text-sm mt-2 inline-flex items-center gap-1 animate-[fadeIn_0.2s_ease-out]">
             <IconAlertTriangle size={14} strokeWidth={2.4} />
             {errors.type}
           </div>
@@ -293,7 +293,7 @@ export default function RequestTab({
       />
       {days > 0 && (
         <div
-          className={`rounded-2xl px-5 py-4 my-3.5 flex flex-col items-center text-center border-[1.5px] ${overLimit ? "bg-red-lt border-[#C0392B40]" : "bg-gold-pale border-[#C9973A60]"}`}
+          className={`rounded-2xl px-5 py-4 my-3.5 flex flex-col items-center text-center border-[1.5px] animate-[slideUp_0.2s_ease-out] ${overLimit ? "bg-red-lt border-[#C0392B40]" : "bg-gold-pale border-[#C9973A60]"}`}
         >
           <div
             className={`text-sm font-semibold inline-flex items-center gap-1.5 ${overLimit ? "text-red" : "text-txt-mid"}`}

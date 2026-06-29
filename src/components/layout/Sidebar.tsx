@@ -207,15 +207,16 @@ export default function Sidebar({
                                 ? COLORS.goldLight
                                 : "rgba(255,255,255,0.55)"
                             }
+                            className="transition-colors duration-200"
                           />
                           <span className="text-sm">{item.label}</span>
                           {pending > 0 && (
-                            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red px-1.5 text-xs font-bold leading-none text-white">
+                            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red px-1.5 text-xs font-bold leading-none text-white animate-[fadeIn_0.2s_ease-out]">
                               {pending}
                             </span>
                           )}
                           {active && pending === 0 && (
-                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-gold" />
+                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-gold animate-[fadeIn_0.2s_ease-out]" />
                           )}
                         </button>
                       );
@@ -235,7 +236,7 @@ export default function Sidebar({
                   <span>{n.icon(active)}</span>
                   <span>{n.label}</span>
                   {active && (
-                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-gold" />
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-gold animate-[fadeIn_0.2s_ease-out]" />
                   )}
                 </button>
               );

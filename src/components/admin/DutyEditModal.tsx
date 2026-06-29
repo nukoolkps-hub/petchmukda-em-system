@@ -207,39 +207,41 @@ export default function DutyEditModal({
           </div>
         </div>
 
-        {kind === "coverage" ? (
-          <CoverageFields
-            roles={roles}
-            employeeDirectory={employeeDirectory}
-            coverageRoleId={coverageRoleId}
-            setCoverageRoleId={setCoverageRoleId}
-            candidateIds={candidateIds}
-            toggleCandidate={toggleCandidate}
-            coverageCandidates={coverageCandidates}
-            coveragePayInput={coveragePayInput}
-            setCoveragePayInput={setCoveragePayInput}
-          />
-        ) : (
-          <RotationFields
-            roles={roles}
-            employeeDirectory={employeeDirectory}
-            period={period}
-            setPeriod={setPeriod}
-            startMonth={startMonth}
-            setStartMonth={setStartMonth}
-            roleId={roleId}
-            setRoleId={setRoleId}
-            rotationPool={rotationPool}
-            excludedIds={excludedIds}
-            toggleExclude={toggleExclude}
-            autoBlockedIds={autoBlockedIds}
-            includedCount={includedCount}
-            grantsPoolEligibility={grantsPoolEligibility}
-            setGrantsPoolEligibility={setGrantsPoolEligibility}
-            skipSundays={skipSundays}
-            setSkipSundays={setSkipSundays}
-          />
-        )}
+        <div key={kind} className="animate-[fadeIn_0.2s_ease-out]">
+          {kind === "coverage" ? (
+            <CoverageFields
+              roles={roles}
+              employeeDirectory={employeeDirectory}
+              coverageRoleId={coverageRoleId}
+              setCoverageRoleId={setCoverageRoleId}
+              candidateIds={candidateIds}
+              toggleCandidate={toggleCandidate}
+              coverageCandidates={coverageCandidates}
+              coveragePayInput={coveragePayInput}
+              setCoveragePayInput={setCoveragePayInput}
+            />
+          ) : (
+            <RotationFields
+              roles={roles}
+              employeeDirectory={employeeDirectory}
+              period={period}
+              setPeriod={setPeriod}
+              startMonth={startMonth}
+              setStartMonth={setStartMonth}
+              roleId={roleId}
+              setRoleId={setRoleId}
+              rotationPool={rotationPool}
+              excludedIds={excludedIds}
+              toggleExclude={toggleExclude}
+              autoBlockedIds={autoBlockedIds}
+              includedCount={includedCount}
+              grantsPoolEligibility={grantsPoolEligibility}
+              setGrantsPoolEligibility={setGrantsPoolEligibility}
+              skipSundays={skipSundays}
+              setSkipSundays={setSkipSundays}
+            />
+          )}
+        </div>
       </div>
 
       {/* footer */}

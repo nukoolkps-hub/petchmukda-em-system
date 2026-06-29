@@ -356,7 +356,10 @@ export default function EmployeeEditModal({
           เงินเดือน
         </TabButton>
       </div>
-      <div className="px-4 py-3.5">
+      <div
+        key={activeTab}
+        className="px-4 py-3.5 animate-[fadeIn_0.2s_ease-out]"
+      >
         {activeTab === "personal" && (
           <>
             {/* Name + prefix — editable */}
@@ -1292,7 +1295,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] text-sm font-semibold cursor-pointer font-[inherit] transition-colors border-[1.5px] ${
+      className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] text-sm font-semibold cursor-pointer font-[inherit] transition-all duration-200 border-[1.5px] ${
         active
           ? "bg-maroon text-white border-maroon shadow-[0_3px_10px_rgba(123,28,28,0.25)]"
           : "bg-white text-txt-mid border-bdr"

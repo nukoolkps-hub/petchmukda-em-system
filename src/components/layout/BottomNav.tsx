@@ -24,7 +24,7 @@ export default function BottomNav({ navItems }: BottomNavProps) {
             className={`flex-1 pt-2.5 pb-3 bg-transparent border-none cursor-pointer font-[inherit] flex flex-col items-center gap-1 transition-all duration-150 relative active:scale-[0.92] ${active ? (isAdminTab ? "text-maroon" : "text-gold") : "text-txt-soft"}`}
           >
             {active && (
-              <>
+              <div className="animate-[fadeIn_0.2s_ease-out]">
                 <div
                   className={`absolute top-0 w-9 h-0.5 rounded-b ${isAdminTab ? "bg-linear-to-r from-maroon to-maroon-lt" : "bg-linear-to-r from-gold to-gold-lt"}`}
                 />
@@ -34,7 +34,7 @@ export default function BottomNav({ navItems }: BottomNavProps) {
                 <div
                   className={`absolute top-1.5 left-1/2 translate-x-[18px] w-1.5 h-1.5 rotate-45 ${isAdminTab ? "bg-maroon-lt" : "bg-gold-lt"}`}
                 />
-              </>
+              </div>
             )}
             <span
               className={`transition-transform duration-150 ${active ? "-translate-y-px" : ""}`}

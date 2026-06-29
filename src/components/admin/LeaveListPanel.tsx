@@ -329,7 +329,7 @@ export default function LeaveListPanel({
           return (
             <div
               key={lv.id}
-              className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3"
+              className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(90,30,10,0.06)] border border-bdr flex items-start gap-3 animate-[fadeIn_0.2s_ease-out]"
             >
               <AvatarCircle
                 avatar={

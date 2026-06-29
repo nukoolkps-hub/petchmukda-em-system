@@ -241,7 +241,10 @@ export default function AdminAdvancePanel({
       )}
 
       {!loading && !error && (
-        <div className="flex flex-col gap-2.5">
+        <div
+          key={`${filter}-${selectedMonth}`}
+          className="flex flex-col gap-2.5 animate-[fadeIn_0.18s_ease-out]"
+        >
           {filtered.map((request) => {
             const slipPreview =
               request.slipImageUrl || request.slipImageDataUrl;
