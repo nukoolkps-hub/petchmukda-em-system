@@ -23,8 +23,8 @@ export default function BaseModal({
   overlayClassName = "",
   zIndexClass = "z-800",
 }: BaseModalProps) {
-  // exit animation · setClosing=true → run modalOut/dialogOut keyframes ·
-  // จากนั้นเรียก onClose() จริง · กัน double-fire ด้วย closing flag
+  // exit animation · setClosing=true → dialog เล่น dialogOut (overlay โผล่/หาย
+  // ทันที ไม่ animate) · จากนั้นเรียก onClose() จริง · กัน double-fire ด้วย flag
   const [closing, setClosing] = useState(false);
 
   const requestClose = useCallback(() => {
@@ -43,12 +43,11 @@ export default function BaseModal({
   }, [closeOnEsc, requestClose]);
 
   return (
+    // overlay (พื้น + backdrop-blur) โผล่ทันที — ไม่ animate opacity เพราะ
+    // การ animate ทับ backdrop-blur ทำให้ browser re-compute blur ทุกเฟรม =
+    // กระตุกบนมือถือ · ให้ blur คำนวณครั้งเดียว แล้วปล่อย dialog animate เอง
     <div
-      className={`fixed inset-0 ${zIndexClass} flex items-center justify-center px-4 sm:px-6 pt-[max(env(safe-area-inset-top),12px)] pb-[max(env(safe-area-inset-bottom),12px)] bg-[rgba(45,26,14,0.65)] backdrop-blur-[6px] ${
-        closing
-          ? "animate-[modalOut_0.14s_ease-in_forwards]"
-          : "animate-[modalIn_0.18s_cubic-bezier(0.2,0.8,0.2,1)]"
-      } ${overlayClassName}`}
+      className={`fixed inset-0 ${zIndexClass} flex items-center justify-center px-4 sm:px-6 pt-[max(env(safe-area-inset-top),12px)] pb-[max(env(safe-area-inset-bottom),12px)] bg-[rgba(45,26,14,0.65)] backdrop-blur-[6px] ${overlayClassName}`}
       onClick={() => {
         if (closeOnBackdrop) requestClose();
       }}
@@ -60,7 +59,7 @@ export default function BaseModal({
         className={`w-full ${maxWidthClass} max-h-[88dvh] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-[0_24px_60px_rgba(45,26,14,0.3)] [will-change:transform,opacity] ${
           closing
             ? "animate-[dialogOut_0.14s_ease-in_forwards]"
-            : "animate-[modalIn_0.18s_cubic-bezier(0.2,0.8,0.2,1)]"
+            : "animate-[dialogIn_0.18s_cubic-bezier(0.2,0.8,0.2,1)]"
         } ${contentClassName}`}
       >
         {children}
