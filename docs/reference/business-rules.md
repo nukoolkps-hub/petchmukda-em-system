@@ -412,6 +412,27 @@ function body ใน CI (รันใน `npm run typecheck` + ก่อน depl
 
 Source: `src/utils/dutyUtils.ts` → `pickPrimary()`, `assignPrimaries()`
 
+### Pool membership — ใครเข้ารอบหน้าที่ (`resolveDutyPool`)
+
+pool ของหน้าที่หมุนเวียน = พนักงานในตำแหน่ง (`roleId`) ที่ **ไม่** `salaryDisabled`
+และ **ไม่** อยู่ใน `duty.excludedEmpIds` (admin ตัดออกเอง) · เรียงตาม `displayOrder`
+
+- **หน้าที่ประจำเดือน (period="monthly") บล็อกคนที่ปิดกองกลางทั้งหมด:** คนที่
+  `poolExclusion = "all"` (legacy `"both"`) ถูก**ตัดออกจาก pool อัตโนมัติ** —
+  ติดหน้าที่ทั้งเดือนเสี่ยงหลุดเกณฑ์เงินเดือนพื้นฐาน 50% โดย exemption ช่วยไม่ได้
+  (exemption ยกเว้นแค่เกณฑ์ 80%) · weekly ไม่บล็อก
+- **พรีวิวใน DutyEditModal สะท้อนกฎเดียวกัน:** คนที่ถูกบล็อกขึ้น chip "ปิดกองกลาง"
+  (ขีดฆ่า · กดสลับไม่ได้) + ตัดออกจาก `includedCount` → เลข "ลำดับการสลับ" ตรงกับ
+  การ์ดหน้าที่ (DutyCard อ่านจาก snapshot จริง) เป๊ะ
+- **`grantsPoolEligibility`** (monthly เท่านั้น) — ให้สิทธิ์เข้ากองกลางแม้ขาย/ซื้อ
+  ไม่ถึง 80% (ยังเคารพฝั่งที่ admin ปิด · ไม่กระทบเกณฑ์ 50%) · DutyCard ขึ้น badge
+  "ให้สิทธิ์กองกลาง"
+- **`skipSundays`** (weekly เท่านั้น) — ข้ามวันอาทิตย์ (ให้ focus ขาย) · หน้าที่นี้
+  ไม่โผล่ใน "หน้าที่วันนี้" ของวันอาทิตย์ (`applicableDuties` filter) · DutyCard ขึ้น
+  badge "ข้ามวันอาทิตย์"
+
+Source: `resolveDutyPool()` / `applicableDuties()` (client + server `dutyUtils.ts`)
+
 ## รายการยกเว้นค่าคอม (`poolAdjustments`) — Per-item routing
 
 admin ใส่ "จำนวนที่ไม่นับค่าคอม" ระดับเดือน · 2 variants:

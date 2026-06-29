@@ -79,7 +79,7 @@ Layout
 | GoldDivider | `shared/GoldDivider.tsx` | Decorative divider with diamond center |
 | MosaicPattern | `shared/MosaicPattern.tsx` | SVG mosaic decoration (sidebar/header) |
 | Layout | `shared/Layout.tsx` | Section/Card/Box utility components |
-| MoneyInput | `shared/MoneyInput.tsx` | ช่องกรอกเงิน — ใส่ comma ทันทีตอนพิมพ์ (1,234,567) + คง cursor + รองรับ decimal/ติดลบ · drop-in แทน `<input inputMode="decimal">` · emit raw string (ไม่มี comma) · helper `formatTypedNumber`/`caretPosFromDigits` ใน `utils/format.ts` (shared กับ Calculator) |
+| MoneyInput | `shared/MoneyInput.tsx` | ช่องกรอกเงิน — ใส่ comma ทันทีตอนพิมพ์ (1,234,567) + คง cursor + รองรับ decimal/ติดลบ · drop-in แทน `<input inputMode="decimal">` · emit raw string (ไม่มี comma) · helper `formatTypedNumber`/`caretPosFromDigits` ใน `utils/format.ts` (shared กับ Calculator) · **คืน caret เฉพาะตอน field ถูก focus จริง** (`el === document.activeElement`) — กัน cursor เด้งผิดที่เมื่อ re-render จากเหตุอื่น (Calculator guard เดียวกัน) · **ใช้กับช่องจำนวนเงินทั้งระบบ:** EmployeeEditModal · AnnualRaiseSection · SalaryAdminEdit · AdvanceRequestModal · EmployeeLoansPanel · SalaryView (cert) · DutyEditModal · ช่องนับชิ้น/config คงเป็น raw integer (ไม่ใช้ comma) |
 | ThemedSelect | `shared/ThemedSelect.tsx` | **dropdown ที่ใช้แทน native `<select>` ทุกที่** — popover ใช้ฟอนต์ Prompt + theme (selected = gold-pale/maroon) แทน OS-native list · API: `value`/`onChange(value)`/`options:{value,label,disabled?}[]`/`placeholder`/`disabled`/`className`/`maxHeightPx` · flip-up + scroll อัตโนมัติเมื่อ space ไม่พอ |
 | BankPicker | `shared/BankPicker.tsx` | dropdown เลือกธนาคาร (โลโก้ + ชื่อ) — custom (native `<option>` รับแต่ text) |
 
