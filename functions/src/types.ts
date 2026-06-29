@@ -22,7 +22,9 @@ export type RequestId = string | number;
 export interface NotifyAdvanceRequestPayload {
 	employeeName: string;
 	amount: number;
-	reason: string;
+	// เหตุผล "ไม่บังคับ" ในฟอร์ม → optional (เดิม required ทำให้ callable throw
+	// เมื่อเบิกโดยไม่กรอกเหตุผล → LINE ไม่ส่งแบบเงียบๆ)
+	reason?: string;
 	month: PayrollMonth;
 	bank?: string;
 	bankAccountNumber?: string;
