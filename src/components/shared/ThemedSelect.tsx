@@ -161,8 +161,8 @@ export default function ThemedSelect({
           }
           className={
             menuFixed && fixedPos
-              ? "z-50 overflow-y-auto bg-white border border-bdr rounded-lg shadow-[0_8px_24px_rgba(45,26,14,0.15)] font-[inherit]"
-              : `absolute z-50 left-0 right-0 overflow-y-auto bg-white border border-bdr rounded-lg shadow-[0_8px_24px_rgba(45,26,14,0.15)] font-[inherit] ${openUp ? "bottom-full mb-1" : "top-full mt-1"}`
+              ? "z-50 overflow-y-auto bg-white border border-bdr rounded-lg shadow-[0_8px_24px_rgba(45,26,14,0.15)] font-[inherit] animate-[calFade_0.13s_ease-out] origin-top"
+              : `absolute z-50 left-0 right-0 overflow-y-auto bg-white border border-bdr rounded-lg shadow-[0_8px_24px_rgba(45,26,14,0.15)] font-[inherit] animate-[calFade_0.13s_ease-out] ${openUp ? "bottom-full mb-1 origin-bottom" : "top-full mt-1 origin-top"}`
           }
         >
           {options.map((o) => {
