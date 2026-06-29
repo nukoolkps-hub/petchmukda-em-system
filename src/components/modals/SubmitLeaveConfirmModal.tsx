@@ -9,6 +9,7 @@ import {
 import { LEAVE_TYPES } from "../../constants";
 import { fmtDate } from "../../utils/dateUtils";
 import BaseModal from "../shared/BaseModal";
+import Spinner from "../shared/Spinner";
 
 interface Props {
   type: string;
@@ -76,7 +77,11 @@ export default function SubmitLeaveConfirmModal({
           disabled={saving}
           className="flex-1 p-3.5 rounded-xl border-none bg-linear-135 from-maroon to-maroon-lt text-white text-base font-bold cursor-pointer font-[inherit] disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_4px_12px_rgba(123,28,28,0.31)] inline-flex items-center justify-center gap-2"
         >
-          <IconCheck size={16} strokeWidth={2.6} />
+          {saving ? (
+            <Spinner size={16} />
+          ) : (
+            <IconCheck size={16} strokeWidth={2.6} />
+          )}
           {saving ? "กำลังบันทึก..." : "ยืนยันยื่นคำขอ"}
         </button>
       </div>

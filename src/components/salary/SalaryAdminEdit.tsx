@@ -51,6 +51,7 @@ import PoolFlowModal from "../modals/PoolFlowModal";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
 import MonthChevronNav from "../shared/MonthChevronNav";
+import Spinner from "../shared/Spinner";
 import EmployeeCardGrid from "./EmployeeCardGrid";
 import PoolAdjustmentModal from "./PoolAdjustmentModal";
 
@@ -1880,6 +1881,8 @@ export default function SalaryAdminEdit({
               >
                 {locked ? (
                   <IconLock size={16} strokeWidth={2.5} />
+                ) : saving ? (
+                  <Spinner size={16} />
                 ) : (
                   <IconCheck size={16} strokeWidth={2.5} />
                 )}

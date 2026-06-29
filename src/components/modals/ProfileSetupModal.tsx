@@ -13,6 +13,7 @@ import { validateBankAccount, validateRequired } from "../../utils/validators";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankPicker from "../shared/BankPicker";
 import BaseModal from "../shared/BaseModal";
+import Spinner from "../shared/Spinner";
 
 /* ─── Profile Setup Modal (first run / edit) ───────────────────── */
 export default function ProfileSetupModal({
@@ -439,6 +440,7 @@ export default function ProfileSetupModal({
           disabled={saving || imageBusy}
           className={`flex-1 py-3.5 border-none rounded-[14px] text-base font-bold font-[inherit] shadow-[0_6px_20px_rgba(123,28,28,0.25)] flex items-center justify-center gap-2 ${saving || imageBusy ? "bg-bdr text-txt-soft cursor-not-allowed" : "bg-maroon text-white cursor-pointer"}`}
         >
+          {saving && <Spinner size={18} />}
           {saving ? "กำลังบันทึก..." : initial ? "บันทึก" : "เริ่มใช้งาน"}
         </button>
       </div>
