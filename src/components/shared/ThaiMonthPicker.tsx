@@ -91,7 +91,7 @@ export default function ThaiMonthPicker({
 
       {/* dropdown — โชว์ 3 ตัว ที่เหลือ scroll */}
       {open && (
-        <div className="absolute z-10 left-0 right-0 mt-1.5 rounded-[10px] border-[1.5px] border-bdr bg-white p-1 shadow-[0_8px_24px_rgba(90,30,10,0.12)] max-h-[124px] overflow-y-auto">
+        <div className="absolute z-10 left-0 right-0 mt-1.5 rounded-[10px] border-[1.5px] border-bdr bg-white p-1 shadow-[0_8px_24px_rgba(90,30,10,0.12)] max-h-[124px] overflow-y-auto animate-[calFade_0.13s_ease-out] origin-top">
           {options.map((opt) => {
             const isSel = opt.ym === value;
             return (

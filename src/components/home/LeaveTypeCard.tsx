@@ -24,11 +24,11 @@ export default function LeaveTypeCard({
           ? `0 4px 18px ${lt.color}30`
           : "0 1px 4px rgba(90,30,10,0.06)",
       }}
-      className="rounded-2xl cursor-pointer font-[inherit] relative px-3 pt-5 pb-4 border-2"
+      className="rounded-2xl cursor-pointer font-[inherit] relative px-3 pt-5 pb-4 border-2 transition-[border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98]"
     >
       {sel && (
         <div
-          className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center"
+          className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center animate-[fadeIn_0.18s_ease-out]"
           style={{ background: lt.color }}
         >
           <IconCheck size={11} color="#fff" strokeWidth={3} />

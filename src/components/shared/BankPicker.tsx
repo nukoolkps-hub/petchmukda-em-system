@@ -65,7 +65,7 @@ export default function BankPicker({
           <span className="flex-1">{placeholder}</span>
         )}
         <IconChevronDown
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+          className={`absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           size={14}
           strokeWidth={2.5}
         />
@@ -74,7 +74,7 @@ export default function BankPicker({
       {open && (
         <div
           role="listbox"
-          className="absolute z-50 left-0 right-0 mt-1.5 max-h-[280px] overflow-y-auto bg-white border border-bdr rounded-xl shadow-[0_10px_30px_rgba(45,26,14,0.18)]"
+          className="absolute z-50 left-0 right-0 mt-1.5 max-h-[280px] overflow-y-auto bg-white border border-bdr rounded-xl shadow-[0_10px_30px_rgba(45,26,14,0.18)] animate-[calFade_0.13s_ease-out] origin-top"
         >
           {THAI_BANKS.map((b) => {
             const active = b.name === value;

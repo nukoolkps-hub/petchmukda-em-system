@@ -29,7 +29,7 @@ export default function ModalHeader({ Icon, title, subtitle, onClose }: Props) {
         type="button"
         aria-label="ปิด"
         onClick={onClose}
-        className="w-9 h-9 rounded-[10px] border border-bdr bg-white text-txt-mid cursor-pointer flex items-center justify-center"
+        className="w-9 h-9 rounded-[10px] border border-bdr bg-white text-txt-mid cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-cream-dk active:scale-95 active:bg-cream"
       >
         <IconX size={18} strokeWidth={2.3} />
       </button>

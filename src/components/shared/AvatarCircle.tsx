@@ -25,7 +25,9 @@ export default function AvatarCircle({
         <img
           src={avatarImageUrl}
           alt="avatar"
-          className="w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover animate-[fadeIn_0.3s_ease-out]"
         />
       </div>
     );

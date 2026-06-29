@@ -188,7 +188,7 @@ export default function CalendarPicker({
         />
       </button>
       {error && (
-        <div className="text-red text-sm mt-1.5 inline-flex items-center gap-1">
+        <div className="text-red text-sm mt-1.5 inline-flex items-center gap-1 animate-[fadeIn_0.25s_ease-out]">
           <IconAlertTriangle size={14} strokeWidth={2.4} />
           {error}
         </div>

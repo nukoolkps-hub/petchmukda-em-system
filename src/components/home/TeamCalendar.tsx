@@ -158,7 +158,7 @@ export default function TeamCalendar({
             </button>
 
             {pickerOpen && (
-              <div className="absolute z-20 top-full right-0 mt-1.5 w-[208px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)]">
+              <div className="absolute z-20 top-full right-0 mt-1.5 w-[208px] rounded-[12px] border-[1.5px] border-bdr bg-white p-2 shadow-[0_8px_24px_rgba(90,30,10,0.14)] animate-[calFade_0.13s_ease-out] origin-top">
                 {/* year header */}
                 <div className="flex items-center justify-between mb-1.5 px-1">
                   <button

@@ -76,7 +76,9 @@ export default function BankLogo({
         alt={entry.name}
         width={inner}
         height={inner}
-        className="object-contain block"
+        loading="lazy"
+        decoding="async"
+        className="object-contain block animate-[fadeIn_0.3s_ease-out]"
       />
     </div>
   );

@@ -356,7 +356,7 @@ export default function Calculator({
 
       {/* outputs */}
       {allFilled && outputs.length > 0 && (
-        <div className="px-3 pb-3 pt-1 border-t border-gold/20 bg-cream/40 space-y-1.5">
+        <div className="px-3 pb-3 pt-1 border-t border-gold/20 bg-cream/40 space-y-1.5 animate-[fadeIn_0.2s_ease-out]">
           {outputs.map((out, i) => (
             <div key={`out-${i}`} className="py-1.5">
               <div className="flex items-center justify-between gap-3">
