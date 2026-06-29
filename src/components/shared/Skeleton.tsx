@@ -14,11 +14,15 @@ export default function Skeleton({
   className = "",
   rounded = "rounded-md",
 }: SkeletonProps) {
+  // base โทน cream-dark + แถบแสง overlay ที่วิ่งด้วย translateX (GPU)
+  // overflow-hidden ครอบไว้ให้แสงวิ่งอยู่ในกรอบ
   return (
     <div
       aria-hidden="true"
-      className={`bg-[linear-gradient(90deg,rgba(240,228,204,0.45)_25%,rgba(245,230,200,0.85)_50%,rgba(240,228,204,0.45)_75%)] bg-[length:200%_100%] animate-[shimmer_1.4s_ease-in-out_infinite] ${rounded} ${className}`}
-    />
+      className={`relative overflow-hidden bg-[rgba(240,228,204,0.6)] ${rounded} ${className}`}
+    >
+      <div className="absolute inset-0 animate-[shimmer_1.4s_ease-in-out_infinite] bg-[linear-gradient(90deg,transparent,rgba(245,230,200,0.9),transparent)]" />
+    </div>
   );
 }
 
