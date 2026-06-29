@@ -133,8 +133,11 @@ Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth
 | rejectedAt | string (ISO) | เวลาปฏิเสธ |
 | rejectionReason | string | เหตุผลปฏิเสธ |
 | slipImageUrl | string | URL สลิปโอนเงิน |
-| lineNotificationStatus | string | สถานะ LINE notification |
+| lineNotificationStatus | string | สถานะ LINE notification (อนุมัติ/ปฏิเสธ → พนักงาน) |
 | autoCarryFromMonth | string (YYYY-MM) | (optional) ถ้า set = auto-carry advance สร้างโดยระบบเมื่อ `salary[sourceMonth].netSalary < 0` · status="approved" ตั้งแต่แรก · exempt จาก "1/month" rule · นับใน tier limit (PR #614) |
+| lineNotifyFailed | boolean? | (optional) server ตั้งเมื่อ push LINE แจ้ง **admin** (คำขอเบิกใหม่ · `notifyAdvanceRequest`) ล้มเหลว — LINE คือช่องที่พัง จึงแจ้ง admin ผ่าน badge "LINE แจ้งเตือนแอดมินไม่สำเร็จ" ใน AdminAdvancePanel แทน |
+| lineNotifyError | string? | (optional) ข้อความ error ของ push ที่ล้มเหลว (≤500 ตัว) |
+| lineNotifyFailedAt | string (ISO)? | (optional) เวลาที่ push ล้มเหลว |
 
 ### roles
 
