@@ -1,13 +1,29 @@
 import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   Briefcase as IconBriefcase,
   Diamond as IconDiamond,
+  GripVertical as IconGrip,
   Lock as IconLock,
   MessageCircle as IconMessageCircle,
   Settings as IconSettings,
   ShoppingBag as IconShoppingBag,
   Trash2 as IconTrash,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../../constants";
 import type { Employee, Role } from "../../types";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -20,6 +36,8 @@ interface EmployeeAdminPanelProps {
   roles: Role[];
   onUpdateRole: (employeeId: string, field: string, value: unknown) => void;
   onDeleteEmployee: (employeeId: string) => void;
+  // ลากเรียงลำดับพนักงาน → save displayOrder ลง Firestore → sync ทุก device
+  onReorderEmployees?: (orderedIds: string[]) => Promise<unknown>;
   // draft + employee ที่เปิดอยู่ ถูกยกขึ้นไป AdminPanel — เพื่อให้ draft ที่ยัง
   // ไม่บันทึก (และ modal ที่เปิดค้าง) รอดเมื่อ admin สลับ section แล้วกลับมา
   editingRole: Record<string, any>;
@@ -34,6 +52,7 @@ export default function EmployeeAdminPanel({
   roles,
   onUpdateRole,
   onDeleteEmployee,
+  onReorderEmployees,
   editingRole,
   setEditingRole,
   editingEmpId,
@@ -44,6 +63,48 @@ export default function EmployeeAdminPanel({
     name: string;
   } | null>(null);
   const [copiedLineId, setCopiedLineId] = useState<string | null>(null);
+
+  // ลำดับ optimistic ระหว่างลาก — sync จาก Firestore เมื่อ set ของ id เปลี่ยน
+  // (เพิ่ม/ลบคน) เพื่อกัน "กระตุก" ตอน reorder array พร้อม Firestore snapshot
+  const [localOrder, setLocalOrder] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    if (!localOrder) return;
+    const fromProps = employeeDirectory
+      .map((e) => e.id)
+      .sort()
+      .join(",");
+    const fromLocal = [...localOrder].sort().join(",");
+    if (fromProps !== fromLocal) setLocalOrder(null);
+  }, [employeeDirectory, localOrder]);
+
+  const orderedEmployees = useMemo(() => {
+    if (!localOrder) return employeeDirectory;
+    const byId = new Map(employeeDirectory.map((e) => [e.id, e]));
+    return localOrder
+      .map((id) => byId.get(id))
+      .filter((e): e is Employee => Boolean(e));
+  }, [employeeDirectory, localOrder]);
+
+  const ids = orderedEmployees.map((e) => e.id);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = ids.indexOf(String(active.id));
+    const newIndex = ids.indexOf(String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(ids, oldIndex, newIndex);
+    setLocalOrder(next);
+    onReorderEmployees?.(next).catch((err) => {
+      console.error("[reorderEmployees] failed:", err);
+      setLocalOrder(null); // rollback ถ้า save fail
+    });
+  }
 
   function copyLineId(text: string | undefined, employeeId: string) {
     if (!text) return;
@@ -77,121 +138,34 @@ export default function EmployeeAdminPanel({
   return (
     <div>
       <div className="flex items-center justify-between mb-3.5 gap-2">
-        <div className="text-sm text-txt-soft">กดที่ชื่อพนักงานเพื่อเปิดหน้าต่างแก้ไข</div>
+        <div className="text-sm text-txt-soft">
+          กดที่ชื่อพนักงานเพื่อแก้ไข · ลากปุ่ม{" "}
+          <IconGrip
+            size={13}
+            strokeWidth={2.4}
+            className="inline-block align-text-bottom"
+          />{" "}
+          เพื่อเรียงลำดับ
+        </div>
       </div>
-      <div className="flex flex-col gap-2.5">
-        {employeeDirectory.map((employee) => {
-          const dirty = hasEmployeeDraft(editingRole, employee.id);
-          return (
-            <button
-              key={employee.id}
-              type="button"
-              onClick={() => setEditingEmpId(employee.id)}
-              className="w-full flex items-center gap-3 px-3.5 py-3 cursor-pointer rounded-2xl shadow-[0_2px_8px_rgba(90,30,10,0.06)] border border-bdr bg-white text-left font-[inherit] transition-[background-color,transform] duration-150 hover:bg-cream/70 active:scale-[0.99] active:bg-cream"
-            >
-              <AvatarCircle
-                avatar={employee.avatar}
-                avatarType={employee.avatarType}
-                avatarImageUrl={employee.avatarImageUrl}
-                size={40}
-                fontSize={13}
-                border={`2px solid ${COLORS.gold}40`}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+          <div className="flex flex-col gap-2.5">
+            {orderedEmployees.map((employee) => (
+              <SortableEmployeeRow
+                key={employee.id}
+                employee={employee}
+                dirty={hasEmployeeDraft(editingRole, employee.id)}
+                onOpen={() => setEditingEmpId(employee.id)}
               />
-              <div className="flex-1 min-w-0">
-                <div className="font-bold text-txt text-sm truncate">
-                  {employee.name}
-                </div>
-                <div className="text-xs text-txt-soft mt-px flex items-center gap-[5px] flex-wrap">
-                  <IconBriefcase size={11} strokeWidth={2.4} />
-                  {employee.role || "-"}
-                  {(() => {
-                    const exc = employee.poolExclusion;
-                    if (!exc) return null;
-                    // new variants: "all" | string[] · legacy: "sell" | "buy" | "both"
-                    const m: Record<string, React.ReactNode> = {
-                      sell: (
-                        <span className="inline-flex items-center gap-0.5">
-                          <IconDiamond size={10} strokeWidth={2.4} />
-                          ปิดขาย
-                        </span>
-                      ),
-                      buy: (
-                        <span className="inline-flex items-center gap-0.5">
-                          <IconShoppingBag size={10} strokeWidth={2.4} />
-                          ปิดซื้อ
-                        </span>
-                      ),
-                      both: (
-                        <span className="inline-flex items-center gap-0.5">
-                          <IconLock size={10} strokeWidth={2.4} />
-                          ปิดทั้งคู่
-                        </span>
-                      ),
-                      all: (
-                        <span className="inline-flex items-center gap-0.5">
-                          <IconLock size={10} strokeWidth={2.4} />
-                          ปิดทั้งหมด
-                        </span>
-                      ),
-                    };
-                    let content: React.ReactNode;
-                    // partial = ปิดเฉพาะบางรายการ (array · ยังเข้ากองได้ที่เหลือ) → ส้ม
-                    // full = ปิดทั้งหมด/legacy sell/buy/both → แดง (ขั้นรุนแรงกว่า)
-                    let isPartial = false;
-                    if (Array.isArray(exc)) {
-                      if (exc.length === 0) return null;
-                      isPartial = true;
-                      content = (
-                        <span className="inline-flex items-center gap-0.5">
-                          <IconLock size={10} strokeWidth={2.4} />
-                          ปิด {exc.length} รายการ
-                        </span>
-                      );
-                    } else {
-                      content = m[exc as string];
-                      if (!content) return null;
-                    }
-                    return (
-                      <span
-                        className={`px-1.5 py-0.5 rounded-md font-bold text-xs ${
-                          isPartial
-                            ? "bg-amber-lt text-amber"
-                            : "bg-red-lt text-red"
-                        }`}
-                      >
-                        {content}
-                      </span>
-                    );
-                  })()}
-                  {employee.salaryDisabled && (
-                    <span className="px-1.5 py-0.5 rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
-                      <IconLock size={10} strokeWidth={2.4} />
-                      ปิดเงินเดือน
-                    </span>
-                  )}
-                  {employee.lineUserId && (
-                    <span className="px-1.5 py-0.5 rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs inline-flex items-center gap-0.5">
-                      <IconMessageCircle size={10} strokeWidth={2.4} />
-                      LINE
-                    </span>
-                  )}
-                </div>
-              </div>
-              {dirty && (
-                <span className="px-2 py-0.5 rounded-lg text-xs font-bold bg-[#D9770630] text-amber">
-                  มีการแก้ไข
-                </span>
-              )}
-              <IconSettings
-                size={16}
-                color={COLORS.textSoft}
-                strokeWidth={2.2}
-                className="shrink-0"
-              />
-            </button>
-          );
-        })}
-      </div>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {editingEmployee && (
         <EmployeeEditModal
@@ -257,6 +231,160 @@ export default function EmployeeAdminPanel({
           </div>
         </BaseModal>
       )}
+    </div>
+  );
+}
+
+/* ─── แถวพนักงานที่ลากเรียงลำดับได้ ─────────────────────────────────
+   กดที่เนื้อแถว (ปุ่มหลัก) → เปิด modal แก้ไข · ลาก grip handle → reorder
+   (drag listener อยู่ที่ handle เท่านั้น กันคลิกพลาด/เปิด modal ตอนลาก) */
+function SortableEmployeeRow({
+  employee,
+  dirty,
+  onOpen,
+}: {
+  employee: Employee;
+  dirty: boolean;
+  onOpen: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: employee.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`w-full flex items-center gap-2 pr-2 rounded-2xl shadow-[0_2px_8px_rgba(90,30,10,0.06)] border bg-white ${
+        isDragging
+          ? "border-gold shadow-[0_8px_22px_rgba(123,28,28,0.18)]"
+          : "border-bdr"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex-1 min-w-0 flex items-center gap-3 pl-3.5 py-3 cursor-pointer text-left font-[inherit] transition-[background-color,transform] duration-150 hover:bg-cream/70 active:scale-[0.99] active:bg-cream rounded-l-2xl"
+      >
+        <AvatarCircle
+          avatar={employee.avatar}
+          avatarType={employee.avatarType}
+          avatarImageUrl={employee.avatarImageUrl}
+          size={40}
+          fontSize={13}
+          border={`2px solid ${COLORS.gold}40`}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-txt text-sm truncate">
+            {employee.name}
+          </div>
+          <div className="text-xs text-txt-soft mt-px flex items-center gap-[5px] flex-wrap">
+            <IconBriefcase size={11} strokeWidth={2.4} />
+            {employee.role || "-"}
+            {(() => {
+              const exc = employee.poolExclusion;
+              if (!exc) return null;
+              // new variants: "all" | string[] · legacy: "sell" | "buy" | "both"
+              const m: Record<string, React.ReactNode> = {
+                sell: (
+                  <span className="inline-flex items-center gap-0.5">
+                    <IconDiamond size={10} strokeWidth={2.4} />
+                    ปิดขาย
+                  </span>
+                ),
+                buy: (
+                  <span className="inline-flex items-center gap-0.5">
+                    <IconShoppingBag size={10} strokeWidth={2.4} />
+                    ปิดซื้อ
+                  </span>
+                ),
+                both: (
+                  <span className="inline-flex items-center gap-0.5">
+                    <IconLock size={10} strokeWidth={2.4} />
+                    ปิดทั้งคู่
+                  </span>
+                ),
+                all: (
+                  <span className="inline-flex items-center gap-0.5">
+                    <IconLock size={10} strokeWidth={2.4} />
+                    ปิดทั้งหมด
+                  </span>
+                ),
+              };
+              let content: React.ReactNode;
+              // partial = ปิดเฉพาะบางรายการ (array · ยังเข้ากองได้ที่เหลือ) → ส้ม
+              // full = ปิดทั้งหมด/legacy sell/buy/both → แดง (ขั้นรุนแรงกว่า)
+              let isPartial = false;
+              if (Array.isArray(exc)) {
+                if (exc.length === 0) return null;
+                isPartial = true;
+                content = (
+                  <span className="inline-flex items-center gap-0.5">
+                    <IconLock size={10} strokeWidth={2.4} />
+                    ปิด {exc.length} รายการ
+                  </span>
+                );
+              } else {
+                content = m[exc as string];
+                if (!content) return null;
+              }
+              return (
+                <span
+                  className={`px-1.5 py-0.5 rounded-md font-bold text-xs ${
+                    isPartial ? "bg-amber-lt text-amber" : "bg-red-lt text-red"
+                  }`}
+                >
+                  {content}
+                </span>
+              );
+            })()}
+            {employee.salaryDisabled && (
+              <span className="px-1.5 py-0.5 rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
+                <IconLock size={10} strokeWidth={2.4} />
+                ปิดเงินเดือน
+              </span>
+            )}
+            {employee.lineUserId && (
+              <span className="px-1.5 py-0.5 rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs inline-flex items-center gap-0.5">
+                <IconMessageCircle size={10} strokeWidth={2.4} />
+                LINE
+              </span>
+            )}
+          </div>
+        </div>
+        {dirty && (
+          <span className="px-2 py-0.5 rounded-lg text-xs font-bold bg-[#D9770630] text-amber">
+            มีการแก้ไข
+          </span>
+        )}
+        <IconSettings
+          size={16}
+          color={COLORS.textSoft}
+          strokeWidth={2.2}
+          className="shrink-0"
+        />
+      </button>
+      {/* drag handle — แตะค้างแล้วลากเพื่อเรียงลำดับ */}
+      <button
+        type="button"
+        aria-label="ลากเพื่อเรียงลำดับ"
+        {...attributes}
+        {...listeners}
+        className="shrink-0 self-stretch px-1.5 flex items-center text-txt-soft cursor-grab active:cursor-grabbing touch-none font-[inherit] rounded-r-2xl hover:bg-cream/70"
+      >
+        <IconGrip size={18} strokeWidth={2.2} />
+      </button>
     </div>
   );
 }

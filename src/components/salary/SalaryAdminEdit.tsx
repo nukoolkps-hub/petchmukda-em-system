@@ -107,7 +107,6 @@ export default function SalaryAdminEdit({
   onSetPoolAdjustment,
   employeeLoans,
   storeCalendar,
-  onReorderEmployees,
   setUnsavedDirty,
   // เดือนที่ดู (controlled โดย AdminPanel) — share กับ section อื่น
   selectedMonth,
@@ -627,15 +626,13 @@ export default function SalaryAdminEdit({
         </div>
       )}
 
-      {/* employee cards — เลือกพนักงานแบบการ์ด + ลากเรียงลำดับได้
-         (admin ลาก → save displayOrder ลง Firestore → sync ทุก device).
-         distance: 6px ก่อนเริ่มลาก → คลิกเพื่อ "เลือก" ยังทำงานปกติ
+      {/* employee cards — เลือกพนักงานแบบการ์ด (เลือกอย่างเดียว)
+         การเรียงลำดับพนักงานย้ายไปทำที่ ตั้งค่า > พนักงาน แทนแล้ว
          จุดสถานะ: เขียว=บันทึกชิ้นเดือนนี้แล้ว, เทา=ยังไม่บันทึก */}
       <EmployeeCardGrid
         employees={employeeDirectory.filter((e) => !e.salaryDisabled)}
         selectedId={selectedEmployeeId}
         onSelect={tryChangeEmployee}
-        onReorder={onReorderEmployees}
         salaryData={salaryData}
         selectedMonth={selectedMonth}
       />
