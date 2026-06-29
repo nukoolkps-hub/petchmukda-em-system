@@ -44,10 +44,15 @@ export async function upsertDuty(
     m.getDoc(doc(ref, cleanId)),
   );
   const now = Date.now();
+  // strip undefined — Firestore ไม่ได้เปิด ignoreUndefinedProperties · ถ้ามี
+  // field = undefined หลุดมา setDoc จะ throw → บันทึกไม่ได้แบบเงียบ
+  const payload = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined),
+  );
   await setDoc(
     doc(ref, cleanId),
     {
-      ...data,
+      ...payload,
       createdAt: existing.exists()
         ? existing.data()?.createdAt || now
         : data.createdAt || now,

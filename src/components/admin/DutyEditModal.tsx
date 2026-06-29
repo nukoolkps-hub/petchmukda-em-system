@@ -252,9 +252,14 @@ export default function DutyEditModal({
                         roleId: "",
                         coverageRoleId,
                         candidateEmpIds: [...candidateIds],
-                        coveragePayPerOccurrence:
-                          Math.max(0, Number(coveragePayInput) || 0) ||
-                          undefined,
+                        // เก็บเป็น number เสมอ (0 = ไม่จ่าย) — เดิม `|| undefined`
+                        // ทำให้ setDoc throw "Unsupported field value: undefined"
+                        // เพราะ Firestore ไม่ได้เปิด ignoreUndefinedProperties
+                        // → coverage บันทึกไม่ได้แบบเงียบ
+                        coveragePayPerOccurrence: Math.max(
+                          0,
+                          Number(coveragePayInput) || 0,
+                        ),
                         rotationStartDate: `${startMonth}-01`,
                       }
                     : {
@@ -271,6 +276,8 @@ export default function DutyEditModal({
                         rotationStartDate: `${startMonth}-01`,
                       },
                 );
+              } catch {
+                // parent (DutySchedulePanel) แสดง toast + คง modal ไว้แล้ว
               } finally {
                 setSaving(false);
               }
@@ -514,8 +521,8 @@ function RotationFields({
               ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%
             </span>
             <span className="block text-xs text-txt-soft mt-0.5">
-              คนทำหน้าที่นี้ติดทั้งเดือน ขายไม่ทันเพื่อนร่วมงาน → เข้ากองกลางได้ (ยังเคารพฝั่งที่ ADMIN ปิด
-              · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%)
+              คนทำหน้าที่นี้ติดทั้งเดือน ขายไม่ทันเพื่อนร่วมงาน → เข้ากองกลางได้ (ยังเคารพฝั่งที่
+              ADMIN ปิด · ไม่กระทบเกณฑ์เงินเดือนพื้นฐาน 50%)
             </span>
           </span>
         </button>

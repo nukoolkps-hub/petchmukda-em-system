@@ -135,7 +135,14 @@ export default function DutySchedulePanel({
           roles={roles}
           employeeDirectory={employeeDirectory}
           onSave={async (data) => {
-            await onUpsertDuty(editing === "new" ? null : editing.id, data);
+            try {
+              await onUpsertDuty(editing === "new" ? null : editing.id, data);
+            } catch (err) {
+              // เดิม error เงียบ → ผู้ใช้เห็นปุ่มกลับมา "บันทึก" แต่ไม่รู้ว่าพลาด
+              console.error("[DutySchedulePanel] save duty failed:", err);
+              showToast?.("บันทึกไม่สำเร็จ — ลองอีกครั้ง");
+              throw err; // คง modal ไว้ให้แก้/ลองใหม่
+            }
             showToast?.(editing === "new" ? "เพิ่มหน้าที่แล้ว" : "บันทึกแล้ว");
             setEditing(null);
           }}
