@@ -91,7 +91,9 @@ export default function Calculator({
     const el = document.getElementById(
       `calc-${p.id}`,
     ) as HTMLInputElement | null;
-    if (!el) return;
+    // คืนตำแหน่ง cursor เฉพาะตอน field นี้ถูก focus อยู่จริง — กัน caret เด้ง
+    // ผิดที่เมื่อ re-render จากเหตุอื่น (sync ราคา live/parent state)
+    if (!el || el !== document.activeElement) return;
     const pos = caretPosFromDigits(el.value, p.digits);
     el.setSelectionRange(pos, pos);
   });

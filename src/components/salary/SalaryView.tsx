@@ -57,6 +57,7 @@ import AdvanceHistoryModal from "../modals/AdvanceHistoryModal";
 import PoolFlowModal from "../modals/PoolFlowModal";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
+import MoneyInput from "../shared/MoneyInput";
 import MonthChevronNav from "../shared/MonthChevronNav";
 
 /* ─── Salary View (employee — read only) ───────────────────────── */
@@ -464,11 +465,9 @@ export default function SalaryView({
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-maroon font-bold">
             ฿
           </span>
-          <input
-            type="text"
-            inputMode="decimal"
+          <MoneyInput
             value={salaryOverrideText}
-            onChange={(e) => setSalaryOverrideText(e.target.value)}
+            onChange={setSalaryOverrideText}
             placeholder={formatThaiNumber(certMaxSalary)}
             className={`w-full pl-8 pr-3 py-2.5 rounded-lg border-[1.5px] text-sm font-[inherit] bg-white outline-none ${salaryOverrideExceeds ? "border-red focus:border-red" : "border-bdr focus:border-maroon"}`}
           />

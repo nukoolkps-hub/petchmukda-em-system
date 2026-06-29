@@ -9,6 +9,7 @@ import { advanceLimitPercent } from "../../utils/advanceUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
+import MoneyInput from "../shared/MoneyInput";
 
 /* ─── Advance Request Modal ────────────────────────────────────── */
 export default function AdvanceRequestModal({
@@ -251,12 +252,10 @@ export default function AdvanceRequestModal({
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-maroon font-bold">
           ฿
         </span>
-        <input
-          type="text"
-          inputMode="decimal"
+        <MoneyInput
           min="0"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={setAmount}
           placeholder="0"
           className={`w-full py-3.5 pr-4 pl-9 rounded-xl text-lg font-bold font-[inherit] text-txt bg-cream box-border outline-none border-[1.5px] ${err.includes("เงิน") || err.includes("วงเงิน") ? "border-red" : "border-bdr"}`}
         />
