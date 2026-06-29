@@ -16,11 +16,13 @@ import type {
 import type { Duty, Employee, Role } from "../../types";
 import DutyForecastModal from "../modals/DutyForecastModal";
 import BaseModal from "../shared/BaseModal";
+import { SkeletonRow } from "../shared/Skeleton";
 import DutyCard from "./DutyCard";
 import DutyEditModal from "./DutyEditModal";
 
 interface Props {
   duties: Duty[];
+  dutiesLoading?: boolean;
   dutyAssignmentsToday: DutyAssignmentsSnapshot | null;
   roles: Role[];
   employeeDirectory: Employee[];
@@ -34,6 +36,7 @@ interface Props {
 
 export default function DutySchedulePanel({
   duties,
+  dutiesLoading,
   dutyAssignmentsToday,
   roles,
   employeeDirectory,
@@ -97,7 +100,12 @@ export default function DutySchedulePanel({
         </div>
       </div>
 
-      {duties.length === 0 ? (
+      {dutiesLoading && duties.length === 0 ? (
+        <div className="flex flex-col gap-2.5 animate-[fadeIn_0.18s_ease-out]">
+          <SkeletonRow />
+          <SkeletonRow />
+        </div>
+      ) : duties.length === 0 ? (
         <div className="text-center text-txt-soft py-12 px-6 bg-white rounded-[14px] border border-dashed border-bdr">
           <div className="flex justify-center mb-3 text-gold">
             <IconCalendarClock size={44} strokeWidth={1.8} />
