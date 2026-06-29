@@ -267,6 +267,16 @@ summary {
     transform: translateY(0);
   }
 }
+/* valuePop — ยอดเงินเด้งนุ่มๆ ครั้งเดียวตอนค่าเปลี่ยน (one-shot · ไม่ loop)
+   ใช้กับเลขเงินสุทธิที่อัปเดต live · key={ค่า} → เล่นซ้ำเมื่อค่าเปลี่ยน */
+@keyframes valuePop {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
 /* ─── Shared exit/fade animations ────────────────────────────
    ใช้ผ่าน animate-[fadeIn_0.18s_ease-out] / animate-[modalOut_0.14s_ease-in]
    / animate-[toastOut_0.2s_ease-in]                                       */

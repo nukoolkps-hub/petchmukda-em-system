@@ -1840,7 +1840,13 @@ export default function SalaryAdminEdit({
             )}
           </div>
           <div className="text-2xl font-extrabold text-gold-lt mt-0.5">
-            {formatThaiNumber(salaryCalculation.netSalary)} ฿
+            <span
+              key={Math.round(salaryCalculation.netSalary)}
+              className="inline-block animate-[valuePop_0.28s_ease-out]"
+            >
+              {formatThaiNumber(salaryCalculation.netSalary)}
+            </span>{" "}
+            ฿
           </div>
           <div className="text-xs text-[#E8C87A80] mt-1">
             เดือน {formatYmThai(selectedMonth)}
