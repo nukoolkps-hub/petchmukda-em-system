@@ -57,8 +57,8 @@ export default class ErrorBoundary extends Component<
     if (!this.state.hasError) return this.props.children;
 
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-cream p-5 font-sans">
-        <div className="max-w-[480px] w-full bg-white rounded-[20px] px-7 py-8 shadow-[0_12px_40px_rgba(45,26,14,0.15)] border border-bdr">
+      <div className="fixed inset-0 flex items-center justify-center bg-cream p-5 font-sans animate-[fadeIn_0.2s_ease-out]">
+        <div className="max-w-[480px] w-full bg-white rounded-[20px] px-7 py-8 shadow-[0_12px_40px_rgba(45,26,14,0.15)] border border-bdr animate-[slideUp_0.3s_ease-out]">
           {/* icon */}
           <div className="w-[72px] h-[72px] rounded-full mx-auto mb-5 bg-linear-135 from-red to-maroon flex items-center justify-center shadow-[0_6px_18px_rgba(192,57,43,0.25)]">
             <IconAlertCircle size={36} color="#fff" strokeWidth={2.2} />

@@ -380,7 +380,7 @@ export default function LeaveApp() {
   /* ─── Render ───────────────────────────────────────────────── */
   return (
     <>
-      <div className="leave-app-root">
+      <div className="leave-app-root animate-[fadeIn_0.25s_ease-out]">
         {/* ══ SIDEBAR (desktop only) ══ */}
         <Sidebar
           profile={viewProfile}
@@ -436,169 +436,176 @@ export default function LeaveApp() {
 
           {/* ── Scrollable Body ── */}
           <div className="leave-content flex-1 px-4 pt-4.5 pb-[90px]">
-            <Routes>
-              {/* HOME */}
-              <Route
-                path="/home"
-                element={
-                  viewIsAdmin ? (
-                    <Navigate to="/admin" replace />
-                  ) : (
-                    <HomeTab
-                      profile={viewProfile}
-                      allLeaves={allLeaves}
-                      employeeDirectory={employeeDirectory}
-                      currentEmployee={viewEmployee}
-                      roles={roles}
-                      duties={duties}
-                      dutyAssignmentsToday={dutyAssignmentsToday}
-                      storeCalendar={storeCalendar}
-                    />
-                  )
-                }
-              />
-
-              {/* REQUEST */}
-              <Route
-                path="/request"
-                element={
-                  viewIsAdmin ? (
-                    <Navigate to="/admin" replace />
-                  ) : leaveForm.submitted ? (
-                    <SuccessScreen
-                      form={leaveForm.form}
-                      days={leaveForm.days}
-                      onReset={leaveForm.reset}
-                    />
-                  ) : (
-                    <RequestTab
-                      profile={viewProfile}
-                      allLeaves={allLeaves}
-                      form={leaveForm.form}
-                      setForm={leaveForm.setForm}
-                      errors={leaveForm.errors}
-                      histDetail={leaveForm.histDetail}
-                      setHistDetail={leaveForm.setHistDetail}
-                      myLeaves={leaveForm.myLeaves}
-                      balance={leaveForm.balance}
-                      used={leaveForm.used}
-                      days={leaveForm.days}
-                      remain={leaveForm.remain}
-                      overLimit={leaveForm.overLimit}
-                      onValidate={leaveForm.validateAndSetErrors}
-                      onSubmit={() => {
-                        if (blockInPreview()) return;
-                        if (viewProfile) leaveForm.submit(viewProfile);
-                      }}
-                      onResetForm={leaveForm.reset}
-                      onDelete={(id: string | number) => {
-                        if (blockInPreview()) return;
-                        leaveForm.handleDelete(id);
-                      }}
-                      storeCalendar={storeCalendar}
-                    />
-                  )
-                }
-              />
-
-              {/* SALARY (employee view) */}
-              <Route
-                path="/salary"
-                element={
-                  viewIsAdmin ? (
-                    <Navigate to="/admin" replace />
-                  ) : viewSalaryDisabled ? (
-                    <Navigate to="/home" replace />
-                  ) : (
-                    <div className="min-h-full">
-                      <SalaryView
+            {/* key=tab → fade เนื้อหาเข้าใหม่ทุกครั้งที่สลับแท็บหลัก (admin
+               sub-section คุม fade เองใน AdminPanel · tab ไม่เปลี่ยน) */}
+            <div key={tab} className="animate-[fadeIn_0.22s_ease-out]">
+              <Routes>
+                {/* HOME */}
+                <Route
+                  path="/home"
+                  element={
+                    viewIsAdmin ? (
+                      <Navigate to="/admin" replace />
+                    ) : (
+                      <HomeTab
                         profile={viewProfile}
-                        employeeId={viewEmployeeId}
-                        salaryData={salaryData}
                         allLeaves={allLeaves}
                         employeeDirectory={employeeDirectory}
-                        advanceRequests={myAdvanceRequests}
-                        onOpenAdvance={() => {
-                          if (blockInPreview()) return;
-                          setShowAdvanceModal(true);
-                        }}
+                        currentEmployee={viewEmployee}
                         roles={roles}
-                        payrollConfirms={payrollConfirms}
-                        poolAdjustments={poolAdjustments}
-                        employeeLoans={employeeLoans}
+                        duties={duties}
+                        dutyAssignmentsToday={dutyAssignmentsToday}
                         storeCalendar={storeCalendar}
-                        showToast={showToast}
-                        previewing={previewing}
                       />
-                    </div>
-                  )
-                }
-              />
+                    )
+                  }
+                />
 
-              {/* KNOWLEDGE — ความรู้ต่างๆ (ใช้ร่วม admin + employee) */}
-              <Route
-                path="/knowledge"
-                element={
-                  <KnowledgeView isAdmin={viewIsAdmin} showToast={showToast} />
-                }
-              />
+                {/* REQUEST */}
+                <Route
+                  path="/request"
+                  element={
+                    viewIsAdmin ? (
+                      <Navigate to="/admin" replace />
+                    ) : leaveForm.submitted ? (
+                      <SuccessScreen
+                        form={leaveForm.form}
+                        days={leaveForm.days}
+                        onReset={leaveForm.reset}
+                      />
+                    ) : (
+                      <RequestTab
+                        profile={viewProfile}
+                        allLeaves={allLeaves}
+                        form={leaveForm.form}
+                        setForm={leaveForm.setForm}
+                        errors={leaveForm.errors}
+                        histDetail={leaveForm.histDetail}
+                        setHistDetail={leaveForm.setHistDetail}
+                        myLeaves={leaveForm.myLeaves}
+                        balance={leaveForm.balance}
+                        used={leaveForm.used}
+                        days={leaveForm.days}
+                        remain={leaveForm.remain}
+                        overLimit={leaveForm.overLimit}
+                        onValidate={leaveForm.validateAndSetErrors}
+                        onSubmit={() => {
+                          if (blockInPreview()) return;
+                          if (viewProfile) leaveForm.submit(viewProfile);
+                        }}
+                        onResetForm={leaveForm.reset}
+                        onDelete={(id: string | number) => {
+                          if (blockInPreview()) return;
+                          leaveForm.handleDelete(id);
+                        }}
+                        storeCalendar={storeCalendar}
+                      />
+                    )
+                  }
+                />
 
-              {/* ADMIN */}
-              <Route
-                path="/admin"
-                element={
-                  viewIsAdmin ? (
-                    <AdminPanel
-                      section={adminSection}
-                      onSectionChange={tryChangeAdminSection}
-                      unsavedDirty={adminUnsavedDirty}
-                      onUnsavedDirtyChange={setAdminUnsavedDirty}
-                      allLeaves={allLeaves}
-                      employeeDirectory={employeeDirectory}
-                      onDelete={leaveForm.handleDelete}
-                      onAddLeave={addLeaveAction}
-                      onUpdateRole={handleUpdateRole}
-                      onDeleteEmployee={handleDeleteEmployee}
-                      onReorderEmployees={reorderEmployees}
-                      salaryData={salaryData}
-                      setSalaryData={setSalaryData}
-                      onSaveSalary={updateSalary}
-                      advanceRequests={advanceRequests}
-                      onUpdateAdvance={adminUpdateAdvance}
-                      roles={roles}
-                      onUpsertRole={upsertRole}
-                      duties={duties}
-                      dutyAssignmentsToday={dutyAssignmentsToday}
-                      onUpsertDuty={upsertDuty}
-                      onDeleteDuty={deleteDuty}
-                      onDeleteRole={deleteRole}
-                      payrollConfirms={payrollConfirms}
-                      poolAdjustments={poolAdjustments}
-                      onSetPoolAdjustment={setPoolAdjustment}
-                      employeeLoans={employeeLoans}
-                      onAddLoan={addEmployeeLoan}
-                      onUpdateLoan={updateEmployeeLoan}
-                      onDeleteLoan={deleteEmployeeLoan}
-                      onSetPayrollConfirm={setPayrollConfirm}
-                      onSyncAutoCarryAdvance={syncAutoCarryAdvance}
-                      storeCalendar={storeCalendar}
-                      onUpdateStoreCalendar={updateStoreCalendarAction}
+                {/* SALARY (employee view) */}
+                <Route
+                  path="/salary"
+                  element={
+                    viewIsAdmin ? (
+                      <Navigate to="/admin" replace />
+                    ) : viewSalaryDisabled ? (
+                      <Navigate to="/home" replace />
+                    ) : (
+                      <div className="min-h-full">
+                        <SalaryView
+                          profile={viewProfile}
+                          employeeId={viewEmployeeId}
+                          salaryData={salaryData}
+                          allLeaves={allLeaves}
+                          employeeDirectory={employeeDirectory}
+                          advanceRequests={myAdvanceRequests}
+                          onOpenAdvance={() => {
+                            if (blockInPreview()) return;
+                            setShowAdvanceModal(true);
+                          }}
+                          roles={roles}
+                          payrollConfirms={payrollConfirms}
+                          poolAdjustments={poolAdjustments}
+                          employeeLoans={employeeLoans}
+                          storeCalendar={storeCalendar}
+                          showToast={showToast}
+                          previewing={previewing}
+                        />
+                      </div>
+                    )
+                  }
+                />
+
+                {/* KNOWLEDGE — ความรู้ต่างๆ (ใช้ร่วม admin + employee) */}
+                <Route
+                  path="/knowledge"
+                  element={
+                    <KnowledgeView
+                      isAdmin={viewIsAdmin}
                       showToast={showToast}
                     />
-                  ) : (
-                    <Navigate to="/home" replace />
-                  )
-                }
-              />
+                  }
+                />
 
-              {/* Catch-all: redirect to home */}
-              <Route
-                path="*"
-                element={
-                  <Navigate to={viewIsAdmin ? "/admin" : "/home"} replace />
-                }
-              />
-            </Routes>
+                {/* ADMIN */}
+                <Route
+                  path="/admin"
+                  element={
+                    viewIsAdmin ? (
+                      <AdminPanel
+                        section={adminSection}
+                        onSectionChange={tryChangeAdminSection}
+                        unsavedDirty={adminUnsavedDirty}
+                        onUnsavedDirtyChange={setAdminUnsavedDirty}
+                        allLeaves={allLeaves}
+                        employeeDirectory={employeeDirectory}
+                        onDelete={leaveForm.handleDelete}
+                        onAddLeave={addLeaveAction}
+                        onUpdateRole={handleUpdateRole}
+                        onDeleteEmployee={handleDeleteEmployee}
+                        onReorderEmployees={reorderEmployees}
+                        salaryData={salaryData}
+                        setSalaryData={setSalaryData}
+                        onSaveSalary={updateSalary}
+                        advanceRequests={advanceRequests}
+                        onUpdateAdvance={adminUpdateAdvance}
+                        roles={roles}
+                        onUpsertRole={upsertRole}
+                        duties={duties}
+                        dutyAssignmentsToday={dutyAssignmentsToday}
+                        onUpsertDuty={upsertDuty}
+                        onDeleteDuty={deleteDuty}
+                        onDeleteRole={deleteRole}
+                        payrollConfirms={payrollConfirms}
+                        poolAdjustments={poolAdjustments}
+                        onSetPoolAdjustment={setPoolAdjustment}
+                        employeeLoans={employeeLoans}
+                        onAddLoan={addEmployeeLoan}
+                        onUpdateLoan={updateEmployeeLoan}
+                        onDeleteLoan={deleteEmployeeLoan}
+                        onSetPayrollConfirm={setPayrollConfirm}
+                        onSyncAutoCarryAdvance={syncAutoCarryAdvance}
+                        storeCalendar={storeCalendar}
+                        onUpdateStoreCalendar={updateStoreCalendarAction}
+                        showToast={showToast}
+                      />
+                    ) : (
+                      <Navigate to="/home" replace />
+                    )
+                  }
+                />
+
+                {/* Catch-all: redirect to home */}
+                <Route
+                  path="*"
+                  element={
+                    <Navigate to={viewIsAdmin ? "/admin" : "/home"} replace />
+                  }
+                />
+              </Routes>
+            </div>
           </div>
 
           {/* ── Bottom nav (mobile only) ── */}

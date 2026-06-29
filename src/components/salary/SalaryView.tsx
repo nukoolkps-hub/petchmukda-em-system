@@ -733,7 +733,13 @@ export default function SalaryView({
               </div>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-4xl font-extrabold text-gold-lt tracking-[-0.02em]">
-                  {formatThaiNumber(previewSalary.netSalary ?? 0)} ฿
+                  <span
+                    key={Math.round(previewSalary.netSalary ?? 0)}
+                    className="inline-block animate-[valuePop_0.28s_ease-out]"
+                  >
+                    {formatThaiNumber(previewSalary.netSalary ?? 0)}
+                  </span>{" "}
+                  ฿
                 </span>
               </div>
               <div className="flex gap-3.5 mt-3.5 pt-3.5 border-t border-gold-lt/12">
@@ -1427,7 +1433,13 @@ export default function SalaryView({
           <div className="text-sm text-gold-lt/65">เงินสุทธิที่ได้รับ</div>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-4xl font-extrabold text-gold-lt tracking-[-0.02em]">
-              {formatThaiNumber(salaryCalculation?.netSalary ?? 0)} ฿
+              <span
+                key={Math.round(salaryCalculation?.netSalary ?? 0)}
+                className="inline-block animate-[valuePop_0.28s_ease-out]"
+              >
+                {formatThaiNumber(salaryCalculation?.netSalary ?? 0)}
+              </span>{" "}
+              ฿
             </span>
           </div>
           <div className="flex gap-3.5 mt-3.5 pt-3.5 border-t border-gold-lt/12">
