@@ -27,10 +27,13 @@ import ConfirmModal from "../modals/ConfirmModal";
 import AvatarCircle from "../shared/AvatarCircle";
 import CalendarPicker from "../shared/CalendarPicker";
 import MonthChevronNav from "../shared/MonthChevronNav";
+import { SkeletonRow } from "../shared/Skeleton";
 import ThemedSelect from "../shared/ThemedSelect";
 
 interface LeaveListPanelProps {
   allLeaves: LeaveEntry[];
+  /** leaves sub ยังโหลดอยู่ไหม → แสดง skeleton แทน "ไม่มีรายการ" ตอนยังว่าง */
+  leavesLoading?: boolean;
   employeeDirectory: Employee[];
   payrollConfirms: PayrollConfirms;
   storeCalendar?: import("../../types").StoreCalendar | null;
@@ -48,6 +51,7 @@ interface LeaveListPanelProps {
 /* ─── Admin: Leave List (เพิ่ม + รายการ + filter + ลบ) ─────────── */
 export default function LeaveListPanel({
   allLeaves,
+  leavesLoading,
   employeeDirectory,
   payrollConfirms,
   storeCalendar,
@@ -314,11 +318,17 @@ export default function LeaveListPanel({
         </div>
       </div>
 
-      {filteredLeaves.length === 0 && (
+      {leavesLoading && allLeaves.length === 0 ? (
+        <div className="flex flex-col gap-2.5 animate-[fadeIn_0.18s_ease-out]">
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+        </div>
+      ) : filteredLeaves.length === 0 ? (
         <div className="text-center text-txt-soft py-10 text-base">
           ไม่มีรายการลาย้อนหลัง
         </div>
-      )}
+      ) : null}
       <div className="flex flex-col gap-2.5">
         {filteredLeaves.map((lv) => {
           const lt = LEAVE_TYPES.find((t) => t.id === lv.type);

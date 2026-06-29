@@ -35,6 +35,8 @@ function AdminNavBadge({ count }: { count: number }) {
 /* ─── Admin Panel (main container) ─────────────────────────────── */
 export default function AdminPanel({
   allLeaves,
+  leavesLoading,
+  advancesLoading,
   employeeDirectory,
   onDelete,
   onAddLeave,
@@ -282,6 +284,7 @@ export default function AdminPanel({
         {section === "advance" && (
           <AdminAdvancePanel
             advanceRequests={advanceRequests || []}
+            advancesLoading={advancesLoading}
             employeeDirectory={employeeDirectory}
             onUpdate={onUpdateAdvance}
             showToast={showToast}
@@ -337,6 +340,7 @@ export default function AdminPanel({
         {section === "leaves" && (
           <LeaveListPanel
             allLeaves={allLeaves}
+            leavesLoading={leavesLoading}
             employeeDirectory={employeeDirectory}
             payrollConfirms={payrollConfirms}
             storeCalendar={storeCalendar}

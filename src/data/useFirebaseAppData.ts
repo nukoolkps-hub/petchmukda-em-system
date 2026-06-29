@@ -1032,6 +1032,11 @@ export default function useFirebaseAppData({
     // Status
     loading,
     error,
+    // Per-collection loading flags (background subs ที่ไม่ block shell) —
+    // view ใช้แสดง skeleton ตอนข้อมูลยังโหลด แทนการ flash empty state
+    // (salaries ไม่ต้อง — SalaryView โชว์ preview จากเงินเดือนพื้นฐานได้เลย)
+    leavesLoading: leavesResult.loading,
+    advancesLoading: advResult.loading,
 
     // Legacy setters (warn instead of update)
     setAllLeaves: noop,

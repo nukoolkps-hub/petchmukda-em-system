@@ -19,6 +19,7 @@ import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
+import { SkeletonRow } from "../shared/Skeleton";
 import ThemedSelect from "../shared/ThemedSelect";
 
 type AdvanceFilter = "pending" | "approved" | "rejected";
@@ -45,6 +46,7 @@ function formatMonthLabel(yearMonth) {
 /* ─── Admin: Advance Requests Panel ────────────────────────────── */
 export default function AdminAdvancePanel({
   advanceRequests,
+  advancesLoading = false,
   employeeDirectory,
   onUpdate,
   showToast,
@@ -99,7 +101,8 @@ export default function AdminAdvancePanel({
       new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime(),
   );
   const showMonthFilter = filter !== "pending";
-  const loading = showMonthFilter && monthScopedResult.loading;
+  // pending ใช้ global sub (advancesLoading) · approved/rejected ใช้ scoped query
+  const loading = showMonthFilter ? monthScopedResult.loading : advancesLoading;
   const error = showMonthFilter ? monthScopedResult.error : null;
 
   async function handleApproveSlip(request, file) {
@@ -220,8 +223,10 @@ export default function AdminAdvancePanel({
       </div>
 
       {loading && (
-        <div className="text-center text-txt-soft py-[50px] text-base">
-          กำลังโหลดคำขอเบิก...
+        <div className="flex flex-col gap-2.5 animate-[fadeIn_0.18s_ease-out]">
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
         </div>
       )}
 

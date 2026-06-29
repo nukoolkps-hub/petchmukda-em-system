@@ -277,6 +277,16 @@ summary {
     transform: scale(1);
   }
 }
+/* shimmer — แถบไล่เฉดวิ่งบน skeleton placeholder ตอนข้อมูลกำลังโหลด
+   (โทน cream/gold เข้า theme) · ใช้คู่กับ component Skeleton */
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
 /* ─── Shared exit/fade animations ────────────────────────────
    ใช้ผ่าน animate-[fadeIn_0.18s_ease-out] / animate-[modalOut_0.14s_ease-in]
    / animate-[toastOut_0.2s_ease-in]                                       */
