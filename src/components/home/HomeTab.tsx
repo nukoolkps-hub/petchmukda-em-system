@@ -140,7 +140,12 @@ export default function HomeTab({
             <div
               className={`text-2xl font-extrabold leading-none ${overQuotaDeduction ? "text-red" : usedThisMonth >= quota ? "text-amber" : "text-maroon"}`}
             >
-              {usedThisMonth}
+              <span
+                key={usedThisMonth}
+                className="inline-block animate-[valuePop_0.28s_ease-out]"
+              >
+                {usedThisMonth}
+              </span>
               <span className="text-sm text-txt-soft font-medium">
                 /{quota} วัน
               </span>

@@ -1037,6 +1037,8 @@ export default function useFirebaseAppData({
     // (salaries ไม่ต้อง — SalaryView โชว์ preview จากเงินเดือนพื้นฐานได้เลย)
     leavesLoading: leavesResult.loading,
     advancesLoading: advResult.loading,
+    dutiesLoading: dutiesResult.loading,
+    loansLoading: loansResult.loading,
 
     // Legacy setters (warn instead of update)
     setAllLeaves: noop,

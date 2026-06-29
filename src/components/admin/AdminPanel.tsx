@@ -37,6 +37,8 @@ export default function AdminPanel({
   allLeaves,
   leavesLoading,
   advancesLoading,
+  dutiesLoading,
+  loansLoading,
   employeeDirectory,
   onDelete,
   onAddLeave,
@@ -206,6 +208,7 @@ export default function AdminPanel({
         {section === "duty-schedule" && (
           <DutySchedulePanel
             duties={duties || []}
+            dutiesLoading={dutiesLoading}
             dutyAssignmentsToday={dutyAssignmentsToday}
             roles={roles || []}
             employeeDirectory={employeeDirectory}
@@ -295,6 +298,7 @@ export default function AdminPanel({
         {section === "loans" && (
           <EmployeeLoansPanel
             employeeLoans={employeeLoans || []}
+            loansLoading={loansLoading}
             employeeDirectory={employeeDirectory}
             onAddLoan={onAddLoan}
             onUpdateLoan={onUpdateLoan}

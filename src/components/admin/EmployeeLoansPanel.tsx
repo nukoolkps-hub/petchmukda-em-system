@@ -20,6 +20,7 @@ import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
+import { SkeletonRow } from "../shared/Skeleton";
 import ThemedSelect from "../shared/ThemedSelect";
 
 function monthLabel(ym: string) {
@@ -42,6 +43,7 @@ function monthOptions(): string[] {
 
 export default function EmployeeLoansPanel({
   employeeLoans,
+  loansLoading,
   employeeDirectory,
   onAddLoan,
   onUpdateLoan,
@@ -87,7 +89,12 @@ export default function EmployeeLoansPanel({
         </button>
       </div>
 
-      {loans.length === 0 ? (
+      {loansLoading && loans.length === 0 ? (
+        <div className="flex flex-col gap-2.5 animate-[fadeIn_0.18s_ease-out]">
+          <SkeletonRow />
+          <SkeletonRow />
+        </div>
+      ) : loans.length === 0 ? (
         <div className="text-center text-txt-soft py-12 px-6 bg-white rounded-[14px] border border-dashed border-bdr">
           <div className="flex justify-center mb-3 text-gold">
             <IconHandCoins size={44} strokeWidth={1.8} />
