@@ -57,7 +57,7 @@ export default function BaseModal({
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
-        className={`w-full ${maxWidthClass} max-h-[88dvh] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-[0_24px_60px_rgba(45,26,14,0.3)] ${
+        className={`w-full ${maxWidthClass} max-h-[88dvh] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-[0_24px_60px_rgba(45,26,14,0.3)] [will-change:transform,opacity] ${
           closing
             ? "animate-[dialogOut_0.14s_ease-in_forwards]"
             : "animate-[modalIn_0.18s_cubic-bezier(0.2,0.8,0.2,1)]"

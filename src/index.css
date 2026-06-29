@@ -277,14 +277,15 @@ summary {
     transform: scale(1);
   }
 }
-/* shimmer — แถบไล่เฉดวิ่งบน skeleton placeholder ตอนข้อมูลกำลังโหลด
-   (โทน cream/gold เข้า theme) · ใช้คู่กับ component Skeleton */
+/* shimmer — แถบแสงวิ่งบน skeleton placeholder ตอนข้อมูลกำลังโหลด ·
+   ใช้ transform translateX (GPU-composited) แทน background-position (paint
+   ทุกเฟรม) → ลื่น ไม่กระตุกแม้มีหลาย skeleton พร้อมกัน */
 @keyframes shimmer {
   from {
-    background-position: 200% 0;
+    transform: translateX(-100%);
   }
   to {
-    background-position: -200% 0;
+    transform: translateX(100%);
   }
 }
 /* ─── Shared exit/fade animations ────────────────────────────
