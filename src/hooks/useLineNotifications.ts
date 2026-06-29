@@ -70,8 +70,10 @@ export default function useLineNotifications({
     };
     const id = await submitAdvanceAction(reqData);
 
-    // ส่ง LINE notification (best-effort)
-    sendAdvanceRequestToLine({
+    // ส่ง LINE notification — await เพื่อรู้ผล (เดิม fire-and-forget → ถ้า LINE
+    // ล้มจะเงียบ ไม่มีใครรู้ว่าแอดมินไม่ได้รับ) · null = ส่งไม่สำเร็จจริง ·
+    // {skipped}/{ok} = admin ปิด toggle/ไม่มี config (ตั้งใจ — ไม่ถือว่า fail)
+    const lineResult = await sendAdvanceRequestToLine({
       employeeName: reqData.employeeName,
       amount: reqData.amount,
       reason: reqData.reason,
@@ -82,7 +84,7 @@ export default function useLineNotifications({
       requestId: id,
     });
 
-    return id;
+    return { id, lineNotified: lineResult !== null };
   }
 
   /* ─── Admin update advance (approve/reject) ────────────────── */

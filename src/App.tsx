@@ -317,14 +317,21 @@ export default function LeaveApp() {
     reason: string;
     month: string;
   }) {
+    let lineNotified = true;
     try {
-      await submitAdvanceRequest({ amount, reason, month });
+      const res = await submitAdvanceRequest({ amount, reason, month });
+      lineNotified = res?.lineNotified !== false;
     } catch (err) {
       showToast(err instanceof Error ? err.message : "ส่งคำขอไม่สำเร็จ");
       return;
     }
     setShowAdvanceModal(false);
-    showToast("ส่งคำขอผ่าน LINE แล้ว — รอ ADMIN โอนเงิน");
+    // คำขอถูกบันทึกแล้วทั้งสองกรณี — ต่างกันแค่ LINE ถึงแอดมินไหม
+    showToast(
+      lineNotified
+        ? "ส่งคำขอผ่าน LINE แล้ว — รอ ADMIN โอนเงิน"
+        : "ยื่นคำขอแล้ว — แต่แจ้ง LINE แอดมินไม่สำเร็จ กรุณาแจ้งแอดมินเอง",
+    );
   }
 
   // ถ้าอยู่ใน salary route แต่ถูกปิดสิทธิ์ → redirect ไป home
