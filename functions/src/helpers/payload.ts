@@ -84,7 +84,8 @@ export function parseNotifyAdvanceRequestPayload(
 	return {
 		employeeName: requiredString(data, "employeeName"),
 		amount: requiredAmount(data),
-		reason: requiredString(data, "reason"),
+		// เหตุผลไม่บังคับ (ฟอร์มปล่อยว่างได้) — เดิม required → throw → LINE ไม่ส่ง
+		reason: optionalString(data, "reason"),
 		month: requiredPayrollMonth(data),
 		bank: optionalString(data, "bank"),
 		bankAccountNumber: optionalString(data, "bankAccountNumber"),
