@@ -315,10 +315,27 @@ export const notifyAdvanceRequest = onCall(async (request) => {
 			[flex],
 		);
 	} catch (err) {
-		console.error(
-			"[notifyAdvanceRequest] pushLineMessage failed:",
-			err instanceof Error ? err.message : err,
-		);
+		const errMsg = err instanceof Error ? err.message : String(err);
+		console.error("[notifyAdvanceRequest] pushLineMessage failed:", errMsg);
+		// LINE คือช่องที่พัง → แจ้ง admin ทางอื่นไม่ได้ ฝากธงไว้ที่ advance doc
+		// ให้ admin เห็น badge "แจ้ง LINE ไม่สำเร็จ" ในหน้าจัดการเบิกเงิน (in-app)
+		if (requestId) {
+			try {
+				await db
+					.collection("advances")
+					.doc(String(requestId))
+					.update({
+						lineNotifyFailed: true,
+						lineNotifyError: errMsg.slice(0, 500),
+						lineNotifyFailedAt: new Date().toISOString(),
+					});
+			} catch (flagErr) {
+				console.error(
+					"[notifyAdvanceRequest] failed to flag advance doc:",
+					flagErr instanceof Error ? flagErr.message : flagErr,
+				);
+			}
+		}
 		throw err;
 	}
 	return { ok: true, requestId };
