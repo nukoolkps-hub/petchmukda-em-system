@@ -383,6 +383,7 @@ function CreateLoanModal({
       // ถ้า upload fail → loan ยังถูกสร้าง · แจ้ง toast แต่ไม่ rollback
       let slipImageUrl: string | null = null;
       let slipUploadFailed = false;
+      let notifyFlagFailed = false;
       if (slipDataUrl && loanId) {
         try {
           slipImageUrl = await uploadLoanSlip(loanId, slipDataUrl);
@@ -410,9 +411,14 @@ function CreateLoanModal({
             "[CreateLoanModal] update notification flag failed:",
             e,
           );
+          notifyFlagFailed = true;
         }
       }
-      if (slipUploadFailed) {
+      if (notifyFlagFailed) {
+        // เงินกู้ถูกสร้างแล้ว แต่ตั้งสถานะแจ้ง LINE ไม่สำเร็จ → worker จะไม่ push
+        // ให้พนักงาน · เตือน admin ให้รู้ (เดิมเงียบ ขึ้น "สร้างแล้ว" เฉยๆ)
+        showToast?.("สร้างเงินกู้แล้ว แต่ตั้งค่าแจ้ง LINE ไม่สำเร็จ — กรุณาแจ้งพนักงานเอง");
+      } else if (slipUploadFailed) {
         showToast?.("สร้างเงินกู้แล้ว แต่อัปโหลดสลิปไม่สำเร็จ — แก้ไขภายหลังได้");
       } else {
         showToast?.("สร้างเงินกู้แล้ว · กำลังแจ้ง LINE พนักงาน");

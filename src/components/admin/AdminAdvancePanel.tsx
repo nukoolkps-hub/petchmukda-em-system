@@ -1,4 +1,5 @@
 import {
+  TriangleAlert as IconAlert,
   Check as IconCheck,
   CircleCheck as IconCircleCheck,
   CircleDollarSign as IconCircleDollarSign,
@@ -322,6 +323,26 @@ export default function AdminAdvancePanel({
                 <div className="text-sm text-txt-mid mb-2.5 leading-normal">
                   <span className="text-txt-soft">เหตุผล:</span> {request.reason}
                 </div>
+
+                {/* LINE แจ้ง admin ล้มเหลว → แจ้งในแอปแทน (LINE คือช่องที่พัง) */}
+                {request.lineNotifyFailed && (
+                  <div className="flex items-start gap-2 mb-2.5 px-3 py-2.5 bg-[#FEF2F2] border border-[#FCA5A5] rounded-[10px]">
+                    <IconAlert
+                      size={16}
+                      strokeWidth={2.2}
+                      className="text-[#DC2626] shrink-0 mt-px"
+                    />
+                    <div className="text-xs text-[#B91C1C] leading-snug">
+                      <span className="font-bold">
+                        LINE แจ้งเตือนแอดมินไม่สำเร็จ
+                      </span>
+                      <div className="text-[#DC2626]/80 mt-px">
+                        ระบบส่งแจ้งเตือนคำขอนี้เข้า LINE ไม่ได้ — ตรวจสอบ Access Token /
+                        การตั้งค่า LINE Bot
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {employeeInfo &&
                   (employeeInfo.bank || employeeInfo.bankAccountNumber) && (

@@ -180,6 +180,11 @@ export interface AdvanceRequest {
   lineNotificationSentAt?: string;
   lineNotificationLastError?: string | null;
   lineNotificationSkippedReason?: string | null;
+  /** server ตั้งเมื่อ push LINE แจ้ง admin (คำขอเบิกใหม่) ล้มเหลว — LINE คือ
+   *  ช่องที่พัง จึงแจ้ง admin ผ่าน badge ในแอปแทน (ดู AdminAdvancePanel)        */
+  lineNotifyFailed?: boolean;
+  lineNotifyError?: string;
+  lineNotifyFailedAt?: string;
 }
 
 /** รายการค่าคอมต่อชิ้น 1 ประเภท (เช่น "ทำบิล", "นับสต๊อก") ของตำแหน่งที่ไม่ใช่
