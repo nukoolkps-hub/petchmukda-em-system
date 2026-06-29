@@ -142,6 +142,47 @@ input[type="number"] {
   appearance: textfield;
 }
 
+/* ─── Interaction smoothness (ทั้งระบบ) ─────────────────────────────
+   ปรับความลื่นไหลรวม: ตัด tap flash, แตะติดมือทันที (ลด delay), ฟอนต์คมขึ้น,
+   เลื่อนแบบ smooth + กัน scroll ทะลุ (chaining) · ทุกอย่างเคารพ
+   prefers-reduced-motion ผ่าน media query reset ด้านล่าง                  */
+html {
+  scroll-behavior: smooth;
+  /* ตัดไฮไลต์สีเทา/ฟ้าตอนแตะปุ่มบนมือถือ — ใช้ active:scale/bg เป็น feedback แทน */
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  /* ฟอนต์ Prompt คมขึ้นบนจอ retina/มือถือ */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* กันหน้าเด้งทะลุ (rubber-band/pull-to-refresh) ใน LINE WebView / iOS */
+  overscroll-behavior-y: contain;
+}
+
+/* ปุ่ม/ลิงก์/ตัวควบคุม — แตะติดมือทันที (ตัด ~300ms delay + double-tap zoom)
+   + transition พื้นฐานให้การเปลี่ยนสถานะ (สี/เงา/ย่อขยายตอนกด) นุ่มขึ้น ·
+   component ที่ตั้ง transition-*/touch-none เองมี specificity สูงกว่า → override */
+button,
+a,
+[role="button"],
+[role="option"],
+summary {
+  touch-action: manipulation;
+  transition-property: color, background-color, border-color, box-shadow,
+    transform, opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* overlay ที่ scroll ได้ (modal · dropdown) — กัน scroll ทะลุไปหน้าเบื้องหลัง
+   + momentum scroll นุ่มบน iOS */
+[role="dialog"],
+[role="listbox"] {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ─── Keyframe Animations ──────────────────────────────────── */
 @keyframes toastIn {
   from {
