@@ -273,6 +273,8 @@ function SortableEmployeeRow({
   }, [pressing]);
 
   const lifted = pressing || isDragging;
+  // transform/transition ของแถวปล่อยให้ dnd-kit คุมล้วนๆ (ตามนิ้ว + drop
+  // animation) — ไม่แตะ transform เองเลย กันชนกับการลาก
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -284,9 +286,13 @@ function SortableEmployeeRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={`w-full flex items-center gap-2 pr-2 rounded-2xl border transition-[transform,box-shadow,background-color,border-color] duration-150 ${
+      // ⚠️ ห้ามใส่ transform ใน transition — dnd-kit อัปเดต transform ตามนิ้ว
+      // ทุกเฟรม ถ้า CSS ease 150ms ตัวที่ลากจะตามช้า = กระตุก · ปล่อย transform
+      // ให้ dnd-kit (style.transition) คุม · transition แค่ visual ยกลอย
+      // (เอฟเฟกต์ยกลอยสื่อผ่านขอบทอง+พื้นทองอ่อน+เงา ไม่ต้องใช้ scale)
+      className={`w-full flex items-center gap-2 pr-2 rounded-2xl border transition-[box-shadow,background-color,border-color] duration-150 ${
         lifted
-          ? "border-gold bg-gold-pale scale-[1.02] shadow-[0_10px_26px_rgba(123,28,28,0.22)]"
+          ? "border-gold bg-gold-pale shadow-[0_10px_26px_rgba(123,28,28,0.22)]"
           : "border-bdr bg-white shadow-[0_2px_8px_rgba(90,30,10,0.06)]"
       }`}
     >
