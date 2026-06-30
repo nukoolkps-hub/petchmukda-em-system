@@ -338,7 +338,7 @@ export default function DutyForecastModal({
                                     <IconCalendarX
                                       size={13}
                                       strokeWidth={2.4}
-                                      className="text-amber shrink-0"
+                                      className="text-amber shrink-0 translate-y-px"
                                     />
                                     <span className="font-extrabold text-amber shrink-0">
                                       {segDayLabel(seg.start, seg.end)}
@@ -349,7 +349,7 @@ export default function DutyForecastModal({
                                     <IconArrowRight
                                       size={12}
                                       strokeWidth={2.6}
-                                      className="text-txt-soft shrink-0"
+                                      className="text-txt-soft shrink-0 translate-y-px"
                                     />
                                     {sub ? (
                                       <span className="inline-flex items-center gap-1 min-w-0 shrink">
