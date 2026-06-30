@@ -7,6 +7,7 @@
 
 import { type InputHTMLAttributes, useLayoutEffect, useRef } from "react";
 import { formatBankAccount } from "../../utils/bankFormat";
+import { setCaretKeepScroll } from "../../utils/caret";
 
 interface Props
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> {
@@ -50,7 +51,8 @@ export default function BankAccountInput({
     // จากเหตุอื่น (เช่น parent state)
     if (!el || el !== document.activeElement) return;
     const pos = caretAfterDigit(el.value, digits);
-    el.setSelectionRange(pos, pos);
+    // ตั้ง caret โดยไม่ให้หน้าจอเลื่อน (กัน iOS เด้ง scroll ตอน setSelectionRange)
+    setCaretKeepScroll(el, pos);
   });
 
   const digits = (value == null ? "" : String(value)).replace(/\D/g, "");
