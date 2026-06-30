@@ -62,6 +62,10 @@ export default function DutyEditModal({
   const [excludedIds, setExcludedIds] = useState<Set<string>>(
     () => new Set(duty?.excludedEmpIds || []),
   );
+  // "คนเริ่ม" รอบแรก — anchor ของ round-robin · "" = อัตโนมัติ (hashDutyId)
+  const [rotationStartEmpId, setRotationStartEmpId] = useState<string>(
+    duty?.rotationStartEmpId || "",
+  );
   // (monthly) ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%
   const [grantsPoolEligibility, setGrantsPoolEligibility] = useState<boolean>(
     duty?.grantsPoolEligibility ?? false,
@@ -126,9 +130,17 @@ export default function DutyEditModal({
       : [],
   );
 
-  const includedCount = rotationPool.filter(
+  const includedPool = rotationPool.filter(
     (e) => !excludedIds.has(e.id) && !autoBlockedIds.has(e.id),
-  ).length;
+  );
+  const includedCount = includedPool.length;
+  // คนเริ่มต้องเป็นสมาชิกใน pool ปัจจุบัน — ถ้าถูกตัดออก/ปิดกองกลาง → กลับเป็น
+  // อัตโนมัติ (กัน anchor ชี้คนที่ไม่อยู่ใน pool แล้ว forecast เพี้ยน)
+  const effectiveStartEmpId = includedPool.some(
+    (e) => e.id === rotationStartEmpId,
+  )
+    ? rotationStartEmpId
+    : "";
 
   const canSave =
     kind === "coverage"
@@ -236,6 +248,9 @@ export default function DutyEditModal({
               toggleExclude={toggleExclude}
               autoBlockedIds={autoBlockedIds}
               includedCount={includedCount}
+              includedPool={includedPool}
+              rotationStartEmpId={effectiveStartEmpId}
+              setRotationStartEmpId={setRotationStartEmpId}
               grantsPoolEligibility={grantsPoolEligibility}
               setGrantsPoolEligibility={setGrantsPoolEligibility}
               skipSundays={skipSundays}
@@ -292,6 +307,16 @@ export default function DutyEditModal({
                         // weekly เท่านั้น · monthly บังคับ false
                         skipSundays: period === "weekly" ? skipSundays : false,
                         rotationStartDate: `${startMonth}-01`,
+                        rotationStartEmpId: effectiveStartEmpId,
+                        // anchor (คนเริ่ม / เดือนเริ่ม) เปลี่ยน → ล้าง cache
+                        // primary ของ period ปัจจุบัน เพื่อให้ค่าใหม่มีผลทันที
+                        // (ไม่งั้น cachedPrimary เดิมจะ override การคำนวณใหม่)
+                        ...((duty?.rotationStartEmpId || "") !==
+                          effectiveStartEmpId ||
+                        (duty?.rotationStartDate || "").slice(0, 7) !==
+                          startMonth
+                          ? { cachedPrimary: null }
+                          : {}),
                       },
                 );
               } catch {
@@ -479,6 +504,9 @@ function RotationFields({
   toggleExclude,
   autoBlockedIds,
   includedCount,
+  includedPool,
+  rotationStartEmpId,
+  setRotationStartEmpId,
   grantsPoolEligibility,
   setGrantsPoolEligibility,
   skipSundays,
@@ -497,6 +525,9 @@ function RotationFields({
   toggleExclude: (id: string) => void;
   autoBlockedIds: Set<string>;
   includedCount: number;
+  includedPool: Employee[];
+  rotationStartEmpId: string;
+  setRotationStartEmpId: (id: string) => void;
   grantsPoolEligibility: boolean;
   setGrantsPoolEligibility: (v: boolean) => void;
   skipSundays: boolean;
@@ -662,6 +693,57 @@ function RotationFields({
               (ติดทั้งเดือนเสี่ยงหลุดเกณฑ์เงินเดือนพื้นฐาน 50%)
             </div>
           )}
+        </div>
+      )}
+
+      {/* คนเริ่ม (เดือนแรก) — admin เลือก anchor ของรอบ · default = อัตโนมัติ */}
+      {includedPool.length > 0 && (
+        <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
+          <label className="text-xs text-maroon font-bold mb-1 block">
+            คนเริ่ม (เดือนแรก)
+          </label>
+          <div className="text-xs text-txt-soft mb-2">
+            เลือกคนที่จะทำหน้าที่นี้ในเดือนเริ่ม แล้วระบบจะหมุนเวียนต่อจากคนนี้ตามลำดับ · "อัตโนมัติ"
+            = ระบบเลือกให้เอง
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setRotationStartEmpId("")}
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer font-[inherit] border transition-all active:scale-[0.96] ${
+                rotationStartEmpId === ""
+                  ? "bg-maroon text-white border-maroon"
+                  : "bg-white text-txt-mid border-bdr hover:border-maroon"
+              }`}
+            >
+              อัตโนมัติ
+            </button>
+            {includedPool.map((emp) => {
+              const on = rotationStartEmpId === emp.id;
+              return (
+                <button
+                  key={emp.id}
+                  type="button"
+                  onClick={() => setRotationStartEmpId(emp.id)}
+                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold cursor-pointer font-[inherit] border transition-all active:scale-[0.96] ${
+                    on
+                      ? "bg-maroon text-white border-maroon"
+                      : "bg-white text-txt-mid border-bdr hover:border-maroon"
+                  }`}
+                >
+                  <AvatarCircle
+                    avatar={emp.avatar}
+                    avatarType={emp.avatarType}
+                    avatarImageUrl={emp.avatarImageUrl}
+                    size={18}
+                    fontSize={9}
+                    border="none"
+                  />
+                  {emp.nickname || emp.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </>

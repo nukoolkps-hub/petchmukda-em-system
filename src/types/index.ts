@@ -262,6 +262,11 @@ export interface Duty {
    *  เพื่อให้พนักงาน focus ขาย (วันอาทิตย์ลูกค้าเยอะ) · default = false  */
   skipSundays?: boolean;
   rotationStartDate: string; // "YYYY-MM-DD"
+  /** (rotation) "คนเริ่ม" ของรอบแรก — admin เลือกว่าใครทำหน้าที่นี้ในเดือน
+   *  เริ่ม (rotationStartDate) · เป็น anchor ของ round-robin แทน hashDutyId
+   *  แล้วหมุนเวียนต่อจากคนนี้ตามลำดับ pool · "" / unset / คนหลุดจาก pool →
+   *  fallback ใช้ hashDutyId (พฤติกรรมเดิม · backward compatible)          */
+  rotationStartEmpId?: string;
   // ─── coverage (kind="coverage") ───────────────────────────────
   coverageRoleId?: string; // ตำแหน่งเป้าหมาย — เมื่อคนในตำแหน่งนี้ลา ต้องหาคนแทน
   candidateEmpIds?: string[]; // รายชื่อคนแทน (admin เลือก · ระบบหมุนให้ยุติธรรม)
