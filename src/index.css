@@ -193,6 +193,16 @@ summary {
   -webkit-overflow-scrolling: touch;
 }
 
+/* มือถือ: ตอนแตะช่องกรอก เบราว์เซอร์จะ scroll ช่องเข้ามาในจอ — เผื่อระยะขอบ
+   บน/ล่าง ไม่ให้ช่องถูก scroll ไปชิดคีย์บอร์ด/แถบเมนูล่าง (กันหน้าจอกระตุก
+   ซ้ำ + caret ถูกบังจนดูเหมือนไม่ตรง) */
+input,
+textarea,
+select {
+  scroll-margin-top: 80px;
+  scroll-margin-bottom: 100px;
+}
+
 /* ─── Keyframe Animations ──────────────────────────────────── */
 @keyframes toastIn {
   from {
