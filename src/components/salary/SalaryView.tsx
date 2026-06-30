@@ -38,6 +38,7 @@ import {
   isLineWebview,
   openInExternalBrowser,
 } from "../../print/webviewHelpers";
+import { formatBankAccount } from "../../utils/bankFormat";
 import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import {
@@ -776,7 +777,7 @@ export default function SalaryView({
                 {employeeInfo?.bank || "-"}
               </div>
               <div className="text-sm text-txt-mid tracking-wider">
-                {employeeInfo?.bankAccountNumber || "-"}
+                {formatBankAccount(employeeInfo?.bankAccountNumber) || "-"}
               </div>
             </div>
           </div>
@@ -1307,7 +1308,7 @@ export default function SalaryView({
             {employeeInfo?.bank || "-"}
           </div>
           <div className="text-sm text-txt-mid tracking-wider">
-            {employeeInfo?.bankAccountNumber || "-"}
+            {formatBankAccount(employeeInfo?.bankAccountNumber) || "-"}
           </div>
         </div>
       </div>

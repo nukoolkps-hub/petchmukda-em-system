@@ -13,6 +13,7 @@ import { useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useAdvancesByStatusAndMonth } from "../../firebase/hooks/useFirestore";
 import { uploadAdvanceSlip } from "../../firebase/storage";
+import { formatBankAccount } from "../../utils/bankFormat";
 import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
@@ -370,7 +371,8 @@ export default function AdminAdvancePanel({
                           {employeeInfo.bank || "-"}
                         </div>
                         <div className="text-sm font-bold text-txt tracking-[0.04em]">
-                          {employeeInfo.bankAccountNumber || "-"}
+                          {formatBankAccount(employeeInfo.bankAccountNumber) ||
+                            "-"}
                         </div>
                       </div>
                       <div
