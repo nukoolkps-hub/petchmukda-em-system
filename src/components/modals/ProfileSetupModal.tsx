@@ -11,6 +11,7 @@ import { uploadAvatar } from "../../firebase/storage";
 import { resizeAvatar } from "../../utils/imageUtils";
 import { validateBankAccount, validateRequired } from "../../utils/validators";
 import AvatarCircle from "../shared/AvatarCircle";
+import BankAccountInput from "../shared/BankAccountInput";
 import BankPicker from "../shared/BankPicker";
 import BaseModal from "../shared/BaseModal";
 import Spinner from "../shared/Spinner";
@@ -370,15 +371,12 @@ export default function ProfileSetupModal({
         <label className="block text-sm text-txt-soft font-semibold mb-1">
           เลขที่บัญชี
         </label>
-        <input
+        <BankAccountInput
           value={bankAccountNumber}
-          onChange={(e) => {
+          maxDigits={getBankAccountDigits(bank)}
+          onChange={(digits) => {
             if (lockBank) return;
-            // เก็บเป็นเลขล้วน — ตัด - / ช่องว่าง / ตัวอักษรทิ้งตอนพิมพ์
-            // (format - ทำตอนแสดงผลด้วย formatBankAccount) + จำกัด digit ตามธนาคาร
-            const digitsOnly = e.target.value.replace(/[^0-9]/g, "");
-            if (digitsOnly.length > getBankAccountDigits(bank)) return;
-            setBankAcc(digitsOnly);
+            setBankAcc(digits); // เก็บเลขล้วน · ใส่ - ตอนแสดงให้อัตโนมัติ
           }}
           readOnly={lockBank}
           placeholder="เช่น 123-4-56789-0"

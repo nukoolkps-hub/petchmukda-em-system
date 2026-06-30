@@ -34,6 +34,7 @@ import {
   rolePrimaryPoolItemId,
 } from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
+import BankAccountInput from "../shared/BankAccountInput";
 import BankPicker from "../shared/BankPicker";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
@@ -484,24 +485,20 @@ export default function EmployeeEditModal({
                   placeholder="— เลือกธนาคาร —"
                 />
               </div>
-              <input
-                type="text"
-                inputMode="numeric"
+              <BankAccountInput
                 value={
                   editingBankAccountNumber !== undefined
                     ? editingBankAccountNumber
-                    : (employee.bankAccountNumber || "").replace(/[^0-9]/g, "")
+                    : employee.bankAccountNumber || ""
                 }
-                onChange={(e) => {
-                  // เก็บเป็นเลขล้วน — ตัด - / ช่องว่าง / ตัวอักษรทิ้งตอนพิมพ์
-                  // (format - ทำตอนแสดงผลด้วย formatBankAccount) + จำกัด digit
-                  const digitsOnly = e.target.value.replace(/[^0-9]/g, "");
-                  if (digitsOnly.length > bankDigitLimit) return;
+                maxDigits={bankDigitLimit}
+                onChange={(digits) =>
+                  // เก็บเป็นเลขล้วน · BankAccountInput ใส่ - ให้ตอนแสดง
                   setEditingRole((previousEditingRole) => ({
                     ...previousEditingRole,
-                    [`${employee.id}:bankAccountNumber`]: digitsOnly,
-                  }));
-                }}
+                    [`${employee.id}:bankAccountNumber`]: digits,
+                  }))
+                }
                 placeholder="เลขที่บัญชี"
                 className={`w-full py-[9px] px-3 rounded-[9px] text-sm font-bold outline-none font-[Prompt,monospace] tracking-wider text-txt border-[1.5px] ${bankAccountIncomplete ? "border-amber bg-white" : editingBankAccountNumber !== undefined ? "border-gold bg-white" : "border-bdr bg-cream"}`}
               />
