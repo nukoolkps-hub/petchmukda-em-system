@@ -6,6 +6,7 @@
    - onChange ส่งกลับเป็น raw (ไม่มี comma) → parent ใช้ parseFloat ได้เลย    */
 
 import { type InputHTMLAttributes, useLayoutEffect, useRef } from "react";
+import { setCaretKeepScroll } from "../../utils/caret";
 import { caretPosFromDigits, formatTypedNumber } from "../../utils/format";
 
 interface Props
@@ -31,7 +32,8 @@ export default function MoneyInput({ value, onChange, ...rest }: Props) {
     // cursor เด้งผิดที่
     if (!el || el !== document.activeElement) return;
     const pos = caretPosFromDigits(el.value, digits);
-    el.setSelectionRange(pos, pos);
+    // ตั้ง caret โดยไม่ให้หน้าจอเลื่อน (กัน iOS เด้ง scroll ตอน setSelectionRange)
+    setCaretKeepScroll(el, pos);
   });
 
   const raw = value == null ? "" : String(value).replace(/,/g, "");

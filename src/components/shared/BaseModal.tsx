@@ -26,6 +26,10 @@ export default function BaseModal({
   // exit animation · setClosing=true → dialog เล่น dialogOut (overlay โผล่/หาย
   // ทันที ไม่ animate) · จากนั้นเรียก onClose() จริง · กัน double-fire ด้วย flag
   const [closing, setClosing] = useState(false);
+  // will-change:transform ค้างถาวร = บน iOS สร้าง layer ที่ทำให้ caret (cursor)
+  // ใน input เลื่อนผิดตำแหน่ง · ใส่ will-change เฉพาะ "ตอน animate" แล้วถอดออก
+  // เมื่อ idle → input ใน modal พิมพ์แล้ว cursor ตรง
+  const [animating, setAnimating] = useState(true);
 
   const requestClose = useCallback(() => {
     if (closing) return;
@@ -56,7 +60,12 @@ export default function BaseModal({
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
-        className={`w-full ${maxWidthClass} max-h-[88dvh] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-[0_24px_60px_rgba(45,26,14,0.3)] [will-change:transform,opacity] ${
+        onAnimationEnd={() => setAnimating(false)}
+        className={`w-full ${maxWidthClass} max-h-[88dvh] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-[0_24px_60px_rgba(45,26,14,0.3)] ${
+          // ใส่ will-change เฉพาะตอน animate (entrance/exit) แล้วถอดเมื่อ idle —
+          // กัน caret ใน input เลื่อนผิดบน iOS (transform layer ค้าง)
+          animating || closing ? "[will-change:transform,opacity]" : ""
+        } ${
           closing
             ? "animate-[dialogOut_0.14s_ease-in_forwards]"
             : "animate-[dialogIn_0.18s_cubic-bezier(0.2,0.8,0.2,1)]"
