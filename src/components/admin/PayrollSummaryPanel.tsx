@@ -1,5 +1,6 @@
 import {
   AlertTriangle as IconAlertTriangle,
+  Ban as IconBan,
   Banknote as IconBanknote,
   Briefcase as IconBriefcase,
   CalendarDays as IconCalendar,
@@ -7,12 +8,10 @@ import {
   CircleCheck as IconCircleCheck,
   Copy as IconCopy,
   CreditCard as IconCreditCard,
-  Diamond as IconDiamond,
   History as IconHistory,
   Lock as IconLock,
   RefreshCw as IconRefresh,
   Search as IconSearch,
-  ShoppingBag as IconShoppingBag,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { COLORS } from "../../constants";
@@ -26,6 +25,10 @@ import {
   settleEmployeeMonth,
 } from "../../utils/payrollCompute";
 import { getPayrollLock, isMonthLocked } from "../../utils/payrollLock";
+import {
+  resolvePoolExclusionItemIds,
+  rolePoolItems,
+} from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
@@ -725,41 +728,42 @@ export default function PayrollSummaryPanel({
                     <div className="font-bold text-txt text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                       {employee.name}
                     </div>
-                    <div className="text-xs text-txt-soft flex items-center gap-1">
+                    <div className="text-xs text-txt-soft flex items-center gap-1 flex-wrap">
                       <IconBriefcase
                         size={11}
                         strokeWidth={2.4}
                         className="shrink-0"
                       />
                       {employee.role || "-"}
-                      {employee.poolExclusion &&
-                        (() => {
-                          const m = {
-                            sell: (
-                              <span className="inline-flex items-center gap-0.5">
-                                <IconDiamond size={11} strokeWidth={2.4} />
-                                ปิดขาย
-                              </span>
-                            ),
-                            buy: (
-                              <span className="inline-flex items-center gap-0.5">
-                                <IconShoppingBag size={11} strokeWidth={2.4} />
-                                ปิดซื้อ
-                              </span>
-                            ),
-                            both: (
-                              <span className="inline-flex items-center gap-0.5">
-                                <IconLock size={11} strokeWidth={2.4} />
-                                ปิดทั้งคู่
-                              </span>
-                            ),
-                          };
-                          return (
-                            <span className="px-1.5 py-1 rounded-md bg-red-lt text-red font-bold text-xs">
-                              {m[employee.poolExclusion]}
-                            </span>
+                      {/* badge ปิดสิทธิ์ — ใช้ snapshot ของเดือน (poolShare) +
+                          resolve เป็น item ids จริง · รองรับ "all"/per-item array/
+                          legacy (sell/buy/both) · label ตาม item จริงไม่ hardcode */}
+                      {(() => {
+                        const exc =
+                          poolShare?.poolExclusion ?? employee.poolExclusion;
+                        if (!exc) return null;
+                        const poolItemsCfg =
+                          (poolShare?.poolItems as any[]) ||
+                          rolePoolItems(
+                            roles?.find((r) => r.id === employee.roleId),
                           );
-                        })()}
+                        const { excludedIds, isAll } =
+                          resolvePoolExclusionItemIds(exc, poolItemsCfg);
+                        if (excludedIds.size === 0) return null;
+                        const labels = poolItemsCfg
+                          .filter((it: any) => excludedIds.has(it.id))
+                          .map((it: any) => it.label);
+                        const text = isAll
+                          ? "ปิดกองกลางทั้งหมด"
+                          : `ปิด ${labels.join(" · ")}`;
+                        const ExclusionIcon = isAll ? IconLock : IconBan;
+                        return (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-1 rounded-md bg-red-lt text-red font-bold text-xs">
+                            <ExclusionIcon size={11} strokeWidth={2.4} />
+                            {text}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div className="text-right">
