@@ -28,6 +28,7 @@ import { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../../constants";
 import { buildLoanContext } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
+import { useStableScrollOnReflow } from "../../hooks/useStableScrollOnReflow";
 import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import {
@@ -121,6 +122,9 @@ export default function SalaryAdminEdit({
   );
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
+  // กัน "หน้าจอขยับ" ตอนพิมพ์จำนวนชิ้น — เนื้อหา (สถานะกองกลาง/เตือน) เหนือ
+  // ช่องกรอกคำนวณใหม่แล้วดันความสูง → ชดเชย scroll ให้ช่องอยู่ที่เดิมบนจอ
+  useStableScrollOnReflow();
   const [showPoolFlow, setShowPoolFlow] = useState(false);
   const [showPoolAdjust, setShowPoolAdjust] = useState(false);
   // กล่องเตือน "draft จะหาย" ในแอป (แทน window.confirm ที่เพี้ยนใน mobile webview)
