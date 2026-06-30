@@ -168,6 +168,10 @@ export default function SalaryAdminEdit({
   };
   const data = useMemo(() => ({ ...savedData, ...draft }), [savedData, draft]);
   const dirty = Object.keys(draft).length > 0;
+  // มี salary doc ของเดือนนี้จริงไหม (savedData fallback เป็น default object
+  // เสมอ จึงเช็คที่ salaryData ตรงๆ) — ไม่มี doc = ตอนยืนยันยอดจะไม่ถูกรวม
+  // (computeEmployeeMonthRow คืน null ถ้าไม่มี data) → ต้องกดบันทึกก่อน
+  const hasMonthDoc = !!salaryData[selectedEmployeeId]?.[selectedMonth];
 
   // sync dirty ขึ้น parent (สำหรับเตือนก่อนเปลี่ยน section)
   useEffect(() => {
@@ -510,7 +514,10 @@ export default function SalaryAdminEdit({
     removeCustomItem("customDeductions", i);
 
   async function saveAll() {
-    if (!dirty || saving) return;
+    // ปกติบันทึกเมื่อมีการแก้ (dirty) · แต่ถ้ายังไม่มี doc ของเดือนนี้เลย
+    // อนุญาตให้กดบันทึกได้แม้ไม่แก้อะไร — สร้าง doc (ชิ้น = 0) เพื่อให้เข้ารอบจ่าย
+    // (รับเงินเดือนพื้นฐาน) · updateSalary จะ stamp roleId/เรท/leave ให้อัตโนมัติ
+    if ((!dirty && hasMonthDoc) || saving) return;
     const nextMonthData = { ...savedData, ...draft };
     setSaving(true);
     try {
@@ -648,6 +655,23 @@ export default function SalaryAdminEdit({
         salaryData={salaryData}
         selectedMonth={selectedMonth}
       />
+
+      {/* เตือน: ยังไม่มีข้อมูลเดือนนี้ → จะไม่ถูกรวมในรอบจ่ายจนกว่าจะกดบันทึก ·
+          คนที่ไม่มีจำนวนชิ้นขาย/รับซื้อ (เช่น ผู้บริหาร) ก็กดบันทึกเข้ารอบได้เลย */}
+      {!hasMonthDoc && !locked && (
+        <div className="rounded-[14px] px-4 py-3 mb-3.5 border-[1.5px] bg-amber-lt border-amber/40 flex items-start gap-2.5">
+          <IconAlertTriangle
+            size={18}
+            strokeWidth={2.4}
+            className="text-amber shrink-0 mt-0.5"
+          />
+          <div className="text-sm text-txt leading-snug">
+            <b className="text-amber">ยังไม่มีข้อมูลเดือนนี้</b> — พนักงานคนนี้จะ
+            <b>ไม่ถูกรวมในรอบจ่าย</b>จนกว่าจะกดบันทึก · ถ้าไม่มีจำนวนชิ้นขาย/รับซื้อ (เช่น
+            ผู้บริหาร) กด <b>"บันทึกเข้ารอบจ่าย"</b> ด้านล่างได้เลย เพื่อรับเงินเดือนพื้นฐาน
+          </div>
+        </div>
+      )}
 
       {/* Pool info card — แสดงตอนอยู่ใน group */}
       {poolShare && poolGroupEmployees.length > 1 && (
@@ -1989,37 +2013,51 @@ export default function SalaryAdminEdit({
       </div>
 
       {/* Sticky Save / Cancel bar — fixed bottom · clear BottomNav (mobile)
-          · style เดียวกับ EmployeeEditModal save bar (PR #467 spec) */}
-      {dirty && (
-        <>
-          {/* spacer ใต้ content กัน sticky bar ทับเนื้อหา */}
-          <div className="h-[80px]" />
-          <div className="fixed left-1/2 -translate-x-1/2 w-full max-w-[430px] md:max-w-[800px] bottom-[68px] md:bottom-3 z-50 px-3 md:px-6">
-            <div className="bg-white border-[1.5px] border-bdr rounded-2xl shadow-[0_-6px_24px_rgba(90,30,10,0.15)] p-2.5 flex gap-2">
-              <button
-                onClick={cancelAll}
-                className="basis-[34%] shrink-0 py-3.5 rounded-2xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={saveAll}
-                disabled={saving || locked}
-                className={`flex-1 py-3.5 rounded-2xl border-none bg-maroon text-white text-base font-bold font-[inherit] flex items-center justify-center gap-2 shadow-maroon-glow ${saving || locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
-              >
-                {locked ? (
-                  <IconLock size={16} strokeWidth={2.5} />
-                ) : saving ? (
-                  <Spinner size={16} />
-                ) : (
-                  <IconCheck size={16} strokeWidth={2.5} />
+          · style เดียวกับ EmployeeEditModal save bar (PR #467 spec)
+          แสดงเมื่อ: มีการแก้ (dirty) · หรือยังไม่มี doc เดือนนี้ (createOnly) —
+          ให้กดบันทึกเข้ารอบจ่ายได้แม้ไม่มีจำนวนชิ้น (รับเงินเดือนพื้นฐาน) */}
+      {(() => {
+        const createOnly = !dirty && !hasMonthDoc && !locked;
+        if (!dirty && !createOnly) return null;
+        return (
+          <>
+            {/* spacer ใต้ content กัน sticky bar ทับเนื้อหา */}
+            <div className="h-[80px]" />
+            <div className="fixed left-1/2 -translate-x-1/2 w-full max-w-[430px] md:max-w-[800px] bottom-[68px] md:bottom-3 z-50 px-3 md:px-6">
+              <div className="bg-white border-[1.5px] border-bdr rounded-2xl shadow-[0_-6px_24px_rgba(90,30,10,0.15)] p-2.5 flex gap-2">
+                {dirty && (
+                  <button
+                    onClick={cancelAll}
+                    className="basis-[34%] shrink-0 py-3.5 rounded-2xl border-[1.5px] border-bdr bg-white text-txt-mid text-base font-semibold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
+                  >
+                    ยกเลิก
+                  </button>
                 )}
-                {locked ? "ปิดรอบแล้ว" : saving ? "กำลังบันทึก..." : "บันทึก"}
-              </button>
+                <button
+                  onClick={saveAll}
+                  disabled={saving || locked}
+                  className={`flex-1 py-3.5 rounded-2xl border-none bg-maroon text-white text-base font-bold font-[inherit] flex items-center justify-center gap-2 shadow-maroon-glow ${saving || locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+                >
+                  {locked ? (
+                    <IconLock size={16} strokeWidth={2.5} />
+                  ) : saving ? (
+                    <Spinner size={16} />
+                  ) : (
+                    <IconCheck size={16} strokeWidth={2.5} />
+                  )}
+                  {locked
+                    ? "ปิดรอบแล้ว"
+                    : saving
+                      ? "กำลังบันทึก..."
+                      : createOnly
+                        ? "บันทึกเข้ารอบจ่าย"
+                        : "บันทึก"}
+                </button>
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        );
+      })()}
 
       {/* กล่องเตือนก่อนสลับพนักงาน/เดือน ทั้งที่ยังมี draft ค้าง (in-app) */}
       {pendingNav && (

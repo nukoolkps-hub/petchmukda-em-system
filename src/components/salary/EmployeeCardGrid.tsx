@@ -16,22 +16,12 @@ interface Props {
   selectedMonth: string;
 }
 
-/** มีจำนวนชิ้น/ข้อมูลค่าคอมของเดือนนี้ไหม (รวม multi-item + legacy) */
+/** มี salary doc ของเดือนนี้ไหม = "บันทึกแล้ว" → เข้ารอบจ่ายแล้ว (ได้รับเงิน
+ *  เดือนพื้นฐานเป็นอย่างน้อย) · ไม่มี doc = ตอนยืนยันยอดจะไม่ถูกรวม
+ *  (เดิมเช็คเฉพาะ "มีจำนวนชิ้น > 0" ทำให้คนที่บันทึกแล้วแต่ไม่มีชิ้น เช่น
+ *   ผู้บริหาร ขึ้นจุดเทาเหมือนคนที่ยังไม่บันทึก — แยกไม่ออกว่าใครตกหล่น) */
 function cardHasData(monthData?: Record<string, any> | null): boolean {
-  const someValPositive = (m?: Record<string, unknown> | null) =>
-    !!m && Object.values(m).some((v) => (Number(v) || 0) > 0);
-  return !!(
-    monthData &&
-    ((monthData.singleRatePieces || 0) > 0 ||
-      someValPositive(monthData.piecePieces) ||
-      someValPositive(monthData.poolItemPieces) ||
-      someValPositive(monthData.bonusCounts) ||
-      (monthData.normalSalePieces || 0) > 0 ||
-      (monthData.specialSalePieces || 0) > 0 ||
-      (monthData.buyPieces || 0) > 0 ||
-      (monthData.invitePieces || 0) > 0 ||
-      (monthData.transferPieces || 0) > 0)
-  );
+  return !!monthData;
 }
 
 export default function EmployeeCardGrid({
