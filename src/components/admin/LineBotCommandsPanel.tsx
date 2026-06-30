@@ -152,7 +152,7 @@ function CommandCard({ command }: { command: BotCommand }) {
           {command.command}
         </code>
         {command.admin && (
-          <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-maroon/10 text-maroon text-xs font-bold">
+          <span className="ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-[6px] bg-maroon/10 text-maroon text-xs font-bold">
             <IconLock size={10} strokeWidth={2.6} />
             admin
           </span>

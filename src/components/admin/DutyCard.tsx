@@ -138,12 +138,12 @@ export default function DutyCard({
               ? `แทนคนลา · ${coverageRole?.name || "(ลบแล้ว)"}`
               : `สลับทุก${duty.period === "weekly" ? "สัปดาห์" : "เดือน"}`}
             {duty.period === "monthly" && duty.grantsPoolEligibility && (
-              <span className="px-1.5 py-0.5 rounded-[6px] bg-gold-pale text-maroon font-bold text-[10px]">
+              <span className="px-1.5 py-1 rounded-[6px] bg-gold-pale text-maroon font-bold text-[10px]">
                 ให้สิทธิ์กองกลาง
               </span>
             )}
             {!isCoverage && duty.period === "weekly" && duty.skipSundays && (
-              <span className="px-1.5 py-0.5 rounded-[6px] bg-maroon/10 text-maroon font-bold text-[10px] inline-flex items-center gap-0.5">
+              <span className="px-1.5 py-1 rounded-[6px] bg-maroon/10 text-maroon font-bold text-[10px] inline-flex items-center gap-0.5">
                 <IconCalendarX size={10} strokeWidth={2.6} />
                 ข้ามวันอาทิตย์
               </span>

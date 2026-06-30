@@ -38,7 +38,7 @@ export default function EmployeeViewPreview({
           <button
             type="button"
             onClick={() => onPickerOpenChange(true)}
-            className="ml-1 px-2 py-0.5 rounded-full border-none bg-maroon/15 text-maroon-dk text-xs font-bold cursor-pointer font-[inherit]"
+            className="ml-1 px-2 py-1 rounded-full border-none bg-maroon/15 text-maroon-dk text-xs font-bold cursor-pointer font-[inherit]"
           >
             เปลี่ยน
           </button>
@@ -46,7 +46,7 @@ export default function EmployeeViewPreview({
             type="button"
             onClick={() => onSelect(null)}
             aria-label="ออกจากมุมมองพนักงาน"
-            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full border-none bg-maroon text-white text-xs font-bold cursor-pointer font-[inherit]"
+            className="inline-flex items-center gap-0.5 px-2 py-1 rounded-full border-none bg-maroon text-white text-xs font-bold cursor-pointer font-[inherit]"
           >
             <IconX size={13} strokeWidth={2.6} />
             ออก

@@ -155,12 +155,12 @@ export default function EmployeeLoansPanel({
                     </button>
                   )}
                   {done ? (
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-lt text-green inline-flex items-center gap-1 shrink-0">
+                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-lt text-green inline-flex items-center gap-1 shrink-0">
                       <IconCircleCheck size={12} strokeWidth={2.5} />
                       ผ่อนครบแล้ว
                     </span>
                   ) : cancelled ? (
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-bdr text-txt-soft shrink-0">
+                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-bdr text-txt-soft shrink-0">
                       ยกเลิก
                     </span>
                   ) : (

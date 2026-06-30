@@ -416,13 +416,13 @@ export default function RequestTab({
                       <div className="font-bold text-txt text-base mb-0.5 flex items-center gap-1.5 flex-wrap">
                         {lt?.label}
                         {h.createdByAdmin && (
-                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-0.5 rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
+                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-1 rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
                             <IconShieldCheck size={10} strokeWidth={2.6} />
                             ADMIN
                           </span>
                         )}
                         {hasDeductibleSunday(h.start, h.end, storeCalendar) && (
-                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-0.5 rounded-[10px] bg-amber-lt text-amber border border-amber/40 inline-flex items-center gap-0.5">
+                          <span className="text-xs font-extrabold tracking-wide px-1.5 py-1 rounded-[10px] bg-amber-lt text-amber border border-amber/40 inline-flex items-center gap-0.5">
                             <IconSun size={10} strokeWidth={2.6} />
                             อาทิตย์ ×1.5
                           </span>

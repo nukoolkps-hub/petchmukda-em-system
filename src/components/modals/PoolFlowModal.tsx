@@ -392,7 +392,7 @@ function PoolItemFlow({
           >
             <div className="text-xs font-bold text-txt truncate">{m.name}</div>
             {m.excluded && (
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-red bg-red-lt rounded px-1 py-0.5 mt-0.5">
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-red bg-red-lt rounded px-1 py-1 mt-0.5">
                 <IconBan size={9} strokeWidth={2.6} />
                 ถูกปิดรายการนี้
               </span>
