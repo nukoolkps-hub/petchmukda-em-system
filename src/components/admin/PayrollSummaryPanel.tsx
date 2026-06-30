@@ -1,6 +1,5 @@
 import {
   AlertTriangle as IconAlertTriangle,
-  Ban as IconBan,
   Banknote as IconBanknote,
   Briefcase as IconBriefcase,
   CalendarDays as IconCalendar,
@@ -25,10 +24,6 @@ import {
   settleEmployeeMonth,
 } from "../../utils/payrollCompute";
 import { getPayrollLock, isMonthLocked } from "../../utils/payrollLock";
-import {
-  resolvePoolExclusionItemIds,
-  rolePoolItems,
-} from "../../utils/salaryUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
@@ -728,42 +723,13 @@ export default function PayrollSummaryPanel({
                     <div className="font-bold text-txt text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                       {employee.name}
                     </div>
-                    <div className="text-xs text-txt-soft flex items-center gap-1 flex-wrap">
+                    <div className="text-xs text-txt-soft flex items-center gap-1">
                       <IconBriefcase
                         size={11}
                         strokeWidth={2.4}
                         className="shrink-0"
                       />
                       {employee.role || "-"}
-                      {/* badge ปิดสิทธิ์ — ใช้ snapshot ของเดือน (poolShare) +
-                          resolve เป็น item ids จริง · รองรับ "all"/per-item array/
-                          legacy (sell/buy/both) · label ตาม item จริงไม่ hardcode */}
-                      {(() => {
-                        const exc =
-                          poolShare?.poolExclusion ?? employee.poolExclusion;
-                        if (!exc) return null;
-                        const poolItemsCfg =
-                          (poolShare?.poolItems as any[]) ||
-                          rolePoolItems(
-                            roles?.find((r) => r.id === employee.roleId),
-                          );
-                        const { excludedIds, isAll } =
-                          resolvePoolExclusionItemIds(exc, poolItemsCfg);
-                        if (excludedIds.size === 0) return null;
-                        const labels = poolItemsCfg
-                          .filter((it: any) => excludedIds.has(it.id))
-                          .map((it: any) => it.label);
-                        const text = isAll
-                          ? "ปิดกองกลางทั้งหมด"
-                          : `ปิด ${labels.join(" · ")}`;
-                        const ExclusionIcon = isAll ? IconLock : IconBan;
-                        return (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-1 rounded-md bg-red-lt text-red font-bold text-xs">
-                            <ExclusionIcon size={11} strokeWidth={2.4} />
-                            {text}
-                          </span>
-                        );
-                      })()}
                     </div>
                   </div>
                   <div className="text-right">
