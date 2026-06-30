@@ -500,6 +500,7 @@ export function computePoolSharesForGroup({
   poolAdjustment, // { items: [{poolGroup, side, pieces, label}] } — ระดับเดือน
   poolGroup, // ตำแหน่ง/กลุ่มที่กำลังคำนวณ — กรอง adjustment เฉพาะของกลุ่มนี้
   storeCalendar, // ปฏิทินเปิด-ปิดร้าน · ใช้นับวันลา (Sat ปิด → ไม่นับ)
+  payPersonalUnderAllExclusion = false,
 }: {
   groupEmployeeIds: string[];
   salaryData: any;
@@ -523,6 +524,12 @@ export function computePoolSharesForGroup({
     extraClosedWeekdays: string[];
     extraClosedSundays?: string[];
   } | null;
+  /** poolExclusion="all" = ปิด "กองกลาง" ทั้งหมด · เมื่อ flag นี้ true →
+   *  รายการ "ส่วนตัว" (kind=personal เช่น ขายพิเศษ) ยังจ่ายตามที่ตัวเองทำ
+   *  (ไม่ใช่ของกองกลาง) · per-item exclusion ที่เลือก item นั้นตรงๆ ยังตัดอยู่
+   *  default false = พฤติกรรมเดิม (ปิดทั้งหมดตัด personal ด้วย) — caller ส่ง
+   *  true เฉพาะเดือนที่ยังไม่ freeze (เดือน freeze ต้องคงยอดเดิมไว้)         */
+  payPersonalUnderAllExclusion?: boolean;
 }) {
   if (!groupEmployeeIds || groupEmployeeIds.length === 0) return {};
 
@@ -652,12 +659,14 @@ export function computePoolSharesForGroup({
   // --- Step 1: per-item eligibility (resolve legacy + per-item array) ---
   // resolve poolExclusion → set ของ item ids ที่โดน exclude ต่อพนักงาน
   const exclusionByEmp: Record<string, Set<string>> = {};
+  const isAllExcludedByEmp: Record<string, boolean> = {};
   activeIds.forEach((employeeId) => {
-    const { excludedIds } = resolvePoolExclusionItemIds(
+    const { excludedIds, isAll } = resolvePoolExclusionItemIds(
       poolExclusion[employeeId],
       poolItemsConfig,
     );
     exclusionByEmp[employeeId] = excludedIds;
+    isAllExcludedByEmp[employeeId] = isAll;
   });
   // itemEligibility[empId][itemId] = true/false · เฉพาะ kind=pool item
   const itemEligibility: Record<string, Record<string, boolean>> = {};
@@ -866,13 +875,17 @@ export function computePoolSharesForGroup({
       });
     } else {
       // personal: pieces ของตัวเอง · 100% share · ไม่หักลาแบบกอง
-      // CRITICAL bug fix: ถ้า admin set poolExclusion ของพนักงานครอบคลุม item นี้
-      // (รวม "all") → ตัด commission ของ item นี้ด้วย (เดิม personal ได้เงิน
-      // ตลอด ไม่ honor exclusion · admin ปิดทั้งหมดแล้ว personal ยังได้เงิน)
+      // exclusion: per-item ที่เลือก item นี้ตรงๆ → ตัด commission
+      // "ปิดทั้งหมด" (isAll): ปิดเฉพาะ "กองกลาง" — รายการส่วนตัว (เช่น ขายพิเศษ)
+      // ยังจ่ายตามที่ตัวเองทำ เมื่อ payPersonalUnderAllExclusion (เดือนไม่ freeze)
+      // · เดือน freeze ส่ง flag=false → คงพฤติกรรมเดิม (ปิดทั้งหมดตัด personal ด้วย)
       activeIds.forEach((empId) => {
         if (!itemShares[empId]) itemShares[empId] = {};
         const myPieces = itemPiecesByEmp[empId]?.[it.id] || 0;
-        const excluded = exclusionByEmp[empId]?.has(it.id) ?? false;
+        const excluded =
+          isAllExcludedByEmp[empId] && payPersonalUnderAllExclusion
+            ? false
+            : (exclusionByEmp[empId]?.has(it.id) ?? false);
         itemShares[empId][it.id] = {
           finalSharePercent: excluded ? 0 : 100,
           allocatedPieces: excluded ? 0 : myPieces,
@@ -940,6 +953,9 @@ export function computePoolSharesForGroup({
       buyEligibilityThreshold,
       baseSalaryEligibilityThreshold,
       poolExclusion: poolExclusion[employeeId],
+      /** ได้สิทธิ์กองกลางจากหน้าที่ประจำเดือน (เช่น ONLINE) แม้ขาย/ซื้อ < 80%
+       *  — ใช้แสดง badge "ผ่านเพราะทำหน้าที่" ในรายชื่อกลุ่ม */
+      poolThresholdExempt: thresholdExempt[employeeId] === true,
       losesBaseSalary,
       sellShareRatio: sellShare ? sellShare.finalSharePercent / 100 : 0,
       buyShareRatio: buyShare ? buyShare.finalSharePercent / 100 : 0,

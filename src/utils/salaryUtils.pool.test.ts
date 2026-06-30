@@ -11,11 +11,16 @@ interface EmpSpec {
   totalLeaveDays?: number;
   poolExclusion?: unknown;
   salaryDisabled?: boolean;
+  poolThresholdExempt?: boolean;
 }
 
 function pool(
   employees: EmpSpec[],
-  opts: { adjustment?: any; role?: any } = {},
+  opts: {
+    adjustment?: any;
+    role?: any;
+    payPersonalUnderAllExclusion?: boolean;
+  } = {},
 ) {
   const role = opts.role ?? ROLE;
   const salaryData: Record<string, any> = {};
@@ -31,6 +36,8 @@ function pool(
     if (e.totalLeaveDays != null) doc.totalLeaveDays = e.totalLeaveDays;
     if (e.poolExclusion !== undefined) doc.poolExclusion = e.poolExclusion;
     if (e.salaryDisabled != null) doc.salaryDisabled = e.salaryDisabled;
+    if (e.poolThresholdExempt != null)
+      doc.poolThresholdExempt = e.poolThresholdExempt;
     salaryData[e.id] = { [YM]: doc };
   }
   return computePoolSharesForGroup({
@@ -42,6 +49,7 @@ function pool(
     roles: [role],
     poolAdjustment: opts.adjustment ?? null,
     poolGroup: role.poolGroup,
+    payPersonalUnderAllExclusion: opts.payPersonalUnderAllExclusion ?? false,
   }) as Record<string, any>;
 }
 
@@ -153,13 +161,84 @@ describe("computePoolSharesForGroup — personal items", () => {
     expect(r.A.itemShares.special.allocatedPieces).toBe(30);
   });
 
-  it("honors poolExclusion='all' for a personal item (no commission)", () => {
+  it("zeroes a personal item under poolExclusion='all' by default (frozen months)", () => {
     const r = pool([
       { id: "A", pieces: { special: 30 }, poolExclusion: "all" },
       { id: "B", pieces: { normal: 100 } },
     ]);
     expect(r.A.itemShares.special.eligible).toBe(false);
     expect(r.A.itemShares.special.allocatedPieces).toBe(0);
+  });
+});
+
+describe("computePoolSharesForGroup — personal item under 'all' (non-frozen)", () => {
+  it("still pays the personal item (ขายพิเศษ) when payPersonalUnderAllExclusion=true", () => {
+    const r = pool(
+      [
+        { id: "A", pieces: { special: 30 }, poolExclusion: "all" },
+        { id: "B", pieces: { normal: 100 } },
+      ],
+      { payPersonalUnderAllExclusion: true },
+    );
+    expect(r.A.itemShares.special.eligible).toBe(true);
+    expect(r.A.itemShares.special.allocatedPieces).toBe(30);
+    expect(r.A.itemShares.special.finalSharePercent).toBe(100);
+  });
+
+  it("still closes the POOL items under 'all' even with the flag on", () => {
+    const r = pool(
+      [
+        { id: "A", pieces: { normal: 100, special: 30 }, poolExclusion: "all" },
+        { id: "B", pieces: { normal: 100 } },
+      ],
+      { payPersonalUnderAllExclusion: true },
+    );
+    // กองกลางยังปิด — ขายทั่วไป/รับซื้อ ไม่ได้
+    expect(r.A.itemShares.normal.eligible).toBe(false);
+    expect(r.A.itemShares.normal.allocatedPieces).toBe(0);
+    // แต่ขายพิเศษ (ส่วนตัว) ยังได้
+    expect(r.A.itemShares.special.eligible).toBe(true);
+    expect(r.A.itemShares.special.allocatedPieces).toBe(30);
+  });
+
+  it("still honors an EXPLICIT per-item exclusion of the personal item (flag spares only 'all')", () => {
+    const r = pool(
+      [
+        {
+          id: "A",
+          pieces: { special: 30 },
+          poolExclusion: ["special"],
+        },
+        { id: "B", pieces: { normal: 100 } },
+      ],
+      { payPersonalUnderAllExclusion: true },
+    );
+    expect(r.A.itemShares.special.eligible).toBe(false);
+    expect(r.A.itemShares.special.allocatedPieces).toBe(0);
+  });
+
+  it("does not change losesBaseSalary (pool items still closed under 'all')", () => {
+    const r = pool(
+      [
+        { id: "A", pieces: { normal: 10, special: 30 }, poolExclusion: "all" },
+        { id: "B", pieces: { normal: 100 } },
+      ],
+      { payPersonalUnderAllExclusion: true },
+    );
+    expect(r.A.losesBaseSalary).toBe(true);
+  });
+});
+
+describe("computePoolSharesForGroup — poolThresholdExempt (duty)", () => {
+  it("exposes poolThresholdExempt and grants pool eligibility below 80%", () => {
+    const r = pool([
+      // A ทำหน้าที่ประจำเดือน (ONLINE) → exempt · ขายแค่ 10 (< 80% ของ 100)
+      { id: "A", pieces: { normal: 10 }, poolThresholdExempt: true },
+      { id: "B", pieces: { normal: 100 } },
+    ]);
+    expect(r.A.poolThresholdExempt).toBe(true);
+    expect(r.A.itemShares.normal.eligible).toBe(true);
+    expect(r.B.poolThresholdExempt).toBe(false);
   });
 });
 

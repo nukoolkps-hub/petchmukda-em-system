@@ -45,6 +45,7 @@ import {
   getOverQuotaDays,
   leaveOverlapsMonth,
 } from "../../utils/leaveUtils";
+import { isMonthLocked } from "../../utils/payrollLock";
 import {
   calculateSalary,
   computeExtraOpenSaturdayWorkedDates,
@@ -174,6 +175,10 @@ export default function SalaryView({
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
         poolGroup: employeeRole.poolGroup,
         storeCalendar,
+        // เดือนยังไม่ freeze → personal (ขายพิเศษ) ยังจ่ายแม้ปิดกองกลางทั้งหมด
+        payPersonalUnderAllExclusion: !isMonthLocked(
+          payrollConfirms?.[selectedMonth],
+        ),
       });
       employeePoolShare = shares[employeeInfo?.id];
     }
@@ -245,6 +250,7 @@ export default function SalaryView({
     poolAdjustments,
     employeeLoans,
     storeCalendar,
+    payrollConfirms,
   ]);
 
   function handlePrintSlip() {
@@ -1897,6 +1903,9 @@ export default function SalaryView({
           initialMonth={selectedMonth}
           poolAdjustments={poolAdjustments}
           isConfirmed={!!payrollConfirms?.[selectedMonth]?.confirmedAt}
+          payPersonalUnderAllExclusion={
+            !isMonthLocked(payrollConfirms?.[selectedMonth])
+          }
         />
       )}
 

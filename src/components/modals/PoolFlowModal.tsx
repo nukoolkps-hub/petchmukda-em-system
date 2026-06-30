@@ -43,6 +43,9 @@ interface PoolFlowModalProps {
   // (admin ยังแก้/พนักงานยื่นลาเพิ่มได้) → ล็อกแผนผังกันสับสน เปิดดูได้หลัง
   // confirm เท่านั้น
   isConfirmed?: boolean;
+  /** เดือนยังไม่ freeze → personal (ขายพิเศษ) ยังจ่ายแม้ปิดกองกลางทั้งหมด ·
+   *  ดู computePoolSharesForGroup · default false = คงยอดเดิม (เดือน freeze)  */
+  payPersonalUnderAllExclusion?: boolean;
 }
 
 /* ─── Pool Flow Modal — แผนผังการแบ่งค่าคอม Pool ─────────────────
@@ -65,6 +68,7 @@ export default function PoolFlowModal({
   poolAdjustments,
   storeCalendar,
   isConfirmed = false,
+  payPersonalUnderAllExclusion = false,
 }: PoolFlowModalProps) {
   const currentYM = currentYearMonth();
 
@@ -162,11 +166,13 @@ export default function PoolFlowModal({
         poolAdjustment: poolAdjustments?.[selectedMonth] || null,
         poolGroup: activeGroup,
         storeCalendar,
+        payPersonalUnderAllExclusion,
       }),
     [
       groupEmployeeIds,
       salaryData,
       allLeaves,
+      payPersonalUnderAllExclusion,
       selectedMonth,
       employeeDirectory,
       poolAdjustments,
