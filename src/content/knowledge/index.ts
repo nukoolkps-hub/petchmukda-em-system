@@ -1438,91 +1438,6 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
     ],
   },
 
-  /* ── 10. ผ่อนสินค้าบัตรเครดิต ── */
-  {
-    id: "installment",
-    title: "ผ่อนสินค้าด้วยบัตรเครดิต",
-    Icon: IconCreditCard,
-    blocks: [
-      { type: "h3", text: "สูตรคำนวณ" },
-      {
-        type: "list",
-        items: [
-          "ราคาที่รูดจริง = ราคาขาย + 3% (ค่าธรรมเนียม)",
-          "ดอกเบี้ยต่อเดือน = ราคารูดจริง × % ดอกเบี้ย",
-          "รายจ่ายต่อเดือน = (ราคารูดจริง ÷ จำนวนเดือนผ่อน) + ดอกเบี้ยต่อเดือน",
-        ],
-      },
-      {
-        type: "example",
-        title: "ตัวอย่าง — ราคา 18,000 ฿ · ดอกเบี้ย 1.2% · 6 เดือน",
-        given: ["ราคาขาย 18,000 ฿", "ดอกเบี้ย 1.2%", "จำนวนเดือนผ่อน 6 เดือน"],
-        steps: [
-          { calc: "18,000 + 3% = 18,540 ฿", meaning: "ราคาที่ใช้รูดจริง" },
-          { calc: "18,540 × 1.2% = 222.48 ฿", meaning: "ดอกเบี้ยต่อเดือน" },
-          {
-            calc: "(18,540 ÷ 6) + 222.48 = 3,312.48 ฿",
-            meaning: "รายจ่ายต่อเดือน",
-          },
-          { calc: "3,312.48 × 6 = 19,874.88 ฿", meaning: "รายจ่ายทั้งหมด" },
-        ],
-      },
-      {
-        type: "calculator",
-        title: "ผ่อนสินค้าด้วยบัตรเครดิต",
-        inputs: [
-          { id: "price", label: "ราคาขาย", suffix: "฿" },
-          {
-            id: "ratePct",
-            label: "ดอกเบี้ย/เดือน",
-            suffix: "%",
-          },
-          {
-            id: "months",
-            label: "จำนวนเดือนผ่อน",
-            suffix: "ด.",
-          },
-        ],
-        compute: ({ price, ratePct, months }) => {
-          // กัน months = 0 → division by zero (Infinity) · ถือว่ายังไม่กรอก
-          if (!(months > 0)) return [];
-          const swiped = price * 1.03;
-          const interest = swiped * (ratePct / 100);
-          const perMonth = swiped / months + interest;
-          const total = perMonth * months;
-          const fmt = (n: number) =>
-            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
-          return [
-            {
-              label: "ราคาที่ใช้รูดจริง",
-              value: swiped,
-              format: "currency",
-              hint: `${fmt(price)} + 3%`,
-            },
-            {
-              label: "ดอกเบี้ย/เดือน",
-              value: interest,
-              format: "currency",
-              hint: `${fmt(swiped)} × ${ratePct}%`,
-            },
-            {
-              label: "รายจ่าย/เดือน",
-              value: perMonth,
-              format: "currency",
-              hint: `${fmt(swiped)} ÷ ${months} + ${fmt(interest)}`,
-            },
-            {
-              label: "รายจ่ายทั้งหมด",
-              value: total,
-              format: "currency",
-              hint: `${fmt(perMonth)} × ${months}`,
-            },
-          ];
-        },
-      },
-    ],
-  },
-
   /* ── 11. รูดบัตรเป็นเงินสด ── */
   {
     id: "cash-out",
@@ -1885,6 +1800,91 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
         src: "/knowledge/print-button9.webp",
         alt: "ปุ่มที่ 9 รูปเครื่องพิมพ์ + กระดาษขาว",
         caption: "8. กดปุ่มที่ 9 (รูปเครื่องพิมพ์ + กระดาษขาว) นับจากทางซ้าย",
+      },
+    ],
+  },
+
+  /* ── ผ่อนสินค้าด้วยบัตรเครดิต (จัดกลุ่มก่อน AEON) ── */
+  {
+    id: "installment",
+    title: "การคำนวณจำนวนเงินผ่อนสินค้า (บัตรเครดิต)",
+    Icon: IconCreditCard,
+    blocks: [
+      { type: "h3", text: "สูตรคำนวณ" },
+      {
+        type: "list",
+        items: [
+          "ราคาที่รูดจริง = ราคาขาย + 3% (ค่าธรรมเนียม)",
+          "ดอกเบี้ยต่อเดือน = ราคารูดจริง × % ดอกเบี้ย",
+          "รายจ่ายต่อเดือน = (ราคารูดจริง ÷ จำนวนเดือนผ่อน) + ดอกเบี้ยต่อเดือน",
+        ],
+      },
+      {
+        type: "example",
+        title: "ตัวอย่าง — ราคา 18,000 ฿ · ดอกเบี้ย 1.2% · 6 เดือน",
+        given: ["ราคาขาย 18,000 ฿", "ดอกเบี้ย 1.2%", "จำนวนเดือนผ่อน 6 เดือน"],
+        steps: [
+          { calc: "18,000 + 3% = 18,540 ฿", meaning: "ราคาที่ใช้รูดจริง" },
+          { calc: "18,540 × 1.2% = 222.48 ฿", meaning: "ดอกเบี้ยต่อเดือน" },
+          {
+            calc: "(18,540 ÷ 6) + 222.48 = 3,312.48 ฿",
+            meaning: "รายจ่ายต่อเดือน",
+          },
+          { calc: "3,312.48 × 6 = 19,874.88 ฿", meaning: "รายจ่ายทั้งหมด" },
+        ],
+      },
+      {
+        type: "calculator",
+        title: "ผ่อนสินค้าด้วยบัตรเครดิต",
+        inputs: [
+          { id: "price", label: "ราคาขาย", suffix: "฿" },
+          {
+            id: "ratePct",
+            label: "ดอกเบี้ย/เดือน",
+            suffix: "%",
+          },
+          {
+            id: "months",
+            label: "จำนวนเดือนผ่อน",
+            suffix: "ด.",
+          },
+        ],
+        compute: ({ price, ratePct, months }) => {
+          // กัน months = 0 → division by zero (Infinity) · ถือว่ายังไม่กรอก
+          if (!(months > 0)) return [];
+          const swiped = price * 1.03;
+          const interest = swiped * (ratePct / 100);
+          const perMonth = swiped / months + interest;
+          const total = perMonth * months;
+          const fmt = (n: number) =>
+            n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+          return [
+            {
+              label: "ราคาที่ใช้รูดจริง",
+              value: swiped,
+              format: "currency",
+              hint: `${fmt(price)} + 3%`,
+            },
+            {
+              label: "ดอกเบี้ย/เดือน",
+              value: interest,
+              format: "currency",
+              hint: `${fmt(swiped)} × ${ratePct}%`,
+            },
+            {
+              label: "รายจ่าย/เดือน",
+              value: perMonth,
+              format: "currency",
+              hint: `${fmt(swiped)} ÷ ${months} + ${fmt(interest)}`,
+            },
+            {
+              label: "รายจ่ายทั้งหมด",
+              value: total,
+              format: "currency",
+              hint: `${fmt(perMonth)} × ${months}`,
+            },
+          ];
+        },
       },
     ],
   },
