@@ -16,6 +16,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { COLORS } from "../../constants";
 import { recordLoanRepaymentTx } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
+import { formatBankAccount } from "../../utils/bankFormat";
 import { formatThaiNumber } from "../../utils/format";
 import {
   buildPoolSharesByGroup,
@@ -815,7 +816,7 @@ export default function PayrollSummaryPanel({
                         {employee.bank}
                       </div>
                       <div className="text-sm font-bold text-txt tracking-[0.04em]">
-                        {employee.bankAccountNumber}
+                        {formatBankAccount(employee.bankAccountNumber)}
                       </div>
                     </div>
                     <div
