@@ -142,6 +142,16 @@ input[type="number"] {
   appearance: textfield;
 }
 
+/* ─── Truncate กับภาษาไทย — กันวรรณยุกต์/สระบนโดนตัด (ทั้งระบบ) ─────────
+   Tailwind .truncate = overflow:hidden · ถ้ากล่อง line แคบ (เช่น text-xs /
+   leading-tight) วรรณยุกต์ไทยที่โผล่เหนือกล่อง (เช่น "น้ำ", "ที่") จะโดนตัดบน
+   → บังคับ line-height ให้สูงพอครอบวรรณยุกต์ครบ · truncate เป็น single-line
+   เสมอ (white-space:nowrap) จึงไม่กระทบ layout นอกจากสูงขึ้นเล็กน้อย ·
+   ยัง truncate แนวนอน (ellipsis) ปกติ · แก้ที่เดียวครอบทุก truncate ในระบบ */
+.truncate {
+  line-height: 1.55;
+}
+
 /* ─── Interaction smoothness (ทั้งระบบ) ─────────────────────────────
    ปรับความลื่นไหลรวม: ตัด tap flash, แตะติดมือทันที (ลด delay), ฟอนต์คมขึ้น,
    เลื่อนแบบ smooth + กัน scroll ทะลุ (chaining) · ทุกอย่างเคารพ
