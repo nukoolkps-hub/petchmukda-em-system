@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { Duty, Employee, Role } from "../../types";
-import { toYMD } from "../../utils/dateUtils";
+import { formatYmThai, toYMD } from "../../utils/dateUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
@@ -603,9 +603,16 @@ function RotationFields({
         <label className="text-xs text-maroon font-bold mb-1.5 block">
           เริ่ม rotation เดือน
         </label>
-        <ThaiMonthPicker value={startMonth} onChange={setStartMonth} />
+        {/* monthsBack=12 → เลือกเดือนย้อนหลังได้ (anchor rotation มักเป็นเดือน
+            ปัจจุบัน/ที่ผ่านมา · เดิม 0 = เลือกเดือนนี้/อนาคตเท่านั้น ทำให้ตั้ง
+            "เดือนนี้" ไม่ได้เมื่ออยู่ปลายเดือน) */}
+        <ThaiMonthPicker
+          value={startMonth}
+          onChange={setStartMonth}
+          monthsBack={12}
+        />
         <div className="text-xs text-txt-soft mt-1">
-          คนแรกใน pool ทำหน้าที่ตั้งแต่ต้นเดือนนี้
+          "คนเริ่ม" ทำหน้าที่ตั้งแต่ต้นเดือนนี้ · เดือนถัดไปหมุนเวียนเป็นคนถัดไป
         </div>
       </div>
 
@@ -700,10 +707,11 @@ function RotationFields({
       {includedPool.length > 0 && (
         <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
           <label className="text-xs text-maroon font-bold mb-1 block">
-            คนเริ่ม (เดือนแรก)
+            คนเริ่ม — เดือน {formatYmThai(startMonth)}
           </label>
           <div className="text-xs text-txt-soft mb-2">
-            เลือกคนที่จะทำหน้าที่นี้ในเดือนเริ่ม แล้วระบบจะหมุนเวียนต่อจากคนนี้ตามลำดับ · "อัตโนมัติ"
+            คนที่เลือกจะทำหน้าที่นี้ใน <b>{formatYmThai(startMonth)}</b> (= "เริ่ม
+            rotation เดือน" ด้านบน) แล้วเดือนถัดไปหมุนเวียนเป็นคนถัดไปตามลำดับ · "อัตโนมัติ"
             = ระบบเลือกให้เอง
           </div>
           <div className="flex flex-wrap gap-1.5">
