@@ -100,7 +100,13 @@ export function pickPrimary(
   ) {
     return cache.empId;
   }
-  const base = (periodIdx + hashDutyId(duty.id)) % pool.length;
+  // anchor = ตำแหน่งของ "คนเริ่ม" (admin เลือก) ใน pool ปัจจุบัน · ถ้าไม่ได้
+  // เลือก/คนนั้นหลุดจาก pool → fallback hashDutyId (พฤติกรรมเดิม)
+  const startIdx = duty.rotationStartEmpId
+    ? pool.indexOf(duty.rotationStartEmpId)
+    : -1;
+  const anchor = startIdx >= 0 ? startIdx : hashDutyId(duty.id);
+  const base = (periodIdx + anchor) % pool.length;
   for (let off = 0; off < pool.length; off++) {
     const cand = pool[(base + off) % pool.length];
     if (!used.has(cand)) return cand;

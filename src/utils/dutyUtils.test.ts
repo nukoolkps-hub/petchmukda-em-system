@@ -285,6 +285,46 @@ describe("pickPrimary", () => {
   it("allows a repeat when every candidate is already used (duties > people)", () => {
     expect(pickPrimary(d, ["a"], 0, new Set(["a"]))).toBe("a");
   });
+
+  it("rotationStartEmpId anchors the first period to the chosen person", () => {
+    const pool = ["a", "b", "c"];
+    const anchored = duty({ id: "pp", rotationStartEmpId: "c" });
+    expect(pickPrimary(anchored, pool, 0, new Set())).toBe("c");
+  });
+
+  it("rotation continues in pool order from the chosen start person", () => {
+    const pool = ["a", "b", "c"];
+    const anchored = duty({ id: "pp", rotationStartEmpId: "b" });
+    // เริ่มที่ b (idx1) แล้วหมุน: idx0=b, idx1=c, idx2=a, idx3=b
+    expect(pickPrimary(anchored, pool, 0, new Set())).toBe("b");
+    expect(pickPrimary(anchored, pool, 1, new Set())).toBe("c");
+    expect(pickPrimary(anchored, pool, 2, new Set())).toBe("a");
+    expect(pickPrimary(anchored, pool, 3, new Set())).toBe("b");
+  });
+
+  it("falls back to the hash pick when rotationStartEmpId is not in the pool", () => {
+    const pool = ["a", "b", "c"];
+    const noAnchor = pickPrimary(d, pool, 4, new Set());
+    const ghostAnchor = pickPrimary(
+      duty({ id: "pp", rotationStartEmpId: "ghost" }),
+      pool,
+      4,
+      new Set(),
+    );
+    expect(ghostAnchor).toBe(noAnchor);
+  });
+
+  it("empty rotationStartEmpId behaves like no anchor (backward compatible)", () => {
+    const pool = ["a", "b", "c"];
+    const noAnchor = pickPrimary(d, pool, 7, new Set());
+    const emptyAnchor = pickPrimary(
+      duty({ id: "pp", rotationStartEmpId: "" }),
+      pool,
+      7,
+      new Set(),
+    );
+    expect(emptyAnchor).toBe(noAnchor);
+  });
 });
 
 // ─── computeDutyForDay ─────────────────────────────────────────────
