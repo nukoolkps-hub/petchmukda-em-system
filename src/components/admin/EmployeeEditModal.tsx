@@ -490,16 +490,16 @@ export default function EmployeeEditModal({
                 value={
                   editingBankAccountNumber !== undefined
                     ? editingBankAccountNumber
-                    : employee.bankAccountNumber || ""
+                    : (employee.bankAccountNumber || "").replace(/[^0-9]/g, "")
                 }
                 onChange={(e) => {
-                  // sanitize + จำกัด digit count ตามธนาคารที่เลือก (ห้ามเกิน)
-                  const cleaned = e.target.value.replace(/[^0-9\- ]/g, "");
-                  const digitsOnly = cleaned.replace(/[^0-9]/g, "");
+                  // เก็บเป็นเลขล้วน — ตัด - / ช่องว่าง / ตัวอักษรทิ้งตอนพิมพ์
+                  // (format - ทำตอนแสดงผลด้วย formatBankAccount) + จำกัด digit
+                  const digitsOnly = e.target.value.replace(/[^0-9]/g, "");
                   if (digitsOnly.length > bankDigitLimit) return;
                   setEditingRole((previousEditingRole) => ({
                     ...previousEditingRole,
-                    [`${employee.id}:bankAccountNumber`]: cleaned,
+                    [`${employee.id}:bankAccountNumber`]: digitsOnly,
                   }));
                 }}
                 placeholder="เลขที่บัญชี"

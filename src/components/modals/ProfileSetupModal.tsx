@@ -32,7 +32,8 @@ export default function ProfileSetupModal({
   );
   const [bank, setBank] = useState(initial?.bank || "");
   const [bankAccountNumber, setBankAcc] = useState(
-    initial?.bankAccountNumber || "",
+    // เก็บเป็นเลขล้วน — ตัด - / ช่องว่าง ของข้อมูลเดิมทิ้ง (format ทำตอนแสดงผล)
+    (initial?.bankAccountNumber || "").replace(/[^0-9]/g, ""),
   );
   const [nameErr, setNameErr] = useState("");
   const [avErr, setAvErr] = useState("");
@@ -373,11 +374,11 @@ export default function ProfileSetupModal({
           value={bankAccountNumber}
           onChange={(e) => {
             if (lockBank) return;
-            // sanitize + จำกัด digit count ตามธนาคารที่เลือก (ห้ามเกิน)
-            const cleaned = e.target.value.replace(/[^0-9\- ]/g, "");
-            const digitsOnly = cleaned.replace(/[^0-9]/g, "");
+            // เก็บเป็นเลขล้วน — ตัด - / ช่องว่าง / ตัวอักษรทิ้งตอนพิมพ์
+            // (format - ทำตอนแสดงผลด้วย formatBankAccount) + จำกัด digit ตามธนาคาร
+            const digitsOnly = e.target.value.replace(/[^0-9]/g, "");
             if (digitsOnly.length > getBankAccountDigits(bank)) return;
-            setBankAcc(cleaned);
+            setBankAcc(digitsOnly);
           }}
           readOnly={lockBank}
           placeholder="เช่น 123-4-56789-0"
