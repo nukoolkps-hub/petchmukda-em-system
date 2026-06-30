@@ -11,7 +11,7 @@
        ท้าย queue ไม่แทรกกลาง                                      */
 
 import type { Duty, Employee, LeaveEntry } from "../types";
-import { toYMD } from "./dateUtils";
+import { dateRange, toYMD } from "./dateUtils";
 
 /** FNV-1a 32-bit hash — deterministic, no deps, low collision rate
  *  ใช้แปลง duty.id → ตัวเลขคงที่ → กลายเป็น slot ใน pool
@@ -658,15 +658,15 @@ export function computeCoverageEarningsForMonth(
    (จาก server snapshot) ดังนั้นทั้ง admin/พนักงานคำนวณเองได้ client-side
    โดยไม่ต้องอ่าน employees/leaves ของคนอื่น
 
-   Forecast แสดงเฉพาะ primary ตาม rotation (deterministic) — ไม่รวม
-   substitute/leave เพราะการลาในอนาคตยังไม่รู้ + เป็น schedule สำหรับ
-   "เตรียมพร้อม" ล่วงหน้า
+   primary ตาม rotation เป็น period-level (สัปดาห์/เดือน · deterministic) —
+   ไม่ filter storeCalendar รายวัน เพราะ "ใครได้สัปดาห์นี้" ไม่เปลี่ยนตาม
+   เสาร์เปิดพิเศษ/วันธรรมดาปิดพิเศษ (คนรับผิดชอบคงเดิม แค่บางวันอาจไม่มี
+   assignment)
 
-   ⚠️ Forecast เป็น period-level (สัปดาห์/เดือน) — ไม่ filter ด้วย
-   storeCalendar รายวัน เพราะ "ใครได้สัปดาห์นี้" ไม่เปลี่ยนตาม
-   เสาร์-เปิดพิเศษ/วันธรรมดาปิดพิเศษ (คนรับผิดชอบยังคงเดิม แค่บางวัน
-   อาจไม่มี assignment) · ถ้าทั้งสัปดาห์ร้านปิด — assignment รายวัน
-   จะว่าง แต่ผู้รับผิดชอบใน forecast ยังเป็นคนเดิม (intentional)        */
+   coverage (คนแทนตอน primary ลา): ถ้าส่ง leaves เข้ามา → แต่ละ period
+   จะมี coverage[] บอก "ช่วงวันที่ primary ลา → ใครแทน" (เท่าที่มีใบลายื่น
+   ล่วงหน้า) สำหรับวางแผน · คิดเฉพาะวันที่ร้านเปิด (applicableDuties) ·
+   ใช้ pool + de-collide ชุดเดียวกับ rotation → ตรงกับที่เห็นจริง            */
 
 /** primary ของทุก duty ในวันที่ระบุ — รับ pool ที่ resolve แล้ว
  *  (dutyId → ordered empIds). ใช้ pickPrimary ตัวเดียวกับ computeAllDuties
@@ -693,11 +693,21 @@ export function computeForecastPrimaries(
   return result;
 }
 
+/** ช่วงวันที่ primary ลา → ใครแทน (สำหรับวางแผนล่วงหน้า)
+ *  substituteEmpId = null → ทุกคนใน pool ลาวันนั้น (ไม่มีคนแทน) */
+export interface CoverageSegment {
+  start: string; // YYYY-MM-DD (inclusive)
+  end: string; // YYYY-MM-DD (inclusive · รวมวันที่คนแทนคนเดียวกันต่อเนื่อง)
+  substituteEmpId: string | null;
+}
+
 export interface ForecastPeriod {
   index: number;
   start: string; // YYYY-MM-DD
   end: string;
   primaryEmpId: string | null;
+  /** ช่วงที่ primary ลาในรอบนี้ → คนแทน · มีค่าเฉพาะตอนส่ง leaves เข้ามา */
+  coverage?: CoverageSegment[];
 }
 
 export interface DutyForecast {
@@ -705,6 +715,82 @@ export interface DutyForecast {
   dutyName: string;
   period: "weekly" | "monthly";
   periods: ForecastPeriod[];
+}
+
+/** หาคนแทน 1 วัน — mirror substitute-scan ของ computeDutyForDay บน id pool
+ *  pass 1: ข้ามคนลา + ข้ามคนที่เป็น primary หน้าที่อื่นวันนั้น (กันทับ)
+ *  pass 2: double-up — ข้ามแค่คนลา · คืน null เมื่อทุกคนใน pool ลา        */
+function pickForecastSubstitute(
+  pool: string[],
+  primary: string,
+  ymd: string,
+  leaves: LeaveEntry[],
+  primariesThatDay: Set<string>,
+): string | null {
+  const startIdx = Math.max(0, pool.indexOf(primary));
+  for (let offset = 1; offset < pool.length; offset++) {
+    const cand = pool[(startIdx + offset) % pool.length];
+    if (cand === primary) continue;
+    if (isOnLeave(leaves, cand, ymd)) continue;
+    if (primariesThatDay.has(cand)) continue;
+    return cand;
+  }
+  for (let offset = 1; offset < pool.length; offset++) {
+    const cand = pool[(startIdx + offset) % pool.length];
+    if (cand === primary) continue;
+    if (isOnLeave(leaves, cand, ymd)) continue;
+    return cand;
+  }
+  return null;
+}
+
+/** coverage ของ 1 period — ไล่ทุกวันในช่วง (clamp today..endYmd) หาว่าวันไหน
+ *  primary ลา + ร้านเปิด (applicableDuties) → คำนวณคนแทน · group วันต่อเนื่อง
+ *  ที่คนแทนคนเดียวกันเป็น segment เดียว · วันที่ไม่ลา/ร้านปิด = ตัด segment */
+function computePeriodCoverage(
+  duty: Duty,
+  periodStart: string,
+  periodEnd: string,
+  primary: string,
+  todayYmd: string,
+  endYmd: string,
+  poolByDutyId: Map<string, string[]>,
+  leaves: LeaveEntry[],
+  calendar: StoreCalendarLite | null | undefined,
+  primariesAt: (ymd: string) => Map<string, string | null>,
+): CoverageSegment[] {
+  const dayStart = periodStart < todayYmd ? todayYmd : periodStart;
+  const dayEnd = periodEnd > endYmd ? endYmd : periodEnd;
+  if (dayStart > dayEnd) return [];
+  const pool = poolByDutyId.get(duty.id) || [];
+  const segs: CoverageSegment[] = [];
+  let cur: CoverageSegment | null = null;
+  for (const d of dateRange(dayStart, dayEnd)) {
+    // วันที่ primary ไม่ลา หรือร้านปิด/หน้าที่ไม่ทำงานวันนั้น → ไม่มี coverage
+    if (
+      !isOnLeave(leaves, primary, d) ||
+      applicableDuties([duty], d, calendar).length === 0
+    ) {
+      cur = null;
+      continue;
+    }
+    const primariesThatDay = new Set<string>();
+    for (const v of primariesAt(d).values()) if (v) primariesThatDay.add(v);
+    const sub = pickForecastSubstitute(
+      pool,
+      primary,
+      d,
+      leaves,
+      primariesThatDay,
+    );
+    if (cur && cur.substituteEmpId === sub) {
+      cur.end = d;
+    } else {
+      cur = { start: d, end: d, substituteEmpId: sub };
+      segs.push(cur);
+    }
+  }
+  return segs;
 }
 
 /** Forecast ของทุก duty ตั้งแต่ period ปัจจุบัน → endYmd (เช่นสิ้นปี)
@@ -715,8 +801,13 @@ export function computeDutyForecast(
   poolByDutyId: Map<string, string[]>,
   todayYmd: string,
   endYmd: string,
+  // ส่ง leaves เข้ามา → แต่ละ period จะมี coverage (primary ลา → ใครแทน วันไหน)
+  // เพื่อให้พนักงาน/admin วางแผนล่วงหน้าได้จริง · ไม่ส่ง = rotation ล้วน (เดิม)
+  leaves?: LeaveEntry[],
+  calendar?: StoreCalendarLite | null,
 ): DutyForecast[] {
-  // coverage = เวรแทนคนลา (ขึ้นกับการลาจริง) → forecast ล่วงหน้าไม่ได้
+  // coverage duty (เวรแทน) เอง forecast ล่วงหน้าไม่ได้ — แต่ rotation duty
+  // เราเติม coverage (คนแทนตอน primary ลา) ได้ถ้ามี leaves
   const rotationDuties = duties.filter((d) => d.kind !== "coverage");
   const cache = new Map<string, Map<string, string | null>>();
   const primariesAt = (ymd: string) => {
@@ -728,6 +819,7 @@ export function computeDutyForecast(
     }
     return m;
   };
+  const withCoverage = !!leaves?.length;
 
   return rotationDuties.map((duty) => {
     const periods: ForecastPeriod[] = [];
@@ -738,12 +830,28 @@ export function computeDutyForecast(
       if (range.start > endYmd) break;
       const repDate = range.start < todayYmd ? todayYmd : range.start;
       const primary = primariesAt(repDate).get(duty.id) ?? null;
-      periods.push({
+      const period: ForecastPeriod = {
         index: idx,
         start: range.start,
         end: range.end,
         primaryEmpId: primary,
-      });
+      };
+      if (withCoverage && primary) {
+        const cov = computePeriodCoverage(
+          duty,
+          range.start,
+          range.end,
+          primary,
+          todayYmd,
+          endYmd,
+          poolByDutyId,
+          leaves ?? [],
+          calendar,
+          primariesAt,
+        );
+        if (cov.length) period.coverage = cov;
+      }
+      periods.push(period);
       idx++;
     }
     return {

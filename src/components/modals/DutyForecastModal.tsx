@@ -7,8 +7,10 @@
    2 ฝั่งได้ผลตรงกัน (single source of truth กับ rotation จริง)            */
 
 import {
+  ArrowRight as IconArrowRight,
   CalendarClock as IconCalendarClock,
   CalendarRange as IconCalendarRange,
+  CalendarX as IconCalendarX,
   UserCheck as IconUserCheck,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -16,9 +18,12 @@ import type {
   DutyAssignmentsSnapshot,
   SnapshotPoolMember,
 } from "../../firebase/dutyAssignments";
-import type { Duty } from "../../types";
+import type { Duty, LeaveEntry, StoreCalendar } from "../../types";
 import { toYMD } from "../../utils/dateUtils";
-import { computeDutyForecast } from "../../utils/dutyUtils";
+import {
+  type CoverageSegment,
+  computeDutyForecast,
+} from "../../utils/dutyUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import ModalHeader from "../shared/ModalHeader";
@@ -26,6 +31,9 @@ import ModalHeader from "../shared/ModalHeader";
 interface Props {
   duties: Duty[];
   dutyAssignmentsToday: DutyAssignmentsSnapshot | null;
+  /** การลาทั้งหมด → ใช้คำนวณคนแทนล่วงหน้า (ใครลา ใครแทน วันไหน) */
+  allLeaves: LeaveEntry[];
+  storeCalendar?: StoreCalendar | null;
   profileId: string | null; // null = admin (ดูทุกคน)
   onClose: () => void;
 }
@@ -62,11 +70,21 @@ interface ForecastItem {
   dutyName: string;
   period: "weekly" | "monthly";
   primaryEmpId: string | null;
+  coverage?: CoverageSegment[];
+}
+
+/** label วันที่สั้นในเดือน · ช่วง 1 วัน = "3" · หลายวัน = "3-5" */
+function segDayLabel(start: string, end: string): string {
+  const sd = Number(start.slice(8, 10));
+  const ed = Number(end.slice(8, 10));
+  return sd === ed ? `${sd}` : `${sd}-${ed}`;
 }
 
 export default function DutyForecastModal({
   duties,
   dutyAssignmentsToday,
+  allLeaves,
+  storeCalendar,
   profileId,
   onClose,
 }: Props) {
@@ -92,8 +110,16 @@ export default function DutyForecastModal({
   }, [dutyAssignmentsToday]);
 
   const forecast = useMemo(
-    () => computeDutyForecast(duties, poolByDutyId, todayYmd, endYmd),
-    [duties, poolByDutyId, todayYmd, endYmd],
+    () =>
+      computeDutyForecast(
+        duties,
+        poolByDutyId,
+        todayYmd,
+        endYmd,
+        allLeaves,
+        storeCalendar,
+      ),
+    [duties, poolByDutyId, todayYmd, endYmd, allLeaves, storeCalendar],
   );
 
   // flatten ทุก period → item เดียว เรียงตามวันที่ (แล้วชื่อหน้าที่)
@@ -108,6 +134,7 @@ export default function DutyForecastModal({
           dutyName: f.dutyName,
           period: f.period,
           primaryEmpId: p.primaryEmpId,
+          coverage: p.coverage,
         });
       }
     }
@@ -121,9 +148,15 @@ export default function DutyForecastModal({
 
   // group 2 ชั้น: เดือน → วัน (card ต่อช่วงวัน · ในการ์ดมีหลายหน้าที่)
   const months = useMemo(() => {
+    // เฉพาะของฉัน = เป็น primary หรือเป็น "คนแทน" ในช่วงไหนของ period นี้
+    // (พนักงานจะได้เห็นว่าต้องไปแทนใครวันไหนด้วย ไม่ใช่แค่เวรตัวเอง)
     const filtered =
       profileId && mineOnly
-        ? allItems.filter((it) => it.primaryEmpId === profileId)
+        ? allItems.filter(
+            (it) =>
+              it.primaryEmpId === profileId ||
+              it.coverage?.some((s) => s.substituteEmpId === profileId),
+          )
         : allItems;
     // ym → (dateKey → items[])  · allItems เรียงตาม start+dutyName แล้ว
     const byMonth = new Map<string, Map<string, ForecastItem[]>>();
@@ -196,7 +229,8 @@ export default function DutyForecastModal({
 
         {/* note */}
         <div className="text-xs text-txt-soft mb-3 leading-relaxed">
-          ตารางตามรอบหมุนเวียน (ยังไม่รวมการลา/คนแทน) — ใช้สำหรับวางแผนล่วงหน้า
+          ตารางตามรอบหมุนเวียน + คนแทนช่วงที่มีคนลา (เท่าที่ยื่นลาไว้ล่วงหน้า) —
+          ใช้สำหรับวางแผนล่วงหน้า
         </div>
 
         {!hasData ? (
@@ -248,43 +282,100 @@ export default function DutyForecastModal({
                             : null;
                           const isMe =
                             !!profileId && it.primaryEmpId === profileId;
+                          const primaryName = emp?.nickname || emp?.name || "";
                           return (
                             <div
                               key={`${it.dutyId}-${i}`}
-                              className={`flex items-center gap-2.5 px-3 py-2 text-sm ${
-                                i > 0 ? "border-t border-bdr/50" : ""
-                              } ${isMe ? "bg-gold-pale/40" : ""}`}
+                              className={`${i > 0 ? "border-t border-bdr/50" : ""} ${isMe ? "bg-gold-pale/40" : ""}`}
                             >
-                              <div className="flex-1 min-w-0 font-semibold text-txt truncate">
-                                {it.dutyName}
+                              {/* แถวหลัก: หน้าที่ + primary (คนรับผิดชอบรอบนี้) */}
+                              <div className="flex items-center gap-2.5 px-3 py-2 text-sm">
+                                <div className="flex-1 min-w-0 font-semibold text-txt truncate">
+                                  {it.dutyName}
+                                </div>
+                                {showPerson &&
+                                  (emp ? (
+                                    <div className="shrink-0 flex items-center gap-1.5 max-w-[55%]">
+                                      <AvatarCircle
+                                        avatar={emp.avatar}
+                                        avatarType={emp.avatarType}
+                                        avatarImageUrl={emp.avatarImageUrl}
+                                        size={22}
+                                        fontSize={10}
+                                        border="none"
+                                      />
+                                      <span
+                                        className={`truncate text-xs ${isMe ? "font-bold text-maroon" : "font-semibold text-txt-mid"}`}
+                                      >
+                                        {emp.nickname || emp.name}
+                                        {isMe && (
+                                          <span className="ml-1 text-[11px] text-maroon-lt font-bold">
+                                            (คุณ)
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="shrink-0 text-txt-soft italic text-xs">
+                                      ยังไม่มีคน
+                                    </div>
+                                  ))}
                               </div>
-                              {showPerson &&
-                                (emp ? (
-                                  <div className="shrink-0 flex items-center gap-1.5 max-w-[55%]">
-                                    <AvatarCircle
-                                      avatar={emp.avatar}
-                                      avatarType={emp.avatarType}
-                                      avatarImageUrl={emp.avatarImageUrl}
-                                      size={22}
-                                      fontSize={10}
-                                      border="none"
+
+                              {/* คนแทนช่วงที่ primary ลา (วางแผนล่วงหน้า) */}
+                              {it.coverage?.map((seg) => {
+                                const sub = seg.substituteEmpId
+                                  ? empById.get(seg.substituteEmpId)
+                                  : null;
+                                const subIsMe =
+                                  !!profileId &&
+                                  seg.substituteEmpId === profileId;
+                                return (
+                                  <div
+                                    key={seg.start}
+                                    className="mx-3 mb-2 flex items-center gap-1.5 rounded-lg bg-amber-lt/60 border border-amber/25 px-2 py-1.5 text-xs"
+                                  >
+                                    <IconCalendarX
+                                      size={13}
+                                      strokeWidth={2.4}
+                                      className="text-amber shrink-0"
                                     />
-                                    <span
-                                      className={`truncate text-xs ${isMe ? "font-bold text-maroon" : "font-semibold text-txt-mid"}`}
-                                    >
-                                      {emp.nickname || emp.name}
-                                      {isMe && (
-                                        <span className="ml-1 text-[11px] text-maroon-lt font-bold">
-                                          (คุณ)
-                                        </span>
-                                      )}
+                                    <span className="font-extrabold text-amber shrink-0">
+                                      {segDayLabel(seg.start, seg.end)}
                                     </span>
+                                    <span className="text-txt-soft truncate min-w-0">
+                                      {primaryName || "คน"} ลา
+                                    </span>
+                                    <IconArrowRight
+                                      size={12}
+                                      strokeWidth={2.6}
+                                      className="text-txt-soft shrink-0"
+                                    />
+                                    {sub ? (
+                                      <span className="inline-flex items-center gap-1 min-w-0 shrink">
+                                        <AvatarCircle
+                                          avatar={sub.avatar}
+                                          avatarType={sub.avatarType}
+                                          avatarImageUrl={sub.avatarImageUrl}
+                                          size={18}
+                                          fontSize={9}
+                                          border="none"
+                                        />
+                                        <span
+                                          className={`truncate font-bold ${subIsMe ? "text-maroon" : "text-green"}`}
+                                        >
+                                          {sub.nickname || sub.name}
+                                          {subIsMe && " (คุณ)"} แทน
+                                        </span>
+                                      </span>
+                                    ) : (
+                                      <span className="font-bold text-red shrink-0">
+                                        ไม่มีคนแทน
+                                      </span>
+                                    )}
                                   </div>
-                                ) : (
-                                  <div className="shrink-0 text-txt-soft italic text-xs">
-                                    ยังไม่มีคน
-                                  </div>
-                                ))}
+                                );
+                              })}
                             </div>
                           );
                         })}

@@ -114,6 +114,8 @@ export default function HomeTab({
             duties={duties}
             snapshot={dutyAssignmentsToday}
             profileId={profile?.id || null}
+            allLeaves={allLeaves}
+            storeCalendar={storeCalendar}
           />
         )}
 
@@ -326,10 +328,14 @@ function DutyTodayCard({
   duties,
   snapshot,
   profileId,
+  allLeaves,
+  storeCalendar,
 }: {
   duties: Duty[];
   snapshot: DutyAssignmentsSnapshot;
   profileId: string | null;
+  allLeaves: LeaveEntry[];
+  storeCalendar?: StoreCalendar | null;
 }) {
   const [showForecast, setShowForecast] = useState(false);
   const assignments = snapshot.assignments;
@@ -507,6 +513,8 @@ function DutyTodayCard({
         <DutyForecastModal
           duties={duties}
           dutyAssignmentsToday={snapshot}
+          allLeaves={allLeaves}
+          storeCalendar={storeCalendar}
           profileId={profileId}
           onClose={() => setShowForecast(false)}
         />
