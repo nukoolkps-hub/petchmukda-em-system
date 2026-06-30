@@ -359,13 +359,13 @@ export default function LeaveListPanel({
                     employeeInfo?.name ||
                     lv.employeeName}
                   {isFuture(lv.start) && (
-                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-[10px] bg-gold-pale text-maroon border border-[#C9973A40] inline-flex items-center gap-0.5">
+                    <span className="text-xs font-bold px-1.5 py-1 rounded-[10px] bg-gold-pale text-maroon border border-[#C9973A40] inline-flex items-center gap-0.5">
                       <IconFastForward size={10} strokeWidth={2.4} />
                       อนาคต
                     </span>
                   )}
                   {lv.createdByAdmin && (
-                    <span className="text-xs font-extrabold tracking-wide px-1.5 py-0.5 rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
+                    <span className="text-xs font-extrabold tracking-wide px-1.5 py-1 rounded-[10px] bg-maroon text-white border border-maroon inline-flex items-center gap-0.5">
                       <IconShieldCheck size={10} strokeWidth={2.6} />
                       ADMIN
                     </span>

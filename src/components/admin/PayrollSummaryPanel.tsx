@@ -748,7 +748,7 @@ export default function PayrollSummaryPanel({
                             ),
                           };
                           return (
-                            <span className="px-1.5 py-0.5 rounded-md bg-red-lt text-red font-bold text-xs">
+                            <span className="px-1.5 py-1 rounded-md bg-red-lt text-red font-bold text-xs">
                               {m[employee.poolExclusion]}
                             </span>
                           );

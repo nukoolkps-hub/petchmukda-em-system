@@ -348,7 +348,7 @@ export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
             type="button"
             onClick={selectAll}
             disabled={employees.length === 0}
-            className="text-[11px] px-2 py-0.5 rounded border border-bdr bg-white text-txt-mid font-bold cursor-pointer font-[inherit] disabled:opacity-40"
+            className="text-[11px] px-2 py-1 rounded border border-bdr bg-white text-txt-mid font-bold cursor-pointer font-[inherit] disabled:opacity-40"
           >
             เลือกทั้งหมด
           </button>
@@ -356,7 +356,7 @@ export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
             type="button"
             onClick={clearAll}
             disabled={selectedIds.size === 0}
-            className="text-[11px] px-2 py-0.5 rounded border border-bdr bg-white text-txt-mid font-bold cursor-pointer font-[inherit] disabled:opacity-40"
+            className="text-[11px] px-2 py-1 rounded border border-bdr bg-white text-txt-mid font-bold cursor-pointer font-[inherit] disabled:opacity-40"
           >
             ล้างการเลือก
           </button>
@@ -464,7 +464,7 @@ export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
               )}
               <div className="text-sm text-txt leading-relaxed">
                 การลบนี้ <b>ไม่สามารถ undo ได้</b> · พิมพ์{" "}
-                <code className="bg-cream px-1.5 py-0.5 rounded font-bold text-maroon">
+                <code className="bg-cream px-1.5 py-1 rounded font-bold text-maroon">
                   {CONFIRM_TOKEN}
                 </code>{" "}
                 ในช่องด้านล่างเพื่อยืนยัน

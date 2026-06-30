@@ -160,7 +160,7 @@ export default function BackupPanel({ showToast }: Props) {
 
                   <div className="mb-3 text-xs text-txt-mid">
                     <span className="text-txt-soft">ไฟล์ </span>
-                    <code className="text-[11px] bg-cream px-1.5 py-0.5 rounded break-all">
+                    <code className="text-[11px] bg-cream px-1.5 py-1 rounded break-all">
                       {status.path}
                     </code>
                   </div>

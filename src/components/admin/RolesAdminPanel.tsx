@@ -557,7 +557,7 @@ export default function RolesAdminPanel({
                   />
                   <span className="text-sm font-bold text-maroon">
                     กองกลาง:{" "}
-                    <code className="bg-gold-pale px-2 py-0.5 rounded-md text-sm">
+                    <code className="bg-gold-pale px-2 py-1 rounded-md text-sm">
                       {groupKey}
                     </code>
                   </span>
@@ -617,7 +617,7 @@ export default function RolesAdminPanel({
                         className={`flex-1 px-2.5 py-2 rounded-lg text-sm font-semibold outline-none font-[inherit] box-border text-txt
                           ${dirty ? "border border-gold bg-gold-pale/30" : "border border-bdr bg-cream"}`}
                       />
-                      <span className="text-xs text-txt-soft px-2 py-0.5 rounded-lg bg-cream border border-bdr font-semibold whitespace-nowrap">
+                      <span className="text-xs text-txt-soft px-2 py-1 rounded-lg bg-cream border border-bdr font-semibold whitespace-nowrap">
                         {employeeCount} คน
                       </span>
                     </div>

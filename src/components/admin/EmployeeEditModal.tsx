@@ -444,7 +444,7 @@ export default function EmployeeEditModal({
                   <IconUser size={12} strokeWidth={2.4} />
                   ตำแหน่ง
                 </span>
-                <span className="text-xs px-2 py-0.5 rounded-lg bg-gold-pale text-maroon font-bold ml-auto">
+                <span className="text-xs px-2 py-1 rounded-lg bg-gold-pale text-maroon font-bold ml-auto">
                   แก้ในแท็บ "ตำแหน่ง"
                 </span>
               </div>
@@ -464,7 +464,7 @@ export default function EmployeeEditModal({
                   <IconBuildingBank size={12} strokeWidth={2.4} />
                   บัญชีรับเงินเดือน
                 </span>
-                <span className="text-xs px-2 py-0.5 rounded-lg bg-green-lt text-green font-bold ml-auto">
+                <span className="text-xs px-2 py-1 rounded-lg bg-green-lt text-green font-bold ml-auto">
                   ADMIN แก้ไขได้
                 </span>
               </div>
@@ -529,11 +529,11 @@ export default function EmployeeEditModal({
                   />
                   LINE User ID
                   {employee.lineUserId ? (
-                    <span className="text-xs px-1.5 py-0.5 rounded-lg bg-[#06C75520] text-[#06A04E] font-bold">
+                    <span className="text-xs px-1.5 py-1 rounded-lg bg-[#06C75520] text-[#06A04E] font-bold">
                       เชื่อมแล้ว
                     </span>
                   ) : (
-                    <span className="text-xs px-1.5 py-0.5 rounded-lg bg-bdr text-txt-soft font-bold">
+                    <span className="text-xs px-1.5 py-1 rounded-lg bg-bdr text-txt-soft font-bold">
                       ยังไม่เชื่อม
                     </span>
                   )}

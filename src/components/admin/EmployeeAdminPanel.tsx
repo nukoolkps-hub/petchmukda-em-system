@@ -363,7 +363,7 @@ function SortableEmployeeRow({
               }
               return (
                 <span
-                  className={`px-1.5 py-0.5 rounded-md font-bold text-xs ${
+                  className={`px-1.5 py-1 rounded-md font-bold text-xs ${
                     isPartial ? "bg-amber-lt text-amber" : "bg-red-lt text-red"
                   }`}
                 >
@@ -372,13 +372,13 @@ function SortableEmployeeRow({
               );
             })()}
             {employee.salaryDisabled && (
-              <span className="px-1.5 py-0.5 rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
+              <span className="px-1.5 py-1 rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
                 <IconLock size={10} strokeWidth={2.4} />
                 ปิดเงินเดือน
               </span>
             )}
             {employee.lineUserId && (
-              <span className="px-1.5 py-0.5 rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs inline-flex items-center gap-0.5">
+              <span className="px-1.5 py-1 rounded-md bg-[#06C75520] text-[#06A04E] font-bold text-xs inline-flex items-center gap-0.5">
                 <IconMessageCircle size={10} strokeWidth={2.4} />
                 LINE
               </span>
@@ -386,7 +386,7 @@ function SortableEmployeeRow({
           </div>
         </div>
         {dirty && (
-          <span className="px-2 py-0.5 rounded-lg text-xs font-bold bg-[#D9770630] text-amber">
+          <span className="px-2 py-1 rounded-lg text-xs font-bold bg-[#D9770630] text-amber">
             มีการแก้ไข
           </span>
         )}

@@ -110,7 +110,7 @@ export default function AdvanceHistoryModal({
                         {formatThaiNumber(r.amount)} ฿
                       </div>
                       <span
-                        className={`text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap inline-flex items-center gap-1 ${s.cls}`}
+                        className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap inline-flex items-center gap-1 ${s.cls}`}
                       >
                         <StatusIcon size={12} strokeWidth={2.4} />
                         {s.label}

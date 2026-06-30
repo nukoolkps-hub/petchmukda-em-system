@@ -144,7 +144,7 @@ function EditableBlockSubCard({
           <button
             type="button"
             onClick={startEditing}
-            className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-[7px] bg-maroon text-white text-[11px] font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform"
+            className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-[7px] bg-maroon text-white text-[11px] font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform"
           >
             <IconPencil size={10} strokeWidth={2.5} color={COLORS.gold} />
             แก้ไข
