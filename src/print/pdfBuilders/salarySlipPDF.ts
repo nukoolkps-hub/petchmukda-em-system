@@ -2,6 +2,7 @@
    สร้าง PDF จริงที่ text ค้นหา/copy ได้
    ไม่ใช่ image-based เหมือน html2pdf                          */
 
+import { formatBankAccount } from "../../utils/bankFormat";
 import { formatYmThai } from "../../utils/dateUtils";
 import { applyHiddenFilter, buildSlipRowsCatalog } from "../../utils/slipRows";
 
@@ -52,7 +53,9 @@ export function buildSalarySlipDocDef({
   const employeePosition = profile?.role || employeeInfo?.role || "-";
   const bank = employeeInfo?.bank || profile?.bank || "-";
   const bankAccountNumber =
-    employeeInfo?.bankAccountNumber || profile?.bankAccountNumber || "-";
+    formatBankAccount(
+      employeeInfo?.bankAccountNumber || profile?.bankAccountNumber,
+    ) || "-";
 
   /* ─── สร้าง earnings + deductions rows จาก shared catalog ──────
      UI modal ใช้ catalog ตัวเดียวกัน · pass hiddenIds ผ่าน args ·

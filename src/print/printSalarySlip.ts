@@ -1,8 +1,6 @@
+import { formatBankAccount } from "../utils/bankFormat";
 import { formatYmThai } from "../utils/dateUtils";
-import {
-  applyHiddenFilter,
-  buildSlipRowsCatalog,
-} from "../utils/slipRows";
+import { applyHiddenFilter, buildSlipRowsCatalog } from "../utils/slipRows";
 import { buildSalarySlipDocDef } from "./pdfBuilders/salarySlipPDF";
 import { openPDFBlob, printHTML } from "./webviewHelpers";
 
@@ -40,7 +38,9 @@ function buildSalarySlipHTML(
   const employeePosition = profile?.role || employeeInfo?.role || "-";
   const bank = employeeInfo?.bank || profile?.bank || "-";
   const bankAccountNumber =
-    employeeInfo?.bankAccountNumber || profile?.bankAccountNumber || "-";
+    formatBankAccount(
+      employeeInfo?.bankAccountNumber || profile?.bankAccountNumber,
+    ) || "-";
 
   const formatNumber = (value) => Number(value || 0).toLocaleString("th-TH");
 
