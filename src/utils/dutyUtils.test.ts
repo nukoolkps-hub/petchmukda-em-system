@@ -599,3 +599,81 @@ describe("computeDutyForecast", () => {
     expect(res).toEqual([]);
   });
 });
+
+describe("computeDutyForecast — coverage (คนแทนตอน primary ลา)", () => {
+  // 2026-06-01 = จันทร์ · สัปดาห์แรก 06-01..06-07 (เสาร์ = 06-06)
+  const w = duty({
+    id: "w",
+    period: "weekly",
+    rotationStartDate: "2026-06-01",
+  });
+  const pools = new Map([["w", ["a", "b"]]]);
+  // primary ของสัปดาห์แรก (a หรือ b ขึ้นกับ hash) — หาแบบ dynamic
+  const primaryOfWeek1 = computeDutyForecast(
+    [w],
+    pools,
+    "2026-06-01",
+    "2026-06-07",
+  )[0].periods[0].primaryEmpId as string;
+  const otherEmp = primaryOfWeek1 === "a" ? "b" : "a";
+
+  it("ไม่มี coverage ถ้าไม่ส่ง leaves (rotation ล้วน เหมือนเดิม)", () => {
+    const [f] = computeDutyForecast([w], pools, "2026-06-01", "2026-06-07");
+    expect(f.periods[0].coverage).toBeUndefined();
+  });
+
+  it("ใส่ coverage = คนอื่นแทน ช่วงวันที่ primary ลา (วันร้านเปิด)", () => {
+    const leaves = [leave(primaryOfWeek1, "2026-06-02", "2026-06-03")];
+    const [f] = computeDutyForecast(
+      [w],
+      pools,
+      "2026-06-01",
+      "2026-06-07",
+      leaves,
+    );
+    expect(f.periods[0].coverage).toEqual([
+      { start: "2026-06-02", end: "2026-06-03", substituteEmpId: otherEmp },
+    ]);
+  });
+
+  it("ไม่มี coverage ถ้าคนที่ลาไม่ใช่ primary ของรอบนั้น", () => {
+    const leaves = [leave(otherEmp, "2026-06-02", "2026-06-03")];
+    const [f] = computeDutyForecast(
+      [w],
+      pools,
+      "2026-06-01",
+      "2026-06-07",
+      leaves,
+    );
+    expect(f.periods[0].coverage).toBeUndefined();
+  });
+
+  it("substituteEmpId = null เมื่อทุกคนใน pool ลาวันนั้น (ไม่มีคนแทน)", () => {
+    const leaves = [
+      leave("a", "2026-06-02", "2026-06-02"),
+      leave("b", "2026-06-02", "2026-06-02"),
+    ];
+    const [f] = computeDutyForecast(
+      [w],
+      pools,
+      "2026-06-01",
+      "2026-06-07",
+      leaves,
+    );
+    expect(f.periods[0].coverage).toEqual([
+      { start: "2026-06-02", end: "2026-06-02", substituteEmpId: null },
+    ]);
+  });
+
+  it("ข้ามวันร้านปิด (เสาร์) — ลาเฉพาะเสาร์ → ไม่มี coverage", () => {
+    const leaves = [leave(primaryOfWeek1, "2026-06-06", "2026-06-06")];
+    const [f] = computeDutyForecast(
+      [w],
+      pools,
+      "2026-06-01",
+      "2026-06-07",
+      leaves,
+    );
+    expect(f.periods[0].coverage).toBeUndefined();
+  });
+});

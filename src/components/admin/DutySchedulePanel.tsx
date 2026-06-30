@@ -13,7 +13,13 @@ import type {
   SnapshotAssignment,
   SnapshotPoolMember,
 } from "../../firebase/dutyAssignments";
-import type { Duty, Employee, Role } from "../../types";
+import type {
+  Duty,
+  Employee,
+  LeaveEntry,
+  Role,
+  StoreCalendar,
+} from "../../types";
 import DutyForecastModal from "../modals/DutyForecastModal";
 import BaseModal from "../shared/BaseModal";
 import { SkeletonRow } from "../shared/Skeleton";
@@ -26,6 +32,8 @@ interface Props {
   dutyAssignmentsToday: DutyAssignmentsSnapshot | null;
   roles: Role[];
   employeeDirectory: Employee[];
+  allLeaves: LeaveEntry[];
+  storeCalendar?: StoreCalendar | null;
   onUpsertDuty: (
     id: string | null,
     data: Omit<Duty, "id" | "createdAt" | "updatedAt">,
@@ -40,6 +48,8 @@ export default function DutySchedulePanel({
   dutyAssignmentsToday,
   roles,
   employeeDirectory,
+  allLeaves,
+  storeCalendar,
   onUpsertDuty,
   onDeleteDuty,
   showToast,
@@ -132,6 +142,8 @@ export default function DutySchedulePanel({
         <DutyForecastModal
           duties={duties}
           dutyAssignmentsToday={dutyAssignmentsToday}
+          allLeaves={allLeaves}
+          storeCalendar={storeCalendar}
           profileId={null}
           onClose={() => setShowForecast(false)}
         />

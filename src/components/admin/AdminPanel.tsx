@@ -214,6 +214,8 @@ export default function AdminPanel({
             dutyAssignmentsToday={dutyAssignmentsToday}
             roles={roles || []}
             employeeDirectory={employeeDirectory}
+            allLeaves={allLeaves}
+            storeCalendar={storeCalendar}
             onUpsertDuty={onUpsertDuty}
             onDeleteDuty={onDeleteDuty}
             showToast={showToast}
