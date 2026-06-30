@@ -113,6 +113,7 @@ export function buildPoolSharesByGroup({
   roles,
   poolAdjustment,
   storeCalendar,
+  payPersonalUnderAllExclusion = false,
 }: {
   activeEmployees: any[];
   yearMonth: string;
@@ -122,6 +123,9 @@ export function buildPoolSharesByGroup({
   roles: any[];
   poolAdjustment: any;
   storeCalendar: any;
+  /** ส่ง true เฉพาะเดือนที่ยังไม่ freeze → personal (ขายพิเศษ) ยังจ่าย
+   *  แม้ poolExclusion="all" · ดู computePoolSharesForGroup */
+  payPersonalUnderAllExclusion?: boolean;
 }): Record<string, Record<string, any>> {
   const grouped = groupEmployeesByPool(
     activeEmployees,
@@ -141,6 +145,7 @@ export function buildPoolSharesByGroup({
       poolAdjustment: poolAdjustment || null,
       poolGroup,
       storeCalendar,
+      payPersonalUnderAllExclusion,
     });
   }
   return sharesByPoolGroup;
@@ -177,6 +182,7 @@ export function computeEmployeeMonthRow({
   storeCalendar,
   poolSharesByGroup,
   dataOverride,
+  payPersonalUnderAllExclusion = false,
 }: {
   employee: any;
   yearMonth: string;
@@ -190,6 +196,8 @@ export function computeEmployeeMonthRow({
   storeCalendar: any;
   poolSharesByGroup?: Record<string, Record<string, any>>;
   dataOverride?: any;
+  /** ส่ง true เฉพาะเดือนที่ยังไม่ freeze · ดู computePoolSharesForGroup */
+  payPersonalUnderAllExclusion?: boolean;
 }): EmployeeMonthRow | null {
   const employeeRole =
     roles.find(
@@ -230,6 +238,7 @@ export function computeEmployeeMonthRow({
         roles,
         poolAdjustment,
         storeCalendar,
+        payPersonalUnderAllExclusion,
       })[employeeRole.poolGroup];
     poolShare = groupShares?.[employee.id] ?? null;
   }
@@ -291,12 +300,16 @@ export function computeMonthSummary(args: {
   monthApprovedAdvances: any[];
   poolAdjustment: any;
   storeCalendar: any;
+  /** ส่ง true เฉพาะเดือนที่ยังไม่ freeze · ดู computePoolSharesForGroup */
+  payPersonalUnderAllExclusion?: boolean;
 }): {
   total: number;
   count: number;
   breakdownSig: string;
   rows: EmployeeMonthRow[];
 } {
+  const payPersonalUnderAllExclusion =
+    args.payPersonalUnderAllExclusion ?? false;
   const poolSharesByGroup = buildPoolSharesByGroup({
     activeEmployees: args.activeEmployees,
     yearMonth: args.yearMonth,
@@ -306,6 +319,7 @@ export function computeMonthSummary(args: {
     roles: args.roles,
     poolAdjustment: args.poolAdjustment,
     storeCalendar: args.storeCalendar,
+    payPersonalUnderAllExclusion,
   });
   const rows = args.activeEmployees
     .map((employee) =>
@@ -321,6 +335,7 @@ export function computeMonthSummary(args: {
         poolAdjustment: args.poolAdjustment,
         storeCalendar: args.storeCalendar,
         poolSharesByGroup,
+        payPersonalUnderAllExclusion,
       }),
     )
     .filter((r): r is EmployeeMonthRow => !!r?.salaryCalculation);

@@ -25,7 +25,7 @@ import {
   computeEmployeeMonthRow,
   settleEmployeeMonth,
 } from "../../utils/payrollCompute";
-import { getPayrollLock } from "../../utils/payrollLock";
+import { getPayrollLock, isMonthLocked } from "../../utils/payrollLock";
 import AvatarCircle from "../shared/AvatarCircle";
 import BankLogo from "../shared/BankLogo";
 import BaseModal from "../shared/BaseModal";
@@ -100,6 +100,10 @@ export default function PayrollSummaryPanel({
     // กรองพนักงานที่ "ปิดสิทธิ์ระบบเงินเดือน" ออก — ใช้แค่ระบบลา ไม่อยู่ใน
     // payroll/pool calculation ใดๆ
     const activeEmps = employeeDirectory.filter((e) => !e.salaryDisabled);
+    // เดือนยังไม่ freeze → personal (ขายพิเศษ) ยังจ่ายแม้ปิดกองกลางทั้งหมด
+    const payPersonalUnderAllExclusion = !isMonthLocked(
+      payrollConfirms?.[selectedMonth],
+    );
     // pool shares "ครั้งเดียวต่อกลุ่ม" (hoist · O(G) ไม่ใช่ O(G²)) — เลขชุดเดียว
     // ทั้งกลุ่ม · ใช้ shared helper เดียวกับ resettle (single source)
     const sharesByPoolGroup = buildPoolSharesByGroup({
@@ -111,6 +115,7 @@ export default function PayrollSummaryPanel({
       roles,
       poolAdjustment: poolAdjustments?.[selectedMonth] || null,
       storeCalendar,
+      payPersonalUnderAllExclusion,
     });
     const monthApprovedAdvances = monthlyApprovedAdvances.data || [];
     // compute each employee's netSalary — ผ่าน shared computeEmployeeMonthRow
@@ -128,6 +133,7 @@ export default function PayrollSummaryPanel({
           poolAdjustment: poolAdjustments?.[selectedMonth] || null,
           storeCalendar,
           poolSharesByGroup: sharesByPoolGroup,
+          payPersonalUnderAllExclusion,
         }),
       )
       .filter((r): r is NonNullable<typeof r> => !!r?.salaryCalculation);
@@ -141,6 +147,7 @@ export default function PayrollSummaryPanel({
     poolAdjustments,
     employeeLoans,
     storeCalendar,
+    payrollConfirms,
   ]);
 
   // filter by search

@@ -624,6 +624,9 @@ export default function useFirebaseAppData({
       monthApprovedAdvances,
       poolAdjustment,
       storeCalendar,
+      // เดือน grace (ยังไม่ freeze) → personal (ขายพิเศษ) ยังจ่ายแม้ปิดกองกลางทั้งหมด
+      // เดือน freeze ถูก block ก่อนถึงตรงนี้ (updateSalary throw) → คงยอดเดิม
+      payPersonalUnderAllExclusion: !isMonthLocked(pcResult.data?.[yearMonth]),
     });
     // 1) settle ทุกแถว (denorm net + auto-carry + loan ledger) · best-effort
     await Promise.allSettled(

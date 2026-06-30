@@ -35,7 +35,7 @@ import {
   getOverQuotaDays,
   leaveOverlapsMonth,
 } from "../../utils/leaveUtils";
-import { getPayrollLock } from "../../utils/payrollLock";
+import { getPayrollLock, isMonthLocked } from "../../utils/payrollLock";
 import {
   calculateSalary,
   computeExtraOpenSaturdayWorkedDates,
@@ -317,86 +317,97 @@ export default function SalaryAdminEdit({
   }, [employeeDirectory, roles, liveSalaryData, selectedMonth]);
 
   /* ─── Heavy computation: memoized ───────────────────────────────── */
-  const { poolShare, poolGroupEmployees, salaryCalculation } = useMemo(() => {
-    let employeePoolShare: any = null;
-    let poolGroupEmployeesDraft: any[] = [];
-    if (employeeRole?.poolGroup) {
-      poolGroupEmployeesDraft = employeeDirectory.filter((employee) => {
-        if (employee.salaryDisabled) return false;
-        const roleIdForMonth =
-          salaryData[employee.id]?.[selectedMonth]?.roleId ?? employee.roleId;
-        const role = roles.find(
-          (candidateRole) => candidateRole.id === roleIdForMonth,
-        );
-        return role?.poolGroup === employeeRole.poolGroup;
-      });
-      const shares = computePoolSharesForGroup({
-        groupEmployeeIds: poolGroupEmployeesDraft.map(
-          (employee) => employee.id,
-        ),
-        salaryData: liveSalaryData,
-        allLeaves,
-        yearMonth: selectedMonth,
-        employeeDirectory,
-        roles,
-        poolAdjustment: poolAdjustments?.[selectedMonth] || null,
-        poolGroup: employeeRole.poolGroup,
+  const { poolShare, poolShares, poolGroupEmployees, salaryCalculation } =
+    useMemo(() => {
+      // เก็บ shares ทั้งกลุ่ม (ทุกคน) ไว้ใช้ render badge "คนในกลุ่ม" ให้ตรงกับ
+      // การคำนวณจริง (รวม exempt จากหน้าที่ + ปิดสิทธิ์ + เกณฑ์ 50%)
+      let groupShares: Record<string, any> = {};
+      let employeePoolShare: any = null;
+      let poolGroupEmployeesDraft: any[] = [];
+      if (employeeRole?.poolGroup) {
+        poolGroupEmployeesDraft = employeeDirectory.filter((employee) => {
+          if (employee.salaryDisabled) return false;
+          const roleIdForMonth =
+            salaryData[employee.id]?.[selectedMonth]?.roleId ?? employee.roleId;
+          const role = roles.find(
+            (candidateRole) => candidateRole.id === roleIdForMonth,
+          );
+          return role?.poolGroup === employeeRole.poolGroup;
+        });
+        const shares = computePoolSharesForGroup({
+          groupEmployeeIds: poolGroupEmployeesDraft.map(
+            (employee) => employee.id,
+          ),
+          salaryData: liveSalaryData,
+          allLeaves,
+          yearMonth: selectedMonth,
+          employeeDirectory,
+          roles,
+          poolAdjustment: poolAdjustments?.[selectedMonth] || null,
+          poolGroup: employeeRole.poolGroup,
+          storeCalendar,
+          // เดือนยังไม่ freeze → personal (ขายพิเศษ) ยังจ่ายแม้ปิดกองกลางทั้งหมด
+          payPersonalUnderAllExclusion: !isMonthLocked(
+            payrollConfirms?.[selectedMonth],
+          ),
+        });
+        groupShares = shares;
+        employeePoolShare = shares[selectedEmployeeId];
+      }
+      // รายการยกเว้นค่าคอม "ระดับ piece" สำหรับพนักงานคนนี้ (multi-item)
+      const monthExclusions = (poolAdjustments?.[selectedMonth]?.items || [])
+        .filter(
+          (it: any) =>
+            it.kind === "piece" && it.employeeId === selectedEmployeeId,
+        )
+        .map((it: any) => ({
+          pieceItemId: it.pieceItemId,
+          pieces: Number(it.pieces) || 0,
+          label: it.label,
+        }));
+      const extraSatWorked = computeExtraOpenSaturdayWorkedDates(
+        selectedMonth,
         storeCalendar,
-      });
-      employeePoolShare = shares[selectedEmployeeId];
-    }
-    // รายการยกเว้นค่าคอม "ระดับ piece" สำหรับพนักงานคนนี้ (multi-item)
-    const monthExclusions = (poolAdjustments?.[selectedMonth]?.items || [])
-      .filter(
-        (it: any) =>
-          it.kind === "piece" && it.employeeId === selectedEmployeeId,
-      )
-      .map((it: any) => ({
-        pieceItemId: it.pieceItemId,
-        pieces: Number(it.pieces) || 0,
-        label: it.label,
-      }));
-    const extraSatWorked = computeExtraOpenSaturdayWorkedDates(
+        monthLeaves,
+      );
+      const computedSalary = calculateSalary(
+        data,
+        overInfo,
+        employeeInfo,
+        totalLeaveDays,
+        approvedAdvanceTotal,
+        employeePoolShare,
+        employeeRole,
+        buildLoanContext(employeeLoans, selectedEmployeeId, selectedMonth),
+        monthExclusions,
+        { workedDates: extraSatWorked },
+      );
+      return {
+        poolShare: employeePoolShare,
+        poolShares: groupShares,
+        poolGroupEmployees: poolGroupEmployeesDraft,
+        salaryCalculation: computedSalary,
+      };
+    }, [
+      employeeRole,
+      employeeDirectory,
+      roles,
+      liveSalaryData,
+      salaryData,
+      allLeaves,
       selectedMonth,
-      storeCalendar,
-      monthLeaves,
-    );
-    const computedSalary = calculateSalary(
+      selectedEmployeeId,
       data,
       overInfo,
       employeeInfo,
+      monthLeaves,
       totalLeaveDays,
       approvedAdvanceTotal,
-      employeePoolShare,
-      employeeRole,
-      buildLoanContext(employeeLoans, selectedEmployeeId, selectedMonth),
-      monthExclusions,
-      { workedDates: extraSatWorked },
-    );
-    return {
-      poolShare: employeePoolShare,
-      poolGroupEmployees: poolGroupEmployeesDraft,
-      salaryCalculation: computedSalary,
-    };
-  }, [
-    employeeRole,
-    employeeDirectory,
-    roles,
-    liveSalaryData,
-    salaryData,
-    allLeaves,
-    selectedMonth,
-    selectedEmployeeId,
-    data,
-    overInfo,
-    employeeInfo,
-    monthLeaves,
-    totalLeaveDays,
-    approvedAdvanceTotal,
-    poolAdjustments,
-    employeeLoans,
-    storeCalendar,
-  ]);
+      poolAdjustments,
+      employeeLoans,
+      storeCalendar,
+      payrollConfirms,
+    ]);
 
   function update(field, value) {
     const num = field === "note" ? value : parseFloat(value) || 0;
@@ -857,15 +868,45 @@ export default function SalaryAdminEdit({
             </div>
           </div>
 
-          {/* members — loop pool items (kind=pool) เป็น badges ต่อคน ·
-              flex-wrap รองรับ items >3 · personal items ไม่แสดง (ส่วนตัว
-              ไม่มี threshold check) */}
+          {/* members — badge ต่อคน · สะท้อนการคำนวณจริง:
+              · pool item (ขายทั่วไป/รับซื้อ) ✓/✗ จาก eligible จริง — คนทำหน้าที่
+                ประจำเดือน (เช่น ONLINE) ได้สิทธิ์แม้ < 80% (โชว์ดาว "ได้จากหน้าที่")
+              · คนปิดกองกลางทั้งหมด → แทน badge กองกลางด้วยเกณฑ์ "primary ≥ 50%"
+              · ขายพิเศษ (ส่วนตัว) โชว์ให้ทุกคนที่ทำ — คนปิดทั้งหมดก็ยังได้ */}
           <div className="mt-2.5">
             <div className="text-xs text-txt-soft mb-1.5">คนในกลุ่ม:</div>
+            {/* legend — อธิบายสัญลักษณ์ (mobile ไม่มี hover) */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1.5 text-[10px] text-txt-soft">
+              <span className="inline-flex items-center gap-1">
+                <IconStar
+                  size={10}
+                  strokeWidth={2.6}
+                  className="fill-current text-green"
+                />
+                ได้กองกลางจากหน้าที่ (เช่น ONLINE)
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <IconLock size={10} strokeWidth={2.6} />
+                ปิดกองกลาง — เช็คเกณฑ์ 50%
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <IconSparkles size={10} strokeWidth={2.6} />
+                ขายพิเศษ (ส่วนตัว)
+              </span>
+            </div>
             <div className="flex flex-col gap-1">
               {poolGroupEmployees.map((g) => {
                 const gSal = salaryData[g.id]?.[selectedMonth];
+                const gShare = poolShares?.[g.id];
                 const isMe = g.id === selectedEmployeeId;
+                const poolItemsCfg = rolePoolItems(employeeRole);
+                const { isAll: isAllClosed } = resolvePoolExclusionItemIds(
+                  gShare?.poolExclusion ?? null,
+                  poolItemsCfg,
+                );
+                const exemptDuty = gShare?.poolThresholdExempt === true;
+                const piecesOf = (id: string) =>
+                  gShare?.itemPieces?.[id] ?? resolvePoolItemPieces(id, gSal);
                 return (
                   <div
                     key={g.id}
@@ -877,32 +918,119 @@ export default function SalaryAdminEdit({
                       {g.name}
                     </span>
                     <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
-                      {rolePoolItems(employeeRole)
-                        .filter((it) => it.kind === "pool")
-                        .map((item) => {
-                          const pieces = resolvePoolItemPieces(item.id, gSal);
-                          const topPieces =
-                            poolShare.topItemPieces?.[item.id] || 0;
-                          const thresholdPct = item.threshold ?? 80;
-                          const thresholdPieces =
-                            topPieces > 0
-                              ? (topPieces * thresholdPct) / 100
+                      {/* ปิดกองกลางทั้งหมด → เกณฑ์ "primary ≥ 50%" แทน pool badges */}
+                      {isAllClosed
+                        ? (() => {
+                            const primaryId = gShare?.primaryPoolItemId;
+                            const primaryItem = poolItemsCfg.find(
+                              (it) => it.id === primaryId,
+                            );
+                            const primaryPieces = primaryId
+                              ? piecesOf(primaryId)
                               : 0;
-                          const eligible =
-                            topPieces === 0 || pieces >= thresholdPieces;
+                            const topPrimary =
+                              gShare?.topItemPieces?.[primaryId] || 0;
+                            // losesBaseSalary=false → ผ่าน (รวมเคส top=0)
+                            const pass50 = !gShare?.losesBaseSalary;
+                            const pct =
+                              topPrimary > 0
+                                ? (primaryPieces / topPrimary) * 100
+                                : 0;
+                            return (
+                              <div
+                                title={`ปิดกองกลางทั้งหมด · ${primaryItem?.label || "ขาย"} ${primaryPieces} ชิ้น = ${pct.toFixed(1)}% ของ Top ${topPrimary} · ${pass50 ? "ผ่านเกณฑ์ 50% (ได้เงินเดือนพื้นฐาน)" : "ต่ำกว่า 50% (ไม่ได้เงินเดือนพื้นฐาน)"}`}
+                                className={`shrink-0 min-w-[64px] px-2 py-1 rounded-md flex flex-col items-center justify-center leading-tight ${pass50 ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                              >
+                                <span className="text-[10px] font-semibold opacity-80 inline-flex items-center gap-0.5 max-w-[88px]">
+                                  <IconLock size={9} strokeWidth={2.6} />
+                                  <span className="truncate">
+                                    {primaryItem?.label || "ขาย"} ≥50%
+                                  </span>
+                                  {pass50 ? (
+                                    <IconCheck size={9} strokeWidth={3} />
+                                  ) : (
+                                    <IconX size={9} strokeWidth={3} />
+                                  )}
+                                </span>
+                                <span className="text-sm font-extrabold">
+                                  {primaryPieces}
+                                </span>
+                              </div>
+                            );
+                          })()
+                        : poolItemsCfg
+                            .filter((it) => it.kind === "pool")
+                            .map((item) => {
+                              const eligible =
+                                gShare?.itemShares?.[item.id]?.eligible ??
+                                false;
+                              const pieces = piecesOf(item.id);
+                              const topPieces =
+                                gShare?.topItemPieces?.[item.id] || 0;
+                              const thresholdPct = item.threshold ?? 80;
+                              const thresholdPieces =
+                                topPieces > 0
+                                  ? (topPieces * thresholdPct) / 100
+                                  : 0;
+                              // ผ่านเพราะทำหน้าที่ประจำเดือน (exempt) ทั้งที่ < เกณฑ์
+                              const viaDuty =
+                                exemptDuty &&
+                                eligible &&
+                                topPieces > 0 &&
+                                pieces < thresholdPieces;
+                              return (
+                                <div
+                                  key={item.id}
+                                  title={`${item.label} · ${pieces} ชิ้น · ${
+                                    eligible
+                                      ? viaDuty
+                                        ? "ได้สิทธิ์กองกลางจากหน้าที่ประจำเดือน (เช่น ONLINE)"
+                                        : "ผ่านเกณฑ์"
+                                      : `ต้องการ ≥ ${thresholdPieces.toFixed(1)} (${thresholdPct}% ของ ${topPieces})`
+                                  }`}
+                                  className={`shrink-0 min-w-[54px] px-2 py-1 rounded-md flex flex-col items-center justify-center leading-tight ${eligible ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                                >
+                                  <span className="text-[10px] font-semibold opacity-80 inline-flex items-center gap-0.5 max-w-[72px]">
+                                    <span className="truncate">
+                                      {item.label}
+                                    </span>
+                                    {viaDuty && (
+                                      <IconStar
+                                        size={9}
+                                        strokeWidth={2.6}
+                                        className="fill-current"
+                                      />
+                                    )}
+                                    {eligible ? (
+                                      <IconCheck size={9} strokeWidth={3} />
+                                    ) : (
+                                      <IconX size={9} strokeWidth={3} />
+                                    )}
+                                  </span>
+                                  <span className="text-sm font-extrabold">
+                                    {pieces}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                      {/* ขายพิเศษ (ส่วนตัว) — โชว์เฉพาะคนที่ทำ (>0) · คนปิดทั้งหมด
+                          ก็ยังได้ค่าคอมนี้ (เดือนที่ยังไม่ freeze) */}
+                      {poolItemsCfg
+                        .filter((it) => it.kind === "personal")
+                        .map((item) => {
+                          const pieces = piecesOf(item.id);
+                          if (pieces <= 0) return null;
+                          const paid =
+                            gShare?.itemShares?.[item.id]?.eligible ?? true;
                           return (
                             <div
                               key={item.id}
-                              title={`${item.label} · ${pieces} ชิ้น · ${eligible ? "ผ่านเกณฑ์" : `ต้องการ ≥ ${thresholdPieces.toFixed(1)} (${thresholdPct}% ของ ${topPieces})`}`}
-                              className={`shrink-0 min-w-[54px] px-2 py-1 rounded-md flex flex-col items-center justify-center leading-tight ${eligible ? "bg-green-lt text-green" : "bg-red-lt text-red"}`}
+                              title={`${item.label} (ส่วนตัว) · ${pieces} ชิ้น · ${paid ? "ได้ค่าคอม (ไม่เข้ากองกลาง)" : "ถูกปิดรายการนี้"}`}
+                              className={`shrink-0 min-w-[54px] px-2 py-1 rounded-md flex flex-col items-center justify-center leading-tight ${paid ? "bg-green-lt text-green" : "bg-cream-dk/40 text-txt-soft line-through"}`}
                             >
-                              <span className="text-[10px] font-semibold opacity-80 inline-flex items-center gap-0.5 max-w-[64px]">
+                              <span className="text-[10px] font-semibold opacity-80 inline-flex items-center gap-0.5 max-w-[72px]">
+                                <IconSparkles size={9} strokeWidth={2.6} />
                                 <span className="truncate">{item.label}</span>
-                                {eligible ? (
-                                  <IconCheck size={9} strokeWidth={3} />
-                                ) : (
-                                  <IconX size={9} strokeWidth={3} />
-                                )}
                               </span>
                               <span className="text-sm font-extrabold">
                                 {pieces}
@@ -1953,6 +2081,9 @@ export default function SalaryAdminEdit({
           initialMonth={selectedMonth}
           poolAdjustments={poolAdjustments}
           isConfirmed={!!payrollConfirms?.[selectedMonth]?.confirmedAt}
+          payPersonalUnderAllExclusion={
+            !isMonthLocked(payrollConfirms?.[selectedMonth])
+          }
         />
       )}
 
