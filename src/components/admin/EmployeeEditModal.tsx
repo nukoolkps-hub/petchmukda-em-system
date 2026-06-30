@@ -368,7 +368,7 @@ export default function EmployeeEditModal({
                 <IconPencil
                   size={12}
                   strokeWidth={2.4}
-                  className="inline mr-1 -mt-px"
+                  className="inline mr-1"
                 />
                 ชื่อพนักงาน (คำนำหน้า + ชื่อ)
                 <span className="font-normal text-txt-soft">
@@ -525,7 +525,7 @@ export default function EmployeeEditModal({
                   <IconMessageCircle
                     size={12}
                     strokeWidth={2.4}
-                    className="inline mr-1 -mt-px"
+                    className="inline mr-1"
                   />
                   LINE User ID
                   {employee.lineUserId ? (
@@ -572,7 +572,7 @@ export default function EmployeeEditModal({
                 <IconLightbulb
                   size={12}
                   strokeWidth={2.4}
-                  className="inline mr-1 -mt-px"
+                  className="inline mr-1"
                 />
                 ID จะถูกเก็บอัตโนมัติเมื่อพนักงานเข้าสู่ระบบผ่าน LINE
               </div>
@@ -666,7 +666,7 @@ export default function EmployeeEditModal({
                 <IconBriefcase
                   size={12}
                   strokeWidth={2.4}
-                  className="inline mr-1 -mt-px"
+                  className="inline mr-1"
                 />
                 เงินเดือนพื้นฐานเริ่มต้น
               </label>
@@ -701,7 +701,7 @@ export default function EmployeeEditModal({
                 <IconBuildingBank
                   size={12}
                   strokeWidth={2.4}
-                  className="inline mr-1 -mt-px"
+                  className="inline mr-1"
                 />
                 หักประกันสังคม
               </label>
@@ -782,7 +782,7 @@ export default function EmployeeEditModal({
                         <IconLock
                           size={12}
                           strokeWidth={2.4}
-                          className="inline mr-1 -mt-px"
+                          className="inline mr-1"
                         />
                         ปิดสิทธิ์ระบบเงินเดือน
                       </div>
@@ -849,7 +849,7 @@ export default function EmployeeEditModal({
                       <IconCircleDollarSign
                         size={12}
                         strokeWidth={2.4}
-                        className="inline mr-1 -mt-px"
+                        className="inline mr-1"
                       />
                       Rate ค่าคอมต่อชิ้น (฿/ชิ้น)
                     </div>
@@ -860,7 +860,7 @@ export default function EmployeeEditModal({
                             <IconPackage
                               size={12}
                               strokeWidth={2.4}
-                              className="inline mr-1 -mt-px"
+                              className="inline mr-1"
                             />
                             {item.label}
                           </label>
@@ -945,7 +945,7 @@ export default function EmployeeEditModal({
                             <IconBan
                               size={14}
                               strokeWidth={2.4}
-                              className="inline mr-1 -mt-px"
+                              className="inline mr-1"
                             />
                             ปิดสิทธิ์ค่าคอมกองกลาง
                           </div>
@@ -1066,7 +1066,7 @@ export default function EmployeeEditModal({
                         <IconCircleDollarSign
                           size={12}
                           strokeWidth={2.4}
-                          className="inline mr-1 -mt-px"
+                          className="inline mr-1"
                         />
                         Rate ค่าคอมต่อชิ้น (฿/ชิ้น)
                       </div>
@@ -1198,7 +1198,7 @@ export default function EmployeeEditModal({
                     <IconTicket
                       size={12}
                       strokeWidth={2.4}
-                      className="inline mr-1 -mt-px"
+                      className="inline mr-1"
                     />
                     Rate โบนัสอื่นๆ (฿/ครั้ง)
                   </div>

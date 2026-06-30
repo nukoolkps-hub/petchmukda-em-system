@@ -298,9 +298,9 @@ export default function LeaveListPanel({
                     setAddSettled(false);
                     setAddOpen(false);
                   }}
-                  className="flex-1 px-3 py-2.5 rounded-[10px] border border-bdr bg-white text-txt-mid text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
+                  className="flex-1 px-3 py-2.5 rounded-[10px] border border-bdr bg-white text-txt-mid text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform inline-flex items-center justify-center gap-1.5"
                 >
-                  <IconX size={13} strokeWidth={2.5} className="inline mr-1" />
+                  <IconX size={13} strokeWidth={2.5} />
                   ยกเลิก
                 </button>
                 <button

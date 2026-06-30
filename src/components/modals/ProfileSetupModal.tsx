@@ -347,7 +347,7 @@ export default function ProfileSetupModal({
           <IconLandmark
             size={14}
             strokeWidth={2.4}
-            className="inline mr-1 -mt-px"
+            className="inline mr-1"
           />
           บัญชีธนาคารสำหรับรับเงินเดือน
         </label>
