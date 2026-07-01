@@ -95,14 +95,12 @@ export default function SalaryView({
         .slice(0, 60),
     [salaryData, salaryEmployeeId],
   );
-  const selectMonths = months.includes(selectedMonth)
-    ? months
-    : [selectedMonth, ...months];
-
-  useEffect(() => {
-    if (months.length === 0) return;
-    if (!months.includes(selectedMonth)) setSelectedMonth(months[0]);
-  }, [months, selectedMonth]);
+  // เดือนที่เลือกดูได้: เดือนปัจจุบัน "เสมอ" (แม้ยังไม่มีข้อมูล → โชว์ preview) +
+  // เดือนที่มีข้อมูล + เดือนที่เลือกค้างไว้ · ไม่เด้งออกจากเดือนปัจจุบันอีกแล้ว
+  const selectMonths = useMemo(() => {
+    const set = new Set<string>([currentYM, selectedMonth, ...months]);
+    return [...set].sort().reverse();
+  }, [currentYM, selectedMonth, months]);
 
   const data = salaryData[salaryEmployeeId]?.[selectedMonth];
   // ตำแหน่ง "ณ เดือนที่ดู" — ใช้ roleId จาก snapshot ใน salary doc ก่อน (frozen)
@@ -210,23 +208,22 @@ export default function SalaryView({
       monthExclusions,
       { workedDates: extraSatWorked },
     );
-    // ถ้ายังไม่มี salary doc → คำนวณ preview จากข้อมูลที่มี (เงินเดือนพื้นฐาน +
-    // โบนัสขยัน + เสาร์เปิดพิเศษ + หักลาเกินโควต้า) เพื่อให้พนักงานเห็นแรงจูงใจ
-    // ก่อน ADMIN กรอกค่าคอม (โดยเฉพาะโบนัสแห่งความขยัน)
-    const previewSalary = data
-      ? null
-      : calculateSalary(
-          {},
-          overQuotaInfo,
-          employeeInfo,
-          leaveDays,
-          approvedAdvanceAmountTotal,
-          null,
-          employeeRole,
-          buildLoanContext(employeeLoans, salaryEmployeeId, selectedMonth),
-          null,
-          { workedDates: extraSatWorked },
-        );
+    // Preview = เงินเดือนพื้นฐาน + โบนัสขยัน + เสาร์เปิดพิเศษ + หักลาเกินโควต้า +
+    // หักเบิก/เงินกู้ · ใช้ salary doc = {} (ไม่อ่านจำนวนชิ้น/ค่าคอมที่ ADMIN
+    // กรอก) → ตัวเลข "คงที่" ไม่วิ่งตามที่ ADMIN แก้ระหว่างเดือน · โชว์จนกว่า
+    // ADMIN กดยืนยันยอด แล้วค่อยเปลี่ยนเป็นยอดจริง (ดู render gate ด้านล่าง)
+    const previewSalary = calculateSalary(
+      {},
+      overQuotaInfo,
+      employeeInfo,
+      leaveDays,
+      approvedAdvanceAmountTotal,
+      null,
+      employeeRole,
+      buildLoanContext(employeeLoans, salaryEmployeeId, selectedMonth),
+      null,
+      { workedDates: extraSatWorked },
+    );
     return {
       overInfo: overQuotaInfo,
       overTotalDays: overQuotaInfo.weekdays + overQuotaInfo.sundays,
@@ -681,7 +678,10 @@ export default function SalaryView({
     </BaseModal>
   );
 
-  if (!data || !salaryCalculation) {
+  // แสดง "preview" (เงินเดือนพื้นฐาน · คงที่) จนกว่า ADMIN จะกดยืนยันยอด —
+  // ยังไม่ยืนยัน = ยังไม่โชว์ยอดจริง/ค่าคอมที่ ADMIN กรอก (กันตัวเลขวิ่งไปมา
+  // ระหว่างเดือน) · ยืนยันแล้ว → โชว์สลิปยอดจริง · กัน data หาย = fallback preview
+  if (!isMonthConfirmed || !data || !salaryCalculation) {
     return (
       <div>
         <div className="flex items-center justify-between gap-2 mb-3.5">
@@ -707,7 +707,7 @@ export default function SalaryView({
               ค่าคอมขาย + รายการที่ ADMIN กรอกเอง จะเพิ่มหลังยืนยันยอด ·
               ตอนนี้เห็นได้แต่ที่ระบบรู้แล้ว
             </div>
-            {months.includes(currentYM) && selectedMonth !== currentYM && (
+            {selectedMonth !== currentYM && (
               <button
                 onClick={() => setSelectedMonth(currentYM)}
                 className="mt-2 px-3 py-1 rounded-[8px] border-none bg-maroon text-white text-xs font-bold cursor-pointer font-[inherit] inline-flex items-center gap-1.5"
