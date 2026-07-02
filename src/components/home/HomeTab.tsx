@@ -102,8 +102,12 @@ export default function HomeTab({
         />
       )}
 
-      {/* ── ตำแหน่ง + เงินเดือนพื้นฐาน + อัตราค่าคอม (ปัจจุบัน) ── */}
-      <PositionRateCard employee={currentEmployee} role={myRole} />
+      {/* ── ตำแหน่ง + เงินเดือนพื้นฐาน + อัตราค่าคอม (ปัจจุบัน) ──
+         พนักงานที่ถูกปิดสิทธิ์เงินเดือน (ฝึกงาน/part-time/ลาออก) ไม่ต้องโชว์
+         การ์ดเงินเดือน/ค่าคอม */}
+      {!currentEmployee?.salaryDisabled && (
+        <PositionRateCard employee={currentEmployee} role={myRole} />
+      )}
 
       {/* ── หน้าที่วันนี้ — เหนือ quota เพราะใช้เช็คทุกวัน ── */}
       {duties &&
