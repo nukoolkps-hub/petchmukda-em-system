@@ -208,12 +208,28 @@ export default function SalaryView({
       monthExclusions,
       { workedDates: extraSatWorked },
     );
-    // Preview = เงินเดือนพื้นฐาน + โบนัสขยัน + เสาร์เปิดพิเศษ + หักลาเกินโควต้า +
-    // หักเบิก/เงินกู้ · ใช้ salary doc = {} (ไม่อ่านจำนวนชิ้น/ค่าคอมที่ ADMIN
-    // กรอก) → ตัวเลข "คงที่" ไม่วิ่งตามที่ ADMIN แก้ระหว่างเดือน · โชว์จนกว่า
-    // ADMIN กดยืนยันยอด แล้วค่อยเปลี่ยนเป็นยอดจริง (ดู render gate ด้านล่าง)
+    // Preview = อ่านจาก salary doc จริงทุกอย่าง (ประกันสังคม/ค่าแทน/รายการ
+    // custom + recurring) + หักลาเกิน/เบิก/เงินกู้ (จาก param) → "เปลี่ยนทุก
+    // อย่าง live" ยกเว้น **ค่าคอม + จำนวนชิ้น** ที่ตรึงไว้ 0 จนกว่า ADMIN กด
+    // ยืนยันยอด (ค่าคอมอิงกองกลาง — ยังไม่นิ่งจนกว่าทุกคนกรอกชิ้นครบ) จึง zero
+    // ทุก field ที่เป็น "จำนวนชิ้น" (pool/personal/bonus) + poolShare=null
+    const previewData = {
+      ...(data || {}),
+      // pool piece counts (+ legacy)
+      poolItemPieces: {},
+      normalSalePieces: 0,
+      specialSalePieces: 0,
+      buyPieces: 0,
+      // personal piece counts (+ legacy)
+      piecePieces: {},
+      singleRatePieces: 0,
+      // bonus item counts (+ legacy)
+      bonusCounts: {},
+      invitePieces: 0,
+      transferPieces: 0,
+    };
     const previewSalary = calculateSalary(
-      {},
+      previewData,
       overQuotaInfo,
       employeeInfo,
       leaveDays,

@@ -36,6 +36,7 @@ import Diamond from "./components/shared/Diamond";
 import { COLORS } from "./constants";
 import { useAuth } from "./contexts/AuthContext";
 import useAppData from "./data/useAppData";
+import { useAdvancesForScope } from "./firebase/hooks/useFirestore";
 import useLeaveForm from "./hooks/useLeaveForm";
 import useLineNotifications from "./hooks/useLineNotifications";
 import useProfile from "./hooks/useProfile";
@@ -212,9 +213,18 @@ export default function LeaveApp() {
     return false;
   }
 
-  const myAdvanceRequests = viewEmployeeId
-    ? advanceRequests.filter((r) => r.employeeId === viewEmployeeId)
-    : [];
+  /* admin subscription (advanceRequests) เป็น pending-only — ตอน admin ดู
+     preview ของพนักงาน จึงต้อง subscribe ของพนักงานคนนั้นแบบครบทุกสถานะ
+     (รวม approved) เพื่อให้เห็น "รายการหักเบิกเงิน + ประวัติ" เหมือนพนักงานเห็น */
+  const previewAdvancesResult = useAdvancesForScope({
+    isAdmin: false,
+    employeeId: previewing ? (previewEmpId ?? null) : null,
+  });
+  const myAdvanceRequests = previewing
+    ? previewAdvancesResult.data
+    : viewEmployeeId
+      ? advanceRequests.filter((r) => r.employeeId === viewEmployeeId)
+      : [];
 
   /* ─── Bank account required — บังคับให้ตั้งค่าก่อนใช้งาน ───── */
   const needsBankSetup = !isAdmin && !!profile && !profile.bankAccountNumber;
