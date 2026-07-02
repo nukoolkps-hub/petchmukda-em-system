@@ -11,9 +11,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="EM มุกดา" />
     <title>ห้างเพชรทองมุกดา — ระบบพนักงาน</title>
-    <!-- Prompt + Sarabun self-host จาก /public/fonts/ — declared ใน src/index.css -->
-    <link rel="preload" href="/fonts/Prompt-400.ttf" as="font" type="font/ttf" crossorigin />
-    <link rel="preload" href="/fonts/Prompt-700.ttf" as="font" type="font/ttf" crossorigin />
+    <!-- Prompt self-host จาก /public/fonts/ — declared ใน src/index.css ·
+         preload woff2 น้ำหนักที่โผล่ตั้งแต่ paint แรก (boot screen):
+         400 = body base · 600 = ข้อความ "กำลังโหลด" · 700 = เปอร์เซ็นต์/bold
+         → พร้อมก่อน first paint กัน FOUT (ตัวอักษรเด้ง) ตอนหน้า loading -->
+    <link rel="preload" href="/fonts/Prompt-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Prompt-600.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Prompt-700.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
     <div id="root"></div>
