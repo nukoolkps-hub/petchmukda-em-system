@@ -340,7 +340,7 @@ function SortableEmployeeRow({
                 all: (
                   <span className="inline-flex items-center gap-0.5">
                     <IconLock size={10} strokeWidth={2.4} />
-                    ปิดทั้งหมด
+                    ปิดกองกลางทั้งหมด
                   </span>
                 ),
               };
@@ -374,7 +374,7 @@ function SortableEmployeeRow({
             {employee.salaryDisabled && (
               <span className="px-1.5 py-1 rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
                 <IconLock size={10} strokeWidth={2.4} />
-                ปิดเงินเดือน
+                ปิดสิทธิ์เงินเดือน
               </span>
             )}
             {employee.lineUserId && (

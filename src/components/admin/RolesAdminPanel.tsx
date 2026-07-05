@@ -489,7 +489,7 @@ export default function RolesAdminPanel({
             <div className="mb-2.5">
               <label className="text-xs text-txt-soft font-semibold mb-1 block">
                 รายการ pool sales (custom · เลือก "หลัก" = primary item สำหรับ กฎ
-                &lt; 50% ขาด base salary ตอน "ปิดทั้งหมด")
+                &lt; 50% ขาด base salary ตอน "ปิดกองกลางทั้งหมด")
               </label>
               <PoolItemsEditor
                 items={newRole.poolItems}

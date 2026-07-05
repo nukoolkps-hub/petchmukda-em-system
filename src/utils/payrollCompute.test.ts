@@ -437,10 +437,10 @@ describe("diffSalaryFields", () => {
     );
     expect(out).toEqual(["การปิดสิทธิ์กองกลาง: ไม่ปิด → ปิด: ขายทั่วไป"]);
   });
-  it('poolExclusion "all" → ปิดทั้งหมด · ล้างกลับ → ไม่ปิด', () => {
+  it('poolExclusion "all" → ปิดกองกลางทั้งหมด · ล้างกลับ → ไม่ปิด', () => {
     expect(
       diffSalaryFields({ poolExclusion: null }, { poolExclusion: "all" }),
-    ).toEqual(["การปิดสิทธิ์กองกลาง: ไม่ปิด → ปิดทั้งหมด"]);
+    ).toEqual(["การปิดสิทธิ์กองกลาง: ไม่ปิด → ปิดกองกลางทั้งหมด"]);
     expect(
       diffSalaryFields(
         { poolExclusion: ["normal"] },
