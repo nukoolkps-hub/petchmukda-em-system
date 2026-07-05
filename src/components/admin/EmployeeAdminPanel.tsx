@@ -340,7 +340,7 @@ function SortableEmployeeRow({
                 all: (
                   <span className="inline-flex items-center gap-0.5">
                     <IconLock size={10} strokeWidth={2.4} />
-                    ปิดทั้งหมด
+                    ปิดกองกลางทั้งหมด
                   </span>
                 ),
               };

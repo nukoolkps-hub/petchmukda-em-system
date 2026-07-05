@@ -456,7 +456,7 @@ export function diffSalaryFields(
       labelMap[id] || (id === "sell" ? "ขายทั่วไป" : id === "buy" ? "รับซื้อ" : id);
     const fmt = (v: any): string => {
       if (v == null) return "ไม่ปิด";
-      if (v === "all" || v === "both") return "ปิดทั้งหมด";
+      if (v === "all" || v === "both") return "ปิดกองกลางทั้งหมด";
       if (Array.isArray(v))
         return v.length ? `ปิด: ${v.map(idLabel).join(", ")}` : "ไม่ปิด";
       return `ปิด: ${idLabel(String(v))}`;
