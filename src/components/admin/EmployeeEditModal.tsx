@@ -1033,7 +1033,7 @@ export default function EmployeeEditModal({
                                     : "text-txt"
                                 }
                               >
-                                ปิดทั้งหมด
+                                ปิดกองกลางทั้งหมด
                               </span>
                             </label>
                             {mode === "all" &&
