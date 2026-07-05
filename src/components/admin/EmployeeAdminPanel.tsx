@@ -372,7 +372,7 @@ function SortableEmployeeRow({
               );
             })()}
             {employee.salaryDisabled && (
-              <span className="px-1.5 py-1 rounded-md bg-red-lt text-red font-bold text-xs inline-flex items-center gap-0.5">
+              <span className="px-1.5 py-1 rounded-md bg-maroon text-white font-bold text-xs inline-flex items-center gap-0.5">
                 <IconLock size={10} strokeWidth={2.4} />
                 ปิดสิทธิ์เงินเดือน
               </span>
