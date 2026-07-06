@@ -492,6 +492,130 @@ export function replayCoverageHistory(
 	return history;
 }
 
+/* ─── Coverage forecast (คนแทนตำแหน่งเป้าหมายล่วงหน้า) ───────────────
+   Mirror ของ src/utils/dutyUtils.ts → computeCoverageForecast · ใช้ helper
+   ชุดเดียวกับ coverage จริง (pickCoverageCandidate / monthlyPrimariesForDay /
+   absentTargets) → forecast ตรงกับที่มอบหมาย/จ่ายจริง · replay ตั้งแต่ต้นปี
+   (seed history ให้ยุติธรรม) แล้วบันทึกผลเฉพาะ >= today · จับวันต่อเนื่องที่
+   คนแทนคนเดิมเป็นช่วงเดียว                                                       */
+export interface CoverageForecastEntry {
+	dutyId: string;
+	dutyName: string;
+	start: string; // YYYY-MM-DD (inclusive)
+	end: string; // YYYY-MM-DD (inclusive)
+	targetEmpId: string;
+	substituteEmpId: string | null;
+}
+
+/** วันถัดไป (YYYY-MM-DD +1) — parse local-date เลี่ยง TZ */
+function nextYmd(ymd: string): string {
+	const d = new Date(`${ymd}T00:00:00`);
+	d.setDate(d.getDate() + 1);
+	return toYMD(d);
+}
+
+export function computeCoverageForecast(
+	duties: Duty[],
+	employees: Employee[],
+	allLeaves: LeaveEntry[],
+	todayYmd: string,
+	endYmd: string,
+): CoverageForecastEntry[] {
+	const coverageDuties = duties.filter((d) => d.kind === "coverage");
+	if (coverageDuties.length === 0 || todayYmd > endYmd) return [];
+	const monthlyDuties = duties.filter(
+		(d) => d.kind !== "coverage" && d.period === "monthly",
+	);
+	const dutyNameById = new Map(coverageDuties.map((d) => [d.id, d.name]));
+
+	const yearStart = `${todayYmd.slice(0, 4)}-01-01`;
+	const replayStart = yearStart < todayYmd ? yearStart : todayYmd;
+	const history = new Map<string, number>();
+	const monthlyPrimariesCache = new Map<string, Set<string>>();
+	const picks: {
+		dutyId: string;
+		ymd: string;
+		targetEmpId: string;
+		substituteEmpId: string | null;
+	}[] = [];
+	const endD = new Date(`${endYmd}T00:00:00`);
+	for (
+		let d = new Date(`${replayStart}T00:00:00`);
+		d <= endD;
+		d.setDate(d.getDate() + 1)
+	) {
+		const ymd = toYMD(d);
+		const ym = ymd.slice(0, 7);
+		let monthlyPrimaries = monthlyPrimariesCache.get(ym);
+		if (!monthlyPrimaries) {
+			monthlyPrimaries = monthlyPrimariesForDay(monthlyDuties, ymd, employees);
+			monthlyPrimariesCache.set(ym, monthlyPrimaries);
+		}
+		const usedToday = new Set<string>();
+		const record = ymd >= todayYmd;
+		for (const duty of coverageDuties) {
+			for (const targetId of absentTargets(duty, ymd, employees, allLeaves)) {
+				const pick = pickCoverageCandidate(
+					duty,
+					ymd,
+					employees,
+					allLeaves,
+					history,
+					usedToday,
+					monthlyPrimaries,
+				);
+				if (pick) {
+					usedToday.add(pick);
+					history.set(pick, (history.get(pick) || 0) + 1);
+				}
+				if (record) {
+					picks.push({
+						dutyId: duty.id,
+						ymd,
+						targetEmpId: targetId,
+						substituteEmpId: pick,
+					});
+				}
+			}
+		}
+	}
+
+	picks.sort(
+		(a, b) =>
+			a.dutyId.localeCompare(b.dutyId) ||
+			a.targetEmpId.localeCompare(b.targetEmpId) ||
+			a.ymd.localeCompare(b.ymd),
+	);
+	const out: CoverageForecastEntry[] = [];
+	for (const p of picks) {
+		const last = out[out.length - 1];
+		if (
+			last &&
+			last.dutyId === p.dutyId &&
+			last.targetEmpId === p.targetEmpId &&
+			last.substituteEmpId === p.substituteEmpId &&
+			nextYmd(last.end) === p.ymd
+		) {
+			last.end = p.ymd;
+		} else {
+			out.push({
+				dutyId: p.dutyId,
+				dutyName: dutyNameById.get(p.dutyId) || "",
+				start: p.ymd,
+				end: p.ymd,
+				targetEmpId: p.targetEmpId,
+				substituteEmpId: p.substituteEmpId,
+			});
+		}
+	}
+	out.sort(
+		(a, b) =>
+			a.start.localeCompare(b.start) ||
+			a.dutyName.localeCompare(b.dutyName, "th"),
+	);
+	return out;
+}
+
 /** คำนวณ coverage ของวันนี้ + คืน set คนที่ถูกดึงไปแทน (เพื่อให้ rotation
  *  ปล่อย slot weekly ของเขาแล้วหาเพื่อนร่วมงานแทน — cascade)                    */
 function computeCoverageForDay(

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type {
+  CoverageForecastItem,
   DutyAssignmentsSnapshot,
   SnapshotPoolMember,
 } from "../../firebase/dutyAssignments";
@@ -146,7 +147,18 @@ export default function DutyForecastModal({
     return items;
   }, [forecast]);
 
-  // group 2 ชั้น: เดือน → วัน (card ต่อช่วงวัน · ในการ์ดมีหลายหน้าที่)
+  // coverage duty (แทนคนลา) ล่วงหน้า — server-computed ใน snapshot · เฉพาะ
+  // ของฉัน = ฉันเป็นคนแทน หรือฉันคือคนที่ลา (จะได้รู้ว่าใครมาแทนเรา)
+  const coverageForecast = useMemo<CoverageForecastItem[]>(() => {
+    const all = dutyAssignmentsToday?.coverageForecast || [];
+    if (!(profileId && mineOnly)) return all;
+    return all.filter(
+      (c) => c.substituteEmpId === profileId || c.targetEmpId === profileId,
+    );
+  }, [dutyAssignmentsToday, profileId, mineOnly]);
+
+  // group 2 ชั้น: เดือน → วัน (card ต่อช่วงวัน · ในการ์ดมีหลายหน้าที่) +
+  // coverage entries ของเดือนนั้น (แยกการ์ด amber)
   const months = useMemo(() => {
     // เฉพาะของฉัน = เป็น primary หรือเป็น "คนแทน" ในช่วงไหนของ period นี้
     // (พนักงานจะได้เห็นว่าต้องไปแทนใครวันไหนด้วย ไม่ใช่แค่เวรตัวเอง)
@@ -158,33 +170,45 @@ export default function DutyForecastModal({
               it.coverage?.some((s) => s.substituteEmpId === profileId),
           )
         : allItems;
-    // ym → (dateKey → items[])  · allItems เรียงตาม start+dutyName แล้ว
-    const byMonth = new Map<string, Map<string, ForecastItem[]>>();
-    for (const it of filtered) {
-      const ym = it.start.slice(0, 7);
-      const dateKey = `${it.start}__${it.end}`;
-      let dates = byMonth.get(ym);
-      if (!dates) {
-        dates = new Map();
-        byMonth.set(ym, dates);
+    // ym → { dates: dateKey → items[], coverage: [] }
+    const byMonth = new Map<
+      string,
+      { dates: Map<string, ForecastItem[]>; coverage: CoverageForecastItem[] }
+    >();
+    const ensure = (ym: string) => {
+      let e = byMonth.get(ym);
+      if (!e) {
+        e = { dates: new Map(), coverage: [] };
+        byMonth.set(ym, e);
       }
+      return e;
+    };
+    for (const it of filtered) {
+      const { dates } = ensure(it.start.slice(0, 7));
+      const dateKey = `${it.start}__${it.end}`;
       const list = dates.get(dateKey);
       if (list) list.push(it);
       else dates.set(dateKey, [it]);
     }
+    for (const c of coverageForecast) {
+      ensure(c.start.slice(0, 7)).coverage.push(c);
+    }
     return [...byMonth.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([ym, dates]) => ({
+      .map(([ym, e]) => ({
         ym,
         label: monthLabel(ym),
-        dateGroups: [...dates.values()].map((items) => ({
+        dateGroups: [...e.dates.values()].map((items) => ({
           start: items[0].start,
           end: items[0].end,
           period: items[0].period,
           items,
         })),
+        coverage: e.coverage
+          .slice()
+          .sort((a, b) => a.start.localeCompare(b.start)),
       }));
-  }, [allItems, profileId, mineOnly]);
+  }, [allItems, coverageForecast, profileId, mineOnly]);
 
   const hasData = (dutyAssignmentsToday?.assignments?.length || 0) > 0;
   const showPerson = !(profileId && mineOnly);
@@ -382,6 +406,75 @@ export default function DutyForecastModal({
                       </div>
                     </div>
                   ))}
+
+                  {/* คนแทนตำแหน่งเป้าหมายล่วงหน้า (หน้าที่แบบ "แทนคนลา") */}
+                  {mth.coverage.map((c) => {
+                    const sub = c.substituteEmpId
+                      ? empById.get(c.substituteEmpId)
+                      : null;
+                    const subIsMe =
+                      !!profileId && c.substituteEmpId === profileId;
+                    const targetIsMe =
+                      !!profileId && c.targetEmpId === profileId;
+                    return (
+                      <div
+                        key={`cov-${c.dutyId}-${c.targetEmpId}-${c.start}`}
+                        className="rounded-[11px] border border-amber/30 bg-amber-lt/30 overflow-hidden"
+                      >
+                        <div className="px-3 py-1.5 bg-amber-lt/60 border-b border-amber/20 flex items-center justify-between gap-2">
+                          <span className="text-sm font-bold text-amber">
+                            {formatRangeInMonth(c.start, c.end, "weekly")}
+                          </span>
+                          <span className="text-[11px] font-semibold text-amber/80 truncate min-w-0">
+                            {c.dutyName}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-3 py-2 text-xs">
+                          <IconCalendarX
+                            size={13}
+                            strokeWidth={2.4}
+                            className="text-amber shrink-0 translate-y-px"
+                          />
+                          <span className="text-txt-soft truncate min-w-0">
+                            {c.targetName || "คน"}
+                            {targetIsMe && " (คุณ)"} ลา
+                          </span>
+                          <IconArrowRight
+                            size={12}
+                            strokeWidth={2.6}
+                            className="text-txt-soft shrink-0 translate-y-px"
+                          />
+                          {c.substituteEmpId ? (
+                            <span className="inline-flex items-center gap-1 min-w-0 shrink">
+                              {sub && (
+                                <AvatarCircle
+                                  avatar={sub.avatar}
+                                  avatarType={sub.avatarType}
+                                  avatarImageUrl={sub.avatarImageUrl}
+                                  size={18}
+                                  fontSize={9}
+                                  border="none"
+                                />
+                              )}
+                              <span
+                                className={`truncate font-bold ${subIsMe ? "text-maroon" : "text-green"}`}
+                              >
+                                {sub?.nickname ||
+                                  sub?.name ||
+                                  c.substituteName ||
+                                  "คน"}
+                                {subIsMe && " (คุณ)"} แทน
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="font-bold text-red shrink-0">
+                              ไม่มีคนแทน
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}
