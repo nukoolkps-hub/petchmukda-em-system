@@ -11,6 +11,7 @@
    - className: เพิ่ม class ภายนอก                                 */
 
 import { Landmark } from "lucide-react";
+import { useState } from "react";
 import { THAI_BANKS } from "../../constants";
 
 interface BankLogoProps {
@@ -62,6 +63,33 @@ export default function BankLogo({
   const solid = "solid" in entry && (entry as { solid?: boolean }).solid;
   const inner = Math.round(size * (solid ? 0.84 : 0.72));
   return (
+    <BankLogoImage
+      entry={entry}
+      size={size}
+      inner={inner}
+      solid={solid}
+      className={className}
+    />
+  );
+}
+
+/* แยก img ออกมาเพื่อถือ state `loaded` — fade เข้าตอนรูปโหลดเสร็จจริง
+   (ไม่ใช่ตอน mount) กันภาพ "กระพริบ/กระโดด" เข้ามาแบบไม่มี transition */
+function BankLogoImage({
+  entry,
+  size,
+  inner,
+  solid,
+  className,
+}: {
+  entry: (typeof THAI_BANKS)[number];
+  size: number;
+  inner: number;
+  solid: boolean | undefined;
+  className: string;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  return (
     <div
       style={{
         width: size,
@@ -72,13 +100,20 @@ export default function BankLogo({
       title={entry.name}
     >
       <img
+        // ref callback: กรณีรูป cached ไว้แล้ว `onLoad` อาจไม่ยิง → เช็ค
+        // `el.complete` ตอน mount แล้ว set loaded เอง
+        ref={(el) => {
+          if (el?.complete) setLoaded(true);
+        }}
         src={`${import.meta.env.BASE_URL}banks/${entry.slug}.svg`}
         alt={entry.name}
         width={inner}
         height={inner}
-        loading="lazy"
         decoding="async"
-        className="object-contain block animate-[fadeIn_0.3s_ease-out]"
+        onLoad={() => setLoaded(true)}
+        className={`object-contain block transition-opacity duration-300 ease-out ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
       />
     </div>
   );
