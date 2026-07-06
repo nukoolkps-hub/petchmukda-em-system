@@ -22,6 +22,7 @@ import { bangkokYmd } from "../dailySummary/dateUtils.js";
 import { getAppFirestore } from "../helpers/config.js";
 import {
 	computeAllDutiesForDay,
+	computeCoverageForecast,
 	type Duty,
 	type Employee,
 	getPeriodIndex,
@@ -69,9 +70,24 @@ interface AssignmentItem {
 	excludedCount: number;
 }
 
+/** คนแทนตำแหน่งเป้าหมายล่วงหน้า (จากใบลาที่ยื่นไว้) — ให้ทุกคน (รวมพนักงาน)
+ *  ดูล่วงหน้าได้ว่าช่วงไหนใครลา ใครมาแทน · denorm ชื่อไว้เพราะ target อยู่คนละ
+ *  ตำแหน่งกับ pool (ไม่มีใน empById ฝั่ง client) */
+interface CoverageForecastItem {
+	dutyId: string;
+	dutyName: string;
+	start: string;
+	end: string;
+	targetEmpId: string;
+	targetName: string | null;
+	substituteEmpId: string | null;
+	substituteName: string | null;
+}
+
 interface Snapshot {
 	date: string;
 	assignments: AssignmentItem[];
+	coverageForecast: CoverageForecastItem[];
 	updatedAt: number;
 }
 
@@ -227,9 +243,34 @@ async function buildSnapshot(): Promise<Snapshot> {
 		};
 	});
 
+	// coverage forecast → สิ้นปี · denorm ชื่อ target/คนแทน (target อยู่คนละ
+	// ตำแหน่งกับ pool → ฝั่ง client ไม่มีใน empById)
+	const yearEnd = `${ymd.slice(0, 4)}-12-31`;
+	const coverageForecast: CoverageForecastItem[] = computeCoverageForecast(
+		duties,
+		employees,
+		allLeaves,
+		ymd,
+		yearEnd,
+	).map((e) => {
+		const target = empById.get(e.targetEmpId);
+		const sub = e.substituteEmpId ? empById.get(e.substituteEmpId) : null;
+		return {
+			dutyId: e.dutyId,
+			dutyName: e.dutyName,
+			start: e.start,
+			end: e.end,
+			targetEmpId: e.targetEmpId,
+			targetName: target?.nickname || target?.name || null,
+			substituteEmpId: e.substituteEmpId,
+			substituteName: sub ? sub.nickname || sub.name || null : null,
+		};
+	});
+
 	return {
 		date: ymd,
 		assignments: items,
+		coverageForecast,
 		updatedAt: Date.now(),
 	};
 }

@@ -51,9 +51,25 @@ export interface SnapshotAssignment {
   excludedCount: number;
 }
 
+/** คนแทนตำแหน่งเป้าหมายล่วงหน้า (coverage duty · จากใบลาที่ยื่นไว้) —
+ *  server-computed เพราะต้อง replay ยุติธรรม + รู้ leaves ทุกคน (พนักงาน
+ *  อ่าน peer data เองไม่ได้) · target อยู่คนละตำแหน่งกับ pool → denorm ชื่อ */
+export interface CoverageForecastItem {
+  dutyId: string;
+  dutyName: string;
+  start: string; // YYYY-MM-DD (inclusive)
+  end: string; // YYYY-MM-DD (inclusive)
+  targetEmpId: string;
+  targetName: string | null;
+  substituteEmpId: string | null;
+  substituteName: string | null;
+}
+
 export interface DutyAssignmentsSnapshot {
   date: string;
   assignments: SnapshotAssignment[];
+  /** อาจไม่มีใน snapshot เก่า (ก่อน feature นี้) → treat as [] */
+  coverageForecast?: CoverageForecastItem[];
   updatedAt: number;
 }
 

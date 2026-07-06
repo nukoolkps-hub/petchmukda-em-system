@@ -659,6 +659,146 @@ export function computeCoverageEarningsForMonth(
   return { total, breakdown };
 }
 
+/* ─── Coverage forecast (คนแทนตำแหน่งเป้าหมายล่วงหน้า) ───────────────
+   หน้าที่แบบ coverage (แทนคนลา) forecast ด้วย rotation period ไม่ได้ —
+   ต้องดูจากใบลาที่ยื่นไว้ว่าคนในตำแหน่งเป้าหมายลาวันไหน แล้ว replay การ
+   เลือกคนแทนแบบยุติธรรม (เคยแทนน้อยสุดก่อน) เหมือน computeCoverageEarnings
+   ForMonth · seed history จากต้นปี → future picks ต่อเนื่องกับที่ผ่านมา ·
+   คืน segment ต่อ (duty × คนที่ลา × คนแทน) จับวันต่อเนื่องที่คนแทนคนเดิม
+   เป็นช่วงเดียว
+
+   ⚠️ ใช้ helper ชุดเดียวกับ coverage จริง (pickCoverageCandidate /
+   monthlyPrimariesForDay / dutyAbsentTargets) → forecast ตรงกับที่มอบหมาย/
+   จ่ายจริง · mirror ฝั่ง server (functions/src/duty/dutyUtils.ts) เพื่อให้
+   snapshot ที่พนักงานเห็นตรงกับผลนี้                                        */
+export interface CoverageForecastEntry {
+  dutyId: string;
+  dutyName: string;
+  start: string; // YYYY-MM-DD (inclusive)
+  end: string; // YYYY-MM-DD (inclusive · รวมวันต่อเนื่องที่คนแทนคนเดิม)
+  targetEmpId: string; // คนในตำแหน่งเป้าหมายที่ลา
+  substituteEmpId: string | null; // null = หาคนแทนไม่ได้ (ทุกคนติด/ลา)
+}
+
+/** วันถัดไป (YYYY-MM-DD → YYYY-MM-DD +1) — parse local-date เลี่ยง TZ */
+function nextYmd(ymd: string): string {
+  const d = new Date(`${ymd}T00:00:00`);
+  d.setDate(d.getDate() + 1);
+  return toYMD(d);
+}
+
+export function computeCoverageForecast(
+  duties: Duty[],
+  employees: Employee[],
+  allLeaves: LeaveEntry[],
+  todayYmd: string,
+  endYmd: string,
+): CoverageForecastEntry[] {
+  const coverageDuties = duties.filter((d) => d.kind === "coverage");
+  if (coverageDuties.length === 0 || todayYmd > endYmd) return [];
+  const monthlyDuties = duties.filter(
+    (d) => d.kind !== "coverage" && d.period === "monthly",
+  );
+  const dutyNameById = new Map(coverageDuties.map((d) => [d.id, d.name]));
+
+  // replay ตั้งแต่ต้นปี — history สะสมต่อเนื่อง (ยุติธรรม) · บันทึกผลเฉพาะ
+  // วัน >= today (ช่วงก่อนหน้าเป็นแค่ seed ไม่แสดง)
+  const yearStart = `${todayYmd.slice(0, 4)}-01-01`;
+  const replayStart = yearStart < todayYmd ? yearStart : todayYmd;
+  const history = new Map<string, number>();
+  const monthlyPrimariesCache = new Map<string, Set<string>>();
+  interface DayPick {
+    dutyId: string;
+    ymd: string;
+    targetEmpId: string;
+    substituteEmpId: string | null;
+  }
+  const picks: DayPick[] = [];
+  const endD = new Date(`${endYmd}T00:00:00`);
+  for (
+    let d = new Date(`${replayStart}T00:00:00`);
+    d <= endD;
+    d.setDate(d.getDate() + 1)
+  ) {
+    const ymd = toYMD(d);
+    const ym = ymd.slice(0, 7);
+    let monthlyPrimaries = monthlyPrimariesCache.get(ym);
+    if (!monthlyPrimaries) {
+      monthlyPrimaries = monthlyPrimariesForDay(monthlyDuties, ymd, employees);
+      monthlyPrimariesCache.set(ym, monthlyPrimaries);
+    }
+    const usedToday = new Set<string>();
+    const record = ymd >= todayYmd;
+    for (const duty of coverageDuties) {
+      for (const targetId of dutyAbsentTargets(
+        duty,
+        ymd,
+        employees,
+        allLeaves,
+      )) {
+        const pick = pickCoverageCandidate(
+          duty,
+          ymd,
+          employees,
+          allLeaves,
+          history,
+          usedToday,
+          monthlyPrimaries,
+        );
+        if (pick) {
+          usedToday.add(pick);
+          history.set(pick, (history.get(pick) || 0) + 1);
+        }
+        if (record) {
+          picks.push({
+            dutyId: duty.id,
+            ymd,
+            targetEmpId: targetId,
+            substituteEmpId: pick,
+          });
+        }
+      }
+    }
+  }
+
+  // group วันต่อเนื่อง (duty × target × substitute เดิม) → segment เดียว
+  picks.sort(
+    (a, b) =>
+      a.dutyId.localeCompare(b.dutyId) ||
+      a.targetEmpId.localeCompare(b.targetEmpId) ||
+      a.ymd.localeCompare(b.ymd),
+  );
+  const out: CoverageForecastEntry[] = [];
+  for (const p of picks) {
+    const last = out[out.length - 1];
+    if (
+      last &&
+      last.dutyId === p.dutyId &&
+      last.targetEmpId === p.targetEmpId &&
+      last.substituteEmpId === p.substituteEmpId &&
+      nextYmd(last.end) === p.ymd
+    ) {
+      last.end = p.ymd;
+    } else {
+      out.push({
+        dutyId: p.dutyId,
+        dutyName: dutyNameById.get(p.dutyId) || "",
+        start: p.ymd,
+        end: p.ymd,
+        targetEmpId: p.targetEmpId,
+        substituteEmpId: p.substituteEmpId,
+      });
+    }
+  }
+  // เรียงตามวันเริ่ม (แล้วชื่อหน้าที่) — render ตามลำดับเวลา
+  out.sort(
+    (a, b) =>
+      a.start.localeCompare(b.start) ||
+      a.dutyName.localeCompare(b.dutyName, "th"),
+  );
+  return out;
+}
+
 /* ─── Forecast (ปฏิทินหน้าที่ล่วงหน้า) ──────────────────────────────
    คำนวณ "primary ของแต่ละ period ในอนาคต" — ใช้ pool ที่ resolve แล้ว
    (จาก server snapshot) ดังนั้นทั้ง admin/พนักงานคำนวณเองได้ client-side

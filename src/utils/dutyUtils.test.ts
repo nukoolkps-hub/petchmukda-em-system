@@ -4,6 +4,7 @@ import {
   applicableDuties,
   computeAllDutiesForDay,
   computeCoverageEarningsForMonth,
+  computeCoverageForecast,
   computeDutyForDay,
   computeDutyForecast,
   computeForecastPrimaries,
@@ -576,6 +577,127 @@ describe("computeCoverageEarningsForMonth", () => {
         leaves,
       ).total,
     ).toBe(100);
+  });
+});
+
+// ─── coverage forecast ─────────────────────────────────────────────
+describe("computeCoverageForecast", () => {
+  const employees = [
+    emp("t1", { roleId: "sales", displayOrder: 1 }), // coverage target
+    emp("c1", { roleId: "cashier", displayOrder: 1 }), // candidate
+    emp("c2", { roleId: "cashier", displayOrder: 2 }), // candidate
+  ];
+  const coverage = duty({
+    id: "cov",
+    name: "แทนบัญชี",
+    kind: "coverage",
+    period: "weekly",
+    coverageRoleId: "sales",
+    candidateEmpIds: ["c1", "c2"],
+  });
+
+  it("empty when there are no coverage duties", () => {
+    expect(
+      computeCoverageForecast(
+        [duty()],
+        employees,
+        [],
+        "2026-06-01",
+        "2026-12-31",
+      ),
+    ).toEqual([]);
+  });
+
+  it("forecasts the fairest cover for a single future absence day", () => {
+    const res = computeCoverageForecast(
+      [coverage],
+      employees,
+      [leave("t1", "2026-06-10")],
+      "2026-06-01",
+      "2026-12-31",
+    );
+    expect(res).toEqual([
+      {
+        dutyId: "cov",
+        dutyName: "แทนบัญชี",
+        start: "2026-06-10",
+        end: "2026-06-10",
+        targetEmpId: "t1",
+        substituteEmpId: "c1",
+      },
+    ]);
+  });
+
+  it("groups consecutive days into one range when the cover is the same", () => {
+    // pool มีคนแทนคนเดียว → คนเดิมทั้งช่วง → 1 segment
+    const res = computeCoverageForecast(
+      [duty({ ...coverage, candidateEmpIds: ["c1"] })],
+      [emp("t1", { roleId: "sales" }), emp("c1", { roleId: "cashier" })],
+      [leave("t1", "2026-06-10", "2026-06-12")],
+      "2026-06-01",
+      "2026-12-31",
+    );
+    expect(res).toEqual([
+      {
+        dutyId: "cov",
+        dutyName: "แทนบัญชี",
+        start: "2026-06-10",
+        end: "2026-06-12",
+        targetEmpId: "t1",
+        substituteEmpId: "c1",
+      },
+    ]);
+  });
+
+  it("rotates cover across a multi-day absence (fairness) → split segments", () => {
+    const res = computeCoverageForecast(
+      [coverage],
+      employees,
+      [leave("t1", "2026-06-10", "2026-06-12")],
+      "2026-06-01",
+      "2026-12-31",
+    );
+    // เคยแทนน้อยสุดก่อน → c1, c2, c1 (สลับรายวันตามความยุติธรรม)
+    expect(res.map((r) => r.substituteEmpId)).toEqual(["c1", "c2", "c1"]);
+    expect(res.map((r) => `${r.start}/${r.end}`)).toEqual([
+      "2026-06-10/2026-06-10",
+      "2026-06-11/2026-06-11",
+      "2026-06-12/2026-06-12",
+    ]);
+  });
+
+  it("marks substituteEmpId null when no candidate is available", () => {
+    const res = computeCoverageForecast(
+      [duty({ ...coverage, candidateEmpIds: ["c1"] })],
+      [emp("t1", { roleId: "sales" }), emp("c1", { roleId: "cashier" })],
+      [leave("t1", "2026-06-10"), leave("c1", "2026-06-10")], // คนแทนคนเดียวก็ลา
+      "2026-06-01",
+      "2026-12-31",
+    );
+    expect(res).toEqual([
+      {
+        dutyId: "cov",
+        dutyName: "แทนบัญชี",
+        start: "2026-06-10",
+        end: "2026-06-10",
+        targetEmpId: "t1",
+        substituteEmpId: null,
+      },
+    ]);
+  });
+
+  it("excludes absence days before today (seed only, not shown)", () => {
+    const res = computeCoverageForecast(
+      [coverage],
+      employees,
+      [leave("t1", "2026-05-30", "2026-06-02")],
+      "2026-06-01",
+      "2026-12-31",
+    );
+    // เฉพาะ 06-01, 06-02 (>= today) แสดง · 05-30/05-31 เป็นแค่ seed history
+    expect(res.every((r) => r.start >= "2026-06-01")).toBe(true);
+    const days = [...new Set(res.flatMap((r) => [r.start, r.end]))].sort();
+    expect(days).toEqual(["2026-06-01", "2026-06-02"]);
   });
 });
 
