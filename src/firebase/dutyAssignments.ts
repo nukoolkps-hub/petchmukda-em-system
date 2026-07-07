@@ -65,11 +65,32 @@ export interface CoverageForecastItem {
   substituteName: string | null;
 }
 
+/** เงินค่าแทน "สด" ของเดือนปัจจุบัน ต่อพนักงาน — server-computed · พนักงาน
+ *  เห็นยอดทันทีที่ถูกเลือกมาแทน (preview) ก่อน admin ยืนยันยอด */
+export interface CoverageThisMonth {
+  month: string; // "YYYY-MM"
+  byEmp: Record<
+    string,
+    {
+      total: number;
+      breakdown: {
+        dutyId: string;
+        dutyName: string;
+        count: number;
+        rate: number;
+        subtotal: number;
+      }[];
+    }
+  >;
+}
+
 export interface DutyAssignmentsSnapshot {
   date: string;
   assignments: SnapshotAssignment[];
   /** อาจไม่มีใน snapshot เก่า (ก่อน feature นี้) → treat as [] */
   coverageForecast?: CoverageForecastItem[];
+  /** เงินค่าแทนสดเดือนปัจจุบัน · อาจไม่มีใน snapshot เก่า */
+  coverageThisMonth?: CoverageThisMonth;
   updatedAt: number;
 }
 

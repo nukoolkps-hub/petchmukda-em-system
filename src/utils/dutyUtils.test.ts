@@ -4,6 +4,7 @@ import {
   applicableDuties,
   computeAllDutiesForDay,
   computeCoverageEarningsForMonth,
+  computeCoverageEarningsForMonthAll,
   computeCoverageForecast,
   computeDutyForDay,
   computeDutyForecast,
@@ -577,6 +578,55 @@ describe("computeCoverageEarningsForMonth", () => {
         leaves,
       ).total,
     ).toBe(100);
+  });
+});
+
+// ─── coverage earnings (all employees) ─────────────────────────────
+describe("computeCoverageEarningsForMonthAll", () => {
+  const employees = [
+    emp("t1", { roleId: "sales", displayOrder: 1 }),
+    emp("c1", { roleId: "cashier", displayOrder: 1 }),
+    emp("c2", { roleId: "cashier", displayOrder: 2 }),
+  ];
+  const coverage = duty({
+    id: "cov",
+    kind: "coverage",
+    period: "weekly",
+    coverageRoleId: "sales",
+    candidateEmpIds: ["c1", "c2"],
+    coveragePayPerOccurrence: 100,
+  });
+
+  it("returns empty when no one covered anything", () => {
+    expect(
+      computeCoverageEarningsForMonthAll([coverage], employees, [], "2026-03"),
+    ).toEqual({});
+  });
+
+  it("matches per-employee computeCoverageEarningsForMonth for every candidate", () => {
+    const leaves = [
+      leave("t1", "2026-03-10", "2026-03-13"), // 4 วัน → สลับ c1/c2
+    ];
+    const all = computeCoverageEarningsForMonthAll(
+      [coverage],
+      employees,
+      leaves,
+      "2026-03",
+    );
+    for (const id of ["c1", "c2"]) {
+      const single = computeCoverageEarningsForMonth(
+        id,
+        "2026-03",
+        [coverage],
+        employees,
+        leaves,
+      );
+      expect(all[id]?.total ?? 0).toBe(single.total);
+      expect(all[id]?.breakdown ?? []).toEqual(single.breakdown);
+    }
+    // 4 วัน สลับ c1(10,12)/c2(11,13) → คนละ 200
+    expect(all.c1.total).toBe(200);
+    expect(all.c2.total).toBe(200);
   });
 });
 

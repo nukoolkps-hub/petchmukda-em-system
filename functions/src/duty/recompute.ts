@@ -22,6 +22,8 @@ import { bangkokYmd } from "../dailySummary/dateUtils.js";
 import { getAppFirestore } from "../helpers/config.js";
 import {
 	computeAllDutiesForDay,
+	type CoverageEarning,
+	computeCoverageEarningsForMonthAll,
 	computeCoverageForecast,
 	type Duty,
 	type Employee,
@@ -84,10 +86,19 @@ interface CoverageForecastItem {
 	substituteName: string | null;
 }
 
+/** เงินค่าแทน "สด" ของเดือนปัจจุบัน ต่อพนักงาน — ให้พนักงานเห็นยอดทันที
+ *  ที่ถูกเลือกมาแทน (ก่อน admin ยืนยันยอด) · derivable จาก forecast + rate
+ *  อยู่แล้ว (ไม่ leak เพิ่ม) */
+interface CoverageThisMonth {
+	month: string; // "YYYY-MM" (เดือนของ snapshot วันนี้)
+	byEmp: Record<string, { total: number; breakdown: CoverageEarning[] }>;
+}
+
 interface Snapshot {
 	date: string;
 	assignments: AssignmentItem[];
 	coverageForecast: CoverageForecastItem[];
+	coverageThisMonth: CoverageThisMonth;
 	updatedAt: number;
 }
 
@@ -267,10 +278,24 @@ async function buildSnapshot(): Promise<Snapshot> {
 		};
 	});
 
+	// เงินค่าแทน "สด" ของเดือนปัจจุบัน ต่อพนักงาน — พนักงานเห็นทันทีที่ถูก
+	// เลือกมาแทน ก่อน admin ยืนยันยอด (preview) · freeze/stamp จริงยังทำตอน
+	// admin save salary เหมือนเดิม
+	const coverageThisMonth: CoverageThisMonth = {
+		month: ymd.slice(0, 7),
+		byEmp: computeCoverageEarningsForMonthAll(
+			duties,
+			employees,
+			allLeaves,
+			ymd.slice(0, 7),
+		),
+	};
+
 	return {
 		date: ymd,
 		assignments: items,
 		coverageForecast,
+		coverageThisMonth,
 		updatedAt: Date.now(),
 	};
 }

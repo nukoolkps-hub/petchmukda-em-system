@@ -18,6 +18,8 @@ export interface Duty {
 	rotationStartEmpId?: string;
 	coverageRoleId?: string;
 	candidateEmpIds?: string[];
+	/** (coverage) เงินตอบแทนคนแทน ต่อครั้ง (฿) */
+	coveragePayPerOccurrence?: number;
 	/** (weekly) ข้ามวันอาทิตย์ — focus ขายแทน */
 	skipSundays?: boolean;
 	/** Primary cache (B) — pool เปลี่ยนกลาง period ไม่กระทบคนทำหน้าที่ */
@@ -490,6 +492,105 @@ export function replayCoverageHistory(
 		}
 	}
 	return history;
+}
+
+/* ─── Coverage earnings (เงินค่าแทน · ทุกคนในรอบเดียว) ───────────────
+   Mirror ของ src/utils/dutyUtils.ts → computeCoverageEarningsForMonthAll ·
+   replay ทั้งปี tally count เดือนนี้ต่อคน → { total, breakdown } · ใช้เขียน
+   snapshot `coverageThisMonth` ให้พนักงานเห็นเงินค่าแทน "สด" ก่อนยืนยันยอด   */
+export interface CoverageEarning {
+	dutyId: string;
+	dutyName: string;
+	count: number;
+	rate: number;
+	subtotal: number;
+}
+
+export function computeCoverageEarningsForMonthAll(
+	duties: Duty[],
+	employees: Employee[],
+	allLeaves: LeaveEntry[],
+	yearMonth: string,
+): Record<string, { total: number; breakdown: CoverageEarning[] }> {
+	const coverageDuties = duties.filter(
+		(d) => d.kind === "coverage" && (d.coveragePayPerOccurrence || 0) > 0,
+	);
+	if (coverageDuties.length === 0) return {};
+	const monthlyDuties = duties.filter(
+		(d) => d.kind !== "coverage" && d.period === "monthly",
+	);
+
+	const [y, m] = yearMonth.split("-").map(Number);
+	const yearStart = `${y}-01-01`;
+	const monthStart = `${yearMonth}-01`;
+	const monthEnd = new Date(y, m, 0);
+	const monthEndYmd = `${yearMonth}-${String(monthEnd.getDate()).padStart(2, "0")}`;
+
+	const countByEmp = new Map<string, Map<string, number>>();
+	const history = new Map<string, number>();
+	const monthlyPrimariesCache = new Map<string, Set<string>>();
+	const start = new Date(`${yearStart}T00:00:00`);
+	for (let d = new Date(start); ; d.setDate(d.getDate() + 1)) {
+		const ymd = toYMD(d);
+		if (ymd > monthEndYmd) break;
+		const inMonth = ymd >= monthStart && ymd <= monthEndYmd;
+		const ym = ymd.slice(0, 7);
+		let monthlyPrimaries = monthlyPrimariesCache.get(ym);
+		if (!monthlyPrimaries) {
+			monthlyPrimaries = monthlyPrimariesForDay(monthlyDuties, ymd, employees);
+			monthlyPrimariesCache.set(ym, monthlyPrimaries);
+		}
+		const usedToday = new Set<string>();
+		for (const duty of coverageDuties) {
+			for (const _t of absentTargets(duty, ymd, employees, allLeaves)) {
+				const pick = pickCoverageCandidate(
+					duty,
+					ymd,
+					employees,
+					allLeaves,
+					history,
+					usedToday,
+					monthlyPrimaries,
+				);
+				if (!pick) continue;
+				usedToday.add(pick);
+				history.set(pick, (history.get(pick) || 0) + 1);
+				if (inMonth) {
+					let byDuty = countByEmp.get(pick);
+					if (!byDuty) {
+						byDuty = new Map();
+						countByEmp.set(pick, byDuty);
+					}
+					byDuty.set(duty.id, (byDuty.get(duty.id) || 0) + 1);
+				}
+			}
+		}
+	}
+
+	const result: Record<
+		string,
+		{ total: number; breakdown: CoverageEarning[] }
+	> = {};
+	for (const [empId, byDuty] of countByEmp) {
+		const breakdown: CoverageEarning[] = [];
+		let total = 0;
+		for (const duty of coverageDuties) {
+			const count = byDuty.get(duty.id) || 0;
+			if (count === 0) continue;
+			const rate = Number(duty.coveragePayPerOccurrence) || 0;
+			const subtotal = count * rate;
+			total += subtotal;
+			breakdown.push({
+				dutyId: duty.id,
+				dutyName: duty.name,
+				count,
+				rate,
+				subtotal,
+			});
+		}
+		if (total > 0) result[empId] = { total, breakdown };
+	}
+	return result;
 }
 
 /* ─── Coverage forecast (คนแทนตำแหน่งเป้าหมายล่วงหน้า) ───────────────

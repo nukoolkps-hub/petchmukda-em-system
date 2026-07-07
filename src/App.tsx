@@ -545,6 +545,7 @@ export default function LeaveApp() {
                           poolAdjustments={poolAdjustments}
                           employeeLoans={employeeLoans}
                           storeCalendar={storeCalendar}
+                          dutyAssignmentsToday={dutyAssignmentsToday}
                           showToast={showToast}
                           previewing={previewing}
                         />

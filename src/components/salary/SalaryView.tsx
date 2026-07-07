@@ -76,6 +76,7 @@ export default function SalaryView({
   poolAdjustments,
   employeeLoans,
   storeCalendar,
+  dutyAssignmentsToday,
   showToast,
   previewing = false,
 }) {
@@ -121,6 +122,7 @@ export default function SalaryView({
     poolShare,
     salaryCalculation,
     previewSalary,
+    previewCoverage,
   } = useMemo(() => {
     const monthLeaves = salaryEmployeeId
       ? allLeaves.filter(
@@ -213,8 +215,25 @@ export default function SalaryView({
     // อย่าง live" ยกเว้น **ค่าคอม + จำนวนชิ้น** ที่ตรึงไว้ 0 จนกว่า ADMIN กด
     // ยืนยันยอด (ค่าคอมอิงกองกลาง — ยังไม่นิ่งจนกว่าทุกคนกรอกชิ้นครบ) จึง zero
     // ทุก field ที่เป็น "จำนวนชิ้น" (pool/personal/bonus) + poolShare=null
+    // เงินค่าแทน "สด" ของเดือนนี้ (duty snapshot · server-computed) — พนักงาน
+    // เห็นทันทีที่ถูกเลือกมาแทน ก่อน admin ยืนยันยอด · เฉพาะเดือนที่ snapshot
+    // คำนวณ (= เดือนปัจจุบัน) + ยังไม่ยืนยันยอด · เดือนที่ยืนยัน/อดีต → ใช้ค่าที่
+    // stamp ในสลิป (freeze) ตามเดิม
+    const monthConfirmed = !!payrollConfirms?.[selectedMonth]?.confirmedAt;
+    const liveCoverage =
+      !monthConfirmed &&
+      dutyAssignmentsToday?.coverageThisMonth?.month === selectedMonth
+        ? dutyAssignmentsToday.coverageThisMonth.byEmp?.[salaryEmployeeId]
+        : undefined;
     const previewData = {
       ...(data || {}),
+      // เงินค่าแทนสด (override ค่าที่ stamp ไว้ · ถ้ามี) — เฉพาะ preview
+      ...(liveCoverage
+        ? {
+            coveragePay: liveCoverage.total,
+            coveragePayBreakdown: liveCoverage.breakdown,
+          }
+        : {}),
       // pool piece counts (+ legacy)
       poolItemPieces: {},
       normalSalePieces: 0,
@@ -249,6 +268,7 @@ export default function SalaryView({
       poolShare: employeePoolShare,
       salaryCalculation: computedSalary,
       previewSalary,
+      previewCoverage: liveCoverage,
     };
   }, [
     allLeaves,
@@ -265,6 +285,7 @@ export default function SalaryView({
     employeeLoans,
     storeCalendar,
     payrollConfirms,
+    dutyAssignmentsToday,
   ]);
 
   function handlePrintSlip() {
@@ -1061,9 +1082,34 @@ export default function SalaryView({
                 </div>
               </div>
 
-              {/* เงินค่าแทน (coverage) — ใน preview = 0 เสมอ (admin stamp ตอน
-                  save salary doc · ก่อนนั้นไม่มีค่า) — บรรทัด render อยู่ใน
-                  final slip rows ที่อ่าน salaryCalculation.coveragePay แทน */}
+              {/* เงินค่าแทน (coverage) "สด" — โชว์ทันทีที่ถูกเลือกมาแทน (จาก
+                  duty snapshot · server-computed) เป็นกำลังใจให้คนแทน · ยอด
+                  freeze จริงตอน admin ยืนยันยอด */}
+              {(previewSalary.coveragePay || 0) > 0 && (
+                <div className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk">
+                  <IconHandshake
+                    size={16}
+                    strokeWidth={2.2}
+                    color={COLORS.green}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">เงินค่าแทน</div>
+                    <div className="text-[11px] text-txt-soft truncate">
+                      {previewCoverage?.breakdown?.length
+                        ? previewCoverage.breakdown
+                            .map(
+                              (b) =>
+                                `${b.dutyName} ${b.count}×${formatThaiNumber(b.rate)}`,
+                            )
+                            .join(" · ")
+                        : "แทนคนลาเดือนนี้"}
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-green whitespace-nowrap">
+                    + {formatThaiNumber(previewSalary.coveragePay || 0)} ฿
+                  </span>
+                </div>
+              )}
 
               {/* Saturday bonus (ถ้ามี) */}
               {(previewSalary.extraOpenSaturdayBonus || 0) > 0 && (
