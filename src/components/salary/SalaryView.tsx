@@ -1135,6 +1135,31 @@ export default function SalaryView({
                 </div>
               )}
 
+              {/* รายรับ custom รายเดือน (admin เพิ่มใน SalaryAdminEdit) —
+                  รวมในยอดอยู่แล้ว ต้องมีแถวโชว์ให้ยอดอธิบายได้ (สดจาก doc) */}
+              {(Array.isArray(data?.customEarnings)
+                ? data.customEarnings
+                : []
+              ).map((it: any, i: number) => (
+                <div
+                  key={`ce-${i}-${it.label}`}
+                  className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk"
+                >
+                  <IconPlus size={16} strokeWidth={2.2} color={COLORS.green} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">
+                      {it.label || "รายการรายรับ"}
+                    </div>
+                    <div className="text-[11px] text-txt-soft">
+                      รายการเพิ่มเดือนนี้
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-green whitespace-nowrap">
+                    + {formatThaiNumber(Number(it.amount) || 0)} ฿
+                  </span>
+                </div>
+              ))}
+
               {/* รายรับประจำ (recurring incomes) */}
               {(previewSalary.recurringIncomes || []).map(
                 (it: any, i: number) => (
@@ -1248,6 +1273,30 @@ export default function SalaryView({
                   </span>
                 </div>
               )}
+              {/* รายการหัก custom รายเดือน (admin เพิ่มใน SalaryAdminEdit) —
+                  รวมในยอดอยู่แล้ว ต้องมีแถวโชว์ให้ยอดอธิบายได้ (สดจาก doc) */}
+              {(Array.isArray(data?.customDeductions)
+                ? data.customDeductions
+                : []
+              ).map((it: any, i: number) => (
+                <div
+                  key={`cd-${i}-${it.label}`}
+                  className="flex items-center gap-2.5 py-2 border-b border-dashed border-cream-dk"
+                >
+                  <IconMinus size={16} strokeWidth={2.2} color={COLORS.red} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-txt-mid">
+                      {it.label || "รายการหัก"}
+                    </div>
+                    <div className="text-[11px] text-txt-soft">
+                      รายการหักเดือนนี้
+                    </div>
+                  </div>
+                  <span className="text-base font-semibold text-red whitespace-nowrap">
+                    − {formatThaiNumber(Number(it.amount) || 0)} ฿
+                  </span>
+                </div>
+              ))}
               {/* รายการหักประจำเดือน — อยู่ล่างสุดเสมอตามที่ ADMIN ขอ */}
               {(previewSalary.recurringDeductions || []).map(
                 (it: any, i: number) => (
@@ -1279,7 +1328,7 @@ export default function SalaryView({
         )}
 
         <div className="text-center text-xs text-txt-soft mt-2">
-          * ค่าคอม + รายการที่ ADMIN กรอกเอง จะเพิ่มหลังยืนยันยอด
+          * ค่าคอม (จำนวนชิ้น) จะเพิ่มหลัง ADMIN ยืนยันยอด — รายการอื่นแสดงสด
         </div>
 
         {/* AdvanceHistoryModal + Cert Modal · ใช้ใน empty state ด้วย ·
