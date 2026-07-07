@@ -429,13 +429,16 @@ export default function useFirebaseAppData({
     const hasRateSnapshot =
       existingSalary != null && existingSalary.baseSalary != null;
     const freezeSnapshot = monthLocked(yearMonth) && hasRateSnapshot;
-    // coveragePay: preserve เดิมถ้ามี snapshot อยู่แล้ว (กัน admin re-save
-    // เดือนที่มี snapshot แล้ว coverage stamp ใหม่จากสถานะ leaves ปัจจุบัน ·
-    // เคยทำให้ past month earnings ขยับเงียบ · audit bug E)
+    // coveragePay: refresh สดทุกครั้งตราบใดที่เดือนยัง "ไม่ยืนยันยอด" — ให้ค่า
+    // stamp ตรงกับ preview สดฝั่งพนักงาน (snapshot coverageThisMonth) เสมอ ·
+    // ยืนยันแล้ว (grace/locked) → preserve ค่าเดิม กันยอดทางการ/สลิปขยับเงียบ
+    // หลังยืนยัน (audit bug E เดิม: past month earnings ขยับตอน re-save)
     // baseSalary: ไม่ preserve แล้ว — re-stamp ทุกครั้งจาก effective ปัจจุบัน
     // เพื่อเคารพการแก้ baseSalary / annualRaises ใน profile (admin คาดหวังเห็น
     // ยอดสด ไม่ stuck) · เดือนที่ปิดรอบถาวรแล้ว freeze ผ่าน freezeSnapshot ปกติ
-    const preserveCoverage = !freezeSnapshot && hasRateSnapshot;
+    const coverageMonthConfirmed = !!pcResult.data?.[yearMonth]?.confirmedAt;
+    const preserveCoverage =
+      hasRateSnapshot && (freezeSnapshot || coverageMonthConfirmed);
 
     // ดึง field ที่ระบบจัดการเองออกจาก fields ที่ caller ส่งมา (กันส่งค่าเก่าทับ)
     const {
