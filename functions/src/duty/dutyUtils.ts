@@ -260,6 +260,9 @@ export function computeDutyForDay(
 	excludeForPrimary: Set<string>,
 	primariesToday: Set<string>,
 	precomputedPrimary?: string,
+	// monthly: history การแทนสะสมตั้งแต่ต้นปี (จาก replayRotationSubHistory)
+	// → เลือกคนแทนแบบไม่ซ้ำ · undefined = neighbor-scan เดิม (weekly)
+	subHistory?: Map<string, number>,
 ): DutyAssignment {
 	const fullPool = activePool(duty, employees);
 	const { start: periodStart, end: periodEnd } = getPeriodRange(duty, todayYmd);
@@ -310,6 +313,34 @@ export function computeDutyForDay(
 			primaryEmpId: primary,
 			actualEmpId: primary,
 			reason: "rotation",
+			periodStart,
+			periodEnd,
+		};
+	}
+
+	// monthly + มี history → เลือกคนแทนแบบยุติธรรม "เคยแทนน้อยสุดก่อน"
+	// (กันคนเดิมโดนเลือกซ้ำทุกครั้งที่ primary ลา — primary monthly คงที่
+	// ทั้งเดือน neighbor-scan เดิมเลยได้คนเดิมตลอด)
+	if (subHistory) {
+		const pick = pickRotationSubstitute(
+			pool,
+			primary,
+			todayYmd,
+			leaves,
+			primariesToday,
+			subHistory,
+		);
+		return {
+			dutyId: duty.id,
+			dutyName: duty.name,
+			period: duty.period,
+			primaryEmpId: primary,
+			actualEmpId: pick,
+			reason: pick
+				? primariesToday.has(pick)
+					? "double_up"
+					: "substitute_for_leave"
+				: "all_on_leave",
 			periodStart,
 			periodEnd,
 		};
@@ -490,6 +521,93 @@ export function replayCoverageHistory(
 				}
 			}
 		}
+	}
+	return history;
+}
+
+/* ─── คนแทนหน้าที่ประจำเดือน (rotation·monthly) — แบบไม่ซ้ำ ──────────
+   Mirror ของ src/utils/dutyUtils.ts (check-duty-sync ตรวจ 2 ฟังก์ชันนี้)
+   เดิม substitute = คนถัดจาก primary เสมอ → โดนซ้ำทุกครั้งที่ primary ลา
+   → เลือกแบบ "เคยแทนน้อยสุดก่อน" (history replay ตั้งแต่ต้นปี)             */
+
+/** เลือกคนแทน 1 วัน แบบ history-fair — pass 1 ข้ามคนลา+คนติดหน้าที่อื่น ·
+ *  pass 2 double-up (ข้ามแค่คนลา) · คืน null เมื่อทุกคนลา
+ *  ⚠️ ต้องเหมือน src/utils/dutyUtils.ts เป๊ะ (check-duty-sync)            */
+export function pickRotationSubstitute(
+	pool: string[],
+	primary: string,
+	ymd: string,
+	leaves: LeaveEntry[],
+	busy: Set<string>,
+	history: Map<string, number>,
+): string | null {
+	const startIdx = Math.max(0, pool.indexOf(primary));
+	const len = pool.length;
+	const cands = pool
+		.filter((id) => id !== primary)
+		.sort((a, b) => {
+			const ha = history.get(a) || 0;
+			const hb = history.get(b) || 0;
+			if (ha !== hb) return ha - hb;
+			const da = (pool.indexOf(a) - startIdx + len) % len;
+			const db = (pool.indexOf(b) - startIdx + len) % len;
+			return da - db;
+		});
+	for (const cand of cands) {
+		if (isOnLeave(leaves, cand, ymd)) continue;
+		if (busy.has(cand)) continue;
+		return cand;
+	}
+	for (const cand of cands) {
+		if (isOnLeave(leaves, cand, ymd)) continue;
+		return cand;
+	}
+	return null;
+}
+
+/** Replay การแทนของหน้าที่ monthly ตั้งแต่ fromYmd → ก่อน toYmdExclusive
+ *  นับว่าใครแทนไปกี่ครั้ง (seed ให้เลือกคนแทนแบบไม่ซ้ำต่อเนื่องกับที่ผ่านมา)
+ *  ⚠️ ต้องเหมือน src/utils/dutyUtils.ts เป๊ะ (check-duty-sync)            */
+export function replayRotationSubHistory(
+	duty: Duty,
+	pool: string[],
+	allLeaves: LeaveEntry[],
+	calendar: StoreCalendarLite | null | undefined,
+	fromYmd: string,
+	toYmdExclusive: string,
+): Map<string, number> {
+	const history = new Map<string, number>();
+	if (duty.period !== "monthly" || pool.length === 0) return history;
+	const primaryByMonth = new Map<string, string | null>();
+	const end = new Date(`${toYmdExclusive}T00:00:00`);
+	for (
+		let d = new Date(`${fromYmd}T00:00:00`);
+		d < end;
+		d.setDate(d.getDate() + 1)
+	) {
+		const ymd = toYMD(d);
+		if (applicableDuties([duty], ymd, calendar).length === 0) continue;
+		const ym = ymd.slice(0, 7);
+		let primary = primaryByMonth.get(ym);
+		if (primary === undefined) {
+			primary = pickPrimary(
+				duty,
+				pool,
+				Math.max(0, getPeriodIndex(duty, ymd)),
+				new Set(),
+			);
+			primaryByMonth.set(ym, primary);
+		}
+		if (!primary || !isOnLeave(allLeaves, primary, ymd)) continue;
+		const pick = pickRotationSubstitute(
+			pool,
+			primary,
+			ymd,
+			allLeaves,
+			new Set(),
+			history,
+		);
+		if (pick) history.set(pick, (history.get(pick) || 0) + 1);
 	}
 	return history;
 }
@@ -792,6 +910,8 @@ export function computeAllDutiesForDay(
 	leaves: LeaveEntry[],
 	coverageHistory?: Map<string, number>,
 	calendar?: StoreCalendarLite | null,
+	// dutyId → history การแทน (monthly rotation) จาก replayRotationSubHistory
+	rotationSubHistory?: Map<string, Map<string, number>>,
 ): DutyAssignment[] {
 	// ร้านปิด → ไม่มี assignment เลย · อาทิตย์ → ตัด weekly+skipSundays
 	const todayDuties = applicableDuties(duties, todayYmd, calendar);
@@ -837,6 +957,7 @@ export function computeAllDutiesForDay(
 		todayYmd,
 		employees,
 		effLeaves,
+		rotationSubHistory,
 	);
 
 	// preserve ลำดับ duties เดิม + coverage ตามตำแหน่งของมัน
@@ -885,6 +1006,7 @@ function computeRotationForDay(
 	todayYmd: string,
 	employees: Employee[],
 	leaves: LeaveEntry[],
+	rotationSubHistory?: Map<string, Map<string, number>>,
 ): DutyAssignment[] {
 	const monthlyDuties = duties.filter((d) => d.period === "monthly");
 	const weeklyDuties = duties.filter((d) => d.period === "weekly");
@@ -925,6 +1047,9 @@ function computeRotationForDay(
 			duty.period === "monthly" ? new Set<string>() : lockedByMonthly,
 			primariesToday,
 			primaryByDuty.get(duty.id),
+			duty.period === "monthly"
+				? rotationSubHistory?.get(duty.id)
+				: undefined,
 		),
 	);
 }
