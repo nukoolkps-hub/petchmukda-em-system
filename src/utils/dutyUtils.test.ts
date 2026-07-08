@@ -589,14 +589,30 @@ describe("pickRotationSubstitute / replayRotationSubHistory", () => {
 
   it("history เท่ากัน → เลือกคนถัดจาก primary (พฤติกรรมเดิม)", () => {
     expect(
-      pickRotationSubstitute(pool, "a", "2026-07-08", [], new Set(), new Map()),
+      pickRotationSubstitute(
+        pool,
+        "a",
+        "2026-07-08",
+        [],
+        new Set(),
+        new Map(),
+        new Set(),
+      ),
     ).toBe("b");
   });
 
   it("เคยแทนน้อยสุดชนะ แม้อยู่ไกลกว่าในลำดับ", () => {
     const history = new Map([["b", 2]]);
     expect(
-      pickRotationSubstitute(pool, "a", "2026-07-08", [], new Set(), history),
+      pickRotationSubstitute(
+        pool,
+        "a",
+        "2026-07-08",
+        [],
+        new Set(),
+        history,
+        new Set(),
+      ),
     ).toBe("c");
   });
 
@@ -609,6 +625,7 @@ describe("pickRotationSubstitute / replayRotationSubHistory", () => {
         [leave("b", "2026-07-08")],
         new Set(),
         new Map(),
+        new Set(),
       ),
     ).toBe("c");
     // c ติดหน้าที่อื่น + b ลา → pass 2 ยอม double-up ที่ c
@@ -620,8 +637,36 @@ describe("pickRotationSubstitute / replayRotationSubHistory", () => {
         [leave("b", "2026-07-08")],
         new Set(["c"]),
         new Map(),
+        new Set(),
       ),
     ).toBe("c");
+  });
+
+  it("subExcluded — ข้ามคนที่ admin ตั้ง 'ไม่ให้เป็นคนแทน' ทั้ง 2 pass", () => {
+    // b ปกติจะได้ (คนถัดจาก a) แต่ถูกตั้งไม่แทน → ได้ c
+    expect(
+      pickRotationSubstitute(
+        pool,
+        "a",
+        "2026-07-08",
+        [],
+        new Set(),
+        new Map(),
+        new Set(["b"]),
+      ),
+    ).toBe("c");
+    // b,c ถูกตั้งไม่แทน → ไม่มีใครแทน (แม้ทุกคนว่าง)
+    expect(
+      pickRotationSubstitute(
+        pool,
+        "a",
+        "2026-07-08",
+        [],
+        new Set(),
+        new Map(),
+        new Set(["b", "c"]),
+      ),
+    ).toBeNull();
   });
 
   it("replay นับวันแทนในอดีต (เฉพาะวันร้านเปิด + primary ลาจริง)", () => {
@@ -727,6 +772,41 @@ describe("computeDutyForecast — monthly substitute ไม่ซ้ำ", () => 
     expect(f.periods[0].coverage).toEqual([
       { start: "2026-07-08", end: "2026-07-09", substituteEmpId: "b" },
     ]);
+  });
+
+  it("substituteExcludedEmpIds (monthly) — คนถูกตั้ง 'ไม่แทน' ไม่ถูกเลือก", () => {
+    // b ปกติได้ทั้ง 2 ครั้ง (ไม่ · rotate b,c) แต่ตั้ง b=ไม่แทน → c แทนทั้งคู่
+    const mEx = duty({
+      id: "m1",
+      period: "monthly",
+      rotationStartDate: "2026-07-01",
+      rotationStartEmpId: "a",
+      substituteExcludedEmpIds: ["b"],
+    });
+    const [f] = computeDutyForecast([mEx], pools, "2026-07-01", "2026-07-31", [
+      leave("a", "2026-07-08"),
+      leave("a", "2026-07-21"),
+    ]);
+    expect(f.periods[0].coverage?.map((s) => s.substituteEmpId)).toEqual([
+      "c",
+      "c",
+    ]);
+  });
+
+  it("substituteExcludedEmpIds (weekly) — ข้ามคนถูกตั้ง 'ไม่แทน'", () => {
+    const wEx = duty({
+      id: "w1",
+      period: "weekly",
+      rotationStartDate: "2026-07-06",
+      rotationStartEmpId: "a",
+      substituteExcludedEmpIds: ["b"],
+    });
+    const wPools = new Map([["w1", ["a", "b", "c"]]]);
+    const [f] = computeDutyForecast([wEx], wPools, "2026-07-06", "2026-07-12", [
+      leave("a", "2026-07-08"),
+    ]);
+    // b ถูกข้าม → c แทน
+    expect(f.periods[0].coverage?.[0]?.substituteEmpId).toBe("c");
   });
 });
 

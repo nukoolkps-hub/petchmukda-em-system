@@ -66,6 +66,10 @@ export default function DutyEditModal({
   const [rotationStartEmpId, setRotationStartEmpId] = useState<string>(
     duty?.rotationStartEmpId || "",
   );
+  // คนที่ "ไม่ให้เป็นคนแทน" — ยังหมุนเป็นเวรหลักได้ แต่ไม่ถูกเลือกมาแทนคนลา
+  const [noSubstituteIds, setNoSubstituteIds] = useState<Set<string>>(
+    () => new Set(duty?.substituteExcludedEmpIds || []),
+  );
   // (monthly) ให้สิทธิ์กองกลางแม้ขาย/ซื้อไม่ถึง 80%
   const [grantsPoolEligibility, setGrantsPoolEligibility] = useState<boolean>(
     duty?.grantsPoolEligibility ?? false,
@@ -97,6 +101,14 @@ export default function DutyEditModal({
   }
   function toggleCandidate(empId: string) {
     setCandidateIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(empId)) next.delete(empId);
+      else next.add(empId);
+      return next;
+    });
+  }
+  function toggleNoSubstitute(empId: string) {
+    setNoSubstituteIds((prev) => {
       const next = new Set(prev);
       if (next.has(empId)) next.delete(empId);
       else next.add(empId);
@@ -246,6 +258,8 @@ export default function DutyEditModal({
               rotationPool={rotationPool}
               excludedIds={excludedIds}
               toggleExclude={toggleExclude}
+              noSubstituteIds={noSubstituteIds}
+              toggleNoSubstitute={toggleNoSubstitute}
               autoBlockedIds={autoBlockedIds}
               includedCount={includedCount}
               includedPool={includedPool}
@@ -301,6 +315,11 @@ export default function DutyEditModal({
                         period,
                         roleId,
                         excludedEmpIds: [...excludedIds],
+                        // "ไม่ให้เป็นคนแทน" — เฉพาะคนที่ยังอยู่ใน pool (ไม่ถูก
+                        // ตัดออกทั้งหมด) · กัน id ค้างเมื่อ admin ตัดออกภายหลัง
+                        substituteExcludedEmpIds: [...noSubstituteIds].filter(
+                          (id) => !excludedIds.has(id),
+                        ),
                         // toggle เฉพาะ monthly · weekly บังคับ false
                         grantsPoolEligibility:
                           period === "monthly" ? grantsPoolEligibility : false,
@@ -502,6 +521,8 @@ function RotationFields({
   rotationPool,
   excludedIds,
   toggleExclude,
+  noSubstituteIds,
+  toggleNoSubstitute,
   autoBlockedIds,
   includedCount,
   includedPool,
@@ -523,6 +544,8 @@ function RotationFields({
   rotationPool: Employee[];
   excludedIds: Set<string>;
   toggleExclude: (id: string) => void;
+  noSubstituteIds: Set<string>;
+  toggleNoSubstitute: (id: string) => void;
   autoBlockedIds: Set<string>;
   includedCount: number;
   includedPool: Employee[];
@@ -700,6 +723,49 @@ function RotationFields({
               (ติดทั้งเดือนเสี่ยงหลุดเกณฑ์เงินเดือนพื้นฐาน 50%)
             </div>
           )}
+        </div>
+      )}
+
+      {/* ไม่ให้เป็นคนแทน — ยังหมุนเป็นเวรหลักได้ แต่ไม่ถูกเลือกมาแทนคนลา */}
+      {includedPool.length > 1 && (
+        <div className="mb-3 p-3 rounded-[10px] bg-cream border border-bdr">
+          <label className="text-xs text-txt-mid font-bold mb-1 block">
+            ไม่ให้เป็นคนแทน (ตอนคนอื่นลา)
+          </label>
+          <div className="text-xs text-txt-soft mb-2">
+            คลิกชื่อ = คนนั้น <b>ยังหมุนเป็นเวรหลักได้ตามปกติ</b> แต่จะไม่ถูกเลือกมา
+            <b>แทน</b> เมื่อคนอื่นในหน้าที่นี้ลา
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {includedPool.map((emp) => {
+              const off = noSubstituteIds.has(emp.id);
+              return (
+                <button
+                  key={emp.id}
+                  type="button"
+                  onClick={() => toggleNoSubstitute(emp.id)}
+                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold font-[inherit] border transition-all cursor-pointer active:scale-[0.96] ${
+                    off
+                      ? "bg-amber-lt text-amber border-amber/40"
+                      : "bg-white text-txt-mid border-bdr hover:border-maroon"
+                  }`}
+                >
+                  <AvatarCircle
+                    avatar={emp.avatar}
+                    avatarType={emp.avatarType}
+                    avatarImageUrl={emp.avatarImageUrl}
+                    size={18}
+                    fontSize={9}
+                    border="none"
+                  />
+                  {emp.nickname || emp.name}
+                  {off && (
+                    <span className="ml-0.5 font-bold text-[9px]">ไม่แทน</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

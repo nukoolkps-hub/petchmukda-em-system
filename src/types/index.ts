@@ -254,6 +254,10 @@ export interface Duty {
   period: "weekly" | "monthly";
   roleId: string; // (rotation) ตำแหน่งที่ทำหน้าที่นี้ — pool resolve จาก employees ที่ roleId ตรง
   excludedEmpIds?: string[]; // คนในตำแหน่งที่ admin ตัดออก ไม่ให้ทำหน้าที่นี้
+  /** (rotation) คนที่ยัง "หมุนเป็นเวรหลักได้" ตามปกติ แต่ไม่ให้ถูกเลือกเป็น
+   *  "คนแทน" เมื่อคนอื่นในหน้าที่นี้ลา · ต่างจาก excludedEmpIds ที่ตัดออกทั้งหมด
+   *  · ไม่กระทบ coverage duty (ใช้ candidateEmpIds allowlist แทน)          */
+  substituteExcludedEmpIds?: string[];
   // (monthly เท่านั้น) ให้สิทธิ์กองกลางแก่คนที่ทำหน้าที่นี้ทั้งเดือน แม้ขาย/ซื้อ
   // ไม่ถึง 80% ของ top — เพราะติดทำหน้าที่ขายไม่ทันเพื่อน · ยกเว้นเกณฑ์ 80%
   // เท่านั้น (ยังเคารพ poolExclusion ที่ admin ปิด + เกณฑ์ 50% เงินเดือนพื้นฐาน)

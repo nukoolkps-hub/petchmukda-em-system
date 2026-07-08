@@ -12,6 +12,8 @@ export interface Duty {
 	period: "weekly" | "monthly";
 	roleId: string;
 	excludedEmpIds?: string[];
+	/** (rotation) คนที่หมุนเป็นเวรหลักได้ แต่ไม่ให้ถูกเลือกเป็นคนแทน */
+	substituteExcludedEmpIds?: string[];
 	rotationStartDate: string; // "YYYY-MM-DD"
 	/** (rotation) admin เลือก "คนเริ่ม" ของรอบแรก — anchor ของ round-robin
 	 *  แทน hashDutyId · "" / unset / คนหลุด pool → fallback hash (เดิม) */
@@ -318,6 +320,9 @@ export function computeDutyForDay(
 		};
 	}
 
+	// admin ตั้ง "ไม่ให้เป็นคนแทน" ในหน้าที่นี้ (ยังหมุนเป็นเวรหลักได้ตามปกติ)
+	const subExcluded = new Set(duty.substituteExcludedEmpIds || []);
+
 	// monthly + มี history → เลือกคนแทนแบบยุติธรรม "เคยแทนน้อยสุดก่อน"
 	// (กันคนเดิมโดนเลือกซ้ำทุกครั้งที่ primary ลา — primary monthly คงที่
 	// ทั้งเดือน neighbor-scan เดิมเลยได้คนเดิมตลอด)
@@ -329,6 +334,7 @@ export function computeDutyForDay(
 			leaves,
 			primariesToday,
 			subHistory,
+			subExcluded,
 		);
 		return {
 			dutyId: duty.id,
@@ -351,6 +357,7 @@ export function computeDutyForDay(
 	for (let offset = 1; offset < pool.length; offset++) {
 		const cand = pool[(startIdx + offset) % pool.length];
 		if (cand === primary) continue;
+		if (subExcluded.has(cand)) continue;
 		if (isOnLeave(leaves, cand, todayYmd)) continue;
 		if (primariesToday.has(cand)) continue;
 		return {
@@ -368,6 +375,7 @@ export function computeDutyForDay(
 	for (let offset = 1; offset < pool.length; offset++) {
 		const cand = pool[(startIdx + offset) % pool.length];
 		if (cand === primary) continue;
+		if (subExcluded.has(cand)) continue;
 		if (isOnLeave(leaves, cand, todayYmd)) continue;
 		return {
 			dutyId: duty.id,
@@ -532,6 +540,8 @@ export function replayCoverageHistory(
 
 /** เลือกคนแทน 1 วัน แบบ history-fair — pass 1 ข้ามคนลา+คนติดหน้าที่อื่น ·
  *  pass 2 double-up (ข้ามแค่คนลา) · คืน null เมื่อทุกคนลา
+ *  subExcluded = คนที่ admin ตั้งว่า "ไม่ให้เป็นคนแทน" ในหน้าที่นี้ (ข้ามทั้ง
+ *  2 pass · ยังหมุนเป็นเวรหลักได้ตามปกติ)
  *  ⚠️ ต้องเหมือน src/utils/dutyUtils.ts เป๊ะ (check-duty-sync)            */
 export function pickRotationSubstitute(
 	pool: string[],
@@ -540,11 +550,12 @@ export function pickRotationSubstitute(
 	leaves: LeaveEntry[],
 	busy: Set<string>,
 	history: Map<string, number>,
+	subExcluded: Set<string>,
 ): string | null {
 	const startIdx = Math.max(0, pool.indexOf(primary));
 	const len = pool.length;
 	const cands = pool
-		.filter((id) => id !== primary)
+		.filter((id) => id !== primary && !subExcluded.has(id))
 		.sort((a, b) => {
 			const ha = history.get(a) || 0;
 			const hb = history.get(b) || 0;
@@ -578,6 +589,7 @@ export function replayRotationSubHistory(
 ): Map<string, number> {
 	const history = new Map<string, number>();
 	if (duty.period !== "monthly" || pool.length === 0) return history;
+	const subExcluded = new Set(duty.substituteExcludedEmpIds || []);
 	const primaryByMonth = new Map<string, string | null>();
 	const end = new Date(`${toYmdExclusive}T00:00:00`);
 	for (
@@ -606,6 +618,7 @@ export function replayRotationSubHistory(
 			allLeaves,
 			new Set(),
 			history,
+			subExcluded,
 		);
 		if (pick) history.set(pick, (history.get(pick) || 0) + 1);
 	}

@@ -966,6 +966,8 @@ export interface DutyForecast {
 
 /** เลือกคนแทน 1 วัน แบบ history-fair — pass 1 ข้ามคนลา+คนติดหน้าที่อื่น ·
  *  pass 2 double-up (ข้ามแค่คนลา) · คืน null เมื่อทุกคนลา
+ *  subExcluded = คนที่ admin ตั้งว่า "ไม่ให้เป็นคนแทน" ในหน้าที่นี้ (ข้ามทั้ง
+ *  2 pass · ยังหมุนเป็นเวรหลักได้ตามปกติ)
  *  ⚠️ ต้องเหมือน functions/src/duty/dutyUtils.ts เป๊ะ (check-duty-sync)   */
 export function pickRotationSubstitute(
   pool: string[],
@@ -974,11 +976,12 @@ export function pickRotationSubstitute(
   leaves: LeaveEntry[],
   busy: Set<string>,
   history: Map<string, number>,
+  subExcluded: Set<string>,
 ): string | null {
   const startIdx = Math.max(0, pool.indexOf(primary));
   const len = pool.length;
   const cands = pool
-    .filter((id) => id !== primary)
+    .filter((id) => id !== primary && !subExcluded.has(id))
     .sort((a, b) => {
       const ha = history.get(a) || 0;
       const hb = history.get(b) || 0;
@@ -1015,6 +1018,7 @@ export function replayRotationSubHistory(
 ): Map<string, number> {
   const history = new Map<string, number>();
   if (duty.period !== "monthly" || pool.length === 0) return history;
+  const subExcluded = new Set(duty.substituteExcludedEmpIds || []);
   const primaryByMonth = new Map<string, string | null>();
   const end = new Date(`${toYmdExclusive}T00:00:00`);
   for (
@@ -1043,6 +1047,7 @@ export function replayRotationSubHistory(
       allLeaves,
       new Set(),
       history,
+      subExcluded,
     );
     if (pick) history.set(pick, (history.get(pick) || 0) + 1);
   }
@@ -1051,18 +1056,21 @@ export function replayRotationSubHistory(
 
 /** หาคนแทน 1 วัน — mirror substitute-scan ของ computeDutyForDay บน id pool
  *  pass 1: ข้ามคนลา + ข้ามคนที่เป็น primary หน้าที่อื่นวันนั้น (กันทับ)
- *  pass 2: double-up — ข้ามแค่คนลา · คืน null เมื่อทุกคนใน pool ลา        */
+ *  pass 2: double-up — ข้ามแค่คนลา · คืน null เมื่อทุกคนใน pool ลา
+ *  subExcluded = คนที่ admin ตั้ง "ไม่ให้เป็นคนแทน" ในหน้าที่นี้ (ข้ามทั้ง 2 pass) */
 function pickForecastSubstitute(
   pool: string[],
   primary: string,
   ymd: string,
   leaves: LeaveEntry[],
   primariesThatDay: Set<string>,
+  subExcluded: Set<string>,
 ): string | null {
   const startIdx = Math.max(0, pool.indexOf(primary));
   for (let offset = 1; offset < pool.length; offset++) {
     const cand = pool[(startIdx + offset) % pool.length];
     if (cand === primary) continue;
+    if (subExcluded.has(cand)) continue;
     if (isOnLeave(leaves, cand, ymd)) continue;
     if (primariesThatDay.has(cand)) continue;
     return cand;
@@ -1070,6 +1078,7 @@ function pickForecastSubstitute(
   for (let offset = 1; offset < pool.length; offset++) {
     const cand = pool[(startIdx + offset) % pool.length];
     if (cand === primary) continue;
+    if (subExcluded.has(cand)) continue;
     if (isOnLeave(leaves, cand, ymd)) continue;
     return cand;
   }
@@ -1098,6 +1107,7 @@ function computePeriodCoverage(
   const dayEnd = periodEnd > endYmd ? endYmd : periodEnd;
   if (dayStart > dayEnd) return [];
   const pool = poolByDutyId.get(duty.id) || [];
+  const subExcluded = new Set(duty.substituteExcludedEmpIds || []);
   const segs: CoverageSegment[] = [];
   let cur: CoverageSegment | null = null;
   for (const d of dateRange(dayStart, dayEnd)) {
@@ -1119,8 +1129,16 @@ function computePeriodCoverage(
           leaves,
           primariesThatDay,
           subHistory,
+          subExcluded,
         )
-      : pickForecastSubstitute(pool, primary, d, leaves, primariesThatDay);
+      : pickForecastSubstitute(
+          pool,
+          primary,
+          d,
+          leaves,
+          primariesThatDay,
+          subExcluded,
+        );
     if (subHistory && sub) subHistory.set(sub, (subHistory.get(sub) || 0) + 1);
     if (cur && cur.substituteEmpId === sub) {
       cur.end = d;
