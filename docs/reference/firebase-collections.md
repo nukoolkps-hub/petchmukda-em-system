@@ -87,8 +87,8 @@ Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth
 | socialSecurity | number | ประกันสังคม |
 | customEarnings | `{label,amount}[]` | รายรับที่ admin เพิ่มเอง |
 | customDeductions | `{label,amount}[]` | รายหักที่ admin เพิ่มเอง |
-| coveragePay | number | เงินค่าแทน (coverage duty) จาก `computeCoverageEarningsForMonth` |
-| coveragePayBreakdown | `{empId,count,total,...}[]` | breakdown ค่าแทน · preserve เดิมถ้า re-save (PR #516) |
+| coveragePay | number | เงินค่าแทน (coverage duty) จาก `computeCoverageEarningsForMonth` · refresh สดทุก save จนกว่าเดือนยืนยันยอด แล้ว freeze |
+| coveragePayBreakdown | `{empId,count,total,...}[]` | breakdown ค่าแทน · preserve เดิมหลังยืนยันยอด (PR #516) |
 | note | string | หมายเหตุ |
 | **Deficit tracking** | | *เขียนตอน admin ยืนยันยอด (PR #614)* |
 | netSalary | number | denormalized `earnings - deductions` (เป็นลบได้) · ใช้ใน AdvanceRequestModal เช็คเดือนก่อนติดลบไหม |
@@ -276,6 +276,39 @@ interface Item {
 3. `loanDeduction = Σ take` → หักจาก deductions
 4. ตอน admin ยืนยันยอด → เขียน `repayments[ym]` (idempotent) +
    `status = "paid_off"` เมื่อ Σ ≥ principal
+
+### duties/{dutyId}
+
+หน้าที่รับผิดชอบ (admin-managed) · ทุก signed-in อ่านได้
+
+| Field | Type | Description |
+|---|---|---|
+| name | string | ชื่อหน้าที่ |
+| kind | `"rotation"` \| `"coverage"` | rotation = หมุนเวียนตาม period · coverage = แทนคนลาของตำแหน่งเป้าหมาย |
+| period | `"weekly"` \| `"monthly"` | รอบหมุน |
+| roleId | string | (rotation) ตำแหน่งที่ทำหน้าที่นี้ — pool มาจาก employees ที่ roleId ตรง |
+| excludedEmpIds | string[] | คนที่ตัดออกจาก pool ทั้งหมด (ไม่ทำหน้าที่นี้เลย) |
+| substituteExcludedEmpIds | string[] | (rotation) คนที่หมุนเป็นเวรหลักได้ แต่ไม่ให้ถูกเลือกเป็นคนแทน (PR #745) |
+| rotationStartDate | `YYYY-MM-DD` | anchor ของ round-robin (วันแรก index 0) |
+| rotationStartEmpId | string | (rotation) "คนเริ่ม" รอบแรก — anchor แทน hashDutyId · "" = อัตโนมัติ |
+| grantsPoolEligibility | boolean | (monthly) ให้สิทธิ์กองกลางแม้ขาย/ซื้อ < 80% |
+| skipSundays | boolean | (weekly) ข้ามวันอาทิตย์ |
+| coverageRoleId | string | (coverage) ตำแหน่งเป้าหมาย |
+| candidateEmpIds | string[] | (coverage) รายชื่อคนแทน (allowlist) |
+| coveragePayPerOccurrence | number | (coverage) เงินตอบแทนต่อครั้งที่แทน (฿) |
+| cachedPrimary | `{periodIndex,empId}` \| null | cache คนทำ primary ของ period ปัจจุบัน (stability) |
+
+### dutyAssignmentsToday/snapshot (server-computed)
+
+Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง duty/employee/leave CRUD + scheduled 00:01) · ทุก signed-in อ่านได้ · self-contained (client render โดยไม่ต้องอ่าน employees/leaves peer)
+
+| Field | Type | Description |
+|---|---|---|
+| date | `YYYY-MM-DD` | วันที่คำนวณ (Bangkok) |
+| assignments | `AssignmentItem[]` | คนทำแต่ละหน้าที่ "วันนี้" + pool ที่ resolve แล้ว (safe projection) |
+| coverageForecast | `CoverageForecastItem[]` | คนแทนตำแหน่งเป้าหมายล่วงหน้าถึงสิ้นปี (จากใบลาที่ยื่นไว้) — `{dutyId,dutyName,start,end,targetEmpId,targetName,substituteEmpId,substituteName}` (PR #741) |
+| coverageThisMonth | `{month, byEmp}` | เงินค่าแทนสดเดือนปัจจุบันต่อคน (`computeCoverageEarningsForMonthAll`) → พนักงานเห็นยอด preview ก่อนยืนยันยอด (PR #742) |
+| updatedAt | number | epoch ms |
 
 ### config/secrets (Cloud Functions only)
 
