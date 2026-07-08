@@ -81,6 +81,13 @@ function segDayLabel(start: string, end: string): string {
   return sd === ed ? `${sd}` : `${sd}-${ed}`;
 }
 
+/** label วันของการ์ดคนแทน — วันเดียวโชว์เลขเดียว ("8" ไม่ใช่ "8-8" กันสับสน) ·
+ *  หลายวันใช้ช่วง (same-month "8-10" · คร่อมเดือน "29 มิ.ย. - 2 ก.ค.") */
+function formatCoverageDay(start: string, end: string): string {
+  if (start === end) return `${new Date(`${start}T00:00:00`).getDate()}`;
+  return formatRangeInMonth(start, end, "weekly");
+}
+
 /** รายการในเดือน — การ์ดช่วงวัน (rotation) หรือการ์ดคนแทน (coverage)
  *  รวมเรียงตามวันเริ่มใน list เดียว → การ์ดคนแทนแทรกต่อจากการ์ดสัปดาห์
  *  ที่ครอบวันลานั้น (ไม่กองอยู่ท้ายเดือน) */
@@ -448,7 +455,7 @@ export default function DutyForecastModal({
                           >
                             <div className="px-3 py-1.5 bg-amber-lt/60 border-b border-amber/20 flex items-center justify-between gap-2">
                               <span className="text-sm font-bold text-amber">
-                                {formatRangeInMonth(c.start, c.end, "weekly")}
+                                {formatCoverageDay(c.start, c.end)}
                               </span>
                               <span className="text-[11px] font-semibold text-amber/80 truncate min-w-0">
                                 {c.dutyName}
