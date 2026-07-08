@@ -433,6 +433,12 @@ snapshot `dutyAssignmentsToday.coverageForecast[]` ให้ **ทุกคน (
   (stateless tradeoff เดียวกับ coverage)
 - **weekly** — neighbor-scan เดิม (คนถัดจาก primary ในลำดับ pool · ข้ามคนลา/
   คนติดหน้าที่อื่น) — primary หมุนทุกสัปดาห์ โอกาสซ้ำต่ำ
+- **`substituteExcludedEmpIds`** — admin ตั้งต่อหน้าที่ว่าใคร "ไม่ให้เป็นคนแทน"
+  (ยังหมุนเป็นเวรหลักได้ตามปกติ · ต่างจาก `excludedEmpIds` ที่ตัดออกจากทั้งหมด) ·
+  ข้ามทั้ง 2 pass ของ substitute-scan (weekly + monthly + forecast) · ถ้าตั้ง
+  จนไม่เหลือคนแทน วันนั้นขึ้น "ไม่มีคนแทน" (admin เลือกเอง) · UI: DutyEditModal
+  section "ไม่ให้เป็นคนแทน" (chip amber ต่อคน) · ไม่กระทบ coverage duty (ใช้
+  `candidateEmpIds` allowlist แทน)
 
 **Fairness guarantee (วัดจาก simulation 52 สัปดาห์):**
 
