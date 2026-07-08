@@ -30,6 +30,7 @@ import {
 	getPeriodIndex,
 	type LeaveEntry,
 	replayCoverageHistory,
+	replayRotationSubHistory,
 	resolveDutyPool,
 } from "./dutyUtils.js";
 
@@ -175,6 +176,24 @@ async function buildSnapshot(): Promise<Snapshot> {
 		ymd, // exclusive → ถึงเมื่อวาน
 	);
 
+	// fairness history ของ "คนแทน" หน้าที่ประจำเดือน (rotation·monthly) —
+	// replay ตั้งแต่ต้นปีต่อ duty → เลือกคนแทนแบบไม่ซ้ำ (เคยแทนน้อยสุดก่อน)
+	const rotationSubHistory = new Map<string, Map<string, number>>(
+		duties
+			.filter((d) => d.kind !== "coverage" && d.period === "monthly")
+			.map((d) => [
+				d.id,
+				replayRotationSubHistory(
+					d,
+					resolveDutyPool(d, employees).map((e) => e.id),
+					allLeaves,
+					storeCalendar,
+					yearStart,
+					ymd,
+				),
+			]),
+	);
+
 	const assignments = computeAllDutiesForDay(
 		duties,
 		ymd,
@@ -182,6 +201,7 @@ async function buildSnapshot(): Promise<Snapshot> {
 		leaves,
 		coverageHistory,
 		storeCalendar,
+		rotationSubHistory,
 	);
 
 	// B · write-back cache: stamp primaryEmpId + periodIndex ของ rotation

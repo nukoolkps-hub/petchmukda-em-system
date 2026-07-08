@@ -423,6 +423,17 @@ snapshot `dutyAssignmentsToday.coverageForecast[]` ให้ **ทุกคน (
 4. **คนใหม่** — LINE bot ตั้ง `displayOrder = max+1` เฉพาะเมื่อทุกคนมี
    displayOrder แล้ว → ต่อท้ายคิว ไม่แทรกหน้า
 
+**คนแทนตอน primary ลา (substitute):**
+- **monthly** — เลือกแบบไม่ซ้ำ "เคยแทนน้อยสุดก่อน" (`pickRotationSubstitute` +
+  `replayRotationSubHistory` replay ตั้งแต่ต้นปี · sync client/server ผ่าน
+  check-duty-sync) — primary ของ monthly คงที่ทั้งเดือน ถ้าใช้ neighbor-scan
+  คนถัดไปในลำดับจะโดนซ้ำทุกครั้ง · เสมอกัน tie-break ตามลำดับ pool ต่อจาก
+  primary · ลาต่อเนื่องหลายวัน → สลับคนแทนรายวัน (ยุติธรรมแบบเดียวกับ
+  coverage duty) · replay ประมาณ primary เดือนก่อนๆ จาก pool ปัจจุบัน
+  (stateless tradeoff เดียวกับ coverage)
+- **weekly** — neighbor-scan เดิม (คนถัดจาก primary ในลำดับ pool · ข้ามคนลา/
+  คนติดหน้าที่อื่น) — primary หมุนทุกสัปดาห์ โอกาสซ้ำต่ำ
+
 **Fairness guarantee (วัดจาก simulation 52 สัปดาห์):**
 
 | สถานการณ์ | ผล |

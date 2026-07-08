@@ -29,6 +29,8 @@ const FUNCTIONS_TO_CHECK = [
   "applicableDuties",
   "monthlyPrimariesForDay",
   "pickCoverageCandidate",
+  "pickRotationSubstitute",
+  "replayRotationSubHistory",
 ];
 
 /** ดึง body ของ function NAME(...) {...} ด้วยการนับวงเล็บปีกกา */

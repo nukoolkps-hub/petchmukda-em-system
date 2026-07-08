@@ -956,6 +956,99 @@ export interface DutyForecast {
   periods: ForecastPeriod[];
 }
 
+/* ─── คนแทนหน้าที่ประจำเดือน (rotation·monthly) — แบบไม่ซ้ำ ──────────
+   เดิม substitute = "คนถัดจาก primary ในลำดับ pool" เสมอ → primary
+   (คงที่ทั้งเดือน) ลากี่ครั้ง คนเดิมก็โดนซ้ำทุกครั้ง · เปลี่ยนเป็นเลือกแบบ
+   ยุติธรรม "เคยแทนน้อยสุดก่อน" (history จาก replay ตั้งแต่ต้นปี — pattern
+   เดียวกับ coverage duty) · เสมอกัน tie-break ด้วยลำดับ pool ต่อจาก primary
+   (พฤติกรรมเดิม) · weekly คง neighbor-scan เดิม (primary หมุนทุกสัปดาห์
+   โอกาสซ้ำต่ำ + ไม่อยากเปลี่ยนพฤติกรรมเกินที่ขอ)                           */
+
+/** เลือกคนแทน 1 วัน แบบ history-fair — pass 1 ข้ามคนลา+คนติดหน้าที่อื่น ·
+ *  pass 2 double-up (ข้ามแค่คนลา) · คืน null เมื่อทุกคนลา
+ *  ⚠️ ต้องเหมือน functions/src/duty/dutyUtils.ts เป๊ะ (check-duty-sync)   */
+export function pickRotationSubstitute(
+  pool: string[],
+  primary: string,
+  ymd: string,
+  leaves: LeaveEntry[],
+  busy: Set<string>,
+  history: Map<string, number>,
+): string | null {
+  const startIdx = Math.max(0, pool.indexOf(primary));
+  const len = pool.length;
+  const cands = pool
+    .filter((id) => id !== primary)
+    .sort((a, b) => {
+      const ha = history.get(a) || 0;
+      const hb = history.get(b) || 0;
+      if (ha !== hb) return ha - hb;
+      const da = (pool.indexOf(a) - startIdx + len) % len;
+      const db = (pool.indexOf(b) - startIdx + len) % len;
+      return da - db;
+    });
+  for (const cand of cands) {
+    if (isOnLeave(leaves, cand, ymd)) continue;
+    if (busy.has(cand)) continue;
+    return cand;
+  }
+  for (const cand of cands) {
+    if (isOnLeave(leaves, cand, ymd)) continue;
+    return cand;
+  }
+  return null;
+}
+
+/** Replay การแทนของหน้าที่ monthly ตั้งแต่ fromYmd → ก่อน toYmdExclusive
+ *  นับว่าใครแทนไปกี่ครั้ง (seed ให้เลือกคนแทนแบบไม่ซ้ำต่อเนื่องกับที่ผ่านมา)
+ *  stateless: primary เดือนก่อนๆ ประมาณจาก pool ปัจจุบัน (tradeoff เดียวกับ
+ *  coverage replay) · ข้าม busy-check ของวันในอดีต (ไม่รู้หน้าที่อื่นย้อนหลัง —
+ *  approximation เท่ากันทั้ง client/server)
+ *  ⚠️ ต้องเหมือน functions/src/duty/dutyUtils.ts เป๊ะ (check-duty-sync)   */
+export function replayRotationSubHistory(
+  duty: Duty,
+  pool: string[],
+  allLeaves: LeaveEntry[],
+  calendar: StoreCalendarLite | null | undefined,
+  fromYmd: string,
+  toYmdExclusive: string,
+): Map<string, number> {
+  const history = new Map<string, number>();
+  if (duty.period !== "monthly" || pool.length === 0) return history;
+  const primaryByMonth = new Map<string, string | null>();
+  const end = new Date(`${toYmdExclusive}T00:00:00`);
+  for (
+    let d = new Date(`${fromYmd}T00:00:00`);
+    d < end;
+    d.setDate(d.getDate() + 1)
+  ) {
+    const ymd = toYMD(d);
+    if (applicableDuties([duty], ymd, calendar).length === 0) continue;
+    const ym = ymd.slice(0, 7);
+    let primary = primaryByMonth.get(ym);
+    if (primary === undefined) {
+      primary = pickPrimary(
+        duty,
+        pool,
+        Math.max(0, getPeriodIndex(duty, ymd)),
+        new Set(),
+      );
+      primaryByMonth.set(ym, primary);
+    }
+    if (!primary || !isOnLeave(allLeaves, primary, ymd)) continue;
+    const pick = pickRotationSubstitute(
+      pool,
+      primary,
+      ymd,
+      allLeaves,
+      new Set(),
+      history,
+    );
+    if (pick) history.set(pick, (history.get(pick) || 0) + 1);
+  }
+  return history;
+}
+
 /** หาคนแทน 1 วัน — mirror substitute-scan ของ computeDutyForDay บน id pool
  *  pass 1: ข้ามคนลา + ข้ามคนที่เป็น primary หน้าที่อื่นวันนั้น (กันทับ)
  *  pass 2: double-up — ข้ามแค่คนลา · คืน null เมื่อทุกคนใน pool ลา        */
@@ -997,6 +1090,9 @@ function computePeriodCoverage(
   leaves: LeaveEntry[],
   calendar: StoreCalendarLite | null | undefined,
   primariesAt: (ymd: string) => Map<string, string | null>,
+  // monthly: history การแทนสะสม (mutable · แชร์ข้าม period ของ duty เดียวกัน)
+  // → เลือกคนแทนแบบไม่ซ้ำ + นับ pick ล่วงหน้าต่อเนื่อง · null = weekly (เดิม)
+  subHistory: Map<string, number> | null,
 ): CoverageSegment[] {
   const dayStart = periodStart < todayYmd ? todayYmd : periodStart;
   const dayEnd = periodEnd > endYmd ? endYmd : periodEnd;
@@ -1015,13 +1111,17 @@ function computePeriodCoverage(
     }
     const primariesThatDay = new Set<string>();
     for (const v of primariesAt(d).values()) if (v) primariesThatDay.add(v);
-    const sub = pickForecastSubstitute(
-      pool,
-      primary,
-      d,
-      leaves,
-      primariesThatDay,
-    );
+    const sub = subHistory
+      ? pickRotationSubstitute(
+          pool,
+          primary,
+          d,
+          leaves,
+          primariesThatDay,
+          subHistory,
+        )
+      : pickForecastSubstitute(pool, primary, d, leaves, primariesThatDay);
+    if (subHistory && sub) subHistory.set(sub, (subHistory.get(sub) || 0) + 1);
     if (cur && cur.substituteEmpId === sub) {
       cur.end = d;
     } else {
@@ -1063,6 +1163,20 @@ export function computeDutyForecast(
   return rotationDuties.map((duty) => {
     const periods: ForecastPeriod[] = [];
     let idx = Math.max(0, getPeriodIndex(duty, todayYmd));
+    // monthly: seed history การแทนตั้งแต่ต้นปีถึงเมื่อวาน → คนแทนล่วงหน้า
+    // เลือกแบบไม่ซ้ำต่อเนื่องกับที่ผ่านมา (map แชร์ mutable ข้าม period —
+    // computePeriodCoverage เดินวันตามลำดับ + นับ pick เพิ่มเอง)
+    const subHistory =
+      withCoverage && duty.period === "monthly"
+        ? replayRotationSubHistory(
+            duty,
+            poolByDutyId.get(duty.id) || [],
+            leaves ?? [],
+            calendar,
+            `${todayYmd.slice(0, 4)}-01-01`,
+            todayYmd,
+          )
+        : null;
     // เดินไปข้างหน้าจน period start เกิน endYmd (safety cap 80 รอบ)
     while (periods.length < 80) {
       const range = getPeriodRangeForIndex(duty, idx);
@@ -1087,6 +1201,7 @@ export function computeDutyForecast(
           leaves ?? [],
           calendar,
           primariesAt,
+          subHistory,
         );
         if (cov.length) period.coverage = cov;
       }
