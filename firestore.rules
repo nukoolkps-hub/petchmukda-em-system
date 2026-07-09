@@ -360,6 +360,14 @@ service cloud.firestore {
         && request.resource.data.count == resource.data.count + 1;
     }
 
+    // ─── Daily Summary Images (รูปแนบสรุปเช้า 07:30 — admin ตั้งเวลา) ──
+    // admin อัปโหลดรูป + กำหนดวันส่ง (date) → Cloud Function (sendDailySummary)
+    // แนบเข้าข้อความเช้าของกลุ่ม we r mukda ในวันนั้น (ส่งครั้งเดียว) ·
+    // อ่าน/เขียน: admin เท่านั้น (UI จัดการ) · Function ใช้ Admin SDK (bypass)
+    match /dailySummaryImages/{imageId} {
+      allow read, write: if isAdmin();
+    }
+
     // ─── LINE Login OAuth state tokens (server-side CSRF defense) ──
     // Issued by prepareLineLogin · consumed atomically by lineAuth ผ่าน
     // Admin SDK ทั้งสองทาง → client ห้ามอ่าน/เขียนเลย (ไม่ใช่ขอ token แอบเอง)

@@ -4,6 +4,25 @@
 
 import type { LinePushMessage } from "../types.js";
 
+/** Host ที่เชื่อถือได้สำหรับ LINE image message (originalContentUrl/previewImageUrl)
+ *  — จำกัดเฉพาะ Firebase/Google Storage เพื่อกัน admin/พนักงานใส่ URL ภายนอก
+ *  (SSRF / รูปหลุด) · LINE ดึงรูปฝั่ง server ผ่าน token URL (ไม่ต้อง auth)     */
+const TRUSTED_IMAGE_HOSTS = [
+	"storage.googleapis.com",
+	"firebasestorage.googleapis.com",
+];
+
+/** true ถ้า url เป็น https + host อยู่ใน TRUSTED_IMAGE_HOSTS */
+export function isTrustedImageUrl(url: string): boolean {
+	try {
+		const parsed = new URL(url);
+		if (parsed.protocol !== "https:") return false;
+		return TRUSTED_IMAGE_HOSTS.some((host) => parsed.hostname === host);
+	} catch {
+		return false;
+	}
+}
+
 /**
  * Push message(s) to a LINE user via the Messaging API.
  */

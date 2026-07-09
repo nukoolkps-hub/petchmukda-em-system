@@ -31,6 +31,9 @@ export interface DailySummaryGroup {
 	lineTargetId: string;
 	sendAiTip: boolean;
 	includeLeaves: boolean;
+	/** แนบ "รูปที่ตั้งเวลาไว้" (admin อัปโหลด + กำหนดวันส่ง) เข้าข้อความเช้านี้ไหม
+	 *  — เฉพาะกลุ่มพนักงาน (we r mukda) · ดู dailySummaryImages collection      */
+	sendScheduledImage?: boolean;
 }
 
 export const DAILY_SUMMARY_GROUPS: DailySummaryGroup[] = [
@@ -41,6 +44,7 @@ export const DAILY_SUMMARY_GROUPS: DailySummaryGroup[] = [
 		lineTargetId: "C731807ff80bde798e0f8ab6bcfcd69c9",
 		sendAiTip: true,
 		includeLeaves: true, // กลุ่มพนักงาน — แสดงคนหยุดด้วย
+		sendScheduledImage: true, // แนบรูปที่ admin ตั้งเวลาไว้ (ถ้าตรงวัน)
 	},
 	{
 		name: "Various Tasks",

@@ -34,13 +34,19 @@ export async function uploadAdvanceSlip(
   );
 }
 
-export async function uploadLoanSlip(
-  loanId: string | number,
+export async function uploadLoanSlip(loanId: string | number, dataUrl: string) {
+  const id = safeSegment(loanId);
+  return await uploadDataUrl(`loanSlips/${id}/slip-${Date.now()}.jpg`, dataUrl);
+}
+
+/** รูปแนบสรุปประจำวัน 07:30 (admin ตั้งเวลาไว้) */
+export async function uploadDailySummaryImage(
+  imageId: string,
   dataUrl: string,
 ) {
-  const id = safeSegment(loanId);
+  const id = safeSegment(imageId);
   return await uploadDataUrl(
-    `loanSlips/${id}/slip-${Date.now()}.jpg`,
+    `dailySummaryImages/${id}/img-${Date.now()}.jpg`,
     dataUrl,
   );
 }

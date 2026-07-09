@@ -12,6 +12,7 @@ import {
 import SalaryAdminEdit from "../salary/SalaryAdminEdit";
 import AdminAdvancePanel from "./AdminAdvancePanel";
 import BackupPanel from "./BackupPanel";
+import DailySummaryImagePanel from "./DailySummaryImagePanel";
 import DutySchedulePanel from "./DutySchedulePanel";
 import EmployeeAdminPanel from "./EmployeeAdminPanel";
 import EmployeeLoansPanel from "./EmployeeLoansPanel";
@@ -252,6 +253,11 @@ export default function AdminPanel({
         {/* ── LINE BOT > NOTIFICATIONS section ── */}
         {section === "linebot-notifications" && (
           <LineBotNotificationsPanel showToast={showToast} />
+        )}
+
+        {/* ── LINE BOT > DAILY SUMMARY IMAGE section ── */}
+        {section === "linebot-daily-image" && (
+          <DailySummaryImagePanel showToast={showToast} />
         )}
 
         {/* ── LINE BOT > COMMANDS section ── */}

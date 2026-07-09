@@ -17,6 +17,7 @@ import {
   Diamond as IconDiamond,
   Eraser as IconEraser,
   HandCoins as IconHandCoins,
+  ImagePlus as IconImagePlus,
   MessageCircle as IconMessageCircle,
   Settings as IconSettings,
   Tag as IconTag,
@@ -38,6 +39,7 @@ export type AdminSectionId =
   | "store-calendar"
   | "linebot-notifications"
   | "linebot-commands"
+  | "linebot-daily-image"
   | "backup"
   | "wipe-data"
   | "knowledge";
@@ -127,6 +129,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     Icon: IconMessageCircle,
     items: [
       { id: "linebot-notifications", label: "การแจ้งเตือน", Icon: IconBell },
+      {
+        id: "linebot-daily-image",
+        label: "รูปแนบสรุปเช้า",
+        Icon: IconImagePlus,
+      },
       { id: "linebot-commands", label: "คำสั่ง", Icon: IconTerminal },
     ],
   },

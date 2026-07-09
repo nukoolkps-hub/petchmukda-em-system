@@ -422,6 +422,23 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 
 **Read:** ทุก signed-in · **Write:** admin only
 
+### dailySummaryImages/{id}
+
+รูปที่ admin อัปโหลด + ตั้งวันส่ง เพื่อแนบไปกับสรุปประจำวัน 07:30 ของกลุ่ม **we r mukda** (ส่งครั้งเดียวในวันที่กำหนด) · admin จัดการผ่าน UI: /admin → LINE BOT → รูปแนบสรุปเช้า
+
+| Field | Type | Description |
+|---|---|---|
+| imageUrl | string | Firebase Storage download URL (token-based · LINE ดึงฝั่ง server) |
+| date | string | `"YYYY-MM-DD"` (Bangkok) วันที่ต้องการส่ง |
+| note | string \| null | ป้ายกำกับให้ admin (ไม่ส่งเข้า LINE) |
+| sentAt | string \| null | ISO timestamp เมื่อ Cloud Function ส่งจริงแล้ว · `null` = ยังไม่ส่ง (ใช้กัน re-send) |
+| createdAt | number | ms epoch |
+| createdBy | string | uid ของ admin |
+
+**ส่งครั้งเดียว:** `sendDailySummary` เลือกเฉพาะ doc ที่ `date == วันนี้` และ `sentAt == null` → stamp `sentAt` หลัง push สำเร็จ · LINE push จำกัด 5 message/ครั้ง → แนบได้สูงสุด 4 รูป/วัน (flex + 4) · **preview** (`ทดสอบแจ้งเตือน`) แสดงรูปของวันนี้ได้โดยไม่ stamp · **หมายเหตุ:** เสาร์ปกติ (ร้านปิด) bot ไม่ส่งสรุปเช้า → รูปที่ตั้งไว้วันนั้นไม่ถูกส่ง
+
+**Read/Write:** admin only · Cloud Function ใช้ Admin SDK (bypass rules)
+
 ## Security Rules Summary
 
 | Collection | Read | Write |
@@ -444,6 +461,7 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | config/blockCost | all signed-in | admin only |
 | config/loyaltyPoints | all signed-in | admin only |
 | config/notifications | admin only | admin only |
+| dailySummaryImages/{id} | admin only | admin only (+ Cloud Function ผ่าน Admin SDK) |
 | config/backupStatus | admin only | blocked (เขียนโดย Cloud Function · Admin SDK) |
 | config/* (อื่นๆ) | blocked | blocked (Functions ใช้ Admin SDK) |
 
@@ -461,3 +479,4 @@ salary doc มี field อ่อนไหว (`note`, `customDeductions`,
 | avatars/{employeeId}/ | all signed-in | admin / owner (image < 8MB) |
 | advanceSlips/{advanceId}/ | admin / owner | admin only (image < 8MB) |
 | salarySlips/{employeeId}/{YYYY-MM}.pdf | admin / owner | admin only (PDF < 8MB) — freeze ตอนยืนยันยอด |
+| dailySummaryImages/{id}/ | all signed-in | admin only (image < 8MB) — รูปแนบสรุปเช้า |
