@@ -56,6 +56,12 @@ service firebase.storage {
         && request.resource.contentType == "application/pdf";
     }
 
+    // รูปแนบสรุปเช้า 07:30 — admin อัปโหลด · LINE ดึงผ่าน token URL
+    match /dailySummaryImages/{imageId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() && isImageUpload();
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

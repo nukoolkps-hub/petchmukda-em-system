@@ -16,7 +16,7 @@ import {
 	getLineConfig,
 	isNotificationEnabled,
 } from "../helpers/config.js";
-import { pushLineMessage } from "../helpers/line.js";
+import { isTrustedImageUrl, pushLineMessage } from "../helpers/line.js";
 import type { LinePushMessage } from "../types.js";
 
 type LoanDoc = Record<string, unknown>;
@@ -355,19 +355,4 @@ function numberValue(value: unknown): number {
 
 function errorMessage(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
-}
-
-const TRUSTED_IMAGE_HOSTS = [
-	"storage.googleapis.com",
-	"firebasestorage.googleapis.com",
-];
-
-function isTrustedImageUrl(url: string): boolean {
-	try {
-		const parsed = new URL(url);
-		if (parsed.protocol !== "https:") return false;
-		return TRUSTED_IMAGE_HOSTS.some((host) => parsed.hostname === host);
-	} catch {
-		return false;
-	}
 }

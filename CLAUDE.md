@@ -342,6 +342,8 @@ Cloud Functions `sendDailySummary` ส่ง flex สรุปประจำว
 
 **Manual test:** พิมพ์ `ทดสอบแจ้งเตือน` ใน LINE 1:1 chat — bot push ตัวอย่างมาให้ admin ดู (เรียก Claude API จริง + เห็นทุก section)
 
+**รูปแนบ (scheduled image):** admin อัปโหลดรูป + ตั้งวันส่งใน `/admin → LINE BOT → รูปแนบสรุปเช้า` → `sendDailySummary` แนบรูปเข้าข้อความของกลุ่ม **we r mukda** (`sendScheduledImage: true`) ในวันนั้น · collection `dailySummaryImages/{id}` (`date` + `imageUrl` + `sentAt`) · **ส่งครั้งเดียว** (เลือก `sentAt == null` แล้ว stamp หลังส่ง) · สูงสุด 4 รูป/วัน (LINE push limit 5) · เสาร์ปกติร้านปิด → ไม่ส่ง · **auto-cleanup:** `cleanupSummaryImages` (scheduled 04:00 ทุกวัน) ลบรูป (doc + Storage) ที่ `date < วันนี้` — รูปที่ส่งแล้วถูกลบวันถัดไป · ดู `functions/src/dailySummary/scheduledImages.ts` + `cleanupSummaryImages.ts` + `src/firebase/dailySummaryImages.ts`
+
 **Idempotency:** `dailySummarySent/{ymd}` claim ผ่าน transaction — กัน Cloud Scheduler ยิงซ้ำส่งสแปม
 
 ## Reference Docs

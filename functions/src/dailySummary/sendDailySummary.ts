@@ -20,7 +20,8 @@ import {
 	getLineConfig,
 	isNotificationEnabled,
 } from "../helpers/config.js";
-import { pushLineMessage } from "../helpers/line.js";
+import { isTrustedImageUrl, pushLineMessage } from "../helpers/line.js";
+import type { LinePushMessage } from "../types.js";
 import { buildDailySummaryFlex } from "./buildFlex.js";
 import {
 	type CalendarEvent,
@@ -30,6 +31,12 @@ import {
 import { APP_TIMEZONE, DAILY_SUMMARY_GROUPS, SAT_DAY_NAME } from "./config.js";
 import { bangkokYmd, formatDateTH, getThaiDayName } from "./dateUtils.js";
 import { fetchTodayLeaves, type LeaveItem } from "./leaves.js";
+import {
+	fetchScheduledImages,
+	markImagesSent,
+	MAX_IMAGES_PER_DAY,
+	type ScheduledImage,
+} from "./scheduledImages.js";
 import { generateDailyTip } from "./tip.js";
 
 interface RunOptions {
@@ -111,11 +118,15 @@ export async function runDailySummary(
 
 	const db = getAppFirestore();
 	const calendar = createCalendarClient();
+	const ymd = bangkokYmd(now);
 	const hasLeavesGroup = DAILY_SUMMARY_GROUPS.some((g) => g.includeLeaves);
+	const hasScheduledImageGroup = DAILY_SUMMARY_GROUPS.some(
+		(g) => g.sendScheduledImage,
+	);
 
-	// ดึง leaves + Calendar events ของทุก group แบบ parallel — ลด latency จาก
-	// O(groups × roundtrip) → O(roundtrip) (ใหญ่สุดของชุดงาน)
-	const [todayLeaves, eventsByGroup] = await Promise.all([
+	// ดึง leaves + Calendar events + รูปที่ตั้งเวลาไว้ ของทุก group แบบ parallel
+	// — ลด latency จาก O(groups × roundtrip) → O(roundtrip) (ใหญ่สุดของชุดงาน)
+	const [todayLeaves, eventsByGroup, scheduledImages] = await Promise.all([
 		hasLeavesGroup
 			? fetchTodayLeaves(db, now).catch((err) => {
 					console.error("[runDailySummary] fetchTodayLeaves error:", err);
@@ -135,6 +146,15 @@ export async function runDailySummary(
 					}),
 			),
 		),
+		hasScheduledImageGroup
+			? fetchScheduledImages(db, ymd).catch((err) => {
+					console.error(
+						"[runDailySummary] fetchScheduledImages error:",
+						err,
+					);
+					return [] as ScheduledImage[];
+				})
+			: Promise.resolve<ScheduledImage[]>([]),
 	]);
 
 	const results: GroupResult[] = [];
@@ -198,10 +218,39 @@ export async function runDailySummary(
 			calendarError,
 		});
 
+		// ── รูปที่ admin ตั้งเวลาไว้ (แนบท้ายเฉพาะกลุ่ม sendScheduledImage) ──
+		// scheduled path: เฉพาะรูปที่ยังไม่ส่ง (!sentAt) แล้ว stamp หลังส่งสำเร็จ
+		// preview (targetOverride): แสดงทุกรูปของวันนี้เพื่อทดสอบ · ไม่ stamp
+		const imagesToSend = group.sendScheduledImage
+			? scheduledImages
+					.filter(
+						(img) =>
+							isTrustedImageUrl(img.imageUrl) &&
+							(targetOverride ? true : !img.sentAt),
+					)
+					.slice(0, MAX_IMAGES_PER_DAY)
+			: [];
+		const messages: LinePushMessage[] = [flex];
+		for (const img of imagesToSend) {
+			messages.push({
+				type: "image",
+				originalContentUrl: img.imageUrl,
+				previewImageUrl: img.imageUrl,
+			});
+		}
+
 		const target = targetOverride || group.lineTargetId;
 		try {
-			await pushLineMessage(token, target, flex);
+			await pushLineMessage(token, target, messages);
 			results.push({ name: group.name, sent: true });
+			// ส่งครั้งเดียว: stamp sentAt เฉพาะ scheduled run (ไม่ใช่ preview)
+			if (!targetOverride && imagesToSend.length > 0) {
+				await markImagesSent(
+					db,
+					imagesToSend.map((img) => img.id),
+					new Date().toISOString(),
+				);
+			}
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : String(err);
 			console.error(`[runDailySummary] push error for ${group.name}:`, msg);
