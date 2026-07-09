@@ -125,7 +125,8 @@ export default function DailySummaryImagePanel({ showToast }: Props) {
       </div>
       <p className="text-sm text-txt-soft mb-4 leading-relaxed">
         อัปโหลดรูป + เลือกวันที่จะส่ง — บอทจะแนบรูปเข้าข้อความสรุปเช้า 07:30 ของกลุ่ม{" "}
-        <b className="text-maroon">we r mukda</b> ในวันนั้น (ส่งครั้งเดียว)
+        <b className="text-maroon">we r mukda</b> ในวันนั้น (ส่งครั้งเดียว) ·
+        รูปจะถูกลบอัตโนมัติในวันถัดไปหลังพ้นวันส่ง
       </p>
 
       {/* ── ฟอร์มเพิ่มรูป ── */}

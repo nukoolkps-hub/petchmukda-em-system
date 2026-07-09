@@ -437,6 +437,8 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 
 **ส่งครั้งเดียว:** `sendDailySummary` เลือกเฉพาะ doc ที่ `date == วันนี้` และ `sentAt == null` → stamp `sentAt` หลัง push สำเร็จ · LINE push จำกัด 5 message/ครั้ง → แนบได้สูงสุด 4 รูป/วัน (flex + 4) · **preview** (`ทดสอบแจ้งเตือน`) แสดงรูปของวันนี้ได้โดยไม่ stamp · **หมายเหตุ:** เสาร์ปกติ (ร้านปิด) bot ไม่ส่งสรุปเช้า → รูปที่ตั้งไว้วันนั้นไม่ถูกส่ง
 
+**Auto-cleanup:** Cloud Function `cleanupSummaryImages` (scheduled 04:00 ทุกวัน) ลบ doc + ไฟล์ Storage ของรูปที่ `date < วันนี้` (Bangkok) — รูปที่ส่งแล้วถูกลบในวันถัดไป · ครอบคลุมรูปที่พลาดการส่งด้วย (ตั้งไว้วันเสาร์ปกติ ฯลฯ) · รูปของวันนี้/อนาคตไม่ถูกแตะ
+
 **Read/Write:** admin only · Cloud Function ใช้ Admin SDK (bypass rules)
 
 ## Security Rules Summary
