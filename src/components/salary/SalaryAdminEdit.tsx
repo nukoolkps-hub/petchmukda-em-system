@@ -2027,7 +2027,9 @@ export default function SalaryAdminEdit({
           <>
             {/* spacer ใต้ content กัน sticky bar ทับเนื้อหา */}
             <div className="h-[80px]" />
-            <div className="fixed left-1/2 -translate-x-1/2 w-full max-w-[430px] md:max-w-[800px] bottom-[68px] md:bottom-3 z-50 px-3 md:px-6">
+            {/* จัดกลาง · `md:left-[calc(50%+130px)]` ชดเชย sidebar 260px (desktop)
+                ให้ bar ตรงกลางคอลัมน์เนื้อหา ไม่เยื้องซ้ายไปทับพื้นที่ sidebar */}
+            <div className="fixed left-1/2 -translate-x-1/2 md:left-[calc(50%+130px)] w-full max-w-[430px] md:max-w-[800px] bottom-[68px] md:bottom-3 z-50 px-3 md:px-6">
               <div className="bg-white border-[1.5px] border-bdr rounded-2xl shadow-[0_-6px_24px_rgba(90,30,10,0.15)] p-2.5 flex gap-2">
                 {dirty && (
                   <button
