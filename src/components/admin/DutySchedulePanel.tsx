@@ -74,13 +74,35 @@ export default function DutySchedulePanel({
     }
     return m;
   }, [assignments]);
+  // pool (roster) ต่อ duty — จาก dutyPools (มีทุก duty แม้วันที่หน้าที่นั้นหยุด)
+  // fallback pool จาก assignments สำหรับ snapshot เก่าที่ยังไม่มี dutyPools
+  const dutyPoolById = useMemo(() => {
+    const m = new Map<
+      string,
+      { pool: SnapshotPoolMember[]; excludedCount: number }
+    >();
+    const dp = dutyAssignmentsToday?.dutyPools;
+    if (dp) {
+      for (const [dutyId, info] of Object.entries(dp)) m.set(dutyId, info);
+    } else {
+      for (const a of assignments) {
+        m.set(a.dutyId, { pool: a.pool, excludedCount: a.excludedCount });
+      }
+    }
+    return m;
+  }, [dutyAssignmentsToday, assignments]);
   const empById = useMemo(() => {
     const m = new Map<string, SnapshotPoolMember>();
     for (const a of assignments) {
       for (const member of a.pool) m.set(member.id, member);
     }
+    // รวมสมาชิกจาก dutyPools ด้วย — การ์ดของหน้าที่ที่หยุดวันนี้ (ไม่มีใน
+    // assignments) จะได้ resolve ชื่อคนใน pool ได้
+    for (const info of dutyPoolById.values()) {
+      for (const member of info.pool) m.set(member.id, member);
+    }
     return m;
-  }, [assignments]);
+  }, [assignments, dutyPoolById]);
 
   return (
     <div>
@@ -131,6 +153,8 @@ export default function DutySchedulePanel({
               assignments={assignmentsByDuty.get(duty.id) || []}
               empById={empById}
               roles={roles}
+              dutyPool={dutyPoolById.get(duty.id)}
+              snapshotDate={dutyAssignmentsToday?.date}
               onEdit={() => setEditing(duty)}
               onDelete={() => setConfirmDelete(duty)}
             />

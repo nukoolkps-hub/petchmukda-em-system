@@ -95,11 +95,22 @@ interface CoverageThisMonth {
 	byEmp: Record<string, { total: number; breakdown: CoverageEarning[] }>;
 }
 
+/** pool ของ "ทุก" duty (ไม่ขึ้นกับว่าวันนี้หน้าที่นั้นทำงานไหม) — การ์ด +
+ *  forecast ใช้ตัวนี้เป็นแหล่ง pool เสมอ · กันเคสวันอาทิตย์ที่ weekly+skipSundays
+ *  ถูกตัดออกจาก assignments (applicableDuties) แล้วไม่มี pool → การ์ดขึ้น
+ *  "0 คน" / forecast ขึ้น "ยังไม่มีคน" ทั้งเดือน (ทั้งที่ตำแหน่งมีคนจริง) */
+interface DutyPoolInfo {
+	pool: SafeEmployee[];
+	excludedCount: number;
+}
+
 interface Snapshot {
 	date: string;
 	assignments: AssignmentItem[];
 	coverageForecast: CoverageForecastItem[];
 	coverageThisMonth: CoverageThisMonth;
+	/** dutyId → pool ของทุก duty (roster) · อาจไม่มีใน snapshot เก่า */
+	dutyPools: Record<string, DutyPoolInfo>;
 	updatedAt: number;
 }
 
@@ -240,19 +251,31 @@ async function buildSnapshot(): Promise<Snapshot> {
 
 	// dutyId → display pool (rotation: สมาชิกตำแหน่ง · coverage: รายชื่อคนแทน)
 	const empById = new Map(employees.map((e) => [e.id, e]));
+	const poolFor = (duty: Duty): SafeEmployee[] =>
+		duty.kind === "coverage"
+			? (duty.candidateEmpIds || [])
+					.map((id) => empById.get(id))
+					.filter((e): e is Employee => !!e)
+					.map(toSafe)
+			: resolveDutyPool(duty, employees).map(toSafe);
+	const excludedCountFor = (duty: Duty): number =>
+		duty.kind === "coverage" ? 0 : duty.excludedEmpIds?.length || 0;
+
+	// pool ของ "ทุก" duty (roster) — การ์ด + forecast อ่านจากตัวนี้เสมอ เพื่อให้
+	// มี pool แม้วันที่หน้าที่นั้นหยุด (อาทิตย์ที่ skipSundays / ร้านปิด) ที่
+	// assignments ไม่มี entry ให้ · กันขึ้น "0 คน" / "ยังไม่มีคน" ทั้งเดือน
+	const dutyPools: Record<string, DutyPoolInfo> = {};
+	for (const duty of duties) {
+		dutyPools[duty.id] = {
+			pool: poolFor(duty),
+			excludedCount: excludedCountFor(duty),
+		};
+	}
+
 	const items: AssignmentItem[] = assignments.map((a) => {
 		const duty = duties.find((d) => d.id === a.dutyId);
-		let pool: SafeEmployee[] = [];
-		if (duty?.kind === "coverage") {
-			pool = (duty.candidateEmpIds || [])
-				.map((id) => empById.get(id))
-				.filter((e): e is Employee => !!e)
-				.map(toSafe);
-		} else if (duty) {
-			pool = resolveDutyPool(duty, employees).map(toSafe);
-		}
-		const excludedCount =
-			duty?.kind === "coverage" ? 0 : duty?.excludedEmpIds?.length || 0;
+		const pool = duty ? poolFor(duty) : [];
+		const excludedCount = duty ? excludedCountFor(duty) : 0;
 		return {
 			dutyId: a.dutyId,
 			dutyName: a.dutyName,
@@ -316,6 +339,7 @@ async function buildSnapshot(): Promise<Snapshot> {
 		assignments: items,
 		coverageForecast,
 		coverageThisMonth,
+		dutyPools,
 		updatedAt: Date.now(),
 	};
 }

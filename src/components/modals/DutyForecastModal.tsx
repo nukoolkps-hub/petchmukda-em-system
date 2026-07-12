@@ -117,15 +117,29 @@ export default function DutyForecastModal({
   const beYear = new Date().getFullYear() + 543;
 
   // pool ที่ resolve แล้ว + ข้อมูลคน จาก snapshot (self-contained)
+  // แหล่ง pool = dutyPools (roster ของทุก duty) เพื่อให้ forecast มี pool แม้
+  // วันอาทิตย์ที่ weekly+skipSundays ถูกตัดจาก assignments · fallback assignments
+  // สำหรับ snapshot เก่าที่ยังไม่มี dutyPools (backward compat)
   const { poolByDutyId, empById } = useMemo(() => {
     const pools = new Map<string, string[]>();
     const emps = new Map<string, SnapshotPoolMember>();
-    for (const a of dutyAssignmentsToday?.assignments || []) {
-      pools.set(
-        a.dutyId,
-        a.pool.map((m) => m.id),
-      );
-      for (const m of a.pool) emps.set(m.id, m);
+    const dutyPools = dutyAssignmentsToday?.dutyPools;
+    if (dutyPools) {
+      for (const [dutyId, dp] of Object.entries(dutyPools)) {
+        pools.set(
+          dutyId,
+          dp.pool.map((m) => m.id),
+        );
+        for (const m of dp.pool) emps.set(m.id, m);
+      }
+    } else {
+      for (const a of dutyAssignmentsToday?.assignments || []) {
+        pools.set(
+          a.dutyId,
+          a.pool.map((m) => m.id),
+        );
+        for (const m of a.pool) emps.set(m.id, m);
+      }
     }
     return { poolByDutyId: pools, empById: emps };
   }, [dutyAssignmentsToday]);
@@ -240,7 +254,9 @@ export default function DutyForecastModal({
       });
   }, [allItems, coverageForecast, profileId, mineOnly]);
 
-  const hasData = (dutyAssignmentsToday?.assignments?.length || 0) > 0;
+  const hasData =
+    (dutyAssignmentsToday?.assignments?.length || 0) > 0 ||
+    Object.keys(dutyAssignmentsToday?.dutyPools || {}).length > 0;
   const showPerson = !(profileId && mineOnly);
 
   return (
