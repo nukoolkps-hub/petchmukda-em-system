@@ -84,6 +84,14 @@ export interface CoverageThisMonth {
   >;
 }
 
+/** pool (roster) ของทุก duty — การ์ด + forecast อ่านจากตัวนี้เสมอ เพื่อให้มี
+ *  pool แม้วันที่หน้าที่นั้นหยุด (อาทิตย์ที่ skipSundays / ร้านปิด) ที่
+ *  assignments ไม่มี entry ให้ · กันการ์ดขึ้น "0 คน" / forecast "ยังไม่มีคน" */
+export interface DutyPoolInfo {
+  pool: SnapshotPoolMember[];
+  excludedCount: number;
+}
+
 export interface DutyAssignmentsSnapshot {
   date: string;
   assignments: SnapshotAssignment[];
@@ -91,6 +99,8 @@ export interface DutyAssignmentsSnapshot {
   coverageForecast?: CoverageForecastItem[];
   /** เงินค่าแทนสดเดือนปัจจุบัน · อาจไม่มีใน snapshot เก่า */
   coverageThisMonth?: CoverageThisMonth;
+  /** dutyId → pool ของทุก duty · อาจไม่มีใน snapshot เก่า → fallback assignments */
+  dutyPools?: Record<string, DutyPoolInfo>;
   updatedAt: number;
 }
 

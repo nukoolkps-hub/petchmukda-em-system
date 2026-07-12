@@ -14,10 +14,12 @@ import {
   Users as IconUsers,
 } from "lucide-react";
 import type {
+  DutyPoolInfo,
   SnapshotAssignment,
   SnapshotPoolMember,
 } from "../../firebase/dutyAssignments";
 import type { Duty, Role } from "../../types";
+import { isSunday } from "../../utils/dutyUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 
 interface DutyCardProps {
@@ -26,6 +28,11 @@ interface DutyCardProps {
   assignments: SnapshotAssignment[];
   empById: Map<string, SnapshotPoolMember>;
   roles: Role[];
+  /** pool (roster) ของหน้าที่นี้ จาก snapshot.dutyPools — มีเสมอแม้วันที่หน้าที่
+   *  หยุด (อาทิตย์ที่ skipSundays / ร้านปิด) ที่ assignments ไม่มี entry ให้ */
+  dutyPool?: DutyPoolInfo;
+  /** วันของ snapshot (YYYY-MM-DD) — ใช้เช็ค "วันนี้เป็นอาทิตย์ที่ข้าม" ไหม */
+  snapshotDate?: string;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -36,11 +43,15 @@ function TodayRow({
   empById,
   isCoverage,
   coverageRoleName,
+  offTodayLabel,
 }: {
   assignment: SnapshotAssignment | undefined;
   empById: Map<string, SnapshotPoolMember>;
   isCoverage: boolean;
   coverageRoleName: string;
+  /** ข้อความ "วันนี้หยุด" — set เมื่อหน้าที่มี pool แต่วันนี้ไม่ถูก assign
+   *  (อาทิตย์ที่ข้าม / ร้านปิด) · null = แสดง fallback เดิม (empty pool) */
+  offTodayLabel: string | null;
 }) {
   const actual = assignment?.actualEmpId
     ? empById.get(assignment.actualEmpId)
@@ -100,7 +111,9 @@ function TodayRow({
             : `${coverageRoleName}ไม่ลาวันนี้ — ไม่ต้องมีคนแทน`
         : assignment?.reason === "all_on_leave"
           ? "ทุกคนในกลุ่มลาวันนี้"
-          : "ยังไม่ได้ตั้ง pool"}
+          : // ไม่มี assignment วันนี้ แต่มีคนใน pool → หน้าที่หยุดวันนี้
+            // (อาทิตย์ที่ข้าม / ร้านปิด) · ไม่มีคนใน pool จริง → ยังไม่ได้ตั้ง
+            (offTodayLabel ?? "ยังไม่ได้ตั้ง pool")}
     </div>
   );
 }
@@ -110,6 +123,8 @@ export default function DutyCard({
   assignments,
   empById,
   roles,
+  dutyPool,
+  snapshotDate,
   onEdit,
   onDelete,
 }: DutyCardProps) {
@@ -117,10 +132,22 @@ export default function DutyCard({
   const role = roles.find((r) => r.id === duty.roleId);
   const coverageRole = roles.find((r) => r.id === duty.coverageRoleId);
   const coverageRoleName = coverageRole?.name || "เป้าหมาย";
-  // pool + excludedCount + primary highlight อ้างจาก assignment แรกพอ
+  // pool + excludedCount จาก dutyPools (roster · มีเสมอ) · fallback assignment แรก
+  // (snapshot เก่า) · primary highlight อ้างจาก assignment วันนี้
   const head = assignments[0];
-  const resolvedPool = head?.pool || [];
-  const excludedCount = head?.excludedCount || 0;
+  const resolvedPool = dutyPool?.pool ?? head?.pool ?? [];
+  const excludedCount = dutyPool?.excludedCount ?? head?.excludedCount ?? 0;
+  // หน้าที่หยุดวันนี้ = มีคนใน pool แต่ไม่มี assignment วันนี้ (อาทิตย์ที่ข้าม /
+  // ร้านปิด) → บอก "วันนี้หยุด" แทน "ยังไม่ได้ตั้ง pool" ที่ชวนเข้าใจผิด
+  const offTodayLabel =
+    !isCoverage && assignments.length === 0 && resolvedPool.length > 0
+      ? duty.period === "weekly" &&
+        duty.skipSundays &&
+        snapshotDate &&
+        isSunday(snapshotDate)
+        ? "วันนี้หยุด · ข้ามวันอาทิตย์"
+        : "วันนี้หยุด"
+      : null;
 
   return (
     <div className="bg-white rounded-[14px] p-3.5 border border-bdr shadow-[0_2px_10px_rgba(90,30,10,0.05)]">
@@ -181,6 +208,7 @@ export default function DutyCard({
               empById={empById}
               isCoverage={isCoverage}
               coverageRoleName={coverageRoleName}
+              offTodayLabel={offTodayLabel}
             />
           ))}
         </div>
