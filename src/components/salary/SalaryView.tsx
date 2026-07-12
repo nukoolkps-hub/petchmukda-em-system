@@ -915,7 +915,11 @@ export default function SalaryView({
         {(() => {
           const myLoans = (employeeLoans || []).filter(
             (l) =>
-              l.employeeId === salaryEmployeeId && l.status !== "cancelled",
+              l.employeeId === salaryEmployeeId &&
+              l.status !== "cancelled" &&
+              // แสดงเฉพาะเดือนตั้งแต่เริ่มผ่อน (startMonth) เป็นต้นไป —
+              // เดือนก่อนหน้ายังไม่มีเงินกู้ก้อนนี้ (YYYY-MM เทียบ string ได้)
+              l.startMonth <= selectedMonth,
           );
           if (myLoans.length === 0) return null;
           return (
@@ -1586,7 +1590,12 @@ export default function SalaryView({
       {/* เงินกู้ของคุณ (loan) */}
       {(() => {
         const myLoans = (employeeLoans || []).filter(
-          (l) => l.employeeId === salaryEmployeeId && l.status !== "cancelled",
+          (l) =>
+            l.employeeId === salaryEmployeeId &&
+            l.status !== "cancelled" &&
+            // แสดงเฉพาะเดือนตั้งแต่เริ่มผ่อน (startMonth) เป็นต้นไป —
+            // เดือนก่อนหน้ายังไม่มีเงินกู้ก้อนนี้ (YYYY-MM เทียบ string ได้)
+            l.startMonth <= selectedMonth,
         );
         if (myLoans.length === 0) return null;
         return (
