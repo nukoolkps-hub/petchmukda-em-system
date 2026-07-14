@@ -4,9 +4,7 @@
  * Schedule: ทุก 15 นาที (เวลาไทย) — เขียน /config/goldPrice ใน Firestore
  *
  * Source chain (ลองตามลำดับ — ตัวแรกที่สำเร็จชนะ):
- * 1. goldprice.mukdagold.com /api/price2 — JSON · proxy ของสมาคม
- *    (ดึงราคา GTA มาแล้ว — ใช้แทน goldtraders ตรงๆ ที่บล็อก
- *     datacenter IP ผ่าน Cloudflare)
+ * 1. สมาคมค้าทองคำ /api/GoldPrices/Latest — JSON · ราคาล่าสุดโดยตรง
  * 2. ฮั่วเซงเฮง apicheckpricev3 — XML · แถว REF (ราคาสมาคม)
  *    fallback สุดท้าย (HSH ก็มี bot protection — สำเร็จไม่บ่อย)
  *
@@ -24,11 +22,12 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getAppFirestore } from "../helpers/config.js";
 
 const HSH_URL = "https://apicheckpricev3.huasengheng.com/api/values/getprice/";
-const MUKDA_URL = "https://goldprice.mukdagold.com/api/price2";
-const MUKDA_SILVER_URL = "https://goldprice.mukdagold.com/api/silver_price";
+const GOLD_TRADERS_URL =
+	"https://www.goldtraders.or.th/api/GoldPrices/Latest?readjson=false";
+const DODEV_SILVER_URL = "https://price.dodev.me/current_price/silver";
 const SANE_MIN = 10000;
 const SANE_MAX = 200000;
-// sanity ราคาเงิน/กรัม — 10 ≤ x ≤ 200 บาท (ปัจจุบันแถวๆ 20-50 ฿/กรัม)
+// sanity ราคาเงิน/กรัม — 10 ≤ x ≤ 200 บาท
 const SANE_MIN_SILVER = 10;
 const SANE_MAX_SILVER = 200;
 
@@ -49,7 +48,7 @@ interface PriceData {
 	priceChanged: number;
 	sourceDate: string;
 	sourceTime: string;
-	source: string; // "hsh-ref" | "mukda-price2"
+	source: string; // "hsh-ref" | "goldtraders-latest"
 	label: string; // updatedBy ที่โชว์ใน UI
 }
 
@@ -98,7 +97,8 @@ async function fetchFromHsh(): Promise<PriceData> {
 	const res = await fetchWithTimeout(HSH_URL);
 	const xml = await res.text();
 
-	const blocks = xml.match(/<GoldPriceStruct>[\s\S]*?<\/GoldPriceStruct>/g) || [];
+	const blocks =
+		xml.match(/<GoldPriceStruct>[\s\S]*?<\/GoldPriceStruct>/g) || [];
 	const structs = blocks.map((b) => ({
 		goldType: tagValue(b, "GoldType"),
 		buy: parsePrice(tagValue(b, "Buy")),
@@ -129,26 +129,28 @@ async function fetchFromHsh(): Promise<PriceData> {
 	};
 }
 
-/** Source 1 (primary): เว็บราคาทองของร้านเอง — JSON สมาคม */
-async function fetchFromMukda(): Promise<PriceData> {
-	const res = await fetchWithTimeout(MUKDA_URL);
+/** Source 1 (primary): สมาคมค้าทองคำ — JSON ราคาล่าสุด */
+async function fetchFromGoldTraders(): Promise<PriceData> {
+	const res = await fetchWithTimeout(GOLD_TRADERS_URL);
 	const data = (await res.json()) as {
-		buyPrice?: number;
-		sellPrice?: number;
-		priceChanged?: number;
-		date?: string;
-		time?: string;
+		bL_BuyPrice?: number;
+		bL_SellPrice?: number;
+		priceChangeFromPrevRow?: number;
+		asTime?: string;
 	};
-	const sellPrice = Number(data.sellPrice);
-	assertSane(sellPrice, "mukda price2");
+	const sellPrice = Number(data.bL_SellPrice);
+	assertSane(sellPrice, "Gold Traders latest");
+	const [sourceDate = "", sourceTime = ""] = String(data.asTime || "").split(
+		"T",
+	);
 	return {
 		sellPrice,
-		buyPrice: Number(data.buyPrice) || 0,
-		priceChanged: Number(data.priceChanged) || 0,
-		sourceDate: String(data.date || ""),
-		sourceTime: String(data.time || ""),
-		source: "mukda-price2",
-		label: "auto · สมาคมค้าทองคำ (mukdagold)",
+		buyPrice: Number(data.bL_BuyPrice) || 0,
+		priceChanged: Number(data.priceChangeFromPrevRow) || 0,
+		sourceDate,
+		sourceTime,
+		source: "goldtraders-latest",
+		label: "auto · สมาคมค้าทองคำ (Gold Traders Association)",
 	};
 }
 
@@ -160,19 +162,19 @@ interface SilverData {
 	silverTime: string; // ISO
 }
 
-/** ราคาเงินแท่งจาก mukdagold · /api/silver_price */
-async function fetchSilverFromMukda(): Promise<SilverData> {
-	const res = await fetchWithTimeout(MUKDA_SILVER_URL);
+/** ราคาเงินแท่งจาก DoDev · /current_price/silver */
+async function fetchSilverFromDoDev(): Promise<SilverData> {
+	const res = await fetchWithTimeout(DODEV_SILVER_URL);
 	const data = (await res.json()) as {
-		bidGPrice?: number;
-		askGPrice?: number;
-		bidKgPrice?: number;
-		askKgPrice?: number;
+		bid_g_price?: number;
+		ask_g_price?: number;
+		bid_kg_price?: number;
+		ask_kg_price?: number;
 		time?: string;
 	};
-	const silverBuyPerGram = Number(data.bidGPrice);
-	const silverSellPerGram = Number(data.askGPrice);
-	// sanity — ราคาเงิน/กรัม ปกติ 20-50 ฿ · กัน garbage
+	const silverBuyPerGram = Number(data.bid_g_price);
+	const silverSellPerGram = Number(data.ask_g_price);
+	// sanity ราคาเงิน/กรัม — กัน payload ผิดหรือ garbage
 	if (
 		!Number.isFinite(silverBuyPerGram) ||
 		silverBuyPerGram < SANE_MIN_SILVER ||
@@ -190,8 +192,8 @@ async function fetchSilverFromMukda(): Promise<SilverData> {
 	return {
 		silverBuyPerGram,
 		silverSellPerGram,
-		silverBuyPerKg: Number(data.bidKgPrice) || 0,
-		silverSellPerKg: Number(data.askKgPrice) || 0,
+		silverBuyPerKg: Number(data.bid_kg_price) || 0,
+		silverSellPerKg: Number(data.ask_kg_price) || 0,
 		silverTime: String(data.time || ""),
 	};
 }
@@ -199,10 +201,9 @@ async function fetchSilverFromMukda(): Promise<SilverData> {
 /** ลอง source ตามลำดับ — ตัวแรกที่สำเร็จชนะ · fail หมด → โยน error รวม */
 async function fetchFromAnySource(): Promise<PriceData> {
 	const errors: string[] = [];
-	// mukda (proxy ของ GTA) เป็นตัวหลัก · HSH เป็น fallback
-	// (ลอง GTA ตรงแล้วโดน Cloudflare บล็อก datacenter IP ตลอด)
+	// สมาคมค้าทองคำเป็นตัวหลัก · HSH เป็น fallback
 	for (const [name, fn] of [
-		["mukda", fetchFromMukda],
+		["Gold Traders", fetchFromGoldTraders],
 		["HSH", fetchFromHsh],
 	] as const) {
 		try {
@@ -236,7 +237,7 @@ async function fetchAndStore(): Promise<StoreResult> {
 	// ดึงราคาเงินคู่กัน · fail ไม่ blocking ราคาทอง (silent skip)
 	let silver: SilverData | null = null;
 	try {
-		silver = await fetchSilverFromMukda();
+		silver = await fetchSilverFromDoDev();
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err);
 		console.warn(`[fetchGoldPrice] silver fetch failed: ${msg}`);

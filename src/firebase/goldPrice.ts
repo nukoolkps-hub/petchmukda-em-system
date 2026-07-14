@@ -11,9 +11,9 @@ import { db, functions } from "./config";
 export interface GoldPrice {
   pricePerBaht: number;
   buyPrice: number;
-  /** ราคาเงิน/กรัม รับซื้อ (bidGPrice จาก mukdagold) */
+  /** ราคาเงิน/กรัม รับซื้อ (bid_g_price จาก DoDev) */
   silverBuyPerGram: number;
-  /** ราคาเงิน/กรัม ขายออก รวม VAT 7% (askGPrice จาก mukdagold) */
+  /** ราคาเงิน/กรัม ขายออก รวม VAT 7% (ask_g_price จาก DoDev) */
   silverSellPerGram: number;
   updatedAt: number;
   updatedBy: string;
