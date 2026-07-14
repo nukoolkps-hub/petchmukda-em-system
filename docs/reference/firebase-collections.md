@@ -356,23 +356,23 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | pricePerBaht | number | ราคาขายทอง 96.5% ฿/บาท (sellPrice ของสมาคม) |
 | buyPrice | number | ราคารับซื้อทอง 96.5% ฿/บาท |
 | priceChanged | number | เปลี่ยนแปลงจากรอบก่อน (informational) |
-| **silverBuyPerGram** | number | ราคาเงินแท่งรับซื้อ ฿/กรัม (จาก mukdagold `bidGPrice`) |
-| **silverSellPerGram** | number | ราคาเงินแท่งขายออก ฿/กรัม **รวม VAT 7%** (จาก mukdagold `askGPrice`) |
+| **silverBuyPerGram** | number | ราคาเงินแท่งรับซื้อ ฿/กรัม (จาก DoDev `bid_g_price`) |
+| **silverSellPerGram** | number | ราคาเงินแท่งขายออก ฿/กรัม **รวม VAT 7%** (จาก DoDev `ask_g_price`) |
 | **silverBuyPerKg** | number | ราคาเงินแท่งรับซื้อ ฿/กิโล |
 | **silverSellPerKg** | number | ราคาเงินแท่งขายออก ฿/กิโล (รวม VAT) |
-| **silverUpdatedAt** | string | ISO timestamp จาก mukdagold silver API |
+| **silverUpdatedAt** | string | ISO timestamp จาก DoDev silver API |
 | updatedAt | number | ms epoch ที่ doc ถูกเขียน |
-| updatedBy | string | `auto · สมาคมค้าทองคำ (mukdagold)` / `(ฮั่วเซงเฮง)` · admin manual |
-| source | string | `mukda-price2` / `hsh-ref` (debug) |
+| updatedBy | string | `auto · สมาคมค้าทองคำ (Gold Traders Association)` / `(ฮั่วเซงเฮง)` · admin manual |
+| source | string | `goldtraders-latest` / `hsh-ref` (debug) |
 | sourceDate / sourceTime | string | timestamp จาก source (เทียบ dirty-check skip write) |
 | lastFetchError | string | ข้อความ error ครั้งล่าสุด (`""` = ไม่มี) |
 | lastFetchErrorAt | number | ms epoch ของ error |
 
 **Source chain** (Cloud Function ลองตามลำดับ):
-1. **Gold:** mukdagold `/api/price2` → HSH `apicheckpricev3` REF (fallback)
-2. **Silver:** mukdagold `/api/silver_price` (no fallback · fail = silent skip ไม่กระทบ gold)
+1. **Gold:** Gold Traders Association `/api/GoldPrices/Latest` → HSH `apicheckpricev3` REF (fallback)
+2. **Silver:** DoDev `/current_price/silver` (no fallback · fail = silent skip ไม่กระทบ gold)
 
-- ราคา gold เดียวกัน (proxy ของสมาคม) · HSH เป็น fallback
+- ราคาทองดึงจาก API ของสมาคมโดยตรง · HSH เป็น fallback
 - **Sanity check:** gold 10,000–200,000 ฿/บาท · silver 10–200 ฿/กรัม
 - **Skip write ถ้า no-change** ทั้ง gold (`sellPrice + sourceDate + sourceTime`) + silver (`silverBuyPerGram + silverSellPerGram`) เท่าเดิม
 

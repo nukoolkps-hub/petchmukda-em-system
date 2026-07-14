@@ -47,7 +47,7 @@
 ### ราคาทองไม่อัปเดต / กล่องแดงใน admin
 - **เช็ค:** `/config/goldPrice.lastFetchError` + `lastFetchErrorAt` — บอก source ที่ fail
 - **Manual:** กดปุ่ม refresh ใน `GoldPriceHeader` → `triggerFetchGoldPriceNow` (admin)
-- **Source chain:** mukdagold (primary) → HSH (fallback) · ถ้าทั้งคู่ fail = เขียน error
+- **Source chain:** Gold Traders Association (primary) → HSH (fallback) · ถ้าทั้งคู่ fail = เขียน error
   ไม่เขียนราคา · Cloud Function `fetchGoldPriceScheduled` รันทุก 15 นาที
 - **Sanity:** ทอง 10,000–200,000 ฿/บาท · เงิน 10–200 ฿/กรัม (นอกช่วง = reject)
 

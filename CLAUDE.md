@@ -156,7 +156,7 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 ราคาทองคำสมาคม 96.5% ใช้ทั่วระบบความรู้ต่างๆ (live tables + calculator default + live-example) · ดึงอัตโนมัติทุก 15 นาที
 
 - **Cloud Function `fetchGoldPriceScheduled`** (`functions/src/goldPrice/fetchGoldPrice.ts`) — `onSchedule "*/15 * * * *" Asia/Bangkok`
-- **Source chain** (fallback): `mukdagold /api/price2` (primary · JSON proxy ของสมาคม) → HSH `apicheckpricev3` REF (XML)
+- **Source chain** (fallback): Gold Traders Association `/api/GoldPrices/Latest` (primary · JSON จากสมาคมโดยตรง) → HSH `apicheckpricev3` REF (XML)
 - **Skip write ถ้า no-change** — เช็ค `sellPrice + sourceDate + sourceTime` เท่าเดิม → ไม่เขียนซ้ำ (กัน Firestore write churn)
 - **Sanity check:** 10,000 ≤ sellPrice ≤ 200,000 ฿/บาท
 - **Manual trigger:** `fetchGoldPriceNow` callable (admin only) — ปุ่ม refresh ใน `GoldPriceHeader`
@@ -203,7 +203,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `functions/src/maintenance/wipeTestData.ts` / `wipeEmployeeData.ts` | ล้างข้อมูล (start-fresh) ทั้งระบบ / รายคน · admin + confirm `"ล้างข้อมูล"` · `TOP_LEVEL_COLLECTIONS` ต้องครบทุก collection พนักงาน/transactional (รวม `stats` ที่ `onLeaveCreated` เขียน) ไม่งั้นข้อมูลค้างหลัง start fresh (ดู business-rules → "สำรองข้อมูล + ล้างข้อมูล") |
 | `functions/src/backup/backupToGitHub.ts` | สำรอง Firestore → GitHub (scheduled Sun 03:00 + manual) · status ลง `/config/backupStatus` |
 | `src/components/admin/WipeDataPanel.tsx` + `src/firebase/wipeTestData.ts` / `backup.ts` | UI ล้างข้อมูล (2 mode · 2-step confirm) + client wrapper สำรอง/ล้างข้อมูล |
-| `functions/src/goldPrice/fetchGoldPrice.ts` | ดึงราคาทองคำสมาคมทุก 15 นาที (scheduled) + manual trigger (onCall) — source chain: mukdagold → HSH |
+| `functions/src/goldPrice/fetchGoldPrice.ts` | ดึงราคาทองคำสมาคมทุก 15 นาที (scheduled) + manual trigger (onCall) — source chain: Gold Traders Association → HSH |
 | `src/firebase/goldPrice.ts` | `/config/goldPrice` doc — subscribe/update + `triggerFetchGoldPriceNow` callable |
 | `src/firebase/laborCost.ts` / `blockCost.ts` / `loyaltyPoints.ts` | `/config/{laborCost,blockCost,loyaltyPoints}` docs — admin-editable inline ในความรู้ต่างๆ · sync ทุก live table + calc |
 | `src/utils/changePriceUtils.ts` | สูตรค่าเปลี่ยน นน. เท่ากัน + ราคาขาย/รับซื้อ 96.5% · `CHANGE_PRICE_WEIGHTS` + `SHORTCUT_MULTIPLIERS` (shared sell+buy) · `computeBuyPrice96` ใช้ `gold.buyPrice` (fallback sell) · `ceilTo50` |

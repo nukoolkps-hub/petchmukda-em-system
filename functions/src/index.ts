@@ -43,7 +43,7 @@ export {
 	recomputeDutyAssignments,
 	recomputeDutyAssignmentsDaily,
 } from "./duty/recompute.js";
-// Gold price — ดึงจาก goldprice.mukdagold.com/api/price2 (สมาคมค้าทองคำ)
+// Gold price — ดึงจาก Gold Traders Association API (สมาคมค้าทองคำ)
 // scheduled ทุก 15 นาที + manual trigger จากปุ่มใน admin panel
 export {
 	fetchGoldPriceNow,
