@@ -770,6 +770,73 @@ export function computeCoverageEarningsForMonthAll(
   return result;
 }
 
+/** จำนวนครั้งที่แต่ละคนถูกเลือกเป็น "คนแทน" ต่อ coverage duty ในช่วง
+ *  [fromYmd, toYmd] — replay จากต้นปีให้ history ยุติธรรมถูก แต่นับเฉพาะวันใน
+ *  ช่วง · toYmd ปกติ = "วันนี้" → นับเฉพาะที่เกิดขึ้นแล้ว ไม่รวมใบลาล่วงหน้า ·
+ *  นับ **ทุก** coverage duty ไม่ว่ามีเงินค่าแทนหรือไม่ (ต่างจาก
+ *  ...EarningsForMonthAll ที่กรอง pay>0) · Map(dutyId → Map(empId → count))   */
+export function computeCoverageCounts(
+  duties: Duty[],
+  employees: Employee[],
+  allLeaves: LeaveEntry[],
+  fromYmd: string,
+  toYmd: string,
+): Map<string, Map<string, number>> {
+  const coverageDuties = duties.filter((d) => d.kind === "coverage");
+  const result = new Map<string, Map<string, number>>();
+  if (coverageDuties.length === 0 || fromYmd > toYmd) return result;
+  const monthlyDuties = duties.filter(
+    (d) => d.kind !== "coverage" && d.period === "monthly",
+  );
+  // replay ตั้งแต่ต้นปี (ของ fromYmd) เพื่อ seed history ให้ยุติธรรม ·
+  // นับเฉพาะวันใน [fromYmd, toYmd]
+  const yearStart = `${fromYmd.slice(0, 4)}-01-01`;
+  const replayStart = yearStart < fromYmd ? yearStart : fromYmd;
+  const history = new Map<string, number>();
+  const monthlyPrimariesCache = new Map<string, Set<string>>();
+  for (
+    let d = new Date(`${replayStart}T00:00:00`);
+    ;
+    d.setDate(d.getDate() + 1)
+  ) {
+    const ymd = toYMD(d);
+    if (ymd > toYmd) break;
+    const inRange = ymd >= fromYmd;
+    const ym = ymd.slice(0, 7);
+    let monthlyPrimaries = monthlyPrimariesCache.get(ym);
+    if (!monthlyPrimaries) {
+      monthlyPrimaries = monthlyPrimariesForDay(monthlyDuties, ymd, employees);
+      monthlyPrimariesCache.set(ym, monthlyPrimaries);
+    }
+    const usedToday = new Set<string>();
+    for (const duty of coverageDuties) {
+      for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
+        const pick = pickCoverageCandidate(
+          duty,
+          ymd,
+          employees,
+          allLeaves,
+          history,
+          usedToday,
+          monthlyPrimaries,
+        );
+        if (!pick) continue;
+        usedToday.add(pick);
+        history.set(pick, (history.get(pick) || 0) + 1);
+        if (inRange) {
+          let counts = result.get(duty.id);
+          if (!counts) {
+            counts = new Map();
+            result.set(duty.id, counts);
+          }
+          counts.set(pick, (counts.get(pick) || 0) + 1);
+        }
+      }
+    }
+  }
+  return result;
+}
+
 /* ─── Coverage forecast (คนแทนตำแหน่งเป้าหมายล่วงหน้า) ───────────────
    หน้าที่แบบ coverage (แทนคนลา) forecast ด้วย rotation period ไม่ได้ —
    ต้องดูจากใบลาที่ยื่นไว้ว่าคนในตำแหน่งเป้าหมายลาวันไหน แล้ว replay การ
@@ -1251,6 +1318,43 @@ export function computeDutyForecast(
       periods,
     };
   });
+}
+
+/** จำนวนครั้งที่แต่ละคนเป็น "คนหลัก" (primary) ต่อ rotation duty ในช่วง
+ *  [fromYmd, toYmd] — นับทุกรอบที่เริ่มแล้ว (start ≤ toYmd) และ overlap ช่วง
+ *  รวมรอบปัจจุบันด้วย · คำนวณจากสูตร rotation (caveat เดียวกับ computeDutyHistory:
+ *  ไม่ใช่ log จริง · ใช้ pool ปัจจุบัน · ไม่นับผลการลา)
+ *  → Map(dutyId → Map(empId → count))                                      */
+export function computeDutyCounts(
+  duties: Duty[],
+  poolByDutyId: Map<string, string[]>,
+  fromYmd: string,
+  toYmd: string,
+): Map<string, Map<string, number>> {
+  const rotationDuties = duties.filter((d) => d.kind !== "coverage");
+  const cache = new Map<string, Map<string, string | null>>();
+  const primariesAt = (ymd: string) => {
+    let mm = cache.get(ymd);
+    if (!mm) {
+      mm = computeForecastPrimaries(rotationDuties, poolByDutyId, ymd);
+      cache.set(ymd, mm);
+    }
+    return mm;
+  };
+  const result = new Map<string, Map<string, number>>();
+  for (const duty of rotationDuties) {
+    const counts = new Map<string, number>();
+    const currentIdx = Math.max(0, getPeriodIndex(duty, toYmd));
+    for (let idx = 0; idx <= currentIdx; idx++) {
+      const range = getPeriodRangeForIndex(duty, idx);
+      if (range.end < fromYmd) continue;
+      if (range.start > toYmd) break;
+      const primary = primariesAt(range.start).get(duty.id);
+      if (primary) counts.set(primary, (counts.get(primary) || 0) + 1);
+    }
+    result.set(duty.id, counts);
+  }
+  return result;
 }
 
 /** ประวัติการหมุนเวียน "ย้อนหลัง" — คำนวณคนหลัก (primary) ของแต่ละรอบในอดีต

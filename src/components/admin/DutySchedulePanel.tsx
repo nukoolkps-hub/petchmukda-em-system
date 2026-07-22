@@ -169,6 +169,7 @@ export default function DutySchedulePanel({
           allLeaves={allLeaves}
           storeCalendar={storeCalendar}
           profileId={null}
+          employees={employeeDirectory}
           onClose={() => setShowForecast(false)}
         />
       )}

@@ -19,10 +19,12 @@ import type {
   DutyAssignmentsSnapshot,
   SnapshotPoolMember,
 } from "../../firebase/dutyAssignments";
-import type { Duty, LeaveEntry, StoreCalendar } from "../../types";
+import type { Duty, Employee, LeaveEntry, StoreCalendar } from "../../types";
 import { toYMD } from "../../utils/dateUtils";
 import {
   type CoverageSegment,
+  computeCoverageCounts,
+  computeDutyCounts,
   computeDutyForecast,
   computeDutyHistory,
 } from "../../utils/dutyUtils";
@@ -38,6 +40,9 @@ interface Props {
   allLeaves: LeaveEntry[];
   storeCalendar?: StoreCalendar | null;
   profileId: string | null; // null = admin (ดูทุกคน)
+  /** admin: employee directory → ใช้นับ coverage counts (แท็บ "จำนวนครั้ง")
+   *  ไม่ส่ง = ฝั่งพนักงาน → แท็บจำนวนครั้งแสดงเฉพาะหน้าที่หมุนเวียน */
+  employees?: Employee[];
   onClose: () => void;
 }
 
@@ -109,15 +114,17 @@ export default function DutyForecastModal({
   allLeaves,
   storeCalendar,
   profileId,
+  employees,
   onClose,
 }: Props) {
   // พนักงาน default = เฉพาะของฉัน · admin ไม่มี profileId → ดูทั้งหมดเสมอ
   const [mineOnly, setMineOnly] = useState<boolean>(!!profileId);
-  // ล่วงหน้า (default) / ย้อนหลัง — ย้อนหลังคำนวณจากสูตรหมุนเวียน (ดู note)
-  const [view, setView] = useState<"future" | "past">("future");
+  // ล่วงหน้า (default) / ย้อนหลัง / จำนวนครั้ง (สรุปนับทั้งปี · เฉพาะที่ทำแล้ว)
+  const [view, setView] = useState<"future" | "past" | "counts">("future");
   // กรองเฉพาะหน้าที่เดียว ("" = ทุกหน้าที่) — ช่วยดูว่าหน้าที่นั้นคนซ้ำไหม
   const [dutyFilter, setDutyFilter] = useState<string>("");
   const isPast = view === "past";
+  const isCounts = view === "counts";
 
   const todayYmd = toYMD(new Date());
   const endYmd = `${new Date().getFullYear()}-12-31`;
@@ -181,6 +188,72 @@ export default function DutyForecastModal({
   );
 
   const activeForecast = isPast ? history : forecast;
+
+  // สรุป "จำนวนครั้ง" รวมทั้งปี — นับเฉพาะที่ทำไปแล้ว (ตั้งแต่ต้นปี → วันนี้ ·
+  // ไม่รวมล่วงหน้า) · rotation จากสูตร · coverage นับจากใบลาจริง (admin ส่ง
+  // employees → นับ coverage ได้ · ฝั่งพนักงานไม่มี employees → แสดงเฉพาะหมุนเวียน)
+  const yearStartYmd = `${todayYmd.slice(0, 4)}-01-01`;
+  const hasEmployees = !!employees && employees.length > 0;
+  const dutyCounts = useMemo(() => {
+    if (!isCounts) return new Map<string, Map<string, number>>();
+    const merged = computeDutyCounts(
+      duties,
+      poolByDutyId,
+      yearStartYmd,
+      todayYmd,
+    );
+    if (hasEmployees && employees) {
+      for (const [dutyId, m] of computeCoverageCounts(
+        duties,
+        employees,
+        allLeaves,
+        yearStartYmd,
+        todayYmd,
+      )) {
+        merged.set(dutyId, m);
+      }
+    }
+    return merged;
+  }, [
+    isCounts,
+    yearStartYmd,
+    duties,
+    poolByDutyId,
+    todayYmd,
+    hasEmployees,
+    employees,
+    allLeaves,
+  ]);
+
+  // แถวสรุปจำนวน — ต่อหน้าที่ (rotation ก่อน coverage) · เรียงคนตาม count มาก→น้อย
+  // coverage แสดงเฉพาะเมื่อมี employees (คำนวณได้) · ไม่งั้นซ่อน (กันขึ้น 0 ลวง)
+  const countRows = useMemo(() => {
+    if (!isCounts) return [];
+    const ordered = [
+      ...duties.filter((d) => d.kind !== "coverage"),
+      ...(hasEmployees ? duties.filter((d) => d.kind === "coverage") : []),
+    ];
+    return ordered
+      .filter((d) => !dutyFilter || d.id === dutyFilter)
+      .map((d) => {
+        const m = dutyCounts.get(d.id) || new Map<string, number>();
+        const people = [...m.entries()]
+          .sort(
+            (a, b) =>
+              b[1] - a[1] ||
+              (empById.get(a[0])?.nickname || "").localeCompare(
+                empById.get(b[0])?.nickname || "",
+                "th",
+              ),
+          )
+          .map(([empId, count]) => ({
+            empId,
+            count,
+            emp: empById.get(empId),
+          }));
+        return { duty: d, people };
+      });
+  }, [isCounts, duties, dutyFilter, dutyCounts, empById, hasEmployees]);
 
   // flatten ทุก period → item เดียว เรียงตามวันที่ (แล้วชื่อหน้าที่)
   const allItems = useMemo(() => {
@@ -254,6 +327,7 @@ export default function DutyForecastModal({
       else dates.set(dateKey, [it]);
     }
     for (const c of coverageForecast) {
+      if (dutyFilter && c.dutyId !== dutyFilter) continue;
       ensure(c.start.slice(0, 7)).coverage.push(c);
     }
     // รวมการ์ด rotation + การ์ดคนแทนเป็น list เดียวเรียงตามวันเริ่ม —
@@ -296,50 +370,48 @@ export default function DutyForecastModal({
         Icon={IconCalendarRange}
         title="ปฏิทินหน้าที่"
         subtitle={
-          isPast
-            ? "ย้อนหลัง 3 เดือน (คำนวณจากสูตรหมุนเวียน)"
-            : `ตารางหมุนเวียนถึงสิ้นปี พ.ศ. ${beYear}`
+          isCounts
+            ? `จำนวนครั้ง — รวมทั้งปี พ.ศ. ${beYear} (เฉพาะที่ทำไปแล้ว)`
+            : isPast
+              ? "ย้อนหลัง 3 เดือน (คำนวณจากสูตรหมุนเวียน)"
+              : `ตารางหมุนเวียนถึงสิ้นปี พ.ศ. ${beYear}`
         }
         onClose={onClose}
       />
 
       <div className="px-4 py-3.5">
-        {/* toggle ล่วงหน้า / ย้อนหลัง */}
+        {/* toggle ล่วงหน้า / ย้อนหลัง / จำนวนครั้ง */}
         <div className="flex gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => setView("future")}
-            className={`flex-1 py-2 rounded-[9px] text-sm font-semibold cursor-pointer font-[inherit] border-[1.5px] active:scale-[0.98] transition-transform ${
-              !isPast
-                ? "bg-maroon text-white border-maroon"
-                : "bg-white text-txt-mid border-bdr"
-            }`}
-          >
-            ล่วงหน้า
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("past")}
-            className={`flex-1 py-2 rounded-[9px] text-sm font-semibold cursor-pointer font-[inherit] border-[1.5px] active:scale-[0.98] transition-transform ${
-              isPast
-                ? "bg-maroon text-white border-maroon"
-                : "bg-white text-txt-mid border-bdr"
-            }`}
-          >
-            ย้อนหลัง
-          </button>
+          {(
+            [
+              ["future", "ล่วงหน้า"],
+              ["past", "ย้อนหลัง"],
+              ["counts", "จำนวนครั้ง"],
+            ] as const
+          ).map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setView(v)}
+              className={`flex-1 py-2 rounded-[9px] text-sm font-semibold cursor-pointer font-[inherit] border-[1.5px] active:scale-[0.98] transition-transform ${
+                view === v
+                  ? "bg-maroon text-white border-maroon"
+                  : "bg-white text-txt-mid border-bdr"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
-        {/* กรองเฉพาะหน้าที่ — ช่วยดูว่าหน้าที่นั้นคนซ้ำในเดือนไหม */}
+        {/* กรองเฉพาะหน้าที่ — ช่วยดูว่าหน้าที่นั้นคนซ้ำในเดือนไหม (รวม coverage) */}
         <div className="mb-3">
           <ThemedSelect
             value={dutyFilter}
             onChange={setDutyFilter}
             options={[
               { value: "", label: "ทุกหน้าที่" },
-              ...duties
-                .filter((d) => d.kind !== "coverage")
-                .map((d) => ({ value: d.id, label: d.name })),
+              ...duties.map((d) => ({ value: d.id, label: d.name })),
             ]}
           />
         </div>
@@ -387,14 +459,78 @@ export default function DutyForecastModal({
         )}
 
         {/* note (ล่วงหน้า) */}
-        {!isPast && (
+        {view === "future" && (
           <div className="text-xs text-txt-soft mb-3 leading-relaxed">
             ตารางตามรอบหมุนเวียน + คนแทนช่วงที่มีคนลา (เท่าที่ยื่นลาไว้ล่วงหน้า) —
             ใช้สำหรับวางแผนล่วงหน้า
           </div>
         )}
 
-        {!hasData ? (
+        {/* note (จำนวนครั้ง) */}
+        {isCounts && (
+          <div className="text-xs text-txt-mid mb-3 leading-relaxed bg-gold-pale/50 border border-gold/30 rounded-[9px] px-3 py-2">
+            นับ <b>ตั้งแต่ต้นปีถึงวันนี้</b> — เฉพาะที่ทำไปแล้ว (ไม่รวมล่วงหน้า) ·
+            หน้าที่หมุนเวียนนับจากสูตร · แทนคนลานับจากใบลาจริง
+            {!hasEmployees && " · (ฝั่งนี้แสดงเฉพาะหน้าที่หมุนเวียน)"}
+          </div>
+        )}
+
+        {isCounts ? (
+          countRows.every((r) => r.people.length === 0) ? (
+            <div className="text-center text-txt-soft py-10 px-6">
+              ยังไม่มีใครทำหน้าที่ในปีนี้
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {countRows.map(({ duty, people }) => (
+                <div
+                  key={duty.id}
+                  className="rounded-[11px] border border-bdr bg-white overflow-hidden"
+                >
+                  <div className="px-3 py-1.5 bg-gold-pale/60 border-b border-bdr flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-maroon truncate">
+                      {duty.name}
+                    </span>
+                    <span className="text-[11px] text-txt-soft shrink-0">
+                      {duty.kind === "coverage" ? "แทนคนลา" : "หมุนเวียน"}
+                    </span>
+                  </div>
+                  {people.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-txt-soft italic">
+                      ยังไม่มีในปีนี้
+                    </div>
+                  ) : (
+                    <div className="flex flex-col">
+                      {people.map(({ empId, count, emp }) => (
+                        <div
+                          key={empId}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm border-t border-bdr/50 first:border-t-0"
+                        >
+                          {emp && (
+                            <AvatarCircle
+                              avatar={emp.avatar}
+                              avatarType={emp.avatarType}
+                              avatarImageUrl={emp.avatarImageUrl}
+                              size={22}
+                              fontSize={10}
+                              border="none"
+                            />
+                          )}
+                          <span className="flex-1 min-w-0 font-semibold text-txt truncate">
+                            {emp?.nickname || emp?.name || empId}
+                          </span>
+                          <span className="shrink-0 font-bold text-maroon">
+                            {count} ครั้ง
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )
+        ) : !hasData ? (
           <div className="text-center text-txt-soft py-10 px-6">
             ยังไม่มีข้อมูลตาราง — ลองรีเฟรชหลัง ADMIN ตั้งค่าหน้าที่
           </div>
