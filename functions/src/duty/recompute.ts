@@ -185,6 +185,7 @@ async function buildSnapshot(): Promise<Snapshot> {
 		allLeaves,
 		yearStart,
 		ymd, // exclusive → ถึงเมื่อวาน
+		storeCalendar,
 	);
 
 	// fairness history ของ "คนแทน" หน้าที่ประจำเดือน (rotation·monthly) —
@@ -306,6 +307,7 @@ async function buildSnapshot(): Promise<Snapshot> {
 		allLeaves,
 		ymd,
 		yearEnd,
+		storeCalendar,
 	).map((e) => {
 		const target = empById.get(e.targetEmpId);
 		const sub = e.substituteEmpId ? empById.get(e.substituteEmpId) : null;
