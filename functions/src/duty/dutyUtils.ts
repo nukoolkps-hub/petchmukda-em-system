@@ -99,6 +99,7 @@ export function pickPrimary(
 	pool: string[],
 	periodIdx: number,
 	used: Set<string>,
+	groupOffset?: number,
 ): string | null {
 	if (pool.length === 0) return null; // กัน % 0 = NaN
 	const cache = duty.cachedPrimary;
@@ -110,12 +111,13 @@ export function pickPrimary(
 	) {
 		return cache.empId;
 	}
-	// anchor = ตำแหน่งของ "คนเริ่ม" (admin เลือก) ใน pool ปัจจุบัน · ถ้าไม่ได้
-	// เลือก/คนนั้นหลุดจาก pool → fallback hashDutyId (พฤติกรรมเดิม)
+	// anchor: 1) คนเริ่มที่ admin เลือก (rotationStartEmpId) · 2) groupOffset
+	// (0,1,2,... ประจำกลุ่ม pool = Latin square กันซ้ำเร็ว) · 3) hashDutyId เดิม
 	const startIdx = duty.rotationStartEmpId
 		? pool.indexOf(duty.rotationStartEmpId)
 		: -1;
-	const anchor = startIdx >= 0 ? startIdx : hashDutyId(duty.id);
+	const anchor =
+		startIdx >= 0 ? startIdx : (groupOffset ?? hashDutyId(duty.id));
 	const base = (periodIdx + anchor) % pool.length;
 	for (let off = 0; off < pool.length; off++) {
 		const cand = pool[(base + off) % pool.length];
@@ -1000,13 +1002,22 @@ function assignPrimaries(
 	lockPicked: boolean,
 	out: Map<string, string>,
 ): void {
+	// groupSeq: pool signature → offset เรียง 0,1,2,... ให้หน้าที่ weekly pool
+	// เดียวกัน base ไม่ชนกัน (Latin square) · monthly คง hashDutyId เดิม
+	const groupSeq = new Map<string, number>();
 	for (const duty of duties) {
 		const fullPool = poolOf(duty);
 		if (fullPool.length === 0) continue;
 		const remaining = fullPool.filter((id) => !locked.has(id));
 		const pool = remaining.length > 0 ? remaining : fullPool;
+		let groupOffset: number | undefined;
+		if (duty.period === "weekly") {
+			const key = pool.join(",");
+			groupOffset = groupSeq.get(key) ?? 0;
+			groupSeq.set(key, groupOffset + 1);
+		}
 		const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-		const primary = pickPrimary(duty, pool, idx, assigned);
+		const primary = pickPrimary(duty, pool, idx, assigned, groupOffset);
 		if (!primary) continue;
 		assigned.add(primary);
 		if (lockPicked) locked.add(primary);

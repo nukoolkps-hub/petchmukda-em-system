@@ -24,10 +24,12 @@ import { toYMD } from "../../utils/dateUtils";
 import {
   type CoverageSegment,
   computeDutyForecast,
+  computeDutyHistory,
 } from "../../utils/dutyUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import ModalHeader from "../shared/ModalHeader";
+import ThemedSelect from "../shared/ThemedSelect";
 
 interface Props {
   duties: Duty[];
@@ -111,10 +113,22 @@ export default function DutyForecastModal({
 }: Props) {
   // พนักงาน default = เฉพาะของฉัน · admin ไม่มี profileId → ดูทั้งหมดเสมอ
   const [mineOnly, setMineOnly] = useState<boolean>(!!profileId);
+  // ล่วงหน้า (default) / ย้อนหลัง — ย้อนหลังคำนวณจากสูตรหมุนเวียน (ดู note)
+  const [view, setView] = useState<"future" | "past">("future");
+  // กรองเฉพาะหน้าที่เดียว ("" = ทุกหน้าที่) — ช่วยดูว่าหน้าที่นั้นคนซ้ำไหม
+  const [dutyFilter, setDutyFilter] = useState<string>("");
+  const isPast = view === "past";
 
   const todayYmd = toYMD(new Date());
   const endYmd = `${new Date().getFullYear()}-12-31`;
   const beYear = new Date().getFullYear() + 543;
+  // ย้อนหลัง 3 เดือน (ตั้งแต่วันที่ 1 ของเดือน 3 เดือนก่อน)
+  const historyFromYmd = useMemo(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 3);
+    return toYMD(d);
+  }, []);
 
   // pool ที่ resolve แล้ว + ข้อมูลคน จาก snapshot (self-contained)
   // แหล่ง pool = dutyPools (roster ของทุก duty) เพื่อให้ forecast มี pool แม้
@@ -157,10 +171,21 @@ export default function DutyForecastModal({
     [duties, poolByDutyId, todayYmd, endYmd, allLeaves, storeCalendar],
   );
 
+  // ประวัติย้อนหลัง — คำนวณเฉพาะตอนเปิด view "ย้อนหลัง"
+  const history = useMemo(
+    () =>
+      isPast
+        ? computeDutyHistory(duties, poolByDutyId, historyFromYmd, todayYmd)
+        : [],
+    [isPast, duties, poolByDutyId, historyFromYmd, todayYmd],
+  );
+
+  const activeForecast = isPast ? history : forecast;
+
   // flatten ทุก period → item เดียว เรียงตามวันที่ (แล้วชื่อหน้าที่)
   const allItems = useMemo(() => {
     const items: ForecastItem[] = [];
-    for (const f of forecast) {
+    for (const f of activeForecast) {
       for (const p of f.periods) {
         items.push({
           start: p.start,
@@ -179,31 +204,35 @@ export default function DutyForecastModal({
         a.dutyName.localeCompare(b.dutyName, "th"),
     );
     return items;
-  }, [forecast]);
+  }, [activeForecast]);
 
   // coverage duty (แทนคนลา) ล่วงหน้า — server-computed ใน snapshot · เฉพาะ
-  // ของฉัน = ฉันเป็นคนแทน หรือฉันคือคนที่ลา (จะได้รู้ว่าใครมาแทนเรา)
+  // ของฉัน = ฉันเป็นคนแทน หรือฉันคือคนที่ลา · ย้อนหลังไม่มี coverage (แสดงคนหลัก)
   const coverageForecast = useMemo<CoverageForecastItem[]>(() => {
+    if (isPast) return [];
     const all = dutyAssignmentsToday?.coverageForecast || [];
     if (!(profileId && mineOnly)) return all;
     return all.filter(
       (c) => c.substituteEmpId === profileId || c.targetEmpId === profileId,
     );
-  }, [dutyAssignmentsToday, profileId, mineOnly]);
+  }, [isPast, dutyAssignmentsToday, profileId, mineOnly]);
 
   // group 2 ชั้น: เดือน → วัน (card ต่อช่วงวัน · ในการ์ดมีหลายหน้าที่) +
   // coverage entries ของเดือนนั้น (แยกการ์ด amber)
   const months = useMemo(() => {
     // เฉพาะของฉัน = เป็น primary หรือเป็น "คนแทน" ในช่วงไหนของ period นี้
     // (พนักงานจะได้เห็นว่าต้องไปแทนใครวันไหนด้วย ไม่ใช่แค่เวรตัวเอง)
-    const filtered =
-      profileId && mineOnly
-        ? allItems.filter(
-            (it) =>
-              it.primaryEmpId === profileId ||
-              it.coverage?.some((s) => s.substituteEmpId === profileId),
-          )
-        : allItems;
+    // + กรองเฉพาะหน้าที่ที่เลือก (dutyFilter) ถ้าตั้งไว้
+    const filtered = allItems.filter((it) => {
+      if (dutyFilter && it.dutyId !== dutyFilter) return false;
+      if (profileId && mineOnly) {
+        return (
+          it.primaryEmpId === profileId ||
+          it.coverage?.some((s) => s.substituteEmpId === profileId)
+        );
+      }
+      return true;
+    });
     // ym → { dates: dateKey → items[], coverage: [] }
     const byMonth = new Map<
       string,
@@ -229,8 +258,10 @@ export default function DutyForecastModal({
     }
     // รวมการ์ด rotation + การ์ดคนแทนเป็น list เดียวเรียงตามวันเริ่ม —
     // วันเริ่มตรงกันให้ rotation มาก่อน (การ์ดคนแทนอยู่ใต้สัปดาห์ที่ครอบวันลา)
+    // ย้อนหลัง: เรียงเดือน + ช่วงวัน จากใหม่→เก่า (ล่าสุดอยู่บนสุด)
+    const dir = isPast ? -1 : 1;
     return [...byMonth.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
+      .sort((a, b) => dir * a[0].localeCompare(b[0]))
       .map(([ym, e]) => {
         const entries: MonthEntry[] = [
           ...[...e.dates.values()].map(
@@ -247,12 +278,12 @@ export default function DutyForecastModal({
           ),
         ].sort(
           (a, b) =>
-            a.start.localeCompare(b.start) ||
+            dir * a.start.localeCompare(b.start) ||
             (a.type === b.type ? 0 : a.type === "dates" ? -1 : 1),
         );
         return { ym, label: monthLabel(ym), entries };
       });
-  }, [allItems, coverageForecast, profileId, mineOnly]);
+  }, [allItems, coverageForecast, profileId, mineOnly, dutyFilter, isPast]);
 
   const hasData =
     (dutyAssignmentsToday?.assignments?.length || 0) > 0 ||
@@ -263,12 +294,70 @@ export default function DutyForecastModal({
     <BaseModal onClose={onClose} maxWidthClass="max-w-[560px]">
       <ModalHeader
         Icon={IconCalendarRange}
-        title="ปฏิทินหน้าที่ล่วงหน้า"
-        subtitle={`ตารางหมุนเวียนถึงสิ้นปี พ.ศ. ${beYear}`}
+        title="ปฏิทินหน้าที่"
+        subtitle={
+          isPast
+            ? "ย้อนหลัง 3 เดือน (คำนวณจากสูตรหมุนเวียน)"
+            : `ตารางหมุนเวียนถึงสิ้นปี พ.ศ. ${beYear}`
+        }
         onClose={onClose}
       />
 
       <div className="px-4 py-3.5">
+        {/* toggle ล่วงหน้า / ย้อนหลัง */}
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setView("future")}
+            className={`flex-1 py-2 rounded-[9px] text-sm font-semibold cursor-pointer font-[inherit] border-[1.5px] active:scale-[0.98] transition-transform ${
+              !isPast
+                ? "bg-maroon text-white border-maroon"
+                : "bg-white text-txt-mid border-bdr"
+            }`}
+          >
+            ล่วงหน้า
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("past")}
+            className={`flex-1 py-2 rounded-[9px] text-sm font-semibold cursor-pointer font-[inherit] border-[1.5px] active:scale-[0.98] transition-transform ${
+              isPast
+                ? "bg-maroon text-white border-maroon"
+                : "bg-white text-txt-mid border-bdr"
+            }`}
+          >
+            ย้อนหลัง
+          </button>
+        </div>
+
+        {/* กรองเฉพาะหน้าที่ — ช่วยดูว่าหน้าที่นั้นคนซ้ำในเดือนไหม */}
+        <div className="mb-3">
+          <ThemedSelect
+            value={dutyFilter}
+            onChange={setDutyFilter}
+            options={[
+              { value: "", label: "ทุกหน้าที่" },
+              ...duties
+                .filter((d) => d.kind !== "coverage")
+                .map((d) => ({ value: d.id, label: d.name })),
+            ]}
+          />
+        </div>
+
+        {/* note ย้อนหลัง — ไม่ใช่ log จริง */}
+        {isPast && (
+          <div className="text-xs text-txt-mid mb-3 leading-relaxed bg-gold-pale/50 border border-gold/30 rounded-[9px] px-3 py-2">
+            <IconCalendarX
+              size={12}
+              strokeWidth={2.4}
+              className="inline mr-1 -mt-0.5 text-maroon"
+            />
+            ย้อนหลังคำนวณจากสูตรหมุนเวียนด้วยรายชื่อปัจจุบัน (ระบบไม่ได้เก็บ log เวรรายวัน) —
+            ตรงกับที่เกิดจริงเฉพาะช่วงที่คนในตำแหน่งไม่เปลี่ยน · แสดง "คนหลัก" ตามรอบ
+            ไม่รวมผลการลา/คนแทน
+          </div>
+        )}
+
         {/* toggle เฉพาะของฉัน — เฉพาะฝั่งพนักงาน */}
         {profileId && (
           <div className="flex gap-2 mb-3">
@@ -297,11 +386,13 @@ export default function DutyForecastModal({
           </div>
         )}
 
-        {/* note */}
-        <div className="text-xs text-txt-soft mb-3 leading-relaxed">
-          ตารางตามรอบหมุนเวียน + คนแทนช่วงที่มีคนลา (เท่าที่ยื่นลาไว้ล่วงหน้า) —
-          ใช้สำหรับวางแผนล่วงหน้า
-        </div>
+        {/* note (ล่วงหน้า) */}
+        {!isPast && (
+          <div className="text-xs text-txt-soft mb-3 leading-relaxed">
+            ตารางตามรอบหมุนเวียน + คนแทนช่วงที่มีคนลา (เท่าที่ยื่นลาไว้ล่วงหน้า) —
+            ใช้สำหรับวางแผนล่วงหน้า
+          </div>
+        )}
 
         {!hasData ? (
           <div className="text-center text-txt-soft py-10 px-6">
@@ -312,7 +403,11 @@ export default function DutyForecastModal({
             <div className="flex justify-center mb-3 text-gold">
               <IconUserCheck size={40} strokeWidth={1.8} />
             </div>
-            คุณยังไม่มีหน้าที่ในช่วงที่เหลือของปีนี้
+            {isPast
+              ? "ไม่มีประวัติในช่วง 3 เดือนที่ผ่านมา"
+              : profileId && mineOnly
+                ? "คุณยังไม่มีหน้าที่ในช่วงที่เหลือของปีนี้"
+                : "ยังไม่มีหน้าที่ในช่วงที่เหลือของปีนี้"}
           </div>
         ) : (
           /* ─── view: เดือน → การ์ดต่อวัน → หน้าที่ + ชื่อ ─── */
