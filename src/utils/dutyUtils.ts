@@ -1234,3 +1234,54 @@ export function computeDutyForecast(
     };
   });
 }
+
+/** ประวัติการหมุนเวียน "ย้อนหลัง" — คำนวณคนหลัก (primary) ของแต่ละรอบในอดีต
+ *  ตั้งแต่ fromYmd จนถึงก่อน todayYmd · period เรียงจากเก่า→ใหม่ในแต่ละ duty
+ *  (modal จัดกลุ่มเป็นเดือนแล้ว sort เอง)
+ *
+ *  ใช้สูตร rotation ตัวเดียวกับ forecast (de-collide ข้ามหน้าที่ที่ pool ซ้ำ) แต่
+ *  คำนวณที่ "วันเริ่มของรอบนั้นจริง" (ไม่ clamp เป็นวันนี้แบบ forecast) → ได้คน
+ *  ที่สูตรกำหนดให้รอบอดีตนั้นๆ · cachedPrimary ไม่กระทบ (match เฉพาะรอบปัจจุบัน)
+ *
+ *  ⚠️ ไม่ใช่ log จริง — ระบบไม่ได้เก็บประวัติเวรรายวัน · เป็นการคำนวณย้อนด้วย
+ *  pool ปัจจุบัน จึงตรงกับที่เกิดจริงเฉพาะช่วงที่ pool (คนในตำแหน่ง) ไม่เปลี่ยน
+ *  และไม่นับผลของการลา/คนแทนในอดีต (แสดงคนหลักตามรอบเท่านั้น)                */
+export function computeDutyHistory(
+  duties: Duty[],
+  poolByDutyId: Map<string, string[]>,
+  fromYmd: string,
+  todayYmd: string,
+): DutyForecast[] {
+  const rotationDuties = duties.filter((d) => d.kind !== "coverage");
+  const cache = new Map<string, Map<string, string | null>>();
+  const primariesAt = (ymd: string) => {
+    let m = cache.get(ymd);
+    if (!m) {
+      m = computeForecastPrimaries(rotationDuties, poolByDutyId, ymd);
+      cache.set(ymd, m);
+    }
+    return m;
+  };
+  return rotationDuties.map((duty) => {
+    const periods: ForecastPeriod[] = [];
+    const currentIdx = Math.max(0, getPeriodIndex(duty, todayYmd));
+    // เดินถอยหลังจากรอบก่อนปัจจุบัน จน period.end < fromYmd หรือหมด index
+    // (cap 60 รอบ กัน loop ยาวเกิน)
+    for (let idx = currentIdx - 1; idx >= 0 && periods.length < 60; idx--) {
+      const range = getPeriodRangeForIndex(duty, idx);
+      if (range.end < fromYmd) break;
+      periods.push({
+        index: idx,
+        start: range.start,
+        end: range.end,
+        primaryEmpId: primariesAt(range.start).get(duty.id) ?? null,
+      });
+    }
+    return {
+      dutyId: duty.id,
+      dutyName: duty.name,
+      period: duty.period,
+      periods,
+    };
+  });
+}

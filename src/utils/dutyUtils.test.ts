@@ -8,6 +8,7 @@ import {
   computeCoverageForecast,
   computeDutyForDay,
   computeDutyForecast,
+  computeDutyHistory,
   computeForecastPrimaries,
   employeeHasPoolExemptDuty,
   getPeriodIndex,
@@ -1038,6 +1039,59 @@ describe("computeDutyForecast", () => {
       "2026-06-21",
     );
     expect(res).toEqual([]);
+  });
+});
+
+describe("computeDutyHistory", () => {
+  const SIX = ["a", "b", "c", "d", "e", "f"];
+
+  it("returns only past periods within the from–today window", () => {
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-01-05",
+    });
+    const [h] = computeDutyHistory(
+      [w],
+      new Map([["w", SIX]]),
+      "2026-05-01",
+      "2026-07-13",
+    );
+    expect(h.periods.length).toBeGreaterThan(0);
+    // ทุกช่วงเป็นอดีต (เริ่มก่อนวันนี้) + ไม่หลุดก่อน from
+    expect(h.periods.every((p) => p.start < "2026-07-13")).toBe(true);
+    expect(h.periods.every((p) => p.end >= "2026-05-01")).toBe(true);
+  });
+
+  it("single weekly duty + 6 people → ไม่ซ้ำใน 6 รอบต่อเนื่อง (fairness)", () => {
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-01-05",
+    });
+    const [h] = computeDutyHistory(
+      [w],
+      new Map([["w", SIX]]),
+      "2026-01-05",
+      "2026-07-13",
+    );
+    const byIdx = [...h.periods].sort((a, b) => a.index - b.index);
+    for (let i = 0; i + 6 <= byIdx.length; i++) {
+      const names = byIdx.slice(i, i + 6).map((p) => p.primaryEmpId);
+      expect(new Set(names).size).toBe(6); // ครบ 6 คนไม่ซ้ำ
+    }
+  });
+
+  it("excludes coverage duties", () => {
+    const cov = duty({ id: "cov", kind: "coverage", period: "weekly" });
+    expect(
+      computeDutyHistory(
+        [cov],
+        new Map([["cov", ["a"]]]),
+        "2026-05-01",
+        "2026-07-13",
+      ),
+    ).toEqual([]);
   });
 });
 
