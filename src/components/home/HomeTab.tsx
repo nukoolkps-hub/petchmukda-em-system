@@ -389,7 +389,7 @@ function DutyTodayCard({
             className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[9px] border border-bdr bg-cream text-maroon text-xs font-bold cursor-pointer font-[inherit] active:scale-[0.96] transition-transform"
           >
             <IconCalendarRange size={13} strokeWidth={2.4} />
-            ดูล่วงหน้า
+            ปฏิทินหน้าที่
           </button>
         </div>
 
