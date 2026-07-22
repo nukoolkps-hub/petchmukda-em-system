@@ -1188,6 +1188,35 @@ describe("computeDutyDayActivity", () => {
     expect(subDays).toBe(2);
     expect(act.substitute.has("a")).toBe(false);
   });
+
+  it("ไม่นับวันก่อน rotationStartDate — หน้าที่ยังไม่เริ่มหมุน (กันคนหลักบวม)", () => {
+    // duty เริ่มหมุน 2026-08-03 แต่ replay ตั้งแต่ 2026-06-01 → วันก่อนเริ่ม
+    // (มิ.ย.-ก.ค.) periodIndex ติดลบถูก clamp เป็น 0 ทุกวัน · ถ้าไม่ gate คนหลัก
+    // รอบ 0 (a) จะถูกนับเป็นคนหลักทุกวันย้อนหลัง (บวมเกินจริง)
+    const emps = [emp("a"), emp("b"), emp("c")];
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      emps,
+      [],
+      null,
+      "2026-06-01", // ก่อน rotationStartDate 2 เดือน
+      "2026-08-07", // จ-ศ สัปดาห์แรกที่เริ่มหมุน
+    ).get("w");
+    if (!act) throw new Error("no activity");
+    // นับเฉพาะสัปดาห์แรกจริง (03-07 = 5 วันทำการ) → a เป็นคนหลักรอบ 0 = 5 วัน
+    // (ไม่ใช่ ~50 วันจากการนับ มิ.ย.-ก.ค. ที่หน้าที่ยังไม่เริ่ม)
+    expect(act.primaryDays.get("a")).toBe(5);
+    const totalPrimaryDays = [...act.primaryDays.values()].reduce(
+      (s, n) => s + n,
+      0,
+    );
+    expect(totalPrimaryDays).toBe(5);
+  });
 });
 
 describe("computeDutyHistory", () => {
