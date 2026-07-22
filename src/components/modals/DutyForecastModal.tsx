@@ -242,6 +242,7 @@ export default function DutyForecastModal({
       isCounts && hasEmployees && employees
         ? computeDutyDayActivity(
             duties,
+            poolByDutyId,
             employees,
             allLeaves,
             storeCalendar,
@@ -254,6 +255,7 @@ export default function DutyForecastModal({
       hasEmployees,
       employees,
       duties,
+      poolByDutyId,
       allLeaves,
       storeCalendar,
       yearStartYmd,

@@ -816,6 +816,10 @@ export interface DutyDayActivity {
  *  เล็กน้อย (overview) — แต่ target/จำนวนวันของคนหลักตรงกับย้อนหลัง               */
 export function computeDutyDayActivity(
   duties: Duty[],
+  // pool (dutyId → ordered empIds) — ต้องเป็น "แหล่งเดียวกับ" computeDutyCounts/
+  // computeDutyHistory (snapshot dutyPools) เพื่อให้คนหลัก weekly-วัน / monthly-
+  // เดือน / ย้อนหลัง ใช้ pool เดียวกันเป๊ะ (กัน divergence แบบ per-day flicker)
+  poolByDutyId: Map<string, string[]>,
   employees: Employee[],
   allLeaves: LeaveEntry[],
   calendar: StoreCalendarLite | null | undefined,
@@ -849,12 +853,9 @@ export function computeDutyDayActivity(
   };
 
   // ── rotation: คนหลัก + คนแทน คิดแบบรอบ (ตรงกับย้อนหลัง) ──────────────
-  // pool จาก employees ปัจจุบัน (เหมือน snapshot dutyPools ที่ย้อนหลังใช้) ·
+  // ใช้ poolByDutyId ที่ส่งเข้ามา (แหล่งเดียวกับ counts/history) ·
   // คนหลักของรอบ = computeForecastPrimaries ณ ต้นรอบ (memoize ตามวัน)
   if (rotationDuties.length > 0) {
-    const poolByDutyId = new Map<string, string[]>(
-      rotationDuties.map((d) => [d.id, activePool(d, employees)]),
-    );
     const primCache = new Map<string, Map<string, string | null>>();
     const primariesAt = (ymd: string) => {
       let m = primCache.get(ymd);

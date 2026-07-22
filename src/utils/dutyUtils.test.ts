@@ -60,6 +60,14 @@ function leave(employeeId: string, start: string, end = start): LeaveEntry {
   } as LeaveEntry;
 }
 
+/** pool (dutyId → empIds) จาก resolveDutyPool — แหล่งเดียวกับ snapshot dutyPools
+ *  ที่หน้าจอส่งเข้า computeDutyDayActivity/Counts/History */
+function poolMap(duties: Duty[], emps: Employee[]): Map<string, string[]> {
+  return new Map(
+    duties.map((d) => [d.id, resolveDutyPool(d, emps).map((e) => e.id)]),
+  );
+}
+
 // ─── hashDutyId ────────────────────────────────────────────────────
 describe("hashDutyId", () => {
   it("is deterministic and unsigned 32-bit", () => {
@@ -1214,6 +1222,7 @@ describe("computeDutyDayActivity", () => {
     const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-11")];
     const sub = computeDutyDayActivity(
       [cov()],
+      poolMap([cov()], employees),
       employees,
       leaves,
       null,
@@ -1232,6 +1241,7 @@ describe("computeDutyDayActivity", () => {
     expect(
       computeDutyDayActivity(
         [one],
+        poolMap([one], employees),
         employees,
         leaves,
         null,
@@ -1247,6 +1257,7 @@ describe("computeDutyDayActivity", () => {
     const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-25")];
     const sub = computeDutyDayActivity(
       [cov()],
+      poolMap([cov()], employees),
       employees,
       leaves,
       null,
@@ -1269,6 +1280,7 @@ describe("computeDutyDayActivity", () => {
     // a เป็นคนหลัก · ลา 03,04 → อยู่ทำจริง 3 วัน (05,06,07) · คนแทน 2 วัน
     const act = computeDutyDayActivity(
       [w],
+      poolMap([w], emps),
       emps,
       [leave("a", "2026-08-03", "2026-08-04")],
       null,
@@ -1300,6 +1312,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
+      poolMap([w], emps),
       emps,
       [leave("a", "2026-08-05")],
       null,
@@ -1323,6 +1336,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
+      poolMap([w], emps),
       emps,
       [],
       null,
@@ -1352,6 +1366,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
+      poolMap([w], emps),
       emps,
       [leave("a", "2026-08-05")],
       null,
@@ -1381,6 +1396,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
+      poolMap([w], emps),
       emps,
       [],
       null,
@@ -1400,6 +1416,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
+      poolMap([w], emps),
       emps,
       [],
       { extraOpenSaturdays: ["2026-08-08"], extraClosedWeekdays: [] },
@@ -1415,6 +1432,7 @@ describe("computeDutyDayActivity", () => {
     const leaves = [leave("t1", "2026-08-06", "2026-08-08")];
     const sub = computeDutyDayActivity(
       [cov()],
+      poolMap([cov()], employees),
       employees,
       leaves,
       null,
@@ -1448,6 +1466,7 @@ describe("computeDutyDayActivity", () => {
     // สัปดาห์ 29 ม.ค. – 4 ก.พ. 2026 คร่อมเดือน (period index 4 ของ w)
     const act = computeDutyDayActivity(
       [m, w],
+      poolMap([m, w], emps),
       emps,
       [],
       null,
