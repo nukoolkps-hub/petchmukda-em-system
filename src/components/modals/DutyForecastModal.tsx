@@ -236,22 +236,24 @@ export default function DutyForecastModal({
         : new Map<string, Map<string, number>>(),
     [isCounts, duties, poolByDutyId, yearStartYmd, todayYmd],
   );
-  // กิจกรรมรายวัน — คนหลัก weekly (วัน) + คนแทน (แทนใคร·วัน) · ต้องมี employees
+  // กิจกรรมรายวัน — คนหลัก weekly (วัน) + คนแทน rotation จาก pool (snapshot ·
+  // ได้ทั้ง admin/พนักงาน) · coverage duty (แทนคนลา) ต้องมี employees (admin)
   const dayActivity = useMemo(
     () =>
-      isCounts && hasEmployees && employees
+      isCounts
         ? computeDutyDayActivity(
             duties,
-            employees,
+            poolByDutyId,
             allLeaves,
             storeCalendar,
             yearStartYmd,
             todayYmd,
+            employees,
           )
         : new Map<string, DutyDayActivity>(),
     [
       isCounts,
-      hasEmployees,
+      poolByDutyId,
       employees,
       duties,
       allLeaves,
@@ -280,7 +282,7 @@ export default function DutyForecastModal({
       ...duties.filter((d) => d.kind !== "coverage"),
       ...(hasEmployees ? duties.filter((d) => d.kind === "coverage") : []),
     ];
-    return ordered
+    const rows = ordered
       .filter((d) => !dutyFilter || d.id === dutyFilter)
       .map((d) => {
         const act = dayActivity.get(d.id);
@@ -322,6 +324,18 @@ export default function DutyForecastModal({
           );
         return { duty: d, primaries, subs };
       });
+    // "เฉพาะของคุณ" (ฝั่งพนักงาน) — เหลือเฉพาะแถวที่ profileId เกี่ยวข้อง
+    // (เป็นคนหลัก หรือเป็นคนแทน) แล้วตัด duty ที่ไม่เหลือแถว
+    if (profileId && mineOnly) {
+      return rows
+        .map((r) => ({
+          duty: r.duty,
+          primaries: r.primaries.filter((p) => p.empId === profileId),
+          subs: r.subs.filter((s) => s.empId === profileId),
+        }))
+        .filter((r) => r.primaries.length > 0 || r.subs.length > 0);
+    }
+    return rows;
   }, [
     isCounts,
     duties,
@@ -331,6 +345,8 @@ export default function DutyForecastModal({
     empById,
     employees,
     hasEmployees,
+    profileId,
+    mineOnly,
   ]);
 
   // flatten ทุก period → item เดียว เรียงตามวันที่ (แล้วชื่อหน้าที่)
@@ -547,19 +563,32 @@ export default function DutyForecastModal({
         {/* note (จำนวนครั้ง) */}
         {isCounts && (
           <div className="text-xs text-txt-mid mb-3 leading-relaxed bg-gold-pale/50 border border-gold/30 rounded-[9px] px-3 py-2">
+            <IconCalendarX
+              size={12}
+              strokeWidth={2.4}
+              className="inline mr-1 -mt-0.5 text-maroon"
+            />
             นับ <b>ตั้งแต่ต้นปีถึงวันนี้</b> — เฉพาะที่ทำไปแล้ว (ไม่รวมล่วงหน้า) · <b>คนหลัก</b>{" "}
-            รายสัปดาห์นับเป็น <b>วัน</b> ที่อยู่ทำจริง (ไม่นับวันลา) · รายเดือนนับเป็นเดือน ·{" "}
-            <b>คนแทน</b> = แทนใคร กี่วัน (ตอนคนนั้นลา)
-            {!hasEmployees && " · (ฝั่งนี้ยังไม่แสดงคนแทน)"}
+            รายสัปดาห์นับเป็น <b>วัน</b> ที่อยู่ทำจริง (ไม่นับวันลา) · รายเดือนนับเป็น{" "}
+            <b>เดือน</b> (รวมเดือนนี้ที่กำลังทำ) · <b>คนแทน</b> = แทนใคร กี่วัน
+            (ตอนคนนั้นลา)
+            {!hasEmployees && " · ฝั่งนี้แสดงเฉพาะหน้าที่หมุนเวียน"}
+            <span className="block mt-1 text-txt-soft">
+              คำนวณจากสูตรหมุนเวียนด้วยรายชื่อปัจจุบัน (ไม่ใช่บันทึกเวรจริง) —
+              ตรงกับที่เกิดขึ้นจริงเฉพาะช่วงที่คนในตำแหน่งไม่เปลี่ยน
+            </span>
           </div>
         )}
 
         {isCounts ? (
+          countRows.length === 0 ||
           countRows.every(
             (r) => r.primaries.length === 0 && r.subs.length === 0,
           ) ? (
             <div className="text-center text-txt-soft py-10 px-6">
-              ยังไม่มีใครทำหน้าที่ในปีนี้
+              {profileId && mineOnly
+                ? "คุณยังไม่ได้ทำหน้าที่ในปีนี้"
+                : "ยังไม่มีใครทำหน้าที่ในปีนี้"}
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">

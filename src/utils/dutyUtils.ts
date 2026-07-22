@@ -810,23 +810,30 @@ export interface DutyDayActivity {
  *    รอบด้วย computeForecastPrimaries → เลขคนหลักตรงกับย้อนหลังเป๊ะ · ไม่ flicker
  *    กลางสัปดาห์ตอนข้ามเดือน (de-collision รายวันของ computeAllDutiesForDay
  *    เคยทำให้คนหลัก weekly สลับกลางสัปดาห์ → โผล่คนที่ย้อนหลังไม่มี)
- *  - คนหลักอยู่ทำ (ไม่ลา + ร้านเปิด) = +1 วัน · คนหลักลา → คนแทน (target = คนหลัก)
- *  - coverage: replay รายวันจากใบลาจริง (เลือกคนแทนยุติธรรม)
+ *  - คนหลักอยู่ทำ (ไม่ลา + ร้านเปิด) = +1 วัน · คนหลักลา → คนแทน (target = คนหลัก) ·
+ *    monthly เลือกคนแทนแบบยุติธรรม "เคยแทนน้อยสุดก่อน" (pickRotationSubstitute)
+ *    ให้ตรงกับ assignment จริง/แท็บล่วงหน้า · weekly = neighbor-scan เดิม
+ *  - coverage: replay รายวันจากใบลาจริง (เลือกคนแทนยุติธรรม) · ต้องมี employees
+ *  รับ pool ที่ resolve แล้ว (poolByDutyId) — ทั้ง admin/พนักงานคำนวณ rotation ได้
+ *  เองจาก snapshot dutyPools โดยไม่ต้องอ่าน employees ของคนอื่น
  *  ⚠️ คำนวณจากสูตร + ใบลาจริง (ไม่ใช่ log จริง) · ตัวคนแทน rotation อาจคลาด
  *  เล็กน้อย (overview) — แต่ target/จำนวนวันของคนหลักตรงกับย้อนหลัง               */
 export function computeDutyDayActivity(
   duties: Duty[],
-  employees: Employee[],
+  poolByDutyId: Map<string, string[]>,
   allLeaves: LeaveEntry[],
   calendar: StoreCalendarLite | null | undefined,
   fromYmd: string,
   toYmd: string,
+  // employees ต้องมีเฉพาะตอนนับ coverage duty (แทนคนลาตำแหน่งเป้าหมาย) —
+  // ฝั่งพนักงานไม่มี employees แต่มี poolByDutyId (snapshot) → rotation ยังนับได้
+  employees?: Employee[],
 ): Map<string, DutyDayActivity> {
   const result = new Map<string, DutyDayActivity>();
   if (fromYmd > toYmd) return result;
   const rotationDuties = duties.filter((d) => d.kind !== "coverage");
   const coverageDuties = duties.filter((d) => d.kind === "coverage");
-  const monthlyDuties = rotationDuties.filter((d) => d.period === "monthly");
+  const yearStart = `${fromYmd.slice(0, 4)}-01-01`;
   const ensure = (dutyId: string): DutyDayActivity => {
     let a = result.get(dutyId);
     if (!a) {
@@ -849,12 +856,9 @@ export function computeDutyDayActivity(
   };
 
   // ── rotation: คนหลัก + คนแทน คิดแบบรอบ (ตรงกับย้อนหลัง) ──────────────
-  // pool จาก employees ปัจจุบัน (เหมือน snapshot dutyPools ที่ย้อนหลังใช้) ·
-  // คนหลักของรอบ = computeForecastPrimaries ณ ต้นรอบ (memoize ตามวัน)
+  // pool = snapshot dutyPools (resolve แล้ว) · คนหลักของรอบ =
+  // computeForecastPrimaries ณ ต้นรอบ (memoize ตามวัน)
   if (rotationDuties.length > 0) {
-    const poolByDutyId = new Map<string, string[]>(
-      rotationDuties.map((d) => [d.id, activePool(d, employees)]),
-    );
     const primCache = new Map<string, Map<string, string | null>>();
     const primariesAt = (ymd: string) => {
       let m = primCache.get(ymd);
@@ -868,6 +872,20 @@ export function computeDutyDayActivity(
       const pool = poolByDutyId.get(duty.id) || [];
       if (pool.length === 0) continue;
       const subExcluded = new Set(duty.substituteExcludedEmpIds || []);
+      // monthly: คนแทนเลือกแบบยุติธรรม "เคยแทนน้อยสุดก่อน" (ตรงกับ assignment
+      // จริง + แท็บล่วงหน้า) — seed history ต้นปี→fromYmd แล้วนับเพิ่มระหว่างเดินวัน ·
+      // weekly: neighbor-scan เดิม (primary หมุนทุกสัปดาห์ โอกาสซ้ำต่ำ)
+      const subHistory =
+        duty.period === "monthly"
+          ? replayRotationSubHistory(
+              duty,
+              pool,
+              allLeaves,
+              calendar,
+              yearStart,
+              fromYmd,
+            )
+          : null;
       // เดินทีละรอบ (idx 0 = รอบแรก ณ rotationStartDate) → ไม่นับวันก่อนเริ่มหมุน
       const currentIdx = Math.max(0, getPeriodIndex(duty, toYmd));
       for (let idx = 0; idx <= currentIdx; idx++) {
@@ -887,15 +905,29 @@ export function computeDutyDayActivity(
           if (!isOnLeave(allLeaves, primary, d)) {
             bumpPrimary(duty.id, primary);
           } else {
-            // คนหลักลา → หาคนแทน (ข้ามคนที่ห้ามแทน) · target = คนหลัก
-            const sub = pickForecastSubstitute(
-              pool,
-              primary,
-              d,
-              allLeaves,
-              primariesThisPeriod,
-              subExcluded,
-            );
+            // คนหลักลา → หาคนแทน (ข้ามคนที่ห้ามแทน) · target = คนหลัก ·
+            // monthly = fair-pick (subHistory) · weekly = neighbor-scan
+            const sub = subHistory
+              ? pickRotationSubstitute(
+                  pool,
+                  primary,
+                  d,
+                  allLeaves,
+                  primariesThisPeriod,
+                  subHistory,
+                  subExcluded,
+                )
+              : pickForecastSubstitute(
+                  pool,
+                  primary,
+                  d,
+                  allLeaves,
+                  primariesThisPeriod,
+                  subExcluded,
+                );
+            if (subHistory && sub) {
+              subHistory.set(sub, (subHistory.get(sub) || 0) + 1);
+            }
             if (sub) bumpSub(duty.id, sub, primary);
           }
         }
@@ -904,8 +936,9 @@ export function computeDutyDayActivity(
   }
 
   // ── coverage substitutes (replay รายวันทั้งช่วงเพื่อ history · นับเฉพาะ inRange) ──
-  if (coverageDuties.length > 0) {
-    const yearStart = `${fromYmd.slice(0, 4)}-01-01`;
+  // ต้องมี employees (roleId ของ target/candidate) — ฝั่งพนักงานไม่มี → ข้าม coverage
+  if (coverageDuties.length > 0 && employees && employees.length > 0) {
+    const monthlyDuties = rotationDuties.filter((d) => d.period === "monthly");
     const replayStart = yearStart < fromYmd ? yearStart : fromYmd;
     const covHistory = new Map<string, number>();
     const monthlyPrimariesCache = new Map<string, Set<string>>();
