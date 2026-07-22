@@ -3,9 +3,11 @@ import type { Duty, Employee, LeaveEntry } from "../types";
 import {
   applicableDuties,
   computeAllDutiesForDay,
+  computeCoverageCounts,
   computeCoverageEarningsForMonth,
   computeCoverageEarningsForMonthAll,
   computeCoverageForecast,
+  computeDutyCounts,
   computeDutyForDay,
   computeDutyForecast,
   computeDutyHistory,
@@ -1073,6 +1075,93 @@ describe("assignPrimaries — Latin square (หน้าที่ pool เดี
       const people = ds.map((d) => perDuty.get(d.id)?.[w]);
       expect(new Set(people).size).toBe(3);
     }
+  });
+});
+
+describe("computeDutyCounts", () => {
+  it("นับจำนวนครั้งต่อคน + ยุติธรรมในเดือน (หน้าที่เดี่ยว)", () => {
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    const counts = computeDutyCounts(
+      [w],
+      new Map([["w", ["a", "b", "c"]]]),
+      "2026-08-01",
+      "2026-08-31",
+    ).get("w");
+    if (!counts) throw new Error("no counts");
+    expect(counts.size).toBe(3); // ทุกคนได้ทำ
+    const vals = [...counts.values()];
+    expect(Math.max(...vals) - Math.min(...vals)).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("computeCoverageCounts", () => {
+  const employees = [
+    emp("t1", { roleId: "sales", displayOrder: 1 }), // target
+    emp("c1", { roleId: "cashier", displayOrder: 1 }),
+    emp("c2", { roleId: "cashier", displayOrder: 2 }),
+  ];
+  const cov = (over: Partial<Duty> = {}) =>
+    duty({
+      id: "cov",
+      kind: "coverage",
+      period: "weekly",
+      coverageRoleId: "sales",
+      candidateEmpIds: ["c1", "c2"],
+      ...over,
+    });
+
+  it("นับคนแทนต่อหน้าที่ · หมุนเวียนยุติธรรม (2 วันลา → คนละคน)", () => {
+    const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-11")];
+    const m = computeCoverageCounts(
+      [cov()],
+      employees,
+      leaves,
+      "2026-01-01",
+      "2026-03-31",
+    ).get("cov");
+    if (!m) throw new Error("no counts");
+    expect(m.get("c1")).toBe(1);
+    expect(m.get("c2")).toBe(1);
+  });
+
+  it("นับเฉพาะที่ทำไปแล้ว — วันลาหลัง toYmd (ล่วงหน้า) ไม่ถูกนับ", () => {
+    // ลา 2 วัน: 03-10 (ทำแล้ว) + 03-25 (ล่วงหน้า) · toYmd = 03-15
+    const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-25")];
+    const m = computeCoverageCounts(
+      [cov()],
+      employees,
+      leaves,
+      "2026-01-01",
+      "2026-03-15",
+    ).get("cov");
+    if (!m) throw new Error("no counts");
+    // นับแค่ 03-10 → รวม 1 ครั้ง (ไม่นับ 03-25 ที่อยู่หลัง toYmd)
+    const total = [...m.values()].reduce((s, n) => s + n, 0);
+    expect(total).toBe(1);
+  });
+
+  it("นับแม้หน้าที่แทนไม่มีเงินค่าแทน (ต่างจาก EarningsForMonthAll)", () => {
+    const leaves = [leave("t1", "2026-03-10")];
+    const noPay = cov({ coveragePayPerOccurrence: 0 });
+    expect(
+      computeCoverageCounts(
+        [noPay],
+        employees,
+        leaves,
+        "2026-01-01",
+        "2026-03-31",
+      )
+        .get("cov")
+        ?.get("c1"),
+    ).toBe(1);
+    // EarningsForMonthAll กรอง pay>0 → ว่าง
+    expect(
+      computeCoverageEarningsForMonthAll([noPay], employees, leaves, "2026-03"),
+    ).toEqual({});
   });
 });
 
