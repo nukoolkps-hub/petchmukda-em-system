@@ -1424,6 +1424,40 @@ describe("computeDutyDayActivity", () => {
     const days = [...(sub?.values() ?? [])].reduce((s, c) => s + c.days, 0);
     expect(days).toBe(2);
   });
+
+  it("คนหลักรายสัปดาห์ไม่ flicker กลางสัปดาห์ตอนข้ามเดือน (ตรงกับย้อนหลัง)", () => {
+    // pool [a,b] · weekly W + monthly M ใช้ pool เดียวกัน · monthly เปลี่ยน
+    // คนหลักข้ามเดือน → ถ้าคิดแบบรายวัน (de-collision) คนหลัก weekly จะสลับ
+    // กลางสัปดาห์ที่คร่อมเดือน (โผล่คนที่ย้อนหลังไม่มี) · แบบรอบต้องเป็นคนเดียว
+    const emps = [
+      emp("a", { roleId: "x", displayOrder: 1 }),
+      emp("b", { roleId: "x", displayOrder: 2 }),
+    ];
+    const m = duty({
+      id: "m",
+      period: "monthly",
+      roleId: "x",
+      rotationStartDate: "2026-01-01",
+    });
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      roleId: "x",
+      rotationStartDate: "2026-01-01",
+    });
+    // สัปดาห์ 29 ม.ค. – 4 ก.พ. 2026 คร่อมเดือน (period index 4 ของ w)
+    const act = computeDutyDayActivity(
+      [m, w],
+      emps,
+      [],
+      null,
+      "2026-01-29",
+      "2026-02-04",
+    ).get("w");
+    if (!act) throw new Error("no activity");
+    // คนหลัก weekly ต้องเป็นคนเดียวทั้งสัปดาห์ (ไม่แตกเป็น 2 คน)
+    expect(act.primaryDays.size).toBe(1);
+  });
 });
 
 describe("computeDutyHistory", () => {
