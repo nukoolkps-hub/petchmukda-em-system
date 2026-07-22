@@ -958,6 +958,8 @@ export function computeCoverageForecast(
   allLeaves: LeaveEntry[],
   todayYmd: string,
   endYmd: string,
+  // ปฏิทินร้าน — วันร้านปิด (เสาร์ default / admin mark) ไม่มีคนแทน (ไม่ forecast)
+  calendar?: StoreCalendarLite | null,
 ): CoverageForecastEntry[] {
   const coverageDuties = duties.filter((d) => d.kind === "coverage");
   if (coverageDuties.length === 0 || todayYmd > endYmd) return [];
@@ -995,6 +997,8 @@ export function computeCoverageForecast(
     const usedToday = new Set<string>();
     const record = ymd >= todayYmd;
     for (const duty of coverageDuties) {
+      // ร้านปิดวันนั้น → ไม่มีคนแทน (ให้ตรงกับ count/pay ที่ gate แล้ว)
+      if (applicableDuties([duty], ymd, calendar).length === 0) continue;
       for (const targetId of dutyAbsentTargets(
         duty,
         ymd,

@@ -497,6 +497,8 @@ export function replayCoverageHistory(
 	allLeaves: LeaveEntry[],
 	startYmd: string,
 	endYmd: string,
+	// ปฏิทินร้าน — วันร้านปิดไม่มีคนแทน → ไม่นับเข้า fairness history
+	calendar?: StoreCalendarLite | null,
 ): Map<string, number> {
 	const history = new Map<string, number>();
 	if (coverageDuties.length === 0) return history;
@@ -515,6 +517,8 @@ export function replayCoverageHistory(
 		}
 		const usedToday = new Set<string>();
 		for (const duty of coverageDuties) {
+			// ร้านปิดวันนั้น → ไม่มีคนแทน → ไม่นับเข้า history
+			if (applicableDuties([duty], ymd, calendar).length === 0) continue;
 			for (const _t of absentTargets(duty, ymd, employees, allLeaves)) {
 				const pick = pickCoverageCandidate(
 					duty,
@@ -758,6 +762,8 @@ export function computeCoverageForecast(
 	allLeaves: LeaveEntry[],
 	todayYmd: string,
 	endYmd: string,
+	// ปฏิทินร้าน — วันร้านปิด (เสาร์ default / admin mark) ไม่มีคนแทน (ไม่ forecast)
+	calendar?: StoreCalendarLite | null,
 ): CoverageForecastEntry[] {
 	const coverageDuties = duties.filter((d) => d.kind === "coverage");
 	if (coverageDuties.length === 0 || todayYmd > endYmd) return [];
@@ -792,6 +798,8 @@ export function computeCoverageForecast(
 		const usedToday = new Set<string>();
 		const record = ymd >= todayYmd;
 		for (const duty of coverageDuties) {
+			// ร้านปิดวันนั้น → ไม่มีคนแทน (ให้ตรงกับ count/pay ที่ gate แล้ว)
+			if (applicableDuties([duty], ymd, calendar).length === 0) continue;
 			for (const targetId of absentTargets(duty, ymd, employees, allLeaves)) {
 				const pick = pickCoverageCandidate(
 					duty,

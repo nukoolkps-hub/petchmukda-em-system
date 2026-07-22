@@ -1046,6 +1046,37 @@ describe("computeCoverageForecast", () => {
     const days = [...new Set(res.flatMap((r) => [r.start, r.end]))].sort();
     expect(days).toEqual(["2026-06-01", "2026-06-02"]);
   });
+
+  it("ไม่ forecast คนแทนวันเสาร์ที่ร้านปิด (ลาคร่อมเสาร์)", () => {
+    // t1 ลา ศ 06-12 – อา 06-14 · เสาร์ 06-13 ปิด → forecast แค่ ศ + อา (ข้ามเสาร์)
+    const res = computeCoverageForecast(
+      [duty({ ...coverage, candidateEmpIds: ["c1"] })],
+      [emp("t1", { roleId: "sales" }), emp("c1", { roleId: "cashier" })],
+      [leave("t1", "2026-06-12", "2026-06-14")],
+      "2026-06-01",
+      "2026-12-31",
+    );
+    // เสาร์ 06-13 ไม่โผล่ → 2 segment แยก (ศ กับ อา)
+    expect(res.map((r) => `${r.start}/${r.end}`)).toEqual([
+      "2026-06-12/2026-06-12",
+      "2026-06-14/2026-06-14",
+    ]);
+  });
+
+  it("forecast คนแทนวันเสาร์ถ้าเปิดพิเศษ (extraOpenSaturdays)", () => {
+    // เสาร์ 06-13 เปิดพิเศษ → ศ-อา ต่อเนื่อง (คนแทนคนเดียว) = 1 segment
+    const res = computeCoverageForecast(
+      [duty({ ...coverage, candidateEmpIds: ["c1"] })],
+      [emp("t1", { roleId: "sales" }), emp("c1", { roleId: "cashier" })],
+      [leave("t1", "2026-06-12", "2026-06-14")],
+      "2026-06-01",
+      "2026-12-31",
+      { extraOpenSaturdays: ["2026-06-13"], extraClosedWeekdays: [] },
+    );
+    expect(res.map((r) => `${r.start}/${r.end}`)).toEqual([
+      "2026-06-12/2026-06-14",
+    ]);
+  });
 });
 
 // ─── forecast ──────────────────────────────────────────────────────
