@@ -1248,6 +1248,60 @@ describe("computeDutyDayActivity", () => {
     expect(act.primaryDays.get("a")).toBe(4); // วันที่ a ลาไม่นับเป็นคนหลัก
     expect(act.substitute.has("a")).toBe(false); // a ลา → ไม่ใช่คนแทนวันนั้น
   });
+
+  it("คนหลัก: ไม่นับวันเสาร์ที่ร้านปิด (เสาร์ = ปิด default)", () => {
+    // 08-03..08 = จ-ส · เสาร์ 08-08 ปิด → นับเฉพาะ จ-ศ = 5 วัน (ไม่ใช่ 6)
+    const emps = [emp("a")];
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      emps,
+      [],
+      null,
+      "2026-08-03",
+      "2026-08-08",
+    ).get("w");
+    expect(act?.primaryDays.get("a")).toBe(5);
+  });
+
+  it("คนหลัก: นับวันเสาร์ถ้าเปิดพิเศษ (extraOpenSaturdays)", () => {
+    // เสาร์ 08-08 อยู่ใน extraOpenSaturdays → เปิด → นับ จ-ศ (5) + เสาร์ (1) = 6
+    const emps = [emp("a")];
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      emps,
+      [],
+      { extraOpenSaturdays: ["2026-08-08"], extraClosedWeekdays: [] },
+      "2026-08-03",
+      "2026-08-08",
+    ).get("w");
+    expect(act?.primaryDays.get("a")).toBe(6);
+  });
+
+  it("คนแทน (coverage): ไม่นับวันเสาร์ที่ร้านปิด (ลาคร่อมเสาร์)", () => {
+    // t1 (เป้าหมาย) ลา พฤ 08-06 – ส 08-08 (คร่อมเสาร์) · เสาร์ปิด → คนแทนนับแค่
+    // พฤ,ศ = 2 วัน (ไม่รวมเสาร์ 08-08 ที่ร้านปิด)
+    const leaves = [leave("t1", "2026-08-06", "2026-08-08")];
+    const sub = computeDutyDayActivity(
+      [cov()],
+      employees,
+      leaves,
+      null,
+      "2026-08-01",
+      "2026-08-08",
+    ).get("cov")?.substitute;
+    const days = [...(sub?.values() ?? [])].reduce((s, c) => s + c.days, 0);
+    expect(days).toBe(2);
+  });
 });
 
 describe("computeDutyHistory", () => {

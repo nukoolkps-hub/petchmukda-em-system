@@ -880,6 +880,10 @@ export function computeDutyDayActivity(
     if (coverageDuties.length > 0) {
       const usedToday = new Set<string>();
       for (const duty of coverageDuties) {
+        // ร้านปิด (เสาร์ default / admin mark ปิด) หรือหน้าที่ไม่ทำงานวันนั้น →
+        // ไม่มีคนแทน (ให้ตรงกับ rotation ที่ผ่าน applicableDuties แล้ว) · เสาร์เปิด
+        // พิเศษ (extraOpenSaturdays) → applicableDuties คืน duty → นับปกติ
+        if (applicableDuties([duty], ymd, calendar).length === 0) continue;
         for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
           const pick = pickCoverageCandidate(
             duty,
