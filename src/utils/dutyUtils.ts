@@ -779,10 +779,12 @@ export function computeCoverageEarningsForMonthAll(
   return result;
 }
 
-/** การเข้าไปแทน ต่อคน — ครั้ง (ช่วงลาต่อเนื่อง = 1 ครั้ง) + วัน (รายวัน) */
+/** การเข้าไปแทน ต่อคน — วัน (รายวัน) + แยกตาม "คนที่ถูกแทน" (target) */
 export interface SubstituteCount {
-  occasions: number;
+  /** จำนวนวันที่ไปแทนรวม (ทุก target) */
   days: number;
+  /** วันที่ไปแทน แยกตามคนที่ถูกแทน — targetEmpId → จำนวนวัน (แทนใคร กี่วัน) */
+  byTarget: Map<string, number>;
 }
 
 /** กิจกรรมรายวันของ 1 duty */
@@ -791,7 +793,7 @@ export interface DutyDayActivity {
    *  (ใช้กับหน้าที่หมุนเวียนรายสัปดาห์ · รายเดือนแสดงเป็น "เดือน" จาก
    *  computeDutyCounts แทน) · Map(empId → จำนวนวัน) */
   primaryDays: Map<string, number>;
-  /** การเข้าไปแทน (rotation ตอน primary ลา + coverage) · Map(empId → {ครั้ง, วัน}) */
+  /** การเข้าไปแทน (rotation ตอน primary ลา + coverage) · Map(empId → {วัน, แทนใคร}) */
   substitute: Map<string, SubstituteCount>;
 }
 
@@ -830,19 +832,13 @@ export function computeDutyDayActivity(
     const a = ensure(dutyId);
     a.primaryDays.set(empId, (a.primaryDays.get(empId) || 0) + 1);
   };
-  // นับ occasions ของคนแทน (วันติดกันของ duty+คนเดิม = 1 ครั้ง)
-  const lastSubDay = new Map<string, string>();
-  const bumpSub = (dutyId: string, empId: string, ymd: string) => {
+  // คนแทน (empId) ไปแทน target (คนที่ลา/คนหลักที่ลา) กี่วัน — เก็บ byTarget
+  const bumpSub = (dutyId: string, empId: string, targetId: string) => {
     const a = ensure(dutyId);
-    const cur = a.substitute.get(empId) || { occasions: 0, days: 0 };
-    const key = `${dutyId}|${empId}`;
-    const prev = lastSubDay.get(key);
-    const newOccasion = !prev || nextYmd(prev) !== ymd;
-    a.substitute.set(empId, {
-      occasions: cur.occasions + (newOccasion ? 1 : 0),
-      days: cur.days + 1,
-    });
-    lastSubDay.set(key, ymd);
+    const cur = a.substitute.get(empId) || { days: 0, byTarget: new Map() };
+    cur.days += 1;
+    cur.byTarget.set(targetId, (cur.byTarget.get(targetId) || 0) + 1);
+    a.substitute.set(empId, cur);
   };
   for (
     let d = new Date(`${replayStart}T00:00:00`);
@@ -881,7 +877,8 @@ export function computeDutyDayActivity(
             a.reason === "substitute_for_leave" ||
             a.reason === "double_up"
           )
-            bumpSub(a.dutyId, a.actualEmpId, ymd);
+            // target ของ rotation = คนหลักที่ลา (primaryEmpId)
+            bumpSub(a.dutyId, a.actualEmpId, a.primaryEmpId ?? a.actualEmpId);
         }
       }
     }
@@ -893,7 +890,12 @@ export function computeDutyDayActivity(
         // ไม่มีคนแทน (ให้ตรงกับ rotation ที่ผ่าน applicableDuties แล้ว) · เสาร์เปิด
         // พิเศษ (extraOpenSaturdays) → applicableDuties คืน duty → นับปกติ
         if (applicableDuties([duty], ymd, calendar).length === 0) continue;
-        for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
+        for (const targetId of dutyAbsentTargets(
+          duty,
+          ymd,
+          employees,
+          allLeaves,
+        )) {
           const pick = pickCoverageCandidate(
             duty,
             ymd,
@@ -906,7 +908,8 @@ export function computeDutyDayActivity(
           if (!pick) continue;
           usedToday.add(pick);
           covHistory.set(pick, (covHistory.get(pick) || 0) + 1);
-          if (inRange) bumpSub(duty.id, pick, ymd);
+          // target ของ coverage = คนในตำแหน่งเป้าหมายที่ลา
+          if (inRange) bumpSub(duty.id, pick, targetId);
         }
       }
     }

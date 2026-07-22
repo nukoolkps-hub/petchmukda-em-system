@@ -1179,7 +1179,7 @@ describe("computeDutyDayActivity", () => {
       ...over,
     });
 
-  it("coverage substitute: นับวัน + ครั้ง (2 วันลาแยกกัน → คนละคน คนละครั้ง)", () => {
+  it("coverage substitute: นับวัน + แทนใคร (target = คนที่ลา)", () => {
     const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-11")];
     const sub = computeDutyDayActivity(
       [cov()],
@@ -1190,11 +1190,12 @@ describe("computeDutyDayActivity", () => {
       "2026-03-31",
     ).get("cov")?.substitute;
     if (!sub) throw new Error("no counts");
-    expect(sub.get("c1")).toEqual({ occasions: 1, days: 1 });
-    expect(sub.get("c2")).toEqual({ occasions: 1, days: 1 });
+    // แต่ละคนแทน t1 คนละ 1 วัน — byTarget เก็บว่า "แทน t1"
+    expect(sub.get("c1")).toEqual({ days: 1, byTarget: new Map([["t1", 1]]) });
+    expect(sub.get("c2")).toEqual({ days: 1, byTarget: new Map([["t1", 1]]) });
   });
 
-  it("substitute: วันติดกันของคนเดิม = 1 ครั้ง หลายวัน", () => {
+  it("substitute: รวมวันแทน target เดิมหลายวัน (byTarget)", () => {
     const one = cov({ candidateEmpIds: ["c1"] });
     const leaves = [leave("t1", "2026-03-10", "2026-03-12")];
     expect(
@@ -1208,7 +1209,7 @@ describe("computeDutyDayActivity", () => {
       )
         .get("cov")
         ?.substitute.get("c1"),
-    ).toEqual({ occasions: 1, days: 3 });
+    ).toEqual({ days: 3, byTarget: new Map([["t1", 3]]) });
   });
 
   it("นับเฉพาะที่ทำแล้ว — วันลาหลัง toYmd (ล่วงหน้า) ไม่ถูกนับ", () => {
@@ -1252,6 +1253,8 @@ describe("computeDutyDayActivity", () => {
     );
     expect(subDays).toBe(2);
     expect(act.substitute.has("a")).toBe(false);
+    // คนแทน (b) แทน "a" (คนหลักที่ลา) 2 วัน — byTarget เก็บ target = a
+    expect(act.substitute.get("b")?.byTarget.get("a")).toBe(2);
   });
 
   it("ไม่นับวันก่อน rotationStartDate — หน้าที่ยังไม่เริ่มหมุน (กันคนหลักบวม)", () => {
