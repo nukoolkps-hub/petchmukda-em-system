@@ -1214,11 +1214,12 @@ describe("computeDutyDayActivity", () => {
     const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-11")];
     const sub = computeDutyDayActivity(
       [cov()],
-      employees,
+      new Map(),
       leaves,
       null,
       "2026-01-01",
       "2026-03-31",
+      employees,
     ).get("cov")?.substitute;
     if (!sub) throw new Error("no counts");
     // แต่ละคนแทน t1 คนละ 1 วัน — byTarget เก็บว่า "แทน t1"
@@ -1232,11 +1233,12 @@ describe("computeDutyDayActivity", () => {
     expect(
       computeDutyDayActivity(
         [one],
-        employees,
+        new Map(),
         leaves,
         null,
         "2026-01-01",
         "2026-03-31",
+        employees,
       )
         .get("cov")
         ?.substitute.get("c1"),
@@ -1247,11 +1249,12 @@ describe("computeDutyDayActivity", () => {
     const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-25")];
     const sub = computeDutyDayActivity(
       [cov()],
-      employees,
+      new Map(),
       leaves,
       null,
       "2026-01-01",
       "2026-03-15",
+      employees,
     ).get("cov")?.substitute;
     if (!sub) throw new Error("no counts");
     const days = [...sub.values()].reduce((s, c) => s + c.days, 0);
@@ -1260,7 +1263,6 @@ describe("computeDutyDayActivity", () => {
 
   it("rotation คนหลักรายวัน: นับเฉพาะวันที่อยู่ทำจริง (วันลาไม่นับ)", () => {
     // 2026-08-03..07 = จ-ศ (เปิด) · duty เดี่ยว pool [a,b,c] · primary รอบ 0 = a
-    const emps = [emp("a"), emp("b"), emp("c")];
     const w = duty({
       id: "w",
       period: "weekly",
@@ -1269,7 +1271,7 @@ describe("computeDutyDayActivity", () => {
     // a เป็นคนหลัก · ลา 03,04 → อยู่ทำจริง 3 วัน (05,06,07) · คนแทน 2 วัน
     const act = computeDutyDayActivity(
       [w],
-      emps,
+      new Map([["w", ["a", "b", "c"]]]),
       [leave("a", "2026-08-03", "2026-08-04")],
       null,
       "2026-08-03",
@@ -1291,7 +1293,6 @@ describe("computeDutyDayActivity", () => {
   it("คนแทน: ข้ามคนที่ตั้ง 'ไม่ให้เป็นคนแทน' (substituteExcludedEmpIds)", () => {
     // pool [a,b,c] · primary รอบ 0 = a ลา 08-05 · b ถูกตั้งไม่ให้เป็นคนแทน
     // → คนถัดไป c มาแทน (ไม่ใช่ b) · b ต้องไม่โผล่ในคนแทน
-    const emps = [emp("a"), emp("b"), emp("c")];
     const w = duty({
       id: "w",
       period: "weekly",
@@ -1300,7 +1301,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
-      emps,
+      new Map([["w", ["a", "b", "c"]]]),
       [leave("a", "2026-08-05")],
       null,
       "2026-08-03",
@@ -1311,11 +1312,42 @@ describe("computeDutyDayActivity", () => {
     expect(act.substitute.get("c")?.byTarget.get("a")).toBe(1); // c แทน a 1 วัน
   });
 
+  it("คนแทนรายเดือน: กระจายยุติธรรม 'เคยแทนน้อยสุดก่อน' (ตรงกับ assignment จริง)", () => {
+    // monthly duty · pool [a,b,c] · primary ก.ค. = a (rotationStartEmpId) ·
+    // a ลา 4 วันทำการ (จ-พฤ) → คนแทนกระจาย b,c คนละ 2 วัน (fair) — ไม่ใช่
+    // neighbor-scan ที่เทให้ b คนเดียว 4 วัน (เดิม forecast tab นับผิดแบบนี้)
+    const m = duty({
+      id: "m",
+      period: "monthly",
+      rotationStartDate: "2026-07-01",
+      rotationStartEmpId: "a",
+    });
+    const leaves = [
+      leave("a", "2026-07-06"), // จ
+      leave("a", "2026-07-07"), // อ
+      leave("a", "2026-07-08"), // พ
+      leave("a", "2026-07-09"), // พฤ
+    ];
+    const act = computeDutyDayActivity(
+      [m],
+      new Map([["m", ["a", "b", "c"]]]),
+      leaves,
+      null,
+      "2026-07-01",
+      "2026-07-31",
+    ).get("m");
+    if (!act) throw new Error("no activity");
+    // b, c แทน a คนละ 2 วัน (ยุติธรรม) — ไม่ใช่ b 4 / c 0
+    expect(act.substitute.get("b")?.days).toBe(2);
+    expect(act.substitute.get("c")?.days).toBe(2);
+    expect(act.substitute.get("b")?.byTarget.get("a")).toBe(2);
+    expect(act.substitute.get("c")?.byTarget.get("a")).toBe(2);
+  });
+
   it("ไม่นับวันก่อน rotationStartDate — หน้าที่ยังไม่เริ่มหมุน (กันคนหลักบวม)", () => {
     // duty เริ่มหมุน 2026-08-03 แต่ replay ตั้งแต่ 2026-06-01 → วันก่อนเริ่ม
     // (มิ.ย.-ก.ค.) periodIndex ติดลบถูก clamp เป็น 0 ทุกวัน · ถ้าไม่ gate คนหลัก
     // รอบ 0 (a) จะถูกนับเป็นคนหลักทุกวันย้อนหลัง (บวมเกินจริง)
-    const emps = [emp("a"), emp("b"), emp("c")];
     const w = duty({
       id: "w",
       period: "weekly",
@@ -1323,7 +1355,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
-      emps,
+      new Map([["w", ["a", "b", "c"]]]),
       [],
       null,
       "2026-06-01", // ก่อน rotationStartDate 2 เดือน
@@ -1344,7 +1376,6 @@ describe("computeDutyDayActivity", () => {
     // 08-03..07 = จ-ศ เปิด 5 วัน · pool [a,b,c] · primary รอบ 0 = a
     // a (คนหลัก) ลา 08-05 วันเดียว → วันนั้นเป็น "คนแทน" (คนอื่น) ไม่ใช่ "คนหลัก"
     // invariant: ทุกวันเปิดถูกนับ "ครั้งเดียว" — คนหลัก + คนแทน = 5 (ไม่ซ้ำ/ไม่เกิน)
-    const emps = [emp("a"), emp("b"), emp("c")];
     const w = duty({
       id: "w",
       period: "weekly",
@@ -1352,7 +1383,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
-      emps,
+      new Map([["w", ["a", "b", "c"]]]),
       [leave("a", "2026-08-05")],
       null,
       "2026-08-03",
@@ -1373,7 +1404,6 @@ describe("computeDutyDayActivity", () => {
 
   it("คนหลัก: ไม่นับวันเสาร์ที่ร้านปิด (เสาร์ = ปิด default)", () => {
     // 08-03..08 = จ-ส · เสาร์ 08-08 ปิด → นับเฉพาะ จ-ศ = 5 วัน (ไม่ใช่ 6)
-    const emps = [emp("a")];
     const w = duty({
       id: "w",
       period: "weekly",
@@ -1381,7 +1411,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
-      emps,
+      new Map([["w", ["a"]]]),
       [],
       null,
       "2026-08-03",
@@ -1392,7 +1422,6 @@ describe("computeDutyDayActivity", () => {
 
   it("คนหลัก: นับวันเสาร์ถ้าเปิดพิเศษ (extraOpenSaturdays)", () => {
     // เสาร์ 08-08 อยู่ใน extraOpenSaturdays → เปิด → นับ จ-ศ (5) + เสาร์ (1) = 6
-    const emps = [emp("a")];
     const w = duty({
       id: "w",
       period: "weekly",
@@ -1400,7 +1429,7 @@ describe("computeDutyDayActivity", () => {
     });
     const act = computeDutyDayActivity(
       [w],
-      emps,
+      new Map([["w", ["a"]]]),
       [],
       { extraOpenSaturdays: ["2026-08-08"], extraClosedWeekdays: [] },
       "2026-08-03",
@@ -1415,24 +1444,40 @@ describe("computeDutyDayActivity", () => {
     const leaves = [leave("t1", "2026-08-06", "2026-08-08")];
     const sub = computeDutyDayActivity(
       [cov()],
-      employees,
+      new Map(),
       leaves,
       null,
       "2026-08-01",
       "2026-08-08",
+      employees,
     ).get("cov")?.substitute;
     const days = [...(sub?.values() ?? [])].reduce((s, c) => s + c.days, 0);
     expect(days).toBe(2);
+  });
+
+  it("rotation ทำงานได้จาก poolByDutyId โดยไม่มี employees (ฝั่งพนักงาน)", () => {
+    // ฝั่งพนักงานไม่มี employees แต่มี pool จาก snapshot → คนหลัก weekly ยังนับได้
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      new Map([["w", ["a", "b", "c"]]]),
+      [],
+      null,
+      "2026-08-03",
+      "2026-08-07",
+      // ไม่ส่ง employees
+    ).get("w");
+    expect(act?.primaryDays.get("a")).toBe(5); // จ-ศ 5 วัน
   });
 
   it("คนหลักรายสัปดาห์ไม่ flicker กลางสัปดาห์ตอนข้ามเดือน (ตรงกับย้อนหลัง)", () => {
     // pool [a,b] · weekly W + monthly M ใช้ pool เดียวกัน · monthly เปลี่ยน
     // คนหลักข้ามเดือน → ถ้าคิดแบบรายวัน (de-collision) คนหลัก weekly จะสลับ
     // กลางสัปดาห์ที่คร่อมเดือน (โผล่คนที่ย้อนหลังไม่มี) · แบบรอบต้องเป็นคนเดียว
-    const emps = [
-      emp("a", { roleId: "x", displayOrder: 1 }),
-      emp("b", { roleId: "x", displayOrder: 2 }),
-    ];
     const m = duty({
       id: "m",
       period: "monthly",
@@ -1448,7 +1493,10 @@ describe("computeDutyDayActivity", () => {
     // สัปดาห์ 29 ม.ค. – 4 ก.พ. 2026 คร่อมเดือน (period index 4 ของ w)
     const act = computeDutyDayActivity(
       [m, w],
-      emps,
+      new Map([
+        ["m", ["a", "b"]],
+        ["w", ["a", "b"]],
+      ]),
       [],
       null,
       "2026-01-29",
