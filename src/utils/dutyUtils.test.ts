@@ -1217,6 +1217,37 @@ describe("computeDutyDayActivity", () => {
     );
     expect(totalPrimaryDays).toBe(5);
   });
+
+  it("คนหลัก vs คนแทน แยกกัน ไม่นับวันซ้ำ (รวม = จำนวนวันเปิดร้าน)", () => {
+    // 08-03..07 = จ-ศ เปิด 5 วัน · pool [a,b,c] · primary รอบ 0 = a
+    // a (คนหลัก) ลา 08-05 วันเดียว → วันนั้นเป็น "คนแทน" (คนอื่น) ไม่ใช่ "คนหลัก"
+    // invariant: ทุกวันเปิดถูกนับ "ครั้งเดียว" — คนหลัก + คนแทน = 5 (ไม่ซ้ำ/ไม่เกิน)
+    const emps = [emp("a"), emp("b"), emp("c")];
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      emps,
+      [leave("a", "2026-08-05")],
+      null,
+      "2026-08-03",
+      "2026-08-07",
+    ).get("w");
+    if (!act) throw new Error("no activity");
+    const primTotal = [...act.primaryDays.values()].reduce((s, n) => s + n, 0);
+    const subTotal = [...act.substitute.values()].reduce(
+      (s, c) => s + c.days,
+      0,
+    );
+    expect(primTotal + subTotal).toBe(5); // ทุกวันเปิดนับครั้งเดียว
+    expect(primTotal).toBe(4); // a อยู่ทำ 4 วัน (เว้น 08-05)
+    expect(subTotal).toBe(1); // 08-05 คนแทน 1 วัน
+    expect(act.primaryDays.get("a")).toBe(4); // วันที่ a ลาไม่นับเป็นคนหลัก
+    expect(act.substitute.has("a")).toBe(false); // a ลา → ไม่ใช่คนแทนวันนั้น
+  });
 });
 
 describe("computeDutyHistory", () => {
