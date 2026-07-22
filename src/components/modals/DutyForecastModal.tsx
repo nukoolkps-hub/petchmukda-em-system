@@ -109,15 +109,18 @@ type MonthEntry =
     }
   | { type: "coverage"; start: string; item: CoverageForecastItem };
 
-/** 1 บรรทัดในแท็บจำนวนครั้ง — avatar + ชื่อ + ป้ายจำนวน */
+/** 1 บรรทัดในแท็บจำนวนครั้ง — avatar + ชื่อ + ป้ายจำนวน
+ *  labelClassName: คุมน้ำหนัก/สีของป้าย · คนหลัก = หนา (default) · คนแทน = บางลง */
 function CountRow({
   emp,
   empId,
   label,
+  labelClassName = "font-bold text-maroon",
 }: {
   emp: SnapshotPoolMember | undefined;
   empId: string;
   label: string;
+  labelClassName?: string;
 }) {
   return (
     <div className="flex items-center gap-2.5 px-3 py-2 text-sm">
@@ -134,7 +137,7 @@ function CountRow({
       <span className="flex-1 min-w-0 font-semibold text-txt truncate">
         {emp?.nickname || emp?.name || empId}
       </span>
-      <span className="shrink-0 font-bold text-maroon">{label}</span>
+      <span className={`shrink-0 ${labelClassName}`}>{label}</span>
     </div>
   );
 }
@@ -604,6 +607,7 @@ export default function DutyForecastModal({
                               emp={emp}
                               empId={empId}
                               label={label}
+                              labelClassName="font-medium text-maroon"
                             />
                           ))}
                         </>
