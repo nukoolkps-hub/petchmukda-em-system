@@ -331,6 +331,7 @@ async function buildSnapshot(): Promise<Snapshot> {
 			employees,
 			allLeaves,
 			ymd.slice(0, 7),
+			storeCalendar,
 		),
 	};
 

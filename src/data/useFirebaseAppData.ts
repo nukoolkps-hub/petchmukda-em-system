@@ -467,13 +467,14 @@ export default function useFirebaseAppData({
       dutiesResult.data,
       employeeResult.data,
     );
-    // เงินค่าแทน (coverage) ของเดือนนี้ — count × rate ต่อ duty
+    // เงินค่าแทน (coverage) ของเดือนนี้ — count × rate ต่อ duty · ข้ามวันร้านปิด
     const coverage = computeCoverageEarningsForMonth(
       employeeId,
       yearMonth,
       dutiesResult.data,
       employeeResult.data,
       leavesResult.data,
+      storeCalendarResult.data,
     );
 
     // snapshot เรท/ตำแหน่งจากข้อมูลพนักงานปัจจุบัน — เขียนเฉพาะตอน "ไม่ freeze"

@@ -601,6 +601,9 @@ export function computeCoverageEarningsForMonth(
   duties: Duty[],
   employees: Employee[],
   allLeaves: LeaveEntry[],
+  // ปฏิทินร้าน — วันร้านปิด (เสาร์ default / admin mark) ไม่จ่ายค่าแทน · ไม่ส่ง
+  // = เสาร์ปิด default (applicableDuties จัดการเอง) · เสาร์เปิดพิเศษ → นับปกติ
+  calendar?: StoreCalendarLite | null,
 ): { total: number; breakdown: CoverageEarning[] } {
   const coverageDuties = duties.filter(
     (d) => d.kind === "coverage" && (d.coveragePayPerOccurrence || 0) > 0,
@@ -638,6 +641,8 @@ export function computeCoverageEarningsForMonth(
     }
     const usedToday = new Set<string>();
     for (const duty of coverageDuties) {
+      // ร้านปิดวันนั้น (เสาร์ default / admin mark) → ไม่มีงาน = ไม่จ่ายค่าแทน
+      if (applicableDuties([duty], ymd, calendar).length === 0) continue;
       for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
         const pick = pickCoverageCandidate(
           duty,
@@ -687,6 +692,8 @@ export function computeCoverageEarningsForMonthAll(
   employees: Employee[],
   allLeaves: LeaveEntry[],
   yearMonth: string,
+  // ปฏิทินร้าน — วันร้านปิดไม่จ่ายค่าแทน (เหมือน computeCoverageEarningsForMonth)
+  calendar?: StoreCalendarLite | null,
 ): Record<string, { total: number; breakdown: CoverageEarning[] }> {
   const coverageDuties = duties.filter(
     (d) => d.kind === "coverage" && (d.coveragePayPerOccurrence || 0) > 0,
@@ -719,6 +726,8 @@ export function computeCoverageEarningsForMonthAll(
     }
     const usedToday = new Set<string>();
     for (const duty of coverageDuties) {
+      // ร้านปิดวันนั้น (เสาร์ default / admin mark) → ไม่มีงาน = ไม่จ่ายค่าแทน
+      if (applicableDuties([duty], ymd, calendar).length === 0) continue;
       for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
         const pick = pickCoverageCandidate(
           duty,

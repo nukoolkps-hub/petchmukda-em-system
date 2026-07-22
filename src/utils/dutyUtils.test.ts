@@ -584,6 +584,71 @@ describe("computeCoverageEarningsForMonth", () => {
       ).total,
     ).toBe(100);
   });
+
+  it("ไม่จ่ายค่าแทนวันเสาร์ที่ร้านปิด (ลาเสาร์วันเดียว)", () => {
+    // 2026-08-08 = เสาร์ (ปิด default) → ไม่มีงาน = ไม่จ่ายค่าแทน
+    const leaves = [leave("t1", "2026-08-08")];
+    const total =
+      computeCoverageEarningsForMonth(
+        "c1",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+      ).total +
+      computeCoverageEarningsForMonth(
+        "c2",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+      ).total;
+    expect(total).toBe(0);
+  });
+
+  it("ไม่รวมวันเสาร์ปิดตอนลาคร่อมเสาร์ (ศ+อา จ่าย · ส ไม่จ่าย)", () => {
+    // ลา ศ 08-07 – อา 08-09 · เสาร์ 08-08 ปิด → จ่ายแค่ ศ + อา = 2 ครั้ง (200)
+    const leaves = [leave("t1", "2026-08-07", "2026-08-09")];
+    const total =
+      computeCoverageEarningsForMonth(
+        "c1",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+      ).total +
+      computeCoverageEarningsForMonth(
+        "c2",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+      ).total;
+    expect(total).toBe(200);
+  });
+
+  it("จ่ายค่าแทนวันเสาร์ถ้าเปิดพิเศษ (extraOpenSaturdays)", () => {
+    const leaves = [leave("t1", "2026-08-08")]; // เสาร์
+    const cal = { extraOpenSaturdays: ["2026-08-08"], extraClosedWeekdays: [] };
+    const total =
+      computeCoverageEarningsForMonth(
+        "c1",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+        cal,
+      ).total +
+      computeCoverageEarningsForMonth(
+        "c2",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+        cal,
+      ).total;
+    expect(total).toBe(100); // เสาร์เปิดพิเศษ → จ่าย 1 ครั้ง
+  });
 });
 
 // ─── monthly rotation substitute — ไม่ซ้ำ (fairness history) ────────
