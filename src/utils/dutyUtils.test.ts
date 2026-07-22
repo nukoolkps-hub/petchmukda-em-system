@@ -1042,6 +1042,40 @@ describe("computeDutyForecast", () => {
   });
 });
 
+describe("assignPrimaries — Latin square (หน้าที่ pool เดียวกันไม่ซ้ำเร็ว)", () => {
+  it("3 weekly duties sharing a 5-person pool: each cycles all 5, no early repeat, no same-week collision", () => {
+    const pool5 = ["a", "b", "c", "d", "e"];
+    const ds = ["d1", "d2", "d3"].map((id) =>
+      duty({ id, period: "weekly", rotationStartDate: "2026-01-05" }),
+    );
+    const pools = new Map(ds.map((d) => [d.id, pool5]));
+    // 5 สัปดาห์ต่อเนื่อง (period index 0..4)
+    const weeks = [
+      "2026-01-05",
+      "2026-01-12",
+      "2026-01-19",
+      "2026-01-26",
+      "2026-02-02",
+    ];
+    const perDuty = new Map<string, (string | null)[]>(
+      ds.map((d) => [d.id, []]),
+    );
+    for (const wk of weeks) {
+      const m = computeForecastPrimaries(ds, pools, wk);
+      for (const d of ds) perDuty.get(d.id)?.push(m.get(d.id) ?? null);
+    }
+    // แต่ละหน้าที่: 5 สัปดาห์ = 5 คนไม่ซ้ำ (วนครบก่อนซ้ำ)
+    for (const d of ds) {
+      expect(new Set(perDuty.get(d.id)).size).toBe(5);
+    }
+    // แต่ละสัปดาห์: 3 หน้าที่ = คนละคน (ไม่ชนกัน)
+    for (let w = 0; w < weeks.length; w++) {
+      const people = ds.map((d) => perDuty.get(d.id)?.[w]);
+      expect(new Set(people).size).toBe(3);
+    }
+  });
+});
+
 describe("computeDutyHistory", () => {
   const SIX = ["a", "b", "c", "d", "e", "f"];
 

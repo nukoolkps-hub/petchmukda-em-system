@@ -89,6 +89,7 @@ export function pickPrimary(
   pool: string[],
   periodIdx: number,
   used: Set<string>,
+  groupOffset?: number,
 ): string | null {
   if (pool.length === 0) return null; // กัน % 0 = NaN
   const cache = duty.cachedPrimary;
@@ -100,12 +101,17 @@ export function pickPrimary(
   ) {
     return cache.empId;
   }
-  // anchor = ตำแหน่งของ "คนเริ่ม" (admin เลือก) ใน pool ปัจจุบัน · ถ้าไม่ได้
-  // เลือก/คนนั้นหลุดจาก pool → fallback hashDutyId (พฤติกรรมเดิม)
+  // anchor (ลำดับความสำคัญ):
+  //  1) ตำแหน่ง "คนเริ่ม" ที่ admin เลือก (rotationStartEmpId) ใน pool ปัจจุบัน
+  //  2) groupOffset — offset ประจำกลุ่ม pool (0,1,2,... จาก assignPrimaries)
+  //     ทำให้หน้าที่ pool เดียวกัน base ไม่ชนกัน = Latin square → แต่ละหน้าที่
+  //     วนครบทุกคนก่อนซ้ำ (กันคนซ้ำในเดือนเดียว)
+  //  3) fallback hashDutyId — standalone/monthly (พฤติกรรมเดิม · backward compat)
   const startIdx = duty.rotationStartEmpId
     ? pool.indexOf(duty.rotationStartEmpId)
     : -1;
-  const anchor = startIdx >= 0 ? startIdx : hashDutyId(duty.id);
+  const anchor =
+    startIdx >= 0 ? startIdx : (groupOffset ?? hashDutyId(duty.id));
   const base = (periodIdx + anchor) % pool.length;
   for (let off = 0; off < pool.length; off++) {
     const cand = pool[(base + off) % pool.length];
@@ -128,13 +134,24 @@ function assignPrimaries(
   lockPicked: boolean,
   out: Map<string, string>,
 ): void {
+  // groupSeq: pool signature → จำนวนหน้าที่ weekly ที่ pool เดียวกันซึ่ง assign
+  // ไปแล้ว → ใช้เป็น offset เรียง 0,1,2,... (Latin square) ให้ base ไม่ชนกัน ·
+  // monthly คง hashDutyId (มักตัวเดียวต่อ pool + คง consistency กับ
+  // replayRotationSubHistory ที่คำนวณ primary รายเดือนแบบ standalone)
+  const groupSeq = new Map<string, number>();
   for (const duty of duties) {
     const fullPool = poolOf(duty);
     if (fullPool.length === 0) continue;
     const remaining = fullPool.filter((id) => !locked.has(id));
     const pool = remaining.length > 0 ? remaining : fullPool;
+    let groupOffset: number | undefined;
+    if (duty.period === "weekly") {
+      const key = pool.join(",");
+      groupOffset = groupSeq.get(key) ?? 0;
+      groupSeq.set(key, groupOffset + 1);
+    }
     const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
-    const primary = pickPrimary(duty, pool, idx, assigned);
+    const primary = pickPrimary(duty, pool, idx, assigned, groupOffset);
     if (!primary) continue;
     assigned.add(primary);
     if (lockPicked) locked.add(primary);
@@ -394,8 +411,9 @@ export function computeDutyForDay(
  *  3. Phase 3 — compute actual (substitute ถ้า primary ลา) — ใช้
  *     primariesToday set กัน "ทับ"
  *
- *  Offset ของแต่ละหน้าที่ใช้ hashDutyId(duty.id) — stable ตาม id (เพิ่ม/
- *  ลบหน้าที่ตัวอื่น ไม่กระทบ slot ของหน้าที่นี้)                          */
+ *  Offset ของหน้าที่ weekly ที่ pool เดียวกัน = ลำดับ 0,1,2,... (Latin square
+ *  → base ไม่ชนกัน · แต่ละหน้าที่วนครบทุกคนก่อนซ้ำ) · monthly + standalone
+ *  ยังใช้ hashDutyId(duty.id) เดิม                                          */
 export function computeAllDutiesForDay(
   duties: Duty[],
   todayYmd: string,
