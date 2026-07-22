@@ -850,21 +850,30 @@ export function computeDutyDayActivity(
       monthlyPrimariesCache.set(ym, monthlyPrimaries);
     }
     // ── rotation: คนหลักอยู่ทำ (rotation) หรือ คนแทน (substitute/double_up) ──
+    // นับเฉพาะหน้าที่ที่ "เริ่มหมุนแล้ว" (ymd ≥ rotationStartDate) — ก่อนวันเริ่ม
+    // getPeriodIndex จะติดลบแล้วถูก clamp เป็น 0 ทุกวัน → คนหลัก period-0 คนเดียว
+    // ถูกนับเป็น "คนหลัก" ทุกวันย้อนไปถึงต้นปี (บวมเกินจริง เช่น 130 วัน) ทั้งที่
+    // หน้าที่ยังไม่เริ่มหมุน · coverage ไม่ใช้ periodIndex → ไม่ต้อง gate ตรงนี้
     if (inRange && rotationDuties.length > 0) {
-      for (const a of computeAllDutiesForDay(
-        rotationDuties,
-        ymd,
-        employees,
-        allLeaves,
-        calendar,
-      )) {
-        if (!a.actualEmpId) continue;
-        if (a.reason === "rotation") bumpPrimary(a.dutyId, a.actualEmpId);
-        else if (
-          a.reason === "substitute_for_leave" ||
-          a.reason === "double_up"
-        )
-          bumpSub(a.dutyId, a.actualEmpId, ymd);
+      const startedDuties = rotationDuties.filter(
+        (d) => ymd >= d.rotationStartDate,
+      );
+      if (startedDuties.length > 0) {
+        for (const a of computeAllDutiesForDay(
+          startedDuties,
+          ymd,
+          employees,
+          allLeaves,
+          calendar,
+        )) {
+          if (!a.actualEmpId) continue;
+          if (a.reason === "rotation") bumpPrimary(a.dutyId, a.actualEmpId);
+          else if (
+            a.reason === "substitute_for_leave" ||
+            a.reason === "double_up"
+          )
+            bumpSub(a.dutyId, a.actualEmpId, ymd);
+        }
       }
     }
     // ── coverage substitutes (replay ทั้งช่วงเพื่อ history · นับเฉพาะ inRange) ──
