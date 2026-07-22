@@ -233,7 +233,7 @@ export default function DutyForecastModal({
         : new Map<string, Map<string, number>>(),
     [isCounts, duties, poolByDutyId, yearStartYmd, todayYmd],
   );
-  // กิจกรรมรายวัน — คนหลัก weekly (วัน) + คนแทน (ครั้ง·วัน) · ต้องมี employees
+  // กิจกรรมรายวัน — คนหลัก weekly (วัน) + คนแทน (แทนใคร·วัน) · ต้องมี employees
   const dayActivity = useMemo(
     () =>
       isCounts && hasEmployees && employees
@@ -258,10 +258,19 @@ export default function DutyForecastModal({
     ],
   );
 
-  // แถวสรุป — ต่อหน้าที่ · คนหลัก (weekly=วัน · monthly=เดือน) + คนแทน (ครั้ง·วัน)
+  // แถวสรุป — ต่อหน้าที่ · คนหลัก (weekly=วัน · monthly=เดือน) + คนแทน (แทนใคร·วัน)
   const countRows = useMemo(() => {
     if (!isCounts) return [];
     const nick = (id: string) => empById.get(id)?.nickname || "";
+    // ชื่อ "คนที่ถูกแทน" (target) — coverage target อยู่คนละ pool กับ empById
+    // จึง fallback ไป employees (admin มีเสมอเมื่อดูแท็บจำนวนครั้ง)
+    const empDir = new Map((employees ?? []).map((e) => [e.id, e]));
+    const targetNick = (id: string) =>
+      empDir.get(id)?.nickname ||
+      empDir.get(id)?.name ||
+      empById.get(id)?.nickname ||
+      empById.get(id)?.name ||
+      id;
     const byCountDesc = (a: [string, number], b: [string, number]) =>
       b[1] - a[1] || nick(a[0]).localeCompare(nick(b[0]), "th");
     const ordered = [
@@ -287,17 +296,27 @@ export default function DutyForecastModal({
           ...p,
           emp: empById.get(p.empId),
         }));
+        // คนแทน — แยกเป็นแถวต่อ "คนที่ถูกแทน": แทนใคร กี่วัน (ไม่โชว์จำนวนครั้ง)
         const subs = [...(act?.substitute.entries() || [])]
           .sort(
             (a, b) =>
               b[1].days - a[1].days ||
               nick(a[0]).localeCompare(nick(b[0]), "th"),
           )
-          .map(([empId, c]) => ({
-            empId,
-            label: `${c.occasions} ครั้ง · ${c.days} วัน`,
-            emp: empById.get(empId),
-          }));
+          .flatMap(([empId, c]) =>
+            [...c.byTarget.entries()]
+              .sort(
+                (x, y) =>
+                  y[1] - x[1] ||
+                  targetNick(x[0]).localeCompare(targetNick(y[0]), "th"),
+              )
+              .map(([targetId, days]) => ({
+                empId,
+                targetId,
+                label: `แทน ${targetNick(targetId)} · ${days} วัน`,
+                emp: empById.get(empId),
+              })),
+          );
         return { duty: d, primaries, subs };
       });
   }, [
@@ -307,6 +326,7 @@ export default function DutyForecastModal({
     monthlyPrimaryCounts,
     dayActivity,
     empById,
+    employees,
     hasEmployees,
   ]);
 
@@ -526,7 +546,7 @@ export default function DutyForecastModal({
           <div className="text-xs text-txt-mid mb-3 leading-relaxed bg-gold-pale/50 border border-gold/30 rounded-[9px] px-3 py-2">
             นับ <b>ตั้งแต่ต้นปีถึงวันนี้</b> — เฉพาะที่ทำไปแล้ว (ไม่รวมล่วงหน้า) · <b>คนหลัก</b>{" "}
             รายสัปดาห์นับเป็น <b>วัน</b> ที่อยู่ทำจริง (ไม่นับวันลา) · รายเดือนนับเป็นเดือน ·{" "}
-            <b>คนแทน</b> = ครั้ง · วัน ที่มาทำแทนตอนคนอื่นลา
+            <b>คนแทน</b> = แทนใคร กี่วัน (ตอนคนนั้นลา)
             {!hasEmployees && " · (ฝั่งนี้ยังไม่แสดงคนแทน)"}
           </div>
         )}
@@ -572,15 +592,15 @@ export default function DutyForecastModal({
                           ))}
                         </>
                       )}
-                      {/* คนแทน (rotation ตอน primary ลา + coverage) — ครั้ง · วัน */}
+                      {/* คนแทน (rotation ตอน primary ลา + coverage) — แทนใคร กี่วัน */}
                       {subs.length > 0 && (
                         <>
                           <div className="px-3 pt-2 pb-1 text-[11px] font-bold text-txt-soft border-t border-bdr/50">
                             คนแทน
                           </div>
-                          {subs.map(({ empId, label, emp }) => (
+                          {subs.map(({ empId, targetId, label, emp }) => (
                             <CountRow
-                              key={`s-${empId}`}
+                              key={`s-${empId}-${targetId}`}
                               emp={emp}
                               empId={empId}
                               label={label}
