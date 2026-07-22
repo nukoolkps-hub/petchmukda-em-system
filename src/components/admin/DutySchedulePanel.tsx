@@ -1,5 +1,5 @@
 /* ─── Admin: Duty Schedule (ตารางหน้าที่) ──────────────────────────
-   Router บางๆ — list การ์ดหน้าที่ + เปิด modal เพิ่ม/แก้/ลบ + ดูล่วงหน้า
+   Router บางๆ — list การ์ดหน้าที่ + เปิด modal เพิ่ม/แก้/ลบ + ปฏิทินหน้าที่
    DutyCard / DutyEditModal แยกเป็นไฟล์ของตัวเอง                          */
 
 import {
@@ -118,7 +118,7 @@ export default function DutySchedulePanel({
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr bg-cream text-maroon text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform duration-100"
             >
               <IconCalendarRange size={15} strokeWidth={2.4} />
-              ดูล่วงหน้า
+              ปฏิทินหน้าที่
             </button>
           )}
           <button
