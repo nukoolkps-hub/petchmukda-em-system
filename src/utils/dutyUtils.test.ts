@@ -584,6 +584,71 @@ describe("computeCoverageEarningsForMonth", () => {
       ).total,
     ).toBe(100);
   });
+
+  it("ไม่จ่ายค่าแทนวันเสาร์ที่ร้านปิด (ลาเสาร์วันเดียว)", () => {
+    // 2026-08-08 = เสาร์ (ปิด default) → ไม่มีงาน = ไม่จ่ายค่าแทน
+    const leaves = [leave("t1", "2026-08-08")];
+    const total =
+      computeCoverageEarningsForMonth(
+        "c1",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+      ).total +
+      computeCoverageEarningsForMonth(
+        "c2",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+      ).total;
+    expect(total).toBe(0);
+  });
+
+  it("ไม่รวมวันเสาร์ปิดตอนลาคร่อมเสาร์ (ศ+อา จ่าย · ส ไม่จ่าย)", () => {
+    // ลา ศ 08-07 – อา 08-09 · เสาร์ 08-08 ปิด → จ่ายแค่ ศ + อา = 2 ครั้ง (200)
+    const leaves = [leave("t1", "2026-08-07", "2026-08-09")];
+    const total =
+      computeCoverageEarningsForMonth(
+        "c1",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+      ).total +
+      computeCoverageEarningsForMonth(
+        "c2",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+      ).total;
+    expect(total).toBe(200);
+  });
+
+  it("จ่ายค่าแทนวันเสาร์ถ้าเปิดพิเศษ (extraOpenSaturdays)", () => {
+    const leaves = [leave("t1", "2026-08-08")]; // เสาร์
+    const cal = { extraOpenSaturdays: ["2026-08-08"], extraClosedWeekdays: [] };
+    const total =
+      computeCoverageEarningsForMonth(
+        "c1",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+        cal,
+      ).total +
+      computeCoverageEarningsForMonth(
+        "c2",
+        "2026-08",
+        [coverage],
+        employees,
+        leaves,
+        cal,
+      ).total;
+    expect(total).toBe(100); // เสาร์เปิดพิเศษ → จ่าย 1 ครั้ง
+  });
 });
 
 // ─── monthly rotation substitute — ไม่ซ้ำ (fairness history) ────────
@@ -1216,6 +1281,91 @@ describe("computeDutyDayActivity", () => {
       0,
     );
     expect(totalPrimaryDays).toBe(5);
+  });
+
+  it("คนหลัก vs คนแทน แยกกัน ไม่นับวันซ้ำ (รวม = จำนวนวันเปิดร้าน)", () => {
+    // 08-03..07 = จ-ศ เปิด 5 วัน · pool [a,b,c] · primary รอบ 0 = a
+    // a (คนหลัก) ลา 08-05 วันเดียว → วันนั้นเป็น "คนแทน" (คนอื่น) ไม่ใช่ "คนหลัก"
+    // invariant: ทุกวันเปิดถูกนับ "ครั้งเดียว" — คนหลัก + คนแทน = 5 (ไม่ซ้ำ/ไม่เกิน)
+    const emps = [emp("a"), emp("b"), emp("c")];
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      emps,
+      [leave("a", "2026-08-05")],
+      null,
+      "2026-08-03",
+      "2026-08-07",
+    ).get("w");
+    if (!act) throw new Error("no activity");
+    const primTotal = [...act.primaryDays.values()].reduce((s, n) => s + n, 0);
+    const subTotal = [...act.substitute.values()].reduce(
+      (s, c) => s + c.days,
+      0,
+    );
+    expect(primTotal + subTotal).toBe(5); // ทุกวันเปิดนับครั้งเดียว
+    expect(primTotal).toBe(4); // a อยู่ทำ 4 วัน (เว้น 08-05)
+    expect(subTotal).toBe(1); // 08-05 คนแทน 1 วัน
+    expect(act.primaryDays.get("a")).toBe(4); // วันที่ a ลาไม่นับเป็นคนหลัก
+    expect(act.substitute.has("a")).toBe(false); // a ลา → ไม่ใช่คนแทนวันนั้น
+  });
+
+  it("คนหลัก: ไม่นับวันเสาร์ที่ร้านปิด (เสาร์ = ปิด default)", () => {
+    // 08-03..08 = จ-ส · เสาร์ 08-08 ปิด → นับเฉพาะ จ-ศ = 5 วัน (ไม่ใช่ 6)
+    const emps = [emp("a")];
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      emps,
+      [],
+      null,
+      "2026-08-03",
+      "2026-08-08",
+    ).get("w");
+    expect(act?.primaryDays.get("a")).toBe(5);
+  });
+
+  it("คนหลัก: นับวันเสาร์ถ้าเปิดพิเศษ (extraOpenSaturdays)", () => {
+    // เสาร์ 08-08 อยู่ใน extraOpenSaturdays → เปิด → นับ จ-ศ (5) + เสาร์ (1) = 6
+    const emps = [emp("a")];
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      emps,
+      [],
+      { extraOpenSaturdays: ["2026-08-08"], extraClosedWeekdays: [] },
+      "2026-08-03",
+      "2026-08-08",
+    ).get("w");
+    expect(act?.primaryDays.get("a")).toBe(6);
+  });
+
+  it("คนแทน (coverage): ไม่นับวันเสาร์ที่ร้านปิด (ลาคร่อมเสาร์)", () => {
+    // t1 (เป้าหมาย) ลา พฤ 08-06 – ส 08-08 (คร่อมเสาร์) · เสาร์ปิด → คนแทนนับแค่
+    // พฤ,ศ = 2 วัน (ไม่รวมเสาร์ 08-08 ที่ร้านปิด)
+    const leaves = [leave("t1", "2026-08-06", "2026-08-08")];
+    const sub = computeDutyDayActivity(
+      [cov()],
+      employees,
+      leaves,
+      null,
+      "2026-08-01",
+      "2026-08-08",
+    ).get("cov")?.substitute;
+    const days = [...(sub?.values() ?? [])].reduce((s, c) => s + c.days, 0);
+    expect(days).toBe(2);
   });
 });
 
