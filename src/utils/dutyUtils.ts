@@ -351,12 +351,18 @@ export function computeDutyForDay(
     };
   }
 
-  // primary ลา → หา substitute (ข้ามคนที่ติดหน้าที่อื่น + ข้ามคนที่ลา)
-  // scan เริ่มจากตำแหน่ง primary ใน pool (deterministic)
+  // admin ตั้ง "ไม่ให้เป็นคนแทน" ในหน้าที่นี้ (ยังหมุนเป็นเวรหลักได้ตามปกติ) —
+  // ต้องข้ามทั้ง 2 pass ให้ตรงกับ server (computeDutyForDay) + forecast
+  // (pickForecastSubstitute/pickRotationSubstitute) ที่เคารพค่านี้อยู่แล้ว
+  const subExcluded = new Set(duty.substituteExcludedEmpIds || []);
+
+  // primary ลา → หา substitute (ข้ามคนที่ติดหน้าที่อื่น + ข้ามคนที่ลา + ข้ามคนที่
+  // admin ตั้งไม่ให้เป็นคนแทน) · scan เริ่มจากตำแหน่ง primary ใน pool (deterministic)
   const startIdx = Math.max(0, pool.indexOf(primary));
   for (let offset = 1; offset < pool.length; offset++) {
     const cand = pool[(startIdx + offset) % pool.length];
     if (cand === primary) continue;
+    if (subExcluded.has(cand)) continue;
     if (isOnLeave(leaves, cand, todayYmd)) continue;
     if (primariesToday.has(cand)) continue; // ไม่ทับหน้าที่อื่น
     return {
@@ -372,10 +378,11 @@ export function computeDutyForDay(
   }
 
   // fallback: ทุกคนใน pool ติดหน้าที่อื่น → ใช้ใครก็ได้ใน pool ที่ไม่ลา
-  // (double up — ยังไม่ออกไป fullPool ตามกฎ monthly แยก)
+  // (double up — ยังไม่ออกไป fullPool ตามกฎ monthly แยก · ยังข้าม subExcluded)
   for (let offset = 1; offset < pool.length; offset++) {
     const cand = pool[(startIdx + offset) % pool.length];
     if (cand === primary) continue;
+    if (subExcluded.has(cand)) continue;
     if (isOnLeave(leaves, cand, todayYmd)) continue;
     return {
       dutyId: duty.id,
