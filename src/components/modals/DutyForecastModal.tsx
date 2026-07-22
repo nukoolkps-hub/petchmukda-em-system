@@ -23,10 +23,11 @@ import type { Duty, Employee, LeaveEntry, StoreCalendar } from "../../types";
 import { toYMD } from "../../utils/dateUtils";
 import {
   type CoverageSegment,
-  computeCoverageCounts,
   computeDutyCounts,
+  computeDutyDayActivity,
   computeDutyForecast,
   computeDutyHistory,
+  type DutyDayActivity,
 } from "../../utils/dutyUtils";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
@@ -107,6 +108,36 @@ type MonthEntry =
       items: ForecastItem[];
     }
   | { type: "coverage"; start: string; item: CoverageForecastItem };
+
+/** 1 บรรทัดในแท็บจำนวนครั้ง — avatar + ชื่อ + ป้ายจำนวน */
+function CountRow({
+  emp,
+  empId,
+  label,
+}: {
+  emp: SnapshotPoolMember | undefined;
+  empId: string;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-2.5 px-3 py-2 text-sm">
+      {emp && (
+        <AvatarCircle
+          avatar={emp.avatar}
+          avatarType={emp.avatarType}
+          avatarImageUrl={emp.avatarImageUrl}
+          size={22}
+          fontSize={10}
+          border="none"
+        />
+      )}
+      <span className="flex-1 min-w-0 font-semibold text-txt truncate">
+        {emp?.nickname || emp?.name || empId}
+      </span>
+      <span className="shrink-0 font-bold text-maroon">{label}</span>
+    </div>
+  );
+}
 
 export default function DutyForecastModal({
   duties,
@@ -194,41 +225,45 @@ export default function DutyForecastModal({
   // employees → นับ coverage ได้ · ฝั่งพนักงานไม่มี employees → แสดงเฉพาะหมุนเวียน)
   const yearStartYmd = `${todayYmd.slice(0, 4)}-01-01`;
   const hasEmployees = !!employees && employees.length > 0;
-  const dutyCounts = useMemo(() => {
-    if (!isCounts) return new Map<string, Map<string, number>>();
-    const merged = computeDutyCounts(
+  // คนหลักรายเดือน (monthly) — นับเป็น "เดือน" (จำนวนรอบ) · weekly ใช้ day activity
+  const monthlyPrimaryCounts = useMemo(
+    () =>
+      isCounts
+        ? computeDutyCounts(duties, poolByDutyId, yearStartYmd, todayYmd)
+        : new Map<string, Map<string, number>>(),
+    [isCounts, duties, poolByDutyId, yearStartYmd, todayYmd],
+  );
+  // กิจกรรมรายวัน — คนหลัก weekly (วัน) + คนแทน (ครั้ง·วัน) · ต้องมี employees
+  const dayActivity = useMemo(
+    () =>
+      isCounts && hasEmployees && employees
+        ? computeDutyDayActivity(
+            duties,
+            employees,
+            allLeaves,
+            storeCalendar,
+            yearStartYmd,
+            todayYmd,
+          )
+        : new Map<string, DutyDayActivity>(),
+    [
+      isCounts,
+      hasEmployees,
+      employees,
       duties,
-      poolByDutyId,
+      allLeaves,
+      storeCalendar,
       yearStartYmd,
       todayYmd,
-    );
-    if (hasEmployees && employees) {
-      for (const [dutyId, m] of computeCoverageCounts(
-        duties,
-        employees,
-        allLeaves,
-        yearStartYmd,
-        todayYmd,
-      )) {
-        merged.set(dutyId, m);
-      }
-    }
-    return merged;
-  }, [
-    isCounts,
-    yearStartYmd,
-    duties,
-    poolByDutyId,
-    todayYmd,
-    hasEmployees,
-    employees,
-    allLeaves,
-  ]);
+    ],
+  );
 
-  // แถวสรุปจำนวน — ต่อหน้าที่ (rotation ก่อน coverage) · เรียงคนตาม count มาก→น้อย
-  // coverage แสดงเฉพาะเมื่อมี employees (คำนวณได้) · ไม่งั้นซ่อน (กันขึ้น 0 ลวง)
+  // แถวสรุป — ต่อหน้าที่ · คนหลัก (weekly=วัน · monthly=เดือน) + คนแทน (ครั้ง·วัน)
   const countRows = useMemo(() => {
     if (!isCounts) return [];
+    const nick = (id: string) => empById.get(id)?.nickname || "";
+    const byCountDesc = (a: [string, number], b: [string, number]) =>
+      b[1] - a[1] || nick(a[0]).localeCompare(nick(b[0]), "th");
     const ordered = [
       ...duties.filter((d) => d.kind !== "coverage"),
       ...(hasEmployees ? duties.filter((d) => d.kind === "coverage") : []),
@@ -236,24 +271,44 @@ export default function DutyForecastModal({
     return ordered
       .filter((d) => !dutyFilter || d.id === dutyFilter)
       .map((d) => {
-        const m = dutyCounts.get(d.id) || new Map<string, number>();
-        const people = [...m.entries()]
+        const act = dayActivity.get(d.id);
+        // คนหลัก: weekly → วันจริง (day activity) · monthly → เดือน (periods)
+        const primarySrc =
+          d.kind === "coverage"
+            ? []
+            : d.period === "monthly"
+              ? [...(monthlyPrimaryCounts.get(d.id)?.entries() || [])]
+                  .sort(byCountDesc)
+                  .map(([empId, n]) => ({ empId, label: `${n} เดือน` }))
+              : [...(act?.primaryDays.entries() || [])]
+                  .sort(byCountDesc)
+                  .map(([empId, n]) => ({ empId, label: `${n} วัน` }));
+        const primaries = primarySrc.map((p) => ({
+          ...p,
+          emp: empById.get(p.empId),
+        }));
+        const subs = [...(act?.substitute.entries() || [])]
           .sort(
             (a, b) =>
-              b[1] - a[1] ||
-              (empById.get(a[0])?.nickname || "").localeCompare(
-                empById.get(b[0])?.nickname || "",
-                "th",
-              ),
+              b[1].days - a[1].days ||
+              nick(a[0]).localeCompare(nick(b[0]), "th"),
           )
-          .map(([empId, count]) => ({
+          .map(([empId, c]) => ({
             empId,
-            count,
+            label: `${c.occasions} ครั้ง · ${c.days} วัน`,
             emp: empById.get(empId),
           }));
-        return { duty: d, people };
+        return { duty: d, primaries, subs };
       });
-  }, [isCounts, duties, dutyFilter, dutyCounts, empById, hasEmployees]);
+  }, [
+    isCounts,
+    duties,
+    dutyFilter,
+    monthlyPrimaryCounts,
+    dayActivity,
+    empById,
+    hasEmployees,
+  ]);
 
   // flatten ทุก period → item เดียว เรียงตามวันที่ (แล้วชื่อหน้าที่)
   const allItems = useMemo(() => {
@@ -469,68 +524,70 @@ export default function DutyForecastModal({
         {/* note (จำนวนครั้ง) */}
         {isCounts && (
           <div className="text-xs text-txt-mid mb-3 leading-relaxed bg-gold-pale/50 border border-gold/30 rounded-[9px] px-3 py-2">
-            นับ <b>ตั้งแต่ต้นปีถึงวันนี้</b> — เฉพาะที่ทำไปแล้ว (ไม่รวมล่วงหน้า) ·
-            หน้าที่หมุนเวียนนับจากสูตร · แทนคนลานับจากใบลาจริง
-            {!hasEmployees && " · (ฝั่งนี้แสดงเฉพาะหน้าที่หมุนเวียน)"}
+            นับ <b>ตั้งแต่ต้นปีถึงวันนี้</b> — เฉพาะที่ทำไปแล้ว (ไม่รวมล่วงหน้า) · <b>คนหลัก</b>{" "}
+            รายสัปดาห์นับเป็น <b>วัน</b> ที่อยู่ทำจริง (ไม่นับวันลา) · รายเดือนนับเป็นเดือน ·{" "}
+            <b>คนแทน</b> = ครั้ง · วัน ที่มาทำแทนตอนคนอื่นลา
+            {!hasEmployees && " · (ฝั่งนี้ยังไม่แสดงคนแทน)"}
           </div>
         )}
 
         {isCounts ? (
-          countRows.every((r) => r.people.length === 0) ? (
+          countRows.every(
+            (r) => r.primaries.length === 0 && r.subs.length === 0,
+          ) ? (
             <div className="text-center text-txt-soft py-10 px-6">
               ยังไม่มีใครทำหน้าที่ในปีนี้
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
-              {countRows.map(({ duty, people }) => (
+              {countRows.map(({ duty, primaries, subs }) => (
                 <div
                   key={duty.id}
                   className="rounded-[11px] border border-bdr bg-white overflow-hidden"
                 >
-                  <div className="px-3 py-1.5 bg-gold-pale/60 border-b border-bdr flex items-center justify-between gap-2">
+                  <div className="px-3 py-1.5 bg-gold-pale/60 border-b border-bdr">
                     <span className="text-sm font-bold text-maroon truncate">
                       {duty.name}
                     </span>
-                    <span className="text-[11px] text-txt-soft shrink-0">
-                      {duty.kind === "coverage"
-                        ? "แทนคนลา · นับเป็นวัน"
-                        : `หมุนเวียน · นับเป็น${duty.period === "monthly" ? "เดือน" : "รอบ"}`}
-                    </span>
                   </div>
-                  {people.length === 0 ? (
+                  {primaries.length === 0 && subs.length === 0 ? (
                     <div className="px-3 py-2 text-xs text-txt-soft italic">
                       ยังไม่มีในปีนี้
                     </div>
                   ) : (
                     <div className="flex flex-col">
-                      {people.map(({ empId, count, emp }) => (
-                        <div
-                          key={empId}
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm border-t border-bdr/50 first:border-t-0"
-                        >
-                          {emp && (
-                            <AvatarCircle
-                              avatar={emp.avatar}
-                              avatarType={emp.avatarType}
-                              avatarImageUrl={emp.avatarImageUrl}
-                              size={22}
-                              fontSize={10}
-                              border="none"
+                      {/* คนหลัก — weekly=วัน · monthly=เดือน */}
+                      {primaries.length > 0 && (
+                        <>
+                          <div className="px-3 pt-2 pb-1 text-[11px] font-bold text-txt-soft">
+                            คนหลัก
+                          </div>
+                          {primaries.map(({ empId, label, emp }) => (
+                            <CountRow
+                              key={`p-${empId}`}
+                              emp={emp}
+                              empId={empId}
+                              label={label}
                             />
-                          )}
-                          <span className="flex-1 min-w-0 font-semibold text-txt truncate">
-                            {emp?.nickname || emp?.name || empId}
-                          </span>
-                          <span className="shrink-0 font-bold text-maroon">
-                            {count}{" "}
-                            {duty.kind === "coverage"
-                              ? "วัน"
-                              : duty.period === "monthly"
-                                ? "เดือน"
-                                : "รอบ"}
-                          </span>
-                        </div>
-                      ))}
+                          ))}
+                        </>
+                      )}
+                      {/* คนแทน (rotation ตอน primary ลา + coverage) — ครั้ง · วัน */}
+                      {subs.length > 0 && (
+                        <>
+                          <div className="px-3 pt-2 pb-1 text-[11px] font-bold text-txt-soft border-t border-bdr/50">
+                            คนแทน
+                          </div>
+                          {subs.map(({ empId, label, emp }) => (
+                            <CountRow
+                              key={`s-${empId}`}
+                              emp={emp}
+                              empId={empId}
+                              label={label}
+                            />
+                          ))}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

@@ -770,30 +770,71 @@ export function computeCoverageEarningsForMonthAll(
   return result;
 }
 
-/** จำนวนครั้งที่แต่ละคนถูกเลือกเป็น "คนแทน" ต่อ coverage duty ในช่วง
- *  [fromYmd, toYmd] — replay จากต้นปีให้ history ยุติธรรมถูก แต่นับเฉพาะวันใน
- *  ช่วง · toYmd ปกติ = "วันนี้" → นับเฉพาะที่เกิดขึ้นแล้ว ไม่รวมใบลาล่วงหน้า ·
- *  นับ **ทุก** coverage duty ไม่ว่ามีเงินค่าแทนหรือไม่ (ต่างจาก
- *  ...EarningsForMonthAll ที่กรอง pay>0) · Map(dutyId → Map(empId → count))   */
-export function computeCoverageCounts(
+/** การเข้าไปแทน ต่อคน — ครั้ง (ช่วงลาต่อเนื่อง = 1 ครั้ง) + วัน (รายวัน) */
+export interface SubstituteCount {
+  occasions: number;
+  days: number;
+}
+
+/** กิจกรรมรายวันของ 1 duty */
+export interface DutyDayActivity {
+  /** วันที่คนนี้เป็น "คนหลัก" และอยู่ทำจริง (ร้านเปิด + ไม่ลา) — นับรายวัน
+   *  (ใช้กับหน้าที่หมุนเวียนรายสัปดาห์ · รายเดือนแสดงเป็น "เดือน" จาก
+   *  computeDutyCounts แทน) · Map(empId → จำนวนวัน) */
+  primaryDays: Map<string, number>;
+  /** การเข้าไปแทน (rotation ตอน primary ลา + coverage) · Map(empId → {ครั้ง, วัน}) */
+  substitute: Map<string, SubstituteCount>;
+}
+
+/** สรุปกิจกรรมรายวันต่อ duty ในช่วง [fromYmd, toYmd] (เฉพาะที่ทำแล้ว) — replay
+ *  รายวัน (คิดเฉพาะวันร้านเปิดผ่าน computeAllDutiesForDay/applicableDuties)
+ *  - คนหลักรายวัน: reason "rotation" → คนหลักอยู่ทำวันนั้น (+1 วัน)
+ *  - คนแทน: reason substitute_for_leave/double_up (rotation) + coverage pick
+ *  ⚠️ คำนวณจากสูตร + ใบลาจริง (ไม่ใช่ log จริง) · client ไม่รู้ว่าใครถูกดึงไป
+ *  coverage วันนั้น → คนแทน rotation อาจคลาดเล็กน้อย (overview)              */
+export function computeDutyDayActivity(
   duties: Duty[],
   employees: Employee[],
   allLeaves: LeaveEntry[],
+  calendar: StoreCalendarLite | null | undefined,
   fromYmd: string,
   toYmd: string,
-): Map<string, Map<string, number>> {
+): Map<string, DutyDayActivity> {
+  const result = new Map<string, DutyDayActivity>();
+  if (fromYmd > toYmd) return result;
+  const rotationDuties = duties.filter((d) => d.kind !== "coverage");
   const coverageDuties = duties.filter((d) => d.kind === "coverage");
-  const result = new Map<string, Map<string, number>>();
-  if (coverageDuties.length === 0 || fromYmd > toYmd) return result;
-  const monthlyDuties = duties.filter(
-    (d) => d.kind !== "coverage" && d.period === "monthly",
-  );
-  // replay ตั้งแต่ต้นปี (ของ fromYmd) เพื่อ seed history ให้ยุติธรรม ·
-  // นับเฉพาะวันใน [fromYmd, toYmd]
+  const monthlyDuties = rotationDuties.filter((d) => d.period === "monthly");
   const yearStart = `${fromYmd.slice(0, 4)}-01-01`;
   const replayStart = yearStart < fromYmd ? yearStart : fromYmd;
-  const history = new Map<string, number>();
+  const covHistory = new Map<string, number>();
   const monthlyPrimariesCache = new Map<string, Set<string>>();
+  const ensure = (dutyId: string): DutyDayActivity => {
+    let a = result.get(dutyId);
+    if (!a) {
+      a = { primaryDays: new Map(), substitute: new Map() };
+      result.set(dutyId, a);
+    }
+    return a;
+  };
+  const bumpPrimary = (dutyId: string, empId: string) => {
+    const a = ensure(dutyId);
+    a.primaryDays.set(empId, (a.primaryDays.get(empId) || 0) + 1);
+  };
+  // นับ occasions ของคนแทน (วันติดกันของ duty+คนเดิม = 1 ครั้ง)
+  const lastSubDay = new Map<string, string>();
+  const bumpSub = (dutyId: string, empId: string, ymd: string) => {
+    const a = ensure(dutyId);
+    const cur = a.substitute.get(empId) || { occasions: 0, days: 0 };
+    const key = `${dutyId}|${empId}`;
+    const prev = lastSubDay.get(key);
+    const newOccasion = !prev || nextYmd(prev) !== ymd;
+    a.substitute.set(empId, {
+      occasions: cur.occasions + (newOccasion ? 1 : 0),
+      days: cur.days + 1,
+    });
+    lastSubDay.set(key, ymd);
+  };
   for (
     let d = new Date(`${replayStart}T00:00:00`);
     ;
@@ -808,28 +849,42 @@ export function computeCoverageCounts(
       monthlyPrimaries = monthlyPrimariesForDay(monthlyDuties, ymd, employees);
       monthlyPrimariesCache.set(ym, monthlyPrimaries);
     }
-    const usedToday = new Set<string>();
-    for (const duty of coverageDuties) {
-      for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
-        const pick = pickCoverageCandidate(
-          duty,
-          ymd,
-          employees,
-          allLeaves,
-          history,
-          usedToday,
-          monthlyPrimaries,
-        );
-        if (!pick) continue;
-        usedToday.add(pick);
-        history.set(pick, (history.get(pick) || 0) + 1);
-        if (inRange) {
-          let counts = result.get(duty.id);
-          if (!counts) {
-            counts = new Map();
-            result.set(duty.id, counts);
-          }
-          counts.set(pick, (counts.get(pick) || 0) + 1);
+    // ── rotation: คนหลักอยู่ทำ (rotation) หรือ คนแทน (substitute/double_up) ──
+    if (inRange && rotationDuties.length > 0) {
+      for (const a of computeAllDutiesForDay(
+        rotationDuties,
+        ymd,
+        employees,
+        allLeaves,
+        calendar,
+      )) {
+        if (!a.actualEmpId) continue;
+        if (a.reason === "rotation") bumpPrimary(a.dutyId, a.actualEmpId);
+        else if (
+          a.reason === "substitute_for_leave" ||
+          a.reason === "double_up"
+        )
+          bumpSub(a.dutyId, a.actualEmpId, ymd);
+      }
+    }
+    // ── coverage substitutes (replay ทั้งช่วงเพื่อ history · นับเฉพาะ inRange) ──
+    if (coverageDuties.length > 0) {
+      const usedToday = new Set<string>();
+      for (const duty of coverageDuties) {
+        for (const _t of dutyAbsentTargets(duty, ymd, employees, allLeaves)) {
+          const pick = pickCoverageCandidate(
+            duty,
+            ymd,
+            employees,
+            allLeaves,
+            covHistory,
+            usedToday,
+            monthlyPrimaries,
+          );
+          if (!pick) continue;
+          usedToday.add(pick);
+          covHistory.set(pick, (covHistory.get(pick) || 0) + 1);
+          if (inRange) bumpSub(duty.id, pick, ymd);
         }
       }
     }
