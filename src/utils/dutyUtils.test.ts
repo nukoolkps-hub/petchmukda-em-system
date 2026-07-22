@@ -3,11 +3,11 @@ import type { Duty, Employee, LeaveEntry } from "../types";
 import {
   applicableDuties,
   computeAllDutiesForDay,
-  computeCoverageCounts,
   computeCoverageEarningsForMonth,
   computeCoverageEarningsForMonthAll,
   computeCoverageForecast,
   computeDutyCounts,
+  computeDutyDayActivity,
   computeDutyForDay,
   computeDutyForecast,
   computeDutyHistory,
@@ -1098,9 +1098,9 @@ describe("computeDutyCounts", () => {
   });
 });
 
-describe("computeCoverageCounts", () => {
+describe("computeDutyDayActivity", () => {
   const employees = [
-    emp("t1", { roleId: "sales", displayOrder: 1 }), // target
+    emp("t1", { roleId: "sales", displayOrder: 1 }), // coverage target
     emp("c1", { roleId: "cashier", displayOrder: 1 }),
     emp("c2", { roleId: "cashier", displayOrder: 2 }),
   ];
@@ -1114,54 +1114,79 @@ describe("computeCoverageCounts", () => {
       ...over,
     });
 
-  it("นับคนแทนต่อหน้าที่ · หมุนเวียนยุติธรรม (2 วันลา → คนละคน)", () => {
+  it("coverage substitute: นับวัน + ครั้ง (2 วันลาแยกกัน → คนละคน คนละครั้ง)", () => {
     const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-11")];
-    const m = computeCoverageCounts(
+    const sub = computeDutyDayActivity(
       [cov()],
       employees,
       leaves,
+      null,
       "2026-01-01",
       "2026-03-31",
-    ).get("cov");
-    if (!m) throw new Error("no counts");
-    expect(m.get("c1")).toBe(1);
-    expect(m.get("c2")).toBe(1);
+    ).get("cov")?.substitute;
+    if (!sub) throw new Error("no counts");
+    expect(sub.get("c1")).toEqual({ occasions: 1, days: 1 });
+    expect(sub.get("c2")).toEqual({ occasions: 1, days: 1 });
   });
 
-  it("นับเฉพาะที่ทำไปแล้ว — วันลาหลัง toYmd (ล่วงหน้า) ไม่ถูกนับ", () => {
-    // ลา 2 วัน: 03-10 (ทำแล้ว) + 03-25 (ล่วงหน้า) · toYmd = 03-15
-    const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-25")];
-    const m = computeCoverageCounts(
-      [cov()],
-      employees,
-      leaves,
-      "2026-01-01",
-      "2026-03-15",
-    ).get("cov");
-    if (!m) throw new Error("no counts");
-    // นับแค่ 03-10 → รวม 1 ครั้ง (ไม่นับ 03-25 ที่อยู่หลัง toYmd)
-    const total = [...m.values()].reduce((s, n) => s + n, 0);
-    expect(total).toBe(1);
-  });
-
-  it("นับแม้หน้าที่แทนไม่มีเงินค่าแทน (ต่างจาก EarningsForMonthAll)", () => {
-    const leaves = [leave("t1", "2026-03-10")];
-    const noPay = cov({ coveragePayPerOccurrence: 0 });
+  it("substitute: วันติดกันของคนเดิม = 1 ครั้ง หลายวัน", () => {
+    const one = cov({ candidateEmpIds: ["c1"] });
+    const leaves = [leave("t1", "2026-03-10", "2026-03-12")];
     expect(
-      computeCoverageCounts(
-        [noPay],
+      computeDutyDayActivity(
+        [one],
         employees,
         leaves,
+        null,
         "2026-01-01",
         "2026-03-31",
       )
         .get("cov")
-        ?.get("c1"),
-    ).toBe(1);
-    // EarningsForMonthAll กรอง pay>0 → ว่าง
-    expect(
-      computeCoverageEarningsForMonthAll([noPay], employees, leaves, "2026-03"),
-    ).toEqual({});
+        ?.substitute.get("c1"),
+    ).toEqual({ occasions: 1, days: 3 });
+  });
+
+  it("นับเฉพาะที่ทำแล้ว — วันลาหลัง toYmd (ล่วงหน้า) ไม่ถูกนับ", () => {
+    const leaves = [leave("t1", "2026-03-10"), leave("t1", "2026-03-25")];
+    const sub = computeDutyDayActivity(
+      [cov()],
+      employees,
+      leaves,
+      null,
+      "2026-01-01",
+      "2026-03-15",
+    ).get("cov")?.substitute;
+    if (!sub) throw new Error("no counts");
+    const days = [...sub.values()].reduce((s, c) => s + c.days, 0);
+    expect(days).toBe(1); // 03-10 เท่านั้น (03-25 ล่วงหน้า)
+  });
+
+  it("rotation คนหลักรายวัน: นับเฉพาะวันที่อยู่ทำจริง (วันลาไม่นับ)", () => {
+    // 2026-08-03..07 = จ-ศ (เปิด) · duty เดี่ยว pool [a,b,c] · primary รอบ 0 = a
+    const emps = [emp("a"), emp("b"), emp("c")];
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+    });
+    // a เป็นคนหลัก · ลา 03,04 → อยู่ทำจริง 3 วัน (05,06,07) · คนแทน 2 วัน
+    const act = computeDutyDayActivity(
+      [w],
+      emps,
+      [leave("a", "2026-08-03", "2026-08-04")],
+      null,
+      "2026-08-03",
+      "2026-08-07",
+    ).get("w");
+    if (!act) throw new Error("no activity");
+    expect(act.primaryDays.get("a")).toBe(3); // 5 วันทำการ − 2 วันลา
+    // คนแทน 2 วัน (03,04) · คนที่ลา (a) ไม่ถูกนับเป็นคนแทน
+    const subDays = [...act.substitute.values()].reduce(
+      (s, c) => s + c.days,
+      0,
+    );
+    expect(subDays).toBe(2);
+    expect(act.substitute.has("a")).toBe(false);
   });
 });
 
