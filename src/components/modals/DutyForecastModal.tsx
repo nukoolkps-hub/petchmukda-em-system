@@ -492,7 +492,9 @@ export default function DutyForecastModal({
                       {duty.name}
                     </span>
                     <span className="text-[11px] text-txt-soft shrink-0">
-                      {duty.kind === "coverage" ? "แทนคนลา" : "หมุนเวียน"}
+                      {duty.kind === "coverage"
+                        ? "แทนคนลา · นับเป็นวัน"
+                        : `หมุนเวียน · นับเป็น${duty.period === "monthly" ? "เดือน" : "รอบ"}`}
                     </span>
                   </div>
                   {people.length === 0 ? (
@@ -520,7 +522,12 @@ export default function DutyForecastModal({
                             {emp?.nickname || emp?.name || empId}
                           </span>
                           <span className="shrink-0 font-bold text-maroon">
-                            {count} ครั้ง
+                            {count}{" "}
+                            {duty.kind === "coverage"
+                              ? "วัน"
+                              : duty.period === "monthly"
+                                ? "เดือน"
+                                : "รอบ"}
                           </span>
                         </div>
                       ))}
