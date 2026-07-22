@@ -1257,6 +1257,29 @@ describe("computeDutyDayActivity", () => {
     expect(act.substitute.get("b")?.byTarget.get("a")).toBe(2);
   });
 
+  it("คนแทน: ข้ามคนที่ตั้ง 'ไม่ให้เป็นคนแทน' (substituteExcludedEmpIds)", () => {
+    // pool [a,b,c] · primary รอบ 0 = a ลา 08-05 · b ถูกตั้งไม่ให้เป็นคนแทน
+    // → คนถัดไป c มาแทน (ไม่ใช่ b) · b ต้องไม่โผล่ในคนแทน
+    const emps = [emp("a"), emp("b"), emp("c")];
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+      substituteExcludedEmpIds: ["b"],
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      emps,
+      [leave("a", "2026-08-05")],
+      null,
+      "2026-08-03",
+      "2026-08-07",
+    ).get("w");
+    if (!act) throw new Error("no activity");
+    expect(act.substitute.has("b")).toBe(false); // b ไม่ถูกเลือกเป็นคนแทน
+    expect(act.substitute.get("c")?.byTarget.get("a")).toBe(1); // c แทน a 1 วัน
+  });
+
   it("ไม่นับวันก่อน rotationStartDate — หน้าที่ยังไม่เริ่มหมุน (กันคนหลักบวม)", () => {
     // duty เริ่มหมุน 2026-08-03 แต่ replay ตั้งแต่ 2026-06-01 → วันก่อนเริ่ม
     // (มิ.ย.-ก.ค.) periodIndex ติดลบถูก clamp เป็น 0 ทุกวัน · ถ้าไม่ gate คนหลัก
