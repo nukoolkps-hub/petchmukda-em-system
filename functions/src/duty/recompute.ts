@@ -29,6 +29,7 @@ import {
 	type Employee,
 	getPeriodIndex,
 	type LeaveEntry,
+	monthlyPrimariesForDay,
 	replayCoverageHistory,
 	replayRotationSubHistory,
 	resolveDutyPool,
@@ -188,22 +189,36 @@ async function buildSnapshot(): Promise<Snapshot> {
 		storeCalendar,
 	);
 
-	// fairness history ของ "คนแทน" หน้าที่ประจำเดือน (rotation·monthly) —
-	// replay ตั้งแต่ต้นปีต่อ duty → เลือกคนแทนแบบไม่ซ้ำ (เคยแทนน้อยสุดก่อน)
+	// fairness history ของ "คนแทน" หน้าที่หมุนเวียน (weekly + monthly) — replay
+	// ตั้งแต่ต้นปีต่อ duty → เลือกคนแทนแบบยุติธรรม (เคยแทนน้อยสุดก่อน) · หน้าที่
+	// รายสัปดาห์กันคนหลักรายเดือนออกจาก pool คนแทน (คนรายเดือนไม่แทนรายสัปดาห์ —
+	// ตรงกับ preferredPool ของ computeDutyForDay ที่ excludeForPrimary=lockedByMonthly)
+	const monthlyPrimaryIds = monthlyPrimariesForDay(
+		monthlyDuties,
+		ymd,
+		employees,
+	);
 	const rotationSubHistory = new Map<string, Map<string, number>>(
 		duties
-			.filter((d) => d.kind !== "coverage" && d.period === "monthly")
-			.map((d) => [
-				d.id,
-				replayRotationSubHistory(
-					d,
-					resolveDutyPool(d, employees).map((e) => e.id),
-					allLeaves,
-					storeCalendar,
-					yearStart,
-					ymd,
-				),
-			]),
+			.filter((d) => d.kind !== "coverage")
+			.map((d) => {
+				const fullPool = resolveDutyPool(d, employees).map((e) => e.id);
+				const pool =
+					d.period === "weekly"
+						? fullPool.filter((id) => !monthlyPrimaryIds.has(id))
+						: fullPool;
+				return [
+					d.id,
+					replayRotationSubHistory(
+						d,
+						pool,
+						allLeaves,
+						storeCalendar,
+						yearStart,
+						ymd,
+					),
+				];
+			}),
 	);
 
 	const assignments = computeAllDutiesForDay(

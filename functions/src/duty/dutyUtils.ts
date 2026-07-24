@@ -582,7 +582,7 @@ export function pickRotationSubstitute(
 	return null;
 }
 
-/** Replay การแทนของหน้าที่ monthly ตั้งแต่ fromYmd → ก่อน toYmdExclusive
+/** Replay การแทน (rotation) ตั้งแต่ fromYmd → ก่อน toYmdExclusive — weekly+monthly
  *  นับว่าใครแทนไปกี่ครั้ง (seed ให้เลือกคนแทนแบบไม่ซ้ำต่อเนื่องกับที่ผ่านมา)
  *  ⚠️ ต้องเหมือน src/utils/dutyUtils.ts เป๊ะ (check-duty-sync)            */
 export function replayRotationSubHistory(
@@ -594,9 +594,10 @@ export function replayRotationSubHistory(
 	toYmdExclusive: string,
 ): Map<string, number> {
 	const history = new Map<string, number>();
-	if (duty.period !== "monthly" || pool.length === 0) return history;
+	if (pool.length === 0) return history;
 	const subExcluded = new Set(duty.substituteExcludedEmpIds || []);
-	const primaryByMonth = new Map<string, string | null>();
+	// primary ต่อ "รอบ" (period index) — weekly=สัปดาห์ · monthly=เดือน
+	const primaryByPeriod = new Map<number, string | null>();
 	const end = new Date(`${toYmdExclusive}T00:00:00`);
 	for (
 		let d = new Date(`${fromYmd}T00:00:00`);
@@ -605,16 +606,11 @@ export function replayRotationSubHistory(
 	) {
 		const ymd = toYMD(d);
 		if (applicableDuties([duty], ymd, calendar).length === 0) continue;
-		const ym = ymd.slice(0, 7);
-		let primary = primaryByMonth.get(ym);
+		const idx = Math.max(0, getPeriodIndex(duty, ymd));
+		let primary = primaryByPeriod.get(idx);
 		if (primary === undefined) {
-			primary = pickPrimary(
-				duty,
-				pool,
-				Math.max(0, getPeriodIndex(duty, ymd)),
-				new Set(),
-			);
-			primaryByMonth.set(ym, primary);
+			primary = pickPrimary(duty, pool, idx, new Set());
+			primaryByPeriod.set(idx, primary);
 		}
 		if (!primary || !isOnLeave(allLeaves, primary, ymd)) continue;
 		const pick = pickRotationSubstitute(
@@ -1083,9 +1079,9 @@ function computeRotationForDay(
 			duty.period === "monthly" ? new Set<string>() : lockedByMonthly,
 			primariesToday,
 			primaryByDuty.get(duty.id),
-			duty.period === "monthly"
-				? rotationSubHistory?.get(duty.id)
-				: undefined,
+			// weekly + monthly ใช้ fair-pick "เคยแทนน้อยสุดก่อน" · weekly เลือก
+			// จาก preferredPool (กันคนหลักรายเดือน ผ่าน excludeForPrimary=lockedByMonthly)
+			rotationSubHistory?.get(duty.id),
 		),
 	);
 }
