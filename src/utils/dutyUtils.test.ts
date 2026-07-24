@@ -766,6 +766,26 @@ describe("pickRotationSubstitute / replayRotationSubHistory", () => {
     );
     expect(satOnly.size).toBe(0);
   });
+
+  it("รองรับ weekly — นับวันแทนรายสัปดาห์ในอดีต (fair)", () => {
+    const w = duty({
+      id: "w1",
+      period: "weekly",
+      rotationStartDate: "2026-07-06", // จันทร์
+      rotationStartEmpId: "a",
+    });
+    // a (คนหลักสัปดาห์แรก) ลา จ-อ → b, c แทนคนละวัน (fair · ไม่ใช่ b ทั้งคู่)
+    const history = replayRotationSubHistory(
+      w,
+      pool,
+      [leave("a", "2026-07-06"), leave("a", "2026-07-07")],
+      null,
+      "2026-07-06",
+      "2026-07-13",
+    );
+    expect(history.get("b")).toBe(1);
+    expect(history.get("c")).toBe(1);
+  });
 });
 
 describe("computeDutyForecast — monthly substitute ไม่ซ้ำ", () => {
@@ -825,7 +845,7 @@ describe("computeDutyForecast — monthly substitute ไม่ซ้ำ", () => 
     expect(f.periods[0].coverage?.map((s) => s.substituteEmpId)).toEqual(["a"]);
   });
 
-  it("weekly ยังใช้ neighbor-scan เดิม (คนเดิมแทนต่อเนื่อง)", () => {
+  it("weekly ใช้ fair-pick — คนแทนสลับยุติธรรม (ไม่ใช่คนเดิมซ้ำ)", () => {
     const w = duty({
       id: "w1",
       period: "weekly",
@@ -836,9 +856,10 @@ describe("computeDutyForecast — monthly substitute ไม่ซ้ำ", () => 
     const [f] = computeDutyForecast([w], wPools, "2026-07-06", "2026-07-12", [
       leave("a", "2026-07-08", "2026-07-09"),
     ]);
-    // b แทนทั้ง 2 วัน (segment เดียว) — ไม่สลับรายวัน
+    // a (คนหลัก) ลา 2 วัน → b แทนวันแรก, c แทนวันที่สอง (กระจายยุติธรรม สลับกัน)
     expect(f.periods[0].coverage).toEqual([
-      { start: "2026-07-08", end: "2026-07-09", substituteEmpId: "b" },
+      { start: "2026-07-08", end: "2026-07-08", substituteEmpId: "b" },
+      { start: "2026-07-09", end: "2026-07-09", substituteEmpId: "c" },
     ]);
   });
 
@@ -1286,8 +1307,9 @@ describe("computeDutyDayActivity", () => {
     );
     expect(subDays).toBe(2);
     expect(act.substitute.has("a")).toBe(false);
-    // คนแทน (b) แทน "a" (คนหลักที่ลา) 2 วัน — byTarget เก็บ target = a
-    expect(act.substitute.get("b")?.byTarget.get("a")).toBe(2);
+    // คนแทนกระจายยุติธรรม — b แทน a วันแรก, c แทน a วันที่สอง (สลับ ไม่ใช่ b ทั้ง 2)
+    expect(act.substitute.get("b")?.byTarget.get("a")).toBe(1);
+    expect(act.substitute.get("c")?.byTarget.get("a")).toBe(1);
   });
 
   it("คนแทน: ข้ามคนที่ตั้ง 'ไม่ให้เป็นคนแทน' (substituteExcludedEmpIds)", () => {
@@ -1342,6 +1364,69 @@ describe("computeDutyDayActivity", () => {
     expect(act.substitute.get("c")?.days).toBe(2);
     expect(act.substitute.get("b")?.byTarget.get("a")).toBe(2);
     expect(act.substitute.get("c")?.byTarget.get("a")).toBe(2);
+  });
+
+  it("คนแทนรายสัปดาห์: กระจายยุติธรรม 'เคยแทนน้อยสุดก่อน' (ไม่ใช่ neighbor ซ้ำ)", () => {
+    // weekly · pool [a,b,c] · คนหลักสัปดาห์นี้ = a · a ลา 2 วัน → b, c แทนคนละ 1
+    // (fair) ไม่ใช่ b ทั้ง 2 วันแบบ neighbor-scan เดิม
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      rotationStartDate: "2026-08-03",
+      rotationStartEmpId: "a",
+    });
+    const act = computeDutyDayActivity(
+      [w],
+      new Map([["w", ["a", "b", "c"]]]),
+      [leave("a", "2026-08-03"), leave("a", "2026-08-04")],
+      null,
+      "2026-08-03",
+      "2026-08-07",
+    ).get("w");
+    if (!act) throw new Error("no activity");
+    expect(act.substitute.get("b")?.days).toBe(1);
+    expect(act.substitute.get("c")?.days).toBe(1);
+  });
+
+  it("คนแทนรายสัปดาห์ไม่เลือกคนหลักรายเดือน (รายเดือนไม่แทนรายสัปดาห์)", () => {
+    // role เดียว [a,b,c] · monthly M (คนหลัก = a ล็อกทั้งเดือน) + weekly W
+    // คนหลัก weekly หมุนใน [b,c] · เมื่อคนหลัก weekly ลา คนแทนต้องเป็นอีกคนใน
+    // [b,c] — ไม่ใช่ a (คนหลักรายเดือน) แม้ a จะว่าง
+    const m = duty({
+      id: "m",
+      period: "monthly",
+      roleId: "x",
+      rotationStartDate: "2026-08-01",
+      rotationStartEmpId: "a",
+    });
+    const w = duty({
+      id: "w",
+      period: "weekly",
+      roleId: "x",
+      rotationStartDate: "2026-08-03",
+    });
+    const pools = new Map([
+      ["m", ["a", "b", "c"]],
+      ["w", ["a", "b", "c"]],
+    ]);
+    // คนหลัก weekly (a ถูกล็อกเป็นรายเดือน → primary weekly = b หรือ c)
+    const wPrimary = computeForecastPrimaries([m, w], pools, "2026-08-03").get(
+      "w",
+    );
+    if (!wPrimary) throw new Error("no weekly primary");
+    // คนหลัก weekly ลาทั้งสัปดาห์ → ต้องมีคนแทน (อีกคนใน b,c) · a ต้องไม่ถูกเลือก
+    const act = computeDutyDayActivity(
+      [m, w],
+      pools,
+      [leave(wPrimary, "2026-08-03", "2026-08-07")],
+      null,
+      "2026-08-03",
+      "2026-08-07",
+    ).get("w");
+    expect(act?.substitute.has("a")).toBe(false); // a = คนหลักรายเดือน ไม่แทน weekly
+    const subEmps = [...(act?.substitute.keys() ?? [])];
+    expect(subEmps.length).toBeGreaterThan(0); // มีคนแทนจริง (ไม่ใช่ "ไม่มีคนแทน")
+    expect(subEmps).not.toContain("a");
   });
 
   it("ไม่นับวันก่อน rotationStartDate — หน้าที่ยังไม่เริ่มหมุน (กันคนหลักบวม)", () => {
