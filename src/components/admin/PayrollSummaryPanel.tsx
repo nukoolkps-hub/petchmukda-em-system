@@ -17,6 +17,7 @@ import { COLORS } from "../../constants";
 import { recordLoanRepaymentTx } from "../../firebase/employeeLoans";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { formatBankAccount } from "../../utils/bankFormat";
+import type { CoverageEarning } from "../../utils/dutyUtils";
 import { formatThaiNumber } from "../../utils/format";
 import {
   buildPoolSharesByGroup,
@@ -40,6 +41,9 @@ export default function PayrollSummaryPanel({
   advanceRequests,
   roles,
   payrollConfirms,
+  // duty snapshot → เงินค่าแทน "สด" ในพรีวิวก่อนยืนยันยอด (ตรงกับที่พนักงาน
+  // เห็น + ตรงกับยอดที่จะถูก stamp ตอนกดยืนยัน)
+  dutyAssignmentsToday,
   poolAdjustments,
   employeeLoans,
   storeCalendar,
@@ -95,6 +99,36 @@ export default function PayrollSummaryPanel({
   /* ─── Heavy computation: memoized ───────────────────────────────
      คำนวณเงินเดือนทุกคนใหม่ เฉพาะตอน salaryData/leaves/advances/roles เปลี่ยน
      สำคัญมาก — ก่อน memo: re-run ทุกครั้งที่กด/พิมพ์ในหน้านี้                */
+  // salaryData สำหรับ "พรีวิว" — เติมเงินค่าแทนสดจาก duty snapshot ให้เดือนที่
+  // ยังไม่ยืนยันยอด · salary doc stamp coveragePay ตอน save/settle เท่านั้น ทำให้
+  // ยอดก่อนกดยืนยันต่ำกว่าจริง แล้วเด้งขึ้นหลังยืนยัน (settle คำนวณสด) · เติม
+  // เฉพาะคนที่มี doc เดือนนั้นอยู่แล้ว — ไม่สร้างแถวใหม่ (คงกฎ "ต้องบันทึกก่อน")
+  const previewSalaryData = useMemo(() => {
+    const byEmp: Record<
+      string,
+      { total: number; breakdown: CoverageEarning[] }
+    > | null =
+      dutyAssignmentsToday?.coverageThisMonth?.month === selectedMonth &&
+      !payrollConfirms?.[selectedMonth]?.confirmedAt
+        ? (dutyAssignmentsToday.coverageThisMonth.byEmp ?? null)
+        : null;
+    if (!byEmp || Object.keys(byEmp).length === 0) return salaryData;
+    const out = { ...salaryData };
+    for (const [empId, cov] of Object.entries(byEmp)) {
+      const monthDoc = salaryData?.[empId]?.[selectedMonth];
+      if (!monthDoc) continue;
+      out[empId] = {
+        ...salaryData[empId],
+        [selectedMonth]: {
+          ...monthDoc,
+          coveragePay: cov.total,
+          coveragePayBreakdown: cov.breakdown,
+        },
+      };
+    }
+    return out;
+  }, [salaryData, dutyAssignmentsToday, selectedMonth, payrollConfirms]);
+
   const rows = useMemo(() => {
     // กรองพนักงานที่ "ปิดสิทธิ์ระบบเงินเดือน" ออก — ใช้แค่ระบบลา ไม่อยู่ใน
     // payroll/pool calculation ใดๆ
@@ -123,7 +157,8 @@ export default function PayrollSummaryPanel({
         computeEmployeeMonthRow({
           employee,
           yearMonth: selectedMonth,
-          salaryData,
+          // พรีวิว: เงินค่าแทนสด (pool shares ไม่เกี่ยว coverage → ใช้ salaryData เดิม)
+          salaryData: previewSalaryData,
           allLeaves,
           employeeDirectory,
           roles,
@@ -140,6 +175,7 @@ export default function PayrollSummaryPanel({
     employeeDirectory,
     roles,
     salaryData,
+    previewSalaryData,
     selectedMonth,
     allLeaves,
     monthlyApprovedAdvances.data,

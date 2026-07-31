@@ -105,6 +105,9 @@ export default function SalaryAdminEdit({
   advanceRequests,
   roles,
   payrollConfirms,
+  // duty snapshot (server-computed) → เงินค่าแทน "สด" ของเดือนปัจจุบัน ให้ admin
+  // เห็นทันทีที่มีคนถูกเลือกมาแทน (ไม่ต้องกดบันทึกก่อน) — ตรงกับฝั่งพนักงาน
+  dutyAssignmentsToday,
   poolAdjustments,
   onSetPoolAdjustment,
   employeeLoans,
@@ -171,6 +174,32 @@ export default function SalaryAdminEdit({
     note: "",
   };
   const data = useMemo(() => ({ ...savedData, ...draft }), [savedData, draft]);
+  // เงินค่าแทน "สด" — salary doc stamp ค่านี้ตอนกดบันทึกเท่านั้น ทำให้ admin
+  // ไม่เห็นยอดจนกว่าจะ save (ต่างจากฝั่งพนักงานที่อ่าน snapshot สด) · override
+  // ด้วย snapshot เดียวกับ SalaryView: เฉพาะเดือนที่ snapshot คำนวณ (= เดือน
+  // ปัจจุบัน) + ยังไม่ยืนยันยอด · ยืนยันแล้ว/เดือนเก่า → ใช้ค่าที่ freeze ไว้
+  // ใช้เฉพาะ "แสดงผล/คำนวณพรีวิว" — ตอน save updateSalary คำนวณสดเองอยู่แล้ว
+  const dataForCalc = useMemo(() => {
+    const monthConfirmed = !!payrollConfirms?.[selectedMonth]?.confirmedAt;
+    const live =
+      !monthConfirmed &&
+      dutyAssignmentsToday?.coverageThisMonth?.month === selectedMonth
+        ? dutyAssignmentsToday.coverageThisMonth.byEmp?.[selectedEmployeeId]
+        : undefined;
+    return live
+      ? {
+          ...data,
+          coveragePay: live.total,
+          coveragePayBreakdown: live.breakdown,
+        }
+      : data;
+  }, [
+    data,
+    dutyAssignmentsToday,
+    payrollConfirms,
+    selectedMonth,
+    selectedEmployeeId,
+  ]);
   const dirty = Object.keys(draft).length > 0;
   // มี salary doc ของเดือนนี้จริงไหม (savedData fallback เป็น default object
   // เสมอ จึงเช็คที่ salaryData ตรงๆ) — ไม่มี doc = ตอนยืนยันยอดจะไม่ถูกรวม
@@ -379,7 +408,7 @@ export default function SalaryAdminEdit({
         monthLeaves,
       );
       const computedSalary = calculateSalary(
-        data,
+        dataForCalc,
         overInfo,
         employeeInfo,
         totalLeaveDays,
@@ -405,7 +434,6 @@ export default function SalaryAdminEdit({
       allLeaves,
       selectedMonth,
       selectedEmployeeId,
-      data,
       overInfo,
       employeeInfo,
       monthLeaves,
@@ -415,6 +443,7 @@ export default function SalaryAdminEdit({
       employeeLoans,
       storeCalendar,
       payrollConfirms,
+      dataForCalc,
     ]);
 
   function update(field, value) {
@@ -1510,7 +1539,8 @@ export default function SalaryAdminEdit({
             )}
           </div>
 
-          {/* เงินค่าแทน (coverage) — admin stamp ตอน save · auto-computed */}
+          {/* เงินค่าแทน (coverage) — โชว์สดจาก duty snapshot (ตรงกับฝั่งพนักงาน) ·
+              stamp ลงสลิปตอน save/ยืนยันยอด */}
           {(salaryCalculation.coveragePay || 0) > 0 && (
             <div className="px-3 py-2.5 bg-cream rounded-[10px] mb-2.5 border border-dashed border-bdr">
               <div className="flex items-center gap-2.5">
@@ -1528,10 +1558,10 @@ export default function SalaryAdminEdit({
                   </div>
                 </div>
               </div>
-              {Array.isArray(data.coveragePayBreakdown) &&
-                data.coveragePayBreakdown.length > 0 && (
+              {Array.isArray(dataForCalc.coveragePayBreakdown) &&
+                dataForCalc.coveragePayBreakdown.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-dashed border-bdr flex flex-col gap-1">
-                    {data.coveragePayBreakdown.map((b) => (
+                    {dataForCalc.coveragePayBreakdown.map((b) => (
                       <div
                         key={b.dutyId}
                         className="flex justify-between text-[11px] text-txt-soft"
