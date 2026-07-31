@@ -281,6 +281,7 @@ export default function AdminPanel({
             advanceRequests={advanceRequests}
             roles={roles}
             payrollConfirms={payrollConfirms}
+            dutyAssignmentsToday={dutyAssignmentsToday}
             onSetPayrollConfirm={onSetPayrollConfirm}
             onSyncAutoCarryAdvance={onSyncAutoCarryAdvance}
             poolAdjustments={poolAdjustments}
@@ -328,6 +329,7 @@ export default function AdminPanel({
             advanceRequests={advanceRequests}
             roles={roles}
             payrollConfirms={payrollConfirms}
+            dutyAssignmentsToday={dutyAssignmentsToday}
             poolAdjustments={poolAdjustments}
             onSetPoolAdjustment={onSetPoolAdjustment}
             employeeLoans={employeeLoans}
