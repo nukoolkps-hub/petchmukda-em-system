@@ -424,6 +424,37 @@ describe("computeAllDutiesForDay", () => {
     emp("b", { displayOrder: 2 }),
   ];
 
+  it("วันอาทิตย์: คนหลักไม่เลื่อนเมื่อหน้าที่ skipSundays หายไป (ตรงกับปฏิทินหน้าที่)", () => {
+    // 4 หน้าที่ weekly pool เดียวกัน · ตัวแรกไม่ทำวันอาทิตย์ (skipSundays)
+    // เดิม: วันอาทิตย์ตัวแรกถูก filter ออกก่อน assign → groupOffset ของที่เหลือ
+    // เลื่อน 1 → คนหลักทุกตัวเปลี่ยนคนกลางสัปดาห์ + ไม่ตรงกับปฏิทิน (bug จริง)
+    const emps = ["a", "b", "c", "d"].map((id, i) =>
+      emp(id, { displayOrder: i + 1 }),
+    );
+    const ds = [
+      duty({ id: "gift", skipSundays: true, createdAt: 0 }),
+      duty({ id: "stock", createdAt: 1 }),
+      duty({ id: "power", createdAt: 2 }),
+      duty({ id: "door", createdAt: 3 }),
+    ].map((d) => ({ ...d, rotationStartDate: "2026-01-05" }) as Duty);
+    const pools = new Map(ds.map((d) => [d.id, ["a", "b", "c", "d"]]));
+    const sunday = "2026-08-02";
+    const calendarPrimaries = computeForecastPrimaries(ds, pools, sunday);
+    const homeAssignments = computeAllDutiesForDay(ds, sunday, emps, []);
+    // หน้าที่ skipSundays ต้องไม่โผล่วันอาทิตย์
+    expect(homeAssignments.map((a) => a.dutyId)).not.toContain("gift");
+    // ที่เหลือคนหลักต้องตรงกับปฏิทินเป๊ะ
+    for (const a of homeAssignments) {
+      expect(a.primaryEmpId).toBe(calendarPrimaries.get(a.dutyId));
+    }
+    // วันธรรมดายังตรงกันเหมือนเดิม (ไม่ regress)
+    const friday = "2026-07-31";
+    const calFri = computeForecastPrimaries(ds, pools, friday);
+    for (const a of computeAllDutiesForDay(ds, friday, emps, [])) {
+      expect(a.primaryEmpId).toBe(calFri.get(a.dutyId));
+    }
+  });
+
   it("returns nothing when the store is closed", () => {
     expect(
       computeAllDutiesForDay([duty()], "2026-06-06", employees, []),

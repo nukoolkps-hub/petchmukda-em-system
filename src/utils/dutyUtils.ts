@@ -420,7 +420,14 @@ export function computeDutyForDay(
  *
  *  Offset ของหน้าที่ weekly ที่ pool เดียวกัน = ลำดับ 0,1,2,... (Latin square
  *  → base ไม่ชนกัน · แต่ละหน้าที่วนครบทุกคนก่อนซ้ำ) · monthly + standalone
- *  ยังใช้ hashDutyId(duty.id) เดิม                                          */
+ *  ยังใช้ hashDutyId(duty.id) เดิม
+ *
+ *  ⚠️ assign primary จาก "หน้าที่ทั้งหมด" (ก่อน filter ปฏิทิน) เสมอ — groupOffset
+ *  (Latin square) + skip-collision ขึ้นกับ "ลำดับหน้าที่ใน array" ถ้าใช้เฉพาะ
+ *  หน้าที่ที่ทำวันนั้น หน้าที่ weekly+skipSundays ที่หายไปวันอาทิตย์จะทำให้
+ *  offset ของหน้าที่ที่เหลือเลื่อนทั้งแถว → คนหลักเปลี่ยนคนกลางสัปดาห์ +
+ *  ไม่ตรงกับปฏิทินหน้าที่ (computeDutyForecast ไม่ filter รายวัน) · filter
+ *  เฉพาะตอน output                                                          */
 export function computeAllDutiesForDay(
   duties: Duty[],
   todayYmd: string,
@@ -430,8 +437,9 @@ export function computeAllDutiesForDay(
 ): DutyAssignment[] {
   // ร้านปิด → ไม่มีหน้าที่ · อาทิตย์ → ตัด weekly+skipSundays per duty
   const todayDuties = applicableDuties(duties, todayYmd, calendar);
-  const monthlyDuties = todayDuties.filter((d) => d.period === "monthly");
-  const weeklyDuties = todayDuties.filter((d) => d.period === "weekly");
+  // คนหลักคิดจากรายการเต็ม (ไม่ขึ้นกับว่าวันนั้นหน้าที่ไหนถูกตัด)
+  const monthlyDuties = duties.filter((d) => d.period === "monthly");
+  const weeklyDuties = duties.filter((d) => d.period === "weekly");
 
   // assigned = คนที่เป็น primary แล้วในรอบนี้ — pickPrimary ใช้ skip-collision
   // (2 หน้าที่ pool เดียวกัน → คนละคน) · lockedByMonthly = monthly กันออก weekly

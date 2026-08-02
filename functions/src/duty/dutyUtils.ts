@@ -981,6 +981,9 @@ export function computeAllDutiesForDay(
 		employees,
 		effLeaves,
 		rotationSubHistory,
+		// assign คนหลักจากรายการเต็ม (ก่อน filter ปฏิทิน) → วันอาทิตย์ที่หน้าที่
+		// skipSundays หายไป คนหลักของหน้าที่อื่นไม่เลื่อนตาม (ตรงกับปฏิทินหน้าที่)
+		duties.filter((d) => d.kind !== "coverage"),
 	);
 
 	// preserve ลำดับ duties เดิม + coverage ตามตำแหน่งของมัน
@@ -1039,9 +1042,17 @@ function computeRotationForDay(
 	employees: Employee[],
 	leaves: LeaveEntry[],
 	rotationSubHistory?: Map<string, Map<string, number>>,
+	// รายการหน้าที่หมุนเวียน "ทั้งหมด" (ก่อน filter ปฏิทินรายวัน) — ใช้ assign
+	// คนหลักเท่านั้น · ไม่ส่ง = ใช้ duties (พฤติกรรมเดิม)
+	allRotationDuties?: Duty[],
 ): DutyAssignment[] {
-	const monthlyDuties = duties.filter((d) => d.period === "monthly");
-	const weeklyDuties = duties.filter((d) => d.period === "weekly");
+	// ⚠️ คนหลักคิดจากรายการเต็มเสมอ — groupOffset (Latin square) + skip-collision
+	// ขึ้นกับลำดับหน้าที่ใน array ถ้าใช้เฉพาะหน้าที่ที่ทำวันนั้น หน้าที่
+	// weekly+skipSundays ที่หายไปวันอาทิตย์จะทำให้ offset ของหน้าที่ที่เหลือ
+	// เลื่อนทั้งแถว → คนหลักเปลี่ยนคนกลางสัปดาห์ + ไม่ตรงกับปฏิทินหน้าที่
+	const primarySource = allRotationDuties ?? duties;
+	const monthlyDuties = primarySource.filter((d) => d.period === "monthly");
+	const weeklyDuties = primarySource.filter((d) => d.period === "weekly");
 
 	// assigned = คนที่เป็น primary แล้วรอบนี้ (pickPrimary skip-collision)
 	const assigned = new Set<string>();
