@@ -109,35 +109,62 @@ type MonthEntry =
     }
   | { type: "coverage"; start: string; item: CoverageForecastItem };
 
-/** 1 บรรทัดในแท็บจำนวนครั้ง — avatar + ชื่อ + ป้ายจำนวน
- *  labelClassName: คุมน้ำหนัก/สีของป้าย · คนหลัก = หนา (default) · คนแทน = บางลง */
+/** 1 คน = 1 บล็อกในแท็บจำนวนครั้ง — บรรทัดบน: avatar + ชื่อ + จำนวนที่เป็น
+ *  "คนหลัก" · บรรทัดย่อยใต้ชื่อ: ไปแทนใคร กี่วัน (รวมไว้ที่เดียวกัน ไม่ต้อง
+ *  มองหาชื่อซ้ำใน 2 หมวด) · primaryLabel = null → ไม่ได้เป็นคนหลัก (มีแต่แทน) */
 function CountRow({
   emp,
   empId,
-  label,
-  labelClassName = "font-bold text-maroon",
+  primaryLabel,
+  subs,
 }: {
   emp: SnapshotPoolMember | undefined;
   empId: string;
-  label: string;
-  labelClassName?: string;
+  primaryLabel: string | null;
+  subs: { targetId: string; targetName: string; days: number }[];
 }) {
   return (
-    <div className="flex items-center gap-2.5 px-3 py-2 text-sm">
-      {emp && (
-        <AvatarCircle
-          avatar={emp.avatar}
-          avatarType={emp.avatarType}
-          avatarImageUrl={emp.avatarImageUrl}
-          size={22}
-          fontSize={10}
-          border="none"
-        />
+    <div className="px-3 py-2">
+      <div className="flex items-center gap-2.5 text-sm">
+        {emp && (
+          <AvatarCircle
+            avatar={emp.avatar}
+            avatarType={emp.avatarType}
+            avatarImageUrl={emp.avatarImageUrl}
+            size={22}
+            fontSize={10}
+            border="none"
+          />
+        )}
+        <span className="flex-1 min-w-0 font-semibold text-txt truncate">
+          {emp?.nickname || emp?.name || empId}
+        </span>
+        <span
+          className={`shrink-0 ${
+            primaryLabel ? "font-bold text-maroon" : "text-txt-soft text-xs"
+          }`}
+        >
+          {primaryLabel ?? "ไม่ได้เป็นคนหลัก"}
+        </span>
+      </div>
+      {/* บรรทัดย่อย: ไปแทนใคร กี่วัน — เยื้องให้ตรงกับชื่อ (avatar 22 + gap 10) */}
+      {subs.length > 0 && (
+        <div className="mt-1 ml-8 flex flex-col gap-0.5">
+          {subs.map((s) => (
+            <div
+              key={s.targetId}
+              className="flex items-center justify-between gap-2 text-[11px]"
+            >
+              <span className="text-txt-soft truncate min-w-0">
+                แทน {s.targetName}
+              </span>
+              <span className="shrink-0 font-semibold text-maroon/80">
+                {s.days} วัน
+              </span>
+            </div>
+          ))}
+        </div>
       )}
-      <span className="flex-1 min-w-0 font-semibold text-txt truncate">
-        {emp?.nickname || emp?.name || empId}
-      </span>
-      <span className={`shrink-0 ${labelClassName}`}>{label}</span>
     </div>
   );
 }
@@ -263,7 +290,8 @@ export default function DutyForecastModal({
     ],
   );
 
-  // แถวสรุป — ต่อหน้าที่ · คนหลัก (weekly=วัน · monthly=เดือน) + คนแทน (แทนใคร·วัน)
+  // แถวสรุป — ต่อหน้าที่ → ต่อ "คน" (1 คน 1 บล็อก): จำนวนที่เป็นคนหลัก
+  // (weekly=วัน · monthly=เดือน) + บรรทัดย่อย "แทนใคร กี่วัน" ใต้ชื่อคนนั้น
   const countRows = useMemo(() => {
     if (!isCounts) return [];
     const nick = (id: string) => empById.get(id)?.nickname || "";
@@ -276,8 +304,6 @@ export default function DutyForecastModal({
       empById.get(id)?.nickname ||
       empById.get(id)?.name ||
       id;
-    const byCountDesc = (a: [string, number], b: [string, number]) =>
-      b[1] - a[1] || nick(a[0]).localeCompare(nick(b[0]), "th");
     const ordered = [
       ...duties.filter((d) => d.kind !== "coverage"),
       ...(hasEmployees ? duties.filter((d) => d.kind === "coverage") : []),
@@ -287,53 +313,83 @@ export default function DutyForecastModal({
       .map((d) => {
         const act = dayActivity.get(d.id);
         // คนหลัก: weekly → วันจริง (day activity) · monthly → เดือน (periods)
-        const primarySrc =
+        const primaryEntries: [string, number][] =
           d.kind === "coverage"
             ? []
             : d.period === "monthly"
               ? [...(monthlyPrimaryCounts.get(d.id)?.entries() || [])]
-                  .sort(byCountDesc)
-                  .map(([empId, n]) => ({ empId, label: `${n} เดือน` }))
-              : [...(act?.primaryDays.entries() || [])]
-                  .sort(byCountDesc)
-                  .map(([empId, n]) => ({ empId, label: `${n} วัน` }));
-        const primaries = primarySrc.map((p) => ({
-          ...p,
-          emp: empById.get(p.empId),
-        }));
-        // คนแทน — แยกเป็นแถวต่อ "คนที่ถูกแทน": แทนใคร กี่วัน (ไม่โชว์จำนวนครั้ง)
-        const subs = [...(act?.substitute.entries() || [])]
-          .sort(
-            (a, b) =>
-              b[1].days - a[1].days ||
-              nick(a[0]).localeCompare(nick(b[0]), "th"),
-          )
-          .flatMap(([empId, c]) =>
-            [...c.byTarget.entries()]
-              .sort(
-                (x, y) =>
-                  y[1] - x[1] ||
-                  targetNick(x[0]).localeCompare(targetNick(y[0]), "th"),
-              )
-              .map(([targetId, days]) => ({
-                empId,
-                targetId,
-                label: `แทน ${targetNick(targetId)} · ${days} วัน`,
-                emp: empById.get(empId),
-              })),
+              : [...(act?.primaryDays.entries() || [])];
+        const unit = d.period === "monthly" ? "เดือน" : "วัน";
+        // รวมทุกคนที่เกี่ยวข้องกับหน้าที่นี้ (เป็นคนหลัก และ/หรือ ไปแทน)
+        // → 1 คน 1 บล็อก · เก็บ count คนหลักไว้ใช้เรียงลำดับ
+        const people = new Map<
+          string,
+          {
+            empId: string;
+            primaryCount: number;
+            primaryLabel: string | null;
+            subs: { targetId: string; targetName: string; days: number }[];
+            subDays: number;
+          }
+        >();
+        const ensure = (empId: string) => {
+          let p = people.get(empId);
+          if (!p) {
+            p = {
+              empId,
+              primaryCount: 0,
+              primaryLabel: null,
+              subs: [],
+              subDays: 0,
+            };
+            people.set(empId, p);
+          }
+          return p;
+        };
+        for (const [empId, n] of primaryEntries) {
+          const p = ensure(empId);
+          p.primaryCount = n;
+          p.primaryLabel = `${n} ${unit}`;
+        }
+        for (const [empId, c] of act?.substitute.entries() || []) {
+          const p = ensure(empId);
+          p.subDays += c.days;
+          p.subs.push(
+            ...[...c.byTarget.entries()].map(([targetId, days]) => ({
+              targetId,
+              targetName: targetNick(targetId),
+              days,
+            })),
           );
-        return { duty: d, primaries, subs };
+        }
+        // เรียงบรรทัดย่อยของแต่ละคน: วันมาก→น้อย แล้วชื่อคนที่ถูกแทน
+        for (const p of people.values()) {
+          p.subs.sort(
+            (a, b) =>
+              b.days - a.days || a.targetName.localeCompare(b.targetName, "th"),
+          );
+        }
+        // เรียงคน: คนหลักมาก→น้อย · คนที่ไม่ได้เป็นคนหลักไปท้าย (เรียงตามวันแทน)
+        const list = [...people.values()].sort(
+          (a, b) =>
+            b.primaryCount - a.primaryCount ||
+            b.subDays - a.subDays ||
+            nick(a.empId).localeCompare(nick(b.empId), "th"),
+        );
+        return {
+          duty: d,
+          people: list.map((p) => ({ ...p, emp: empById.get(p.empId) })),
+        };
       });
-    // "เฉพาะของคุณ" (ฝั่งพนักงาน) — เหลือเฉพาะแถวที่ profileId เกี่ยวข้อง
-    // (เป็นคนหลัก หรือเป็นคนแทน) แล้วตัด duty ที่ไม่เหลือแถว
+    // "เฉพาะของคุณ" (ฝั่งพนักงาน) — เหลือเฉพาะบล็อกของ profileId แล้วตัด
+    // duty ที่ไม่เหลือคน
     if (profileId && mineOnly) {
       return rows
         .map((r) => ({
           duty: r.duty,
-          primaries: r.primaries.filter((p) => p.empId === profileId),
-          subs: r.subs.filter((s) => s.empId === profileId),
+          people: r.people.filter((p) => p.empId === profileId),
         }))
-        .filter((r) => r.primaries.length > 0 || r.subs.length > 0);
+        .filter((r) => r.people.length > 0);
     }
     return rows;
   }, [
@@ -568,10 +624,10 @@ export default function DutyForecastModal({
               strokeWidth={2.4}
               className="inline mr-1 -mt-0.5 text-maroon"
             />
-            นับ <b>ตั้งแต่ต้นปีถึงวันนี้</b> — เฉพาะที่ทำไปแล้ว (ไม่รวมล่วงหน้า) · <b>คนหลัก</b>{" "}
-            รายสัปดาห์นับเป็น <b>วัน</b> ที่อยู่ทำจริง (ไม่นับวันลา) · รายเดือนนับเป็น{" "}
-            <b>เดือน</b> (รวมเดือนนี้ที่กำลังทำ) · <b>คนแทน</b> = แทนใคร กี่วัน
-            (ตอนคนนั้นลา)
+            นับ <b>ตั้งแต่ต้นปีถึงวันนี้</b> — เฉพาะที่ทำไปแล้ว (ไม่รวมล่วงหน้า) · ตัวเลขข้างชื่อ =
+            จำนวนที่เป็น <b>คนหลัก</b> (รายสัปดาห์นับเป็น <b>วัน</b> ที่อยู่ทำจริง ไม่นับวันลา ·
+            รายเดือนนับเป็น <b>เดือน</b> รวมเดือนนี้ที่กำลังทำ) · บรรทัดเล็กใต้ชื่อ ={" "}
+            <b>ไปแทนใคร กี่วัน</b> (ตอนคนนั้นลา)
             {!hasEmployees && " · ฝั่งนี้แสดงเฉพาะหน้าที่หมุนเวียน"}
             <span className="block mt-1 text-txt-soft">
               คำนวณจากสูตรหมุนเวียนด้วยรายชื่อปัจจุบัน (ไม่ใช่บันทึกเวรจริง) —
@@ -582,9 +638,7 @@ export default function DutyForecastModal({
 
         {isCounts ? (
           countRows.length === 0 ||
-          countRows.every(
-            (r) => r.primaries.length === 0 && r.subs.length === 0,
-          ) ? (
+          countRows.every((r) => r.people.length === 0) ? (
             <div className="text-center text-txt-soft py-10 px-6">
               {profileId && mineOnly
                 ? "คุณยังไม่ได้ทำหน้าที่ในปีนี้"
@@ -592,7 +646,7 @@ export default function DutyForecastModal({
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
-              {countRows.map(({ duty, primaries, subs }) => (
+              {countRows.map(({ duty, people }) => (
                 <div
                   key={duty.id}
                   className="rounded-[11px] border border-bdr bg-white overflow-hidden"
@@ -602,45 +656,22 @@ export default function DutyForecastModal({
                       {duty.name}
                     </span>
                   </div>
-                  {primaries.length === 0 && subs.length === 0 ? (
+                  {people.length === 0 ? (
                     <div className="px-3 py-2 text-xs text-txt-soft italic">
                       ยังไม่มีในปีนี้
                     </div>
                   ) : (
-                    <div className="flex flex-col">
-                      {/* คนหลัก — weekly=วัน · monthly=เดือน */}
-                      {primaries.length > 0 && (
-                        <>
-                          <div className="px-3 pt-2 pb-1 text-[11px] font-bold text-txt-soft">
-                            คนหลัก
-                          </div>
-                          {primaries.map(({ empId, label, emp }) => (
-                            <CountRow
-                              key={`p-${empId}`}
-                              emp={emp}
-                              empId={empId}
-                              label={label}
-                            />
-                          ))}
-                        </>
-                      )}
-                      {/* คนแทน (rotation ตอน primary ลา + coverage) — แทนใคร กี่วัน */}
-                      {subs.length > 0 && (
-                        <>
-                          <div className="px-3 pt-2 pb-1 text-[11px] font-bold text-txt-soft border-t border-bdr/50">
-                            คนแทน
-                          </div>
-                          {subs.map(({ empId, targetId, label, emp }) => (
-                            <CountRow
-                              key={`s-${empId}-${targetId}`}
-                              emp={emp}
-                              empId={empId}
-                              label={label}
-                              labelClassName="font-medium text-maroon"
-                            />
-                          ))}
-                        </>
-                      )}
+                    <div className="flex flex-col divide-y divide-bdr/40">
+                      {/* 1 คน 1 บล็อก — จำนวนที่เป็นคนหลัก + บรรทัดย่อย "แทนใคร กี่วัน" */}
+                      {people.map((p) => (
+                        <CountRow
+                          key={p.empId}
+                          emp={p.emp}
+                          empId={p.empId}
+                          primaryLabel={p.primaryLabel}
+                          subs={p.subs}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
