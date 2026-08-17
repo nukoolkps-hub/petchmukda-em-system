@@ -3,14 +3,19 @@
  *
  * Schedule: ทุก 15 นาที (เวลาไทย) — เขียน /config/goldPrice ใน Firestore
  *
- * Source chain (ลองตามลำดับ — ตัวแรกที่สำเร็จชนะ):
- * 1. สมาคมค้าทองคำ /api/GoldPrices/Latest — JSON · ราคาล่าสุดโดยตรง
- * 2. ฮั่วเซงเฮง apicheckpricev3 — XML · แถว REF (ราคาสมาคม)
+ * Source chain — ทอง (ลองตามลำดับ · ตัวแรกที่สำเร็จชนะ):
+ * 1. จอราคาร้าน petchmukda-price-exc /api/price — JSON ที่ normalize แล้ว
+ *    (แหล่งหลัก → ราคาในระบบตรงกับจอหน้าร้านเสมอ · ฝั่งนั้น fallback
+ *     สมาคมค้าทอง → ฮั่วเซงเฮง + cache ให้ในตัว)
+ * 2. สมาคมค้าทองคำ /api/GoldPrices/Latest — JSON · ราคาล่าสุดโดยตรง
+ * 3. ฮั่วเซงเฮง apicheckpricev3 — XML · แถว REF (ราคาสมาคม)
  *    fallback สุดท้าย (HSH ก็มี bot protection — สำเร็จไม่บ่อย)
+ *
+ * Source chain — เงิน: จอราคาร้าน /api/silver → DoDev โดยตรง
  *
  * Manual trigger: callable function fetchGoldPriceNow (admin only)
  *
- * Observability: fail ทั้ง 2 source → เขียน lastFetchError +
+ * Observability: fail ทุก source → เขียน lastFetchError +
  * lastFetchErrorAt ลง doc เดียวกัน (ไม่แตะ pricePerBaht)
  *
  * กัน write churn: ถ้า sellPrice + source timestamp เท่าเดิม → skip
@@ -21,6 +26,12 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getAppFirestore } from "../helpers/config.js";
 
+// จอแสดงราคาของร้าน (petchmukda-price-exc) — แหล่งหลัก เพื่อให้ราคาในระบบ
+// พนักงาน "ตรงกับจอหน้าร้านเสมอ" (จอกับระบบเคยต่างคนต่างดึง = คนละนาที/คนละราคา)
+// ฝั่งนั้น normalize + cache + fallback (สมาคมค้าทอง → ฮั่วเซงเฮง) ให้แล้ว ·
+// ถ้าเรียกไม่ได้ค่อยตกไปดึงตรงจาก provider เดิมด้านล่าง
+const PRICE_EXC_GOLD_URL = "https://petchmukda-price-exc.web.app/api/price";
+const PRICE_EXC_SILVER_URL = "https://petchmukda-price-exc.web.app/api/silver";
 const HSH_URL = "https://apicheckpricev3.huasengheng.com/api/values/getprice/";
 const GOLD_TRADERS_URL =
 	"https://www.goldtraders.or.th/api/GoldPrices/Latest?readjson=false";
@@ -90,6 +101,46 @@ async function fetchWithTimeout(url: string): Promise<Response> {
 		throw new Error(`HTTP ${res.status} from ${url}`);
 	}
 	return res;
+}
+
+/** แยก ISO timestamp → [date, time] · ตัด timezone/มิลลิวินาทีออกจากเวลา
+ *  ("2026-08-17T19:00:00+07:00" → ["2026-08-17", "19:00:00"]) ให้รูปแบบเดียว
+ *  กับ provider เดิม (เทียบ skip-if-unchanged จึงไม่เพี้ยนตอนสลับ source) */
+function splitIsoTimestamp(iso: string): [string, string] {
+	const [date = "", rest = ""] = String(iso).split("T");
+	const time = rest.split(/[+Z.]/)[0] || "";
+	return [date, time];
+}
+
+/** Source 0 (primary): จอแสดงราคาของร้าน — JSON ที่ normalize แล้ว */
+async function fetchFromPriceExc(): Promise<PriceData> {
+	const res = await fetchWithTimeout(PRICE_EXC_GOLD_URL);
+	const data = (await res.json()) as {
+		sellPrice?: number;
+		buyPrice?: number;
+		priceChanged?: number;
+		updatedAt?: string;
+		source?: string;
+		stale?: boolean;
+	};
+	const sellPrice = Number(data.sellPrice);
+	assertSane(sellPrice, "price-exc");
+	const [sourceDate, sourceTime] = splitIsoTimestamp(data.updatedAt || "");
+	// stale = ฝั่งนั้นคืนค่าจาก cache เพราะ provider ล่ม · ยังใช้ได้ (ดีกว่าไม่มี
+	// ราคา) แต่ log ไว้ให้เห็นใน Cloud Logging
+	if (data.stale) {
+		console.warn("[fetchGoldPrice] price-exc returned a stale gold price");
+	}
+	return {
+		sellPrice,
+		buyPrice: Number(data.buyPrice) || 0,
+		priceChanged: Number(data.priceChanged) || 0,
+		sourceDate,
+		sourceTime,
+		source: "price-exc",
+		// โชว์ provider ต้นทางที่ฝั่งจอใช้จริง (Gold Traders / Hua Seng Heng)
+		label: `auto · จอราคาร้าน${data.source ? ` (${data.source})` : ""}`,
+	};
 }
 
 /** Source 1: ฮั่วเซงเฮง — XML, ใช้แถว GoldType=REF (ราคาสมาคม) */
@@ -162,7 +213,47 @@ interface SilverData {
 	silverTime: string; // ISO
 }
 
-/** ราคาเงินแท่งจาก DoDev · /current_price/silver */
+/** sanity ราคาเงิน/กรัม — กัน payload ผิดหรือ garbage (ใช้ร่วมทุก source) */
+function assertSaneSilver(value: number, context: string): void {
+	if (
+		!Number.isFinite(value) ||
+		value < SANE_MIN_SILVER ||
+		value > SANE_MAX_SILVER
+	) {
+		throw new Error(`Invalid silver price (${context}): ${value}`);
+	}
+}
+
+/** ราคาเงินจากจอแสดงราคาของร้าน (แหล่งหลัก · ต้นทาง DoDev เหมือนกัน) */
+async function fetchSilverFromPriceExc(): Promise<SilverData> {
+	const res = await fetchWithTimeout(PRICE_EXC_SILVER_URL);
+	const data = (await res.json()) as {
+		askGPrice?: number;
+		bidGPrice?: number;
+		askKgPrice?: number;
+		bidKgPrice?: number;
+		providerUpdatedAt?: string;
+		updatedAt?: string;
+		stale?: boolean;
+	};
+	// ask = ราคาขาย · bid = ราคารับซื้อ (ตรงกับ ask_g_price/bid_g_price ของ DoDev)
+	const silverSellPerGram = Number(data.askGPrice);
+	const silverBuyPerGram = Number(data.bidGPrice);
+	assertSaneSilver(silverBuyPerGram, "price-exc buy");
+	assertSaneSilver(silverSellPerGram, "price-exc sell");
+	if (data.stale) {
+		console.warn("[fetchGoldPrice] price-exc returned a stale silver price");
+	}
+	return {
+		silverBuyPerGram,
+		silverSellPerGram,
+		silverBuyPerKg: Number(data.bidKgPrice) || 0,
+		silverSellPerKg: Number(data.askKgPrice) || 0,
+		silverTime: String(data.providerUpdatedAt || data.updatedAt || ""),
+	};
+}
+
+/** ราคาเงินแท่งจาก DoDev · /current_price/silver (fallback) */
 async function fetchSilverFromDoDev(): Promise<SilverData> {
 	const res = await fetchWithTimeout(DODEV_SILVER_URL);
 	const data = (await res.json()) as {
@@ -174,21 +265,8 @@ async function fetchSilverFromDoDev(): Promise<SilverData> {
 	};
 	const silverBuyPerGram = Number(data.bid_g_price);
 	const silverSellPerGram = Number(data.ask_g_price);
-	// sanity ราคาเงิน/กรัม — กัน payload ผิดหรือ garbage
-	if (
-		!Number.isFinite(silverBuyPerGram) ||
-		silverBuyPerGram < SANE_MIN_SILVER ||
-		silverBuyPerGram > SANE_MAX_SILVER
-	) {
-		throw new Error(`Invalid silver buy price: ${silverBuyPerGram}`);
-	}
-	if (
-		!Number.isFinite(silverSellPerGram) ||
-		silverSellPerGram < SANE_MIN_SILVER ||
-		silverSellPerGram > SANE_MAX_SILVER
-	) {
-		throw new Error(`Invalid silver sell price: ${silverSellPerGram}`);
-	}
+	assertSaneSilver(silverBuyPerGram, "DoDev buy");
+	assertSaneSilver(silverSellPerGram, "DoDev sell");
 	return {
 		silverBuyPerGram,
 		silverSellPerGram,
@@ -201,8 +279,10 @@ async function fetchSilverFromDoDev(): Promise<SilverData> {
 /** ลอง source ตามลำดับ — ตัวแรกที่สำเร็จชนะ · fail หมด → โยน error รวม */
 async function fetchFromAnySource(): Promise<PriceData> {
 	const errors: string[] = [];
-	// สมาคมค้าทองคำเป็นตัวหลัก · HSH เป็น fallback
+	// จอราคาร้านเป็นตัวหลัก (ราคาตรงกับหน้าร้านเสมอ) · ถ้าเรียกไม่ได้ค่อยดึงตรง
+	// จากสมาคมค้าทองคำ → ฮั่วเซงเฮง (กันราคาค้างตอนจอ/เน็ตฝั่งนั้นมีปัญหา)
 	for (const [name, fn] of [
+		["จอราคาร้าน", fetchFromPriceExc],
 		["Gold Traders", fetchFromGoldTraders],
 		["HSH", fetchFromHsh],
 	] as const) {
@@ -234,13 +314,26 @@ async function fetchAndStore(): Promise<StoreResult> {
 		throw err;
 	}
 
-	// ดึงราคาเงินคู่กัน · fail ไม่ blocking ราคาทอง (silent skip)
+	// ดึงราคาเงินคู่กัน · fail ไม่ blocking ราคาทอง (silent skip) ·
+	// จอราคาร้านก่อน แล้วค่อยตกไป DoDev ตรงๆ (เหมือน chain ของทอง)
 	let silver: SilverData | null = null;
-	try {
-		silver = await fetchSilverFromDoDev();
-	} catch (err) {
-		const msg = err instanceof Error ? err.message : String(err);
-		console.warn(`[fetchGoldPrice] silver fetch failed: ${msg}`);
+	const silverErrors: string[] = [];
+	for (const [name, fn] of [
+		["จอราคาร้าน", fetchSilverFromPriceExc],
+		["DoDev", fetchSilverFromDoDev],
+	] as const) {
+		try {
+			silver = await fn();
+			break;
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : String(err);
+			silverErrors.push(`${name}: ${msg}`);
+		}
+	}
+	if (!silver && silverErrors.length > 0) {
+		console.warn(
+			`[fetchGoldPrice] silver fetch failed: ${silverErrors.join(" · ")}`,
+		);
 	}
 
 	const snap = await docRef.get();
