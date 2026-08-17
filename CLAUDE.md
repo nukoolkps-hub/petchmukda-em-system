@@ -81,9 +81,9 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 
 **Block types** (rendered by `KnowledgeBlock` switch):
 - **Static:** `h3` · `p` · `list` · `table` (มี `colWidths`/`colAlign`) · `formula` · `example` · `image` · `callout` (รองรับ `\n` multi-line) · `steps`
-- **Live (subscribe goldPrice):** `change-price-table` · `sell-price-96-table` · `buy-price-96-table` (ใช้ `gold.buyPrice` · fallback pricePerBaht) — ใช้ `CHANGE_PRICE_WEIGHTS` (single source ของน้ำหนัก+ค่าแรง) + `SHORTCUT_MULTIPLIERS` shared sell/buy (เช่น ½ สลึง = ราคาทอง × 0.125)
+- **Live (subscribe goldPrice):** `change-price-table` (**ยึดค่าเปลี่ยนจากจอราคาร้าน** ผ่าน `resolveChangePrice` · fallback สูตรในระบบ) · `sell-price-96-table` · `buy-price-96-table` (ใช้ `gold.buyPrice` · fallback pricePerBaht) — ใช้ `CHANGE_PRICE_WEIGHTS` (single source ของน้ำหนัก+ค่าแรง) + `SHORTCUT_MULTIPLIERS` shared sell/buy (เช่น ½ สลึง = ราคาทอง × 0.125)
 - **Admin-editable live tables:** `labor-cost-table` · `block-cost-table` · `loyalty-points-redeem-table` — admin กด "แก้ไข" ในตาราง · sync ทุก signed-in ผ่าน `/config/{laborCost,blockCost,loyaltyPoints}`
-- **Live with compute fn:** `live-example` (โจทย์+ขั้นตอนคำนวณจากราคาวันนี้ · receives sell/buy/silverBuy/laborBaht/labor) · `calculator` (input form + live output · `goldPriceDefault`/`buyPriceDefault`/`silverSell+BuyPriceDefault`/`disabledWhen`/`hidden`/`readOnly`/`unit`)
+- **Live with compute fn:** `live-example` (โจทย์+ขั้นตอนคำนวณจากราคาวันนี้ · receives sell/buy/silverBuy/laborBaht/labor/`changePriceOf`) · `calculator` (input form + live output · `goldPriceDefault`/`buyPriceDefault`/`silverSell+BuyPriceDefault`/`disabledWhen`/`hidden`/`readOnly`/`unit`)
 - **Other:** `secret` (PIN/รหัส dot mask)
 
 **Calculator UX:**
@@ -156,7 +156,8 @@ useAppData() → useFirebaseAppData() → Firestore real-time (onSnapshot)
 ราคาทองคำสมาคม 96.5% ใช้ทั่วระบบความรู้ต่างๆ (live tables + calculator default + live-example) · ดึงอัตโนมัติทุก 15 นาที
 
 - **Cloud Function `fetchGoldPriceScheduled`** (`functions/src/goldPrice/fetchGoldPrice.ts`) — `onSchedule "*/15 * * * *" Asia/Bangkok`
-- **Source chain** (fallback): Gold Traders Association `/api/GoldPrices/Latest` (primary · JSON จากสมาคมโดยตรง) → HSH `apicheckpricev3` REF (XML)
+- **Source chain** (fallback): จอราคาร้าน `petchmukda-price-exc /api/price` (primary · ราคาตรงกับจอหน้าร้านเสมอ) → Gold Traders Association `/api/GoldPrices/Latest` → HSH `apicheckpricev3` REF (XML)
+- **ค่าเปลี่ยน นน. เท่ากัน ยึดจอราคาร้าน:** `/api/price` ส่ง `changeRates` มาด้วย → เก็บลง `changeRates` + `changeRatesForPrice` · frontend ใช้ `resolveChangePrice()` (จอก่อน · fallback สูตรในระบบเมื่อจอเรียกไม่ได้/ค่าค้าง) · จอมีค่าแรง+rate%+การปัดเศษของตัวเอง เลขจึงไม่เท่าสูตรฝั่งเรา — **ห้ามคำนวณค่าเปลี่ยนเองตรงๆ ใน UI ใหม่** ให้เรียก `resolveChangePrice` เสมอ · แก้ค่าเปลี่ยนจริงต้องแก้ที่หน้า admin ของจอ
 - **Skip write ถ้า no-change** — เช็ค `sellPrice + sourceDate + sourceTime` เท่าเดิม → ไม่เขียนซ้ำ (กัน Firestore write churn)
 - **Sanity check:** 10,000 ≤ sellPrice ≤ 200,000 ฿/บาท
 - **Manual trigger:** `fetchGoldPriceNow` callable (admin only) — ปุ่ม refresh ใน `GoldPriceHeader`
@@ -206,7 +207,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `functions/src/goldPrice/fetchGoldPrice.ts` | ดึงราคาทองคำสมาคมทุก 15 นาที (scheduled) + manual trigger (onCall) — source chain: Gold Traders Association → HSH |
 | `src/firebase/goldPrice.ts` | `/config/goldPrice` doc — subscribe/update + `triggerFetchGoldPriceNow` callable |
 | `src/firebase/laborCost.ts` / `blockCost.ts` / `loyaltyPoints.ts` | `/config/{laborCost,blockCost,loyaltyPoints}` docs — admin-editable inline ในความรู้ต่างๆ · sync ทุก live table + calc |
-| `src/utils/changePriceUtils.ts` | สูตรค่าเปลี่ยน นน. เท่ากัน + ราคาขาย/รับซื้อ 96.5% · `CHANGE_PRICE_WEIGHTS` + `SHORTCUT_MULTIPLIERS` (shared sell+buy) · `computeBuyPrice96` ใช้ `gold.buyPrice` (fallback sell) · `ceilTo50` |
+| `src/utils/changePriceUtils.ts` | สูตรค่าเปลี่ยน นน. เท่ากัน + ราคาขาย/รับซื้อ 96.5% · `CHANGE_PRICE_WEIGHTS` + `SHORTCUT_MULTIPLIERS` (shared sell+buy) · `computeBuyPrice96` ใช้ `gold.buyPrice` (fallback sell) · `ceilTo50` · **`resolveChangePrice`** = ค่าเปลี่ยนที่โชว์จริง (จอราคาร้านก่อน · `excId` จับคู่แถวกับจอ) |
 | `src/utils/format.ts` | `formatThaiNumber` + `formatTypedNumber` (ใส่ comma live ขณะพิมพ์ คงทศนิยม/ติดลบ) + `caretPosFromDigits` (คืนตำแหน่ง cursor หลังแทรก comma) — shared โดย Calculator + MoneyInput |
 | `src/components/shared/MoneyInput.tsx` | ช่องกรอกเงิน reusable — drop-in แทน `<input inputMode="decimal">` · ใส่ comma ทันทีตอนพิมพ์ + คง cursor · emit raw (ไม่มี comma) กลับ parent · **คืน caret เฉพาะตอน field ถูก focus จริง** (`el === document.activeElement`) กัน cursor เด้งผิดที่เมื่อ re-render จากเหตุอื่น (live price/parent state) — Calculator ใช้ guard เดียวกัน · **ใช้กับช่อง "จำนวนเงิน" ทั้งระบบ:** EmployeeEditModal, AnnualRaiseSection, SalaryAdminEdit, AdvanceRequestModal (ขอเบิก), EmployeeLoansPanel (เงินต้น/ผ่อน), SalaryView (เงินเดือนใบรับรอง), DutyEditModal (เงินค่าแทน) · ช่อง**นับชิ้น/config** คงเป็น raw integer (ไม่มี comma → ไม่มี caret bug) |
 | `src/components/shared/calendarTheme.ts` | **Single source ของ theme ปฏิทินทั้งระบบ** (maroon+gold) — token ใช้ร่วมโดย CalendarPicker · TeamCalendar · MonthChevronNav · ThaiMonthPicker · day cell เลือก = ทอง soft · เดือน dropdown เลือก = maroon · วันนี้ = เทา · ดู `docs/reference/ui-components.md` → "Calendar theme" |

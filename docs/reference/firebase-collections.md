@@ -361,6 +361,9 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | **silverBuyPerKg** | number | ราคาเงินแท่งรับซื้อ ฿/กิโล |
 | **silverSellPerKg** | number | ราคาเงินแท่งขายออก ฿/กิโล (รวม VAT) |
 | **silverUpdatedAt** | string | ISO timestamp จาก DoDev silver API |
+| **changeRates** | map | ค่าเปลี่ยน นน. เท่ากัน ตามที่ขึ้น**จอราคาร้าน** · key = weight id ฝั่งจอ (`gram-06` · `salueng-1` · `baht-1` ฯลฯ = `ChangePriceWeight.excId`) · เขียนเฉพาะตอน source = `price-exc` |
+| **changeRatesForPrice** | number | ราคาทองที่จอใช้คำนวณ `changeRates` ชุดนี้ — ไม่ตรง `pricePerBaht` = ค้าง → client fallback ไปคำนวณเอง |
+| **changeRatesUpdatedAt** | number | ms epoch ที่ `changeRates` ถูกเขียนล่าสุด |
 | updatedAt | number | ms epoch ที่ doc ถูกเขียน |
 | updatedBy | string | `auto · สมาคมค้าทองคำ (Gold Traders Association)` / `(ฮั่วเซงเฮง)` · admin manual |
 | source | string | `goldtraders-latest` / `hsh-ref` (debug) |
@@ -368,13 +371,13 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | lastFetchError | string | ข้อความ error ครั้งล่าสุด (`""` = ไม่มี) |
 | lastFetchErrorAt | number | ms epoch ของ error |
 
-**Source chain** (Cloud Function ลองตามลำดับ):
-1. **Gold:** Gold Traders Association `/api/GoldPrices/Latest` → HSH `apicheckpricev3` REF (fallback)
-2. **Silver:** DoDev `/current_price/silver` (no fallback · fail = silent skip ไม่กระทบ gold)
+**Source chain** (Cloud Function ลองตามลำดับ · ตัวแรกที่สำเร็จชนะ):
+1. **Gold:** จอราคาร้าน `petchmukda-price-exc /api/price` (**แหล่งหลัก** → ราคาในระบบตรงกับจอหน้าร้านเสมอ) → Gold Traders Association `/api/GoldPrices/Latest` → HSH `apicheckpricev3` REF
+2. **Silver:** จอราคาร้าน `/api/silver` → DoDev `/current_price/silver` (fail = silent skip ไม่กระทบ gold)
 
-- ราคาทองดึงจาก API ของสมาคมโดยตรง · HSH เป็น fallback
+- **`changeRates` มาจากจอเท่านั้น** — `/api/price` คำนวณค่าเปลี่ยนมาให้ในตัว (จอมี config ค่าแรง/rate%/การปัดเศษของตัวเอง) · source อื่นไม่มี → ไม่เขียนฟิลด์นี้ ค่าเดิมคงอยู่ แต่ `changeRatesForPrice` จะไม่ตรงราคาใหม่ → client fallback ไปคำนวณเอง
 - **Sanity check:** gold 10,000–200,000 ฿/บาท · silver 10–200 ฿/กรัม
-- **Skip write ถ้า no-change** ทั้ง gold (`sellPrice + sourceDate + sourceTime`) + silver (`silverBuyPerGram + silverSellPerGram`) เท่าเดิม
+- **Skip write ถ้า no-change** ทั้ง gold (`sellPrice + sourceDate + sourceTime`) + silver (`silverBuyPerGram + silverSellPerGram`) + ค่าเปลี่ยน (`changeRates + changeRatesForPrice`) เท่าเดิม — ค่าเปลี่ยนขยับได้เองแม้ราคาทองเท่าเดิม (admin แก้ config บนจอ) จึงต้องเทียบด้วย
 
 **Manual trigger:** Cloud Function `fetchGoldPriceNow` (onCall, admin only) — ปุ่ม refresh ใน `GoldPriceHeader`
 

@@ -28,19 +28,7 @@ import {
   Wallet as IconWallet,
   Weight as IconWeight,
 } from "lucide-react";
-import {
-  CHANGE_PRICE_WEIGHTS,
-  computeChangePriceBreakdown,
-} from "../../utils/changePriceUtils";
 import type { KnowledgeSection } from "./types";
-
-/** ช่วยหาค่าเปลี่ยน "นน. เท่ากัน เริ่มต้น" ของน้ำหนักใดน้ำหนักหนึ่ง
- *  (ปัดทวีคูณ 50 แล้ว) — ใช้ในตัวอย่าง "การคำนวณค่าเปลี่ยน เพิ่มขึ้น" */
-function changePriceFor(weightId: string, sellPrice: number): number {
-  const w = CHANGE_PRICE_WEIGHTS.find((it) => it.id === weightId);
-  if (!w) return 0;
-  return computeChangePriceBreakdown(w, sellPrice).total;
-}
 
 export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   /* ── 1. มาตรฐานน้ำหนัก ── */
@@ -556,8 +544,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "live-example",
         title: "ตัวอย่าง — 1 สลึง เพิ่มเป็น 2 สลึง (MD-03)",
-        compute: ({ sell, labor }) => {
-          const oldChange = changePriceFor("1-saleung", sell);
+        compute: ({ sell, labor, changePriceOf }) => {
+          const oldChange = changePriceOf("1-saleung");
           // ค่าแรงของน้ำหนักที่เพิ่ม = 1 สลึง (2 − 1 สลึง) · default 750
           const newLabor = labor["1-saleung"] || 750;
           const md = 300;
@@ -594,8 +582,8 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "live-example",
         title: "ตัวอย่าง — 1 บาท เพิ่มเป็น 2 บาท (MD-03)",
-        compute: ({ sell, labor }) => {
-          const oldChange = changePriceFor("1-baht", sell);
+        compute: ({ sell, labor, changePriceOf }) => {
+          const oldChange = changePriceOf("1-baht");
           // ค่าแรงของน้ำหนักที่เพิ่ม = 1 บาท (2 − 1 บาท) · default 1050
           const newLabor = labor["1-baht"] || 1050;
           const md = 300;

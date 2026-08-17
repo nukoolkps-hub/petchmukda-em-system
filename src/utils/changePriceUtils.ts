@@ -13,17 +13,62 @@ export interface ChangePriceWeight {
   laborBase: number; // ค่าแรงเริ่มต้นจากตารางใน knowledge
   /** ถ้า true → คำนวณเป็น "ต่อบาท" (ใช้กับ 2 บาท+) — ผู้ใช้ต้องคูณน้ำหนักเอง */
   perBaht?: boolean;
+  /** weight id ของแถวเดียวกันบน "จอราคาร้าน" (petchmukda-price-exc) —
+   *  ใช้จับคู่ค่าเปลี่ยนที่ดึงมาจากจอ (ดู `resolveChangePrice`) */
+  excId: string;
 }
 
 export const CHANGE_PRICE_WEIGHTS: ChangePriceWeight[] = [
-  { id: "0.6g", label: "0.6 กรัม", grams: 0.6, laborBase: 450 },
-  { id: "1g", label: "1 กรัม", grams: 1.0, laborBase: 550 },
-  { id: "half-saleung", label: "½ สลึง", grams: 1.895, laborBase: 650 },
-  { id: "1-saleung", label: "1 สลึง", grams: 3.79, laborBase: 750 },
-  { id: "2-saleung", label: "2 สลึง", grams: 7.58, laborBase: 850 },
-  { id: "3-saleung", label: "3 สลึง", grams: 11.37, laborBase: 950 },
-  { id: "1-baht", label: "1 บาท", grams: 15.16, laborBase: 1050 },
-  { id: "6-saleung", label: "6 สลึง", grams: 22.74, laborBase: 1900 },
+  {
+    id: "0.6g",
+    label: "0.6 กรัม",
+    grams: 0.6,
+    laborBase: 450,
+    excId: "gram-06",
+  },
+  { id: "1g", label: "1 กรัม", grams: 1.0, laborBase: 550, excId: "gram-1" },
+  {
+    id: "half-saleung",
+    label: "½ สลึง",
+    grams: 1.895,
+    laborBase: 650,
+    excId: "salueng-05",
+  },
+  {
+    id: "1-saleung",
+    label: "1 สลึง",
+    grams: 3.79,
+    laborBase: 750,
+    excId: "salueng-1",
+  },
+  {
+    id: "2-saleung",
+    label: "2 สลึง",
+    grams: 7.58,
+    laborBase: 850,
+    excId: "salueng-2",
+  },
+  {
+    id: "3-saleung",
+    label: "3 สลึง",
+    grams: 11.37,
+    laborBase: 950,
+    excId: "salueng-3",
+  },
+  {
+    id: "1-baht",
+    label: "1 บาท",
+    grams: 15.16,
+    laborBase: 1050,
+    excId: "baht-1",
+  },
+  {
+    id: "6-saleung",
+    label: "6 สลึง",
+    grams: 22.74,
+    laborBase: 1900,
+    excId: "salueng-6",
+  },
   // 2 บาท+ "บาทละ 1,050" → คิดเป็น "ต่อบาท" (ลูกค้าคูณน้ำหนักเอง)
   {
     id: "2-baht-plus",
@@ -31,6 +76,7 @@ export const CHANGE_PRICE_WEIGHTS: ChangePriceWeight[] = [
     grams: 15.16,
     laborBase: 1050,
     perBaht: true,
+    excId: "baht-2-up",
   },
 ];
 
@@ -107,6 +153,41 @@ export function computeChangePrice(
   const goldPart = goldByWeight(goldPricePerBaht, weight.grams) * 0.031;
   const laborPart = weight.laborBase * 0.85;
   return goldPart + laborPart;
+}
+
+/** ค่าเปลี่ยนที่ดึงมาจาก "จอราคาร้าน" (เก็บใน /config/goldPrice โดย
+ *  Cloud Function `fetchGoldPrice`) — key = `ChangePriceWeight.excId` */
+export interface StoreChangeRates {
+  rates: Record<string, number>;
+  /** ราคาทองที่จอใช้คำนวณค่าเปลี่ยนชุดนี้ — ไม่ตรงราคาปัจจุบัน = ค้าง */
+  forPrice: number;
+}
+
+/** ค่าเปลี่ยนที่จะโชว์จริง
+ *
+ *  จอราคาร้านคือ "ราคาที่ลูกค้าเห็นหน้าร้าน" → เป็น source of truth ·
+ *  จอมีค่าแรง + rate% + วิธีปัดเศษเป็นของตัวเอง (admin แก้ในหน้า admin ของจอ)
+ *  จึงได้เลขไม่เท่ากับสูตรฝั่งระบบพนักงาน — ต้องยึดของจอ ไม่งั้นพนักงาน
+ *  บอกลูกค้าคนละราคากับที่ขึ้นจอ
+ *
+ *  fallback ไปสูตรฝั่งเราเมื่อ: จอเรียกไม่ได้ (source อื่นชนะใน chain) ·
+ *  จอไม่ส่ง changeRates · หรือค่าที่เก็บไว้คำนวณจากราคาทองคนละตัวกับตอนนี้
+ *  (`forPrice` ไม่ตรง = ค้าง) → ยังมีเลขโชว์เสมอ ไม่มีทางว่าง */
+export function resolveChangePrice(
+  weight: ChangePriceWeight,
+  goldPricePerBaht: number,
+  store?: StoreChangeRates | null,
+): { total: number; fromStore: boolean } {
+  if (store && store.forPrice === goldPricePerBaht) {
+    const rate = store.rates[weight.excId];
+    if (typeof rate === "number" && Number.isFinite(rate) && rate > 0) {
+      return { total: rate, fromStore: true };
+    }
+  }
+  return {
+    total: computeChangePriceBreakdown(weight, goldPricePerBaht).total,
+    fromStore: false,
+  };
 }
 
 /** breakdown ใช้แสดงใน tooltip / hint

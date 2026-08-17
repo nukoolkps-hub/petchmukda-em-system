@@ -136,6 +136,9 @@ export type KnowledgeBlock =
         /** ค่าแรงรายน้ำหนัก (key = weightId เช่น "1-saleung", "1-baht")
          *  ใช้แทน hardcode ค่าแรงในตัวอย่าง · admin แก้ตาราง → sync ทันที */
         labor: Record<string, number>;
+        /** ค่าเปลี่ยน นน. เท่ากัน ของน้ำหนักนั้น (ปัดเศษแล้ว) — เลขเดียวกับ
+         *  ตาราง "ค่าเปลี่ยน" เป๊ะ (ยึดจอราคาร้านก่อน · fallback สูตรในระบบ) */
+        changePriceOf: (weightId: string) => number;
       }) => {
         given: string[];
         steps: { calc: string; meaning: string }[];

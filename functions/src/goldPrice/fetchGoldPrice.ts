@@ -13,6 +13,10 @@
  *
  * Source chain — เงิน: จอราคาร้าน /api/silver → DoDev โดยตรง
  *
+ * ค่าเปลี่ยน นน. เท่ากัน: /api/price ส่ง changeRates มาด้วย (จอคำนวณเอง จาก
+ * config ที่ admin แก้ในหน้า admin ของจอ) → เก็บลง doc ให้ระบบพนักงานโชว์
+ * เลขเดียวกับจอเป๊ะ · source อื่นไม่มี → ระบบ fallback ไปคำนวณเองฝั่ง client
+ *
  * Manual trigger: callable function fetchGoldPriceNow (admin only)
  *
  * Observability: fail ทุก source → เขียน lastFetchError +
@@ -61,6 +65,9 @@ interface PriceData {
 	sourceTime: string;
 	source: string; // "hsh-ref" | "goldtraders-latest"
 	label: string; // updatedBy ที่โชว์ใน UI
+	/** ค่าเปลี่ยน นน. เท่ากัน จากจอราคาร้าน — key = weight id ฝั่งจอ
+	 *  ("gram-06" · "salueng-1" · "baht-1" ฯลฯ) · null = source นี้ไม่มีให้ */
+	changeRates: Record<string, number> | null;
 }
 
 interface StoreResult {
@@ -112,6 +119,22 @@ function splitIsoTimestamp(iso: string): [string, string] {
 	return [date, time];
 }
 
+/** changeRates จากจอราคาร้าน: [{ id, weight, rawPrice, price, prefix }]
+ *  → { [id]: price } (ราคาปัดเศษแล้ว = เลขที่ขึ้นบนจอจริง) ·
+ *  payload ผิดรูป/ว่าง → null (ฝั่ง client จะ fallback ไปคำนวณเอง) */
+function parseChangeRates(raw: unknown): Record<string, number> | null {
+	if (!Array.isArray(raw)) return null;
+	const rates: Record<string, number> = {};
+	for (const row of raw) {
+		const id = (row as { id?: unknown } | null)?.id;
+		const price = Number((row as { price?: unknown } | null)?.price);
+		if (typeof id === "string" && id && Number.isFinite(price) && price > 0) {
+			rates[id] = price;
+		}
+	}
+	return Object.keys(rates).length > 0 ? rates : null;
+}
+
 /** Source 0 (primary): จอแสดงราคาของร้าน — JSON ที่ normalize แล้ว */
 async function fetchFromPriceExc(): Promise<PriceData> {
 	const res = await fetchWithTimeout(PRICE_EXC_GOLD_URL);
@@ -122,6 +145,7 @@ async function fetchFromPriceExc(): Promise<PriceData> {
 		updatedAt?: string;
 		source?: string;
 		stale?: boolean;
+		changeRates?: unknown;
 	};
 	const sellPrice = Number(data.sellPrice);
 	assertSane(sellPrice, "price-exc");
@@ -140,6 +164,7 @@ async function fetchFromPriceExc(): Promise<PriceData> {
 		source: "price-exc",
 		// โชว์ provider ต้นทางที่ฝั่งจอใช้จริง (Gold Traders / Hua Seng Heng)
 		label: `auto · จอราคาร้าน${data.source ? ` (${data.source})` : ""}`,
+		changeRates: parseChangeRates(data.changeRates),
 	};
 }
 
@@ -177,6 +202,7 @@ async function fetchFromHsh(): Promise<PriceData> {
 		sourceTime,
 		source: "hsh-ref",
 		label: "auto · สมาคมค้าทองคำ (ฮั่วเซงเฮง)",
+		changeRates: null,
 	};
 }
 
@@ -202,6 +228,7 @@ async function fetchFromGoldTraders(): Promise<PriceData> {
 		sourceTime,
 		source: "goldtraders-latest",
 		label: "auto · สมาคมค้าทองคำ (Gold Traders Association)",
+		changeRates: null,
 	};
 }
 
@@ -297,6 +324,17 @@ async function fetchFromAnySource(): Promise<PriceData> {
 	throw new Error(errors.join(" · "));
 }
 
+/** เทียบ map ค่าเปลี่ยน 2 ชุด (key + ค่าตรงกันทั้งหมด) */
+function sameRates(
+	a: Record<string, number> | undefined,
+	b: Record<string, number>,
+): boolean {
+	if (!a || typeof a !== "object") return false;
+	const keys = Object.keys(b);
+	if (Object.keys(a).length !== keys.length) return false;
+	return keys.every((k) => a[k] === b[k]);
+}
+
 async function fetchAndStore(): Promise<StoreResult> {
 	const db = getAppFirestore();
 	const docRef = db.collection("config").doc("goldPrice");
@@ -344,11 +382,21 @@ async function fetchAndStore(): Promise<StoreResult> {
 		!silver ||
 		(current?.silverBuyPerGram === silver.silverBuyPerGram &&
 			current?.silverSellPerGram === silver.silverSellPerGram);
+	// ค่าเปลี่ยนขยับได้เองแม้ราคาทองเท่าเดิม (admin แก้ค่าแรง/rate% ในหน้า admin
+	// ของจอ) → ต้องเทียบด้วย ไม่งั้น skip แล้วเลขในระบบค้างไม่ตรงจอ
+	const changeRatesUnchanged =
+		!data.changeRates ||
+		(current?.changeRatesForPrice === data.sellPrice &&
+			sameRates(
+				current?.changeRates as Record<string, number> | undefined,
+				data.changeRates,
+			));
 	if (
 		current?.pricePerBaht === data.sellPrice &&
 		current?.sourceDate === data.sourceDate &&
 		current?.sourceTime === data.sourceTime &&
-		silverUnchanged
+		silverUnchanged &&
+		changeRatesUnchanged
 	) {
 		// เคลียร์ error เก่า (fetch รอบนี้สำเร็จแล้ว)
 		if (current?.lastFetchError) {
@@ -378,6 +426,14 @@ async function fetchAndStore(): Promise<StoreResult> {
 			priceChanged: data.priceChanged,
 			lastFetchError: "",
 			lastFetchErrorAt: 0,
+			// ค่าเปลี่ยนจากจอราคาร้าน — merge only if มีมาด้วย (source อื่นไม่มี) ·
+			// changeRatesForPrice = ราคาทองที่จอใช้คำนวณชุดนี้ → client เอาไว้เช็คว่า
+			// ยังตรงกับ pricePerBaht ปัจจุบันไหม (ไม่ตรง = ค้าง → คำนวณเองแทน)
+			...(data.changeRates && {
+				changeRates: data.changeRates,
+				changeRatesForPrice: data.sellPrice,
+				changeRatesUpdatedAt: Date.now(),
+			}),
 			// ราคาเงิน — merge only if fetched สำเร็จ (กัน wipe ค่าเดิม)
 			...(silver && {
 				silverBuyPerGram: silver.silverBuyPerGram,
