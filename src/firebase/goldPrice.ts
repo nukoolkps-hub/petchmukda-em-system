@@ -19,6 +19,11 @@ export interface GoldPrice {
   updatedBy: string;
   lastFetchError: string;
   lastFetchErrorAt: number;
+  /** ค่าเปลี่ยน นน. เท่ากัน ตามที่ขึ้น "จอราคาร้าน" — key = weight id ฝั่งจอ
+   *  (`ChangePriceWeight.excId`) · ว่าง = จอไม่ได้ส่งมา (fallback คำนวณเอง) */
+  changeRates: Record<string, number>;
+  /** ราคาทองที่จอใช้คำนวณ changeRates ชุดนี้ — ไม่ตรง pricePerBaht = ค้าง */
+  changeRatesForPrice: number;
 }
 
 const PATH = "config/goldPrice";
@@ -33,7 +38,19 @@ export const DEFAULT_GOLD_PRICE: GoldPrice = {
   updatedBy: "",
   lastFetchError: "",
   lastFetchErrorAt: 0,
+  changeRates: {},
+  changeRatesForPrice: 0,
 };
+
+/** เก็บเฉพาะค่าเปลี่ยนที่เป็นเลขบวก (กัน payload เพี้ยนทำตารางโชว์ 0/NaN) */
+function sanitizeChangeRates(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const rates: Record<string, number> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) rates[k] = v;
+  }
+  return rates;
+}
 
 export function subscribeGoldPrice(
   onChange: (g: GoldPrice) => void,
@@ -67,6 +84,12 @@ export function subscribeGoldPrice(
           typeof data.lastFetchError === "string" ? data.lastFetchError : "",
         lastFetchErrorAt:
           typeof data.lastFetchErrorAt === "number" ? data.lastFetchErrorAt : 0,
+        changeRates: sanitizeChangeRates(data.changeRates),
+        changeRatesForPrice:
+          typeof data.changeRatesForPrice === "number" &&
+          data.changeRatesForPrice > 0
+            ? data.changeRatesForPrice
+            : 0,
       });
     },
     (err) => {

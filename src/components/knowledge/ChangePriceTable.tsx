@@ -6,8 +6,8 @@ import { Coins as IconCoins, RefreshCw as IconRefresh } from "lucide-react";
 import { THAI_MONTH_NAMES } from "../../constants";
 import { useGoldPrice, useLaborCost } from "../../firebase/hooks/useFirestore";
 import {
-  computeChangePriceBreakdown,
   getWeightsWithLabor,
+  resolveChangePrice,
 } from "../../utils/changePriceUtils";
 import { formatThaiNumber } from "../../utils/format";
 
@@ -26,6 +26,14 @@ export default function ChangePriceTable() {
   const { data: gold, loading } = useGoldPrice();
   const { data: labor } = useLaborCost();
   const weights = getWeightsWithLabor(labor.values);
+  // ค่าเปลี่ยนยึดตามจอราคาร้านก่อนเสมอ (ราคาที่ลูกค้าเห็นหน้าร้าน) ·
+  // จอเรียกไม่ได้/ค่าค้าง → fallback คำนวณเอง (resolveChangePrice จัดการให้)
+  const store = { rates: gold.changeRates, forPrice: gold.changeRatesForPrice };
+  const rows = weights.map((w) => ({
+    weight: w,
+    ...resolveChangePrice(w, gold.pricePerBaht, store),
+  }));
+  const fromStore = rows.some((r) => r.fromStore);
 
   return (
     <div className="mb-3 rounded-[12px] border-[1.5px] border-gold/40 overflow-hidden bg-white">
@@ -53,6 +61,11 @@ export default function ChangePriceTable() {
           อัปเดต {fmtUpdatedAt(gold.updatedAt)}
           {gold.updatedBy ? ` · โดย ${gold.updatedBy}` : ""}
         </div>
+        <div className="mt-0.5 text-[10px] text-txt-soft/90 italic">
+          {fromStore
+            ? "ค่าเปลี่ยน: ตรงกับจอราคาร้าน"
+            : "ค่าเปลี่ยน: คำนวณจากสูตรในระบบ (ยังไม่ได้ค่าจากจอราคาร้าน)"}
+        </div>
       </div>
 
       {/* table */}
@@ -70,22 +83,19 @@ export default function ChangePriceTable() {
           </tr>
         </thead>
         <tbody>
-          {weights.map((w) => {
-            const breakdown = computeChangePriceBreakdown(w, gold.pricePerBaht);
-            return (
-              <tr
-                key={w.id}
-                className="border-b border-bdr/40 last:border-0 odd:bg-cream/40"
-              >
-                <td className="px-2.5 py-1.5 text-txt font-semibold">
-                  {w.label}
-                </td>
-                <td className="px-2.5 py-1.5 text-right font-extrabold text-maroon">
-                  {formatThaiNumber(breakdown.total)}
-                </td>
-              </tr>
-            );
-          })}
+          {rows.map(({ weight, total }) => (
+            <tr
+              key={weight.id}
+              className="border-b border-bdr/40 last:border-0 odd:bg-cream/40"
+            >
+              <td className="px-2.5 py-1.5 text-txt font-semibold">
+                {weight.label}
+              </td>
+              <td className="px-2.5 py-1.5 text-right font-extrabold text-maroon">
+                {formatThaiNumber(total)}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

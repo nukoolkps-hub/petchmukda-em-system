@@ -61,6 +61,14 @@ type KnowledgeSection = {
 | `price-tag` | การอ่านป้ายสินค้า | p, image | — | — | 495 |
 
 ### ค่าเปลี่ยน
+
+> **ค่าเปลี่ยนยึด "จอราคาร้าน"** — `change-price-table` โชว์ `goldPrice.changeRates`
+> (Cloud Function ดึงจาก `/api/price` ของจอ) ก่อนเสมอ · จอเรียกไม่ได้/ค่าค้าง →
+> fallback สูตรในระบบ · header ของตารางบอกว่าเลขชุดไหน · `live-example` ที่อ้าง
+> "ค่าเปลี่ยนเริ่มต้น … (จากตาราง)" ต้องใช้ `changePriceOf(weightId)` จาก compute arg
+> **ห้าม** เรียก `computeChangePriceBreakdown` ตรงๆ ไม่งั้นเลขในโจทย์ไม่ตรงตาราง
+> (ดู `docs/reference/business-rules.md` → "สูตรค่าเปลี่ยน นน. เท่ากัน เริ่มต้น")
+
 | id | title | blocks | live? | tone | line |
 |---|---|---|---|---|---|
 | `change-price` | ค่าเปลี่ยน นน. เท่ากัน เริ่มต้น (ทอง 96.5%) | p, **change-price-table** | ✓ | — | 514 |

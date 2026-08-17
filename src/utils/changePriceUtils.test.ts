@@ -8,6 +8,7 @@ import {
   computeChangePriceBreakdown,
   computeSellPrice96,
   getWeightsWithLabor,
+  resolveChangePrice,
 } from "./changePriceUtils";
 
 const byId = (id: string): ChangePriceWeight => {
@@ -124,5 +125,70 @@ describe("computeChangePrice / computeChangePriceBreakdown", () => {
     expect(b.total).toBe(ceilTo50(b.raw));
     expect(b.total % 50).toBe(0);
     expect(b.total).toBeGreaterThanOrEqual(b.raw);
+  });
+});
+
+describe("resolveChangePrice", () => {
+  const w = byId("1-baht");
+  const local = computeChangePriceBreakdown(w, GOLD).total;
+
+  it("prefers the store screen rate when it was computed at the current price", () => {
+    const r = resolveChangePrice(w, GOLD, {
+      rates: { [w.excId]: 3000 },
+      forPrice: GOLD,
+    });
+    expect(r).toEqual({ total: 3000, fromStore: true });
+    // ต้องไม่ใช่เลขของสูตรในระบบ (จอมีค่าแรง/การปัดเศษของตัวเอง)
+    expect(r.total).not.toBe(local);
+  });
+
+  it("falls back to the local formula when no store rates are available", () => {
+    expect(resolveChangePrice(w, GOLD, null)).toEqual({
+      total: local,
+      fromStore: false,
+    });
+    expect(resolveChangePrice(w, GOLD, { rates: {}, forPrice: GOLD })).toEqual({
+      total: local,
+      fromStore: false,
+    });
+  });
+
+  it("falls back when the stored rates were computed at a different gold price", () => {
+    // ราคาทองขยับแล้วแต่ยังไม่ได้ค่าเปลี่ยนชุดใหม่จากจอ → ห้ามโชว์ของค้าง
+    expect(
+      resolveChangePrice(w, GOLD, {
+        rates: { [w.excId]: 3000 },
+        forPrice: GOLD - 50,
+      }),
+    ).toEqual({ total: local, fromStore: false });
+  });
+
+  it("falls back on a garbage stored rate instead of showing 0/NaN", () => {
+    for (const bad of [0, -100, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(
+        resolveChangePrice(w, GOLD, {
+          rates: { [w.excId]: bad },
+          forPrice: GOLD,
+        }),
+      ).toEqual({ total: local, fromStore: false });
+    }
+  });
+
+  it("maps every weight row to a distinct store-screen id", () => {
+    const excIds = CHANGE_PRICE_WEIGHTS.map((it) => it.excId);
+    expect(excIds.every(Boolean)).toBe(true);
+    expect(new Set(excIds).size).toBe(CHANGE_PRICE_WEIGHTS.length);
+  });
+
+  it("resolves each row from the store screen when the full set is present", () => {
+    const rates = Object.fromEntries(
+      CHANGE_PRICE_WEIGHTS.map((it, i) => [it.excId, 100 * (i + 1)]),
+    );
+    for (const [i, it] of CHANGE_PRICE_WEIGHTS.entries()) {
+      expect(resolveChangePrice(it, GOLD, { rates, forPrice: GOLD })).toEqual({
+        total: 100 * (i + 1),
+        fromStore: true,
+      });
+    }
   });
 });

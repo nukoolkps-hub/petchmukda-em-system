@@ -4,7 +4,10 @@
 
 import { ArrowRight as IconArrow } from "lucide-react";
 import { useGoldPrice, useLaborCost } from "../../firebase/hooks/useFirestore";
-import { getWeightsWithLabor } from "../../utils/changePriceUtils";
+import {
+  getWeightsWithLabor,
+  resolveChangePrice,
+} from "../../utils/changePriceUtils";
 import MathText from "./MathText";
 
 interface Props {
@@ -18,6 +21,7 @@ interface Props {
     silverBuy: number;
     laborBaht: number;
     labor: Record<string, number>;
+    changePriceOf: (weightId: string) => number;
   }) => {
     given: string[];
     steps: { calc: string; meaning: string }[];
@@ -37,12 +41,24 @@ export default function LiveExample({
   for (const w of weights) laborRecord[w.id] = w.laborBase;
   const labor1Baht = laborRecord["1-baht"] || 1050;
   // ก่อน live data โหลด → ใช้ default ราคา 50,000 / silver 30 ฿/กรัม กัน NaN
+  const sell = gold.pricePerBaht || 50000;
+  // ค่าเปลี่ยนในตัวอย่างต้องเป็นเลขเดียวกับตาราง "ค่าเปลี่ยน นน. เท่ากัน"
+  // (ยึดจอราคาร้านก่อน) ไม่งั้นโจทย์อ้าง "จากตาราง" แต่เลขไม่ตรงตาราง
+  const changePriceOf = (weightId: string): number => {
+    const w = weights.find((it) => it.id === weightId);
+    if (!w) return 0;
+    return resolveChangePrice(w, sell, {
+      rates: gold.changeRates,
+      forPrice: gold.changeRatesForPrice,
+    }).total;
+  };
   const { given, steps } = compute({
-    sell: gold.pricePerBaht || 50000,
+    sell,
     buy: gold.buyPrice || gold.pricePerBaht || 50000,
     silverBuy: gold.silverBuyPerGram || 30,
     laborBaht: labor1Baht,
     labor: laborRecord,
+    changePriceOf,
   });
 
   const isSilver = tone === "silver";
