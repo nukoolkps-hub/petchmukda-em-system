@@ -6,12 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**",
-      "!!**/dist",
-      "!!**/functions",
-      "!!**/petchmangkorn-leave-system"
-    ]
+    "includes": ["**", "!!**/dist", "!!**/functions"]
   },
   "formatter": {
     "enabled": true,
