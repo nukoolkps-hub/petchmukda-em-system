@@ -9,8 +9,7 @@
     "includes": [
       "**",
       "!!**/dist",
-      "!!**/functions",
-      "!!**/petchmangkorn-leave-system"
+      "!!**/functions"
     ]
   },
   "formatter": {
