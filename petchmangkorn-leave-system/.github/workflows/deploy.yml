@@ -1,0 +1,117 @@
+name: Deploy to Firebase
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test (frontend utils)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+  deploy-hosting:
+    name: Deploy Hosting
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          VITE_LINE_LOGIN_CHANNEL_ID: ${{ vars.VITE_LINE_LOGIN_CHANNEL_ID }}
+          # apiKey อ่านจาก GitHub Secret (ไม่ commit ลง repo) — ตั้งที่ Settings → Secrets → Actions
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          # ค่าด้านล่างเป็น public identifier (ไม่ใช่ secret) — hardcode ได้
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ vars.VITE_FIREBASE_MEASUREMENT_ID }}
+          VITE_FIRESTORE_DATABASE_ID: ${{ vars.FIRESTORE_DATABASE_ID }}
+
+      # ใช้ w9jds เหมือน job อื่น — FirebaseExtended/action-hosting-deploy
+      # ติด flaky retry-after-success (premature close → retry release POST →
+      # 400 "is the current active version") ทำให้ job แดงทั้งที่ deploy สำเร็จ
+      - uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only hosting --project ${{ vars.FIREBASE_PROJECT_ID }}
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+  deploy-functions:
+    name: Deploy Functions
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - run: npm ci --prefix functions
+
+      - run: npm run build --prefix functions
+
+      # firebase-tools CLI อ่าน GOOGLE_APPLICATION_CREDENTIALS/ADC ใน CI ไม่ติด
+      # (bug firebase/firebase-tools#10726 — autoAuth timeout) → ใช้ w9jds
+      # action ที่รับ GCP_SA_KEY (json หรือ base64 ก็ได้) แทน
+      - uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions --project ${{ vars.FIREBASE_PROJECT_ID }} --force
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+  deploy-firestore-rules:
+    name: Deploy Firestore Rules
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only firestore:${{ vars.FIRESTORE_DATABASE_ID }}:rules --project ${{ vars.FIREBASE_PROJECT_ID }} --force
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+  deploy-storage-rules:
+    name: Deploy Storage Rules
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only storage --project ${{ vars.FIREBASE_PROJECT_ID }}
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
