@@ -293,14 +293,18 @@ export function computeDutyForDay(
   excludeForPrimary: Set<string>,
   primariesToday: Set<string>,
   precomputedPrimary?: string,
-  /** คนที่ "ติดหน้าที่ผูกขาด" วันนี้ (Duty.exclusive) — ตัดออกจาก pool แบบ
-   *  hard filter ทุกชั้น (คนหลัก · คนแทน · double-up) ไม่มี fallback ให้กลับ
-   *  เข้ามา ต่างจาก excludeForPrimary ที่เป็นแค่ preference               */
+  /** คนที่ "ติดหน้าที่ผูกขาด" วันนี้ (Duty.exclusive) — กันออกจากหน้าที่นี้
+   *  ทุกชั้น (คนหลัก · คนแทน · double-up) · แต่ยังเป็นแค่ preference:
+   *  ถ้ากันแล้วไม่มีใครทำได้เลย จะยอมดึงกลับมา (ห้ามปล่อยหน้าที่ว่าง)     */
   blockedEmpIds?: Set<string>,
 ): DutyAssignment {
-  const fullPool = blockedEmpIds?.size
-    ? activePool(duty, employees).filter((id) => !blockedEmpIds.has(id))
-    : activePool(duty, employees);
+  // rawPool = คนทั้งหมดของหน้าที่นี้ (ยังไม่กรองอะไร) — เก็บไว้ใช้เป็น
+  // "ทางเลือกสุดท้าย" กันหน้าที่ว่างทั้งที่ยังมีคนมาทำงานวันนี้
+  const rawPool = activePool(duty, employees);
+  const unblocked = blockedEmpIds?.size
+    ? rawPool.filter((id) => !blockedEmpIds.has(id))
+    : rawPool;
+  const fullPool = unblocked.length > 0 ? unblocked : rawPool;
   const { start: periodStart, end: periodEnd } = getPeriodRange(duty, todayYmd);
 
   if (fullPool.length === 0) {
@@ -402,7 +406,29 @@ export function computeDutyForDay(
     };
   }
 
-  // ทุกคนใน pool ลาหมด
+  // ทางเลือกสุดท้าย — ห้ามปล่อยหน้าที่ว่างถ้ายังมีคนมาทำงานวันนี้
+  // ปลดทั้ง excludeForPrimary (คนหลักรายเดือน) และ blockedEmpIds (คนผูกขาด)
+  // แล้วมองจาก rawPool · ยังเคารพ subExcluded (admin สั่งห้ามเป็นคนแทน) และ
+  // ข้ามคนที่ลาจริง — เคสนี้เกิดตอนคนมาทำงานน้อยกว่าจำนวนหน้าที่
+  const rawStartIdx = Math.max(0, rawPool.indexOf(primary));
+  for (let offset = 1; offset <= rawPool.length; offset++) {
+    const cand = rawPool[(rawStartIdx + offset) % rawPool.length];
+    if (cand === primary) continue;
+    if (subExcluded.has(cand)) continue;
+    if (isOnLeave(leaves, cand, todayYmd)) continue;
+    return {
+      dutyId: duty.id,
+      dutyName: duty.name,
+      period: duty.period,
+      primaryEmpId: primary,
+      actualEmpId: cand,
+      reason: "double_up",
+      periodStart,
+      periodEnd,
+    };
+  }
+
+  // ทุกคนของหน้าที่นี้ลาหมดจริงๆ
   return {
     dutyId: duty.id,
     dutyName: duty.name,
