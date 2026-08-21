@@ -1866,3 +1866,112 @@ describe("computeAllDutiesForDay — หน้าที่ผูกขาด", (
     }
   });
 });
+
+/* ─── ความยุติธรรมระยะยาวของหน้าที่ผูกขาด ─────────────────────────────
+   กันอนาคต: การบล็อกคนทำหน้าที่ผูกขาดต้องไม่ทำให้ภาระงานเทไปกองที่ใคร
+   คนใดคนหนึ่ง · จำลองทั้งปีแล้ววัดจริง แทนการเดาจากโค้ด
+
+   เหตุผลที่ยังยุติธรรมอยู่: `assignPrimaries` ใช้ `assigned` set ร่วมกัน →
+   1 คนเป็น "คนหลัก" ได้แค่หน้าที่เดียว การหมุนเวียนคนหลักจึงคำนวณจาก pool
+   เต็มเสมอ ไม่ถูก blockedEmpIds รบกวน · blockedEmpIds มีผลเฉพาะชั้น
+   "ใครทำจริงวันนี้" (Phase 3)                                            */
+describe("หน้าที่ผูกขาด — ความยุติธรรมระยะยาว (จำลอง 1 ปี)", () => {
+  const STAFF = ["a", "b", "c", "d", "e", "f"];
+  const staff = STAFF.map((id) => emp(id));
+  const EXCLUSIVE_IDS = ["online", "acct"];
+
+  // 7 หน้าที่ / 6 คน — หน้าที่มากกว่าคน (เคสจริงของร้าน) → ต้องมีคนทำซ้อน
+  // rotationStartDate ต้องเป็นวันแรกที่จำลอง — ถ้า anchor อยู่หลังช่วงจำลอง
+  // getPeriodIndex จะติดลบแล้วถูก clamp เป็น 0 → คนหลักไม่หมุนเลย (วัดเพี้ยน)
+  const START = "2026-01-01";
+  const makeDuties = (exclusive: boolean): Duty[] => [
+    duty({
+      id: "online",
+      name: "ONLINE",
+      period: "monthly",
+      rotationStartDate: START,
+      exclusive,
+    }),
+    duty({
+      id: "acct",
+      name: "บัญชี",
+      period: "monthly",
+      rotationStartDate: START,
+      exclusive,
+    }),
+    ...["gift", "stock", "power", "chip", "door"].map((id) =>
+      duty({ id, name: id, rotationStartDate: START }),
+    ),
+  ];
+
+  const YEAR: string[] = (() => {
+    const out: string[] = [];
+    const d = new Date(`${START}T00:00:00`);
+    for (let i = 0; i < 365; i++) {
+      out.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+      );
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  })();
+
+  // ลาแบบ deterministic (~2 วัน/เดือน/คน) — กันเทสต์ flaky
+  const LEAVES: LeaveEntry[] = YEAR.flatMap((ymd, i) =>
+    i % 3 === 0 ? [leave(STAFF[(i * 7 + Math.floor(i / 5)) % 6], ymd)] : [],
+  );
+
+  function simulate(exclusive: boolean) {
+    const duties = makeDuties(exclusive);
+    const load = new Map<string, number>(STAFF.map((s) => [s, 0]));
+    let violations = 0; // คนทำหน้าที่ผูกขาด ถูกจัดหน้าที่อื่นซ้อน
+    let unassigned = 0;
+
+    for (const ymd of YEAR) {
+      const result = computeAllDutiesForDay(duties, ymd, staff, LEAVES, null);
+      const exclusiveWorkers = new Set(
+        result
+          .filter((a) => EXCLUSIVE_IDS.includes(a.dutyId) && a.actualEmpId)
+          .map((a) => a.actualEmpId as string),
+      );
+      for (const a of result) {
+        if (!a.actualEmpId) {
+          unassigned++;
+          continue;
+        }
+        load.set(a.actualEmpId, (load.get(a.actualEmpId) ?? 0) + 1);
+        if (
+          !EXCLUSIVE_IDS.includes(a.dutyId) &&
+          exclusiveWorkers.has(a.actualEmpId)
+        ) {
+          violations++;
+        }
+      }
+    }
+    const values = [...load.values()];
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    return { violations, unassigned, spreadPct: ((max - min) / max) * 100 };
+  }
+
+  it("ติ๊กผูกขาด → คนทำ ONLINE/บัญชี ไม่โดนงานซ้อนเลยทั้งปี", () => {
+    const before = simulate(false);
+    const after = simulate(true);
+    // ก่อนแก้ ปัญหานี้เกิดจริงหลายสิบครั้ง/ปี (ยืนยันว่าโจทย์ reproduce ได้)
+    expect(before.violations).toBeGreaterThan(0);
+    expect(after.violations).toBe(0);
+  });
+
+  it("ภาระงานไม่เทไปกองที่ใครคนเดียว — และไม่แย่ลงกว่าเดิม", () => {
+    const before = simulate(false);
+    const after = simulate(true);
+    // ช่องว่างระหว่างคนทำมากสุด-น้อยสุด ต้องไม่บานกว่าเดิม (+2% กัน noise)
+    expect(after.spreadPct).toBeLessThanOrEqual(before.spreadPct + 2);
+    // และต้องอยู่ในเกณฑ์ยอมรับได้ในเชิงสัมบูรณ์
+    expect(after.spreadPct).toBeLessThan(15);
+  });
+
+  it("คนพอ (6 คน / 7 หน้าที่) → ไม่มีหน้าที่ไหนว่างทั้งปี", () => {
+    expect(simulate(true).unassigned).toBe(0);
+  });
+});
