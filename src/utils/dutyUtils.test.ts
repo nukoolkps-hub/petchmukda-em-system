@@ -1845,7 +1845,7 @@ describe("computeAllDutiesForDay — หน้าที่ผูกขาด", (
     expect(after).toEqual(before);
   });
 
-  it("คนเหลือไม่พอ → หน้าที่อื่นว่าง ดีกว่าดึงคนผูกขาดมาทำซ้อน", () => {
+  it("คนเหลือไม่พอ → ยอมดึงคนผูกขาดมาทำซ้อน ดีกว่าปล่อยหน้าที่ว่าง", () => {
     const only2 = [emp("a"), emp("b")];
     const result = computeAllDutiesForDay(
       [
@@ -1858,12 +1858,81 @@ describe("computeAllDutiesForDay — หน้าที่ผูกขาด", (
       [],
       null,
     );
-    const worker = result.find((r) => r.dutyId === "online")?.actualEmpId;
-    expect(worker).toBeTruthy();
-    // หน้าที่อื่นห้ามได้คนผูกขาดไปทำ แม้ pool จะเหลือน้อย
-    for (const other of result.filter((r) => r.dutyId !== "online")) {
-      expect(other.actualEmpId).not.toBe(worker);
+    // 3 หน้าที่ / 2 คน → ต้องมีคนทำครบทุกหน้าที่ (ไม่มีช่องว่าง)
+    for (const a of result) expect(a.actualEmpId).toBeTruthy();
+  });
+
+  it("เหลือคนเดียว → คนนั้นทำหน้าที่ที่เหลือทั้งหมด (ผูกขาดยังอยู่ครบ)", () => {
+    const three = ["a", "b", "c"].map((id) => emp(id));
+    const result = computeAllDutiesForDay(
+      [
+        duty({
+          id: "online",
+          name: "ONLINE",
+          period: "monthly",
+          exclusive: true,
+        }),
+        duty({ id: "acct", name: "บัญชี", period: "monthly", exclusive: true }),
+        ...["w1", "w2", "w3", "w4", "w5"].map((id) => duty({ id, name: id })),
+      ],
+      MON,
+      three,
+      [],
+      null,
+    );
+    const perPerson = new Map<string, number>();
+    for (const a of result) {
+      expect(a.actualEmpId).toBeTruthy();
+      const id = a.actualEmpId as string;
+      perPerson.set(id, (perPerson.get(id) ?? 0) + 1);
     }
+    // 2 คนติดหน้าที่ผูกขาดคนละ 1 · คนที่เหลือรับ 5 หน้าที่ที่เหลือทั้งหมด
+    expect([...perPerson.values()].sort((x, y) => x - y)).toEqual([1, 1, 5]);
+  });
+
+  it("ต้องทำซ้อน → กระจายให้คนที่ถืองานน้อยสุด ไม่เทกองที่คนเดียว", () => {
+    const three = ["a", "b", "c"].map((id) => emp(id));
+    const result = computeAllDutiesForDay(
+      [
+        duty({
+          id: "online",
+          name: "ONLINE",
+          period: "monthly",
+          exclusive: true,
+        }),
+        duty({ id: "acct", name: "บัญชี", period: "monthly", exclusive: true }),
+        ...["w1", "w2", "w3", "w4", "w5"].map((id) => duty({ id, name: id })),
+      ],
+      MON,
+      three,
+      // คนที่ควรรับ 5 หน้าที่ลา → เหลือ 2 คนต้องหาร 7 หน้าที่
+      [leave("c", MON)],
+      null,
+    );
+    const perPerson = new Map<string, number>();
+    for (const a of result) {
+      expect(a.actualEmpId).toBeTruthy();
+      const id = a.actualEmpId as string;
+      perPerson.set(id, (perPerson.get(id) ?? 0) + 1);
+    }
+    const counts = [...perPerson.values()];
+    // 7 หน้าที่ / 2 คน → ต้องเป็น 4-3 ไม่ใช่ 6-1
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
+  });
+
+  it("คนพอ → ยังเลี่ยงคนผูกขาดตามปกติ (fallback ไม่ทำงานพร่ำเพรื่อ)", () => {
+    const result = computeAllDutiesForDay(
+      [
+        duty({ id: "online", name: "ONLINE", exclusive: true }),
+        duty({ id: "x", name: "x" }),
+      ],
+      MON,
+      staff,
+      [],
+      null,
+    );
+    const worker = result.find((r) => r.dutyId === "online")?.actualEmpId;
+    expect(result.find((r) => r.dutyId === "x")?.actualEmpId).not.toBe(worker);
   });
 });
 
@@ -1973,5 +2042,48 @@ describe("หน้าที่ผูกขาด — ความยุติ�
 
   it("คนพอ (6 คน / 7 หน้าที่) → ไม่มีหน้าที่ไหนว่างทั้งปี", () => {
     expect(simulate(true).unassigned).toBe(0);
+  });
+
+  it("คนน้อยมาก + มีคนลา → ก็ยังไม่มีหน้าที่ว่าง (ทั้งติ๊กและไม่ติ๊ก)", () => {
+    // ปิดช่องโหว่เดิมด้วย: monthly lock เคยทำให้หน้าที่รายสัปดาห์ว่าง
+    // ตอนเหลือคนเดียวแล้วคนนั้นลา — 175 ช่อง/ปี ทั้งที่ยังไม่ได้ติ๊กผูกขาด
+    const skeleton = STAFF.slice(0, 3).map((id) => emp(id));
+    for (const exclusive of [false, true]) {
+      const duties = makeDuties(exclusive);
+      let unassigned = 0;
+      for (const ymd of YEAR) {
+        for (const a of computeAllDutiesForDay(
+          duties,
+          ymd,
+          skeleton,
+          LEAVES,
+          null,
+        )) {
+          if (!a.actualEmpId) unassigned++;
+        }
+      }
+      expect(unassigned).toBe(0);
+    }
+  });
+
+  it("คนน้อยมาก (3 คน / 7 หน้าที่) → ก็ยังไม่มีหน้าที่ว่าง", () => {
+    // fallback ต้องทำงาน: ยอมให้คนผูกขาดทำซ้อน ดีกว่าปล่อยหน้าที่ว่าง
+    const skeleton = STAFF.slice(0, 3);
+    const skeletonStaff = skeleton.map((id) => emp(id));
+    const duties = makeDuties(true);
+    let unassigned = 0;
+    for (const ymd of YEAR) {
+      for (const a of computeAllDutiesForDay(
+        duties,
+        ymd,
+        skeletonStaff,
+        // ไม่มีใครลา — ทดสอบเฉพาะเคส "คนน้อยกว่าหน้าที่"
+        [],
+        null,
+      )) {
+        if (!a.actualEmpId) unassigned++;
+      }
+    }
+    expect(unassigned).toBe(0);
   });
 });

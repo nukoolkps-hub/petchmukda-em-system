@@ -259,6 +259,26 @@ function activePool(duty: Duty, employees: Employee[]): string[] {
 	return resolveDutyPool(duty, employees).map((e) => e.id);
 }
 
+/** เลือกคนที่ "ถือหน้าที่วันนี้น้อยสุด" จากรายชื่อที่สแกนมาแล้ว —
+ *  เสมอกันใช้ลำดับสแกนเดิม (deterministic) · load ว่าง = พฤติกรรมเดิมเป๊ะ */
+function pickLeastLoaded(
+	candidates: string[],
+	loadToday?: Map<string, number>,
+): string | null {
+	if (candidates.length === 0) return null;
+	if (!loadToday) return candidates[0];
+	let best = candidates[0];
+	let bestLoad = loadToday.get(best) ?? 0;
+	for (const cand of candidates.slice(1)) {
+		const load = loadToday.get(cand) ?? 0;
+		if (load < bestLoad) {
+			best = cand;
+			bestLoad = load;
+		}
+	}
+	return best;
+}
+
 export function computeDutyForDay(
 	duty: Duty,
 	todayYmd: string,
@@ -270,14 +290,22 @@ export function computeDutyForDay(
 	// monthly: history การแทนสะสมตั้งแต่ต้นปี (จาก replayRotationSubHistory)
 	// → เลือกคนแทนแบบไม่ซ้ำ · undefined = neighbor-scan เดิม (weekly)
 	subHistory?: Map<string, number>,
-	/** คนที่ "ติดหน้าที่ผูกขาด" วันนี้ (Duty.exclusive) — ตัดออกจาก pool แบบ
-	 *  hard filter ทุกชั้น (คนหลัก · คนแทน · double-up) ไม่มี fallback ให้กลับ
-	 *  เข้ามา ต่างจาก excludeForPrimary ที่เป็นแค่ preference               */
+	/** คนที่ "ติดหน้าที่ผูกขาด" วันนี้ (Duty.exclusive) — กันออกจากหน้าที่นี้
+	 *  ทุกชั้น (คนหลัก · คนแทน · double-up) · แต่ยังเป็นแค่ preference:
+	 *  ถ้ากันแล้วไม่มีใครทำได้เลย จะยอมดึงกลับมา (ห้ามปล่อยหน้าที่ว่าง)     */
 	blockedEmpIds?: Set<string>,
+	/** จำนวนหน้าที่ที่แต่ละคน "ถืออยู่แล้ววันนี้" — ใช้ตอนจำเป็นต้องให้ทำซ้อน
+	 *  (double_up / ทางเลือกสุดท้าย) เลือกคนที่ถือน้อยสุดก่อน กันงานไปกอง
+	 *  ที่คนเดียว · ไม่ส่ง = ทุกคนถือ 0 (พฤติกรรมเดิม: เจอใครก่อนเอาคนนั้น) */
+	loadToday?: Map<string, number>,
 ): DutyAssignment {
-	const fullPool = blockedEmpIds?.size
-		? activePool(duty, employees).filter((id) => !blockedEmpIds.has(id))
-		: activePool(duty, employees);
+	// rawPool = คนทั้งหมดของหน้าที่นี้ (ยังไม่กรองอะไร) — เก็บไว้ใช้เป็น
+	// "ทางเลือกสุดท้าย" กันหน้าที่ว่างทั้งที่ยังมีคนมาทำงานวันนี้
+	const rawPool = activePool(duty, employees);
+	const unblocked = blockedEmpIds?.size
+		? rawPool.filter((id) => !blockedEmpIds.has(id))
+		: rawPool;
+	const fullPool = unblocked.length > 0 ? unblocked : rawPool;
 	const { start: periodStart, end: periodEnd } = getPeriodRange(duty, todayYmd);
 
 	if (fullPool.length === 0) {
@@ -383,23 +411,55 @@ export function computeDutyForDay(
 		};
 	}
 
+	const doubleUpCands: string[] = [];
 	for (let offset = 1; offset < pool.length; offset++) {
 		const cand = pool[(startIdx + offset) % pool.length];
 		if (cand === primary) continue;
 		if (subExcluded.has(cand)) continue;
 		if (isOnLeave(leaves, cand, todayYmd)) continue;
+		doubleUpCands.push(cand);
+	}
+	const doubleUp = pickLeastLoaded(doubleUpCands, loadToday);
+	if (doubleUp) {
 		return {
 			dutyId: duty.id,
 			dutyName: duty.name,
 			period: duty.period,
 			primaryEmpId: primary,
-			actualEmpId: cand,
+			actualEmpId: doubleUp,
 			reason: "double_up",
 			periodStart,
 			periodEnd,
 		};
 	}
 
+	// ทางเลือกสุดท้าย — ห้ามปล่อยหน้าที่ว่างถ้ายังมีคนมาทำงานวันนี้
+	// ปลดทั้ง excludeForPrimary (คนหลักรายเดือน) และ blockedEmpIds (คนผูกขาด)
+	// แล้วมองจาก rawPool · ยังเคารพ subExcluded + ข้ามคนที่ลาจริง
+	const rawStartIdx = Math.max(0, rawPool.indexOf(primary));
+	const lastResortCands: string[] = [];
+	for (let offset = 1; offset <= rawPool.length; offset++) {
+		const cand = rawPool[(rawStartIdx + offset) % rawPool.length];
+		if (cand === primary) continue;
+		if (subExcluded.has(cand)) continue;
+		if (isOnLeave(leaves, cand, todayYmd)) continue;
+		if (!lastResortCands.includes(cand)) lastResortCands.push(cand);
+	}
+	const lastResort = pickLeastLoaded(lastResortCands, loadToday);
+	if (lastResort) {
+		return {
+			dutyId: duty.id,
+			dutyName: duty.name,
+			period: duty.period,
+			primaryEmpId: primary,
+			actualEmpId: lastResort,
+			reason: "double_up",
+			periodStart,
+			periodEnd,
+		};
+	}
+
+	// ทุกคนของหน้าที่นี้ลาหมดจริงๆ
 	return {
 		dutyId: duty.id,
 		dutyName: duty.name,
@@ -1097,6 +1157,9 @@ function computeRotationForDay(
 	// ต้องเหมือน src/utils/dutyUtils.ts (computeAllDutiesForDay) เชิงพฤติกรรม
 	const exclusiveWorkers = new Set<string>();
 	const resultByDutyId = new Map<string, DutyAssignment>();
+	// งานที่แต่ละคนถืออยู่แล้ววันนี้ — ใช้ตอนจำเป็นต้องให้ทำซ้อน จะได้เลือก
+	// คนที่ถือน้อยสุด แทนที่จะเทให้คนแรกที่เจอ
+	const loadToday = new Map<string, number>();
 	const runDuty = (duty: Duty, blocked?: Set<string>) =>
 		computeDutyForDay(
 			duty,
@@ -1110,15 +1173,25 @@ function computeRotationForDay(
 			// จาก preferredPool (กันคนหลักรายเดือน ผ่าน excludeForPrimary=lockedByMonthly)
 			rotationSubHistory?.get(duty.id),
 			blocked,
+			loadToday,
 		);
+	const record = (duty: Duty, assignment: DutyAssignment) => {
+		resultByDutyId.set(duty.id, assignment);
+		if (assignment.actualEmpId) {
+			loadToday.set(
+				assignment.actualEmpId,
+				(loadToday.get(assignment.actualEmpId) ?? 0) + 1,
+			);
+		}
+	};
 
 	for (const duty of duties.filter((d) => d.exclusive)) {
 		const assignment = runDuty(duty, new Set(exclusiveWorkers));
-		resultByDutyId.set(duty.id, assignment);
+		record(duty, assignment);
 		if (assignment.actualEmpId) exclusiveWorkers.add(assignment.actualEmpId);
 	}
 	for (const duty of duties.filter((d) => !d.exclusive)) {
-		resultByDutyId.set(duty.id, runDuty(duty, exclusiveWorkers));
+		record(duty, runDuty(duty, exclusiveWorkers));
 	}
 
 	return duties.map((duty) => resultByDutyId.get(duty.id) as DutyAssignment);
