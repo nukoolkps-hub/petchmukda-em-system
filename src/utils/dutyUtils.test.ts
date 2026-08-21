@@ -1862,6 +1862,64 @@ describe("computeAllDutiesForDay — หน้าที่ผูกขาด", (
     for (const a of result) expect(a.actualEmpId).toBeTruthy();
   });
 
+  it("เหลือคนเดียว → คนนั้นทำหน้าที่ที่เหลือทั้งหมด (ผูกขาดยังอยู่ครบ)", () => {
+    const three = ["a", "b", "c"].map((id) => emp(id));
+    const result = computeAllDutiesForDay(
+      [
+        duty({
+          id: "online",
+          name: "ONLINE",
+          period: "monthly",
+          exclusive: true,
+        }),
+        duty({ id: "acct", name: "บัญชี", period: "monthly", exclusive: true }),
+        ...["w1", "w2", "w3", "w4", "w5"].map((id) => duty({ id, name: id })),
+      ],
+      MON,
+      three,
+      [],
+      null,
+    );
+    const perPerson = new Map<string, number>();
+    for (const a of result) {
+      expect(a.actualEmpId).toBeTruthy();
+      const id = a.actualEmpId as string;
+      perPerson.set(id, (perPerson.get(id) ?? 0) + 1);
+    }
+    // 2 คนติดหน้าที่ผูกขาดคนละ 1 · คนที่เหลือรับ 5 หน้าที่ที่เหลือทั้งหมด
+    expect([...perPerson.values()].sort((x, y) => x - y)).toEqual([1, 1, 5]);
+  });
+
+  it("ต้องทำซ้อน → กระจายให้คนที่ถืองานน้อยสุด ไม่เทกองที่คนเดียว", () => {
+    const three = ["a", "b", "c"].map((id) => emp(id));
+    const result = computeAllDutiesForDay(
+      [
+        duty({
+          id: "online",
+          name: "ONLINE",
+          period: "monthly",
+          exclusive: true,
+        }),
+        duty({ id: "acct", name: "บัญชี", period: "monthly", exclusive: true }),
+        ...["w1", "w2", "w3", "w4", "w5"].map((id) => duty({ id, name: id })),
+      ],
+      MON,
+      three,
+      // คนที่ควรรับ 5 หน้าที่ลา → เหลือ 2 คนต้องหาร 7 หน้าที่
+      [leave("c", MON)],
+      null,
+    );
+    const perPerson = new Map<string, number>();
+    for (const a of result) {
+      expect(a.actualEmpId).toBeTruthy();
+      const id = a.actualEmpId as string;
+      perPerson.set(id, (perPerson.get(id) ?? 0) + 1);
+    }
+    const counts = [...perPerson.values()];
+    // 7 หน้าที่ / 2 คน → ต้องเป็น 4-3 ไม่ใช่ 6-1
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
+  });
+
   it("คนพอ → ยังเลี่ยงคนผูกขาดตามปกติ (fallback ไม่ทำงานพร่ำเพรื่อ)", () => {
     const result = computeAllDutiesForDay(
       [
