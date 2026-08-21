@@ -293,6 +293,7 @@ interface Item {
 | rotationStartEmpId | string | (rotation) "คนเริ่ม" รอบแรก — anchor แทน hashDutyId · "" = อัตโนมัติ |
 | grantsPoolEligibility | boolean | (monthly) ให้สิทธิ์กองกลางแม้ขาย/ซื้อ < 80% |
 | skipSundays | boolean | (weekly) ข้ามวันอาทิตย์ |
+| exclusive | boolean | "ผูกขาดคนทำ" — คนที่ทำหน้าที่นี้วันนั้น (คนหลัก**หรือคนแทน**) ไม่ถูกจัดหน้าที่อื่น · default `false` · **`kind="coverage"` ผูกขาดเสมอโดยไม่ต้องใช้ field นี้** (กันผ่าน `effLeaves` ฝั่ง server) |
 | coverageRoleId | string | (coverage) ตำแหน่งเป้าหมาย |
 | candidateEmpIds | string[] | (coverage) รายชื่อคนแทน (allowlist) |
 | coveragePayPerOccurrence | number | (coverage) เงินตอบแทนต่อครั้งที่แทน (฿) |

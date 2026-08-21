@@ -486,6 +486,12 @@ pool ของหน้าที่หมุนเวียน = พนักง
     หมุนเวียนมองเขาเป็น "ไม่ว่าง" ทุกชั้น · UI สื่อผ่าน badge "ผูกขาดคนทำ (อัตโนมัติ)"
     บน DutyCard + กล่องอธิบาย (ไอคอนกุญแจ) ใน DutyEditModal แทน toggle
 
+**UI:** toggle "ผูกขาดคนทำ" อยู่ **ใต้ช่องชื่อหน้าที่** ใน `DutyEditModal` (ส่วนที่ใช้ร่วม
+ทั้ง 2 ประเภท — component `ExclusiveField`) · rotation = toggle ปกติ · coverage =
+ล็อกเปิด + badge "เปิดเสมอ" กดไม่ได้ · `DutyCard` ขึ้น badge "ผูกขาดคนทำ"
+(coverage ต่อท้ายว่า "(อัตโนมัติ)") · คู่มือในแอป (`ManualModal` แท็บ "หน้าที่")
+อธิบายกฎนี้ให้พนักงานด้วย
+
 ### หน้าที่ผูกขาด (`exclusive`) — ลำดับการคำนวณ
 
 `computeAllDutiesForDay` (client) / `computeRotationForDay` (server) แบ่ง phase

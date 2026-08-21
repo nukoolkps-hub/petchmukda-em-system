@@ -1,6 +1,6 @@
 # 💎 ห้างเพชรทองมุกดา — ระบบพนักงาน
 
-ระบบจัดการพนักงานครบวงจร — การลา · เงินเดือน · ค่าคอมกองกลาง · เบิกเงินล่วงหน้า · กู้เงินผ่อนคืน · หน้าที่หมุนเวียน · LINE Bot
+ระบบจัดการพนักงานครบวงจร — การลา · เงินเดือน · ค่าคอมกองกลาง · เบิกเงินล่วงหน้า · กู้เงินผ่อนคืน · หน้าที่หมุนเวียน · ความรู้ต่างๆ (ราคาทองสด) · LINE Bot
 
 > ⚡ **Production-ready** — React 19 + TypeScript + Firebase + LINE Login + Cloud Functions
 
@@ -17,6 +17,7 @@
 - **PDF:** pdfmake 0.3.x + Sarabun font (self-hosted)
 - **Routing:** react-router-dom v7 (HashRouter)
 - **Lint:** Biome
+- **Test:** Vitest (unit — pure logic ใน `src/utils/`)
 
 ---
 
@@ -34,6 +35,8 @@ npm run dev          # Vite + Firebase Emulators (auth/firestore/functions/stora
 npm run build         # production build (output: dist/)
 npm run typecheck     # tsc + check client/server algorithm sync
 npm run check         # Biome lint + format (--write)
+npm test              # Vitest — unit tests (รันครั้งเดียว) · gate ของทุก deploy job
+npm run test:coverage # Vitest + coverage (scope src/utils)
 npm run check:duty-sync   # ตรวจ rotation algorithm client/server ตรงกัน
 npm run build:functions   # compile Cloud Functions
 ```
@@ -77,11 +80,17 @@ src/
 │   ├── storeCalendar.ts             # isStoreClosed · isQuotaCountableDay
 │   ├── sanitizeRichText.ts          # XSS whitelist sanitizer
 │   ├── payrollLock.ts               # กฎปิดรอบ 7 วันหลังยืนยันยอด
+│   ├── payrollCompute.ts            # ประกอบแถวเงินเดือน + settle (pure · ใช้ทั้ง 2 ฝั่ง)
+│   ├── changePriceUtils.ts          # ราคาขาย/รับซื้อ 96.5% + ค่าเปลี่ยน (resolveChangePrice)
+│   ├── *.test.ts                    # Vitest — เทสต์อยู่ข้าง source
 │   └── dateUtils.ts · format.ts · …
+│
+├── content/knowledge/               # เนื้อหา "ความรู้ต่างๆ" (hardcode · block-based)
 │
 ├── components/
 │   ├── admin/                       # AdminPanel + sub-panels
 │   ├── home/                        # HomeTab · TeamCalendar · RequestTab
+│   ├── knowledge/                   # KnowledgeView · ตารางราคาสด · Calculator
 │   ├── salary/                      # SalaryView · SalaryAdminEdit
 │   ├── modals/                      # PoolFlowModal · ManualModal · …
 │   ├── shared/                      # AvatarCircle · BaseModal · ModalHeader · ToggleSwitch · …
@@ -93,10 +102,12 @@ functions/src/
 ├── index.ts                         # barrel exports
 ├── advance/                         # notifications + cleanup
 ├── auth/                            # bootstrapAdmin · devAuth · lineAuth · setAdmin
-├── dailySummary/                    # สรุปวันละครั้ง → LINE
+├── backup/                          # สำรอง Firestore → GitHub (scheduled + manual)
+├── dailySummary/                    # สรุปวันละครั้ง → LINE (+ รูปแนบตามวันที่ตั้งไว้)
 ├── duty/                            # dutyUtils + recompute snapshot ⚠️ mirror ของ src/utils/dutyUtils.ts
+├── goldPrice/                       # ดึงราคาทอง/เงินทุก 15 นาที → /config/goldPrice
 ├── line/                            # webhook + commands (เชื่อมพนักงาน · ทดสอบแจ้งเตือน · ฯลฯ)
-├── maintenance/                     # cleanupOldSlips · cleanupOldTips · cleanupOldAdvances
+├── maintenance/                     # cleanupOldSlips · cleanupOldTips · wipeTestData · …
 └── payroll/                         # onLeaveCreated trigger
 
 scripts/
@@ -122,15 +133,28 @@ firebase.json · firestore.indexes.json
 ### ระบบหน้าที่ (Rotation Stability A+B+C)
 - 🔄 **หน้าที่หมุนเวียน** — admin ตั้งครั้งเดียว · ระบบหมุนรายสัปดาห์/รายเดือนอัตโนมัติ
 - 🤝 **แทนคนลา (coverage)** — เลือก "คนเคยแทนน้อยสุดก่อน" (ยุติธรรม) · ตั้งเงินตอบแทนต่อครั้งได้
+- 🔐 **ผูกขาดคนทำ (`exclusive`)** — หน้าที่ที่ต้องอยู่กับที่ทั้งวัน (ONLINE · บัญชี): คนที่ทำวันนั้น **คนหลักหรือคนแทน** ไม่ถูกจัดหน้าที่อื่น · หน้าที่ `coverage` เปิดอัตโนมัติเสมอ (ปิดไม่ได้)
+- 🚫 **ห้ามมีหน้าที่ว่าง** — กฎเหนือกว่าผูกขาด: คนมาทำงานน้อยกว่าจำนวนหน้าที่ → ยอมทำซ้อน แล้ว**กระจายให้คนที่ถือน้อยสุด** (เคารพ "ไม่ให้เป็นคนแทน" + วันลาจริงเสมอ)
 - 🛡 **Stable hash slot** — เพิ่ม/ลบหน้าที่ตัวอื่น ไม่กระทบ slot ของหน้าที่นี้
 - 🔒 **Primary cache per period** — pool เปลี่ยนกลางสัปดาห์ ตารางไม่เด้ง
-- 📅 **ปฏิทินดูล่วงหน้า** — พนักงานวางแผนได้ถึงสิ้นปี
+- 📅 **ปฏิทินดูล่วงหน้า** — พนักงานวางแผนได้ถึงสิ้นปี (แท็บย้อนหลัง + จำนวนครั้ง)
 
 ### ระบบปิด-ปิดร้าน (Store Calendar)
 - 🏪 **เสาร์ปิด default** + admin เปิดบางเสาร์เป็นกรณีพิเศษ
 - 🔒 admin ปิดวันธรรมดาบางวันได้ (อบรม · หยุดยาว)
 - ✅ ปฏิทินหน้าแรกของพนักงาน + ฝั่ง admin sync real-time
 - 📊 ลาวันปิด = ไม่นับ · ลาเสาร์เปิดพิเศษ = นับเข้าโควต้า
+
+### ความรู้ต่างๆ (`/knowledge`) + ราคาทองสด
+- 🧠 **เนื้อหา reference** — มาตรฐานน้ำหนัก · ค่าแรง · ขาย/รับซื้อ · จำนำ · VAT (block-based · hardcode ใน `src/content/knowledge/`)
+- 🟡 **ราคาทอง/เงินอัตโนมัติ** — Cloud Function ดึงทุก 15 นาที → `/config/goldPrice` · source chain: จอราคาร้าน → สมาคมค้าทองคำ → HSH · ปุ่ม refresh สำหรับ admin
+- 🔁 **ค่าเปลี่ยน นน. เท่ากัน ยึดจอราคาร้าน** — `resolveChangePrice()` ใช้ค่าจากจอก่อน (fallback สูตรในระบบ) → เลขตรงกับที่ลูกค้าเห็นหน้าร้าน
+- 🧮 **เครื่องคิดเลขสด** — default = ราคาวันนี้ · badge "ราคาวันนี้" · comma ขณะพิมพ์
+- ✏️ **ตารางที่ admin แก้ได้ inline** — ค่าแรง · ค่าบล็อก · แต้มแลกทอง (sync ทุกคนทันที)
+
+### สำรอง / ล้างข้อมูล (admin)
+- 💾 **สำรอง Firestore → GitHub** — scheduled อาทิตย์ 03:00 + กดเองได้ · สถานะที่ `/config/backupStatus`
+- 🧹 **ล้างข้อมูล (start fresh)** — ทั้งระบบ / รายคน · ยืนยัน 2 ชั้น + พิมพ์คำว่า "ล้างข้อมูล"
 
 ### ระบบตำแหน่ง (Role)
 - 👥 จัดกลุ่มพนักงานเป็นตำแหน่ง · บางตำแหน่งแชร์กองกลาง (poolGroup)
@@ -144,8 +168,9 @@ firebase.json · firestore.indexes.json
 
 ### LINE Bot
 - 📩 **คำสั่ง:** `ทดสอบแจ้งเตือน` · `คำสั่ง` · `ไอดีกลุ่ม` · `ไอดีฉัน` · `เชื่อมพนักงาน`
-- 📰 **สรุปประจำวัน 07:30** — Google Calendar + คนหยุด + เคล็ดลับ Claude API
-- 🔔 แจ้งเตือนเบิกเงิน (approved/rejected) เข้า LINE 1:1
+- 📰 **สรุปประจำวัน 07:30** — Google Calendar + คนหยุด + เคล็ดลับ Claude API (idempotent · ยิงซ้ำไม่สแปม)
+- 🖼 **รูปแนบสรุปเช้า** — admin อัปโหลด + ตั้งวันส่ง · ส่งครั้งเดียว · auto-cleanup วันถัดไป
+- 🔔 แจ้งเตือนเบิกเงิน (approved/rejected) + เงินกู้ (พร้อมรูปสลิป) เข้า LINE 1:1
 
 ---
 
@@ -182,6 +207,10 @@ Employee LINE — admin ใช้คำสั่ง `เชื่อมพนั
 | [docs/reference/firebase-collections.md](./docs/reference/firebase-collections.md) | Firestore schema + security rules |
 | [docs/reference/line-integration.md](./docs/reference/line-integration.md) | LINE Bot commands · webhook · auth |
 | [docs/reference/ui-components.md](./docs/reference/ui-components.md) | Component tree + shared components |
+| [docs/reference/knowledge-content.md](./docs/reference/knowledge-content.md) | เนื้อหา "ความรู้ต่างๆ" — sections + block types + วิธีแก้/เพิ่ม |
+| [docs/reference/testing.md](./docs/reference/testing.md) | กลยุทธ์เทสต์ + invariants (เงินไม่เพี้ยน) + idempotency |
+| [docs/reference/troubleshooting.md](./docs/reference/troubleshooting.md) | runbook เมื่อเจออาการผิดปกติ (กองกลางเพี้ยน · ราคาทองไม่มา · deploy fail) |
+| [docs/reference/glossary.md](./docs/reference/glossary.md) | คำไทยใน UI ↔ identifier ใน code |
 | [firestore.rules](./firestore.rules) | Security rules (มี mirror ของ payroll lock + monthLocked) |
 
 ---
@@ -222,6 +251,7 @@ Client Firestore rules deny ทุก `/config/*` ยกเว้น `notificati
 ## 🚢 Deployment
 
 ทุกอย่าง auto deploy ผ่าน GitHub Actions เมื่อ push เข้า `main`:
+- **Test** (`test`) — `npm run typecheck` + `npm test` · ทุก deploy job `needs:` job นี้ (เทสต์แดง = ไม่ deploy)
 - **Hosting** (`deploy-hosting`)
 - **Functions** (`deploy-functions`) — รัน `check-duty-sync` ก่อน build (กัน algorithm client/server diverge)
 - **Firestore Rules** (`deploy-firestore-rules`)
@@ -250,8 +280,9 @@ Emulator detect ผ่าน hostname (`localhost` / `127.0.0.1`) — ไม่�
 
 `src/utils/dutyUtils.ts` (client) และ `functions/src/duty/dutyUtils.ts` (server) มีอัลกอริทึมเลือก primary ที่ต้องเหมือนกันเป๊ะ — ถ้า drift → forecast ฝั่ง admin ไม่ตรงกับ snapshot จริง
 
-`scripts/check-duty-sync.mjs` เทียบ function body 5 ตัวหลังตัด comment/whitespace:
+`scripts/check-duty-sync.mjs` เทียบ function body 9 ตัวหลังตัด comment/whitespace:
 - `hashDutyId` · `pickPrimary` · `assignPrimaries` · `isSunday` · `applicableDuties`
+- `monthlyPrimariesForDay` · `pickCoverageCandidate` · `pickRotationSubstitute` · `replayRotationSubHistory`
 
 รันใน `npm run typecheck` + workflow `deploy-functions` ก่อน build · diverge = CI แดง
 
@@ -281,7 +312,10 @@ Emulator detect ผ่าน hostname (`localhost` / `127.0.0.1`) — ไม่�
 - [x] Store calendar (วันเปิด-ปิดร้าน + override)
 - [x] Rich text "หน้าที่หลัก" ของตำแหน่ง (sanitize on-write)
 - [x] Payroll lock (7-day grace · rules mirror)
+- [x] Duty exclusive (ผูกขาดคนทำ) + ห้ามมีหน้าที่ว่าง + กระจายงานซ้อนแบบถ่วงน้ำหนัก
+- [x] ความรู้ต่างๆ + ราคาทอง/เงินอัตโนมัติ (ค่าเปลี่ยนยึดจอราคาร้าน)
+- [x] สำรองข้อมูล → GitHub + ล้างข้อมูล (start fresh)
+- [x] Unit tests (Vitest — gate ทุก deploy)
 - [ ] PWA / offline mode
-- [ ] Unit tests (Vitest)
 - [ ] E2E tests (Playwright)
 - [ ] i18n (อังกฤษ)

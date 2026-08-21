@@ -118,7 +118,9 @@ Layout
 | AdvanceRequestModal | ฟอร์มเบิกเงินล่วงหน้า |
 | AdvanceHistoryModal | ประวัติเบิกเงิน |
 | ConfirmModal | ยืนยันลบรายการลา |
-| ManualModal | คู่มือใช้งาน (กฎลา + กฎ commission) |
+| ManualModal | คู่มือใช้งาน — 6 แท็บ: กฎการลา · กฎค่าคอม · เบิก/กู้ · เอกสาร · ปิดรอบ 7 วัน · หน้าที่ (รวมผูกขาดคนทำ + ลำดับกฎวันที่คนไม่พอ) |
+| DutyEditModal | ฟอร์มเพิ่ม/แก้หน้าที่ — toggle **ผูกขาดคนทำ** อยู่ใต้ช่องชื่อหน้าที่ (ส่วนที่ใช้ร่วมทั้ง 2 ประเภท · component `ExclusiveField`) · `kind="coverage"` แสดงเป็น **ล็อกเปิดเสมอ + badge "เปิดเสมอ"** กดปิดไม่ได้ |
+| DutyForecastModal | ปฏิทินหน้าที่ล่วงหน้า/ย้อนหลัง + จำนวนครั้ง |
 | PoolFlowModal | แผนผังเงินเดือน (📊) — flow การแบ่งค่าคอมกองกลาง · **per-item** (PR #512) · loop ทุก kind=pool item รวม custom |
 | PoolAdjustmentModal | รายการยกเว้นค่าคอม · 2 variants (pool + piece) · **per-item routing** (PR #506) |
 
