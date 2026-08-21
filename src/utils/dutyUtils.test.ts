@@ -1754,3 +1754,115 @@ describe("computeDutyForecast — coverage (คนแทนตอน primary ล
     expect(f.periods[0].coverage).toBeUndefined();
   });
 });
+
+/* ─── หน้าที่ "ผูกขาดคนทำ" (Duty.exclusive) ─────────────────────────
+   คนที่ทำหน้าที่ผูกขาดในวันนั้น — คนหลัก **หรือคนแทน** — ต้องไม่ถูกจัด
+   หน้าที่อื่นเลยในวันเดียวกัน · งานที่เคยตกเป็นของเขากระจายไปให้คนอื่น    */
+describe("computeAllDutiesForDay — หน้าที่ผูกขาด", () => {
+  const staff = ["a", "b", "c", "d"].map((id) => emp(id));
+  const MON = "2026-06-01"; // ตรงกับ rotationStartDate → periodIndex 0
+
+  it("คนแทนหน้าที่ผูกขาด ไม่ถูกจัดหน้าที่อื่นในวันเดียวกัน", () => {
+    const online = duty({
+      id: "online",
+      name: "ONLINE",
+      exclusive: true,
+      rotationStartEmpId: "a",
+    });
+    const others = ["x", "y", "z"].map((id) =>
+      duty({ id, name: id, rotationStartEmpId: "b" }),
+    );
+    // คนหลักของ ONLINE (a) ลา → ต้องมีคนมาแทน
+    const result = computeAllDutiesForDay(
+      [online, ...others],
+      MON,
+      staff,
+      [leave("a", MON)],
+      null,
+    );
+
+    const onlineAssignment = result.find((r) => r.dutyId === "online");
+    expect(onlineAssignment?.actualEmpId).toBeTruthy();
+    expect(onlineAssignment?.actualEmpId).not.toBe("a");
+    const substitute = onlineAssignment?.actualEmpId as string;
+
+    // คนแทนต้องไม่โผล่ในหน้าที่อื่นเลย (ทั้งคนหลักและคนแทน)
+    for (const other of result.filter((r) => r.dutyId !== "online")) {
+      expect(other.actualEmpId).not.toBe(substitute);
+      expect(other.primaryEmpId).not.toBe(substitute);
+    }
+  });
+
+  it("คนหลักหน้าที่ผูกขาด ไม่ถูกจัดหน้าที่อื่นในวันเดียวกัน", () => {
+    const online = duty({ id: "online", name: "ONLINE", exclusive: true });
+    const others = ["x", "y", "z"].map((id) => duty({ id, name: id }));
+    const result = computeAllDutiesForDay(
+      [online, ...others],
+      MON,
+      staff,
+      [],
+      null,
+    );
+    const worker = result.find((r) => r.dutyId === "online")?.actualEmpId;
+    expect(worker).toBeTruthy();
+    for (const other of result.filter((r) => r.dutyId !== "online")) {
+      expect(other.actualEmpId).not.toBe(worker);
+    }
+  });
+
+  it("หน้าที่ผูกขาด 2 ตัว ต้องได้คนละคน", () => {
+    const result = computeAllDutiesForDay(
+      [
+        duty({ id: "online", name: "ONLINE", exclusive: true }),
+        duty({ id: "acct", name: "บัญชี", exclusive: true }),
+        duty({ id: "x", name: "x" }),
+      ],
+      MON,
+      staff,
+      [],
+      null,
+    );
+    const online = result.find((r) => r.dutyId === "online")?.actualEmpId;
+    const acct = result.find((r) => r.dutyId === "acct")?.actualEmpId;
+    const other = result.find((r) => r.dutyId === "x")?.actualEmpId;
+    expect(online).toBeTruthy();
+    expect(acct).toBeTruthy();
+    expect(acct).not.toBe(online);
+    expect(other).not.toBe(online);
+    expect(other).not.toBe(acct);
+  });
+
+  it("ไม่มี exclusive → พฤติกรรมเดิมทุกอย่าง (ไม่ regress)", () => {
+    const duties = ["x", "y", "z"].map((id) => duty({ id, name: id }));
+    const before = computeAllDutiesForDay(duties, MON, staff, [], null);
+    const after = computeAllDutiesForDay(
+      duties.map((d) => ({ ...d, exclusive: false })),
+      MON,
+      staff,
+      [],
+      null,
+    );
+    expect(after).toEqual(before);
+  });
+
+  it("คนเหลือไม่พอ → หน้าที่อื่นว่าง ดีกว่าดึงคนผูกขาดมาทำซ้อน", () => {
+    const only2 = [emp("a"), emp("b")];
+    const result = computeAllDutiesForDay(
+      [
+        duty({ id: "online", name: "ONLINE", exclusive: true }),
+        duty({ id: "x", name: "x" }),
+        duty({ id: "y", name: "y" }),
+      ],
+      MON,
+      only2,
+      [],
+      null,
+    );
+    const worker = result.find((r) => r.dutyId === "online")?.actualEmpId;
+    expect(worker).toBeTruthy();
+    // หน้าที่อื่นห้ามได้คนผูกขาดไปทำ แม้ pool จะเหลือน้อย
+    for (const other of result.filter((r) => r.dutyId !== "online")) {
+      expect(other.actualEmpId).not.toBe(worker);
+    }
+  });
+});

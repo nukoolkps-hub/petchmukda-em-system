@@ -24,6 +24,9 @@ export interface Duty {
 	coveragePayPerOccurrence?: number;
 	/** (weekly) ข้ามวันอาทิตย์ — focus ขายแทน */
 	skipSundays?: boolean;
+	/** "ผูกขาดคนทำ" — คนที่ทำหน้าที่นี้ในวันนั้น (คนหลักหรือคนแทน) จะไม่ถูก
+	 *  จัดหน้าที่อื่นเลยในวันเดียวกัน · default = false (พฤติกรรมเดิม) */
+	exclusive?: boolean;
 	/** Primary cache (B) — pool เปลี่ยนกลาง period ไม่กระทบคนทำหน้าที่ */
 	cachedPrimary?: {
 		periodIndex: number;
@@ -267,8 +270,14 @@ export function computeDutyForDay(
 	// monthly: history การแทนสะสมตั้งแต่ต้นปี (จาก replayRotationSubHistory)
 	// → เลือกคนแทนแบบไม่ซ้ำ · undefined = neighbor-scan เดิม (weekly)
 	subHistory?: Map<string, number>,
+	/** คนที่ "ติดหน้าที่ผูกขาด" วันนี้ (Duty.exclusive) — ตัดออกจาก pool แบบ
+	 *  hard filter ทุกชั้น (คนหลัก · คนแทน · double-up) ไม่มี fallback ให้กลับ
+	 *  เข้ามา ต่างจาก excludeForPrimary ที่เป็นแค่ preference               */
+	blockedEmpIds?: Set<string>,
 ): DutyAssignment {
-	const fullPool = activePool(duty, employees);
+	const fullPool = blockedEmpIds?.size
+		? activePool(duty, employees).filter((id) => !blockedEmpIds.has(id))
+		: activePool(duty, employees);
 	const { start: periodStart, end: periodEnd } = getPeriodRange(duty, todayYmd);
 
 	if (fullPool.length === 0) {
@@ -1081,7 +1090,14 @@ function computeRotationForDay(
 
 	const primariesToday = new Set<string>(primaryByDuty.values());
 
-	return duties.map((duty) =>
+	// ⚠️ แบ่ง 2 รอบเพราะหน้าที่ "ผูกขาด" (Duty.exclusive) ต้องรู้ผลก่อน:
+	// 1) คำนวณหน้าที่ผูกขาด → ได้ "คนที่ทำจริง" (คนหลัก **หรือคนแทน**)
+	// 2) หน้าที่ที่เหลือคำนวณโดยตัดคนเหล่านั้นออกจาก pool → งานที่เคยตกเป็น
+	//    ของเขากระจายไปให้คนอื่น
+	// ต้องเหมือน src/utils/dutyUtils.ts (computeAllDutiesForDay) เชิงพฤติกรรม
+	const exclusiveWorkers = new Set<string>();
+	const resultByDutyId = new Map<string, DutyAssignment>();
+	const runDuty = (duty: Duty, blocked?: Set<string>) =>
 		computeDutyForDay(
 			duty,
 			todayYmd,
@@ -1093,6 +1109,17 @@ function computeRotationForDay(
 			// weekly + monthly ใช้ fair-pick "เคยแทนน้อยสุดก่อน" · weekly เลือก
 			// จาก preferredPool (กันคนหลักรายเดือน ผ่าน excludeForPrimary=lockedByMonthly)
 			rotationSubHistory?.get(duty.id),
-		),
-	);
+			blocked,
+		);
+
+	for (const duty of duties.filter((d) => d.exclusive)) {
+		const assignment = runDuty(duty, new Set(exclusiveWorkers));
+		resultByDutyId.set(duty.id, assignment);
+		if (assignment.actualEmpId) exclusiveWorkers.add(assignment.actualEmpId);
+	}
+	for (const duty of duties.filter((d) => !d.exclusive)) {
+		resultByDutyId.set(duty.id, runDuty(duty, exclusiveWorkers));
+	}
+
+	return duties.map((duty) => resultByDutyId.get(duty.id) as DutyAssignment);
 }

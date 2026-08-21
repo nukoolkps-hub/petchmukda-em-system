@@ -477,6 +477,33 @@ pool ของหน้าที่หมุนเวียน = พนักง
 - **`skipSundays`** (weekly เท่านั้น) — ข้ามวันอาทิตย์ (ให้ focus ขาย) · หน้าที่นี้
   ไม่โผล่ใน "หน้าที่วันนี้" ของวันอาทิตย์ (`applicableDuties` filter) · DutyCard ขึ้น
   badge "ข้ามวันอาทิตย์"
+- **`exclusive`** ("ผูกขาดคนทำ" · ใช้ได้ทั้ง weekly + monthly) — คนที่ทำหน้าที่นี้
+  ในวันนั้น **ไม่ว่าจะเป็นคนหลักหรือคนแทน** จะไม่ถูกจัดหน้าที่อื่นเลยในวันเดียวกัน ·
+  ใช้กับงานที่ต้องอยู่กับที่ทั้งวัน (ONLINE, บัญชี)
+
+### หน้าที่ผูกขาด (`exclusive`) — ลำดับการคำนวณ
+
+`computeAllDutiesForDay` (client) / `computeRotationForDay` (server) แบ่ง phase
+สุดท้ายเป็น 2 รอบ:
+
+1. **คำนวณหน้าที่ผูกขาดก่อน** — ทีละตัวตามลำดับ · สะสม `exclusiveWorkers` จาก
+   `actualEmpId` (คนที่ทำ**จริง**) → หน้าที่ผูกขาดตัวที่ 2 จะไม่ได้คนเดียวกับตัวแรก
+2. **หน้าที่ที่เหลือ** — ส่ง `exclusiveWorkers` เป็น `blockedEmpIds` เข้า
+   `computeDutyForDay` → ตัดออกจาก pool แบบ **hard filter** ตั้งแต่ `activePool`
+   ทำให้ไม่หลุดกลับเข้ามาทั้งชั้นคนหลัก · คนแทน · และ `double_up` fallback
+
+> ต่างจาก `excludeForPrimary` (monthly lock) ที่เป็นแค่ *preference* — ถ้ากรอง
+> แล้ว pool ว่างจะ fallback กลับไปใช้ pool เต็ม · `blockedEmpIds` ไม่มี fallback
+> **ตั้งใจให้หน้าที่อื่นว่าง (`empty_pool`) ดีกว่าดึงคนผูกขาดมาทำซ้อน**
+
+**ทำไมต้องดู `actualEmpId` ไม่ใช่ `primaryEmpId`:** เคสที่เจอจริงคือคนที่ "มาแทน"
+หน้าที่ ONLINE (คนหลักลา) แล้วยังถูกจัดหน้าที่อื่นซ้อน — คนหลักถูกกัน 2 ชั้นอยู่แล้ว
+(`assigned` ใน `assignPrimaries` + `primariesToday` ตอนเลือกคนแทน) แต่ **คนแทน
+ไม่เคยถูกบันทึกกลับเข้า set ไหนเลย**
+
+**ขอบเขต:** มีผลกับ assignment รายวัน (หน้าแรก + snapshot `dutyAssignmentsToday`)
+· "ปฏิทินหน้าที่" (`computeDutyForecast`) คำนวณคนแทนแยกต่อหน้าที่อยู่แล้ว ไม่ได้
+mode cross-duty (ข้อจำกัดเดิม ไม่ได้เกิดจาก flag นี้)
 
 Source: `resolveDutyPool()` / `applicableDuties()` (client + server `dutyUtils.ts`)
 

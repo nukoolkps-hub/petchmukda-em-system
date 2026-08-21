@@ -293,8 +293,14 @@ export function computeDutyForDay(
   excludeForPrimary: Set<string>,
   primariesToday: Set<string>,
   precomputedPrimary?: string,
+  /** คนที่ "ติดหน้าที่ผูกขาด" วันนี้ (Duty.exclusive) — ตัดออกจาก pool แบบ
+   *  hard filter ทุกชั้น (คนหลัก · คนแทน · double-up) ไม่มี fallback ให้กลับ
+   *  เข้ามา ต่างจาก excludeForPrimary ที่เป็นแค่ preference               */
+  blockedEmpIds?: Set<string>,
 ): DutyAssignment {
-  const fullPool = activePool(duty, employees);
+  const fullPool = blockedEmpIds?.size
+    ? activePool(duty, employees).filter((id) => !blockedEmpIds.has(id))
+    : activePool(duty, employees);
   const { start: periodStart, end: periodEnd } = getPeriodRange(duty, todayYmd);
 
   if (fullPool.length === 0) {
@@ -473,7 +479,15 @@ export function computeAllDutiesForDay(
 
   // Phase 3: compute actual — ใช้ todayDuties (กรองแล้ว) เพื่อให้ Sunday-off
   // ไม่โผล่ใน assignment array
-  return todayDuties.map((duty) =>
+  //
+  // ⚠️ แบ่ง 2 รอบเพราะหน้าที่ "ผูกขาด" (Duty.exclusive) ต้องรู้ผลก่อน:
+  // 3a คำนวณหน้าที่ผูกขาดก่อน → ได้ "คนที่ทำจริง" (คนหลัก **หรือคนแทน**)
+  // 3b หน้าที่ที่เหลือคำนวณโดยตัดคนเหล่านั้นออกจาก pool → งานที่เคยตกเป็นของ
+  //    เขากระจายไปให้คนอื่น · ต้องดูคนทำจริงไม่ใช่คนหลัก เพราะเคสที่เจอคือ
+  //    คนที่ "มาแทน" หน้าที่ผูกขาด แล้วยังถูกจัดหน้าที่อื่นซ้อน
+  const exclusiveWorkers = new Set<string>();
+  const resultByDutyId = new Map<string, DutyAssignment>();
+  const runDuty = (duty: Duty, blocked?: Set<string>) =>
     computeDutyForDay(
       duty,
       todayYmd,
@@ -482,7 +496,24 @@ export function computeAllDutiesForDay(
       duty.period === "monthly" ? new Set<string>() : lockedByMonthly,
       primariesToday,
       primaryByDuty.get(duty.id),
-    ),
+      blocked,
+    );
+
+  // 3a — หน้าที่ผูกขาด (สะสมทีละตัว: ผูกขาดตัวที่ 2 ต้องไม่ได้คนเดียวกับตัวแรก)
+  for (const duty of todayDuties.filter((d) => d.exclusive)) {
+    const assignment = runDuty(duty, new Set(exclusiveWorkers));
+    resultByDutyId.set(duty.id, assignment);
+    if (assignment.actualEmpId) exclusiveWorkers.add(assignment.actualEmpId);
+  }
+
+  // 3b — หน้าที่ที่เหลือ
+  for (const duty of todayDuties.filter((d) => !d.exclusive)) {
+    resultByDutyId.set(duty.id, runDuty(duty, exclusiveWorkers));
+  }
+
+  // คืนตามลำดับ todayDuties เดิม (UI เรียงตามลำดับที่ admin ตั้งไว้)
+  return todayDuties.map(
+    (duty) => resultByDutyId.get(duty.id) as DutyAssignment,
   );
 }
 
