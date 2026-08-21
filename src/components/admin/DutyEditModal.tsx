@@ -78,6 +78,8 @@ export default function DutyEditModal({
   const [skipSundays, setSkipSundays] = useState<boolean>(
     duty?.skipSundays ?? false,
   );
+  // "ผูกขาดคนทำ" — คนที่ทำหน้าที่นี้วันนั้นจะไม่ถูกจัดหน้าที่อื่นเลย
+  const [exclusive, setExclusive] = useState<boolean>(duty?.exclusive ?? false);
   // coverage — ตำแหน่งเป้าหมาย + รายชื่อคนแทน
   const [coverageRoleId, setCoverageRoleId] = useState<string>(
     duty?.coverageRoleId || "",
@@ -269,6 +271,8 @@ export default function DutyEditModal({
               setGrantsPoolEligibility={setGrantsPoolEligibility}
               skipSundays={skipSundays}
               setSkipSundays={setSkipSundays}
+              exclusive={exclusive}
+              setExclusive={setExclusive}
             />
           )}
         </div>
@@ -325,6 +329,7 @@ export default function DutyEditModal({
                           period === "monthly" ? grantsPoolEligibility : false,
                         // weekly เท่านั้น · monthly บังคับ false
                         skipSundays: period === "weekly" ? skipSundays : false,
+                        exclusive,
                         rotationStartDate: `${startMonth}-01`,
                         rotationStartEmpId: effectiveStartEmpId,
                         // anchor (คนเริ่ม / เดือนเริ่ม) เปลี่ยน → ล้าง cache
@@ -532,6 +537,8 @@ function RotationFields({
   setGrantsPoolEligibility,
   skipSundays,
   setSkipSundays,
+  exclusive,
+  setExclusive,
 }: {
   roles: Role[];
   employeeDirectory: Employee[];
@@ -555,6 +562,8 @@ function RotationFields({
   setGrantsPoolEligibility: (v: boolean) => void;
   skipSundays: boolean;
   setSkipSundays: (v: boolean) => void;
+  exclusive: boolean;
+  setExclusive: (v: boolean) => void;
 }) {
   return (
     <>
@@ -620,6 +629,24 @@ function RotationFields({
           </span>
         </button>
       )}
+
+      {/* ผูกขาดคนทำ — ใช้กับงานที่ต้องอยู่กับที่ทั้งวัน (ONLINE / บัญชี) */}
+      <button
+        type="button"
+        onClick={() => setExclusive(!exclusive)}
+        className="w-full text-left mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30] cursor-pointer font-[inherit] flex items-center gap-2.5 transition-all duration-150 active:scale-[0.99]"
+      >
+        <ToggleSwitch enabled={exclusive} />
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-bold text-txt">
+            ผูกขาดคนทำ (ไม่ต้องทำหน้าที่อื่น)
+          </span>
+          <span className="block text-xs text-txt-soft mt-0.5">
+            คนที่ทำหน้าที่นี้ในวันนั้น — ไม่ว่าจะเป็นคนหลักหรือคนแทน — จะไม่ถูกจัดหน้าที่อื่นเลย
+            ในวันเดียวกัน · หน้าที่อื่นที่เคยตกเป็นของเขาจะกระจายไปให้คนอื่นแทน
+          </span>
+        </span>
+      </button>
 
       {/* rotation start month */}
       <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30]">
