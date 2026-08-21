@@ -1055,6 +1055,20 @@ export function computeAllDutiesForDay(
 		duties.filter((d) => d.kind !== "coverage"),
 	);
 
+	// ห้ามมีหน้าที่ว่างทั้งที่ยังมีคนมาทำงาน — คนที่ถูกดึงไปแทน (coverage)
+	// ถูกกันออกจากหน้าที่หมุนเวียนทุกชั้นผ่าน effLeaves (หน้าที่ "แทนคนลา"
+	// ผูกขาดคนทำเสมอ) · ถ้ากันแล้วเหลือหน้าที่ว่างทั้งที่เขามาทำงานจริง →
+	// ดึงกลับมาทำ (กฎเดียวกับหน้าที่ผูกขาด: ว่างไม่ได้ · เลือกคนถือน้อยสุด)
+	fillEmptyWithPulled(
+		rotationAssignments,
+		rotationDuties,
+		pulled,
+		todayYmd,
+		employees,
+		leaves,
+		coverageAssignments,
+	);
+
 	// preserve ลำดับ duties เดิม + coverage ตามตำแหน่งของมัน
 	const byId = new Map<string, DutyAssignment[]>();
 	for (const a of rotationAssignments)
@@ -1069,6 +1083,50 @@ export function computeAllDutiesForDay(
 		if (list) out.push(...list);
 	}
 	return out;
+}
+
+/** ทางเลือกสุดท้ายของหน้าที่หมุนเวียนที่ "ว่าง" (all_on_leave) — ดึงคนที่ถูก
+ *  ส่งไปแทน coverage วันนั้นกลับมาทำ เมื่อไม่มีใครอื่นเหลือแล้ว
+ *  · เคารพ substituteExcludedEmpIds + ใบลาจริงเสมอ (ไม่ใช่ effLeaves)
+ *  · เลือกคนที่ถือหน้าที่วันนี้น้อยสุด (นับรวม coverage) กันงานกองที่คนเดียว
+ *  · แก้ assignment ที่ส่งเข้ามาโดยตรง (in-place)                          */
+function fillEmptyWithPulled(
+	rotationAssignments: DutyAssignment[],
+	rotationDuties: Duty[],
+	pulled: Set<string>,
+	todayYmd: string,
+	employees: Employee[],
+	leaves: LeaveEntry[],
+	coverageAssignments: DutyAssignment[],
+): void {
+	if (pulled.size === 0) return;
+	const empty = rotationAssignments.filter(
+		(a) => !a.actualEmpId && a.reason === "all_on_leave",
+	);
+	if (empty.length === 0) return;
+	const dutyById = new Map(rotationDuties.map((d) => [d.id, d]));
+	// งานที่แต่ละคนถืออยู่แล้ววันนี้ (coverage + rotation ที่จัดไปแล้ว)
+	const loadToday = new Map<string, number>();
+	for (const a of [...coverageAssignments, ...rotationAssignments]) {
+		if (a.actualEmpId)
+			loadToday.set(a.actualEmpId, (loadToday.get(a.actualEmpId) ?? 0) + 1);
+	}
+	for (const a of empty) {
+		const duty = dutyById.get(a.dutyId);
+		if (!duty) continue;
+		const subExcluded = new Set(duty.substituteExcludedEmpIds || []);
+		const candidates = activePool(duty, employees).filter(
+			(id) =>
+				pulled.has(id) &&
+				!subExcluded.has(id) &&
+				!isOnLeave(leaves, id, todayYmd),
+		);
+		const pick = pickLeastLoaded(candidates, loadToday);
+		if (!pick) continue;
+		a.actualEmpId = pick;
+		a.reason = "double_up";
+		loadToday.set(pick, (loadToday.get(pick) ?? 0) + 1);
+	}
 }
 
 /** assign primary ให้หน้าที่กลุ่มหนึ่ง — ลูปเดียวใช้ทั้ง monthly (lockPicked)

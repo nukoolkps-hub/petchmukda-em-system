@@ -6,6 +6,7 @@
 import {
   AlertTriangle as IconAlertTriangle,
   CalendarClock as IconCalendarClock,
+  Lock as IconLock,
   X as IconX,
 } from "lucide-react";
 import { useState } from "react";
@@ -486,6 +487,24 @@ function CoverageFields({
             );
           })}
         </div>
+      </div>
+
+      {/* ผูกขาดคนทำ — coverage ผูกขาดโดยธรรมชาติ (ไม่มี toggle · ปิดไม่ได้)
+          กลไก: คนที่ถูกดึงมาแทนถูกกันออกจากหน้าที่หมุนเวียนทุกชั้นในวันนั้น */}
+      <div className="mb-3 p-3 rounded-[10px] bg-[#F5E6C860] border border-[#C9973A30] flex items-start gap-2.5">
+        <span className="w-8 h-8 rounded-[9px] bg-maroon flex items-center justify-center shrink-0">
+          <IconLock size={15} strokeWidth={2.6} className="text-white" />
+        </span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-bold text-txt">
+            ผูกขาดคนทำ — เปิดอยู่เสมอ
+          </span>
+          <span className="block text-xs text-txt-soft mt-0.5">
+            หน้าที่ "แทนคนลา" ผูกขาดคนทำโดยอัตโนมัติ (ไม่ต้องตั้ง · ปิดไม่ได้) — คนที่ถูกดึงมาแทน
+            ในวันนั้นจะไม่ถูกจัดหน้าที่อื่นเลย หน้าที่ที่เคยตกเป็นของเขาจะกระจายไปให้คนอื่น ·
+            ยกเว้นวันที่คนมาทำงานน้อยกว่าจำนวนหน้าที่ ระบบจะยอมให้ทำซ้อนแทนที่จะปล่อยหน้าที่ว่าง
+          </span>
+        </span>
       </div>
 
       {/* เงินตอบแทนต่อครั้งที่แทน */}

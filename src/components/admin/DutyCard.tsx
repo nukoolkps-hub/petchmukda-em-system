@@ -176,10 +176,22 @@ export default function DutyCard({
                 ข้ามวันอาทิตย์
               </span>
             )}
-            {!isCoverage && duty.exclusive && (
-              <span className="px-1.5 py-1 rounded-[6px] bg-maroon text-white font-bold text-[10px] inline-flex items-center gap-0.5">
+            {/* coverage ผูกขาดคนทำเสมอ (ไม่มี toggle — ปิดไม่ได้) ·
+                rotation ขึ้นเฉพาะที่ admin เปิด */}
+            {(isCoverage || duty.exclusive) && (
+              <span
+                title={
+                  isCoverage
+                    ? "หน้าที่แทนคนลาผูกขาดคนทำเสมอ — คนที่มาแทนจะไม่ถูกจัดหน้าที่อื่นในวันนั้น"
+                    : undefined
+                }
+                className="px-1.5 py-1 rounded-[6px] bg-maroon text-white font-bold text-[10px] inline-flex items-center gap-0.5"
+              >
                 <IconLock size={10} strokeWidth={2.6} />
                 ผูกขาดคนทำ
+                {isCoverage && (
+                  <span className="font-semibold opacity-80">(อัตโนมัติ)</span>
+                )}
               </span>
             )}
           </div>
