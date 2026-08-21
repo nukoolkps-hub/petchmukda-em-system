@@ -355,3 +355,7 @@ Cloud Functions `sendDailySummary` ส่ง flex สรุปประจำว
 - `docs/reference/line-integration.md` — LINE Bot commands, webhook, auth
 - `docs/reference/ui-components.md` — Component tree + shared components + Knowledge view
 - `docs/reference/knowledge-content.md` — เนื้อหา "ความรู้ต่างๆ": สารบัญ 29 sections + block types + tone + วิธีแก้/เพิ่ม (อ่านก่อนแตะ `src/content/knowledge/`)
+- `docs/reference/testing.md` — กลยุทธ์เทสต์ + invariants (เงินไม่เพี้ยน) + idempotency (อ่านก่อนแตะ logic ใน `src/utils/`)
+- `docs/reference/troubleshooting.md` — runbook เมื่อเจออาการผิดปกติ · `docs/reference/glossary.md` — คำไทย (UI) ↔ identifier ใน code
+
+**คู่มือในแอป (`ManualModal`)** = เอกสารสำหรับ *พนักงาน* — แก้กฎที่กระทบผู้ใช้ (ลา/ค่าคอม/เบิก/ปิดรอบ/หน้าที่) ต้องอัปเดตแท็บที่เกี่ยวข้องด้วย ไม่ใช่แค่ `docs/`

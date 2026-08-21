@@ -36,7 +36,8 @@ npm run test:coverage
 | `payrollSimulationGraceEdits.test.ts` | **จำลอง grace re-settle** (#637-#641) — idempotency + conservation |
 | `payrollLock.test.ts` | กฎปิดรอบ 7 วัน (`getPayrollLock`/`isMonthLocked`) |
 | `leaveUtils.test.ts` · `storeCalendar.test.ts` | นับวันลา/over-quota · ปฏิทินเปิด-ปิดร้าน |
-| `advanceUtils.test.ts` · `dutyUtils.test.ts` | เบิกล่วงหน้า · หน้าที่ประจำ (rotation/fairness) |
+| `advanceUtils.test.ts` · `dutyUtils.test.ts` | เบิกล่วงหน้า · หน้าที่ประจำ (rotation/fairness/ผูกขาด/ห้ามว่าง · มี simulation 1 ปี) |
+| `dutyCoverageExclusive.test.ts` | หน้าที่ "แทนคนลา" — ผูกขาดคนทำอัตโนมัติ + ห้ามมีหน้าที่ว่าง · **ยิงตรงที่ engine ฝั่ง server** (`functions/src/duty/dutyUtils.ts`) เพราะ client engine ไม่รู้จัก coverage · ไฟล์นั้น pure TS ไม่มี dependency กับ firebase จึง import ข้ามได้ |
 | `changePriceUtils.test.ts` · `dateUtils.test.ts` · `format.test.ts` · `validators.test.ts` | ราคาทอง · วันที่ไทย · comma format · validators |
 
 ## Invariants — เงินต้องไม่เพี้ยน (ใช้ใน simulation tests)
