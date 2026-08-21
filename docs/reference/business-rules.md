@@ -480,6 +480,11 @@ pool ของหน้าที่หมุนเวียน = พนักง
 - **`exclusive`** ("ผูกขาดคนทำ" · ใช้ได้ทั้ง weekly + monthly) — คนที่ทำหน้าที่นี้
   ในวันนั้น **ไม่ว่าจะเป็นคนหลักหรือคนแทน** จะไม่ถูกจัดหน้าที่อื่นเลยในวันเดียวกัน ·
   ใช้กับงานที่ต้องอยู่กับที่ทั้งวัน (ONLINE, บัญชี)
+  - **หน้าที่ `kind="coverage"` (แทนคนลา) ผูกขาดคนทำเสมอ — ไม่มี toggle ให้ติ๊ก**
+    (ปิดไม่ได้) · กลไกคนละตัวกับ flag: `computeAllDutiesForDay` ฝั่ง server คำนวณ
+    coverage **ก่อน** แล้วใส่คนที่ถูกดึงไปแทน (`pulled`) เข้า `effLeaves` → หน้าที่
+    หมุนเวียนมองเขาเป็น "ไม่ว่าง" ทุกชั้น · UI สื่อผ่าน badge "ผูกขาดคนทำ (อัตโนมัติ)"
+    บน DutyCard + กล่องอธิบาย (ไอคอนกุญแจ) ใน DutyEditModal แทน toggle
 
 ### หน้าที่ผูกขาด (`exclusive`) — ลำดับการคำนวณ
 
@@ -500,6 +505,13 @@ pool ของหน้าที่หมุนเวียน = พนักง
 
 ยังเคารพ 2 อย่างเสมอ: `substituteExcludedEmpIds` (admin สั่งห้ามเป็นคนแทน)
 และคนที่ลาจริง → `all_on_leave` เกิดได้เฉพาะตอน**ทุกคนของหน้าที่นั้นลาหมดจริงๆ**
+
+**คนที่ถูกดึงไปแทน coverage ก็ใช้กฎเดียวกัน** — เขาถูกกันผ่าน `effLeaves` (ลาปลอม)
+ซึ่งทางเลือกสุดท้ายใน `computeDutyForDay` มองไม่เห็นความต่างจากลาจริง · ฝั่ง server
+จึงมี `fillEmptyWithPulled()` เดินซ้ำหลัง `computeRotationForDay`: หน้าที่ไหนได้
+`all_on_leave` แต่ยังมีคนใน `pulled` ที่ **ไม่ได้ลาจริง** → ดึงกลับมาทำ
+(reason `double_up` · เลือกด้วย `pickLeastLoaded` นับ load รวม coverage ด้วย) ·
+ยังเคารพ `substituteExcludedEmpIds` → เทสต์ `src/utils/dutyCoverageExclusive.test.ts`
 
 **เวลาต้องให้ทำซ้อน เลือกคนที่ถืองานน้อยสุด** — `computeDutyForDay` รับ
 `loadToday` (Map: empId → จำนวนหน้าที่ที่ถือแล้ววันนี้) ที่ orchestration นับ
