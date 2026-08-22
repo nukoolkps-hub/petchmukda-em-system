@@ -12,6 +12,7 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import { advanceQuotaOfMonth } from "../utils/advanceUtils";
 import { COLLECTIONS, db } from "./config";
 
 const ref = collection(db, COLLECTIONS.ADVANCES);
@@ -121,8 +122,30 @@ export async function getAutoCarryAdvances(employeeId, autoCarryFromMonth) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-/* ─── Submit new advance request ───────────────────────────── */
+/* ─── Submit new advance request ─────────────────────────────
+   บังคับโควต้า "N ครั้ง/เดือน" ตรงจุดที่เขียนจริง — เช็คจาก "ข้อมูลสด" บน
+   server (ไม่ใช่ snapshot ใน memory ที่อาจยังโหลดไม่เสร็จ/ค้างของเก่า
+   → ปุ่มในฟอร์มเปิด แล้วยื่นเกินโควต้าหลุด · เคยเกิดจริง) · fail closed
+   ถ้าอ่านไม่ได้ — ปล่อยผ่านแปลว่ายอมให้เบิกเกินสิทธิ์ ซึ่งเป็นเงินจริง       */
 export async function submitAdvance(request) {
+  let existing: Record<string, any>[];
+  try {
+    existing = await getAdvancesByEmployeeAndMonth(
+      request.employeeId,
+      request.month,
+    );
+  } catch (e) {
+    console.error("[submitAdvance] ตรวจสอบคำขอเดิมไม่สำเร็จ:", e);
+    throw new Error(
+      "ตรวจสอบคำขอเดิมของเดือนนี้ไม่สำเร็จ — ลองใหม่อีกครั้ง (เช็คสัญญาณเน็ต)",
+    );
+  }
+  const quota = advanceQuotaOfMonth(existing, request.month);
+  if (quota.reachedLimit) {
+    throw new Error(
+      `เบิกได้เดือนละ ${quota.limit} ครั้ง — เดือนนี้ยื่นครบแล้ว (${quota.used}/${quota.limit})`,
+    );
+  }
   const docRef = await addDoc(ref, {
     ...request,
     status: "pending",

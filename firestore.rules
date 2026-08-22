@@ -153,6 +153,39 @@ service cloud.firestore {
         && request.resource.data.submittedAt is string;
     }
 
+    // auto-carry advance — "เงินสุทธิติดลบเดือน X → ยกเป็นเบิกล่วงหน้าเดือน X+1"
+    // สร้างโดย ADMIN (ตอนกดยืนยันยอด) ไม่ใช่พนักงาน → validAdvanceCreate ใช้ไม่ได้
+    // (บังคับ status="pending" + ห้ามมี field เกิน) · ล็อกรูปทรงให้แคบที่สุด:
+    // ต้องมี autoCarryFromMonth + status="approved" เท่านั้น จึงจะ create ได้
+    function validAutoCarryCreate() {
+      return request.resource.data.keys().hasOnly([
+          "employeeId",
+          "employeeName",
+          "amount",
+          "reason",
+          "month",
+          "status",
+          "submittedAt",
+          "approvedAt",
+          "autoCarryFromMonth"
+        ])
+        && request.resource.data.keys().hasAll([
+          "employeeId",
+          "amount",
+          "month",
+          "status",
+          "autoCarryFromMonth"
+        ])
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.amount <= 200000
+        && request.resource.data.month is string
+        && request.resource.data.month.matches('^\\d{4}-\\d{2}$')
+        && request.resource.data.autoCarryFromMonth is string
+        && request.resource.data.autoCarryFromMonth.matches('^\\d{4}-\\d{2}$')
+        && request.resource.data.status == "approved";
+    }
+
     // admin อนุมัติ/ปฏิเสธ advance — ห้ามแก้ฟิลด์ผูก identity/เงิน (กันเผลอ
     // แก้ amount/employeeId หลังอนุมัติแล้วยอดผิด). อนุญาตเฉพาะเปลี่ยน
     // status + เพิ่ม slipImageUrl/rejectionReason/approvedAt/rejectedAt
@@ -241,13 +274,17 @@ service cloud.firestore {
 
     // ─── Advances ────────────────────────────────────────────────
     // อ่าน: admin หรือเจ้าของ
-    // สร้าง: เจ้าของ
+    // สร้าง: เจ้าของ (คำขอปกติ · status=pending) หรือ admin (เฉพาะ auto-carry
+    //        ตอนเงินสุทธิติดลบ — รูปทรงล็อกด้วย validAutoCarryCreate)
     // อนุมัติ/ปฏิเสธ: admin
     match /advances/{advanceId} {
       allow read:   if isAdmin() || isEmployeeOwner(resource.data.employeeId);
-      allow create: if isEmployeeOwner(request.resource.data.employeeId)
-        && validAdvanceCreate()
-        && !monthLocked(request.resource.data.month);
+      allow create: if !monthLocked(request.resource.data.month)
+        && (
+          (isEmployeeOwner(request.resource.data.employeeId)
+            && validAdvanceCreate())
+          || (isAdmin() && validAutoCarryCreate())
+        );
       allow update: if isAdmin()
         && !monthLocked(resource.data.month)
         && validAdvanceUpdate();

@@ -290,6 +290,7 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
     ลิสต์ว่างดูเหมือน "ยังไม่เคยเบิก" แล้วยื่นเกินโควต้าหลุด (เคยเกิดจริงตอนกฎยังเป็น
     1 ครั้ง/เดือน: คำขอแรก approved แล้วพนักงานยื่นซ้ำได้) · ฟอร์มจึงปิดปุ่มตอน
     `advancesLoading` ด้วย
+  - E2E ที่ยิงของจริง (query + rules + write) → `src/firebase/advances.emulator.test.ts`
   - ⚠️ `firestore.rules` **ยังบังคับกฎนี้ไม่ได้** — rules query ไม่ได้ (`validAdvanceCreate`
     ตรวจได้แค่รูปทรง doc + เพดาน 200,000 ฿) · ถ้าต้องการ hard enforce ต้องเพิ่ม
     counter doc ต่อ (employee, เดือน) ที่ rules อ่านได้ด้วย `get()`
@@ -307,7 +308,9 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
 **Flow:**
 1. Admin ยืนยันยอดเดือน X · `salary.netSalary < 0`
 2. `denormalizeNetSalaries()` เขียน `salary.netSalary` (เป็นลบได้) + clear `deficitClearedAt: null`
-3. `syncAutoCarryAdvances()` สร้าง advance ใหม่ใน month X+1:
+3. `syncAutoCarryAdvances()` สร้าง advance ใหม่ใน month X+1
+   (rules: `validAutoCarryCreate` — admin สร้างได้เฉพาะรูปทรงนี้ · เดิม `allow create`
+   ยอมแค่ `isEmployeeOwner` + `status="pending"` ทำให้ขั้นนี้ permission-denied):
    - `status: "approved"` (ไม่ผ่าน pending)
    - `amount: |net|`
    - `autoCarryFromMonth: "X"` (marker)
