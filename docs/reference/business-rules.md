@@ -282,9 +282,16 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
   - ต้องผ่าน **2 ด่าน**: จำนวนครั้ง (quota) + ยอดรวมทั้งเดือนไม่เกินเพดาน % ตามอายุงาน
   - single source: `advanceQuotaOfMonth()` / `userAdvancesOfMonth()` /
     `activeAdvancesOfMonth()` (`src/utils/advanceUtils.ts`)
-  - **บังคับ 2 ชั้น** — (1) ฟอร์มปิดปุ่ม · (2) `submitAdvance()` ใน data layer **อ่านสดจาก server**
-    (`getAdvancesByEmployeeAndMonth`) ก่อน `addDoc` แล้ว throw ถ้าครบโควต้า ·
+  - **บังคับ 2 ชั้น** — (1) ฟอร์มปิดปุ่ม · (2) `advancesAPI.submitAdvance()` **อ่านสดจาก
+    server** (`getAdvancesByEmployeeAndMonth`) ก่อน `addDoc` แล้ว throw ถ้าครบโควต้า ·
     fail closed เมื่ออ่านไม่ได้ (ปล่อยผ่าน = ยอมให้เบิกเกินสิทธิ์ = เงินจริงหาย)
+  - **ด่านยอดรวมก็เช็คตอนเขียนจริงด้วย** — `submitAdvance()` อ่าน employee doc สด
+    → `getEffectiveBaseSalary × advanceLimitPercent` = เพดานเดือนนั้น · ยอดที่ใช้ไป
+    (รวม auto-carry) + ยอดใหม่ ห้ามเกิน · เพดานคำนวณไม่ได้ (ยังไม่ตั้ง baseSalary /
+    อ่าน employee ไม่ได้) → **ข้ามด่านนี้** ไม่บล็อกคนที่ควรเบิกได้
+  - ⚠️ **ไม่ atomic** — read-then-write (Firestore rules query ไม่ได้ · client
+    transaction ก็ query ไม่ได้) → กดปุ่มรัว/2 เครื่องพร้อมกันยังลอดได้ในทางทฤษฎี ·
+    บรรเทาด้วย `submitting` state ปิดปุ่มระหว่างส่งในฟอร์ม
   - **ทำไมต้องมีชั้นที่ 2:** ชั้นฟอร์มอิง subscription ใน memory — ระหว่างยังโหลดไม่เสร็จ
     (`advancesLoading`) / subscription error / เปิดจากอีกเครื่องที่ snapshot ค้าง →
     ลิสต์ว่างดูเหมือน "ยังไม่เคยเบิก" แล้วยื่นเกินโควต้าหลุด (เคยเกิดจริงตอนกฎยังเป็น

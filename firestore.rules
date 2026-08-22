@@ -186,6 +186,18 @@ service cloud.firestore {
         && request.resource.data.status == "approved";
     }
 
+    // admin แก้ "ยอด" ของ auto-carry ได้ (deficit เดือนก่อนเปลี่ยนตอน re-confirm
+    // ในช่วง grace) — validAdvanceUpdate ล็อก amount ไว้ จึงต้องมีทางนี้แยก ·
+    // แคบสุด: เฉพาะ doc ที่เป็น auto-carry + แก้ได้เฉพาะฟิลด์ amount เท่านั้น
+    function validAutoCarryAmountUpdate() {
+      return resource.data.autoCarryFromMonth is string
+        && request.resource.data.autoCarryFromMonth == resource.data.autoCarryFromMonth
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["amount"])
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.amount <= 200000;
+    }
+
     // admin อนุมัติ/ปฏิเสธ advance — ห้ามแก้ฟิลด์ผูก identity/เงิน (กันเผลอ
     // แก้ amount/employeeId หลังอนุมัติแล้วยอดผิด). อนุญาตเฉพาะเปลี่ยน
     // status + เพิ่ม slipImageUrl/rejectionReason/approvedAt/rejectedAt
@@ -287,7 +299,7 @@ service cloud.firestore {
         );
       allow update: if isAdmin()
         && !monthLocked(resource.data.month)
-        && validAdvanceUpdate();
+        && (validAdvanceUpdate() || validAutoCarryAmountUpdate());
       allow delete: if isAdmin() && !monthLocked(resource.data.month);
     }
 

@@ -1,10 +1,13 @@
 /* ─── E2E: โควต้าเบิกล่วงหน้า บน Firestore emulator จริง ──────────────
    เทสต์ชุดอื่นเป็น pure logic — ชุดนี้ยิงโค้ด production ทั้งเส้น:
    `submitAdvance()` → query จริง → firestore.rules จริง → addDoc จริง
-   เพื่อพิสูจน์ 3 อย่างที่เทสต์ pure ตอบไม่ได้:
+   เพื่อพิสูจน์สิ่งที่เทสต์ pure ตอบไม่ได้:
    1. query ที่ใช้เช็คโควต้าอ่านได้จริงภายใต้ rules (ไม่ permission-denied)
-   2. ไม่ต้องมี composite index (equality ล้วน) — ไม่งั้น throw ตอน deploy จริง
-   3. ยื่นเกินโควต้าถูกบล็อกจริง แม้ client ไม่มี state อะไรอยู่ในมือเลย
+   2. ยื่นเกินโควต้า/เกินวงเงินถูกบล็อกจริง แม้ client ไม่มี state ในมือเลย
+   3. rules ยอม/ไม่ยอมให้ใครเขียนอะไร (auto-carry ของ admin · พนักงานสวมรอย)
+   ⚠️ ไม่ครอบเรื่อง composite index — emulator ไม่บังคับ index เหมือน
+      production · เพิ่ม orderBy ในภายหลังจะผ่านที่นี่แต่ FAILED_PRECONDITION
+      ของจริง → ถ้าแตะ query ต้องเช็ค firestore.indexes.json ด้วยตาเอง
 
    ต้องมี emulator รันอยู่ (`npm run emulators`) — ไม่มีก็ skip ทั้ง describe
    (CI ไม่ได้รัน emulator · deploy job จึงไม่พัง)                              */
@@ -40,13 +43,18 @@ const EMP_ID = "emp-quota-test";
 const LINE_UID = "Ueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 const YM = "2026-08";
 
+/** ต้องมีทั้ง Firestore + Auth (beforeAll sign-in ด้วย custom token) —
+ *  เช็คทั้ง 2 พอร์ต ไม่งั้นรัน `--only firestore` จะพังแทนที่จะ skip */
 async function emulatorUp(): Promise<boolean> {
-  try {
-    const res = await fetch(`http://${FIRESTORE_HOST}:${FIRESTORE_PORT}/`);
-    return res.ok;
-  } catch {
-    return false;
-  }
+  const ping = async (port: number) => {
+    try {
+      return (await fetch(`http://${FIRESTORE_HOST}:${port}/`)).ok;
+    } catch {
+      return false;
+    }
+  };
+  const [fs, auth] = await Promise.all([ping(FIRESTORE_PORT), ping(AUTH_PORT)]);
+  return fs && auth;
 }
 const RUNNING = await emulatorUp();
 
@@ -269,5 +277,33 @@ describe.skipIf(!RUNNING)("E2E โควต้าเบิกล่วงหน�
     await expect(
       advancesAPI.submitAdvance({ ...newRequest(500), employeeId: "someone" }),
     ).rejects.toThrow();
+  }, 30_000);
+
+  it("ADMIN แก้ยอด auto-carry ได้ (deficit เปลี่ยนตอน re-confirm เดือน grace)", async () => {
+    // เคยถูก rules ปฏิเสธ: validAdvanceUpdate ล็อก amount ไว้ →
+    // updateAutoCarryAdvanceAmount() พัง → re-settle เดือน grace หลุดกลางคัน
+    const ref = await addDoc(collection(adminDb, "advances"), autoCarryDoc());
+    await expect(
+      updateDoc(doc(adminDb, "advances", ref.id), { amount: 2500 }),
+    ).resolves.toBeUndefined();
+    // แก้ได้เฉพาะ amount — ฟิลด์อื่นยังล็อกอยู่
+    await expect(
+      updateDoc(doc(adminDb, "advances", ref.id), { employeeId: "someone" }),
+    ).rejects.toThrow(/permission|PERMISSION/i);
+    await deleteDoc(doc(adminDb, "advances", ref.id));
+  }, 30_000);
+
+  it("เกินเพดาน % ของเดือน → ถูกบล็อกตอนเขียนจริง (ไม่ใช่แค่ในฟอร์ม)", async () => {
+    // เพดาน = baseSalary 15,000 × 50% (อายุงาน < 3 ปี) = 7,500
+    await expect(
+      advancesAPI.submitAdvance(newRequest(7_000)),
+    ).resolves.toBeTruthy();
+    await expect(advancesAPI.submitAdvance(newRequest(1_000))).rejects.toThrow(
+      /เกินวงเงินคงเหลือ/,
+    );
+    // ยอดที่พอดีวงเงินที่เหลือ (500) ต้องผ่าน
+    await expect(
+      advancesAPI.submitAdvance(newRequest(500)),
+    ).resolves.toBeTruthy();
   }, 30_000);
 });

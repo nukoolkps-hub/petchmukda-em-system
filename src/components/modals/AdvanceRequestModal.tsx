@@ -113,6 +113,9 @@ export default function AdvanceRequestModal({
   ).getDate();
   const payrollLocked = now.getDate() === daysInMonth;
 
+  // กันกดปุ่มรัว/สองนิ้ว — โควต้าเช็คแบบ read-then-write ไม่ atomic
+  // (Firestore rules query ไม่ได้) → 2 คำขอที่ยิงพร้อมกันเห็นยอดเดิมทั้งคู่
+  const [submitting, setSubmitting] = useState(false);
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [err, setErr] = useState("");
@@ -149,7 +152,14 @@ export default function AdvanceRequestModal({
       return;
     }
     setErr("");
-    onSubmit({ amount: amountValue, reason: reason.trim(), month: yearMonth });
+    setSubmitting(true);
+    Promise.resolve(
+      onSubmit({
+        amount: amountValue,
+        reason: reason.trim(),
+        month: yearMonth,
+      }),
+    ).finally(() => setSubmitting(false));
     setAmount("");
     setReason("");
   }
@@ -346,7 +356,9 @@ export default function AdvanceRequestModal({
         </button>
         <button
           type="button"
+          disabled={submitting}
           onClick={() => {
+            if (submitting) return;
             if (payrollLocked) {
               setErr("วันสุดท้ายของเดือนเป็นวันทำเงินเดือน — เบิกล่วงหน้าไม่ได้");
               return;
@@ -375,6 +387,7 @@ export default function AdvanceRequestModal({
           }}
           className={`flex-2 p-3.5 rounded-xl border-none text-base font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5
             ${
+              submitting ||
               payrollLocked ||
               prevMonthHadDeficit ||
               advancesLoading ||
@@ -384,17 +397,19 @@ export default function AdvanceRequestModal({
                 : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
             }`}
         >
-          {payrollLocked
-            ? "วันทำเงินเดือน — เบิกไม่ได้"
-            : prevMonthHadDeficit
-              ? "เดือนก่อนติดลบ — เบิกไม่ได้"
-              : advancesLoading
-                ? "กำลังโหลดข้อมูล..."
-                : quotaFull
-                  ? `เดือนนี้เบิกครบ ${quota.limit} ครั้งแล้ว`
-                  : remaining <= 0
-                    ? "เต็มวงเงินแล้ว"
-                    : "ส่งคำขอผ่าน LINE"}
+          {submitting
+            ? "กำลังส่งคำขอ..."
+            : payrollLocked
+              ? "วันทำเงินเดือน — เบิกไม่ได้"
+              : prevMonthHadDeficit
+                ? "เดือนก่อนติดลบ — เบิกไม่ได้"
+                : advancesLoading
+                  ? "กำลังโหลดข้อมูล..."
+                  : quotaFull
+                    ? `เดือนนี้เบิกครบ ${quota.limit} ครั้งแล้ว`
+                    : remaining <= 0
+                      ? "เต็มวงเงินแล้ว"
+                      : "ส่งคำขอผ่าน LINE"}
         </button>
       </div>
     </BaseModal>

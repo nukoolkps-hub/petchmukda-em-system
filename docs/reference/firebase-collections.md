@@ -457,7 +457,7 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | poolSnapshots/{YYYY-MM} | all signed-in | admin only |
 | poolAdjustments/{YYYY-MM} | all signed-in | admin (+ เดือนยังไม่ปิดรอบ) |
 | employeeLoans/{loanId} | admin / owner | admin only |
-| advances | admin / owner | owner สร้างคำขอปกติ (`validAdvanceCreate` · บังคับ `status="pending"` + ห้ามมี field เกิน) · **admin สร้างได้เฉพาะ auto-carry** (`validAutoCarryCreate` · ต้องมี `autoCarryFromMonth` + `status="approved"`) · admin update/delete — เดือนปิดรอบแล้วเขียนไม่ได้ |
+| advances | admin / owner | owner สร้างคำขอปกติ (`validAdvanceCreate` · บังคับ `status="pending"` + ห้ามมี field เกิน) · **admin สร้างได้เฉพาะ auto-carry** (`validAutoCarryCreate` · ต้องมี `autoCarryFromMonth` + `status="approved"`) · admin update (`validAdvanceUpdate` — เปลี่ยนได้เฉพาะ status/slip/เวลา · **หรือ** `validAutoCarryAmountUpdate` — แก้ `amount` ได้เฉพาะ doc auto-carry ตอน deficit เปลี่ยน) / delete — เดือนปิดรอบแล้วเขียนไม่ได้ |
 | roles | all signed-in | admin only |
 | payrollConfirms | all signed-in | admin (เดือนปิดรอบ → ยืนยันใหม่ไม่ได้) |
 | certCounters/{พ.ศ.} | all signed-in | all signed-in (count ต้อง +1 เท่านั้น) |
