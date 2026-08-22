@@ -43,3 +43,41 @@ export function advanceLimitPercent(startWorkMonth?: string | null): number {
   const tier = ADVANCE_LIMIT_TIERS.find((t) => years >= t.minYears);
   return tier?.percent ?? 0.5;
 }
+
+/* ─── กฎ "เบิกได้ครั้งเดียวต่อเดือน" ────────────────────────────────
+   single source ของกฎนี้ — ใช้ทั้งฝั่ง UI (ปิดปุ่ม) และตอน "เขียนจริง"
+   (`submitAdvance` อ่านสดจาก server ก่อน addDoc) เพื่อไม่ให้ 2 ที่ตีความ
+   ต่างกัน · เดิมกฎอยู่แค่ใน modal → ถ้า client ยังโหลด advances ไม่เสร็จ /
+   subscription error / เครื่องอื่นค้าง snapshot เก่า → ปุ่มเปิด ยื่นซ้ำได้ */
+
+export interface AdvanceLike {
+  status?: string | null;
+  month?: string | null;
+  /** advance ที่ระบบสร้างให้ตอนเงินสุทธิติดลบ (ไม่ใช่พนักงานยื่นเอง) */
+  autoCarryFromMonth?: string | null;
+}
+
+/** คำขอของเดือนนั้นที่ "ยังมีผล" (pending + approved · rejected ไม่นับ) */
+export function activeAdvancesOfMonth<T extends AdvanceLike>(
+  advances: T[],
+  yearMonth: string,
+): T[] {
+  return (advances || []).filter(
+    (a) => a?.month === yearMonth && a?.status !== "rejected",
+  );
+}
+
+/** คำขอที่ "กินสิทธิ์ 1 ครั้ง/เดือน" — คืนตัวแรกที่บล็อกการยื่นใหม่ · null = ยื่นได้
+ *  · rejected ไม่นับ (ADMIN ปฏิเสธแล้วยื่นใหม่ได้ในเดือนเดียวกัน)
+ *  · auto-carry ไม่นับ (ระบบสร้างให้ตอน net ติดลบ พนักงานไม่ได้ยื่นเอง)
+ *    แต่ยังกินวงเงิน tier ตามจริง (ดู activeAdvancesOfMonth)             */
+export function findBlockingAdvance<T extends AdvanceLike>(
+  advances: T[],
+  yearMonth: string,
+): T | null {
+  return (
+    activeAdvancesOfMonth(advances, yearMonth).find(
+      (a) => !a.autoCarryFromMonth,
+    ) ?? null
+  );
+}

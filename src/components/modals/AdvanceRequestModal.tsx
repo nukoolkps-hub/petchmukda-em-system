@@ -5,7 +5,11 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { COLORS, THAI_MONTH_NAMES } from "../../constants";
-import { advanceLimitPercent } from "../../utils/advanceUtils";
+import {
+  activeAdvancesOfMonth,
+  advanceLimitPercent,
+  findBlockingAdvance,
+} from "../../utils/advanceUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
@@ -18,6 +22,7 @@ export default function AdvanceRequestModal({
   employeeId,
   salaryData,
   advanceRequests,
+  advancesLoading = false,
   onSubmit,
   onClose,
 }: {
@@ -26,6 +31,9 @@ export default function AdvanceRequestModal({
   employeeId: string;
   salaryData: any;
   advanceRequests: any[];
+  /** ยังโหลดคำขอเดิมไม่เสร็จ → ยังตัดสินกฎ "1 ครั้ง/เดือน" ไม่ได้ → ปิดปุ่มไว้ก่อน
+   *  (ไม่งั้นลิสต์ว่างจะดูเหมือน "ยังไม่เคยเบิก" แล้วยื่นซ้ำหลุด) */
+  advancesLoading?: boolean;
   onSubmit: (data: { amount: number; reason: string; month: string }) => void;
   onClose: () => void;
 }) {
@@ -66,13 +74,16 @@ export default function AdvanceRequestModal({
   // auto-carry advance (autoCarryFromMonth ตั้ง · ระบบสร้างให้ตอน admin
   // ยืนยันยอด net<0) → exempt จาก "1/month" rule (พนักงานไม่ได้ยื่น) แต่
   // ยังนับใน alreadyRequested (กินวงเงิน tier ตามจริง)
-  const myReqs = (advanceRequests || []).filter((r) => r.month === yearMonth);
-  const activeReqs = myReqs.filter((r) => r.status !== "rejected");
-  const alreadyRequested = activeReqs.reduce((s, r) => s + r.amount, 0);
+  // ใช้ helper กลางจาก advanceUtils — ตัวเดียวกับที่ `submitAdvance` ใช้ตอน
+  // เขียนจริง (อ่านสดจาก server) → UI กับกติกาตอนบันทึกตีความตรงกันเสมอ
+  const activeReqs = activeAdvancesOfMonth(advanceRequests || [], yearMonth);
+  const alreadyRequested = activeReqs.reduce((s, r) => s + (r.amount || 0), 0);
   const remaining = Math.max(0, maxAdvance - alreadyRequested);
-  const userActiveReqs = activeReqs.filter((r) => !r.autoCarryFromMonth);
-  const alreadyRequestedThisMonth = userActiveReqs.length > 0;
-  const autoCarryReqs = activeReqs.filter((r) => !!r.autoCarryFromMonth);
+  const alreadyRequestedThisMonth = !!findBlockingAdvance(
+    advanceRequests || [],
+    yearMonth,
+  );
+  const autoCarryReqs = activeReqs.filter((r: any) => !!r.autoCarryFromMonth);
   const autoCarryAmount = autoCarryReqs.reduce((s, r) => s + r.amount, 0);
   const autoCarryFrom = autoCarryReqs[0]?.autoCarryFromMonth as
     | string
@@ -117,6 +128,10 @@ export default function AdvanceRequestModal({
       setErr(
         `เดือนก่อนเงินสุทธิติดลบ ฿${formatThaiNumber(prevMonthDeficitAmount)} · ติดต่อ ADMIN ขออนุญาตก่อน`,
       );
+      return;
+    }
+    if (advancesLoading) {
+      setErr("กำลังโหลดข้อมูลคำขอเดิม — รอสักครู่แล้วลองใหม่");
       return;
     }
     if (alreadyRequestedThisMonth) {
@@ -327,6 +342,10 @@ export default function AdvanceRequestModal({
               );
               return;
             }
+            if (advancesLoading) {
+              setErr("กำลังโหลดข้อมูลคำขอเดิม — รอสักครู่แล้วลองใหม่");
+              return;
+            }
             if (alreadyRequestedThisMonth) {
               setErr("เบิกได้ครั้งเดียวต่อเดือน — เดือนนี้มีคำขอแล้ว");
               return;
@@ -341,6 +360,7 @@ export default function AdvanceRequestModal({
             ${
               payrollLocked ||
               prevMonthHadDeficit ||
+              advancesLoading ||
               alreadyRequestedThisMonth ||
               remaining <= 0
                 ? "bg-bdr text-txt-soft shadow-none"
@@ -351,11 +371,13 @@ export default function AdvanceRequestModal({
             ? "วันทำเงินเดือน — เบิกไม่ได้"
             : prevMonthHadDeficit
               ? "เดือนก่อนติดลบ — เบิกไม่ได้"
-              : alreadyRequestedThisMonth
-                ? "เดือนนี้เบิกแล้ว"
-                : remaining <= 0
-                  ? "เต็มวงเงินแล้ว"
-                  : "ส่งคำขอผ่าน LINE"}
+              : advancesLoading
+                ? "กำลังโหลดข้อมูล..."
+                : alreadyRequestedThisMonth
+                  ? "เดือนนี้เบิกแล้ว"
+                  : remaining <= 0
+                    ? "เต็มวงเงินแล้ว"
+                    : "ส่งคำขอผ่าน LINE"}
         </button>
       </div>
     </BaseModal>

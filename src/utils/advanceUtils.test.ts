@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { advanceLimitPercent, tenureFullYears } from "./advanceUtils";
+import {
+  activeAdvancesOfMonth,
+  advanceLimitPercent,
+  findBlockingAdvance,
+  tenureFullYears,
+} from "./advanceUtils";
 
 // tenure math reads `new Date()` — pin the clock so tests are deterministic.
 // Fixed "now" = 15 June 2026 (local time).
@@ -56,5 +61,70 @@ describe("advanceLimitPercent", () => {
     // boundary guard: 3y full → tier {minYears:3} = 60%
     expect(tenureFullYears("2023-06")).toBe(3);
     expect(advanceLimitPercent("2023-06")).toBe(0.6);
+  });
+});
+
+/* ─── กฎ "เบิกได้ครั้งเดียวต่อเดือน" ─────────────────────────────────
+   helper ตัวเดียวกันนี้ใช้ทั้งฝั่งฟอร์ม (ปิดปุ่ม) และตอนเขียนจริงใน
+   `submitAdvance` (อ่านสดจาก server ก่อน addDoc) — เดิมกฎอยู่แค่ในฟอร์ม
+   ทำให้ยื่นซ้ำได้เมื่อ client ยังไม่เห็นคำขอเดิม                          */
+const YM = "2026-06";
+const req = (over: Record<string, unknown> = {}) => ({
+  id: "a1",
+  month: YM,
+  status: "pending",
+  amount: 1000,
+  ...over,
+});
+
+describe("findBlockingAdvance — 1 ครั้ง/เดือน", () => {
+  it("ไม่มีคำขอเดือนนี้ → ยื่นได้", () => {
+    expect(findBlockingAdvance([], YM)).toBeNull();
+    expect(findBlockingAdvance([req({ month: "2026-05" })], YM)).toBeNull();
+  });
+
+  it("มีคำขอรออนุมัติ → บล็อก", () => {
+    expect(findBlockingAdvance([req()], YM)?.id).toBe("a1");
+  });
+
+  it("คำขอที่อนุมัติแล้ว → บล็อก (เคสที่หลุดจริง)", () => {
+    expect(findBlockingAdvance([req({ status: "approved" })], YM)?.id).toBe(
+      "a1",
+    );
+  });
+
+  it("ถูกปฏิเสธ → ยื่นใหม่ได้ในเดือนเดียวกัน", () => {
+    expect(findBlockingAdvance([req({ status: "rejected" })], YM)).toBeNull();
+  });
+
+  it("auto-carry (ระบบสร้างให้ตอน net ติดลบ) → ไม่กินสิทธิ์ยื่น", () => {
+    const list = [req({ status: "approved", autoCarryFromMonth: "2026-05" })];
+    expect(findBlockingAdvance(list, YM)).toBeNull();
+    // ...แต่ยังกินวงเงิน tier ตามจริง
+    expect(activeAdvancesOfMonth(list, YM)).toHaveLength(1);
+  });
+
+  it("auto-carry + คำขอที่พนักงานยื่นเอง → บล็อกที่ตัวที่ยื่นเอง", () => {
+    const list = [
+      req({ id: "carry", status: "approved", autoCarryFromMonth: "2026-05" }),
+      req({ id: "mine" }),
+    ];
+    expect(findBlockingAdvance(list, YM)?.id).toBe("mine");
+  });
+
+  it("activeAdvancesOfMonth: rejected ไม่นับวงเงิน · เดือนอื่นไม่นับ", () => {
+    const list = [
+      req({ id: "r", status: "rejected", amount: 5000 }),
+      req({ id: "old", month: "2026-05", amount: 5000 }),
+      req({ id: "ok", status: "approved", amount: 1500 }),
+    ];
+    const active = activeAdvancesOfMonth(list, YM);
+    expect(active.map((a) => a.id)).toEqual(["ok"]);
+    expect(active.reduce((s, a) => s + a.amount, 0)).toBe(1500);
+  });
+
+  it("ทนต่อข้อมูลไม่ครบ (list ว่าง/undefined field)", () => {
+    expect(findBlockingAdvance([{}], YM)).toBeNull();
+    expect(activeAdvancesOfMonth([{}], YM)).toHaveLength(0);
   });
 });

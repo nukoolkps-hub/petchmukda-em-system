@@ -276,7 +276,18 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
   | ครบ 5 ปี | 80% |
   | ครบ 6 ปี+ | 100% |
   Source: `src/utils/advanceUtils.ts` → `ADVANCE_LIMIT_TIERS`
-- **1 ครั้ง/เดือน** — pending/approved บล็อกยื่นใหม่ในเดือนเดียวกัน · rejected เท่านั้นที่ยื่นใหม่ได้ · auto-carry (`autoCarryFromMonth` ตั้ง) ไม่นับ
+- **1 ครั้ง/เดือน** — pending/approved บล็อกยื่นใหม่ในเดือนเดียวกัน · rejected เท่านั้นที่ยื่นใหม่ได้ · auto-carry (`autoCarryFromMonth` ตั้ง) ไม่นับ (แต่ยังกินวงเงิน tier)
+  - single source: `findBlockingAdvance()` / `activeAdvancesOfMonth()` (`src/utils/advanceUtils.ts`)
+  - **บังคับ 2 ชั้น** — (1) ฟอร์มปิดปุ่ม · (2) `submitAdvance()` ใน data layer **อ่านสดจาก server**
+    (`getAdvancesByEmployeeAndMonth`) ก่อน `addDoc` แล้ว throw ถ้ามีคำขอที่ยังมีผล ·
+    fail closed เมื่ออ่านไม่ได้ (ปล่อยผ่าน = ยอมให้เบิกซ้ำ = เงินจริงหาย)
+  - **ทำไมต้องมีชั้นที่ 2:** ชั้นฟอร์มอิง subscription ใน memory — ระหว่างยังโหลดไม่เสร็จ
+    (`advancesLoading`) / subscription error / เปิดจากอีกเครื่องที่ snapshot ค้าง →
+    ลิสต์ว่างดูเหมือน "ยังไม่เคยเบิก" แล้วยื่นซ้ำหลุด (เคยเกิดจริง: คำขอแรก approved
+    แล้วพนักงานยื่นซ้ำได้) · ฟอร์มจึงปิดปุ่มตอน `advancesLoading` ด้วย
+  - ⚠️ `firestore.rules` **ยังบังคับกฎนี้ไม่ได้** — rules query ไม่ได้ (`validAdvanceCreate`
+    ตรวจได้แค่รูปทรง doc + เพดาน 200,000 ฿) · ถ้าต้องการ hard enforce ต้องเพิ่ม
+    claim doc id คงที่ (`advanceClaims/{empId}_{ym}` · create-only = ยื่นซ้ำโดน rules ปฏิเสธ)
 - Status flow: `pending → approved / rejected`
 - Approved → **หักจากเงินเดือน "ในเดือนที่เบิก"** (ไม่ใช่เดือนถัดไป) · advance.month = ตอนยื่น · `monthApprovedAdvances` รวมเป็น `advanceDeduction` ในสลิปเดือนเดียวกัน
 - พนักงาน**ขอเอง** · admin อนุมัติ/ปฏิเสธ + แนบสลิปการโอน (storage `loanSlips/{advanceId}/`)
