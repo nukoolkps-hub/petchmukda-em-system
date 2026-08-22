@@ -37,8 +37,26 @@ npm run test:coverage
 | `payrollLock.test.ts` | กฎปิดรอบ 7 วัน (`getPayrollLock`/`isMonthLocked`) |
 | `leaveUtils.test.ts` · `storeCalendar.test.ts` | นับวันลา/over-quota · ปฏิทินเปิด-ปิดร้าน |
 | `advanceUtils.test.ts` · `dutyUtils.test.ts` | เบิกล่วงหน้า · หน้าที่ประจำ (rotation/fairness/ผูกขาด/ห้ามว่าง · มี simulation 1 ปี) |
+| `advances.emulator.test.ts` | **E2E บน Firestore emulator** — โควต้าเบิก 3 ครั้ง/เดือน ยิงผ่าน `submitAdvance()` จริง + `firestore.rules` จริง · skip อัตโนมัติถ้าไม่มี emulator (CI ไม่ได้รัน) |
 | `dutyCoverageExclusive.test.ts` | หน้าที่ "แทนคนลา" — ผูกขาดคนทำอัตโนมัติ + ห้ามมีหน้าที่ว่าง · **ยิงตรงที่ engine ฝั่ง server** (`functions/src/duty/dutyUtils.ts`) เพราะ client engine ไม่รู้จัก coverage · ไฟล์นั้น pure TS ไม่มี dependency กับ firebase จึง import ข้ามได้ |
 | `changePriceUtils.test.ts` · `dateUtils.test.ts` · `format.test.ts` · `validators.test.ts` | ราคาทอง · วันที่ไทย · comma format · validators |
+
+## เทสต์ที่ต้องใช้ emulator (`*.emulator.test.ts`)
+
+pure test ตอบไม่ได้ 3 อย่าง: query อ่านผ่าน `firestore.rules` ไหม · ต้องมี composite
+index ไหม · เขียนจริงแล้วโดนบล็อกจริงไหม — จึงมีชุด E2E ที่ยิงโค้ด production
+ทั้งเส้นบน emulator
+
+```bash
+npm run emulators              # เทอร์มินัลที่ 1 (auth + firestore + …)
+npm test                       # เทอร์มินัลที่ 2 — ชุด emulator จะรันด้วย
+```
+
+- ไม่มี emulator รันอยู่ → `describe.skipIf` ข้ามทั้งชุด (CI/deploy job ไม่พัง)
+- sign-in ใช้ **unsigned custom token** ของ Auth emulator (ใส่ `claims.admin` ได้)
+  → เทสต์ทั้งมุมพนักงานและ admin ได้โดยไม่ต้องมี service account
+- ⚠️ emulator จะ **ตายเมื่อแก้ `firestore.rules` ระหว่างรัน** (hot-reload พัง) —
+  แก้ rules แล้วต้อง restart emulator ก่อนรันเทสต์ใหม่
 
 ## Invariants — เงินต้องไม่เพี้ยน (ใช้ใน simulation tests)
 
