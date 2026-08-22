@@ -32,7 +32,7 @@ import * as rolesAPI from "../firebase/roles";
 import * as salariesAPI from "../firebase/salaries";
 import * as storeCalendarAPI from "../firebase/storeCalendar";
 import { wipeEmployeeData } from "../firebase/wipeTestData";
-import { findBlockingAdvance } from "../utils/advanceUtils";
+import { advanceQuotaOfMonth } from "../utils/advanceUtils";
 import {
   computeCoverageEarningsForMonth,
   employeeHasPoolExemptDuty,
@@ -714,10 +714,10 @@ export default function useFirebaseAppData({
   /* ─── Advances ──────────────────────────────────────────── */
   async function submitAdvance(request) {
     if (monthLocked(request?.month)) throw new Error(LOCK_MSG);
-    // กฎ "เบิกได้ครั้งเดียวต่อเดือน" — เช็คตอนเขียนจริงด้วย โดย "อ่านสด" จาก
+    // กฎ "เบิกได้ N ครั้ง/เดือน" — เช็คตอนเขียนจริงด้วย โดย "อ่านสด" จาก
     // server (ไม่ใช่ snapshot ใน memory ที่อาจยังโหลดไม่เสร็จ/ค้างของเก่า
-    // → ปุ่มในฟอร์มเปิด แล้วยื่นซ้ำหลุด) · fail closed ถ้าอ่านไม่ได้ —
-    // ปล่อยผ่านแปลว่ายอมให้เบิกซ้ำ ซึ่งเป็นเงินจริง
+    // → ปุ่มในฟอร์มเปิด แล้วยื่นเกินโควต้าหลุด) · fail closed ถ้าอ่านไม่ได้ —
+    // ปล่อยผ่านแปลว่ายอมให้เบิกเกินสิทธิ์ ซึ่งเป็นเงินจริง
     let existing: Awaited<
       ReturnType<typeof advancesAPI.getAdvancesByEmployeeAndMonth>
     >;
@@ -732,12 +732,10 @@ export default function useFirebaseAppData({
         "ตรวจสอบคำขอเดิมของเดือนนี้ไม่สำเร็จ — ลองใหม่อีกครั้ง (เช็คสัญญาณเน็ต)",
       );
     }
-    const blocking = findBlockingAdvance(existing, request.month);
-    if (blocking) {
+    const quota = advanceQuotaOfMonth(existing, request.month);
+    if (quota.reachedLimit) {
       throw new Error(
-        blocking.status === "approved"
-          ? "เบิกได้ครั้งเดียวต่อเดือน — เดือนนี้ ADMIN อนุมัติคำขอไปแล้ว"
-          : "เบิกได้ครั้งเดียวต่อเดือน — เดือนนี้มีคำขอรออนุมัติอยู่",
+        `เบิกได้เดือนละ ${quota.limit} ครั้ง — เดือนนี้ยื่นครบแล้ว (${quota.used}/${quota.limit})`,
       );
     }
     return await advancesAPI.submitAdvance(request);

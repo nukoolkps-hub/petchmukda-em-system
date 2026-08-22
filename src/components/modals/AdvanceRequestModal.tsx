@@ -8,7 +8,7 @@ import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import {
   activeAdvancesOfMonth,
   advanceLimitPercent,
-  findBlockingAdvance,
+  advanceQuotaOfMonth,
 } from "../../utils/advanceUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
@@ -31,8 +31,8 @@ export default function AdvanceRequestModal({
   employeeId: string;
   salaryData: any;
   advanceRequests: any[];
-  /** ยังโหลดคำขอเดิมไม่เสร็จ → ยังตัดสินกฎ "1 ครั้ง/เดือน" ไม่ได้ → ปิดปุ่มไว้ก่อน
-   *  (ไม่งั้นลิสต์ว่างจะดูเหมือน "ยังไม่เคยเบิก" แล้วยื่นซ้ำหลุด) */
+  /** ยังโหลดคำขอเดิมไม่เสร็จ → ยังนับโควต้าครั้ง/เดือนไม่ได้ → ปิดปุ่มไว้ก่อน
+   *  (ไม่งั้นลิสต์ว่างจะดูเหมือน "ยังไม่เคยเบิก" แล้วยื่นเกินโควต้าหลุด) */
   advancesLoading?: boolean;
   onSubmit: (data: { amount: number; reason: string; month: string }) => void;
   onClose: () => void;
@@ -69,21 +69,19 @@ export default function AdvanceRequestModal({
   const limitPercent = advanceLimitPercent(employee?.startWorkMonth);
   const maxAdvance = Math.floor(baseSalary * limitPercent);
 
-  // คำขอที่ไม่ใช่ "rejected" ในเดือนนี้ (pending + approved)
-  // กฎ: 1 ครั้ง/เดือน — มีคำขอที่ไม่ rejected อยู่แล้ว = ห้ามยื่นใหม่
+  // คำขอที่ไม่ใช่ "rejected" ในเดือนนี้ (pending + approved) = ตัวที่กินวงเงิน
   // auto-carry advance (autoCarryFromMonth ตั้ง · ระบบสร้างให้ตอน admin
-  // ยืนยันยอด net<0) → exempt จาก "1/month" rule (พนักงานไม่ได้ยื่น) แต่
-  // ยังนับใน alreadyRequested (กินวงเงิน tier ตามจริง)
+  // ยืนยันยอด net<0) → ไม่นับเป็น "ครั้ง" (พนักงานไม่ได้ยื่นเอง) แต่ยังนับ
+  // ใน alreadyRequested (กินวงเงิน tier ตามจริง)
   // ใช้ helper กลางจาก advanceUtils — ตัวเดียวกับที่ `submitAdvance` ใช้ตอน
   // เขียนจริง (อ่านสดจาก server) → UI กับกติกาตอนบันทึกตีความตรงกันเสมอ
+  // 2 ด่าน: จำนวนครั้ง/เดือน (quota) + ยอดรวมห้ามเกินเพดาน % (remaining)
   const activeReqs = activeAdvancesOfMonth(advanceRequests || [], yearMonth);
   const alreadyRequested = activeReqs.reduce((s, r) => s + (r.amount || 0), 0);
   const remaining = Math.max(0, maxAdvance - alreadyRequested);
-  const alreadyRequestedThisMonth = !!findBlockingAdvance(
-    advanceRequests || [],
-    yearMonth,
-  );
-  const autoCarryReqs = activeReqs.filter((r: any) => !!r.autoCarryFromMonth);
+  const quota = advanceQuotaOfMonth(advanceRequests || [], yearMonth);
+  const quotaFull = quota.reachedLimit;
+  const autoCarryReqs = activeReqs.filter((r) => !!r.autoCarryFromMonth);
   const autoCarryAmount = autoCarryReqs.reduce((s, r) => s + r.amount, 0);
   const autoCarryFrom = autoCarryReqs[0]?.autoCarryFromMonth as
     | string
@@ -134,8 +132,10 @@ export default function AdvanceRequestModal({
       setErr("กำลังโหลดข้อมูลคำขอเดิม — รอสักครู่แล้วลองใหม่");
       return;
     }
-    if (alreadyRequestedThisMonth) {
-      setErr("เบิกได้ครั้งเดียวต่อเดือน — เดือนนี้มีคำขอแล้ว");
+    if (quotaFull) {
+      setErr(
+        `เบิกได้เดือนละ ${quota.limit} ครั้ง — เดือนนี้ยื่นครบแล้ว (${quota.used}/${quota.limit})`,
+      );
       return;
     }
     // strip comma ก่อน parse — ผู้ใช้พิมพ์ "1,000" (ฟอร์แมตที่แสดง) ต้องได้ 1000
@@ -217,7 +217,7 @@ export default function AdvanceRequestModal({
         </div>
       )}
 
-      {alreadyRequestedThisMonth && !payrollLocked && !prevMonthHadDeficit && (
+      {quotaFull && !payrollLocked && !prevMonthHadDeficit && (
         <div className="bg-amber-lt rounded-xl px-3.5 py-3 mb-3.5 border border-amber/30 flex items-start gap-2">
           <IconAlertTriangle
             size={16}
@@ -225,8 +225,10 @@ export default function AdvanceRequestModal({
             strokeWidth={2.4}
           />
           <div className="text-sm text-txt-mid leading-normal">
-            <b className="text-amber">เบิกได้ครั้งเดียวต่อเดือน</b> — เดือนนี้มีคำขอแล้ว ·
-            ต้องรอเดือนถัดไป
+            <b className="text-amber">
+              เดือนนี้ยื่นครบ {quota.used}/{quota.limit} ครั้งแล้ว
+            </b>{" "}
+            — เบิกได้เดือนละ {quota.limit} ครั้ง · ต้องรอเดือนถัดไป
           </div>
         </div>
       )}
@@ -248,6 +250,19 @@ export default function AdvanceRequestModal({
           <span className="text-sm text-txt-mid">เบิกไปแล้วเดือนนี้</span>
           <span className="text-sm font-bold text-txt-mid">
             {formatThaiNumber(alreadyRequested)} ฿
+          </span>
+        </div>
+        <div className="flex justify-between items-center mb-1.5">
+          <span className="text-sm text-txt-mid">
+            จำนวนครั้ง{" "}
+            <span className="text-[11px] text-txt-soft">
+              (เบิกได้เดือนละ {quota.limit} ครั้ง)
+            </span>
+          </span>
+          <span
+            className={`text-sm font-bold ${quotaFull ? "text-amber" : "text-txt-mid"}`}
+          >
+            {quota.used}/{quota.limit} ครั้ง
           </span>
         </div>
         <div className="h-px bg-gold/25 my-1.5" />
@@ -346,8 +361,10 @@ export default function AdvanceRequestModal({
               setErr("กำลังโหลดข้อมูลคำขอเดิม — รอสักครู่แล้วลองใหม่");
               return;
             }
-            if (alreadyRequestedThisMonth) {
-              setErr("เบิกได้ครั้งเดียวต่อเดือน — เดือนนี้มีคำขอแล้ว");
+            if (quotaFull) {
+              setErr(
+                `เบิกได้เดือนละ ${quota.limit} ครั้ง — เดือนนี้ยื่นครบแล้ว (${quota.used}/${quota.limit})`,
+              );
               return;
             }
             if (remaining <= 0) {
@@ -361,7 +378,7 @@ export default function AdvanceRequestModal({
               payrollLocked ||
               prevMonthHadDeficit ||
               advancesLoading ||
-              alreadyRequestedThisMonth ||
+              quotaFull ||
               remaining <= 0
                 ? "bg-bdr text-txt-soft shadow-none"
                 : "bg-maroon text-white shadow-[0_4px_14px_rgba(123,28,28,0.25)]"
@@ -373,8 +390,8 @@ export default function AdvanceRequestModal({
               ? "เดือนก่อนติดลบ — เบิกไม่ได้"
               : advancesLoading
                 ? "กำลังโหลดข้อมูล..."
-                : alreadyRequestedThisMonth
-                  ? "เดือนนี้เบิกแล้ว"
+                : quotaFull
+                  ? `เดือนนี้เบิกครบ ${quota.limit} ครั้งแล้ว`
                   : remaining <= 0
                     ? "เต็มวงเงินแล้ว"
                     : "ส่งคำขอผ่าน LINE"}

@@ -8,6 +8,8 @@
    อายุงานยังไม่ครบ 1 ปี (เพิ่งเริ่ม) ก็ได้ 50% ตามขั้นแรก
    ไม่มี startWorkMonth → fallback 50% (default)                       */
 
+import { BUSINESS_RULES } from "../constants";
+
 export interface AdvanceLimitTier {
   /** จำนวนปีขั้นต่ำของอายุงาน (years >= minYears) */
   minYears: number;
@@ -44,11 +46,14 @@ export function advanceLimitPercent(startWorkMonth?: string | null): number {
   return tier?.percent ?? 0.5;
 }
 
-/* ─── กฎ "เบิกได้ครั้งเดียวต่อเดือน" ────────────────────────────────
+/* ─── กฎ "จำนวนครั้งที่เบิกได้ต่อเดือน" ─────────────────────────────
    single source ของกฎนี้ — ใช้ทั้งฝั่ง UI (ปิดปุ่ม) และตอน "เขียนจริง"
    (`submitAdvance` อ่านสดจาก server ก่อน addDoc) เพื่อไม่ให้ 2 ที่ตีความ
    ต่างกัน · เดิมกฎอยู่แค่ใน modal → ถ้า client ยังโหลด advances ไม่เสร็จ /
-   subscription error / เครื่องอื่นค้าง snapshot เก่า → ปุ่มเปิด ยื่นซ้ำได้ */
+   subscription error / เครื่องอื่นค้าง snapshot เก่า → ปุ่มเปิด ยื่นซ้ำได้
+
+   จำนวนครั้งอยู่ที่ `BUSINESS_RULES.ADVANCE_MAX_PER_MONTH` · เพดาน "ยอดรวม"
+   ต่อเดือนคุมแยกด้วย % ตามอายุงาน (advanceLimitPercent) — ต้องผ่านทั้ง 2 ด่าน */
 
 export interface AdvanceLike {
   status?: string | null;
@@ -57,7 +62,8 @@ export interface AdvanceLike {
   autoCarryFromMonth?: string | null;
 }
 
-/** คำขอของเดือนนั้นที่ "ยังมีผล" (pending + approved · rejected ไม่นับ) */
+/** คำขอของเดือนนั้นที่ "ยังมีผล" (pending + approved · rejected ไม่นับ)
+ *  — ใช้รวมเป็นยอดที่กินวงเงิน % ของเดือน (รวม auto-carry ด้วย)        */
 export function activeAdvancesOfMonth<T extends AdvanceLike>(
   advances: T[],
   yearMonth: string,
@@ -67,17 +73,40 @@ export function activeAdvancesOfMonth<T extends AdvanceLike>(
   );
 }
 
-/** คำขอที่ "กินสิทธิ์ 1 ครั้ง/เดือน" — คืนตัวแรกที่บล็อกการยื่นใหม่ · null = ยื่นได้
+/** คำขอที่ "พนักงานยื่นเอง" และยังมีผลในเดือนนั้น — ตัวที่นับโควต้าจำนวนครั้ง
  *  · rejected ไม่นับ (ADMIN ปฏิเสธแล้วยื่นใหม่ได้ในเดือนเดียวกัน)
- *  · auto-carry ไม่นับ (ระบบสร้างให้ตอน net ติดลบ พนักงานไม่ได้ยื่นเอง)
- *    แต่ยังกินวงเงิน tier ตามจริง (ดู activeAdvancesOfMonth)             */
-export function findBlockingAdvance<T extends AdvanceLike>(
+ *  · auto-carry ไม่นับ (ระบบสร้างให้ตอน net ติดลบ พนักงานไม่ได้ยื่นเอง)   */
+export function userAdvancesOfMonth<T extends AdvanceLike>(
   advances: T[],
   yearMonth: string,
-): T | null {
-  return (
-    activeAdvancesOfMonth(advances, yearMonth).find(
-      (a) => !a.autoCarryFromMonth,
-    ) ?? null
+): T[] {
+  return activeAdvancesOfMonth(advances, yearMonth).filter(
+    (a) => !a.autoCarryFromMonth,
   );
+}
+
+export interface AdvanceQuota {
+  /** ยื่นไปแล้วกี่ครั้งในเดือนนี้ (นับเฉพาะที่ยังมีผล) */
+  used: number;
+  /** โควต้าต่อเดือน */
+  limit: number;
+  /** เหลืออีกกี่ครั้ง */
+  left: number;
+  /** ครบโควต้าแล้ว = ยื่นใหม่ไม่ได้ */
+  reachedLimit: boolean;
+}
+
+/** โควต้าจำนวนครั้งของเดือนนั้น · `limit` override ได้ (เทสต์/อนาคตปรับต่อคน) */
+export function advanceQuotaOfMonth<T extends AdvanceLike>(
+  advances: T[],
+  yearMonth: string,
+  limit: number = BUSINESS_RULES.ADVANCE_MAX_PER_MONTH,
+): AdvanceQuota {
+  const used = userAdvancesOfMonth(advances, yearMonth).length;
+  return {
+    used,
+    limit,
+    left: Math.max(0, limit - used),
+    reachedLimit: used >= limit,
+  };
 }

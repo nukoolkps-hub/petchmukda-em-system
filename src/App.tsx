@@ -225,7 +225,7 @@ export default function LeaveApp() {
     : viewEmployeeId
       ? advanceRequests.filter((r) => r.employeeId === viewEmployeeId)
       : [];
-  /* ยังไม่รู้คำขอเดิมของเดือนนี้ = ตัดสินกฎ "เบิก 1 ครั้ง/เดือน" ไม่ได้ →
+  /* ยังไม่รู้คำขอเดิมของเดือนนี้ = นับโควต้า "เบิก N ครั้ง/เดือน" ไม่ได้ →
      ส่งต่อให้ฟอร์มปิดปุ่มไว้ก่อน (ลิสต์ว่างระหว่างโหลด เคยดูเหมือน
      "ยังไม่เคยเบิก" ทำให้ยื่นซ้ำได้) · ไม่มี employee id = ยังไม่พร้อมเช่นกัน */
   const myAdvancesLoading = previewing

@@ -167,7 +167,7 @@ export interface AdvanceRequest {
   rejectionReason?: string;
   /** ถ้า set = auto-carry advance สร้างโดยระบบเมื่อเงินสุทธิเดือนก่อนหน้า
    *  ติดลบ (yyyy-mm ของเดือนที่ติดลบ) · status="approved" ตั้งแต่แรก ·
-   *  ไม่นับใน "1 ครั้ง/เดือน" rule ของ AdvanceRequestModal                  */
+   *  ไม่นับในโควต้า "N ครั้ง/เดือน" (advanceQuotaOfMonth)                     */
   autoCarryFromMonth?: string;
   lineNotificationStatus?:
     | "pending"

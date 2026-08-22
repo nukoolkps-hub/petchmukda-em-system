@@ -132,7 +132,7 @@ export async function submitAdvance(request) {
 }
 
 /* ─── Get advances ของพนักงานคนหนึ่งในเดือนหนึ่ง (one-time · อ่านสด) ────
-   ใช้ตอน "เขียนจริง" เพื่อบังคับกฎ 1 ครั้ง/เดือน — ห้ามอิง snapshot ใน
+   ใช้ตอน "เขียนจริง" เพื่อบังคับโควต้าครั้ง/เดือน — ห้ามอิง snapshot ใน
    memory เพราะอาจยังโหลดไม่เสร็จ/ค้างของเก่า แล้วยื่นซ้ำหลุด
    equality filter ล้วน (ไม่มี orderBy) → ไม่ต้องมี composite index          */
 export async function getAdvancesByEmployeeAndMonth(
