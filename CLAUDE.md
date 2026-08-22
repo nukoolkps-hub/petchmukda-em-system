@@ -232,7 +232,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | เกณฑ์เข้า Pool (per item · admin custom) | default 80% ของ top item (PR #488+) |
 | เกณฑ์ได้เงินเดือนพื้นฐาน | ≥ 50% ของ top primary item (poolExclusion="all") |
 | วันลา "ฟรี" ก่อนเริ่มหัก % ใน Pool | 2 วันแรก (ไม่กระทบ) |
-| เพดานเบิกล่วงหน้า (ขึ้นตามอายุงาน) | <3y=50% · 3y=60% · 4y=70% · 5y=80% · 6y+=100% ของ effective base salary · 1 ครั้ง/เดือน · หักในเดือนที่เบิก |
+| เพดานเบิกล่วงหน้า (ขึ้นตามอายุงาน) | <3y=50% · 3y=60% · 4y=70% · 5y=80% · 6y+=100% ของ effective base salary · **3 ครั้ง/เดือน** (`BUSINESS_RULES.ADVANCE_MAX_PER_MONTH` · ยอดรวมยังห้ามเกินเพดาน %) · หักในเดือนที่เบิก |
 | เงินสุทธิติดลบ → auto-carry | ถ้า `netSalary < 0` ในเดือน X · admin ยืนยันยอด → ระบบสร้าง advance ใน X+1 (`autoCarryFromMonth=X` · approved) · พร้อมบล็อกพนักงานยื่นเบิกใหม่ · admin "อนุญาตให้ยื่นเบิกใหม่" → ปลดบล็อก (auto-carry ยังหักปกติ) |
 | โบนัสแห่งความขยัน (0 วันลา) | 2 × dailyRate |
 | โบนัสแห่งความขยัน (1 วันลา) | 1 × dailyRate |

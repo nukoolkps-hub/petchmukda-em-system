@@ -31,7 +31,7 @@ import {
   UserCheck as IconUserCheck,
 } from "lucide-react";
 import { useState } from "react";
-import { COLORS } from "../../constants";
+import { BUSINESS_RULES, COLORS } from "../../constants";
 import BaseModal from "../shared/BaseModal";
 import { Box, Card, Section } from "../shared/Layout";
 
@@ -925,8 +925,14 @@ export default function ManualModal({ onClose }) {
                 </div>
               </li>
               <li>
-                <b>เบิกได้ครั้งเดียวต่อเดือน</b> — ยื่นแล้วต้องรอเดือนถัดไป
-                (รวมทั้งกรณีรออนุมัติและอนุมัติแล้ว · ปฏิเสธเท่านั้นที่ยื่นใหม่ได้)
+                <b>เบิกได้เดือนละ {BUSINESS_RULES.ADVANCE_MAX_PER_MONTH} ครั้ง</b> —
+                นับทั้งที่รออนุมัติและอนุมัติแล้ว · ที่ถูกปฏิเสธไม่นับ (ยื่นใหม่ได้) ·
+                ยอดยกมาอัตโนมัติจากเดือนก่อนไม่นับเป็นครั้ง แต่ยังกินวงเงิน ·
+                ครบแล้วต้องรอเดือนถัดไป
+              </li>
+              <li>
+                <b>ทุกครั้งรวมกันห้ามเกินเพดาน %</b> ด้านบน — ฟอร์มจะโชว์ "คงเหลือเบิกได้"
+                ให้เห็นตลอด
               </li>
               <li>
                 <b className="text-red">ถ้าเดือนนี้เงินสุทธิติดลบ</b> → ระบบจะ{" "}

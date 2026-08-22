@@ -131,6 +131,24 @@ export async function submitAdvance(request) {
   return docRef.id;
 }
 
+/* ─── Get advances ของพนักงานคนหนึ่งในเดือนหนึ่ง (one-time · อ่านสด) ────
+   ใช้ตอน "เขียนจริง" เพื่อบังคับโควต้าครั้ง/เดือน — ห้ามอิง snapshot ใน
+   memory เพราะอาจยังโหลดไม่เสร็จ/ค้างของเก่า แล้วยื่นซ้ำหลุด
+   equality filter ล้วน (ไม่มี orderBy) → ไม่ต้องมี composite index          */
+export async function getAdvancesByEmployeeAndMonth(
+  employeeId,
+  yearMonth,
+): Promise<Record<string, any>[]> {
+  const snap = await getDocs(
+    query(
+      ref,
+      where("employeeId", "==", employeeId),
+      where("month", "==", yearMonth),
+    ),
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 /* ─── Create auto-carry advance (เงินสุทธิติดลบ → ยกไปเดือนถัดไป) ───
    ต่างจาก submitAdvance: status="approved" ตั้งแต่แรก · ไม่ต้องผ่าน admin
    approve · ใส่ `autoCarryFromMonth` marker เพื่อ filter ใน UI         */

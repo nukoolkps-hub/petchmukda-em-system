@@ -41,7 +41,7 @@
 
 | ไทย (UI) | code | ความหมายสั้น |
 |---|---|---|
-| เบิกเงินล่วงหน้า | `advance` (`advances`, `AdvanceRequestModal`) | เบิกก่อน · หักในเดือนที่เบิก · 1 ครั้ง/เดือน |
+| เบิกเงินล่วงหน้า | `advance` (`advances`, `AdvanceRequestModal`) | เบิกก่อน · หักในเดือนที่เบิก · 3 ครั้ง/เดือน |
 | เพดานเบิก | advance limit (`getEffectiveBaseSalary` × %) | <3y=50% … 6y+=100% |
 | เงินกู้ผ่อนคืน | `employeeLoans` (`principal`, `monthlyDeduction`, `repayments`) | admin สร้าง · หักอัตโนมัติทุกเดือน · 1 active/คน |
 
