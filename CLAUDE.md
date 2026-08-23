@@ -331,7 +331,7 @@ Single source: `src/utils/storeCalendar.ts` · sync helper `applicableDuties` �
 
 ### Daily Summary (07:30)
 
-Cloud Functions `sendDailySummary` ส่ง flex สรุปประจำวันเข้ากลุ่ม LINE ที่ **admin ตั้งเองได้** ที่ `/admin → LINE BOT → การแจ้งเตือน → "กลุ่มที่รับสรุปเช้า"` (เก็บที่ `config/notifications.dailySummaryGroups` · ต่อกลุ่มตั้งได้: ชื่อ · Google Calendar ID · คนหยุดวันนี้ · เคล็ดลับ AI · รูปแนบ) — ยังไม่เคยตั้ง → ใช้ค่าเดิม `DAILY_SUMMARY_GROUPS` (`functions/src/dailySummary/config.ts`) แล้ว **seed ลง Firestore ให้ครั้งแรก** (`resolveDailySummaryGroups` ใน `dailySummary/groups.ts`) · array ว่าง = ตั้งใจไม่ส่ง — มี 3 section ในกล่องเดียว:
+Cloud Functions `sendDailySummary` ส่ง flex สรุปประจำวันเข้ากลุ่ม LINE ที่ **admin ตั้งเองได้** ที่ `/admin → LINE BOT → การแจ้งเตือน → "กลุ่มที่รับสรุปเช้า"` (เก็บที่ `config/notifications.dailySummaryGroups` · ต่อกลุ่มตั้งได้: ชื่อ · Google Calendar ID · คนหยุดวันนี้ · เคล็ดลับ AI · รูปแนบ) — ยังไม่เคยตั้ง → ใช้ค่าเดิม `DAILY_SUMMARY_GROUPS` (`functions/src/dailySummary/config.ts`) แล้ว **seed ลง Firestore ให้ครั้งแรก** (`resolveDailySummaryGroups` ใน `dailySummary/groups.ts` · ปุ่ม "โหลดกลุ่มเริ่มต้นจากระบบ" เรียก callable `seedDailySummaryGroupsNow` ให้ทันที) · array ว่าง = ตั้งใจไม่ส่ง — มี 3 section ในกล่องเดียว:
 1. **📋 ภารกิจวันนี้** — ดึงจาก Google Calendar (3 calendars แยกตามกลุ่ม)
 2. **👥 พนักงานหยุดวันนี้** — เฉพาะกลุ่มที่ `includeLeaves: true` (we r mukda) · render เป็น **inline 1 บรรทัด** `ชื่อ(ประเภท) ชื่อ(ประเภท) ...` ไม่บอกวันที่ (PR #615)
 3. **💡 เคล็ดลับมืออาชีพ** — Claude API (เฉพาะ `sendAiTip: true`) + dedup ด้วย `recentTips` collection (30 ล่าสุด)

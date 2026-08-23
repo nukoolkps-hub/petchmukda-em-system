@@ -9,6 +9,7 @@
 
 import {
   CalendarDays as IconCalendar,
+  DownloadCloud as IconDownload,
   Image as IconImage,
   Lightbulb as IconLightbulb,
   Plus as IconPlus,
@@ -24,10 +25,12 @@ import {
 import ToggleSwitch from "../shared/ToggleSwitch";
 
 interface Props {
-  groups: DailySummaryGroupConfig[] | undefined;
   /** undefined = ยังไม่เคยตั้งค่า (ระบบใช้ค่าเดิมในโค้ดอยู่) */
+  groups: DailySummaryGroupConfig[] | undefined;
   loading?: boolean;
   onSave: (groups: DailySummaryGroupConfig[]) => Promise<void>;
+  /** ดึงกลุ่มเริ่มต้นที่ฝังไว้ในโค้ดฝั่ง server ลง Firestore ทันที */
+  onLoadDefaults: () => Promise<void>;
 }
 
 const FIELD_CLASS =
@@ -37,6 +40,7 @@ export default function DailySummaryGroupsCard({
   groups,
   loading = false,
   onSave,
+  onLoadDefaults,
 }: Props) {
   const [newId, setNewId] = useState("");
   const [newName, setNewName] = useState("");
@@ -98,7 +102,25 @@ export default function DailySummaryGroupsCard({
       {!loading && notConfigured && (
         <div className="rounded-[10px] bg-gold-pale/50 border border-gold/30 px-3 py-2.5 mb-3 text-xs text-txt-mid leading-relaxed">
           ยังไม่เคยตั้งกลุ่มในหน้านี้ — ระบบยังส่งตาม<b>ค่าเดิมที่ตั้งไว้ในโค้ด</b> ·
-          กลุ่มจริงจะขึ้นมาให้แก้ที่นี่หลังสรุปเช้ารอบถัดไป (หรือหลังพิมพ์ "ทดสอบแจ้งเตือน" ใน LINE)
+          กดปุ่มด้านล่างเพื่อดึงกลุ่มจริงลงมาแก้ที่นี่
+          <button
+            type="button"
+            disabled={saving}
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await onLoadDefaults();
+              } finally {
+                setSaving(false);
+              }
+            }}
+            className={`mt-2 w-full py-2 rounded-[9px] text-xs font-bold text-white cursor-pointer font-[inherit] inline-flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform ${
+              saving ? "bg-bdr cursor-wait" : "bg-maroon"
+            }`}
+          >
+            <IconDownload size={13} strokeWidth={2.6} />
+            {saving ? "กำลังโหลด..." : "โหลดกลุ่มเริ่มต้นจากระบบ"}
+          </button>
         </div>
       )}
       {!loading && !notConfigured && list.length === 0 && (

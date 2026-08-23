@@ -101,7 +101,9 @@ Admin เปิด/ปิด notification รายประเภทผ่า�
 **ลำดับที่ server ใช้** (`resolveDailySummaryGroups` · `dailySummary/groups.ts`):
 1. field เป็น array → ใช้ค่านั้น (**array ว่าง = ตั้งใจไม่ส่ง**)
 2. ไม่มี field เลย → ใช้ `DAILY_SUMMARY_GROUPS` เดิม **แล้ว seed ลง Firestore ให้
-   ครั้งเดียว** → รอบถัดไป ADMIN เห็นกลุ่มจริงในหน้า UI แล้วแก้ต่อได้
+   ครั้งเดียว** → รอบถัดไป ADMIN เห็นกลุ่มจริงในหน้า UI แล้วแก้ต่อได้ ·
+   ไม่อยากรอถึงรอบถัดไป → กดปุ่ม **"โหลดกลุ่มเริ่มต้นจากระบบ"** ในการ์ด
+   (callable `seedDailySummaryGroupsNow` · admin only · idempotent — มีอยู่แล้วไม่ทับ)
 3. อ่าน Firestore ไม่ได้ → fallback ค่าเดิมในโค้ด (ไม่เงียบหาย)
 
 **ค่าที่ไม่ถูกต้องถูกตัดทิ้งทั้ง 2 ฝั่ง** — ID ผิดรูปแบบ / ซ้ำ (ไม่งั้นกลุ่มเดียวได้ 2 ข้อความ) ·
