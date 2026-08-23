@@ -3,7 +3,8 @@
  *
  * Schedule: 07:30 ทุกวัน เวลาไทย
  *
- * สำหรับแต่ละ group ใน DAILY_SUMMARY_GROUPS:
+ * สำหรับแต่ละกลุ่มที่ ADMIN ตั้งไว้ (config/notifications.dailySummaryGroups ·
+ * ยังไม่เคยตั้ง → ค่าเดิมใน DAILY_SUMMARY_GROUPS แล้ว seed ให้ครั้งแรก):
  * 1. ดึง events จาก Google Calendar
  * 2. ถ้า group.includeLeaves → ดึงรายชื่อพนักงานหยุดวันนี้
  * 3. ถ้า group.sendAiTip → เรียก Claude API
@@ -28,13 +29,14 @@ import {
 	createCalendarClient,
 	fetchTodayEvents,
 } from "./calendar.js";
-import { APP_TIMEZONE, DAILY_SUMMARY_GROUPS, SAT_DAY_NAME } from "./config.js";
+import { APP_TIMEZONE, SAT_DAY_NAME } from "./config.js";
 import { bangkokYmd, formatDateTH, getThaiDayName } from "./dateUtils.js";
+import { resolveDailySummaryGroups } from "./groups.js";
 import { fetchTodayLeaves, type LeaveItem } from "./leaves.js";
 import {
 	fetchScheduledImages,
-	markImagesSent,
 	MAX_IMAGES_PER_DAY,
+	markImagesSent,
 	type ScheduledImage,
 } from "./scheduledImages.js";
 import { generateDailyTip } from "./tip.js";
@@ -119,10 +121,15 @@ export async function runDailySummary(
 	const db = getAppFirestore();
 	const calendar = createCalendarClient();
 	const ymd = bangkokYmd(now);
-	const hasLeavesGroup = DAILY_SUMMARY_GROUPS.some((g) => g.includeLeaves);
-	const hasScheduledImageGroup = DAILY_SUMMARY_GROUPS.some(
-		(g) => g.sendScheduledImage,
-	);
+	// กลุ่มปลายทาง — ADMIN ตั้งเองได้ใน /admin → LINE BOT → การแจ้งเตือน ·
+	// ยังไม่เคยตั้ง → ใช้ค่าเดิมในโค้ด + seed ลง Firestore (ดู groups.ts)
+	const groups = await resolveDailySummaryGroups(db);
+	if (groups.length === 0) {
+		console.log("[runDailySummary] ไม่มีกลุ่มปลายทางที่ตั้งไว้ — ไม่ส่ง");
+		return [];
+	}
+	const hasLeavesGroup = groups.some((g) => g.includeLeaves);
+	const hasScheduledImageGroup = groups.some((g) => g.sendScheduledImage);
 
 	// ดึง leaves + Calendar events + รูปที่ตั้งเวลาไว้ ของทุก group แบบ parallel
 	// — ลด latency จาก O(groups × roundtrip) → O(roundtrip) (ใหญ่สุดของชุดงาน)
@@ -134,24 +141,25 @@ export async function runDailySummary(
 				})
 			: Promise.resolve<LeaveItem[]>([]),
 		Promise.all(
-			DAILY_SUMMARY_GROUPS.map((group) =>
-				fetchTodayEvents(calendar, group.calendarId, now)
-					.then((events) => ({ events, error: false }))
-					.catch((err) => {
-						console.error(
-							`[runDailySummary] calendar error for ${group.name}:`,
-							err,
-						);
-						return { events: [] as CalendarEvent[], error: true };
-					}),
+			groups.map((group) =>
+				// ไม่ได้ผูก Google Calendar ไว้ (ADMIN เว้นว่าง) → ไม่ยิง API
+				// · ถือว่า "ไม่มีภารกิจ" ไม่ใช่ error (error → ขึ้นกล่องแดงในข้อความ)
+				!group.calendarId
+					? Promise.resolve({ events: [] as CalendarEvent[], error: false })
+					: fetchTodayEvents(calendar, group.calendarId, now)
+							.then((events) => ({ events, error: false }))
+							.catch((err) => {
+								console.error(
+									`[runDailySummary] calendar error for ${group.name}:`,
+									err,
+								);
+								return { events: [] as CalendarEvent[], error: true };
+							}),
 			),
 		),
 		hasScheduledImageGroup
 			? fetchScheduledImages(db, ymd).catch((err) => {
-					console.error(
-						"[runDailySummary] fetchScheduledImages error:",
-						err,
-					);
+					console.error("[runDailySummary] fetchScheduledImages error:", err);
 					return [] as ScheduledImage[];
 				})
 			: Promise.resolve<ScheduledImage[]>([]),
@@ -159,8 +167,8 @@ export async function runDailySummary(
 
 	const results: GroupResult[] = [];
 
-	for (let i = 0; i < DAILY_SUMMARY_GROUPS.length; i++) {
-		const group = DAILY_SUMMARY_GROUPS[i];
+	for (let i = 0; i < groups.length; i++) {
+		const group = groups[i];
 		const { events, error: calendarError } = eventsByGroup[i];
 
 		// Skip กลุ่มที่ไม่มี event + ไม่ส่ง tip + ไม่ใช่กลุ่มพนักงาน
@@ -265,12 +273,16 @@ export async function runDailySummary(
  *  อ่าน config/storeCalendar.extraOpenSaturdays · ถ้าวันนี้เป็นเสาร์และ
  *  ไม่อยู่ในรายการ extraOpenSaturdays → return true (ข้าม)
  *  วันอื่น (จ-ศ, อา) ส่งปกติเหมือนเดิม                                     */
-async function shouldSkipSaturday(db: Firestore, ymd: string): Promise<boolean> {
+async function shouldSkipSaturday(
+	db: Firestore,
+	ymd: string,
+): Promise<boolean> {
 	const [y, m, d] = ymd.split("-").map(Number);
 	const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
 	if (dow !== 6) return false; // ไม่ใช่เสาร์ → ส่งปกติ
 	const snap = await db.doc("config/storeCalendar").get();
-	const extraOpen = (snap.data()?.extraOpenSaturdays as string[] | undefined) || [];
+	const extraOpen =
+		(snap.data()?.extraOpenSaturdays as string[] | undefined) || [];
 	return !extraOpen.includes(ymd);
 }
 

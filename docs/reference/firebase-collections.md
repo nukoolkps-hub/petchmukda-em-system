@@ -466,7 +466,7 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | config/laborCost | all signed-in | admin only |
 | config/blockCost | all signed-in | admin only |
 | config/loyaltyPoints | all signed-in | admin only |
-| config/notifications | admin only | admin only |
+| config/notifications | admin only | admin only — toggle 4 ตัว + `dailySummaryGroups[]` (กลุ่มปลายทางสรุปเช้า · Cloud Function seed ค่าเดิมให้ครั้งแรก) |
 | dailySummaryImages/{id} | admin only | admin only (+ Cloud Function ผ่าน Admin SDK) |
 | config/backupStatus | admin only | blocked (เขียนโดย Cloud Function · Admin SDK) |
 | config/* (อื่นๆ) | blocked | blocked (Functions ใช้ Admin SDK) |
