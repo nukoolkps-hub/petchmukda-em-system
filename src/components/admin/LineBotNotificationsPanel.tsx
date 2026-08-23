@@ -26,9 +26,12 @@ import { useAuth } from "../../contexts/AuthContext";
 import {
   type NotificationSettings,
   subscribeNotificationSettings,
+  updateDailySummaryGroups,
   updateNotificationSettings,
 } from "../../firebase/notificationSettings";
+import type { DailySummaryGroupConfig } from "../../utils/dailySummaryGroups";
 import ToggleSwitch from "../shared/ToggleSwitch";
+import DailySummaryGroupsCard from "./DailySummaryGroupsCard";
 
 interface LineBotNotificationsPanelProps {
   showToast?: (message: string) => void;
@@ -90,6 +93,17 @@ export default function LineBotNotificationsPanel({
     }
   }
 
+  async function saveGroups(groups: DailySummaryGroupConfig[]) {
+    try {
+      await updateDailySummaryGroups(groups, user?.uid || "anonymous");
+      showToast?.("บันทึกกลุ่มที่รับสรุปเช้าแล้ว");
+    } catch (err) {
+      console.error("[LineBotNotifications] save groups failed:", err);
+      showToast?.("บันทึกไม่สำเร็จ — ลองใหม่อีกครั้ง");
+      throw err;
+    }
+  }
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
@@ -104,7 +118,7 @@ export default function LineBotNotificationsPanel({
         <ToggleRow
           icon={IconClock}
           title="สรุปประจำวัน 07:30"
-          description="Bot push เข้า 3 กลุ่ม LINE · we r mukda ได้ครบชุด (ภารกิจ + คนหยุดวันนี้ + เคล็ดลับมืออาชีพจาก Claude) ทุกเช้า · Various Tasks + KS Apartment ส่งเฉพาะวันที่มี event ใน Google Calendar · ข้ามวันเสาร์ปกติ (ส่งเฉพาะเสาร์เปิดพิเศษ)"
+          description="Bot push เข้ากลุ่ม LINE ที่ตั้งไว้ด้านล่าง · กลุ่มที่เปิด 'พนักงานหยุดวันนี้' ได้ครบชุด (ภารกิจ + คนหยุด + เคล็ดลับมืออาชีพ) ทุกเช้า · กลุ่มอื่นส่งเฉพาะวันที่มี event ใน Google Calendar · ข้ามวันเสาร์ปกติ (ส่งเฉพาะเสาร์เปิดพิเศษ)"
           enabled={isOn("dailySummaryEnabled")}
           disabled={loading}
           onToggle={() => toggle("dailySummaryEnabled")}
@@ -134,6 +148,13 @@ export default function LineBotNotificationsPanel({
           onToggle={() => toggle("loanCreatedEnabled")}
         />
       </div>
+
+      {/* กลุ่มปลายทางของสรุปเช้า — ตั้งเองได้ ไม่ต้องแก้โค้ด */}
+      <DailySummaryGroupsCard
+        groups={settings.dailySummaryGroups}
+        loading={loading}
+        onSave={saveGroups}
+      />
     </div>
   );
 }

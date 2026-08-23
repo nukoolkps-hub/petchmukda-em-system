@@ -76,10 +76,39 @@ Admin เปิด/ปิด notification รายประเภทผ่า�
 
 | Field | Default | ผล |
 |---|---|---|
-| `dailySummaryEnabled` | true | สรุปประจำวัน 07:30 push 3 กลุ่ม LINE (เสาร์ปกติข้าม) |
+| `dailySummaryEnabled` | true | สรุปประจำวัน 07:30 push เข้ากลุ่มที่ตั้งไว้ใน `dailySummaryGroups` (เสาร์ปกติข้าม) |
 | `advanceRequestEnabled` | true | แจ้ง ADMIN เมื่อพนักงานยื่นเบิก (+ clipboard เลขบัญชี) |
 | `advanceApprovalEnabled` | true | แจ้งพนักงานเมื่อ approve/reject (+ รูปสลิป) |
 | `loanCreatedEnabled` | true | แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ (+ รูปสลิป) |
+| `dailySummaryGroups` | (ไม่มี) | **array กลุ่มปลายทางของสรุปเช้า** — ADMIN ตั้งเองในหน้าเดียวกัน (ดูหัวข้อถัดไป) |
+
+### กลุ่มปลายทางของสรุปเช้า (`dailySummaryGroups`)
+
+เดิม hardcode ที่ `DAILY_SUMMARY_GROUPS` (`functions/src/dailySummary/config.ts`) —
+เปลี่ยนกลุ่มทีต้องแก้โค้ด + deploy · ตอนนี้ ADMIN เพิ่ม/ลบ/ตั้งค่าเองได้ที่
+`/admin → LINE BOT → การแจ้งเตือน → "กลุ่มที่รับสรุปเช้า"`
+
+```ts
+{ lineTargetId: "C…"   // C=กลุ่ม · R=ห้อง · U=1:1 + hex 32 ตัว (คีย์หลัก ห้ามซ้ำ)
+  name: "we r mukda"   // ชื่อไว้จำ (โชว์ใน UI + log)
+  calendarId?: string  // Google Calendar ของ "ภารกิจวันนี้" · ว่าง = ไม่ดึงปฏิทิน
+  includeLeaves?: boolean      // รวม "พนักงานหยุดวันนี้"
+  sendAiTip?: boolean          // "เคล็ดลับมืออาชีพ" (Claude API)
+  sendScheduledImage?: boolean // แนบรูปที่ตั้งวันไว้ (dailySummaryImages)
+}
+```
+
+**ลำดับที่ server ใช้** (`resolveDailySummaryGroups` · `dailySummary/groups.ts`):
+1. field เป็น array → ใช้ค่านั้น (**array ว่าง = ตั้งใจไม่ส่ง**)
+2. ไม่มี field เลย → ใช้ `DAILY_SUMMARY_GROUPS` เดิม **แล้ว seed ลง Firestore ให้
+   ครั้งเดียว** → รอบถัดไป ADMIN เห็นกลุ่มจริงในหน้า UI แล้วแก้ต่อได้
+3. อ่าน Firestore ไม่ได้ → fallback ค่าเดิมในโค้ด (ไม่เงียบหาย)
+
+**ค่าที่ไม่ถูกต้องถูกตัดทิ้งทั้ง 2 ฝั่ง** — ID ผิดรูปแบบ / ซ้ำ (ไม่งั้นกลุ่มเดียวได้ 2 ข้อความ) ·
+UI: `normalizeDailySummaryGroups` (`src/utils/dailySummaryGroups.ts` · มีเทสต์) ·
+server: `fromStored` ใน `groups.ts` · ⚠️ regex ต้องตรงกัน 2 ฝั่ง
+
+**หา Group ID:** เชิญบอทเข้ากลุ่ม → พิมพ์ `ไอดีกลุ่ม` ในกลุ่มนั้น
 
 ### เมื่อ LINE ส่งไม่สำเร็จ — ห้ามเงียบ
 

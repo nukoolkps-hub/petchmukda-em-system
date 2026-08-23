@@ -12,6 +12,12 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import {
+  activeAdvancesOfMonth,
+  advanceLimitPercent,
+  advanceQuotaOfMonth,
+} from "../utils/advanceUtils";
+import { getEffectiveBaseSalary } from "../utils/salaryUtils";
 import { COLLECTIONS, db } from "./config";
 
 const ref = collection(db, COLLECTIONS.ADVANCES);
@@ -121,14 +127,75 @@ export async function getAutoCarryAdvances(employeeId, autoCarryFromMonth) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-/* ─── Submit new advance request ───────────────────────────── */
+/* ─── Submit new advance request ─────────────────────────────
+   บังคับโควต้า "N ครั้ง/เดือน" ตรงจุดที่เขียนจริง — เช็คจาก "ข้อมูลสด" บน
+   server (ไม่ใช่ snapshot ใน memory ที่อาจยังโหลดไม่เสร็จ/ค้างของเก่า
+   → ปุ่มในฟอร์มเปิด แล้วยื่นเกินโควต้าหลุด · เคยเกิดจริง) · fail closed
+   ถ้าอ่านไม่ได้ — ปล่อยผ่านแปลว่ายอมให้เบิกเกินสิทธิ์ ซึ่งเป็นเงินจริง       */
 export async function submitAdvance(request) {
+  let existing: Record<string, any>[];
+  try {
+    existing = await getAdvancesByEmployeeAndMonth(
+      request.employeeId,
+      request.month,
+    );
+  } catch (e) {
+    console.error("[submitAdvance] ตรวจสอบคำขอเดิมไม่สำเร็จ:", e);
+    throw new Error(
+      "ตรวจสอบคำขอเดิมของเดือนนี้ไม่สำเร็จ — ลองใหม่อีกครั้ง (เช็คสัญญาณเน็ต)",
+    );
+  }
+  const quota = advanceQuotaOfMonth(existing, request.month);
+  if (quota.reachedLimit) {
+    throw new Error(
+      `เบิกได้เดือนละ ${quota.limit} ครั้ง — เดือนนี้ยื่นครบแล้ว (${quota.used}/${quota.limit})`,
+    );
+  }
+  // ด่านที่ 2 — ยอดรวมทั้งเดือนห้ามเกินเพดาน % ตามอายุงาน · อ่าน employee doc
+  // สดเช่นกัน (ฟอร์มคำนวณจาก state ที่อาจค้าง) · เพดาน 0 = คำนวณไม่ได้
+  // (ยังไม่ตั้ง baseSalary / อ่านไม่เจอ) → ปล่อยผ่าน ไม่ให้บล็อกคนที่ควรเบิกได้
+  const maxPerMonth = await advanceCeilingOf(request.employeeId);
+  if (maxPerMonth > 0) {
+    const used = activeAdvancesOfMonth(existing, request.month).reduce(
+      (sum, a) => sum + (Number(a.amount) || 0),
+      0,
+    );
+    const remaining = Math.max(0, maxPerMonth - used);
+    if ((Number(request.amount) || 0) > remaining) {
+      throw new Error(
+        `เกินวงเงินคงเหลือของเดือนนี้ — เบิกได้อีก ${remaining.toLocaleString("th-TH")} ฿`,
+      );
+    }
+  }
   const docRef = await addDoc(ref, {
     ...request,
     status: "pending",
     submittedAt: new Date().toISOString(),
   });
   return docRef.id;
+}
+
+/** เพดานเบิกต่อเดือนของพนักงาน (บาท) จาก employee doc สด —
+ *  effective base salary (รวมขึ้นเงินเดือนสะสม) × % ตามอายุงาน ·
+ *  คืน 0 เมื่ออ่านไม่ได้/ยังไม่ตั้งเงินเดือน = "ไม่รู้เพดาน" → caller ข้ามด่านนี้
+ *  (ฟอร์มยังคุมอยู่ · ไม่บล็อกคนที่ควรเบิกได้เพราะ config ไม่ครบ)          */
+async function advanceCeilingOf(employeeId: string): Promise<number> {
+  try {
+    const snap = await getDoc(doc(db, COLLECTIONS.EMPLOYEES, employeeId));
+    const emp = snap.data();
+    if (!emp) return 0;
+    const base = getEffectiveBaseSalary({
+      baseSalary: emp.baseSalary ?? 0,
+      startWorkMonth: emp.startWorkMonth ?? null,
+      annualRaiseAmount: emp.annualRaiseAmount ?? 0,
+      annualRaises: emp.annualRaises ?? {},
+    });
+    if (!base) return 0;
+    return Math.floor(base * advanceLimitPercent(emp.startWorkMonth));
+  } catch (e) {
+    console.warn("[submitAdvance] อ่านเพดานวงเงินไม่สำเร็จ — ข้ามด่านยอดรวม:", e);
+    return 0;
+  }
 }
 
 /* ─── Get advances ของพนักงานคนหนึ่งในเดือนหนึ่ง (one-time · อ่านสด) ────
