@@ -14,6 +14,8 @@
  */
 
 import type { Firestore } from "firebase-admin/firestore";
+import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { getAppFirestore } from "../helpers/config.js";
 import { DAILY_SUMMARY_GROUPS, type DailySummaryGroup } from "./config.js";
 
 /** ⚠️ ต้องตรงกับ `src/utils/dailySummaryGroups.ts` (LINE_TARGET_ID_PATTERN) */
@@ -97,3 +99,17 @@ export async function resolveDailySummaryGroups(
 	}
 	return DAILY_SUMMARY_GROUPS;
 }
+
+/* ─── Callable: โหลดกลุ่มเริ่มต้นเข้า Firestore (admin กดเองจากหน้า UI) ───
+   ปกติ seed เกิดตอนสรุปเช้ารอบถัดไป — ปุ่มนี้ให้ admin เห็นกลุ่มจริงทันที
+   ไม่ต้องรอ · idempotent: ถ้ามี field แล้วจะไม่ทับ (คืนของเดิม)          */
+export const seedDailySummaryGroupsNow = onCall(async (request) => {
+	if (!request.auth) {
+		throw new HttpsError("unauthenticated", "ต้อง login ก่อน");
+	}
+	if (!(request.auth.token as { admin?: boolean }).admin) {
+		throw new HttpsError("permission-denied", "ADMIN only");
+	}
+	const groups = await resolveDailySummaryGroups(getAppFirestore());
+	return { ok: true, count: groups.length };
+});

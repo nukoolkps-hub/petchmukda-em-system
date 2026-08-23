@@ -25,6 +25,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   type NotificationSettings,
+  seedDailySummaryGroupsNow,
   subscribeNotificationSettings,
   updateDailySummaryGroups,
   updateNotificationSettings,
@@ -104,6 +105,16 @@ export default function LineBotNotificationsPanel({
     }
   }
 
+  async function loadDefaultGroups() {
+    try {
+      const count = await seedDailySummaryGroupsNow();
+      showToast?.(`โหลดกลุ่มเริ่มต้นแล้ว ${count} กลุ่ม`);
+    } catch (err) {
+      console.error("[LineBotNotifications] seed groups failed:", err);
+      showToast?.("โหลดกลุ่มเริ่มต้นไม่สำเร็จ — ลองใหม่อีกครั้ง");
+    }
+  }
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
@@ -154,6 +165,7 @@ export default function LineBotNotificationsPanel({
         groups={settings.dailySummaryGroups}
         loading={loading}
         onSave={saveGroups}
+        onLoadDefaults={loadDefaultGroups}
       />
     </div>
   );

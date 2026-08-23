@@ -6,11 +6,12 @@
    ที่ deploy ใหม่ทำงานไม่ได้ก่อน admin จะกดเปิด/สร้าง config doc            */
 
 import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 import {
   type DailySummaryGroupConfig,
   normalizeDailySummaryGroups,
 } from "../utils/dailySummaryGroups";
-import { db } from "./config";
+import { db, functions } from "./config";
 
 export interface NotificationSettings {
   dailySummaryEnabled?: boolean;
@@ -65,4 +66,16 @@ export async function updateDailySummaryGroups(
     { dailySummaryGroups: normalizeDailySummaryGroups(groups) },
     updatedBy,
   );
+}
+
+/** โหลด "กลุ่มเริ่มต้น" (ค่าที่ฝังไว้ในโค้ดฝั่ง Cloud Functions) ลง Firestore
+ *  ทันที — ปกติ seed เกิดเองตอนสรุปเช้ารอบถัดไป ปุ่มนี้ให้ admin เห็นกลุ่ม
+ *  จริงเลยโดยไม่ต้องรอ · idempotent (มีอยู่แล้วไม่ทับ)                     */
+export async function seedDailySummaryGroupsNow(): Promise<number> {
+  const fn = httpsCallable<undefined, { ok: boolean; count: number }>(
+    functions,
+    "seedDailySummaryGroupsNow",
+  );
+  const res = await fn();
+  return res.data?.count ?? 0;
 }

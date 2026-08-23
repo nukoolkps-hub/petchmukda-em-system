@@ -31,11 +31,17 @@ export { lineAuth } from "./auth/lineAuth.js";
 export { prepareLineLogin } from "./auth/prepareLineLogin.js";
 export { seedLineConfigFromEnv } from "./auth/seedLineConfigFromEnv.js";
 export { setAdmin } from "./auth/setAdmin.js";
+// Backup
+export {
+	backupFirestoreScheduled,
+	triggerFirestoreBackupNow,
+} from "./backup/backupToGitHub.js";
+// ลบรูปแนบสรุปเช้าที่พ้นวันส่งแล้ว (Firestore doc + Storage) — 04:00 ทุกวัน
+export { cleanupSummaryImages } from "./dailySummary/cleanupSummaryImages.js";
+export { seedDailySummaryGroupsNow } from "./dailySummary/groups.js";
 // Daily summary — ภารกิจ + คนหยุด + เคล็ดลับ → ส่งเข้า LINE 07:30 ทุกวัน
 // (manual test: Cloud Scheduler "Force run" หรือ LINE command "ทดสอบแจ้งเตือน")
 export { sendDailySummary } from "./dailySummary/sendDailySummary.js";
-// ลบรูปแนบสรุปเช้าที่พ้นวันส่งแล้ว (Firestore doc + Storage) — 04:00 ทุกวัน
-export { cleanupSummaryImages } from "./dailySummary/cleanupSummaryImages.js";
 // Duty assignments — server-side compute เพื่อ sync admin/พนักงาน
 // (ฝั่งพนักงานอ่าน employees/leaves ของคนอื่นไม่ได้ → compute ไม่ครบ)
 // callable: trigger หลัง CRUD · scheduled: refresh ตอนวันเปลี่ยน
@@ -51,16 +57,11 @@ export {
 } from "./goldPrice/fetchGoldPrice.js";
 // LINE webhook
 export { lineWebhook } from "./line/webhook.js";
-// Backup
-export {
-	backupFirestoreScheduled,
-	triggerFirestoreBackupNow,
-} from "./backup/backupToGitHub.js";
 // Maintenance
 export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";
 export { cleanupOldTips } from "./maintenance/cleanupOldTips.js";
+// Per-employee wipe (admin only) — ลบข้อมูลของพนักงานเฉพาะคน ไม่ใช่ทั้งระบบ
+export { wipeEmployeeData } from "./maintenance/wipeEmployeeData.js";
 // One-time start-fresh utility (admin-only callable · ลบข้อมูลพนักงาน +
 // transactional data ก่อนเริ่มใช้จริง · เก็บ config/roles/duties ไว้)
 export { wipeTestData } from "./maintenance/wipeTestData.js";
-// Per-employee wipe (admin only) — ลบข้อมูลของพนักงานเฉพาะคน ไม่ใช่ทั้งระบบ
-export { wipeEmployeeData } from "./maintenance/wipeEmployeeData.js";
