@@ -33,7 +33,9 @@ function buildCertificateHTML(
         startWorkMonth: employeeInfo.startWorkMonth ?? null,
         annualRaiseAmount: employeeInfo.annualRaiseAmount ?? 0,
         annualRaises: employeeInfo.annualRaises ?? {},
-      }) || data?.baseSalary || 0
+      }) ||
+      data?.baseSalary ||
+      0
     : data?.baseSalary || 0;
   // salaryOverride: caller (UI) ส่งมาเมื่อพนักงานอยากระบุยอดต่ำกว่าจริง
   // (เช่น ยื่นกู้เครดิตการ์ดที่ไม่อยากโชว์ยอดเต็ม) · clamp ห้ามเกิน effective
@@ -314,16 +316,9 @@ export async function downloadSalaryCertificatePDF(args) {
       .trim();
   const filename = `หนังสือรับรองเงินเดือน-${safe(employeeName)}-${today}.pdf`;
 
-  return new Promise<void>((resolve, reject) => {
-    try {
-      pdfMake.createPdf(docDef).getBlob((blob: Blob) => {
-        openPDFBlob(blob, filename);
-        resolve();
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
+  // pdfmake 0.3.x: getBlob() คืน Promise (ไม่รับ callback แบบ 0.1.x)
+  const blob: Blob = await pdfMake.createPdf(docDef).getBlob();
+  openPDFBlob(blob, filename);
 }
 
 /** Default export — backward compat */

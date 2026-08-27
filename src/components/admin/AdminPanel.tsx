@@ -20,6 +20,7 @@ import LeaveListPanel from "./LeaveListPanel";
 import LeaveSummaryPanel from "./LeaveSummaryPanel";
 import LineBotCommandsPanel from "./LineBotCommandsPanel";
 import LineBotNotificationsPanel from "./LineBotNotificationsPanel";
+import PayrollMatrixPanel from "./PayrollMatrixPanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
 import RolesAdminPanel from "./RolesAdminPanel";
 import StoreCalendarPanel from "./StoreCalendarPanel";
@@ -288,6 +289,23 @@ export default function AdminPanel({
             employeeLoans={employeeLoans}
             storeCalendar={storeCalendar}
             onSaveSalary={onSaveSalary}
+            selectedMonth={adminMonth}
+            onSelectMonth={setAdminMonth}
+            showToast={showToast}
+          />
+        )}
+
+        {/* ── PAYROLL MATRIX section (ตารางการคำนวณโดยรวม) ── */}
+        {section === "payroll-matrix" && (
+          <PayrollMatrixPanel
+            employeeDirectory={employeeDirectory}
+            salaryData={salaryData}
+            allLeaves={allLeaves}
+            roles={roles}
+            payrollConfirms={payrollConfirms}
+            poolAdjustments={poolAdjustments}
+            employeeLoans={employeeLoans}
+            storeCalendar={storeCalendar}
             selectedMonth={adminMonth}
             onSelectMonth={setAdminMonth}
             showToast={showToast}

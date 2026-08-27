@@ -34,6 +34,7 @@ npm run test:coverage
 | `payrollSimulation.test.ts` | **จำลอง 1 ปี × 10 คน** ครอบทุกเคส → assert invariants |
 | `payrollSimulationRoles.test.ts` | เปลี่ยนตำแหน่งกลางปี + หลาย pool group + slip display |
 | `payrollSimulationGraceEdits.test.ts` | **จำลอง grace re-settle** (#637-#641) — idempotency + conservation |
+| `payrollMatrix.test.ts` | ตารางการคำนวณโดยรวม — ตารางต้อง "จัดเรียง" เลขจาก `calculateSalary` เท่านั้น (ห้ามคำนวณเอง) · คอลัมน์รวม = ผลบวกของช่องในแถว · union ของ pool item ข้ามตำแหน่ง |
 | `payrollLock.test.ts` | กฎปิดรอบ 7 วัน (`getPayrollLock`/`isMonthLocked`) |
 | `leaveUtils.test.ts` · `storeCalendar.test.ts` | นับวันลา/over-quota · ปฏิทินเปิด-ปิดร้าน |
 | `advanceUtils.test.ts` · `dutyUtils.test.ts` | เบิกล่วงหน้า · หน้าที่ประจำ (rotation/fairness/ผูกขาด/ห้ามว่าง · มี simulation 1 ปี) |

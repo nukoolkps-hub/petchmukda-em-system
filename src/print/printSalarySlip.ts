@@ -325,13 +325,8 @@ export async function generateSalarySlipBlob(args): Promise<Blob> {
   await ensureThaiFonts(pdfMake);
 
   const docDef = buildSalarySlipDocDef(args);
-  return new Promise<Blob>((resolve, reject) => {
-    try {
-      pdfMake.createPdf(docDef).getBlob((blob: Blob) => resolve(blob));
-    } catch (err) {
-      reject(err);
-    }
-  });
+  // pdfmake 0.3.x: getBlob() คืน Promise (ไม่รับ callback แบบ 0.1.x)
+  return pdfMake.createPdf(docDef).getBlob();
 }
 
 export async function downloadSalarySlipPDF(args) {
