@@ -60,6 +60,7 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 | salary | `SalaryAdminEdit` | draft ค่าคอม |
 | advance | `AdminAdvancePanel` | filter เดือน/สถานะ |
 | payroll | `PayrollSummaryPanel` | เดือนที่เลือก |
+| payroll-matrix (ตารางรวม) | `PayrollMatrixPanel` | โชว์/ซ่อนเลขบัญชี, กำลังสร้าง PDF |
 | positions | `RolesAdminPanel` | draft role |
 
 **กฎ:** component ไม่ควรเกิน ~300-400 บรรทัด — ถ้าโตเกินให้แยก (เช่น `EmployeeEditModal` แยกจาก `EmployeeAdminPanel`)
@@ -191,6 +192,8 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `src/firebase/hooks/useFirestore.ts` | Subscription hooks per collection (scope: admin vs employee) |
 | `src/firebase/poolSnapshots.ts` | Public, non-sensitive copy ของ pool fields (privacy phase 2 infra) |
 | `src/components/modals/PoolFlowModal.tsx` | แผนผังเงินเดือน (📊) — flow การแบ่งค่าคอมกองกลาง |
+| `src/utils/payrollMatrix.ts` + `src/print/payrollMatrixPDF.ts` | **ตารางการคำนวณโดยรวม** — pure builder จัดเรียง `EmployeeMonthRow[]` เป็นตาราง (แถว = รายการ · คอลัมน์ = พนักงาน + "รวม") · **ไม่คำนวณเงินเอง** อ่านจาก `salaryCalculation`/`poolShare` ล้วน → เลขตรงกับสลิป/หน้าจ่ายเงินเสมอ · รายการที่แต่ละคนมีไม่เท่ากัน = union (คนที่ไม่มี = ช่องว่าง) · PDF แนวนอน (≤6 คน = A4 · เกินนั้น = A3) |
+| `src/components/admin/PayrollMatrixPanel.tsx` | UI ตารางรวม — เลื่อนแนวนอน + ตรึงคอลัมน์แรก · toggle เลขบัญชี · ปุ่มดาวน์โหลด PDF (lazy-import) |
 | `src/utils/salaryUtils.ts` | สูตรเงินเดือน + `computePoolSharesForGroup` (ใช้ snapshot ก่อนเสมอ) |
 | `src/utils/leaveUtils.ts` | นับวันลา, คำนวณ over-quota |
 | `src/utils/pdfFonts.ts` | Lazy-load + register Sarabun font กับ pdfmake (`addVirtualFileSystem`) |

@@ -60,6 +60,7 @@ Layout
         ├── SalaryAdminEdit (per employee)
         ├── AdminAdvancePanel (approve/reject)
         ├── PayrollSummaryPanel (confirm payroll)
+        ├── PayrollMatrixPanel (ตารางรวมทุกคน + PDF)
         └── RolesAdminPanel (CRUD roles)
 ```
 

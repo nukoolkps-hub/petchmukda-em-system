@@ -20,6 +20,7 @@ import {
   ImagePlus as IconImagePlus,
   MessageCircle as IconMessageCircle,
   Settings as IconSettings,
+  Table as IconTable,
   Tag as IconTag,
   Terminal as IconTerminal,
   Users as IconUsers,
@@ -32,6 +33,7 @@ export type AdminSectionId =
   | "advance"
   | "loans"
   | "payroll"
+  | "payroll-matrix"
   | "roles"
   | "positions"
   | "duty-schedule"
@@ -104,6 +106,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { id: "advance", label: "เบิกเงิน", Icon: IconCashBanknote },
       { id: "loans", label: "กู้เงิน", Icon: IconHandCoins },
       { id: "payroll", label: "จ่ายเงิน", Icon: IconCreditCard },
+      { id: "payroll-matrix", label: "ตารางรวม", Icon: IconTable },
     ],
   },
   {

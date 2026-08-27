@@ -59,6 +59,16 @@
   server filter ด้วย `applicableDuties` (storeCalendar) ก่อน assign
 - client/server logic ต้อง sync — ถ้าแก้ `dutyUtils.ts` ต้องผ่าน `scripts/check-duty-sync.mjs`
 
+## PDF (สลิป / ใบรับรอง / ตารางรวม)
+
+### กดปุ่ม PDF แล้วค้าง — ไฟล์ไม่ดาวน์โหลด ไม่มี error
+- **สาเหตุ:** `pdfmake 0.3.x` เปลี่ยน API — `getBlob()` **คืน Promise
+  ไม่รับ callback** แบบ 0.1.x · โค้ดที่เขียน `getBlob((blob) => ...)`
+  จะไม่มีอะไรเรียก callback เลย → Promise ที่ห่อไว้ค้างตลอดกาล
+  (เงียบสนิท ไม่ throw) · เจอทั้งดาวน์โหลดสลิป · ใบรับรอง · freeze สลิปลง Storage
+- **แก้:** `const blob = await pdfMake.createPdf(docDef).getBlob()`
+- **กฎ:** เพิ่มปุ่ม PDF ใหม่ต้องใช้ `await ... .getBlob()` เสมอ · ห้ามส่ง callback
+
 ## LINE Bot / Daily Summary
 
 ### บอทไม่ส่งข้อความ / daily summary ไม่มา
