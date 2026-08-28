@@ -68,6 +68,9 @@ interface AssignmentItem {
 		| "coverage_no_candidate"
 		| "empty_target_role"
 		| "target_present";
+	/** คนหลักไม่ได้ลา แต่ติดหน้าที่อื่นวันนี้ (ผูกขาด/ถูกดึงไปแทน) →
+	 *  UI เขียน "แทน X (ติดหน้าที่อื่น)" แทน "(ลา)" */
+	primaryPulledToDuty: boolean;
 	periodStart: string;
 	periodEnd: string;
 	pool: SafeEmployee[]; // rotation: สมาชิก pool · coverage: รายชื่อคนแทน
@@ -306,6 +309,8 @@ async function buildSnapshot(): Promise<Snapshot> {
 					null
 				: null,
 			reason: a.reason,
+			// เขียนเป็น boolean เสมอ — Firestore ไม่รับ undefined
+			primaryPulledToDuty: a.primaryPulledToDuty === true,
 			periodStart: a.periodStart,
 			periodEnd: a.periodEnd,
 			pool,
