@@ -148,6 +148,57 @@ describe("หน้าที่แทนคนลา (coverage) — ผูกข
     expect(res.find((a) => a.dutyId === "d2")?.actualEmpId).toBe("a");
   });
 
+  it("คนหลักถูกดึงไปแทนบัญชี → หน้าที่เดิมขึ้น 'แทน X (ติดหน้าที่อื่น)' ไม่ใช่ '(ลา)'", () => {
+    // a ถูกดึงไปแทนบัญชี · a เป็นคนหลักของ d1 → d1 ต้องคง a เป็นคนหลัก
+    // แล้วให้คนอื่นทำแทน · และต้องบอกว่า "ติดหน้าที่อื่น" ไม่ใช่ "ลา"
+    const duties = [
+      coverage({ candidateEmpIds: ["a"] }),
+      rotation("d1", { rotationStartEmpId: "a" }),
+    ];
+    const res = computeAllDutiesForDay(duties, MON, STAFF, [leave("acct1")]);
+    expect(res.find((x) => x.dutyId === "cov")?.actualEmpId).toBe("a");
+    const d1 = res.find((x) => x.dutyId === "d1");
+    expect(d1?.primaryEmpId).toBe("a"); // เวรยังเป็นของ a
+    expect(d1?.actualEmpId).not.toBe("a"); // แต่วันนี้คนอื่นทำแทน
+    expect(d1?.actualEmpId).toBeTruthy();
+    expect(d1?.primaryPulledToDuty).toBe(true); // ไม่ใช่ "ลา"
+  });
+
+  it("คนหลักลาจริง → ยังเป็น '(ลา)' เหมือนเดิม (ไม่ติดป้ายผิด)", () => {
+    const duties = [coverage(), rotation("d1", { rotationStartEmpId: "a" })];
+    const res = computeAllDutiesForDay(duties, MON, STAFF, [leave("a")]);
+    const d1 = res.find((x) => x.dutyId === "d1");
+    expect(d1?.primaryEmpId).toBe("a");
+    expect(d1?.actualEmpId).not.toBe("a");
+    expect(d1?.primaryPulledToDuty).toBeFalsy();
+  });
+
+  it("คนหลักถูกดึงไป ONLINE (ผูกขาด รายเดือน) → หน้าที่เดิมขึ้น 'แทน X'", () => {
+    // เคสจริงที่เจอหน้างาน: ONLINE (monthly · ผูกขาด) ดึง b ไปแทนคนลา
+    // → หน้าที่รายสัปดาห์ที่ b เป็นคนหลัก ต้องไม่ย้ายเวรให้คนแทนเงียบๆ
+    const duties: Duty[] = [
+      {
+        id: "online",
+        name: "ONLINE",
+        kind: "rotation",
+        period: "monthly",
+        roleId: "sales",
+        rotationStartDate: MON,
+        rotationStartEmpId: "a",
+        excludedEmpIds: ["c"], // c ทำ ONLINE ไม่ได้ → เหลือ b มาแทน a
+        exclusive: true,
+      },
+      rotation("d1", { rotationStartEmpId: "b", rotationStartDate: MON }),
+    ];
+    const res = computeAllDutiesForDay(duties, MON, STAFF, [leave("a")]);
+    expect(res.find((x) => x.dutyId === "online")?.actualEmpId).toBe("b");
+    const d1 = res.find((x) => x.dutyId === "d1");
+    expect(d1?.primaryEmpId).toBe("b"); // เวรยังเป็นของ b (rotation ไม่เลื่อน)
+    expect(d1?.actualEmpId).toBe("c"); // c มาทำแทน
+    expect(d1?.reason).not.toBe("rotation");
+    expect(d1?.primaryPulledToDuty).toBe(true);
+  });
+
   it("ไม่มีใครถูกดึงไปแทน → ผลลัพธ์เหมือนเดิมทุกประการ", () => {
     const duties = [coverage(), rotation("d1"), rotation("d2")];
     const withCoverage = computeAllDutiesForDay(duties, MON, STAFF, []);

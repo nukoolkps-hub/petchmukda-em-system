@@ -170,6 +170,9 @@ export interface DutyAssignment {
 	/** coverage: คนในตำแหน่งเป้าหมายที่ลา (คนที่ถูกแทน) */
 	targetEmpId?: string | null;
 	reason: DutyReason;
+	/** คนหลักไม่ได้ลา แต่ "ติดหน้าที่ผูกขาด" อื่นวันนี้ → มีคนมาแทน
+	 *  (UI เขียน "แทน X (ติดหน้าที่อื่น)" แทน "(ลา)") · undefined = ของเดิม */
+	primaryPulledToDuty?: boolean;
 	periodStart: string;
 	periodEnd: string;
 }
@@ -325,11 +328,22 @@ export function computeDutyForDay(
 	const pool = preferredPool.length > 0 ? preferredPool : fullPool;
 
 	const idx = Math.max(0, getPeriodIndex(duty, todayYmd));
+	// คนหลักที่ "ติดหน้าที่ผูกขาด" วันนี้ ไม่ได้แปลว่าเวรเปลี่ยนมือ — เขายัง
+	// เป็นคนหลักของรอบนี้ แค่วันนี้มาทำไม่ได้ · ต้องคงเขาไว้เป็น primaryEmpId
+	// แล้วหา "คนแทน" เหมือนตอนลา ไม่งั้นพัง 2 อย่าง:
+	//  1. UI ไม่ขึ้น "แทน X" — ดูเหมือนเป็นเวรของคนแทนเอง
+	//  2. rotation เลื่อน — ตัดเขาออกจาก pool ทำให้ index ของทุกคนขยับ
+	//     (คนถัดไปโดนข้าม · คนหลักตัวจริงไม่เคยถูกบันทึกว่าถึงเวร)
+	const blockedPrimary =
+		!!precomputedPrimary &&
+		!!blockedEmpIds?.has(precomputedPrimary) &&
+		rawPool.includes(precomputedPrimary);
 	// ใช้ primary ที่ Phase 1/2 คำนวณไว้ (cache + hash + de-collide) ถ้ายัง
 	// อยู่ใน pool · ไม่งั้น compute เอง — ใช้ primariesToday เป็น used set
 	// เพื่อเคารพ skip-collision แม้ใน fallback
-	const primary =
-		precomputedPrimary && pool.includes(precomputedPrimary)
+	const primary = blockedPrimary
+		? (precomputedPrimary as string)
+		: precomputedPrimary && pool.includes(precomputedPrimary)
 			? precomputedPrimary
 			: pickPrimary(duty, pool, idx, primariesToday);
 	if (!primary) {
@@ -346,7 +360,8 @@ export function computeDutyForDay(
 		};
 	}
 
-	if (!isOnLeave(leaves, primary, todayYmd)) {
+	// primary ไม่ลา + ไม่ติดหน้าที่ผูกขาด → ใช้ primary
+	if (!blockedPrimary && !isOnLeave(leaves, primary, todayYmd)) {
 		return {
 			dutyId: duty.id,
 			dutyName: duty.name,
@@ -375,25 +390,35 @@ export function computeDutyForDay(
 			subHistory,
 			subExcluded,
 		);
+		// คนหลักติดหน้าที่ผูกขาด แต่ไม่มีใครแทนได้ → ให้เขาทำซ้อนเอง
+		// (ผูกขาดเป็นแค่ preference · "ห้ามปล่อยหน้าที่ว่าง" สำคัญกว่า)
+		const actual = pick ?? (blockedPrimary ? primary : null);
 		return {
 			dutyId: duty.id,
 			dutyName: duty.name,
 			period: duty.period,
 			primaryEmpId: primary,
-			actualEmpId: pick,
+			actualEmpId: actual,
 			reason: pick
 				? primariesToday.has(pick)
 					? "double_up"
 					: "substitute_for_leave"
-				: "all_on_leave",
+				: actual
+					? "rotation"
+					: "all_on_leave",
+			primaryPulledToDuty: blockedPrimary && pick ? true : undefined,
 			periodStart,
 			periodEnd,
 		};
 	}
 
-	// substitute scan เริ่มจากตำแหน่ง primary ใน pool (deterministic)
-	const startIdx = Math.max(0, pool.indexOf(primary));
-	for (let offset = 1; offset < pool.length; offset++) {
+	// substitute scan เริ่มจากตำแหน่ง primary ใน pool (deterministic) ·
+	// ถ้า primary ไม่อยู่ใน pool (ติดผูกขาดเลยถูกกรองออก) เริ่มที่ offset 0
+	// ไม่งั้นคนแรกของ pool จะถูกข้ามฟรีๆ
+	const primaryIdx = pool.indexOf(primary);
+	const startIdx = Math.max(0, primaryIdx);
+	const firstOffset = primaryIdx >= 0 ? 1 : 0;
+	for (let offset = firstOffset; offset < pool.length; offset++) {
 		const cand = pool[(startIdx + offset) % pool.length];
 		if (cand === primary) continue;
 		if (subExcluded.has(cand)) continue;
@@ -406,13 +431,14 @@ export function computeDutyForDay(
 			primaryEmpId: primary,
 			actualEmpId: cand,
 			reason: "substitute_for_leave",
+			primaryPulledToDuty: blockedPrimary || undefined,
 			periodStart,
 			periodEnd,
 		};
 	}
 
 	const doubleUpCands: string[] = [];
-	for (let offset = 1; offset < pool.length; offset++) {
+	for (let offset = firstOffset; offset < pool.length; offset++) {
 		const cand = pool[(startIdx + offset) % pool.length];
 		if (cand === primary) continue;
 		if (subExcluded.has(cand)) continue;
@@ -428,6 +454,7 @@ export function computeDutyForDay(
 			primaryEmpId: primary,
 			actualEmpId: doubleUp,
 			reason: "double_up",
+			primaryPulledToDuty: blockedPrimary || undefined,
 			periodStart,
 			periodEnd,
 		};
@@ -454,6 +481,22 @@ export function computeDutyForDay(
 			primaryEmpId: primary,
 			actualEmpId: lastResort,
 			reason: "double_up",
+			primaryPulledToDuty: blockedPrimary || undefined,
+			periodStart,
+			periodEnd,
+		};
+	}
+
+	// คนหลักติดหน้าที่ผูกขาด แต่ไม่มีใครมาแทนได้เลย → ให้เขาทำซ้อนเอง
+	// (ผูกขาดเป็นแค่ preference · "ห้ามปล่อยหน้าที่ว่าง" สำคัญกว่า)
+	if (blockedPrimary) {
+		return {
+			dutyId: duty.id,
+			dutyName: duty.name,
+			period: duty.period,
+			primaryEmpId: primary,
+			actualEmpId: primary,
+			reason: "rotation",
 			periodStart,
 			periodEnd,
 		};
@@ -1068,6 +1111,20 @@ export function computeAllDutiesForDay(
 		leaves,
 		coverageAssignments,
 	);
+
+	// คนที่ถูกดึงไปแทน (coverage) ถูกใส่ใน effLeaves เพื่อให้ cascade ทำงาน —
+	// แต่เขา "ไม่ได้ลา" จริง · ติดป้ายไว้ให้ UI เขียน "แทน X (ติดหน้าที่อื่น)"
+	// แทน "(ลา)" ที่ชวนเข้าใจผิดว่าเจ้าตัวหยุด
+	for (const a of rotationAssignments) {
+		if (
+			a.primaryEmpId &&
+			a.actualEmpId !== a.primaryEmpId &&
+			pulled.has(a.primaryEmpId) &&
+			!isOnLeave(leaves, a.primaryEmpId, todayYmd)
+		) {
+			a.primaryPulledToDuty = true;
+		}
+	}
 
 	// preserve ลำดับ duties เดิม + coverage ตามตำแหน่งของมัน
 	const byId = new Map<string, DutyAssignment[]>();

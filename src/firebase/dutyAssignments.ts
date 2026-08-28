@@ -45,6 +45,9 @@ export interface SnapshotAssignment {
     | "coverage_no_candidate"
     | "empty_target_role"
     | "target_present";
+  /** คนหลักไม่ได้ลา แต่ "ติดหน้าที่อื่น" วันนี้ (ผูกขาด/ถูกดึงไปแทน) →
+   *  UI เขียน "แทน X (ติดหน้าที่อื่น)" แทน "(ลา)" · undefined = ข้อมูลเก่า */
+  primaryPulledToDuty?: boolean;
   periodStart: string;
   periodEnd: string;
   pool: SnapshotPoolMember[];
