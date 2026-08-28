@@ -1786,11 +1786,62 @@ describe("computeAllDutiesForDay — หน้าที่ผูกขาด", (
     expect(onlineAssignment?.actualEmpId).not.toBe("a");
     const substitute = onlineAssignment?.actualEmpId as string;
 
-    // คนแทนต้องไม่โผล่ในหน้าที่อื่นเลย (ทั้งคนหลักและคนแทน)
+    // คนแทนต้องไม่ "ทำ" หน้าที่อื่นเลยในวันนั้น
+    // (ยังเป็น "คนหลักตามเวร" ของหน้าที่อื่นได้ — เวรไม่เปลี่ยนมือเพราะติดงาน
+    //  วันเดียว · ระบบจะหาคนมาแทนให้แล้วขึ้นป้าย "แทน X" ดูเทสต์ด้านล่าง)
     for (const other of result.filter((r) => r.dutyId !== "online")) {
       expect(other.actualEmpId).not.toBe(substitute);
-      expect(other.primaryEmpId).not.toBe(substitute);
     }
+  });
+
+  it("คนหลักที่ถูกดึงไปหน้าที่ผูกขาด → หน้าที่เดิมขึ้น 'แทน X' ไม่ใช่เวรของคนแทน", () => {
+    // b เป็นคนหลักของ "x" · แต่ b ถูกดึงไปทำ ONLINE (ผูกขาด) แทน a ที่ลา
+    // → "x" ต้องคง b ไว้เป็นคนหลัก แล้วให้คนอื่นมาแทน (ไม่ใช่ย้ายเวรให้คนแทน)
+    const online = duty({
+      id: "online",
+      name: "ONLINE",
+      exclusive: true,
+      rotationStartEmpId: "a",
+      excludedEmpIds: ["d"], // d ทำ ONLINE ไม่ได้ → เหลือ b มาแทน a
+    });
+    const x = duty({ id: "x", name: "x", rotationStartEmpId: "b" });
+    const result = computeAllDutiesForDay(
+      [online, x],
+      MON,
+      staff,
+      [leave("a", MON), leave("c", MON)],
+      null,
+    );
+    const onlineWorker = result.find((r) => r.dutyId === "online")?.actualEmpId;
+    expect(onlineWorker).toBe("b");
+
+    const xa = result.find((r) => r.dutyId === "x");
+    expect(xa?.primaryEmpId).toBe("b"); // เวรยังเป็นของ b (rotation ไม่เลื่อน)
+    expect(xa?.actualEmpId).not.toBe("b"); // แต่วันนี้คนอื่นทำแทน
+    expect(xa?.actualEmpId).toBeTruthy(); // ห้ามปล่อยว่าง
+    expect(xa?.reason).not.toBe("rotation"); // ต้องบอกว่าเป็นการแทน
+    expect(xa?.primaryPulledToDuty).toBe(true); // แทนเพราะติดงาน ไม่ใช่เพราะลา
+  });
+
+  it("คนหลักติดผูกขาด + ไม่มีใครแทนได้เลย → ให้เขาทำซ้อนเอง (ห้ามหน้าที่ว่าง)", () => {
+    // เหลือ a กับ b · a ลา → b ทำ ONLINE · "x" ไม่มีใครเหลือนอกจาก b
+    const online = duty({
+      id: "online",
+      name: "ONLINE",
+      exclusive: true,
+      rotationStartEmpId: "a",
+    });
+    const x = duty({ id: "x", name: "x", rotationStartEmpId: "b" });
+    const result = computeAllDutiesForDay(
+      [online, x],
+      MON,
+      [emp("a"), emp("b")],
+      [leave("a", MON)],
+      null,
+    );
+    const xa = result.find((r) => r.dutyId === "x");
+    expect(xa?.actualEmpId).toBe("b");
+    expect(xa?.reason).not.toBe("all_on_leave");
   });
 
   it("คนหลักหน้าที่ผูกขาด ไม่ถูกจัดหน้าที่อื่นในวันเดียวกัน", () => {

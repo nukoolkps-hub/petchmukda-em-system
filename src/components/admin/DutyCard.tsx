@@ -87,7 +87,8 @@ function TodayRow({
             isSubstitute &&
             primary && (
               <div className="text-[11px] text-txt-soft">
-                แทน {primary.nickname || primary.name} (ลา)
+                แทน {primary.nickname || primary.name} (
+                {assignment?.primaryPulledToDuty ? "ติดหน้าที่อื่น" : "ลา"})
               </div>
             )
           )}
