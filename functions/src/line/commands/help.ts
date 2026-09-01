@@ -91,7 +91,13 @@ function makeHelpFlexMessage(): LinePushMessage {
 					}),
 					commandBox({
 						command: "ทดสอบแจ้งเตือน",
-						description: "Bot push ตัวอย่างสรุปประจำวัน (Calendar + คนหยุด + เคล็ดลับ) มาให้ดู",
+						description:
+							"Bot push ตัวอย่างสรุปประจำวัน (Calendar + คนหยุด + เคล็ดลับ) มาให้ดู",
+						scope: "แชทส่วนตัว",
+					}),
+					commandBox({
+						command: "ทดสอบคนลาเพิ่ม",
+						description: 'Bot push ตัวอย่างกล่อง "มีคนลาเพิ่ม" (รอบ 08:30) มาให้ดู',
 						scope: "แชทส่วนตัว",
 					}),
 				],

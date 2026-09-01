@@ -19,6 +19,8 @@ export interface NotificationSettings {
   advanceApprovalEnabled?: boolean;
   /** แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ (พร้อมสลิปการโอน ถ้ามี) */
   loanCreatedEnabled?: boolean;
+  /** ตามแจ้ง 08:30 เฉพาะคนที่กดลาหลังสรุปเช้า (ไม่มีใคร = ไม่ส่ง) */
+  lateLeaveNoticeEnabled?: boolean;
   /** กลุ่ม LINE ที่รับ "สรุปประจำวัน 07:30" — ADMIN ตั้งเองในหน้า LINE BOT
    *  · field หายไป = ยังไม่เคยตั้ง → Cloud Function ใช้ค่าเดิมในโค้ดแล้ว seed
    *  ให้ครั้งแรก · array ว่าง = ตั้งใจไม่ส่งเลย */
