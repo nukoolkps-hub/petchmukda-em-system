@@ -8,6 +8,7 @@
 
 import type { Firestore } from "firebase-admin/firestore";
 import { bangkokYmd } from "./dateUtils.js";
+import { coversDay } from "./leaveRules.js";
 
 export interface LeaveItem {
 	nickname: string;
@@ -54,11 +55,7 @@ export async function fetchTodayLeaveDocs(
 
 	return leavesSnap.docs
 		.map((d) => d.data() as Record<string, unknown>)
-		.filter((leave) => {
-			const start = String(leave.start || "");
-			const end = String(leave.end || "");
-			return start <= ymd && end >= ymd;
-		});
+		.filter((leave) => coversDay(leave, ymd));
 }
 
 /** join ใบลา → ชื่อเล่นพนักงาน + ป้ายประเภทลา (แชร์กับ lateLeaves.ts) */
