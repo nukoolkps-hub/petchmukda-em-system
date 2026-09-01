@@ -13,6 +13,11 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
+import {
+  checkReturnedState,
+  saveLoginState,
+  takeLoginState,
+} from "../utils/loginState";
 import { auth, functions } from "./config";
 
 const googleProvider = new GoogleAuthProvider();
@@ -54,8 +59,10 @@ export async function signInWithGoogle() {
    ขั้นที่ 1: ขอ state จาก server → redirect → LINE Login URL
    - state ออกโดย Cloud Function prepareLineLogin · เก็บใน Firestore
      loginStates/{state} (single-use · TTL 10 นาที)
-   - client เก็บ sessionStorage copy เพื่อ defense-in-depth (กัน race
-     ระหว่าง tabs · backup CSRF check)                              */
+   - client เก็บ copy ใน localStorage เพื่อ defense-in-depth · ใช้
+     localStorage ไม่ใช่ sessionStorage เพราะ flow มือถือเด้งข้าม tab/
+     เบราว์เซอร์ได้ (เช่น พิมพ์ใบรับรองจาก LINE webview) แล้ว sessionStorage
+     จะหาย → เทียบ state ไม่ผ่านทั้งที่ไม่มีใครปลอมแปลง (ดู utils/loginState.ts) */
 export async function startLineLogin({ channelId, redirectUri }) {
   if (!channelId || !redirectUri) {
     throw new Error("Missing LINE channelId or redirectUri");
@@ -67,8 +74,8 @@ export async function startLineLogin({ channelId, redirectUri }) {
     throw new Error("Failed to prepare LINE login state");
   }
 
-  // 2. เก็บ copy ใน sessionStorage เพื่อ defense-in-depth (client-side check)
-  sessionStorage.setItem("line_login_state", state);
+  // 2. เก็บ copy ไว้เทียบตอนกลับมา (defense-in-depth · server ตัดสินจริง)
+  saveLoginState(state);
 
   // 3. redirect ไป LINE authorize URL พร้อม state เดียวกัน
   const url = new URL("https://access.line.me/oauth2/v2.1/authorize");
@@ -100,12 +107,17 @@ export async function completeLineLogin() {
   }
 
   // Verify state ฝั่ง client (defense-in-depth · server validate ซ้ำใน lineAuth
-  // ผ่าน Firestore transaction · single-use)
-  const savedState = sessionStorage.getItem("line_login_state");
-  if (state !== savedState) {
+  // ผ่าน Firestore transaction · single-use) · "ไม่เจอที่เก็บไว้" ไม่ใช่
+  // ความผิดปกติ — บริบทหายได้จากการเด้งข้ามเบราว์เซอร์ ปล่อยให้ server ตัดสิน
+  const check = checkReturnedState(state, takeLoginState());
+  if (!check.ok) {
     throw new Error("State mismatch — อาจมีคนปลอมแปลง");
   }
-  sessionStorage.removeItem("line_login_state");
+  if (check.reason === "no-saved-state") {
+    console.warn(
+      "[auth] ไม่พบ state ที่เก็บไว้ (น่าจะเด้งข้ามเบราว์เซอร์/แท็บ) — ใช้การตรวจฝั่ง server อย่างเดียว",
+    );
+  }
 
   // ส่ง code + state → Cloud Function · server consume state ใน Firestore txn
   const redirectUri = window.location.origin + window.location.pathname;
