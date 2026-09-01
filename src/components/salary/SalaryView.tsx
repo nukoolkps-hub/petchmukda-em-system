@@ -363,7 +363,8 @@ export default function SalaryView({
     setShowCertModal(true);
   }
 
-  // listen header button (MobileHeader dispatches event เมื่อกด "ใบรับรอง")
+  // listen header button — ทั้ง MobileHeader และ DesktopHeader ยิง event นี้
+  // เมื่อกด "ใบรับรอง" (header 2 ตัวสลับกันด้วย CSS · ต้องมีปุ่มครบทั้งคู่)
   // ใช้ window event แทน prop drilling · header ไม่ต้องรู้จัก data/state
   useEffect(() => {
     const handler = () => handlePrintCert();
@@ -438,7 +439,8 @@ export default function SalaryView({
   const selectedMonthLabel = formatYmThai(selectedMonth);
 
   // ใบรับรอง modal — render ที่เดียวกันในทุก state · ใช้ใน empty + main view
-  // เพื่อให้ปุ่ม "ใบรับรอง" บน MobileHeader เปิด modal ได้แม้ยังไม่มี salary doc
+  // เพื่อให้ปุ่ม "ใบรับรอง" บน header (mobile/desktop) เปิด modal ได้แม้ยังไม่มี
+  // salary doc
   const certModal = showCertModal && (
     <BaseModal onClose={() => setShowCertModal(false)}>
       <div className="bg-cream rounded-2xl p-5 w-full">
@@ -1384,7 +1386,8 @@ export default function SalaryView({
   return (
     <div>
       {/* month selector + ปุ่มแผนผังเงินเดือน — บนสุด
-          แผนผังโผล่เฉพาะ pool sales · ใบรับรองอยู่ main header (MobileHeader) */}
+          แผนผังโผล่เฉพาะ pool sales · ใบรับรองอยู่ main header
+          (MobileHeader + DesktopHeader) */}
       <div className="flex items-center justify-between gap-2 mb-3">
         {employeeRole?.poolGroup ? (
           <button

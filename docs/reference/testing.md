@@ -41,6 +41,8 @@ npm run test:coverage
 | `advances.emulator.test.ts` | **E2E บน Firestore emulator** — โควต้าเบิก 3 ครั้ง/เดือน ยิงผ่าน `submitAdvance()` จริง + `firestore.rules` จริง · skip อัตโนมัติถ้าไม่มี emulator (CI ไม่ได้รัน) |
 | `dutyCoverageExclusive.test.ts` | หน้าที่ "แทนคนลา" — ผูกขาดคนทำอัตโนมัติ + ห้ามมีหน้าที่ว่าง · **ยิงตรงที่ engine ฝั่ง server** (`functions/src/duty/dutyUtils.ts`) เพราะ client engine ไม่รู้จัก coverage · ไฟล์นั้น pure TS ไม่มี dependency กับ firebase จึง import ข้ามได้ |
 | `changePriceUtils.test.ts` · `dateUtils.test.ts` · `format.test.ts` · `validators.test.ts` | ราคาทอง · วันที่ไทย · comma format · validators |
+| `certSalary.test.ts` · `loginState.test.ts` | เพดานยอดใบรับรอง (+30%) · state ของ LINE Login (TTL + "ไม่มี state เก็บไว้" ≠ "ปลอม") |
+| **guard tests** — `dutySnapshotFields.test.ts` · `lineHelpCommands.test.ts` · `crossImportPurity.test.ts` · `manualLabels.test.ts` · `layout/headerActionParity.test.ts` | สแกน source กัน drift ข้ามไฟล์ที่ **ไม่ throw และไม่มีเทสต์อื่นจับ** — field ที่ writer ลืมเขียน · คำสั่ง LINE ที่ไม่อยู่ในการ์ด `คำสั่ง` · เทสต์ `src/` ที่ลาก `functions/` เข้ามาจนพัง CI · คู่มืออ้างชื่อปุ่มที่ไม่มีจริง · ปุ่มที่มีแค่ header ตัวเดียว (mobile/desktop สลับกันด้วย CSS → อีกครึ่งหาไม่เจอ) |
 
 ## เทสต์ที่ต้องใช้ emulator (`*.emulator.test.ts`)
 

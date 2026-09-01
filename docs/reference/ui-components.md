@@ -33,10 +33,11 @@ Layout
 │   ├── Profile card
 │   ├── Nav items
 │   └── Logout button
-├── MobileHeader + BottomNav (mobile)
+├── DesktopHeader (>= 768px) + MobileHeader + BottomNav (< 768px)
 │   ├── Diamond + brand name
 │   ├── Profile avatar
-│   └── Tab navigation
+│   ├── Tab navigation (mobile)
+│   └── ปุ่มตาม tab: "คู่มือการใช้งาน" · "ดูมุมมองพนักงาน" · "ใบรับรอง" (/salary)
 └── Routes
     ├── HomeTab
     │   ├── PositionRateCard (เงินเดือนพื้นฐาน + อัตราค่าคอม · LIVE badge)
@@ -63,6 +64,16 @@ Layout
         ├── PayrollMatrixPanel (ตารางรวมทุกคน + PDF)
         └── RolesAdminPanel (CRUD roles)
 ```
+
+**Header มี 2 ตัว สลับกันด้วย CSS ล้วนๆ — ปุ่มต้องมีครบทั้งคู่:**
+`.leave-header-mobile { display: none }` ที่ >= 768px และ `.leave-desktop-header
+{ display: none }` ที่ < 768px (`src/index.css`) · เพิ่มปุ่มไว้แค่ตัวเดียว =
+ผู้ใช้อีกครึ่งหนึ่งหาไม่เจอ **โดยไม่มี error ใดๆ** (เจอมาแล้ว: ปุ่ม "ใบรับรอง"
+มีแต่ใน `MobileHeader` → พนักงานที่เข้าจาก PC พิมพ์ใบรับรองเงินเดือนไม่ได้เลย) ·
+header ไม่รู้จัก data — ยิง `window.dispatchEvent(new CustomEvent("openSalaryCert"))`
+แล้ว `SalaryView` ดักเอง · `src/components/layout/headerActionParity.test.ts`
+เทียบ custom event + `title=` ของทั้งสองไฟล์ให้ตรงกัน
+
 
 ## Shared Components
 

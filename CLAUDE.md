@@ -303,6 +303,12 @@ Single source: `src/utils/storeCalendar.ts` · sync helper `applicableDuties` �
   - **นาก** → `tone="nak"` · CSS `bg-rose-gold`/`text-rose-gold` (#B76E79 rose gold — สื่อสีจริงของนาก ทอง + ทองแดง) · h3 text-only variant: `tone="nak-text"`
   - กฎ: เมื่อเพิ่ม example/calculator/table ใหม่ใน knowledge ต้อง tag tone ให้ตรงกับวัสดุ — อย่าทิ้ง default maroon ไว้กับ section เงิน/นาก
 - Mobile-first layout (max 430px) + Desktop sidebar (>= 768px)
+- **Header มี 2 ตัว — เพิ่มปุ่มต้องใส่ครบทั้งคู่:** `MobileHeader` (< 768px) และ
+  `DesktopHeader` (>= 768px) สลับกันด้วย CSS ล้วนๆ (`display: none` ใน `index.css`) ·
+  ใส่ปุ่มไว้ตัวเดียว = ผู้ใช้อีกครึ่งหนึ่งหาไม่เจอ **โดยไม่มี error ใดๆ** (เจอมาแล้ว:
+  ปุ่ม "ใบรับรอง" มีแต่ในมือถือ → พนักงานเข้าจาก PC พิมพ์ใบรับรองไม่ได้เลย) ·
+  header ยิง `CustomEvent` ให้ view ดักเอง (ไม่ prop drill) · guard test:
+  `src/components/layout/headerActionParity.test.ts`
 - **Production (ใช้งานจริงแล้ว) — ต้อง backward compatible เสมอ:** มีข้อมูลจริง
   ใน Firestore + เงินเดือน/ลา/เบิก/กองกลางของเดือนเก่าที่ freeze ไว้แล้ว ·
   **ห้าม breaking changes ที่ทำข้อมูลเก่าพัง/อ่านไม่ออก/คำนวณเพี้ยน** เมื่อแก้ code:
