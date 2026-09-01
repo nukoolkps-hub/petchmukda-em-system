@@ -1,20 +1,25 @@
 /* ─── "มีคนลาเพิ่ม" 08:30 — เลือกเฉพาะคนที่ตกหล่นจากสรุปเช้า ─────────
-   logic อยู่ฝั่ง server (functions/src/dailySummary/lateLeaves.ts) แต่เป็น
-   pure TS ไม่มี dependency กับ firebase จึง import ข้ามมาเทสต์ได้ตรงๆ
+   logic อยู่ฝั่ง server (functions/src/dailySummary/leaveRules.ts) แต่เป็น
+   pure TS ไม่ import อะไรเลย จึง import ข้ามมาเทสต์ได้ตรงๆ
    (pattern เดียวกับ dutyCoverageExclusive.test.ts)
+
+   ⚠️ ต้อง import จาก `leaveRules.ts` เท่านั้น — `lateLeaves.ts` แตะ
+   firebase-admin ซึ่ง CI ไม่ได้ลง (`npm ci` เฉพาะ root) → typecheck พัง
 
    invariant ที่ยึด:
    1. แจ้งเฉพาะคนที่กด "หลัง" สรุปเช้า — ไม่ส่งซ้ำคนที่อยู่ในกล่องเช้าแล้ว
    2. ใบลาเก่าที่ไม่มี createdAt ต้องไม่ถูกนับเป็นของใหม่ (ไม่งั้นสแปมทุกวัน
       ตลอดช่วงที่คนนั้นลายาว)
-   3. cutoff ยึด claimedAt ของสรุปเช้า · ไม่มี doc → 07:30 ของวันนั้น        */
+   3. cutoff ยึด claimedAt ของสรุปเช้า · ไม่มี doc → 07:30 ของวันนั้น
+   4. ต้องเป็นใบลาที่ครอบ "วันนี้" — กดวันนี้แต่ลาสัปดาห์หน้า ไม่นับ         */
 
 import { describe, expect, it } from "vitest";
 import {
-  fetchLateLeaves,
+  coversDay,
   isLateLeave,
+  pickLateLeaveDocs,
   resolveLateCutoffMs,
-} from "../../functions/src/dailySummary/lateLeaves";
+} from "../../functions/src/dailySummary/leaveRules";
 
 const YMD = "2026-09-01";
 const at = (hhmm: string) => Date.parse(`${YMD}T${hhmm}:00+07:00`);
@@ -79,122 +84,59 @@ describe("isLateLeave", () => {
   });
 });
 
-/* ─── fetchLateLeaves — กรอง + join ชื่อเล่น (fake Firestore) ─────── */
+describe("coversDay", () => {
+  it("ลาวันเดียว = วันนี้ → ครอบ", () => {
+    expect(coversDay({ start: YMD, end: YMD }, YMD)).toBe(true);
+  });
 
-/** พารามิเตอร์ตัวแรกของ fetchLateLeaves — ดึงจาก signature ตรงๆ เพื่อไม่ต้อง
- *  import type จาก firebase-admin (ไม่ได้อยู่ใน tsconfig ฝั่ง src/) */
-type FakeFirestore = Parameters<typeof fetchLateLeaves>[0];
+  it("ลายาวคร่อมวันนี้ → ครอบ", () => {
+    expect(coversDay({ start: "2026-08-30", end: "2026-09-03" }, YMD)).toBe(
+      true,
+    );
+  });
 
-interface FakeDoc {
-  id: string;
-  data: () => Record<string, unknown>;
-}
+  it("ลาสัปดาห์หน้า / สัปดาห์ที่แล้ว → ไม่ครอบ", () => {
+    expect(coversDay({ start: "2026-09-05", end: "2026-09-05" }, YMD)).toBe(
+      false,
+    );
+    expect(coversDay({ start: "2026-08-20", end: "2026-08-25" }, YMD)).toBe(
+      false,
+    );
+  });
+});
 
-/** db ปลอมเล็กๆ พอให้ fetchTodayLeaveDocs + toLeaveItems ทำงาน
- *  (leaves ใช้ .where("end", ">=", ymd).get() · employees ใช้ .get()) */
-function fakeDb(
-  leaves: Record<string, unknown>[],
-  employees: Record<string, Record<string, unknown>>,
-): FakeFirestore {
-  const toDocs = (rows: Record<string, unknown>[]): FakeDoc[] =>
-    rows.map((r, i) => ({ id: String(r.id ?? i), data: () => r }));
-  return {
-    collection: (name: string) => {
-      if (name === "employees") {
-        return {
-          get: async () => ({
-            docs: Object.entries(employees).map(([id, data]) => ({
-              id,
-              data: () => data,
-            })),
-          }),
-        };
-      }
-      return {
-        where: (_f: string, _op: string, ymd: string) => ({
-          get: async () => ({
-            docs: toDocs(leaves.filter((l) => String(l.end || "") >= ymd)),
-          }),
-        }),
-      };
-    },
-  } as unknown as FakeFirestore;
-}
-
-describe("fetchLateLeaves", () => {
+describe("pickLateLeaveDocs — ตัวกรองจริงที่รอบ 08:30 ใช้", () => {
   const cutoff = at("07:30");
-  const EMPLOYEES = {
-    e1: { nickname: "น้ำ", name: "อพิตญา" },
-    e2: { nickname: "เนม", name: "ณัฐพล" },
-    e3: { nickname: "ดาว", name: "ดวงดาว" },
-  };
+  const leaves = [
+    // อยู่ในกล่องเช้าแล้ว
+    { employeeId: "e1", start: YMD, end: YMD, createdAt: at("06:00") },
+    // ตกหล่น — กดหลังสรุปเช้า
+    { employeeId: "e2", start: YMD, end: YMD, createdAt: at("08:10") },
+    // ตกหล่น + ลายาวคร่อมวันนี้
+    {
+      employeeId: "e3",
+      start: "2026-08-30",
+      end: "2026-09-03",
+      createdAt: at("07:45"),
+    },
+    // เพิ่งกด แต่ลาสัปดาห์หน้า → ไม่เกี่ยวกับคนขาดวันนี้
+    {
+      employeeId: "e4",
+      start: "2026-09-05",
+      end: "2026-09-05",
+      createdAt: at("08:20"),
+    },
+    // ใบเก่าไม่มี createdAt
+    { employeeId: "e5", start: YMD, end: YMD },
+  ];
 
-  it("คืนเฉพาะคนที่ลาวันนี้ + กดหลังสรุปเช้า พร้อมชื่อเล่น", () => {
-    const db = fakeDb(
-      [
-        // อยู่ในกล่องเช้าแล้ว
-        {
-          employeeId: "e1",
-          start: YMD,
-          end: YMD,
-          type: "personal",
-          createdAt: at("06:00"),
-        },
-        // ตกหล่น — กดหลังสรุปเช้า
-        {
-          employeeId: "e2",
-          start: YMD,
-          end: YMD,
-          type: "sick",
-          createdAt: at("08:10"),
-        },
-        // ตกหล่น + ลายาวคร่อมวันนี้
-        {
-          employeeId: "e3",
-          start: "2026-08-30",
-          end: "2026-09-03",
-          type: "personal",
-          createdAt: at("07:45"),
-        },
-      ],
-      EMPLOYEES,
-    );
-    return fetchLateLeaves(db, YMD, cutoff).then((items) => {
-      expect(items.map((i) => i.nickname)).toEqual(["เนม", "ดาว"]);
-      expect(items[0].kindLabel).toBe("ลาป่วย");
-      expect(items[1].kindLabel).toBe("ลากิจ");
-    });
+  it("เหลือเฉพาะคนที่ขาดวันนี้ + กดหลังสรุปเช้า", () => {
+    expect(
+      pickLateLeaveDocs(leaves, YMD, cutoff).map((l) => l.employeeId),
+    ).toEqual(["e2", "e3"]);
   });
 
-  it("ใบลาของวันอื่น แม้เพิ่งกด ก็ไม่นับ (สนใจแค่คนขาดวันนี้)", async () => {
-    const db = fakeDb(
-      [
-        {
-          employeeId: "e2",
-          start: "2026-09-05",
-          end: "2026-09-05",
-          type: "personal",
-          createdAt: at("08:10"),
-        },
-      ],
-      EMPLOYEES,
-    );
-    expect(await fetchLateLeaves(db, YMD, cutoff)).toEqual([]);
-  });
-
-  it("ไม่มีใครตกหล่น → array ว่าง (ตัวเรียกจะไม่ส่งข้อความ)", async () => {
-    const db = fakeDb(
-      [
-        {
-          employeeId: "e1",
-          start: YMD,
-          end: YMD,
-          type: "personal",
-          createdAt: at("06:00"),
-        },
-      ],
-      EMPLOYEES,
-    );
-    expect(await fetchLateLeaves(db, YMD, cutoff)).toEqual([]);
+  it("ไม่มีใครตกหล่น → array ว่าง (ตัวเรียกจะไม่ส่งข้อความ)", () => {
+    expect(pickLateLeaveDocs([leaves[0], leaves[4]], YMD, cutoff)).toEqual([]);
   });
 });
