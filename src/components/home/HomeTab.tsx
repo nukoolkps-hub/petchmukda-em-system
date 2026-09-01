@@ -417,13 +417,14 @@ function DutyTodayCard({
                     {a.dutyName}
                     {isCov ? (
                       <span className="text-xs opacity-80">
-                        แทน {a.targetName || "—"}
+                        แทน {a.targetName || "—"} (ลา)
                       </span>
                     ) : (
                       isSub &&
                       primary && (
                         <span className="text-xs opacity-80">
-                          แทน {primary.nickname || primary.name}
+                          แทน {primary.nickname || primary.name} (
+                          {a.primaryPulledToDuty ? "ติดหน้าที่อื่น" : "ลา"})
                         </span>
                       )
                     )}
@@ -485,13 +486,14 @@ function DutyTodayCard({
                         </div>
                         {isCov ? (
                           <div className="text-[10px] text-txt-soft">
-                            แทน {a.targetName || "—"}
+                            แทน {a.targetName || "—"} (ลา)
                           </div>
                         ) : (
                           isSub &&
                           primary && (
                             <div className="text-[10px] text-txt-soft">
-                              แทน {primary.nickname || primary.name}
+                              แทน {primary.nickname || primary.name} (
+                              {a.primaryPulledToDuty ? "ติดหน้าที่อื่น" : "ลา"})
                             </div>
                           )
                         )}
