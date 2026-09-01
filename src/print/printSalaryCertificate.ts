@@ -233,9 +233,9 @@ function buildCertificateHTML(
         ของ <b>บริษัท ห้างเพชรทองมุกดา จำกัด</b>
         โดยปฏิบัติงานตั้งแต่ <b>${startWork}</b>
         ${yearsOfService ? `รวมอายุงาน <b>${yearsOfService}</b>` : ""}
-        มีอัตราเงินเดือนประจำเดือนละ <b>${formatNumber(baseSalary)} บาท</b>
+        มีรายได้เฉลี่ยเดือนละ <b>${formatNumber(baseSalary)} บาท</b>
         (<b>${baseInWords}</b>)
-        ซึ่งอัตรานี้ยังไม่รวมค่าตอบแทนและเงินพิเศษอื่น ๆ
+        ซึ่งรวมเงินเดือนพื้นฐานและค่าตอบแทนอื่น ๆ แล้ว
       </p>
       ${
         purpose

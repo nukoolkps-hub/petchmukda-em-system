@@ -504,7 +504,7 @@ export default function SalaryView({
 
         {/* เงินเดือนที่จะใส่ในใบ — default = ปัจจุบัน · ลดได้เสมอ · เพิ่มได้ถึงเพดาน */}
         <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5">
-          เงินเดือนที่จะระบุในใบรับรอง
+          รายได้ที่จะระบุในใบรับรอง
         </div>
         <div className="relative mb-1">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-maroon font-bold">

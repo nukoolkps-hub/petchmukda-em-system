@@ -5,6 +5,7 @@
    เอกสารนี้ใช้ยื่นกู้/สมัครงาน — เพดานคือสิ่งที่กันไม่ให้ยอดหลุดไปไกลจากจริง
    จึงต้องมีเทสต์คุมทุกขอบ                                                   */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { BUSINESS_RULES } from "../constants";
 import {
@@ -88,6 +89,38 @@ describe("invariant: ยอดที่พิมพ์ไม่มีทาง�
       const printed = clampCertSalary(asked, base);
       expect(printed).toBeLessThanOrEqual(certSalaryCeiling(base));
       expect(printed).toBeGreaterThanOrEqual(0);
+    }
+  });
+});
+
+/* ─── ข้อความในใบต้องสอดคล้องกับเพดาน ───────────────────────────────
+   เดิมใบเขียนว่า "ซึ่งอัตรานี้ยังไม่รวมค่าตอบแทนและเงินพิเศษอื่น ๆ" — ประโยค
+   นั้นใช้ได้ตอนยอดถูก clamp ที่เงินเดือนพื้นฐานพอดี แต่พอยอมให้ระบุเกินได้
+   ถึง +30% (เพื่อสะท้อนค่าคอม/โบนัส) ประโยคเดิมกลายเป็นขัดกับตัวเลขในใบเอง
+
+   ใบรับรองใช้ยื่นกู้ — ข้อความที่ขัดกับตัวเลขคือปัญหาจริง ไม่ใช่เรื่องคำสวย */
+
+describe("ข้อความในใบรับรอง สอดคล้องกับเพดาน", () => {
+  const CERT_FILES = [
+    "src/print/printSalaryCertificate.ts",
+    "src/print/pdfBuilders/salaryCertificatePDF.ts",
+  ];
+
+  it("ไม่มีประโยค 'ยังไม่รวมค่าตอบแทน' ตราบใดที่ยังระบุเกินพื้นฐานได้", () => {
+    if (BUSINESS_RULES.CERT_MAX_OVER_BASE <= 0) return; // clamp พอดี = ใช้ได้
+    for (const file of CERT_FILES) {
+      const source = readFileSync(file, "utf8");
+      expect(source, `${file} ยังมีประโยคที่ขัดกับยอดในใบ`).not.toContain(
+        "ยังไม่รวมค่าตอบแทน",
+      );
+    }
+  });
+
+  it("ทั้ง 2 ตัว render ใช้ถ้อยคำเดียวกัน (ใบ HTML กับ PDF ต้องไม่ต่างกัน)", () => {
+    for (const file of CERT_FILES) {
+      const source = readFileSync(file, "utf8");
+      expect(source).toContain("มีรายได้เฉลี่ยเดือนละ");
+      expect(source).toContain("ซึ่งรวมเงินเดือนพื้นฐานและค่าตอบแทนอื่น ๆ แล้ว");
     }
   });
 });
