@@ -2,6 +2,7 @@
    หนังสือรับรองเงินเดือน — เป็น PDF text-searchable จริง          */
 
 import { THAI_MONTH_NAMES } from "../../constants";
+import { clampCertSalary } from "../../utils/certSalary";
 import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
 
 const COLORS = {
@@ -81,14 +82,13 @@ export function buildCertificateDocDef({
         startWorkMonth: employeeInfo.startWorkMonth ?? null,
         annualRaiseAmount: employeeInfo.annualRaiseAmount ?? 0,
         annualRaises: employeeInfo.annualRaises ?? {},
-      }) || data?.baseSalary || 0
+      }) ||
+      data?.baseSalary ||
+      0
     : data?.baseSalary || 0;
-  // salaryOverride: caller (UI) ส่งมาเมื่อพนักงานอยากระบุยอดต่ำกว่าจริง ·
-  // clamp ห้ามเกิน effective (กันโชว์ยอดสูงกว่าจริง)
-  const baseSalary =
-    typeof salaryOverride === "number" && salaryOverride > 0
-      ? Math.min(salaryOverride, effectiveBase)
-      : effectiveBase;
+  // salaryOverride: ยอดที่พนักงานระบุเองก่อนพิมพ์ · clamp ด้วยเพดานเดียวกับ
+  // UI + ตัวพิมพ์ HTML (certSalary.ts เป็น single source ของกฎนี้)
+  const baseSalary = clampCertSalary(salaryOverride, effectiveBase);
   const prefix = employeeInfo?.prefix || profile?.prefix || "นางสาว";
   const printDate = new Date().toLocaleDateString("th-TH", {
     day: "numeric",
