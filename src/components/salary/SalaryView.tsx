@@ -39,6 +39,7 @@ import {
   openInExternalBrowser,
 } from "../../print/webviewHelpers";
 import { formatBankAccount } from "../../utils/bankFormat";
+import { certSalaryCeiling, exceedsCertCeiling } from "../../utils/certSalary";
 import { currentYearMonth, formatYmThai } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import {
@@ -384,16 +385,19 @@ export default function SalaryView({
         annualRaises: employeeInfo.annualRaises ?? {},
       }) || 0
     : 0;
+  // เพดานที่ระบุได้ = เงินเดือนพื้นฐาน + CERT_MAX_OVER_BASE (ค่าคอม/โบนัส
+  // ไม่อยู่ใน baseSalary) · กฎอยู่ที่ certSalary.ts ที่เดียว ใช้ร่วมกับตัวพิมพ์
+  const certCeiling = certSalaryCeiling(certMaxSalary);
   // parse + clamp · 0 = ใช้ค่า default (effective)
   const salaryOverrideNum = (() => {
     const raw = parseFloat(salaryOverrideText.replace(/,/g, ""));
     if (!Number.isFinite(raw) || raw <= 0) return 0;
-    return Math.min(raw, certMaxSalary);
+    return Math.min(raw, certCeiling);
   })();
-  const salaryOverrideExceeds = (() => {
-    const raw = parseFloat(salaryOverrideText.replace(/,/g, ""));
-    return Number.isFinite(raw) && raw > certMaxSalary;
-  })();
+  const salaryOverrideExceeds = exceedsCertCeiling(
+    parseFloat(salaryOverrideText.replace(/,/g, "")),
+    certMaxSalary,
+  );
 
   async function confirmPrintCert() {
     if (isLineWebview()) {
@@ -498,9 +502,9 @@ export default function SalaryView({
           className="w-full px-3 py-2.5 mb-4 rounded-lg border-[1.5px] border-bdr text-sm font-[inherit] bg-white outline-none focus:border-maroon"
         />
 
-        {/* เงินเดือนที่จะใส่ในใบ — default = ปัจจุบัน · ลดลงได้แต่ห้ามเกิน */}
+        {/* เงินเดือนที่จะใส่ในใบ — default = ปัจจุบัน · ลดได้เสมอ · เพิ่มได้ถึงเพดาน */}
         <div className="text-xs font-bold text-txt-soft uppercase tracking-wide mb-1.5">
-          เงินเดือนที่จะระบุในใบรับรอง
+          รายได้ที่จะระบุในใบรับรอง
         </div>
         <div className="relative mb-1">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-maroon font-bold">
@@ -516,15 +520,19 @@ export default function SalaryView({
         <div className="text-[11px] text-txt-soft mb-4">
           {salaryOverrideExceeds ? (
             <span className="text-red font-semibold">
-              เกินเงินเดือนพื้นฐานปัจจุบัน · ระบบจะใช้ ฿{formatThaiNumber(certMaxSalary)}{" "}
-              แทน
+              เกินเพดาน · ระบบจะใช้ ฿{formatThaiNumber(certCeiling)} แทน
+            </span>
+          ) : salaryOverrideNum > certMaxSalary ? (
+            <span>
+              สูงกว่าเงินเดือนพื้นฐาน ฿{formatThaiNumber(certMaxSalary)}{" "}
+              (รวมค่าคอม/โบนัส)
             </span>
           ) : salaryOverrideNum > 0 && salaryOverrideNum < certMaxSalary ? (
             <span>ระบุน้อยกว่าจริง · ปัจจุบัน ฿{formatThaiNumber(certMaxSalary)}</span>
           ) : (
             <span>
               เว้นว่าง = ใช้เงินเดือนพื้นฐานปัจจุบัน ฿{formatThaiNumber(certMaxSalary)} ·
-              ห้ามระบุมากกว่านี้
+              ระบุได้สูงสุด ฿{formatThaiNumber(certCeiling)}
             </span>
           )}
         </div>

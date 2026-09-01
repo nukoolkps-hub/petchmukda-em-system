@@ -1,4 +1,5 @@
 import { THAI_MONTH_NAMES } from "../constants";
+import { clampCertSalary } from "../utils/certSalary";
 import { formatTenure } from "../utils/dateUtils";
 import { getEffectiveBaseSalary } from "../utils/salaryUtils";
 import { buildCertificateDocDef } from "./pdfBuilders/salaryCertificatePDF";
@@ -37,13 +38,10 @@ function buildCertificateHTML(
       data?.baseSalary ||
       0
     : data?.baseSalary || 0;
-  // salaryOverride: caller (UI) ส่งมาเมื่อพนักงานอยากระบุยอดต่ำกว่าจริง
-  // (เช่น ยื่นกู้เครดิตการ์ดที่ไม่อยากโชว์ยอดเต็ม) · clamp ห้ามเกิน effective
-  // (กันโชว์ยอดสูงกว่าจริง · ผิดกฎหมาย/ผิดจรรยาบรรณ)
-  const baseSalary =
-    typeof salaryOverride === "number" && salaryOverride > 0
-      ? Math.min(salaryOverride, effectiveBase)
-      : effectiveBase;
+  // salaryOverride: ยอดที่พนักงานระบุเองในกล่องก่อนพิมพ์ · ต่ำกว่าได้เสมอ ·
+  // สูงกว่าได้ถึงเพดาน (base + CERT_MAX_OVER_BASE) เพราะค่าคอม/โบนัสไม่อยู่ใน
+  // baseSalary · clamp ที่นี่ด้วยแม้ UI clamp แล้ว (defense in depth)
+  const baseSalary = clampCertSalary(salaryOverride, effectiveBase);
 
   // mode='pdf' → ไม่ต้องมีปุ่ม + auto-print
   const includePrintControls = opts.includePrintControls !== false;
@@ -235,9 +233,9 @@ function buildCertificateHTML(
         ของ <b>บริษัท ห้างเพชรทองมุกดา จำกัด</b>
         โดยปฏิบัติงานตั้งแต่ <b>${startWork}</b>
         ${yearsOfService ? `รวมอายุงาน <b>${yearsOfService}</b>` : ""}
-        มีอัตราเงินเดือนประจำเดือนละ <b>${formatNumber(baseSalary)} บาท</b>
+        มีรายได้เฉลี่ยเดือนละ <b>${formatNumber(baseSalary)} บาท</b>
         (<b>${baseInWords}</b>)
-        ซึ่งอัตรานี้ยังไม่รวมค่าตอบแทนและเงินพิเศษอื่น ๆ
+        ซึ่งรวมเงินเดือนพื้นฐานและค่าตอบแทนอื่น ๆ แล้ว
       </p>
       ${
         purpose
