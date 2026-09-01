@@ -1,6 +1,10 @@
 /* ─── DesktopHeader — Top bar for desktop layout ─────────────── */
 
-import { BookOpen as IconBook2, Eye as IconEye } from "lucide-react";
+import {
+  BookOpen as IconBook2,
+  Eye as IconEye,
+  FileText as IconFileText,
+} from "lucide-react";
 import { useLocation } from "react-router-dom";
 import MemphisPattern from "../shared/MemphisPattern";
 import { PAGE_TITLES } from "./navConfig";
@@ -39,6 +43,22 @@ export default function DesktopHeader({
           )}
         </div>
         <div className="flex items-center gap-2.5">
+          {/* ใบรับรองเงินเดือน — ต้องมีคู่กับ MobileHeader เสมอ · ปุ่มนี้เคย
+              อยู่แต่ใน MobileHeader ซึ่ง desktop ซ่อนด้วย CSS
+              (`.leave-header-mobile { display: none }`) → พนักงานที่เข้าจาก PC
+              หาปุ่มไม่เจอเลย · มีเทสต์ `headerActionParity.test.ts` กันหายอีก */}
+          {tab === "salary" && (
+            <button
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent("openSalaryCert"))
+              }
+              title="พิมพ์ใบรับรองเงินเดือน"
+              className="flex items-center gap-2 px-3 py-[7px] rounded-[10px] border border-gold-lt/25 bg-white/12 cursor-pointer text-white font-[inherit] text-sm font-semibold shrink-0 whitespace-nowrap"
+            >
+              <IconFileText size={18} color="#fff" strokeWidth={2.2} />
+              ใบรับรอง
+            </button>
+          )}
           {onPreviewEmployee && (
             <button
               onClick={onPreviewEmployee}
