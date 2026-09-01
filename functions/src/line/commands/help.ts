@@ -5,6 +5,8 @@ import { replyMessage } from "../core/reply.js";
 import { type LineCommand, matched, notMatched } from "../core/types.js";
 
 const HELP_ALT_TEXT = "คำสั่งสำหรับผู้ดูแลระบบ";
+const CREAM = "#FFFDF5";
+const TEXT_SOFT = "#9E8B7D";
 
 export const helpCommand: LineCommand<void> = {
 	name: "คำสั่ง",
@@ -102,7 +104,67 @@ function makeHelpFlexMessage(): LinePushMessage {
 					}),
 				],
 			},
+			footer: scheduleFooter(),
 		},
+	};
+}
+
+/* ─── สิ่งที่บอทส่งเองโดยไม่ต้องสั่ง ──────────────────────────────
+   admin มักถามว่า "บอทส่งอะไรตอนไหนบ้าง" — ใส่ไว้ท้ายการ์ดคำสั่งเลย
+   จะได้ไม่ต้องเปิดหน้าเว็บดู · เพิ่มงานตามเวลาใหม่ต้องมาเติมที่นี่ด้วย */
+function scheduleFooter(): Record<string, unknown> {
+	const rows: [string, string][] = [
+		["07:30", "สรุปประจำวัน — ภารกิจ + คนหยุด + เคล็ดลับ (เสาร์ปกติข้าม)"],
+		["08:30", "มีคนลาเพิ่ม — เฉพาะคนที่กดลาหลังสรุปเช้า (ไม่มี = ไม่ส่ง)"],
+		["ทันที", "ผลอนุมัติเบิกเงิน / เงินกู้ใหม่ → ส่งหาพนักงานคนนั้น"],
+	];
+
+	return {
+		type: "box",
+		layout: "vertical",
+		backgroundColor: CREAM,
+		paddingAll: "14px",
+		spacing: "sm",
+		contents: [
+			{
+				type: "text",
+				text: "แจ้งเตือนอัตโนมัติ",
+				color: COLORS.maroon,
+				weight: "bold",
+				size: "sm",
+			},
+			...rows.map(([time, what]) => ({
+				type: "box",
+				layout: "baseline",
+				spacing: "sm",
+				contents: [
+					{
+						type: "text",
+						text: time,
+						color: COLORS.maroon,
+						weight: "bold",
+						size: "xs",
+						flex: 2,
+					},
+					{
+						type: "text",
+						text: what,
+						color: COLORS.textMedium,
+						size: "xs",
+						flex: 9,
+						wrap: true,
+					},
+				],
+			})),
+			{
+				type: "text",
+				text: "เปิด-ปิดได้ที่ เว็บแอป → ผู้ดูแล → LINE BOT → การแจ้งเตือน",
+				color: TEXT_SOFT,
+				size: "xxs",
+				margin: "md",
+				wrap: true,
+			},
+		],
 	};
 }
 
