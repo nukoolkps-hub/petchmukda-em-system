@@ -11,6 +11,8 @@
                               approve → แนบสลิปการโอน · reject → เหตุผล
    - loanCreatedEnabled     — แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ +
                               สลิปการโอน (ถ้าแนบไว้)
+   - lateLeaveNoticeEnabled — ตามแจ้ง 08:30 เฉพาะคนที่กดลาหลังสรุปเช้า
+                              (ไม่มีใครตกหล่น = ไม่ส่ง)
 
    Default semantic: missing field / true = enabled (backward compat).      */
 
@@ -20,6 +22,7 @@ import {
   CheckCircle2 as IconCheckCircle,
   Clock as IconClock,
   HandCoins as IconHandCoins,
+  UserMinus as IconUserMinus,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -71,7 +74,8 @@ export default function LineBotNotificationsPanel({
       | "dailySummaryEnabled"
       | "advanceRequestEnabled"
       | "advanceApprovalEnabled"
-      | "loanCreatedEnabled",
+      | "loanCreatedEnabled"
+      | "lateLeaveNoticeEnabled",
   ) {
     const next = !isOn(field);
     // Flip ทันที (optimistic) — switch เคลื่อนทันที ผู้ใช้ไม่รู้สึกหน่วง
@@ -133,6 +137,14 @@ export default function LineBotNotificationsPanel({
           enabled={isOn("dailySummaryEnabled")}
           disabled={loading}
           onToggle={() => toggle("dailySummaryEnabled")}
+        />
+        <ToggleRow
+          icon={IconUserMinus}
+          title="มีคนลาเพิ่ม 08:30"
+          description="สรุปเช้าถ่ายภาพคนหยุดตอน 07:30 — ใครกดลาหลังจากนั้นจะไม่โผล่ในกล่องเช้า · รอบนี้ตามแจ้งเฉพาะคนที่ตกหล่น เป็นข้อความสั้นตัวใหญ่ ไม่มีภารกิจ/เคล็ดลับ · ไม่มีใครกดลาเพิ่ม = ไม่ส่งเลย · ส่งเข้ากลุ่มที่เปิด 'พนักงานหยุดวันนี้'"
+          enabled={isOn("lateLeaveNoticeEnabled")}
+          disabled={loading}
+          onToggle={() => toggle("lateLeaveNoticeEnabled")}
         />
         <ToggleRow
           icon={IconBanknote}

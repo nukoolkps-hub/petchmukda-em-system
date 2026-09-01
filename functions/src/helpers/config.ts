@@ -62,7 +62,8 @@ export async function isNotificationEnabled(
 		| "dailySummaryEnabled"
 		| "advanceRequestEnabled"
 		| "advanceApprovalEnabled"
-		| "loanCreatedEnabled",
+		| "loanCreatedEnabled"
+		| "lateLeaveNoticeEnabled",
 ): Promise<boolean> {
 	const now = Date.now();
 	if (now > notificationCache.expiresAt) {

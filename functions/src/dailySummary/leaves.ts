@@ -34,8 +34,17 @@ export async function fetchTodayLeaves(
 	db: Firestore,
 	now: Date,
 ): Promise<LeaveItem[]> {
-	const ymd = bangkokYmd(now);
+	const todayLeaves = await fetchTodayLeaveDocs(db, bangkokYmd(now));
+	if (todayLeaves.length === 0) return [];
+	return toLeaveItems(db, todayLeaves);
+}
 
+/** ใบลาที่ครอบวันนี้ (raw doc) — แยกออกมาให้ "แจ้งคนกดลาหลังสรุปเช้า"
+ *  (lateLeaves.ts) ใช้ query ชุดเดียวกันแล้วค่อยกรองด้วย createdAt */
+export async function fetchTodayLeaveDocs(
+	db: Firestore,
+	ymd: string,
+): Promise<Record<string, unknown>[]> {
 	// query end >= today → filter start <= today ใน memory
 	// (Firestore ห้าม inequality 2 fields)
 	const leavesSnap = await db
@@ -43,14 +52,20 @@ export async function fetchTodayLeaves(
 		.where("end", ">=", ymd)
 		.get();
 
-	const todayLeaves = leavesSnap.docs
+	return leavesSnap.docs
 		.map((d) => d.data() as Record<string, unknown>)
 		.filter((leave) => {
 			const start = String(leave.start || "");
 			const end = String(leave.end || "");
 			return start <= ymd && end >= ymd;
 		});
+}
 
+/** join ใบลา → ชื่อเล่นพนักงาน + ป้ายประเภทลา (แชร์กับ lateLeaves.ts) */
+export async function toLeaveItems(
+	db: Firestore,
+	todayLeaves: Record<string, unknown>[],
+): Promise<LeaveItem[]> {
 	if (todayLeaves.length === 0) return [];
 
 	// join กับ employees → nickname

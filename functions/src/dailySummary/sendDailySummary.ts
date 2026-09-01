@@ -273,7 +273,7 @@ export async function runDailySummary(
  *  อ่าน config/storeCalendar.extraOpenSaturdays · ถ้าวันนี้เป็นเสาร์และ
  *  ไม่อยู่ในรายการ extraOpenSaturdays → return true (ข้าม)
  *  วันอื่น (จ-ศ, อา) ส่งปกติเหมือนเดิม                                     */
-async function shouldSkipSaturday(
+export async function shouldSkipSaturday(
 	db: Firestore,
 	ymd: string,
 ): Promise<boolean> {

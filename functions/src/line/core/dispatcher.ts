@@ -3,6 +3,7 @@ import { groupIdCommand } from "../commands/groupId.js";
 import { helpCommand } from "../commands/help.js";
 import { idCommand } from "../commands/id.js";
 import { myIdCommand } from "../commands/myId.js";
+import { previewLateLeaveCommand } from "../commands/previewLateLeave.js";
 import { previewNotifyCommand } from "../commands/previewNotify.js";
 import { setupEmployeeCommand } from "../commands/setupEmployee.js";
 import { replyText } from "./reply.js";
@@ -15,6 +16,7 @@ const commands: LineCommand[] = [
 	idCommand,
 	setupEmployeeCommand,
 	previewNotifyCommand,
+	previewLateLeaveCommand,
 ];
 
 export async function dispatchLineCommand(

@@ -350,6 +350,18 @@ Cloud Functions `sendDailySummary` ส่ง flex สรุปประจำว
 
 **Idempotency:** `dailySummarySent/{ymd}` claim ผ่าน transaction — กัน Cloud Scheduler ยิงซ้ำส่งสแปม
 
+### "มีคนลาเพิ่ม" (08:30) — ตามคนที่กดลาหลังสรุปเช้า
+
+`sendLateLeaveNotice` (`functions/src/dailySummary/sendLateLeaveNotice.ts`) — สรุปเช้าถ่ายภาพคนหยุด ณ 07:30 ใครกดลาหลังจากนั้น**ไม่โผล่ในกล่องเช้าเลย** ทีมเลยไม่รู้ว่าวันนี้ขาดคนเพิ่ม → รอบ 08:30 ตามแจ้งเฉพาะ **"คนที่ตกหล่น"** ไม่ใช่ส่งซ้ำทั้งหมด
+
+- **ไม่มีใครตกหล่น = ไม่ส่งเลย** (เงียบ · ไม่มีกล่อง "ไม่มีคนลาเพิ่ม" มารบกวนทุกเช้า)
+- flex สั้น **ตัวหนังสือใหญ่** (ชื่อ `xxl`) — ไม่มีภารกิจ ไม่มีเคล็ดลับ AI · ต่างจากกล่องเช้าโดยตั้งใจเพราะมันแทรกกลางวันทำงาน
+- **"ตกหล่น"** = `leave.createdAt` (epoch ms · เขียนตอน `addLeave`) **>** cutoff · cutoff = `dailySummarySent/{ymd}.claimedAt` (เวลาที่สรุปเช้าเริ่มทำงาน) · ไม่มี doc (เสาร์/ปิด toggle) → 07:30 ของวันนั้น · ใบลาเก่าที่**ไม่มี `createdAt` ถือว่าไม่ใช่ของใหม่** (ไม่งั้นสแปมชื่อเดิมทุกวันตลอดช่วงที่คนนั้นลายาว)
+- ยึด `claimedAt` ไม่ใช่ `sentAt` — claim เกิดก่อนอ่าน leaves จึงอาจแจ้งซ้ำเล็กน้อย ซึ่งดีกว่าคนหายเงียบ
+- ปลายทาง = กลุ่มที่เปิด `includeLeaves` (กลุ่มเดียวกับที่เห็นคนหยุดในกล่องเช้า) · เสาร์ปกติข้าม (กฎเดียวกัน) · toggle `lateLeaveNoticeEnabled`
+- **Idempotency:** `lateLeaveNoticeSent/{ymd}` claim ผ่าน transaction
+- **Manual test:** พิมพ์ `ทดสอบคนลาเพิ่ม` ใน LINE 1:1 — ไม่มีคนตกหล่นจริงจะใช้ข้อมูลตัวอย่างแล้วบอกให้รู้
+
 ## Reference Docs
 
 - **`docs/reference.md`** — สารบัญ + สถาปัตยกรรมกองกลาง (Pool): single source of truth, privacy phase 1/2 (เริ่มที่นี่)
