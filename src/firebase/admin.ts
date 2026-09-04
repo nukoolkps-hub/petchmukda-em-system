@@ -49,13 +49,3 @@ export async function bootstrapAdmin(setupSecret: string) {
   const tokenResult = await currentUser.getIdTokenResult(true);
   return { ...data, admin: tokenResult.claims.admin === true };
 }
-
-/**
- * Force refresh current user's token to get latest claims
- * เรียกหลังจาก setAdminRole() เพื่อให้ frontend เห็นการเปลี่ยนแปลงทันที
- */
-export async function refreshIdToken() {
-  const user = auth.currentUser;
-  if (!user) return;
-  await user.getIdToken(true); // force refresh
-}

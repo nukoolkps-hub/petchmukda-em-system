@@ -119,7 +119,7 @@ export async function runDailySummary(
 	if (!token) throw new Error("LINE_CHANNEL_ACCESS_TOKEN not configured");
 
 	const db = getAppFirestore();
-	const calendar = createCalendarClient();
+	const calendar = await createCalendarClient();
 	const ymd = bangkokYmd(now);
 	// กลุ่มปลายทาง — ADMIN ตั้งเองได้ใน /admin → LINE BOT → การแจ้งเตือน ·
 	// ยังไม่เคยตั้ง → ใช้ค่าเดิมในโค้ด + seed ลง Firestore (ดู groups.ts)

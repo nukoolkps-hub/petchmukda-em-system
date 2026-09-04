@@ -6,7 +6,7 @@
  * ต้อง share Google Calendar กับ email ของ SA ก่อน
  */
 
-import { google } from "googleapis";
+import type { calendar_v3 } from "googleapis";
 import { APP_TIMEZONE } from "./config.js";
 import { getThaiDayRange } from "./dateUtils.js";
 
@@ -17,8 +17,15 @@ export interface CalendarEvent {
 	location: string;
 }
 
-/** Calendar client เดียว ใช้ร่วมกันใน loop ของ runDailySummary */
-export function createCalendarClient() {
+export type CalendarClient = calendar_v3.Calendar;
+
+/** Calendar client เดียว ใช้ร่วมกันใน loop ของ runDailySummary
+ *  · `googleapis` โหลดแบบ lazy — แพ็กเกจใหญ่มาก (require หลายร้อย ms ถึงเป็น
+ *  วินาที) และทุก function ใน index.ts แชร์ module graph เดียวกัน ถ้า import
+ *  ที่ top-level ทุก instance (รวม lineAuth/prepareLineLogin ที่ user รออยู่
+ *  หน้า loading) ต้องจ่ายค่า cold start นี้ทั้งที่ใช้แค่สรุปเช้า */
+export async function createCalendarClient(): Promise<CalendarClient> {
+	const { google } = await import("googleapis");
 	const auth = new google.auth.GoogleAuth({
 		scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
 	});
@@ -26,7 +33,7 @@ export function createCalendarClient() {
 }
 
 export async function fetchTodayEvents(
-	calendar: ReturnType<typeof createCalendarClient>,
+	calendar: CalendarClient,
 	calendarId: string,
 	now: Date,
 ): Promise<CalendarEvent[]> {

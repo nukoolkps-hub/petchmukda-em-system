@@ -6,7 +6,10 @@
      · phase 2: 95% → ~99% ช้าๆ (กัน "ค้างที่ 95%")
    - หลัง 8s แสดงปุ่ม "ลองใหม่" ให้ user กดเอง
    - หลัง 10s auto-reload 1 ครั้งต่อ session (กัน Firebase handshake stuck)
-   - reload ครั้งที่ 2 แล้วยังค้าง → แสดงคำแนะนำ + ปุ่ม "ล้าง cache + เข้าใหม่" */
+   - reload ครั้งที่ 2 แล้วยังค้าง → แสดงคำแนะนำ + ปุ่ม "ล้าง cache + เข้าใหม่"
+   - `autoReload={false}` (ระหว่างแลก code จาก LINE callback) → ไม่ auto-reload
+     และเลื่อนปุ่ม "ลองใหม่" ออกไป — การแลก token ใช้เวลาได้หลายวินาที
+     (cold start ของ Cloud Function) reload กลางทางจะทำให้ login ล้มทั้งรอบ */
 
 import { useEffect, useRef, useState } from "react";
 import Diamond from "./Diamond";
@@ -14,6 +17,8 @@ import Diamond from "./Diamond";
 interface Props {
   /** ข้อความใต้ diamond — เช่น "กำลังเข้าสู่ระบบ..." / "เชื่อมต่อ Firebase..." */
   message?: string;
+  /** false = ปิด auto-reload 10s (ใช้ตอนกำลังแลก LINE code · default true) */
+  autoReload?: boolean;
 }
 
 const RELOAD_KEY = "boot-auto-reloaded";
@@ -47,7 +52,10 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export default function BootLoadingScreen({ message = "กำลังโหลด..." }: Props) {
+export default function BootLoadingScreen({
+  message = "กำลังโหลด...",
+  autoReload = true,
+}: Props) {
   // initial 5% — กัน flash ที่ 0% ก่อน tick แรก (80ms) และให้ user เห็นทันที
   // ว่า "เริ่มแล้ว"
   const [progress, setProgress] = useState(5);
@@ -74,20 +82,26 @@ export default function BootLoadingScreen({ message = "กำลังโหล�
           );
         }, 80);
     // showRetry หลัง 8s — single setTimeout แทน 1s setInterval ที่ trigger
-    // re-render ทุกวินาทีโดยเปล่าประโยชน์
-    const retryTimer = setTimeout(() => setShowRetry(true), 8000);
-    // auto-reload หลัง 10 วินาที — 1 ครั้งต่อ session
-    const reloadTimer = setTimeout(() => {
-      if (sessionStorage.getItem(RELOAD_KEY)) return;
-      sessionStorage.setItem(RELOAD_KEY, "1");
-      // มาร์คก่อน reload — กัน cleanup ลบ flag ที่เพิ่ง set
-      reloadingRef.current = true;
-      window.location.reload();
-    }, 10000);
+    // re-render ทุกวินาทีโดยเปล่าประโยชน์ · ระหว่าง LINE callback ให้รอนานกว่า
+    // (การแลก token ช้าได้ถึง ~15s ตอน cold start · กดลองใหม่ = เริ่ม login ใหม่)
+    const retryTimer = setTimeout(
+      () => setShowRetry(true),
+      autoReload ? 8000 : 20000,
+    );
+    // auto-reload หลัง 10 วินาที — 1 ครั้งต่อ session · ปิดระหว่าง LINE callback
+    const reloadTimer = autoReload
+      ? setTimeout(() => {
+          if (sessionStorage.getItem(RELOAD_KEY)) return;
+          sessionStorage.setItem(RELOAD_KEY, "1");
+          // มาร์คก่อน reload — กัน cleanup ลบ flag ที่เพิ่ง set
+          reloadingRef.current = true;
+          window.location.reload();
+        }, 10000)
+      : null;
     return () => {
       if (progressId) clearInterval(progressId);
       clearTimeout(retryTimer);
-      clearTimeout(reloadTimer);
+      if (reloadTimer) clearTimeout(reloadTimer);
       // ล้าง flag เฉพาะตอน "โหลดสำเร็จ" (parent unmount เพราะ loading=false)
       // ไม่ใช่ตอนเรา trigger reload เอง (StrictMode dev จะ double-mount-unmount
       // ก่อน timer ทำงานด้วย — ถ้าลบทุก unmount จะกระทบเมื่อ flag ถูก set
@@ -96,7 +110,7 @@ export default function BootLoadingScreen({ message = "กำลังโหล�
         sessionStorage.removeItem(RELOAD_KEY);
       }
     };
-  }, []);
+  }, [autoReload]);
 
   return (
     // ── หน้า loading ใช้ "font ระบบ" (ไม่ใช่ Prompt) โดยตั้งใจ ──

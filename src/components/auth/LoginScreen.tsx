@@ -4,7 +4,7 @@
    - "Login ด้วย LINE" button (LINE green)
    - "Dev Login" button (emulator mode only)
    - Error display with retry
-   - Handles LINE callback loading state                     */
+   (LINE callback loading state อยู่ที่ BootLoadingScreen ผ่าน AuthGate) */
 
 import {
   AlertTriangle as IconAlertTriangle,
@@ -37,11 +37,15 @@ const DEV_LOGIN_ITEMS = [
 ] as const;
 
 interface LoginScreenProps {
-  loading?: boolean;
   error?: string | null;
 }
 
-export default function LoginScreen({ loading, error }: LoginScreenProps) {
+export default function LoginScreen({ error }: LoginScreenProps) {
+  // กำลังขอ state จาก server (prepareLineLogin) ก่อน redirect ไป LINE —
+  // cold start ใช้เวลาได้หลายวินาที · ต้อง disable ปุ่มไม่ให้กดซ้ำ: ทุกครั้ง
+  // ที่กดจะออก state ใหม่ทับ localStorage · ถ้า redirect แรกใช้ state A แต่
+  // ที่เก็บไว้กลายเป็น B → กลับมาแล้ว "State mismatch" ทั้งที่ไม่มีใครปลอม
+  const [lineLoading, setLineLoading] = useState(false);
   const [devLoading, setDevLoading] = useState<DevRole | null>(null);
   const [seedLoading, setSeedLoading] = useState(false);
   const [lineConfigLoading, setLineConfigLoading] = useState(false);
@@ -51,19 +55,24 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
   const displayError = error || localError;
 
   async function handleLineLogin() {
+    if (lineLoading) return;
     if (!LINE_CHANNEL_ID) {
       setLocalError("ยังไม่ได้ตั้งค่า VITE_LINE_LOGIN_CHANNEL_ID ใน .env.local");
       return;
     }
+    setLineLoading(true);
+    setLocalError(null);
     try {
       // state ออกโดย server (prepareLineLogin) เพื่อ CSRF defense ที่แข็งกว่า
-      // client-only UUID — ไม่ต้องส่ง state จากตรงนี้
+      // client-only UUID — ไม่ต้องส่ง state จากตรงนี้ · สำเร็จ = หน้า redirect
+      // ออกไป LINE เลย จึงคง loading ไว้ (ไม่ reset ใน finally)
       await startLineLogin({
         channelId: LINE_CHANNEL_ID,
         redirectUri: `${window.location.origin}/callback`,
       });
     } catch (err: unknown) {
       setLocalError((err as Error).message || "ไม่สามารถเปิด LINE Login ได้");
+      setLineLoading(false);
     }
   }
 
@@ -233,95 +242,68 @@ export default function LoginScreen({ loading, error }: LoginScreenProps) {
               </div>
             )}
 
-            {/* Loading state (handling LINE callback) */}
-            {loading && (
-              <div className="text-center py-5">
-                <div className="w-12 h-12 rounded-full bg-linear-135 from-gold to-gold-lt flex items-center justify-center mx-auto mb-3 animate-[pulse_1.5s_ease-in-out_infinite]">
-                  <Diamond size={22} color="#5C1212" />
-                </div>
-                <div className="text-gold-lt text-sm font-semibold">
-                  กำลังเข้าสู่ระบบ...
-                </div>
-                <div className="text-gold-lt/40 text-sm mt-1">รอสักครู่</div>
-              </div>
-            )}
+            {/* Login buttons */}
+            {/* LINE Login button */}
+            <button
+              className={`login-line-btn w-full p-4 border-none rounded-[14px] text-lg font-bold font-[inherit] flex items-center justify-center gap-3 transition-all duration-200 mb-3 bg-[#06C755] text-white shadow-[0_6px_20px_rgba(6,199,85,0.25)] ${lineLoading ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+              onClick={handleLineLogin}
+              disabled={lineLoading}
+              aria-busy={lineLoading}
+            >
+              {/* LINE icon */}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
+                <path d="M12 2C6.48 2 2 5.73 2 10.25c0 4.07 3.58 7.49 8.42 8.14.33.07.77.22.88.5.1.26.07.66.03.92l-.14.85c-.04.26-.2 1.01.88.55.94-.4 5.08-2.99 6.93-5.12C20.89 13.89 22 12.17 22 10.25 22 5.73 17.52 2 12 2zm-3.37 10.75H6.88a.62.62 0 01-.62-.63V8.38c0-.35.28-.63.63-.63.34 0 .62.28.62.63v3.12h1.13c.34 0 .62.28.62.63 0 .34-.28.62-.63.62zm1.87-.63a.62.62 0 01-1.25 0V8.38a.62.62 0 011.25 0v3.74zm4.13 0c0 .26-.16.5-.4.6a.63.63 0 01-.72-.14l-1.6-2.18v1.72a.62.62 0 01-1.24 0V8.38c0-.26.16-.5.4-.6a.63.63 0 01.72.14l1.6 2.18V8.38a.62.62 0 011.25 0v3.74zm2.87-2.5a.62.62 0 010 1.25h-1.12v.63h1.12a.62.62 0 010 1.25H16.38a.62.62 0 01-.63-.63V8.38c0-.35.28-.63.63-.63H17.5a.62.62 0 010 1.25h-1.12v.62h1.12z" />
+              </svg>
+              {lineLoading ? "กำลังเปิด LINE..." : "Login ด้วย LINE"}
+            </button>
 
-            {/* Login buttons (only when not loading) */}
-            {!loading && (
-              <>
-                {/* LINE Login button */}
+            {/* Dev Login (emulator mode only) */}
+            {USE_EMULATORS && (
+              <div className="grid grid-cols-3 gap-2">
+                {DEV_LOGIN_ITEMS.map((item) => {
+                  const DevIcon = item.icon;
+                  return (
+                    <button
+                      key={item.role}
+                      className={`login-dev-btn min-w-0 w-full p-3 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-xs font-semibold font-[inherit] flex items-center justify-center gap-1.5 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                      onClick={() => handleDevLogin(item.role)}
+                      disabled={
+                        !!devLoading || seedLoading || lineConfigLoading
+                      }
+                      title={`Login as ${item.label}`}
+                    >
+                      <DevIcon size={16} strokeWidth={1.8} aria-hidden="true" />
+                      <span className="truncate">
+                        {devLoading === item.role ? "กำลังเข้า..." : item.label}
+                      </span>
+                    </button>
+                  );
+                })}
                 <button
-                  className="login-line-btn w-full p-4 border-none rounded-[14px] text-lg font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-3 transition-all duration-200 mb-3 bg-[#06C755] text-white shadow-[0_6px_20px_rgba(6,199,85,0.25)]"
-                  onClick={handleLineLogin}
+                  className={`login-seed-btn col-span-3 w-full p-3.5 bg-gold-lt/8 border border-dashed border-gold-lt/25 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/65 ${seedLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                  onClick={handleSeedData}
+                  disabled={!!devLoading || seedLoading || lineConfigLoading}
                 >
-                  {/* LINE icon */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
-                    <path d="M12 2C6.48 2 2 5.73 2 10.25c0 4.07 3.58 7.49 8.42 8.14.33.07.77.22.88.5.1.26.07.66.03.92l-.14.85c-.04.26-.2 1.01.88.55.94-.4 5.08-2.99 6.93-5.12C20.89 13.89 22 12.17 22 10.25 22 5.73 17.52 2 12 2zm-3.37 10.75H6.88a.62.62 0 01-.62-.63V8.38c0-.35.28-.63.63-.63.34 0 .62.28.62.63v3.12h1.13c.34 0 .62.28.62.63 0 .34-.28.62-.63.62zm1.87-.63a.62.62 0 01-1.25 0V8.38a.62.62 0 011.25 0v3.74zm4.13 0c0 .26-.16.5-.4.6a.63.63 0 01-.72-.14l-1.6-2.18v1.72a.62.62 0 01-1.24 0V8.38c0-.26.16-.5.4-.6a.63.63 0 01.72.14l1.6 2.18V8.38a.62.62 0 011.25 0v3.74zm2.87-2.5a.62.62 0 010 1.25h-1.12v.63h1.12a.62.62 0 010 1.25H16.38a.62.62 0 01-.63-.63V8.38c0-.35.28-.63.63-.63H17.5a.62.62 0 010 1.25h-1.12v.62h1.12z" />
-                  </svg>
-                  Login ด้วย LINE
+                  <IconDatabase
+                    size={17}
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
+                  {seedLoading ? "กำลัง seed..." : "Seed Demo"}
                 </button>
-
-                {/* Dev Login (emulator mode only) */}
-                {USE_EMULATORS && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {DEV_LOGIN_ITEMS.map((item) => {
-                      const DevIcon = item.icon;
-                      return (
-                        <button
-                          key={item.role}
-                          className={`login-dev-btn min-w-0 w-full p-3 bg-white/8 border border-dashed border-gold-lt/20 rounded-[14px] text-xs font-semibold font-[inherit] flex items-center justify-center gap-1.5 transition-all duration-200 text-gold-lt/55 ${devLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
-                          onClick={() => handleDevLogin(item.role)}
-                          disabled={
-                            !!devLoading || seedLoading || lineConfigLoading
-                          }
-                          title={`Login as ${item.label}`}
-                        >
-                          <DevIcon
-                            size={16}
-                            strokeWidth={1.8}
-                            aria-hidden="true"
-                          />
-                          <span className="truncate">
-                            {devLoading === item.role
-                              ? "กำลังเข้า..."
-                              : item.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                    <button
-                      className={`login-seed-btn col-span-3 w-full p-3.5 bg-gold-lt/8 border border-dashed border-gold-lt/25 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/65 ${seedLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
-                      onClick={handleSeedData}
-                      disabled={
-                        !!devLoading || seedLoading || lineConfigLoading
-                      }
-                    >
-                      <IconDatabase
-                        size={17}
-                        strokeWidth={1.8}
-                        aria-hidden="true"
-                      />
-                      {seedLoading ? "กำลัง seed..." : "Seed Demo"}
-                    </button>
-                    <button
-                      className={`login-seed-btn col-span-3 w-full p-3.5 bg-white/6 border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/60 ${lineConfigLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
-                      onClick={handleSeedLineConfig}
-                      disabled={
-                        !!devLoading || seedLoading || lineConfigLoading
-                      }
-                    >
-                      <IconDatabase
-                        size={17}
-                        strokeWidth={1.8}
-                        aria-hidden="true"
-                      />
-                      {lineConfigLoading
-                        ? "กำลัง seed LINE..."
-                        : "Seed LINE Config"}
-                    </button>
-                  </div>
-                )}
-              </>
+                <button
+                  className={`login-seed-btn col-span-3 w-full p-3.5 bg-white/6 border border-dashed border-gold-lt/20 rounded-[14px] text-sm font-semibold font-[inherit] flex items-center justify-center gap-2 transition-all duration-200 text-gold-lt/60 ${lineConfigLoading ? "cursor-wait opacity-60" : "cursor-pointer opacity-100"}`}
+                  onClick={handleSeedLineConfig}
+                  disabled={!!devLoading || seedLoading || lineConfigLoading}
+                >
+                  <IconDatabase
+                    size={17}
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
+                  {lineConfigLoading ? "กำลัง seed LINE..." : "Seed LINE Config"}
+                </button>
+              </div>
             )}
           </div>
 

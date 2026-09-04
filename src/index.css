@@ -186,15 +186,17 @@ body {
 
 /* ปุ่ม/ลิงก์/ตัวควบคุม — แตะติดมือทันที (ตัด ~300ms delay + double-tap zoom)
    + transition พื้นฐานให้การเปลี่ยนสถานะ (สี/เงา/ย่อขยายตอนกด) นุ่มขึ้น ·
-   component ที่ตั้ง transition-*/touch-none เองมี specificity สูงกว่า → override */
+   component ที่ตั้ง transition-… หรือ touch-none เองมี specificity สูงกว่า → override
+   (ห้ามเขียน "*" ตามด้วย "/" ในคอมเมนต์นี้ — จะปิดคอมเมนต์ก่อนเวลาแล้วทั้ง rule
+   ถูก parser ทิ้ง · เคยเกิดแล้ว: ปุ่มทั้งระบบเสีย touch-action บน production) */
 button,
 a,
 [role="button"],
 [role="option"],
 summary {
   touch-action: manipulation;
-  transition-property: color, background-color, border-color, box-shadow,
-    transform, opacity;
+  transition-property:
+    color, background-color, border-color, box-shadow, transform, opacity;
   transition-duration: 0.15s;
   transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }

@@ -6,7 +6,7 @@ import {
   AlertTriangle as IconAlertTriangle,
   Check as IconCheck,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   Navigate,
   Route,
@@ -14,12 +14,9 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import AdminPanel from "./components/admin/AdminPanel";
-import EmployeeViewPreview from "./components/admin/EmployeeViewPreview";
 import HomeTab from "./components/home/HomeTab";
 import RequestTab from "./components/home/RequestTab";
 import SuccessScreen from "./components/home/SuccessScreen";
-import KnowledgeView from "./components/knowledge/KnowledgeView";
 import type { AdminSectionId } from "./components/layout/adminNavConfig";
 import BottomNav from "./components/layout/BottomNav";
 import DesktopHeader from "./components/layout/DesktopHeader";
@@ -27,9 +24,7 @@ import MobileHeader from "./components/layout/MobileHeader";
 import { getNavItems } from "./components/layout/navConfig";
 import Sidebar from "./components/layout/Sidebar";
 import AdvanceRequestModal from "./components/modals/AdvanceRequestModal";
-import ManualModal from "./components/modals/ManualModal";
 import ProfileSetupModal from "./components/modals/ProfileSetupModal";
-import SalaryView from "./components/salary/SalaryView";
 import BaseModal from "./components/shared/BaseModal";
 import BootLoadingScreen from "./components/shared/BootLoadingScreen";
 import Diamond from "./components/shared/Diamond";
@@ -42,6 +37,30 @@ import useLineNotifications from "./hooks/useLineNotifications";
 import useProfile from "./hooks/useProfile";
 
 /* Loading Screen ใช้ตัวเดียวกับ AuthGate — `BootLoadingScreen` */
+
+/* ─── Route-level code splitting ───────────────────────────────
+   หน้าแรกของพนักงาน (home/request) โหลดใน chunk หลัก · ส่วนที่หนักและไม่ใช่
+   ทุกคนใช้ (admin ทั้งชุด · ความรู้ต่างๆ + เนื้อหา 2,000 บรรทัด · เงินเดือน ·
+   คู่มือ · โหมดดูมุมมองพนักงาน) แยก chunk โหลดเมื่อเปิดจริง → boot เร็วขึ้น
+   และ deploy ใหม่ไม่ต้องดาวน์โหลดทั้งก้อน · chunk หายหลัง deploy → main.tsx
+   ดัก vite:preloadError แล้ว reload ให้                                  */
+const AdminPanel = lazy(() => import("./components/admin/AdminPanel"));
+const EmployeeViewPreview = lazy(
+  () => import("./components/admin/EmployeeViewPreview"),
+);
+const KnowledgeView = lazy(
+  () => import("./components/knowledge/KnowledgeView"),
+);
+const ManualModal = lazy(() => import("./components/modals/ManualModal"));
+const SalaryView = lazy(() => import("./components/salary/SalaryView"));
+
+function LazyFallback() {
+  return (
+    <div className="py-12 flex justify-center">
+      <div className="w-8 h-8 rounded-full border-[3px] border-gold/30 border-t-maroon animate-spin" />
+    </div>
+  );
+}
 
 function UnlinkedEmployeeScreen({ onSignOut }: { onSignOut: () => void }) {
   return (
@@ -76,34 +95,9 @@ export default function LeaveApp() {
   const tab = location.pathname.replace("/", "") || "home";
 
   /* ─── Auth ─────────────────────────────────────────────────── */
-  const { user: authUser, signOut: authSignOut } = useAuth();
-
-  /* ─── Admin claim state ────────────────────────────────────── */
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminChecked, setAdminChecked] = useState(false);
-  useEffect(() => {
-    let active = true;
-    if (!authUser) {
-      setIsAdmin(false);
-      setAdminChecked(true);
-      return;
-    }
-    setAdminChecked(false);
-    authUser
-      .getIdTokenResult()
-      .then((result) => {
-        if (active) setIsAdmin(result.claims.admin === true);
-      })
-      .catch(() => {
-        if (active) setIsAdmin(false);
-      })
-      .finally(() => {
-        if (active) setAdminChecked(true);
-      });
-    return () => {
-      active = false;
-    };
-  }, [authUser]);
+  // isAdmin resolve เสร็จใน AuthContext ก่อน LeaveApp mount → data layer
+  // subscribe ด้วย scope สุดท้ายตั้งแต่ render แรก (ไม่รื้อ listener ทีหลัง)
+  const { user: authUser, isAdmin, signOut: authSignOut } = useAuth();
 
   /* ─── Data layer (Firebase) ────────────────────────────────── */
   const data = useAppData({
@@ -368,7 +362,7 @@ export default function LeaveApp() {
   });
 
   /* ─── Loading & Error states ───────────────────────────────── */
-  if (loading || !adminChecked) {
+  if (loading) {
     return <BootLoadingScreen message="เชื่อมต่อ Firebase..." />;
   }
   if (error) {
@@ -460,178 +454,180 @@ export default function LeaveApp() {
             {/* key=tab → fade เนื้อหาเข้าใหม่ทุกครั้งที่สลับแท็บหลัก (admin
                sub-section คุม fade เองใน AdminPanel · tab ไม่เปลี่ยน) */}
             <div key={tab} className="animate-[fadeIn_0.22s_ease-out]">
-              <Routes>
-                {/* HOME */}
-                <Route
-                  path="/home"
-                  element={
-                    viewIsAdmin ? (
-                      <Navigate to="/admin" replace />
-                    ) : (
-                      <HomeTab
-                        profile={viewProfile}
-                        allLeaves={allLeaves}
-                        employeeDirectory={employeeDirectory}
-                        currentEmployee={viewEmployee}
-                        roles={roles}
-                        duties={duties}
-                        dutyAssignmentsToday={dutyAssignmentsToday}
-                        storeCalendar={storeCalendar}
-                      />
-                    )
-                  }
-                />
-
-                {/* REQUEST */}
-                <Route
-                  path="/request"
-                  element={
-                    viewIsAdmin ? (
-                      <Navigate to="/admin" replace />
-                    ) : leaveForm.submitted ? (
-                      <SuccessScreen
-                        form={leaveForm.form}
-                        days={leaveForm.days}
-                        onReset={leaveForm.reset}
-                      />
-                    ) : (
-                      <RequestTab
-                        profile={viewProfile}
-                        allLeaves={allLeaves}
-                        form={leaveForm.form}
-                        setForm={leaveForm.setForm}
-                        errors={leaveForm.errors}
-                        histDetail={leaveForm.histDetail}
-                        setHistDetail={leaveForm.setHistDetail}
-                        myLeaves={leaveForm.myLeaves}
-                        balance={leaveForm.balance}
-                        used={leaveForm.used}
-                        days={leaveForm.days}
-                        remain={leaveForm.remain}
-                        overLimit={leaveForm.overLimit}
-                        onValidate={leaveForm.validateAndSetErrors}
-                        onSubmit={() => {
-                          if (blockInPreview()) return;
-                          if (viewProfile) leaveForm.submit(viewProfile);
-                        }}
-                        onResetForm={leaveForm.reset}
-                        onDelete={(id: string | number) => {
-                          if (blockInPreview()) return;
-                          leaveForm.handleDelete(id);
-                        }}
-                        storeCalendar={storeCalendar}
-                      />
-                    )
-                  }
-                />
-
-                {/* SALARY (employee view) */}
-                <Route
-                  path="/salary"
-                  element={
-                    viewIsAdmin ? (
-                      <Navigate to="/admin" replace />
-                    ) : viewSalaryDisabled ? (
-                      <Navigate to="/home" replace />
-                    ) : (
-                      <div className="min-h-full">
-                        <SalaryView
+              <Suspense fallback={<LazyFallback />}>
+                <Routes>
+                  {/* HOME */}
+                  <Route
+                    path="/home"
+                    element={
+                      viewIsAdmin ? (
+                        <Navigate to="/admin" replace />
+                      ) : (
+                        <HomeTab
                           profile={viewProfile}
-                          employeeId={viewEmployeeId}
-                          salaryData={salaryData}
                           allLeaves={allLeaves}
                           employeeDirectory={employeeDirectory}
-                          advanceRequests={myAdvanceRequests}
-                          onOpenAdvance={() => {
-                            if (blockInPreview()) return;
-                            setShowAdvanceModal(true);
-                          }}
+                          currentEmployee={viewEmployee}
                           roles={roles}
-                          payrollConfirms={payrollConfirms}
-                          poolAdjustments={poolAdjustments}
-                          employeeLoans={employeeLoans}
-                          storeCalendar={storeCalendar}
+                          duties={duties}
                           dutyAssignmentsToday={dutyAssignmentsToday}
-                          showToast={showToast}
-                          previewing={previewing}
+                          storeCalendar={storeCalendar}
                         />
-                      </div>
-                    )
-                  }
-                />
+                      )
+                    }
+                  />
 
-                {/* KNOWLEDGE — ความรู้ต่างๆ (ใช้ร่วม admin + employee) */}
-                <Route
-                  path="/knowledge"
-                  element={
-                    <KnowledgeView
-                      isAdmin={viewIsAdmin}
-                      showToast={showToast}
-                    />
-                  }
-                />
+                  {/* REQUEST */}
+                  <Route
+                    path="/request"
+                    element={
+                      viewIsAdmin ? (
+                        <Navigate to="/admin" replace />
+                      ) : leaveForm.submitted ? (
+                        <SuccessScreen
+                          form={leaveForm.form}
+                          days={leaveForm.days}
+                          onReset={leaveForm.reset}
+                        />
+                      ) : (
+                        <RequestTab
+                          profile={viewProfile}
+                          allLeaves={allLeaves}
+                          form={leaveForm.form}
+                          setForm={leaveForm.setForm}
+                          errors={leaveForm.errors}
+                          histDetail={leaveForm.histDetail}
+                          setHistDetail={leaveForm.setHistDetail}
+                          myLeaves={leaveForm.myLeaves}
+                          balance={leaveForm.balance}
+                          used={leaveForm.used}
+                          days={leaveForm.days}
+                          remain={leaveForm.remain}
+                          overLimit={leaveForm.overLimit}
+                          onValidate={leaveForm.validateAndSetErrors}
+                          onSubmit={() => {
+                            if (blockInPreview()) return;
+                            if (viewProfile) leaveForm.submit(viewProfile);
+                          }}
+                          onResetForm={leaveForm.reset}
+                          onDelete={(id: string | number) => {
+                            if (blockInPreview()) return;
+                            leaveForm.handleDelete(id);
+                          }}
+                          storeCalendar={storeCalendar}
+                        />
+                      )
+                    }
+                  />
 
-                {/* ADMIN */}
-                <Route
-                  path="/admin"
-                  element={
-                    viewIsAdmin ? (
-                      <AdminPanel
-                        section={adminSection}
-                        onSectionChange={tryChangeAdminSection}
-                        unsavedDirty={adminUnsavedDirty}
-                        onUnsavedDirtyChange={setAdminUnsavedDirty}
-                        allLeaves={allLeaves}
-                        leavesLoading={leavesLoading}
-                        advancesLoading={advancesLoading}
-                        dutiesLoading={dutiesLoading}
-                        loansLoading={loansLoading}
-                        rolesLoading={rolesLoading}
-                        employeeDirectory={employeeDirectory}
-                        onDelete={leaveForm.handleDelete}
-                        onAddLeave={addLeaveAction}
-                        onUpdateRole={handleUpdateRole}
-                        onDeleteEmployee={handleDeleteEmployee}
-                        onReorderEmployees={reorderEmployees}
-                        salaryData={salaryData}
-                        setSalaryData={setSalaryData}
-                        onSaveSalary={updateSalary}
-                        advanceRequests={advanceRequests}
-                        onUpdateAdvance={adminUpdateAdvance}
-                        roles={roles}
-                        onUpsertRole={upsertRole}
-                        duties={duties}
-                        dutyAssignmentsToday={dutyAssignmentsToday}
-                        onUpsertDuty={upsertDuty}
-                        onDeleteDuty={deleteDuty}
-                        onDeleteRole={deleteRole}
-                        payrollConfirms={payrollConfirms}
-                        poolAdjustments={poolAdjustments}
-                        onSetPoolAdjustment={setPoolAdjustment}
-                        employeeLoans={employeeLoans}
-                        onAddLoan={addEmployeeLoan}
-                        onUpdateLoan={updateEmployeeLoan}
-                        onDeleteLoan={deleteEmployeeLoan}
-                        onSetPayrollConfirm={setPayrollConfirm}
-                        onSyncAutoCarryAdvance={syncAutoCarryAdvance}
-                        storeCalendar={storeCalendar}
-                        onUpdateStoreCalendar={updateStoreCalendarAction}
+                  {/* SALARY (employee view) */}
+                  <Route
+                    path="/salary"
+                    element={
+                      viewIsAdmin ? (
+                        <Navigate to="/admin" replace />
+                      ) : viewSalaryDisabled ? (
+                        <Navigate to="/home" replace />
+                      ) : (
+                        <div className="min-h-full">
+                          <SalaryView
+                            profile={viewProfile}
+                            employeeId={viewEmployeeId}
+                            salaryData={salaryData}
+                            allLeaves={allLeaves}
+                            employeeDirectory={employeeDirectory}
+                            advanceRequests={myAdvanceRequests}
+                            onOpenAdvance={() => {
+                              if (blockInPreview()) return;
+                              setShowAdvanceModal(true);
+                            }}
+                            roles={roles}
+                            payrollConfirms={payrollConfirms}
+                            poolAdjustments={poolAdjustments}
+                            employeeLoans={employeeLoans}
+                            storeCalendar={storeCalendar}
+                            dutyAssignmentsToday={dutyAssignmentsToday}
+                            showToast={showToast}
+                            previewing={previewing}
+                          />
+                        </div>
+                      )
+                    }
+                  />
+
+                  {/* KNOWLEDGE — ความรู้ต่างๆ (ใช้ร่วม admin + employee) */}
+                  <Route
+                    path="/knowledge"
+                    element={
+                      <KnowledgeView
+                        isAdmin={viewIsAdmin}
                         showToast={showToast}
                       />
-                    ) : (
-                      <Navigate to="/home" replace />
-                    )
-                  }
-                />
+                    }
+                  />
 
-                {/* Catch-all: redirect to home */}
-                <Route
-                  path="*"
-                  element={
-                    <Navigate to={viewIsAdmin ? "/admin" : "/home"} replace />
-                  }
-                />
-              </Routes>
+                  {/* ADMIN */}
+                  <Route
+                    path="/admin"
+                    element={
+                      viewIsAdmin ? (
+                        <AdminPanel
+                          section={adminSection}
+                          onSectionChange={tryChangeAdminSection}
+                          unsavedDirty={adminUnsavedDirty}
+                          onUnsavedDirtyChange={setAdminUnsavedDirty}
+                          allLeaves={allLeaves}
+                          leavesLoading={leavesLoading}
+                          advancesLoading={advancesLoading}
+                          dutiesLoading={dutiesLoading}
+                          loansLoading={loansLoading}
+                          rolesLoading={rolesLoading}
+                          employeeDirectory={employeeDirectory}
+                          onDelete={leaveForm.handleDelete}
+                          onAddLeave={addLeaveAction}
+                          onUpdateRole={handleUpdateRole}
+                          onDeleteEmployee={handleDeleteEmployee}
+                          onReorderEmployees={reorderEmployees}
+                          salaryData={salaryData}
+                          setSalaryData={setSalaryData}
+                          onSaveSalary={updateSalary}
+                          advanceRequests={advanceRequests}
+                          onUpdateAdvance={adminUpdateAdvance}
+                          roles={roles}
+                          onUpsertRole={upsertRole}
+                          duties={duties}
+                          dutyAssignmentsToday={dutyAssignmentsToday}
+                          onUpsertDuty={upsertDuty}
+                          onDeleteDuty={deleteDuty}
+                          onDeleteRole={deleteRole}
+                          payrollConfirms={payrollConfirms}
+                          poolAdjustments={poolAdjustments}
+                          onSetPoolAdjustment={setPoolAdjustment}
+                          employeeLoans={employeeLoans}
+                          onAddLoan={addEmployeeLoan}
+                          onUpdateLoan={updateEmployeeLoan}
+                          onDeleteLoan={deleteEmployeeLoan}
+                          onSetPayrollConfirm={setPayrollConfirm}
+                          onSyncAutoCarryAdvance={syncAutoCarryAdvance}
+                          storeCalendar={storeCalendar}
+                          onUpdateStoreCalendar={updateStoreCalendarAction}
+                          showToast={showToast}
+                        />
+                      ) : (
+                        <Navigate to="/home" replace />
+                      )
+                    }
+                  />
+
+                  {/* Catch-all: redirect to home */}
+                  <Route
+                    path="*"
+                    element={
+                      <Navigate to={viewIsAdmin ? "/admin" : "/home"} replace />
+                    }
+                  />
+                </Routes>
+              </Suspense>
             </div>
           </div>
 
@@ -668,18 +664,24 @@ export default function LeaveApp() {
             />
           )}
 
-          {showManual && <ManualModal onClose={() => setShowManual(false)} />}
+          {showManual && (
+            <Suspense fallback={null}>
+              <ManualModal onClose={() => setShowManual(false)} />
+            </Suspense>
+          )}
 
           {/* แบนเนอร์/ตัวเลือก "ดูมุมมองพนักงาน" — เฉพาะ admin จริง
               (ปุ่มเข้าโหมดอยู่บน header ข้างปุ่มคู่มือ) */}
           {isAdmin && (
-            <EmployeeViewPreview
-              employees={employeeDirectory}
-              previewEmpId={previewEmpId}
-              onSelect={setPreviewEmpId}
-              pickerOpen={previewPickerOpen}
-              onPickerOpenChange={setPreviewPickerOpen}
-            />
+            <Suspense fallback={null}>
+              <EmployeeViewPreview
+                employees={employeeDirectory}
+                previewEmpId={previewEmpId}
+                onSelect={setPreviewEmpId}
+                pickerOpen={previewPickerOpen}
+                onPickerOpenChange={setPreviewPickerOpen}
+              />
+            </Suspense>
           )}
 
           {pendingSection && (

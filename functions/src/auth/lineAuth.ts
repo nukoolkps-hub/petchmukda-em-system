@@ -2,7 +2,7 @@
  * lineAuth — LINE Login → Firebase Custom Token
  */
 
-import { getAuth, type Auth, type UserRecord } from "firebase-admin/auth";
+import { type Auth, getAuth, type UserRecord } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import {
@@ -12,8 +12,7 @@ import {
 } from "../helpers/config.js";
 import { parseLineAuthPayload } from "../helpers/payload.js";
 
-const UNPROVISIONED_LINE_USER_MESSAGE =
-	"บัญชี LINE นี้ยังไม่ได้ถูกเพิ่มโดยผู้ดูแลระบบ";
+const UNPROVISIONED_LINE_USER_MESSAGE = "บัญชี LINE นี้ยังไม่ได้ถูกเพิ่มโดยผู้ดูแลระบบ";
 
 /** atomically validate + consume OAuth state · single-use (delete in same txn)
  *  · CSRF defense ฝั่ง server (เพิ่มจาก client sessionStorage check) */
@@ -92,16 +91,19 @@ export const lineAuth = onCall(async (request) => {
 			profile.displayName,
 			profile.pictureUrl,
 		);
-		await auth.setCustomUserClaims(profile.userId, {
-			...(user.customClaims || {}),
-			admin: true,
-		});
+		// เขียน claim เฉพาะเมื่อยังไม่มี — ประหยัด 1 round-trip ต่อ login
+		const existingClaims = (user.customClaims || {}) as { admin?: boolean };
+		if (existingClaims.admin !== true) {
+			await auth.setCustomUserClaims(profile.userId, {
+				...existingClaims,
+				admin: true,
+			});
+		}
 
-		// ทุกครั้งที่ admin "ของจริง" login เข้ามา ให้กวาด admin claim ที่ค้าง
-		// จากคนที่ไม่อยู่ใน ADMIN_LINE_USER_ID อีกแล้วทิ้งให้หมด (เคย bootstrap
-		// หรือเคยตั้ง setAdmin ไว้ แต่ตอนนี้ไม่ใช่ admin แล้ว) — ไม่ต้องรอให้
-		// user คนนั้น login ใหม่
-		await revokeStaleAdminClaims(auth, config.ADMIN_LINE_USER_ID);
+		// การกวาด admin claim ที่ค้างจากคนที่ไม่อยู่ใน ADMIN_LINE_USER_ID แล้ว
+		// ย้ายไป scheduled function `revokeStaleAdminClaimsScheduled` (ทุกวัน
+		// 04:30) — เดิมทำตรงนี้ทุกครั้งที่ admin login (listUsers 1000 + revoke
+		// ทีละคน) ทำให้ user รอหน้า loading นานเกิน 10s จน auto-reload ตัดหน้า
 
 		const customToken = await auth.createCustomToken(profile.userId, {
 			admin: true,
@@ -137,7 +139,10 @@ export const lineAuth = onCall(async (request) => {
 		}
 	} catch (error) {
 		if ((error as { code?: string }).code === "auth/user-not-found") {
-			throw new HttpsError("permission-denied", UNPROVISIONED_LINE_USER_MESSAGE);
+			throw new HttpsError(
+				"permission-denied",
+				UNPROVISIONED_LINE_USER_MESSAGE,
+			);
 		}
 		throw error;
 	}
@@ -168,50 +173,6 @@ export const lineAuth = onCall(async (request) => {
 	};
 });
 
-/**
- * กวาด admin custom claim จาก user ที่ไม่ได้อยู่ใน ADMIN_LINE_USER_ID
- * รองรับสูงสุด 1000 users ต่อ batch (เพียงพอสำหรับร้านเล็ก)
- */
-async function revokeStaleAdminClaims(
-	auth: Auth,
-	configValue: string | undefined,
-): Promise<void> {
-	const allowedAdminIds = new Set(
-		configValue
-			?.split(/[,\s]+/)
-			.map((value) => value.trim())
-			.filter(Boolean) || [],
-	);
-
-	try {
-		const { users } = await auth.listUsers(1000);
-		let revokedCount = 0;
-		for (const user of users) {
-			const claims = (user.customClaims || {}) as {
-				admin?: boolean;
-				[key: string]: unknown;
-			};
-			if (claims.admin === true && !allowedAdminIds.has(user.uid)) {
-				const { admin: _droppedAdmin, ...rest } = claims;
-				await auth.setCustomUserClaims(user.uid, rest);
-				await auth.revokeRefreshTokens(user.uid);
-				revokedCount++;
-				console.log(
-					`[revokeStaleAdminClaims] revoked admin claim from ${user.uid}`,
-				);
-			}
-		}
-		if (revokedCount > 0) {
-			console.log(
-				`[revokeStaleAdminClaims] cleaned up ${revokedCount} stale admin(s)`,
-			);
-		}
-	} catch (err) {
-		// ไม่ throw — ถ้า scan fail อย่างน้อย admin จริงยัง login ได้ปกติ
-		console.error("[revokeStaleAdminClaims] scan failed:", err);
-	}
-}
-
 async function ensureLineAuthUser(
 	auth: Auth,
 	uid: string,
@@ -223,13 +184,11 @@ async function ensureLineAuthUser(
 		...(photoURL ? { photoURL } : {}),
 	};
 
+	// round-trip เดียว: updateUser คืน UserRecord (รวม customClaims) อยู่แล้ว —
+	// ไม่ต้อง getUser → updateUser → getUser (3 เที่ยว) เหมือนเดิม
 	try {
-		const user = await auth.getUser(uid);
-		if (Object.keys(profileUpdate).length > 0) {
-			await auth.updateUser(uid, profileUpdate);
-			return auth.getUser(uid);
-		}
-		return user;
+		if (Object.keys(profileUpdate).length === 0) return await auth.getUser(uid);
+		return await auth.updateUser(uid, profileUpdate);
 	} catch (error) {
 		if ((error as { code?: string }).code !== "auth/user-not-found") {
 			throw error;

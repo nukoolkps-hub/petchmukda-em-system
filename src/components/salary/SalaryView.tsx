@@ -33,7 +33,6 @@ import {
   loanRemainingAsOfMonth,
 } from "../../firebase/employeeLoans";
 import { printSalaryCertificate } from "../../print/printSalaryCertificate";
-import { printSalarySlip } from "../../print/printSalarySlip";
 import {
   isLineWebview,
   openInExternalBrowser,
@@ -302,10 +301,14 @@ export default function SalaryView({
     setShowSlipPrintModal(true);
   }
 
-  function doPrintSlip(opts: {
+  async function doPrintSlip(opts: {
     hiddenEarnIds?: Set<string>;
     hiddenDedIds?: Set<string>;
   }) {
+    // lazy-import — pdfmake + font ใหญ่ · โหลดเฉพาะตอนกดพิมพ์จริง (ตรงกับ
+    // PayrollSummaryPanel ที่ import แบบ dynamic อยู่แล้ว — ถ้า static ตรงนี้
+    // ทั้งสองที่จะรวมเข้า chunk หลัก)
+    const { printSalarySlip } = await import("../../print/printSalarySlip");
     printSalarySlip({
       profile,
       employeeInfo,
