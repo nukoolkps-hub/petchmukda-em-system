@@ -13,13 +13,16 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
-import { formatMatrixValue } from "../../print/payrollMatrixPDF";
 import {
   buildPoolSharesByGroup,
   computeEmployeeMonthRow,
 } from "../../utils/payrollCompute";
 import { isMonthLocked } from "../../utils/payrollLock";
-import { buildPayrollMatrix, type MatrixRow } from "../../utils/payrollMatrix";
+import {
+  buildPayrollMatrix,
+  formatMatrixValue,
+  type MatrixRow,
+} from "../../utils/payrollMatrix";
 import MonthChevronNav from "../shared/MonthChevronNav";
 
 interface Props {

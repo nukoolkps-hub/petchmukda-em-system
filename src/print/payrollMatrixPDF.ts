@@ -3,7 +3,11 @@
    ใช้ pdfmake + ฟอนต์ Sarabun (lazy-load เหมือนสลิป/ใบรับรอง)
    หน้ากระดาษเลือกตามจำนวนคน: ≤6 คน = A4 · มากกว่านั้น = A3 (ไม่บีบจนอ่านไม่ออก) */
 
-import type { MatrixRow, PayrollMatrix } from "../utils/payrollMatrix";
+import {
+  formatMatrixMoney,
+  formatMatrixValue,
+  type PayrollMatrix,
+} from "../utils/payrollMatrix";
 import { openPDFBlob } from "./webviewHelpers";
 
 const MAROON = "#7B1C1C";
@@ -33,31 +37,6 @@ function monthLabelTH(yearMonth: string): string {
     .map(Number);
   if (!y || !m) return yearMonth;
   return `${THAI_MONTHS[m - 1]} ${y + 543}`;
-}
-
-const money = (n: number) =>
-  n.toLocaleString("th-TH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
-/** จัดรูปค่าตามชนิดของแถว — ให้ตรงกับที่แสดงบนหน้าจอ */
-export function formatMatrixValue(
-  value: number | string | null,
-  kind: MatrixRow["kind"],
-): string {
-  if (value === null || value === undefined || value === "") return "";
-  if (typeof value === "string") return value;
-  switch (kind) {
-    case "percent":
-      return `${value.toLocaleString("th-TH", { maximumFractionDigits: 2 })}%`;
-    case "int":
-      return value.toLocaleString("th-TH", { maximumFractionDigits: 0 });
-    case "pieces":
-      return value.toLocaleString("th-TH", { maximumFractionDigits: 2 });
-    default:
-      return money(value);
-  }
 }
 
 function buildDocDef(matrix: PayrollMatrix) {
@@ -146,7 +125,7 @@ function buildDocDef(matrix: PayrollMatrix) {
             stack: [
               { text: "รวมสุทธิที่ต้องจ่าย", style: "subtitle", alignment: "right" },
               {
-                text: `${money(matrix.netTotal)} บาท`,
+                text: `${formatMatrixMoney(matrix.netTotal)} บาท`,
                 style: "netTotal",
                 alignment: "right",
               },

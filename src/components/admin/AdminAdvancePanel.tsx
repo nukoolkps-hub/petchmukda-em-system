@@ -14,7 +14,7 @@ import { COLORS, THAI_MONTH_NAMES } from "../../constants";
 import { useAdvancesByStatusAndMonth } from "../../firebase/hooks/useFirestore";
 import { uploadAdvanceSlip } from "../../firebase/storage";
 import { formatBankAccount } from "../../utils/bankFormat";
-import { currentYearMonth } from "../../utils/dateUtils";
+import { currentYearMonth, fmtThaiDateTime } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
 import AvatarCircle from "../shared/AvatarCircle";
@@ -276,7 +276,6 @@ export default function AdminAdvancePanel({
               },
             };
             const s = sMap[request.status] || sMap.pending;
-            const date = new Date(request.submittedAt);
             return (
               <div
                 key={request.id}
@@ -305,13 +304,7 @@ export default function AdminAdvancePanel({
                         request.employeeName}
                     </div>
                     <div className="text-xs text-txt-soft">
-                      {date.toLocaleDateString("th-TH", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {fmtThaiDateTime(request.submittedAt)}
                     </div>
                   </div>
                   <span

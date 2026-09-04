@@ -177,6 +177,11 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
   → signInWithCustomToken → เข้าระบบ
 ```
 
+- **`AuthContext` resolve admin claim ก่อนปล่อย** — `loading` เป็น false ก็ต่อเมื่อ `user` + `isAdmin` พร้อมทั้งคู่ · `LeaveApp` อ่าน `isAdmin` จาก `useAuth()` (ไม่ resolve เอง) → data layer subscribe ด้วย scope สุดท้ายตั้งแต่ render แรก ไม่รื้อ listener ทีหลัง
+- **LINE callback:** `AuthContext` ล้าง `?code&state` ออกจาก URL **ก่อน** เรียก `completeLineLogin({ code, state })` (code/state single-use · reload กลางทางต้องไม่ replay) และส่ง `autoReload={false}` ให้ `BootLoadingScreen` ระหว่างแลก token (cold start ของ `lineAuth` ช้าได้เกิน 10s · auto-reload จะตัดหน้าแล้ว login ล้มทั้งรอบ) · ปุ่ม "Login ด้วย LINE" disable ระหว่างรอ `prepareLineLogin` (กดซ้ำ = state ใหม่ทับ localStorage → "State mismatch")
+- **`lineAuth` ต้องเบา** — ไม่มีงาน batch บน login path · การกวาด admin claim ค้างอยู่ที่ scheduled `revokeStaleAdminClaimsScheduled` (04:30 ทุกวัน · `functions/src/auth/revokeStaleAdminClaims.ts`) · `googleapis`/`@anthropic-ai/sdk` import แบบ lazy เฉพาะในสรุปเช้า (ทุก function แชร์ module graph — top-level import ทำให้ทุก instance cold start ช้า)
+- **Code splitting:** `App.tsx` lazy-load `AdminPanel` · `KnowledgeView` · `SalaryView` · `ManualModal` · `EmployeeViewPreview` (React.lazy + Suspense) · pdf module import แบบ dynamic เท่านั้น (ห้าม static import `print/*PDF` / `printSalarySlip` จาก component — จะดึงเข้า chunk หลัก · helper ที่หน้าจอใช้ร่วมให้วางใน `utils/` เช่น `formatMatrixValue`)
+
 ## Key Source Files
 
 | Path | Description |
@@ -198,7 +203,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `src/utils/leaveUtils.ts` | นับวันลา, คำนวณ over-quota |
 | `src/utils/pdfFonts.ts` | Lazy-load + register Sarabun font กับ pdfmake (`addVirtualFileSystem`) |
 | `src/firebase/auth.ts` | LINE Login + auth helpers |
-| `src/contexts/AuthContext.tsx` | Auth state provider |
+| `src/contexts/AuthContext.tsx` | Auth state provider — `user` · `isAdmin` (resolve claim ก่อน `loading=false`) · `handlingCallback` · จัดการ LINE callback |
 | `public/fonts/Sarabun-*.ttf` | Self-host Thai font (CSP block CDN ภายนอก) |
 | `functions/src/index.ts` | Cloud Functions barrel exports + `setGlobalOptions({ serviceAccount: "petchmukda-bot@appspot.gserviceaccount.com" })` |
 | `functions/src/line/` | LINE Bot webhook + commands (`ทดสอบแจ้งเตือน`, `คำสั่ง`, `ไอดีกลุ่ม`, ฯลฯ) |

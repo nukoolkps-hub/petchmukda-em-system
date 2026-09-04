@@ -404,3 +404,32 @@ export function buildPayrollMatrix(
     netTotal: netRow.total ?? 0,
   };
 }
+
+/* ─── Display formatting ─────────────────────────────────────────
+   อยู่ใน utils (ไม่ใช่ print/) เพราะหน้าจอ PayrollMatrixPanel ใช้ด้วย — ถ้า
+   import จาก payrollMatrixPDF จะดึง pdf module เข้า chunk หลักและทำให้
+   dynamic import ของปุ่มดาวน์โหลด PDF ไม่แยก chunk                    */
+export const formatMatrixMoney = (n: number) =>
+  n.toLocaleString("th-TH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+/** จัดรูปค่าตามชนิดของแถว — ให้ตรงกับที่แสดงบนหน้าจอ */
+export function formatMatrixValue(
+  value: number | string | null,
+  kind: MatrixRow["kind"],
+): string {
+  if (value === null || value === undefined || value === "") return "";
+  if (typeof value === "string") return value;
+  switch (kind) {
+    case "percent":
+      return `${value.toLocaleString("th-TH", { maximumFractionDigits: 2 })}%`;
+    case "int":
+      return value.toLocaleString("th-TH", { maximumFractionDigits: 0 });
+    case "pieces":
+      return value.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+    default:
+      return formatMatrixMoney(value);
+  }
+}

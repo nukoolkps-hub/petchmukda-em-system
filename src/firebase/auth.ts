@@ -1,16 +1,12 @@
 /* ─── Authentication ────────────────────────────────────────────
-   Firebase Auth — รองรับ:
-   ✅ Google Sign-in (พร้อมใช้)
-   ✅ LINE Login (ผ่าน Cloud Function)
-   ✅ Email/Password (สำหรับ admin)                                */
+   Firebase Auth — LINE Login (ผ่าน Cloud Function) + Dev mode (emulator)
+   · ระบบใช้ LINE Login ทางเดียว — Google/Email provider ถูกถอดออกแล้ว
+     (ไม่มีที่เรียก · ลด bundle บน boot path)                        */
 
 import {
   signOut as fbSignOut,
-  GoogleAuthProvider,
   onAuthStateChanged,
   signInWithCustomToken,
-  signInWithEmailAndPassword,
-  signInWithPopup,
 } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
 import {
@@ -19,9 +15,6 @@ import {
   takeLoginState,
 } from "../utils/loginState";
 import { auth, functions } from "./config";
-
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" });
 
 const lineAuthFn = httpsCallable(functions, "lineAuth");
 const prepareLineLoginFn = httpsCallable(functions, "prepareLineLogin");
@@ -38,22 +31,6 @@ export type SeedLineConfigResult = {
   skipped?: boolean;
   seededKeys: string[];
 };
-
-/* ─── Google Sign-in ────────────────────────────────────────── */
-export async function signInWithGoogle() {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user; // { uid, email, displayName, photoURL }
-  } catch (err: unknown) {
-    const e = err as { code?: string };
-    console.error("[Auth] Google sign-in failed:", err);
-    throw new Error(
-      e.code === "auth/popup-closed-by-user"
-        ? "ยกเลิกการลงชื่อเข้าใช้"
-        : "ลงชื่อเข้าใช้ไม่สำเร็จ",
-    );
-  }
-}
 
 /* ─── LINE Login (full flow) ─────────────────────────────────
    ขั้นที่ 1: ขอ state จาก server → redirect → LINE Login URL
@@ -91,17 +68,18 @@ export async function startLineLogin({ channelId, redirectUri }) {
  * ขั้นที่ 2: หลัง LINE redirect กลับมา (frontend callback page)
  * ส่ง code → Cloud Function → ได้ Firebase Custom Token → sign in
  *
+ * รับ code/state เป็น param (ไม่อ่านจาก URL เอง) — AuthContext ล้าง query
+ * ออกจาก URL ก่อนเรียก เพื่อให้ reload ระหว่างแลก token ไม่ replay code เดิม
+ *
  * @returns {Promise<User>}
  */
-export async function completeLineLogin() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get("code");
-  const state = params.get("state");
-  const error = params.get("error");
-
-  if (error) {
-    throw new Error(`LINE Login error: ${error}`);
-  }
+export async function completeLineLogin({
+  code,
+  state,
+}: {
+  code: string;
+  state: string;
+}) {
   if (!code) {
     throw new Error("ไม่พบ authorization code จาก LINE");
   }
@@ -156,22 +134,6 @@ export async function signInWithDevRole(role: DevRole) {
 export async function seedLineConfigFromEnv() {
   const result = await seedLineConfigFromEnvFn();
   return result.data as SeedLineConfigResult;
-}
-
-/* ─── Email/Password (Admin) ────────────────────────────────── */
-export async function signInWithEmail(email, password) {
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    return result.user;
-  } catch (err: unknown) {
-    const e = err as { code?: string };
-    console.error("[Auth] Email sign-in failed:", err);
-    throw new Error(
-      e.code === "auth/wrong-password" || e.code === "auth/user-not-found"
-        ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
-        : "ลงชื่อเข้าใช้ไม่สำเร็จ",
-    );
-  }
 }
 
 /* ─── Sign Out ──────────────────────────────────────────────── */

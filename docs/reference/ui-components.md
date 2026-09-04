@@ -143,7 +143,6 @@ header ไม่รู้จัก data — ยิง `window.dispatchEvent(new 
 | useLeaveForm | `hooks/useLeaveForm.ts` | Leave request form state + validation |
 | useProfile | `hooks/useProfile.ts` | Profile state from auth + employee data |
 | useLineNotifications | `hooks/useLineNotifications.ts` | LINE notification for advances |
-| useAuth | `firebase/hooks/useAuth.ts` | Firebase auth state listener |
 | useFirestore | `firebase/hooks/useFirestore.ts` | Firestore real-time subscription hooks |
 
 ## Print / PDF

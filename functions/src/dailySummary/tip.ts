@@ -7,10 +7,17 @@
  * - บันทึก tip ใหม่ลง Firestore กันซ้ำในรอบถัดไป
  */
 
-import Anthropic from "@anthropic-ai/sdk";
+// type-only — SDK ตัวจริง import แบบ lazy ใน generateDailyTip (ลด cold start
+// ของทุก function ที่แชร์ module graph เดียวกัน · ใช้เฉพาะสรุปเช้า)
+import type Anthropic from "@anthropic-ai/sdk";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAppFirestore } from "../helpers/config.js";
-import { AI_MAX_TOKENS, AI_MODEL, RECENT_TIPS_LIMIT, TIP_RETRY_LIMIT } from "./config.js";
+import {
+	AI_MAX_TOKENS,
+	AI_MODEL,
+	RECENT_TIPS_LIMIT,
+	TIP_RETRY_LIMIT,
+} from "./config.js";
 
 export interface DailyTip {
 	description: string;
@@ -21,7 +28,8 @@ export interface DailyTip {
 export async function generateDailyTip(
 	anthropicApiKey: string,
 ): Promise<DailyTip> {
-	const client = new Anthropic({ apiKey: anthropicApiKey });
+	const { default: AnthropicSDK } = await import("@anthropic-ai/sdk");
+	const client = new AnthropicSDK({ apiKey: anthropicApiKey });
 	const recentTips = await getRecentTips();
 	const systemPrompt = buildSystemPrompt();
 
@@ -89,9 +97,8 @@ export function parseTipParts(tipText: string): {
 
 	if (!result.summary && result.description) {
 		const firstLine = result.description.split("\n")[0];
-		result.summary = firstLine.length > 30
-			? `${firstLine.substring(0, 30)}…`
-			: firstLine;
+		result.summary =
+			firstLine.length > 30 ? `${firstLine.substring(0, 30)}…` : firstLine;
 	}
 
 	return result;

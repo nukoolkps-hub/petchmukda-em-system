@@ -29,6 +29,8 @@ export { devAuth } from "./auth/devAuth.js";
 export { lineAuth } from "./auth/lineAuth.js";
 // OAuth state token issuer — server-side CSRF defense (pair กับ lineAuth)
 export { prepareLineLogin } from "./auth/prepareLineLogin.js";
+// กวาด admin claim ค้าง (ย้ายออกจาก login path ของ lineAuth · ทุกวัน 04:30)
+export { revokeStaleAdminClaimsScheduled } from "./auth/revokeStaleAdminClaims.js";
 export { seedLineConfigFromEnv } from "./auth/seedLineConfigFromEnv.js";
 export { setAdmin } from "./auth/setAdmin.js";
 // Backup

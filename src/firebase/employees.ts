@@ -4,7 +4,6 @@ import {
   deleteDoc,
   doc,
   getDoc,
-  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -60,12 +59,6 @@ export function subscribeEmployeeByLineUserId(lineUserId, onChange, onError) {
   );
 }
 
-/* ─── Read All (one-time) ───────────────────────────────────── */
-export async function getAllEmployees() {
-  const snap = await getDocs(query(ref, orderBy("name")));
-  return sortByDisplayOrder(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-}
-
 /* ─── Batch update displayOrder — ใช้ตอน admin ลาก reorder card ─── */
 export async function reorderEmployees(orderedIds) {
   await Promise.all(
@@ -82,14 +75,6 @@ export async function reorderEmployees(orderedIds) {
 export async function getEmployee(id) {
   const snap = await getDoc(doc(ref, id));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
-}
-
-/* ─── Find by LINE User ID (for LINE Login) ───────────────────── */
-export async function getEmployeeByLineId(lineUserId) {
-  const snap = await getDocs(query(ref, where("lineUserId", "==", lineUserId)));
-  if (snap.empty) return null;
-  const d = snap.docs[0];
-  return { id: d.id, ...d.data() };
 }
 
 /* ─── Create / Update ─────────────────────────────────────────

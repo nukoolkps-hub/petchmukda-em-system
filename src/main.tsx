@@ -26,14 +26,21 @@ window.addEventListener("load", () => {
 
 /* ─── Auth Gate — show login or app based on auth state ──── */
 function AuthGate() {
-  const { user, loading, error } = useAuth();
+  const { user, loading, handlingCallback, error } = useAuth();
 
   if (loading) {
-    return <BootLoadingScreen message="กำลังเข้าสู่ระบบ..." />;
+    // ระหว่างแลก LINE code ห้าม auto-reload — code/state ถูกล้างจาก URL แล้ว
+    // reload กลางทาง = login รอบนี้หายไปทั้งที่ server กำลังจะตอบกลับ
+    return (
+      <BootLoadingScreen
+        message="กำลังเข้าสู่ระบบ..."
+        autoReload={!handlingCallback}
+      />
+    );
   }
 
   if (!user) {
-    return <LoginScreen loading={false} error={error} />;
+    return <LoginScreen error={error} />;
   }
 
   return <LeaveApp />;
