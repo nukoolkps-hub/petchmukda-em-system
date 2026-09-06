@@ -257,6 +257,9 @@ export default function LeaveApp() {
     addLeave: addLeaveAction,
     deleteLeave: deleteLeaveAction,
     authUid: viewEmployeeId,
+    // ตอน "ดูมุมมองพนักงาน" ต้องติดเส้นตายเหมือนพนักงาน (preview ต้องเห็น
+    // สิ่งที่พนักงานคนนั้นเห็นเป๊ะ) — `viewIsAdmin` คือ admin ที่ไม่ได้ preview
+    isAdmin: viewIsAdmin,
     showToast,
   });
 

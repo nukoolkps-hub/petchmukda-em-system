@@ -39,6 +39,18 @@ service cloud.firestore {
         + '-' + pad2(bangkokTime().day());
     }
 
+    // พนักงาน "ยกเลิก (ลบ) ใบลาของตัวเอง" ได้ถึงก่อน 09:00 (เวลาไทย) ของวันแรกที่ลา
+    // - วันในอนาคต → ได้ตลอด
+    // - วันนี้ → ได้ถึง 08:59 · 09:00 เป็นต้นไปล็อก (07:30 บอทประกาศคนหยุดเข้ากลุ่ม
+    //   + หน้าที่ประจำวันจัดคนแทนไปแล้ว — ลบทีหลังได้ = วันลาที่ทีมรับรู้แล้วหายไป
+    //   แล้วโควต้า/โบนัสขยัน/เงินเดือนเพี้ยน)
+    // - ใบลาที่เริ่มไปแล้ว → ล็อก · admin ลบให้ได้ (จำกัดด้วยการปิดรอบ 7 วันแทน)
+    // คู่กับฝั่ง UI: `canCancelLeave` ใน src/utils/leaveUtils.ts (กฎเดียวกัน 2 ชั้น)
+    function canSelfCancelLeave(startYmd) {
+      return startYmd > bangkokToday()
+        || (startYmd == bangkokToday() && bangkokTime().hours() < 9);
+    }
+
     // ─── Payroll month lock ──────────────────────────────────────
     // เดือน (YYYY-MM) ถูก "ปิดรอบถาวร" เมื่อพ้น lockAtMs (= ยืนยันยอดครั้งแรก
     // + 7 วัน) ที่เก็บไว้ใน payrollConfirms/{ym}. ใช้ร่วมกับฝั่ง UI
@@ -232,12 +244,12 @@ service cloud.firestore {
         && validLeaveCreate()
         && !monthLocked(request.resource.data.start[0:7]);
       allow update: if isAdmin() && !monthLocked(resource.data.start[0:7]);
-      // ลบเอง: เฉพาะใบลาที่ยังไม่เริ่ม (start > วันนี้)
-      // วันนี้และอดีต: admin เท่านั้น · เดือนปิดรอบแล้วลบไม่ได้
+      // ลบเอง: ถึงก่อน 09:00 (เวลาไทย) ของวันแรกที่ลา — ดู canSelfCancelLeave()
+      // หลังจากนั้นและอดีต: admin เท่านั้น · เดือนปิดรอบแล้วลบไม่ได้
       allow delete: if !monthLocked(resource.data.start[0:7])
         && (isAdmin()
           || (isEmployeeOwner(resource.data.employeeId)
-            && resource.data.start > bangkokToday()));
+            && canSelfCancelLeave(resource.data.start)));
     }
 
     // ─── Salaries ────────────────────────────────────────────────

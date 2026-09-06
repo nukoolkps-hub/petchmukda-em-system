@@ -3,7 +3,35 @@ import { BUSINESS_RULES } from "../constants";
 import type { StoreCalendar } from "../types";
 import { dateToYmd, isQuotaCountableDay, isStoreClosed } from "./storeCalendar";
 
-const { WEEKDAY_LEAVE_QUOTA } = BUSINESS_RULES;
+const { WEEKDAY_LEAVE_QUOTA, LEAVE_CANCEL_CUTOFF_HOUR } = BUSINESS_RULES;
+
+/** พนักงาน "ยกเลิก (ลบ) ใบลาของตัวเอง" ใบนี้ได้อยู่ไหม ณ เวลา `now`
+ *  = ยังไม่ถึง `LEAVE_CANCEL_CUTOFF_HOUR` (09:00) ของ **วันแรกที่ลา**
+ *
+ *  - ใบลาวันอนาคต → ยกเลิกได้ตลอด (ยังไม่ถึงเช้าวันนั้น)
+ *  - ใบลาของวันนี้ → ยกเลิกได้ถึง 08:59 · 09:00 เป็นต้นไป ล็อก
+ *  - ใบลาที่เริ่มไปแล้ว → ล็อก
+ *
+ *  **admin ไม่อยู่ใต้กฎนี้** — ลบให้ได้ตลอดจนกว่าเดือนนั้นจะปิดรอบ (7 วัน)
+ *
+ *  กฎเดียวกันถูกบังคับ 2 ชั้น: UI เรียกฟังก์ชันนี้ (ซ่อนปุ่ม + กัน submit) และ
+ *  `firestore.rules` (`canSelfCancelLeave`) ตัดสินซ้ำฝั่ง server ด้วยเวลาไทย —
+ *  หน้าที่เปิดค้างข้ามเส้นตายจึงลบไม่ได้จริง แม้ปุ่มจะยังค้างอยู่บนจอ           */
+export function canCancelLeave(
+  startYmd: string,
+  now: Date = new Date(),
+): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startYmd)) return false;
+  const [y, m, d] = startYmd.split("-").map((v) => parseInt(v, 10));
+  const cutoff = new Date(y, m - 1, d, LEAVE_CANCEL_CUTOFF_HOUR, 0, 0, 0);
+  return now.getTime() < cutoff.getTime();
+}
+
+/** ข้อความอธิบายเส้นตายยกเลิกใบลา — ใช้ทั้ง toast และคำอธิบายใต้รายการ
+ *  (อ่านชั่วโมงจาก BUSINESS_RULES ไม่ hardcode "9" ในข้อความ)              */
+export const LEAVE_CANCEL_CUTOFF_TEXT = `ยกเลิกใบลาเองได้ถึงก่อน ${String(
+  LEAVE_CANCEL_CUTOFF_HOUR,
+).padStart(2, "0")}:00 ของวันแรกที่ลา`;
 
 /** วันที่ลาควรนับเข้า "วันธรรมดา" (โควต้า) ไหม
  *  = ร้านเปิด AND ไม่ใช่อาทิตย์ (อาทิตย์คิดแยก × 1.5)

@@ -225,7 +225,32 @@ Source: `src/utils/salaryUtils.ts` → `computePoolSharesForGroup()` · snapshot
 - **UI ป้องกันชั้นแรก:** `RequestTab` ปฏิทินวันที่เริ่ม/สิ้นสุด cap `maxDate = TODAY+14` เมื่อเลือกลาป่วย · `validate()` เป็น defense layer
 - **ผู้ดูแล (admin)** เพิ่มใบลาให้พนักงานผ่าน `LeaveListPanel` ได้โดยไม่ติดกฎเหล่านี้ (override เคสลืมกดลา)
 
-Source: `src/utils/leaveUtils.ts` · `src/hooks/useLeaveForm.ts` · `src/components/home/RequestTab.tsx`
+### เส้นตายยกเลิก (ลบ) ใบลาเอง — 09:00 ของวันแรกที่ลา
+
+`canCancelLeave(startYmd, now)` ใน `src/utils/leaveUtils.ts` = **single source** ของกฎนี้ ·
+ชั่วโมงตัดอยู่ที่ `BUSINESS_RULES.LEAVE_CANCEL_CUTOFF_HOUR` (= 9)
+
+| ใบลา | พนักงานลบเอง |
+|---|---|
+| วันข้างหน้า | ✅ ได้ตลอด |
+| วันนี้ · ก่อน 09:00 | ✅ ได้ (เปลี่ยนใจมาทำงาน ทันร้านเปิด) |
+| วันนี้ · ตั้งแต่ 09:00 | ❌ ล็อก |
+| เริ่มลาไปแล้ว (รวมใบลาหลายวันที่ยังไม่จบ) | ❌ ล็อก — ยึด 09:00 ของ**วันแรก** |
+
+**ทำไม 09:00:** 07:30 บอทประกาศรายชื่อคนหยุดเข้ากลุ่ม LINE (+ ตามคนลาเพิ่ม 08:30) และ
+`recomputeDutyAssignments` จัดคนแทนของวันนั้นไปแล้ว — ปล่อยให้ลบทีหลังได้ = วันลาที่ทีมรับรู้
+ไปแล้วหายจากระบบ แล้ว **โควต้า / โบนัสขยัน / ยอดหักในสลิป เพี้ยนจากความจริง**
+
+**ล็อก 2 ชั้น** (pattern เดียวกับปิดรอบ 7 วัน):
+1. **UI** — `RequestTab` ซ่อนปุ่มลบ + `useLeaveForm.handleDelete` เช็คซ้ำด้วยเวลา "ตอนกด"
+   (หน้าที่เปิดค้างข้ามเส้นตายปุ่มยังโชว์ได้ → ต้องดักตรง submit ไม่ใช่แค่ตอน render)
+2. **Server** — `firestore.rules` → `canSelfCancelLeave(startYmd)` ตัดสินด้วย **เวลาไทย
+   ฝั่ง server** (`bangkokTime().hours() < 9`) — client ปรับนาฬิกาเครื่องแล้วเลี่ยงไม่ได้
+
+**admin ไม่อยู่ใต้กฎนี้** — ลบใบลาของใครก็ได้จนกว่าเดือนนั้นจะปิดรอบ (7 วัน) ·
+ตอน admin "ดูมุมมองพนักงาน" ติดเส้นตายเหมือนพนักงาน (`isAdmin: viewIsAdmin` ใน `App.tsx`)
+
+Source: `src/utils/leaveUtils.ts` · `src/hooks/useLeaveForm.ts` · `src/components/home/RequestTab.tsx` · `firestore.rules`
 
 ## ปฏิทินเปิด-ปิดร้าน (storeCalendar)
 

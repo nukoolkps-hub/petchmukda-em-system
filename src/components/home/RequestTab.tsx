@@ -7,6 +7,7 @@ import {
   CalendarRange as IconCalendarRange,
   ChevronRight as IconChevronRight,
   ClipboardList as IconClipboardList,
+  Lock as IconLock,
   ShieldCheck as IconShieldCheck,
   Sun as IconSun,
   Trash2 as IconTrash,
@@ -14,8 +15,13 @@ import {
 import { useMemo, useState } from "react";
 import { BUSINESS_RULES, COLORS, LEAVE_TYPES } from "../../constants";
 import type { LeaveEntry, StoreCalendar } from "../../types";
-import { addDaysYmd, fmtDate, isFuture, todayYmd } from "../../utils/dateUtils";
-import { countWeekdayLeaves, leaveOverlapsMonth } from "../../utils/leaveUtils";
+import { addDaysYmd, fmtDate, isPast, todayYmd } from "../../utils/dateUtils";
+import {
+  canCancelLeave,
+  countWeekdayLeaves,
+  LEAVE_CANCEL_CUTOFF_TEXT,
+  leaveOverlapsMonth,
+} from "../../utils/leaveUtils";
 import { isStoreClosed, isSunday } from "../../utils/storeCalendar";
 import ConfirmModal from "../modals/ConfirmModal";
 import SubmitLeaveConfirmModal from "../modals/SubmitLeaveConfirmModal";
@@ -434,13 +440,30 @@ export default function RequestTab({
                         {h.days} วันทำการ)
                       </div>
                       {histDetail === h.id && (
-                        <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex items-center gap-1.5">
-                          <IconCalendar size={12} strokeWidth={2.4} />
-                          วันที่ยื่น: {h.submitted}
+                        <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5">
+                            <IconCalendar size={12} strokeWidth={2.4} />
+                            วันที่ยื่น: {h.submitted}
+                          </div>
+                          {/* เลยเส้นตายแล้วแต่ใบลายังไม่จบ — บอกว่าทำไมปุ่มลบหาย
+                              (ใบลาที่ผ่านไปแล้วไม่ต้องบอก เห็นชัดอยู่แล้ว) */}
+                          {!canCancelLeave(h.start) && !isPast(h.end) && (
+                            <div className="flex items-start gap-1.5 text-amber">
+                              <IconLock
+                                size={12}
+                                strokeWidth={2.4}
+                                className="shrink-0 mt-1"
+                              />
+                              <span>
+                                {LEAVE_CANCEL_CUTOFF_TEXT} — เลยเวลาแล้ว ต้องให้
+                                ADMIN ลบให้
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                    {isFuture(h.start) && (
+                    {canCancelLeave(h.start) && (
                       <button
                         type="button"
                         aria-label="ลบใบลา"

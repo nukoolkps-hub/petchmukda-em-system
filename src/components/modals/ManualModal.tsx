@@ -431,6 +431,41 @@ export default function ManualModal({ onClose }) {
           <Section
             title={
               <span className="inline-flex items-center gap-1.5">
+                <IconLock size={16} strokeWidth={2.4} />
+                ยกเลิกใบลาเองได้ถึงเมื่อไหร่
+              </span>
+            }
+            color={COLORS.amber}
+          >
+            <p>
+              ลบใบลาของตัวเองได้ <b>ถึงก่อน 09:00 ของวันแรกที่ลา</b>
+            </p>
+            <ul>
+              <li>
+                <b>ใบลาวันข้างหน้า</b> → ลบได้ตลอด
+              </li>
+              <li>
+                <b>ใบลาของวันนี้</b> → ลบได้ถึง <b>08:59</b> (เปลี่ยนใจมาทำงาน
+                ยังทันร้านเปิด)
+              </li>
+              <li>
+                <b className="text-red">ตั้งแต่ 09:00 เป็นต้นไป ลบเองไม่ได้</b> —
+                ปุ่มลบจะหายไป ต้องให้ ADMIN ลบให้
+              </li>
+              <li>
+                ใบลาหลายวัน ยึด 09:00 ของ<b>วันแรก</b> — เริ่มลาแล้วยกเลิกเองไม่ได้
+              </li>
+            </ul>
+            <p className="mt-1.5 text-xs text-txt-soft">
+              เหตุผล: 07:30 บอทประกาศรายชื่อคนหยุดเข้ากลุ่มไปแล้ว + หน้าที่ประจำวัน
+              ถูกจัดคนแทนเรียบร้อย — ถ้ายังลบย้อนหลังได้ วันลาที่ทีมรับรู้ไปแล้วจะหาย จากระบบ
+              แล้วโควต้า/โบนัสขยัน/เงินเดือนจะไม่ตรงกับความจริง
+            </p>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
                 <IconStar size={16} strokeWidth={2.4} />
                 โบนัสแห่งความขยัน (ไม่หยุด)
               </span>

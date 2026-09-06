@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { StoreCalendar } from "../types";
 import {
+  canCancelLeave,
   countWeekdayLeaves,
   getOverQuotaDays,
+  LEAVE_CANCEL_CUTOFF_TEXT,
   leaveOverlapsMonth,
 } from "./leaveUtils";
 
@@ -121,5 +123,57 @@ describe("cross-month leave clamping", () => {
       weekdays: 1,
       sundays: 0,
     });
+  });
+});
+
+/* ─── canCancelLeave — เส้นตายยกเลิกใบลาของพนักงาน (09:00 ของวันที่ลา) ───
+   invariant: ใบลาที่ทีมรับรู้ไปแล้ว (พ้น 09:00 ของวันแรกที่ลา) พนักงานลบเอง
+   ไม่ได้ — ไม่งั้นวันลาหายจากระบบแล้วโควต้า/โบนัสขยัน/เงินเดือนเพี้ยน       */
+describe("canCancelLeave", () => {
+  // 09 มิ.ย. 2026 (อังคาร) เป็น "วันที่ลา" ในทุกเคสด้านล่าง
+  const LEAVE_DAY = "2026-06-09";
+
+  it("ยกเลิกได้ตลอด ถ้าใบลายังไม่ถึงวัน", () => {
+    // เย็นวันก่อนหน้า
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 5, 8, 23, 59))).toBe(true);
+    // ล่วงหน้าหลายวัน
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 5, 1, 12, 0))).toBe(true);
+  });
+
+  it("วันที่ลา: ก่อน 09:00 ยังยกเลิกได้ (เปลี่ยนใจมาทำงาน ทันร้านเปิด)", () => {
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 5, 9, 0, 0))).toBe(true);
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 5, 9, 8, 59, 59))).toBe(
+      true,
+    );
+  });
+
+  it("วันที่ลา: 09:00 ตรง เป็นต้นไป ล็อก", () => {
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 5, 9, 9, 0, 0))).toBe(
+      false,
+    );
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 5, 9, 9, 0, 1))).toBe(
+      false,
+    );
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 5, 9, 23, 59))).toBe(false);
+  });
+
+  it("ใบลาที่ผ่านไปแล้ว ล็อกเสมอ", () => {
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 5, 10, 0, 0))).toBe(false);
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 6, 1, 0, 0))).toBe(false);
+  });
+
+  it("ใบลาหลายวัน: ยึด 09:00 ของ *วันแรก* — เริ่มแล้วยกเลิกไม่ได้แม้ยังไม่จบ", () => {
+    // ลา 09-11 มิ.ย. · สายวันที่ 10 (ยังอยู่ในช่วงลา) → ล็อกแล้ว
+    expect(canCancelLeave(LEAVE_DAY, new Date(2026, 5, 10, 8, 0))).toBe(false);
+  });
+
+  it("วันที่ผิดรูป → ยกเลิกไม่ได้ (ปล่อยให้ admin จัดการ)", () => {
+    expect(canCancelLeave("", new Date(2026, 5, 1))).toBe(false);
+    expect(canCancelLeave("2026-6-9", new Date(2026, 5, 1))).toBe(false);
+    expect(canCancelLeave("ไม่ใช่วันที่", new Date(2026, 5, 1))).toBe(false);
+  });
+
+  it("ข้อความเส้นตายอ่านชั่วโมงจาก BUSINESS_RULES (ไม่ hardcode ในข้อความ)", () => {
+    expect(LEAVE_CANCEL_CUTOFF_TEXT).toContain("09:00");
   });
 });

@@ -8,6 +8,7 @@ import {
   fmtShort,
   todayYmd,
 } from "../utils/dateUtils";
+import { canCancelLeave, LEAVE_CANCEL_CUTOFF_TEXT } from "../utils/leaveUtils";
 
 interface UseLeaveFormOptions {
   profileName: string | null;
@@ -25,6 +26,8 @@ interface UseLeaveFormOptions {
   ) => string | number | Promise<string>;
   deleteLeave: (id: string | number) => void | Promise<void>;
   authUid: string;
+  /** true = admin (ลบใบลาของใครก็ได้ ไม่ติดเส้นตาย 09:00 · จำกัดด้วยปิดรอบแทน) */
+  isAdmin?: boolean;
   showToast: (msg: string) => void;
 }
 
@@ -36,6 +39,7 @@ export default function useLeaveForm({
   addLeave,
   deleteLeave,
   authUid,
+  isAdmin = false,
   showToast,
 }: UseLeaveFormOptions) {
   const [form, setForm] = useState({ type: "", startDate: "", endDate: "" });
@@ -80,7 +84,12 @@ export default function useLeaveForm({
     if (overLimit) e.over = `วันลาเกินสิทธิ์คงเหลือ (${remain} วัน)`;
     // กันยื่นลาวันร้านปิดทั้งหมด (เช่นเลือกเสาร์ปิด หรือ จ-ศ ที่ admin ปิด)
     // → days = 0 · Firestore rules ปฏิเสธอยู่แล้ว แต่ต้องบอก user ก่อน
-    if (form.startDate && form.endDate && form.startDate <= form.endDate && days === 0)
+    if (
+      form.startDate &&
+      form.endDate &&
+      form.startDate <= form.endDate &&
+      days === 0
+    )
       e.over = "วันที่เลือกตรงกับวันร้านปิด · ลาวันร้านปิดไม่นับ";
     // กันลาทับวันที่ลาไปแล้ว — เช็คทับซ้อนกับ leave อื่นของพนักงานคนเดียวกัน
     if (form.startDate && form.endDate && form.endDate >= form.startDate) {
@@ -159,6 +168,14 @@ export default function useLeaveForm({
 
   /* ─── Delete — deletes from Firestore ──────────────────────── */
   async function handleDelete(id: string | number) {
+    // เส้นตายยกเลิกของพนักงาน — เช็คด้วยเวลา "ตอนกด" ไม่ใช่ตอน render
+    // (หน้าที่เปิดค้างไว้ตั้งแต่ก่อน 09:00 ปุ่มยังโชว์อยู่ได้ · firestore.rules
+    // ปฏิเสธซ้ำอยู่แล้ว แต่ดักตรงนี้เพื่อขึ้นข้อความไทยที่อ่านรู้เรื่อง)
+    const target = allLeaves.find((lv) => String(lv.id) === String(id));
+    if (!isAdmin && target && !canCancelLeave(target.start)) {
+      showToast(`เลยเวลายกเลิกแล้ว — ${LEAVE_CANCEL_CUTOFF_TEXT} · ติดต่อ ADMIN`);
+      return;
+    }
     try {
       await deleteLeave(id);
       showToast("ลบรายการลาเรียบร้อยแล้ว");
