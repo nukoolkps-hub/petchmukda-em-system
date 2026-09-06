@@ -6,6 +6,9 @@
       ใช้ได้จริง (ถ้าพังทั้งไฟล์ rules จะ deny ทุกอย่าง เทสต์ข้อ 1 จะแดง)
    2. ใบลาที่เริ่มไปแล้ว เจ้าของลบเองไม่ได้ · admin ยังลบให้ได้
    3. ใบลาของ "วันนี้" ตัดสินด้วยเวลาไทยฝั่ง server ตามชั่วโมงจริงตอนรัน
+   4. ช่วงผ่อนผัน 10 นาที ผูกกับ `createdAtServer` (serverTimestamp) จริง และ
+      **ปลอมไม่ได้** — client ที่ยัด timestamp อนาคตต้องถูกปฏิเสธตั้งแต่ตอนสร้าง
+      (ถ้าปลอมได้ = ได้สิทธิ์ลบใบลาย้อนหลังไม่จำกัด เงินเดือนเพี้ยนได้)
 
    ต้องมี emulator รันอยู่ (`npm run emulators`) — ไม่มีก็ skip ทั้ง describe
    (CI ไม่ได้รัน emulator · deploy job จึงไม่พัง)                              */
@@ -22,6 +25,7 @@ import {
   doc,
   initializeFirestore,
   setDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { BUSINESS_RULES } from "../constants";
@@ -153,6 +157,36 @@ describe.skipIf(!RUNNING)("E2E เส้นตายยกเลิกใบล�
     );
     // admin ไม่ติดเส้นตาย — ลบให้ได้ (เก็บกวาดด้วยในตัว)
     await expect(deleteAsAdmin(id)).resolves.toBeUndefined();
+  });
+
+  it("ช่วงผ่อนผัน — ใบที่เพิ่งยื่นเอง (createdAtServer สดๆ) ลบได้แม้เลยเส้นตาย", async () => {
+    // ยิงผ่าน addLeave ของจริง → createdAtServer = serverTimestamp()
+    const { addLeave } = await import("./leaves");
+    const id = await addLeave({
+      employeeId: EMP_ID,
+      employeeName: EMP_NAME,
+      type: "personal",
+      start: bangkokTodayYmd(),
+      end: bangkokTodayYmd(),
+      days: 1,
+    });
+    // ลบทันที — ต้องผ่านไม่ว่าตอนนี้จะเลย 09:00 หรือยัง
+    await expect(deleteAsEmployee(id)).resolves.toBeUndefined();
+  });
+
+  it("ปลอม createdAtServer เป็นอนาคตไม่ได้ — rules ปฏิเสธตั้งแต่ตอนสร้าง", async () => {
+    // ถ้าปลอมได้ = เปิดช่วงผ่อนผันไว้ล่วงหน้า แล้วลบใบลาย้อนหลังทีหลัง
+    const forged = setDoc(doc(empDb, "leaves", "lv-forged"), {
+      employeeId: EMP_ID,
+      employeeName: EMP_NAME,
+      type: "personal",
+      start: addDaysYmd(bangkokTodayYmd(), 5),
+      end: addDaysYmd(bangkokTodayYmd(), 5),
+      days: 1,
+      createdAt: Date.now(),
+      createdAtServer: Timestamp.fromMillis(Date.now() + 86_400_000),
+    });
+    await expect(forged).rejects.toThrow(/permission|insufficient/i);
   });
 
   it(`ใบลาของวันนี้ — ตัดที่ ${BUSINESS_RULES.LEAVE_CANCEL_CUTOFF_HOUR}:00 เวลาไทย (server เป็นคนตัดสิน)`, async () => {

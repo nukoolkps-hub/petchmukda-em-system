@@ -8,7 +8,7 @@ import {
   fmtShort,
   todayYmd,
 } from "../utils/dateUtils";
-import { canCancelLeave, LEAVE_CANCEL_CUTOFF_TEXT } from "../utils/leaveUtils";
+import { canCancelLeave, leaveCancelHint } from "../utils/leaveUtils";
 
 interface UseLeaveFormOptions {
   profileName: string | null;
@@ -172,8 +172,8 @@ export default function useLeaveForm({
     // (หน้าที่เปิดค้างไว้ตั้งแต่ก่อน 09:00 ปุ่มยังโชว์อยู่ได้ · firestore.rules
     // ปฏิเสธซ้ำอยู่แล้ว แต่ดักตรงนี้เพื่อขึ้นข้อความไทยที่อ่านรู้เรื่อง)
     const target = allLeaves.find((lv) => String(lv.id) === String(id));
-    if (!isAdmin && target && !canCancelLeave(target.start)) {
-      showToast(`เลยเวลายกเลิกแล้ว — ${LEAVE_CANCEL_CUTOFF_TEXT} · ติดต่อ ADMIN`);
+    if (!isAdmin && target && !canCancelLeave(target)) {
+      showToast(leaveCancelHint(target).text);
       return;
     }
     try {

@@ -87,7 +87,13 @@ export interface LeaveEntry {
   days: number;
   reason?: string;
   submitted?: string;
+  /** epoch ms จากนาฬิกา "เครื่องผู้ใช้" — ใช้แสดงผลเท่านั้น ปลอมได้ */
   createdAt?: number;
+  /** `serverTimestamp()` ตอนสร้าง — ฐานเวลาของ "ยกเลิกได้ 10 นาทีแรก"
+   *  client ตั้งเองไม่ได้ (`firestore.rules` บังคับให้เท่ากับ `request.time`)
+   *  · undefined = ใบลาที่สร้างก่อนมีฟีเจอร์นี้ / client รุ่นเก่า → ไม่มี grace
+   *  · พิมพ์เป็น structural type เพื่อไม่ลาก type ของ firebase เข้ามาใน utils */
+  createdAtServer?: { toMillis: () => number } | null;
   /** true ถ้า admin เพิ่มให้พนักงาน (เช่น พนักงานลืมกดลา) — โผล่ badge "ADMIN" ในลิสต์ */
   createdByAdmin?: boolean;
 }

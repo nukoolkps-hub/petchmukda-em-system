@@ -450,7 +450,7 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | Collection | Read | Write |
 |---|---|---|
 | employees | admin / owner | admin (full), owner (profile + bank fields only) |
-| leaves | **all signed-in** | owner (create), owner (delete — ถึงก่อน 09:00 เวลาไทย ของวันแรกที่ลา · `canSelfCancelLeave`), admin (update/delete any) |
+| leaves | **all signed-in** | owner (create · `createdAtServer` ต้อง == `request.time`), owner (delete — ถึง 08:59 เวลาไทย ของวันแรกที่ลา `canSelfCancelLeave` · หรือภายใน 10 นาทีหลังยื่น `withinCancelGrace`), admin (update/delete any) |
 | loginStates/{state} | blocked (client) | blocked (client) — เขียน/อ่านผ่าน Admin SDK เท่านั้น |
 | salaries/{empId}/months/{ym} | admin / owner | admin only |
 | collectionGroup `months` | admin only | blocked |

@@ -19,7 +19,7 @@ import { addDaysYmd, fmtDate, isPast, todayYmd } from "../../utils/dateUtils";
 import {
   canCancelLeave,
   countWeekdayLeaves,
-  LEAVE_CANCEL_CUTOFF_TEXT,
+  leaveCancelHint,
   leaveOverlapsMonth,
 } from "../../utils/leaveUtils";
 import { isStoreClosed, isSunday } from "../../utils/storeCalendar";
@@ -445,25 +445,38 @@ export default function RequestTab({
                             <IconCalendar size={12} strokeWidth={2.4} />
                             วันที่ยื่น: {h.submitted}
                           </div>
-                          {/* เลยเส้นตายแล้วแต่ใบลายังไม่จบ — บอกว่าทำไมปุ่มลบหาย
-                              (ใบลาที่ผ่านไปแล้วไม่ต้องบอก เห็นชัดอยู่แล้ว) */}
-                          {!canCancelLeave(h.start) && !isPast(h.end) && (
-                            <div className="flex items-start gap-1.5 text-amber">
-                              <IconLock
-                                size={12}
-                                strokeWidth={2.4}
-                                className="shrink-0 mt-1"
-                              />
-                              <span>
-                                {LEAVE_CANCEL_CUTOFF_TEXT} — เลยเวลาแล้ว ต้องให้
-                                ADMIN ลบให้
-                              </span>
-                            </div>
-                          )}
+                          {/* บอกเส้นตายยกเลิกของใบนี้แบบเจาะจงวัน-เวลา —
+                              ทั้งตอนยังยกเลิกได้ (รู้ว่าเหลือถึงเมื่อไหร่) และ
+                              ตอนหมดเวลาแล้ว (รู้ว่าทำไมปุ่มลบหาย) · ใบลาที่จบ
+                              ไปแล้วไม่ต้องบอก เห็นชัดอยู่แล้ว */}
+                          {!isPast(h.end) &&
+                            (() => {
+                              const hint = leaveCancelHint(h);
+                              return (
+                                <div
+                                  className={`flex items-start gap-1.5 ${hint.tone === "ok" ? "text-txt-soft" : "text-amber"}`}
+                                >
+                                  {hint.tone === "ok" ? (
+                                    <IconTrash
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="shrink-0 mt-1"
+                                    />
+                                  ) : (
+                                    <IconLock
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="shrink-0 mt-1"
+                                    />
+                                  )}
+                                  <span>{hint.text}</span>
+                                </div>
+                              );
+                            })()}
                         </div>
                       )}
                     </div>
-                    {canCancelLeave(h.start) && (
+                    {canCancelLeave(h) && (
                       <button
                         type="button"
                         aria-label="ลบใบลา"
