@@ -7,6 +7,7 @@ import {
   CalendarRange as IconCalendarRange,
   ChevronRight as IconChevronRight,
   ClipboardList as IconClipboardList,
+  Lock as IconLock,
   ShieldCheck as IconShieldCheck,
   Sun as IconSun,
   Trash2 as IconTrash,
@@ -14,8 +15,13 @@ import {
 import { useMemo, useState } from "react";
 import { BUSINESS_RULES, COLORS, LEAVE_TYPES } from "../../constants";
 import type { LeaveEntry, StoreCalendar } from "../../types";
-import { addDaysYmd, fmtDate, isFuture, todayYmd } from "../../utils/dateUtils";
-import { countWeekdayLeaves, leaveOverlapsMonth } from "../../utils/leaveUtils";
+import { addDaysYmd, fmtDate, isPast, todayYmd } from "../../utils/dateUtils";
+import {
+  canCancelLeave,
+  countWeekdayLeaves,
+  leaveCancelHint,
+  leaveOverlapsMonth,
+} from "../../utils/leaveUtils";
 import { isStoreClosed, isSunday } from "../../utils/storeCalendar";
 import ConfirmModal from "../modals/ConfirmModal";
 import SubmitLeaveConfirmModal from "../modals/SubmitLeaveConfirmModal";
@@ -434,13 +440,43 @@ export default function RequestTab({
                         {h.days} วันทำการ)
                       </div>
                       {histDetail === h.id && (
-                        <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex items-center gap-1.5">
-                          <IconCalendar size={12} strokeWidth={2.4} />
-                          วันที่ยื่น: {h.submitted}
+                        <div className="text-sm text-txt-soft mt-1.5 pt-1.5 border-t border-dashed border-bdr flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5">
+                            <IconCalendar size={12} strokeWidth={2.4} />
+                            วันที่ยื่น: {h.submitted}
+                          </div>
+                          {/* บอกเส้นตายยกเลิกของใบนี้แบบเจาะจงวัน-เวลา —
+                              ทั้งตอนยังยกเลิกได้ (รู้ว่าเหลือถึงเมื่อไหร่) และ
+                              ตอนหมดเวลาแล้ว (รู้ว่าทำไมปุ่มลบหาย) · ใบลาที่จบ
+                              ไปแล้วไม่ต้องบอก เห็นชัดอยู่แล้ว */}
+                          {!isPast(h.end) &&
+                            (() => {
+                              const hint = leaveCancelHint(h);
+                              return (
+                                <div
+                                  className={`flex items-start gap-1.5 ${hint.tone === "ok" ? "text-txt-soft" : "text-amber"}`}
+                                >
+                                  {hint.tone === "ok" ? (
+                                    <IconTrash
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="shrink-0 mt-1"
+                                    />
+                                  ) : (
+                                    <IconLock
+                                      size={12}
+                                      strokeWidth={2.4}
+                                      className="shrink-0 mt-1"
+                                    />
+                                  )}
+                                  <span>{hint.text}</span>
+                                </div>
+                              );
+                            })()}
                         </div>
                       )}
                     </div>
-                    {isFuture(h.start) && (
+                    {canCancelLeave(h) && (
                       <button
                         type="button"
                         aria-label="ลบใบลา"

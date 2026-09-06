@@ -8,6 +8,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
 import type { LeaveEntry } from "../types";
@@ -47,6 +48,9 @@ export async function addLeave(leave: Omit<LeaveEntry, "id">): Promise<string> {
     ...leave,
     submitted: leave.submitted || new Date().toLocaleString("th-TH"),
     createdAt: Date.now(),
+    // เวลา "ของ server" — ฐานของช่วงผ่อนผันยกเลิก 10 นาทีแรก · createdAt
+    // ด้านบนมาจากนาฬิกาเครื่องผู้ใช้ จึงเชื่อเป็นเกณฑ์สิทธิ์ลบไม่ได้
+    createdAtServer: serverTimestamp(),
   });
   return docRef.id;
 }

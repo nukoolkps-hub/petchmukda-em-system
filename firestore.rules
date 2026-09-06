@@ -39,6 +39,33 @@ service cloud.firestore {
         + '-' + pad2(bangkokTime().day());
     }
 
+    // พนักงาน "ยกเลิก (ลบ) ใบลาของตัวเอง" ได้ถึงก่อน 09:00 (เวลาไทย) ของวันแรกที่ลา
+    // - วันในอนาคต → ได้ตลอด
+    // - วันนี้ → ได้ถึง 08:59 · 09:00 เป็นต้นไปล็อก (07:30 บอทประกาศคนหยุดเข้ากลุ่ม
+    //   + หน้าที่ประจำวันจัดคนแทนไปแล้ว — ลบทีหลังได้ = วันลาที่ทีมรับรู้แล้วหายไป
+    //   แล้วโควต้า/โบนัสขยัน/เงินเดือนเพี้ยน)
+    // - ใบลาที่เริ่มไปแล้ว → ล็อก · admin ลบให้ได้ (จำกัดด้วยการปิดรอบ 7 วันแทน)
+    // - ยกเว้น: ใบที่ "เพิ่งยื่นเอง" ยังลบได้ 10 นาทีแรก (ดู withinCancelGrace)
+    // คู่กับฝั่ง UI: `canCancelLeave` ใน src/utils/leaveUtils.ts (กฎเดียวกัน 2 ชั้น)
+    function canSelfCancelLeave(startYmd) {
+      return startYmd > bangkokToday()
+        || (startYmd == bangkokToday() && bangkokTime().hours() < 9)
+        || withinCancelGrace();
+    }
+
+    // ช่วงผ่อนผัน "กดยื่นผิด" — ลบใบที่ตัวเองเพิ่งสร้างได้ 10 นาทีแรก แม้เลย 09:00
+    // (ใบที่เพิ่งสร้างยังไม่เคยเข้ากล่องประกาศเช้า ลบแล้วไม่มีใครเข้าใจผิด)
+    // ⚠️ อ่าน `createdAtServer` (serverTimestamp) เท่านั้น — `createdAt` มาจาก
+    // นาฬิกาเครื่องผู้ใช้ ปลอมเป็นอนาคตแล้วได้สิทธิ์ลบย้อนหลังไม่จำกัด
+    // ใบที่ admin เพิ่มให้ไม่เข้าข่าย (ไม่ใช่ "พนักงานกดผิดเอง")
+    // ⚠️ 600000 ms = BUSINESS_RULES.LEAVE_CANCEL_GRACE_MINUTES (10) — แก้ที่หนึ่ง
+    // ต้องแก้อีกที่
+    function withinCancelGrace() {
+      return resource.data.get('createdByAdmin', false) == false
+        && resource.data.get('createdAtServer', null) != null
+        && request.time.toMillis() < resource.data.createdAtServer.toMillis() + 600000;
+    }
+
     // ─── Payroll month lock ──────────────────────────────────────
     // เดือน (YYYY-MM) ถูก "ปิดรอบถาวร" เมื่อพ้น lockAtMs (= ยืนยันยอดครั้งแรก
     // + 7 วัน) ที่เก็บไว้ใน payrollConfirms/{ym}. ใช้ร่วมกับฝั่ง UI
@@ -94,6 +121,7 @@ service cloud.firestore {
           "reason",
           "submitted",
           "createdAt",
+          "createdAtServer",
           "createdByAdmin"
         ])
         && request.resource.data.employeeName ==
@@ -120,6 +148,12 @@ service cloud.firestore {
         && (!("submitted" in request.resource.data)
           || (request.resource.data.submitted is string && request.resource.data.submitted.size() <= 120))
         && request.resource.data.createdAt is int
+        // createdAtServer = ฐานเวลาของช่วงผ่อนผันยกเลิก 10 นาที · ต้องเป็น
+        // serverTimestamp() เป๊ะ (== request.time) → client ตั้งเองไม่ได้
+        // optional เพื่อไม่ให้ client รุ่นเก่าที่ยังไม่รีเฟรช ยื่นลาไม่ได้
+        // (ใบที่ไม่มีฟิลด์นี้ = ไม่ได้ช่วงผ่อนผัน · เส้นตาย 09:00 อย่างเดียว)
+        && (!("createdAtServer" in request.resource.data)
+          || request.resource.data.createdAtServer == request.time)
         // createdByAdmin = true ตั้งได้แค่ admin · พนักงานต้องไม่ส่ง field นี้หรือต้องเป็น false
         && (!("createdByAdmin" in request.resource.data)
           || (request.resource.data.createdByAdmin is bool
@@ -232,12 +266,12 @@ service cloud.firestore {
         && validLeaveCreate()
         && !monthLocked(request.resource.data.start[0:7]);
       allow update: if isAdmin() && !monthLocked(resource.data.start[0:7]);
-      // ลบเอง: เฉพาะใบลาที่ยังไม่เริ่ม (start > วันนี้)
-      // วันนี้และอดีต: admin เท่านั้น · เดือนปิดรอบแล้วลบไม่ได้
+      // ลบเอง: ถึงก่อน 09:00 (เวลาไทย) ของวันแรกที่ลา — ดู canSelfCancelLeave()
+      // หลังจากนั้นและอดีต: admin เท่านั้น · เดือนปิดรอบแล้วลบไม่ได้
       allow delete: if !monthLocked(resource.data.start[0:7])
         && (isAdmin()
           || (isEmployeeOwner(resource.data.employeeId)
-            && resource.data.start > bangkokToday()));
+            && canSelfCancelLeave(resource.data.start)));
     }
 
     // ─── Salaries ────────────────────────────────────────────────

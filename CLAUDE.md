@@ -200,7 +200,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `src/utils/payrollMatrix.ts` + `src/print/payrollMatrixPDF.ts` | **ตารางการคำนวณโดยรวม** — pure builder จัดเรียง `EmployeeMonthRow[]` เป็นตาราง (แถว = รายการ · คอลัมน์ = พนักงาน + "รวม") · **ไม่คำนวณเงินเอง** อ่านจาก `salaryCalculation`/`poolShare` ล้วน → เลขตรงกับสลิป/หน้าจ่ายเงินเสมอ · รายการที่แต่ละคนมีไม่เท่ากัน = union (คนที่ไม่มี = ช่องว่าง) · PDF แนวนอน (≤6 คน = A4 · เกินนั้น = A3) |
 | `src/components/admin/PayrollMatrixPanel.tsx` | UI ตารางรวม — เลื่อนแนวนอน + ตรึงคอลัมน์แรก · toggle เลขบัญชี · ปุ่มดาวน์โหลด PDF (lazy-import) |
 | `src/utils/salaryUtils.ts` | สูตรเงินเดือน + `computePoolSharesForGroup` (ใช้ snapshot ก่อนเสมอ) |
-| `src/utils/leaveUtils.ts` | นับวันลา, คำนวณ over-quota |
+| `src/utils/leaveUtils.ts` | นับวันลา, คำนวณ over-quota, `canCancelLeave` + `leaveCancelHint` (เส้นตายยกเลิกใบลา + ข้อความที่พนักงานเห็น — single source คู่กับ `firestore.rules`) |
 | `src/utils/pdfFonts.ts` | Lazy-load + register Sarabun font กับ pdfmake (`addVirtualFileSystem`) |
 | `src/firebase/auth.ts` | LINE Login + auth helpers |
 | `src/contexts/AuthContext.tsx` | Auth state provider — `user` · `isAdmin` (resolve claim ก่อน `loading=false`) · `handlingCallback` · จัดการ LINE callback |
@@ -240,6 +240,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | เกณฑ์เข้า Pool (per item · admin custom) | default 80% ของ top item (PR #488+) |
 | เกณฑ์ได้เงินเดือนพื้นฐาน | ≥ 50% ของ top primary item (poolExclusion="all") |
 | วันลา "ฟรี" ก่อนเริ่มหัก % ใน Pool | 2 วันแรก (ไม่กระทบ) |
+| เส้นตายพนักงาน "ยกเลิกใบลาเอง" | ถึง **08:59 ของวันแรกที่ลา** (`LEAVE_CANCEL_CUTOFF_HOUR`) · **+ ผ่อนผัน 10 นาทีแรกหลังกดยื่น** (`LEAVE_CANCEL_GRACE_MINUTES` · อิง `createdAtServer` = serverTimestamp ที่ rules บังคับ ปลอมไม่ได้) · หลังจากนั้น admin เท่านั้น · ล็อก 2 ชั้น (UI `canCancelLeave` + `firestore.rules` `canSelfCancelLeave`/`withinCancelGrace` ใช้เวลาไทยฝั่ง server) |
 | เพดานเบิกล่วงหน้า (ขึ้นตามอายุงาน) | <3y=50% · 3y=60% · 4y=70% · 5y=80% · 6y+=100% ของ effective base salary · **3 ครั้ง/เดือน** (`BUSINESS_RULES.ADVANCE_MAX_PER_MONTH` · ยอดรวมยังห้ามเกินเพดาน %) · หักในเดือนที่เบิก |
 | เงินสุทธิติดลบ → auto-carry | ถ้า `netSalary < 0` ในเดือน X · admin ยืนยันยอด → ระบบสร้าง advance ใน X+1 (`autoCarryFromMonth=X` · approved) · พร้อมบล็อกพนักงานยื่นเบิกใหม่ · admin "อนุญาตให้ยื่นเบิกใหม่" → ปลดบล็อก (auto-carry ยังหักปกติ) |
 | โบนัสแห่งความขยัน (0 วันลา) | 2 × dailyRate |

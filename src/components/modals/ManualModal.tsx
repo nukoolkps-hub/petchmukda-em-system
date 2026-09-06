@@ -9,6 +9,7 @@ import {
   CalendarRange as IconCalendarRange,
   Check as IconCheck,
   ClipboardList as IconClipboardList,
+  Clock as IconClock,
   Diamond as IconDiamond,
   FileText as IconFileText,
   HandCoins as IconHandCoins,
@@ -425,6 +426,78 @@ export default function ManualModal({ onClose }) {
             </ul>
             <p className="mt-1.5 text-xs text-txt-soft">
               กดลาล่วงหน้าได้เปรียบ — ชื่อจะอยู่ในกล่องเช้ารอบเดียว ทีมวางแผนงานได้ทัน
+            </p>
+          </Section>
+
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <IconLock size={16} strokeWidth={2.4} />
+                ยกเลิกใบลาเองได้ถึงเมื่อไหร่
+              </span>
+            }
+            color={COLORS.amber}
+          >
+            <p>
+              ลบใบลาของตัวเองได้ <b>ถึง 08:59 น. ของวันแรกที่ลา</b> — พอถึง{" "}
+              <b>09:00 น. ปุ่มลบจะหายไป</b>
+            </p>
+
+            <Card title="ตัวอย่าง: ลาวันจันทร์ที่ 7" color={COLORS.text}>
+              <ul>
+                <li>
+                  อาทิตย์ที่ 6 ทั้งวัน → <b className="text-green">ลบได้</b>
+                </li>
+                <li>
+                  จันทร์ที่ 7 เวลา 08:59 น. → <b className="text-green">ลบได้</b>{" "}
+                  (นาทีสุดท้าย)
+                </li>
+                <li>
+                  จันทร์ที่ 7 เวลา 09:00 น. เป็นต้นไป →{" "}
+                  <b className="text-red">ลบไม่ได้</b>
+                </li>
+              </ul>
+              <p className="mt-2 text-xs text-txt-soft">
+                ยื่นไว้ล่วงหน้านานแค่ไหนไม่เกี่ยว — นับจาก <b>วันที่เริ่มลา</b> อย่างเดียว ·
+                ในแอปจะเขียนวันและเวลาไว้ให้ใต้ใบลา แต่ละใบอยู่แล้ว ไม่ต้องนับเอง
+              </p>
+            </Card>
+
+            <Card title="ลาหลายวันติดกัน" color={COLORS.text}>
+              <p>
+                ยึด 09:00 น. ของ <b>วันแรก</b> วันเดียว — เช่นลา 7-9 พอถึงเช้าวันที่ 8
+                จะลบเองไม่ได้แล้ว แม้ใบลายังไม่จบ
+              </p>
+            </Card>
+
+            <Card
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <IconClock size={14} strokeWidth={2.4} />
+                  กดยื่นผิด? ยกเลิกได้ใน 10 นาทีแรก
+                </span>
+              }
+              color={COLORS.green}
+            >
+              <p>
+                ใบลาที่ <b>เพิ่งกดยื่นเอง</b> ยกเลิกได้ภายใน <b>10 นาทีแรกหลังกดยื่น</b>{" "}
+                เสมอ ถึงจะเลย 09:00 ไปแล้วก็ตาม
+              </p>
+              <p className="mt-1.5 text-xs text-txt-soft">
+                ไว้แก้เวลาเลือกผิดวัน/ผิดประเภท · พ้น 10 นาทีแล้วกลับไปใช้กฎ 09:00 ตามปกติ ·
+                ใบที่ <b>ADMIN เป็นคนเพิ่มให้</b> ไม่เข้าข่ายข้อนี้
+              </p>
+            </Card>
+
+            <p className="mt-2 text-xs text-txt-soft">
+              <b>ทำไมต้องมีเส้นตาย:</b> 07:30 บอทประกาศรายชื่อคนหยุดวันนั้นเข้ากลุ่มไปแล้ว
+              และระบบจัดคนแทนหน้าที่ประจำวันเรียบร้อย — ถ้ายังลบย้อนหลังได้
+              วันลาที่ทีมรับรู้ไปแล้วจะหายจากระบบ แล้วโควต้า โบนัสขยัน
+              และยอดหักในสลิปจะไม่ตรงกับความจริง
+            </p>
+            <p className="mt-1.5 text-xs text-txt-soft">
+              เลยเวลาแล้วแต่ต้องแก้จริงๆ → <b>แจ้ง ADMIN</b> ลบให้ได้ตลอด
+              จนกว่าเดือนนั้นจะปิดรอบ
             </p>
           </Section>
 
