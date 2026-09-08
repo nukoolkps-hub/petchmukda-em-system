@@ -4,6 +4,7 @@
    - return { data, loading, error }
    - cleanup on unmount                                          */
 import { type DependencyList, useEffect, useState } from "react";
+import { markFirestoreStalled } from "../../utils/firestoreTransport";
 import {
   subscribeAdvances,
   subscribeAdvancesByEmployeeId,
@@ -41,6 +42,14 @@ import {
 import { subscribeRoles } from "../roles";
 import { subscribeAllSalaries, subscribeEmployeeSalaries } from "../salaries";
 import { EMPTY_STORE_CALENDAR, subscribeStoreCalendar } from "../storeCalendar";
+
+/** รอ snapshot แรกนานสุดก่อนถือว่า "เชื่อมต่อค้าง" — ตั้งไว้ต่ำกว่า
+ *  auto-reload 10 วิของ BootLoadingScreen ไม่ได้ (จะชนกัน) จึงปิด
+ *  auto-reload ของจอนั้นแล้วให้ตัวนี้เป็นคนตัดสินแทน (ดู App.tsx) */
+const FIRESTORE_STALL_TIMEOUT_MS = 10_000;
+
+const FIRESTORE_STALL_MESSAGE =
+  'เชื่อมต่อฐานข้อมูลไม่สำเร็จ — สัญญาณเน็ตอาจไม่นิ่ง หรือเบราว์เซอร์ในแอป LINE บล็อกการเชื่อมต่ออยู่ · กด "โหลดใหม่" ได้เลย ระบบจะสลับไปใช้โหมดเชื่อมต่อสำรองให้อัตโนมัติ';
 
 interface SubscriptionResult<T> {
   data: T;
@@ -99,7 +108,7 @@ function useScopedSubscription<T>(
   getSubscribeFn: () => SubscribeFn<T> | null,
   defaultValue: T,
   deps: DependencyList,
-  options?: { keepPreviousData?: boolean },
+  options?: { keepPreviousData?: boolean; stallTimeoutMs?: number },
 ): SubscriptionResult<T> {
   const [data, setData] = useState<T>(defaultValue);
   const [loading, setLoading] = useState(false);
@@ -122,13 +131,38 @@ function useScopedSubscription<T>(
     }
 
     setLoading(true);
+
+    /* ─── กันค้างตลอดกาล ────────────────────────────────────────
+       Firestore ที่เชื่อมต่อ "ค้างกลางทาง" (เช่น WebChannel โดนบล็อกใน
+       เบราว์เซอร์ของแอป LINE) จะไม่เรียก onChange และ **ไม่ยิง error เลย**
+       → loading ค้าง true ตลอด = หน้า loading หมุนไม่จบ
+       ตั้งเวลาไว้: เกินแล้วถือว่าเชื่อมต่อไม่ได้ → ขึ้นจอ error ที่บอกสาเหตุ
+       จริง + จำไว้ให้โหลดครั้งหน้าสลับไป long-polling อัตโนมัติ
+       (ถ้าข้อมูลมาทีหลัง onChange จะล้าง error ให้เอง แอปกลับมาปกติ)     */
+    let stallTimer: ReturnType<typeof setTimeout> | undefined;
+    const clearStallTimer = () => {
+      if (stallTimer !== undefined) clearTimeout(stallTimer);
+    };
+    if (options?.stallTimeoutMs) {
+      stallTimer = setTimeout(() => {
+        console.warn(
+          "[Firestore] subscription stalled — ไม่มี snapshot และไม่มี error",
+        );
+        markFirestoreStalled();
+        setLoading(false);
+        setError(new Error(FIRESTORE_STALL_MESSAGE));
+      }, options.stallTimeoutMs);
+    }
+
     const unsub = subscribeFn(
       (newData) => {
+        clearStallTimer();
         setData(newData);
         setLoading(false);
         setError(null);
       },
       (err) => {
+        clearStallTimer();
         console.warn(
           "[Firestore] scoped subscription error (degrading gracefully):",
           err.message,
@@ -146,7 +180,10 @@ function useScopedSubscription<T>(
         }
       },
     );
-    return unsub;
+    return () => {
+      clearStallTimer();
+      unsub();
+    };
     // biome-ignore lint/correctness/useExhaustiveDependencies: this generic hook accepts the caller's scoped dependency list.
   }, deps);
 
@@ -218,6 +255,10 @@ export function useEmployeesForScope({
     },
     [] as any[],
     [isAdmin, authUid],
+    // ตัวเดียวที่ block หน้า "เชื่อมต่อ Firebase..." (useFirebaseAppData:
+    // `loading = employeeResult.loading`) — ถ้าตัวนี้ค้าง แอปเข้าไม่ได้เลย
+    // จึงต้องมีเพดานเวลา · sub อื่นโหลดพื้นหลัง ค้างแล้วไม่บล็อกใคร
+    { stallTimeoutMs: FIRESTORE_STALL_TIMEOUT_MS },
   );
 }
 
