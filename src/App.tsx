@@ -366,7 +366,12 @@ export default function LeaveApp() {
 
   /* ─── Loading & Error states ───────────────────────────────── */
   if (loading) {
-    return <BootLoadingScreen message="เชื่อมต่อ Firebase..." />;
+    // ไม่ auto-reload ที่จอนี้ — การ reload มั่วๆ ไม่ได้แก้อาการ "เชื่อมต่อ
+    // ค้าง" · ปล่อยให้ stallTimeoutMs ของ subscription employees ตัดสิน
+    // แล้วขึ้นจอ error ที่บอกสาเหตุจริง + สลับ transport ให้รอบหน้า
+    return (
+      <BootLoadingScreen message="เชื่อมต่อ Firebase..." autoReload={false} />
+    );
   }
   if (error) {
     return (

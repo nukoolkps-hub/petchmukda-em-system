@@ -14,6 +14,10 @@ import {
 } from "firebase/firestore";
 import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 import { connectStorageEmulator, getStorage } from "firebase/storage";
+import {
+  hasFirestoreStalled,
+  shouldForceLongPolling,
+} from "../utils/firestoreTransport";
 import firebaseConfigs from "./firebaseConfig.json";
 
 type FirebaseRuntimeConfig = {
@@ -63,15 +67,23 @@ if (missingKeys.length > 0) {
 
 export const app = initializeApp(firebaseConfig);
 /* ─── Firestore transport ──────────────────────────────────────
-   ในเบราว์เซอร์ default Firestore ใช้ WebChannel (bidi long-poll).
-   LINE in-app browser (LIFF WebView) บล็อก keep-alive ของ WebChannel
-   บ่อย → connection ดู open แต่ data ไม่ไหล → onSnapshot ค้าง
-   forever → user ค้างหน้า loading screen ตลอด.
-   experimentalAutoDetectLongPolling ให้ SDK ตรวจจับเอง ถ้า WebChannel
-   ใช้ไม่ได้ → fallback ไป long-polling ปกติ                          */
+   default ในเบราว์เซอร์คือ WebChannel (bidi long-poll ที่พึ่ง keep-alive)
+   · เบราว์เซอร์ในแอป LINE บล็อก keep-alive ตัวนี้บ่อย → connection ดู open
+   แต่ data ไม่ไหล → onSnapshot ค้าง forever โดยไม่ยิง error → user ค้าง
+   หน้า "เชื่อมต่อ Firebase..." ตลอด
+   `experimentalAutoDetectLongPolling` ให้ SDK เดาเอง แต่เดาไม่ถูกทุกเคส
+   ในแอป LINE (เจอจริงบน production) → ถ้ารู้ว่าอยู่ใน LINE หรือเครื่องนี้
+   เคยค้างมาก่อน ให้ **บังคับ** long-polling ไปเลย ไม่ต้องเดา
+   ⚠️ สอง flag นี้ใช้พร้อมกันไม่ได้ — ต้องเลือกอย่างใดอย่างหนึ่ง          */
+const forceLongPolling = shouldForceLongPolling({
+  userAgent: typeof navigator === "undefined" ? "" : navigator.userAgent,
+  stalledBefore: hasFirestoreStalled(),
+});
 export const db = initializeFirestore(
   app,
-  { experimentalAutoDetectLongPolling: true },
+  forceLongPolling
+    ? { experimentalForceLongPolling: true }
+    : { experimentalAutoDetectLongPolling: true },
   FIRESTORE_DATABASE_ID,
 );
 export const auth = getAuth(app);

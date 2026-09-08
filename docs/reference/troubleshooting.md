@@ -59,6 +59,33 @@
   server filter ด้วย `applicableDuties` (storeCalendar) ก่อน assign
 - client/server logic ต้อง sync — ถ้าแก้ `dutyUtils.ts` ต้องผ่าน `scripts/check-duty-sync.mjs`
 
+## เข้าแอป / โหลดข้อมูล
+
+### ค้างหน้า "เชื่อมต่อ Firebase..." หมุนไม่จบ (โดยเฉพาะในแอป LINE)
+- **อ่านจอให้ถูกก่อน** — ข้อความบอกว่าติดขั้นไหน:
+  - `"กำลังเข้าสู่ระบบ..."` = ยังไม่ผ่าน auth (`AuthGate` · ดู LINE callback)
+  - `"เชื่อมต่อ Firebase..."` = **login ผ่านแล้ว** ติดที่ subscription `employees`
+    (`useFirebaseAppData` → `loading = employeeResult.loading` ตัวเดียว)
+- **ตัดสาเหตุที่ *ไม่ใช่* ออกก่อน** — สองอย่างนี้ให้จอคนละแบบ ถ้าเห็นจอหมุน
+  แปลว่าไม่ใช่ทั้งคู่:
+  - สิทธิ์ไม่พอ → `useScopedSubscription` degrade เป็นลิสต์ว่าง + `loading=false`
+    → ได้จอ "ยังไม่พบข้อมูลพนักงาน"
+  - error อื่น → จอแดง "เชื่อมต่อข้อมูลไม่สำเร็จ"
+- **สาเหตุจริง:** `onSnapshot` **ไม่เรียก callback และไม่ยิง error เลย** —
+  connection ค้างกลางทาง · เบราว์เซอร์ในแอป LINE (LIFF WebView) บล็อก
+  keep-alive ของ WebChannel บ่อย → ดู open แต่ข้อมูลไม่ไหล
+- **แก้แล้ว 2 ชั้น:**
+  1. `src/firebase/config.ts` **บังคับ** `experimentalForceLongPolling` เมื่อ
+     UA เป็นแอป LINE หรือเครื่องนี้เคยค้าง (`shouldForceLongPolling` ใน
+     `src/utils/firestoreTransport.ts`) — เดิมใช้ `experimentalAutoDetectLongPolling`
+     ซึ่ง **เดาไม่ถูกทุกเคสในแอป LINE**
+  2. `useEmployeesForScope` มี `stallTimeoutMs` 10 วิ → เกินแล้วขึ้นจอ error
+     ที่บอกสาเหตุจริง + `markFirestoreStalled()` จำไว้ให้โหลดครั้งหน้าสลับ
+     transport เอง (จอ "เชื่อมต่อ Firebase..." จึงปิด auto-reload — reload
+     มั่วๆ ไม่ได้แก้อาการนี้)
+- **ยังค้างอยู่อีก:** เช็คว่าเป็นทุกเบราว์เซอร์หรือเฉพาะ LINE · ถ้าเป็นทุกที่
+  แปลว่าเน็ต/DNS ไม่ใช่ transport · ดู console หา `subscription stalled`
+
 ## PDF (สลิป / ใบรับรอง / ตารางรวม)
 
 ### กดปุ่ม PDF แล้วค้าง — ไฟล์ไม่ดาวน์โหลด ไม่มี error

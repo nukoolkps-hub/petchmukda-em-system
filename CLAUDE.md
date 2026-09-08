@@ -203,6 +203,7 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `src/utils/leaveUtils.ts` | นับวันลา, คำนวณ over-quota, `canCancelLeave` + `leaveCancelHint` (เส้นตายยกเลิกใบลา + ข้อความที่พนักงานเห็น — single source คู่กับ `firestore.rules`) |
 | `src/utils/pdfFonts.ts` | Lazy-load + register Sarabun font กับ pdfmake (`addVirtualFileSystem`) |
 | `src/firebase/auth.ts` | LINE Login + auth helpers |
+| `src/utils/firestoreTransport.ts` | เลือก transport ของ Firestore — **บังคับ long-polling ในแอป LINE** (WebChannel โดนบล็อก → `onSnapshot` ค้างเงียบๆ) + จำเครื่องที่เคยค้าง · ดู `docs/reference/troubleshooting.md` → "ค้างหน้าเชื่อมต่อ Firebase" |
 | `src/contexts/AuthContext.tsx` | Auth state provider — `user` · `isAdmin` (resolve claim ก่อน `loading=false`) · `handlingCallback` · จัดการ LINE callback |
 | `public/fonts/Sarabun-*.ttf` | Self-host Thai font (CSP block CDN ภายนอก) |
 | `functions/src/index.ts` | Cloud Functions barrel exports + `setGlobalOptions({ serviceAccount: "petchmukda-bot@appspot.gserviceaccount.com" })` |
