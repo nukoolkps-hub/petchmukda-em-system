@@ -35,9 +35,9 @@ export default function DesktopHeader({
           </div>
           {/* subtitle — แสดงทุก tab เพื่อให้ banner สูงเท่ากันเสมอ ไม่ขยับตอนสลับ sidebar */}
           {isAdmin ? (
-            <div className="text-gold-lt/55 text-sm mt-0.5">ผู้ดูแลระบบ</div>
+            <div className="text-gold-lt/75 text-sm mt-0.5">ผู้ดูแลระบบ</div>
           ) : (
-            <div className="text-gold-lt/55 text-sm mt-0.5">
+            <div className="text-gold-lt/75 text-sm mt-0.5">
               สวัสดีค่ะ คุณ{profile?.name || ""}
             </div>
           )}
@@ -77,7 +77,7 @@ export default function DesktopHeader({
             <IconBook2 size={18} color="#fff" strokeWidth={2.2} />
             คู่มือการใช้งาน
           </button>
-          <div className="text-sm text-gold-lt/50">
+          <div className="text-sm text-gold-lt/75">
             {new Intl.DateTimeFormat("th-TH", {
               weekday: "long",
               day: "numeric",
