@@ -49,18 +49,50 @@ export function isLateLeave(
  *  sentAt (หลังส่งเสร็จ) คนที่กดลาช่วงนั้นจะหายไปเงียบๆ = บั๊กที่กำลังแก้
  *
  *  ไม่มี doc สักตัว (ปิด toggle สรุปเช้า/เสาร์) → 07:30 ของวันนั้นเสมอ แม้
- *  เป็นรอบ 09:30 — ถ้าใช้ 08:30 คนที่กดลาช่วง 07:30-08:30 จะหายเงียบ       */
+ *  เป็นรอบ 09:30 — ถ้าใช้ 08:30 คนที่กดลาช่วง 07:30-08:30 จะหายเงียบ
+ *
+ *  **นับเฉพาะรอบที่ประกาศออกไปจริง** (`roundWasAnnounced`) — รอบที่ claim
+ *  แล้วส่งไม่ออกต้องไม่บล็อกรอบถัดไป ไม่งั้นคนที่ควรถูกแจ้งหายเงียบทั้งวัน */
 export function resolveRoundCutoffMs(
 	ymd: string,
 	docs: (Record<string, unknown> | null | undefined)[],
 ): number {
 	for (const doc of docs) {
+		if (!roundWasAnnounced(doc)) continue;
 		const stamp = doc?.claimedAt ?? doc?.sentAt;
 		if (typeof stamp !== "string") continue;
 		const parsed = Date.parse(stamp);
 		if (Number.isFinite(parsed)) return parsed;
 	}
 	return Date.parse(`${ymd}T${MORNING_FALLBACK_TIME}+07:00`);
+}
+
+/** รอบนั้น "ประกาศออกไปจริง" หรือแค่ claim ค้างไว้?
+ *
+ *  claim เกิดก่อนยิง push เสมอ (กัน scheduler ยิงซ้ำ) → doc มี claimedAt
+ *  ตั้งแต่ก่อนรู้ผล · ถ้ารอบนั้นส่งไม่ออก (token เสีย / LINE ล่ม) doc ก็ยัง
+ *  อยู่ แล้วรอบถัดไปจะนึกว่า "ประกาศไปแล้ว" → คนที่ควรถูกแจ้งหายเงียบทั้งวัน
+ *  ทั้งที่ไม่เคยมีข้อความออกไปสักครั้ง
+ *
+ *  เกณฑ์: ต้องมีอย่างน้อย 1 กลุ่มที่ `sent === true` · results ว่าง (ไม่มี
+ *  กลุ่มปลายทาง) หรือทุกกลุ่ม fail = ไม่มีใครเห็น → ไม่นับ
+ *
+ *  doc เก่าที่ไม่มี `results` แต่มี `sentAt` และไม่มี `error` → นับว่าส่งแล้ว
+ *  (migrate-on-read · ของที่เขียนไว้ก่อนมี field นี้)                        */
+export function roundWasAnnounced(
+	doc: Record<string, unknown> | null | undefined,
+): boolean {
+	if (!doc) return false;
+	const results = doc.results;
+	if (Array.isArray(results)) {
+		return results.some(
+			(r) =>
+				typeof r === "object" &&
+				r !== null &&
+				(r as { sent?: unknown }).sent === true,
+		);
+	}
+	return typeof doc.sentAt === "string" && !doc.error;
 }
 
 /** cutoff ของรอบ 08:30 — นับต่อจากสรุปเช้าอย่างเดียว (wrapper เดิม) */

@@ -21,6 +21,7 @@ import {
   pickLateLeaveDocs,
   resolveLateCutoffMs,
   resolveRoundCutoffMs,
+  roundWasAnnounced,
 } from "../../functions/src/dailySummary/leaveRules";
 
 const YMD = "2026-09-01";
@@ -55,8 +56,15 @@ describe("resolveLateCutoffMs", () => {
 });
 
 describe("resolveRoundCutoffMs — รอบ 09:30 ต้องนับต่อจากรอบ 08:30", () => {
-  const morning = { claimedAt: new Date(at("07:30")).toISOString() };
-  const round0830 = { claimedAt: new Date(at("08:30")).toISOString() };
+  const ok = [{ name: "we r mukda", sent: true }];
+  const morning = {
+    claimedAt: new Date(at("07:30")).toISOString(),
+    results: ok,
+  };
+  const round0830 = {
+    claimedAt: new Date(at("08:30")).toISOString(),
+    results: ok,
+  };
 
   it("รอบ 08:30 ส่งไปแล้ว → รอบ 09:30 นับต่อจาก 08:30 ไม่ใช่ 07:30", () => {
     // ถ้าพลาดไปใช้ของสรุปเช้า คนที่ถูกประกาศตอน 08:30 จะโดนประกาศซ้ำ
@@ -75,11 +83,35 @@ describe("resolveRoundCutoffMs — รอบ 09:30 ต้องนับต่�
   });
 
   it("doc รอบแรกมี timestamp เสีย → ข้ามไปใช้ตัวถัดไปในสาย", () => {
-    expect(resolveRoundCutoffMs(YMD, [{ claimedAt: 12345 }, morning])).toBe(
+    expect(
+      resolveRoundCutoffMs(YMD, [{ claimedAt: 12345, results: ok }, morning]),
+    ).toBe(at("07:30"));
+    expect(
+      resolveRoundCutoffMs(YMD, [{ claimedAt: "เสีย", results: ok }, round0830]),
+    ).toBe(at("08:30"));
+  });
+
+  it("ปิดสวิตช์ 08:30 เปิดแต่ 09:30 → กวาดคนที่กดลาหลัง 07:30 มาทั้งหมด", () => {
+    // รอบที่ปิด toggle จะ return ตั้งแต่ต้น ไม่สร้าง doc → สายตกมาที่สรุปเช้า
+    expect(resolveRoundCutoffMs(YMD, [undefined, morning])).toBe(at("07:30"));
+  });
+
+  it("รอบ 08:30 claim แล้วส่งไม่ออก → ไม่บล็อกรอบ 09:30 (คนไม่หายเงียบ)", () => {
+    // claim เกิดก่อน push เสมอ → doc มี claimedAt แม้ไม่มีใครได้เห็นข้อความ
+    const failed = {
+      claimedAt: new Date(at("08:30")).toISOString(),
+      error: "LINE_CHANNEL_ACCESS_TOKEN not configured",
+    };
+    expect(resolveRoundCutoffMs(YMD, [failed, morning])).toBe(at("07:30"));
+
+    // ทุกกลุ่ม push ไม่ผ่าน (มี sentAt แต่ไม่มีใครได้รับ) ก็ต้องไม่นับ
+    const allGroupsFailed = {
+      claimedAt: new Date(at("08:30")).toISOString(),
+      sentAt: new Date(at("08:30")).toISOString(),
+      results: [{ name: "we r mukda", sent: false, error: "429" }],
+    };
+    expect(resolveRoundCutoffMs(YMD, [allGroupsFailed, morning])).toBe(
       at("07:30"),
-    );
-    expect(resolveRoundCutoffMs(YMD, [{ claimedAt: "เสีย" }, round0830])).toBe(
-      at("08:30"),
     );
   });
 
@@ -90,6 +122,40 @@ describe("resolveRoundCutoffMs — รอบ 09:30 ต้องนับต่�
     expect(resolveLateCutoffMs(YMD, null)).toBe(
       resolveRoundCutoffMs(YMD, [null]),
     );
+  });
+});
+
+describe("roundWasAnnounced — กัน 'claim แล้วแต่ไม่ได้ส่ง' บล็อกรอบถัดไป", () => {
+  it("มีอย่างน้อย 1 กลุ่มที่ sent → นับว่าประกาศแล้ว", () => {
+    expect(
+      roundWasAnnounced({
+        results: [
+          { name: "a", sent: false, error: "x" },
+          { name: "b", sent: true },
+        ],
+      }),
+    ).toBe(true);
+  });
+
+  it("ทุกกลุ่ม fail / results ว่าง / claim เฉยๆ / ไม่มี doc → ยังไม่ประกาศ", () => {
+    expect(roundWasAnnounced({ results: [{ name: "a", sent: false }] })).toBe(
+      false,
+    );
+    expect(roundWasAnnounced({ results: [] })).toBe(false);
+    expect(roundWasAnnounced({ claimedAt: "2026-09-01T01:30:00.000Z" })).toBe(
+      false,
+    );
+    expect(roundWasAnnounced(null)).toBe(false);
+    expect(roundWasAnnounced(undefined)).toBe(false);
+  });
+
+  it("doc เก่าที่ไม่มี results — มี sentAt + ไม่มี error → นับว่าส่งแล้ว", () => {
+    expect(roundWasAnnounced({ sentAt: "2026-09-01T01:30:00.000Z" })).toBe(
+      true,
+    );
+    expect(
+      roundWasAnnounced({ sentAt: "2026-09-01T01:30:00.000Z", error: "boom" }),
+    ).toBe(false);
   });
 });
 

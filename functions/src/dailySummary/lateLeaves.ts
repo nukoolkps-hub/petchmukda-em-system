@@ -18,6 +18,7 @@ export {
 	pickLateLeaveDocs,
 	resolveLateCutoffMs,
 	resolveRoundCutoffMs,
+	roundWasAnnounced,
 } from "./leaveRules.js";
 
 /** ใบลาที่ครอบวันนี้ + ถูกกดหลัง cutoff → ชื่อเล่น + ประเภทลา */
