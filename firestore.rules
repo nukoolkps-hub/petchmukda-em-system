@@ -467,15 +467,20 @@ service cloud.firestore {
     function quizOwner() {
       return isSignedIn() && request.auth.uid == resource.data.uid;
     }
-    function quizNotSubmitted() {
-      return resource.data.submittedAt == null;
+    // ยังเปิดให้เจ้าของเขียนอยู่ไหม — ส่งแล้ว หรือยกเลิกแล้ว = ปิด
+    // (`cancelledAt` เพิ่มทีหลัง doc เก่าไม่มี key → ต้องเช็ค `in` ก่อนอ่าน)
+    function quizStillOpen() {
+      return resource.data.submittedAt == null
+        && (!('cancelledAt' in resource.data)
+            || resource.data.cancelledAt == null);
     }
-    // คำตอบ + การส่ง เท่านั้น — ห้ามแตะ employeeId/startedAt/durationMinutes
-    // (ยืดเวลา/โอนข้อสอบให้คนอื่น) และห้ามแตะ field ฝั่งให้คะแนน
+    // คำตอบ + การส่ง + การยกเลิก เท่านั้น — ห้ามแตะ uid/employeeId/
+    // startedAt/durationMinutes (ยืดเวลา/โอนข้อสอบให้คนอื่น) และห้ามแตะ
+    // field ฝั่งให้คะแนน
     function quizAnswerFieldsOnly() {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['answers', 'submittedAt', 'submittedAtServer',
-                  'autoSubmitted']);
+                  'autoSubmitted', 'cancelledAt', 'cancelledAtServer']);
     }
     function quizGradeFieldsOnly() {
       return request.resource.data.diff(resource.data).affectedKeys()
@@ -493,8 +498,8 @@ service cloud.firestore {
         // เริ่มมาแล้วมีคะแนนติดมาด้วยไม่ได้
         && !('grades' in request.resource.data);
 
-      // เจ้าของ: ตอบ/ส่ง ได้จนกว่าจะส่ง · admin: ให้คะแนนได้ตลอด
-      allow update: if (quizOwner() && quizNotSubmitted()
+      // เจ้าของ: ตอบ/ส่ง/ยกเลิก ได้จนกว่าจะส่ง · admin: ให้คะแนนได้ตลอด
+      allow update: if (quizOwner() && quizStillOpen()
                         && quizAnswerFieldsOnly())
         || (isAdmin() && quizGradeFieldsOnly());
 

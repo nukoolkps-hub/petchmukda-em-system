@@ -462,15 +462,21 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | submittedAt | number \| null | ms epoch ตอนส่ง · `null` = ยังทำอยู่ |
 | submittedAtServer | timestamp | `serverTimestamp()` ตอนส่ง |
 | autoSubmitted | boolean | `true` = หมดเวลาแล้วระบบส่งให้เอง |
+| cancelledAt | number \| null | ms epoch ตอนกด "ยกเลิกการทำข้อสอบ" · ไม่นับเป็นผลสอบ + ทำต่อไม่ได้ · **ไม่ลบ doc** (ประวัติต้องเห็นว่าเคยเริ่มแล้วเลิก) |
+| cancelledAtServer | timestamp | `serverTimestamp()` ตอนยกเลิก |
 | grades | map | `questionId → ผ่าน/ไม่ผ่าน` (admin เท่านั้น) · ข้อที่ยังไม่ตรวจไม่มี key |
 | gradedAt / gradedBy | number \| null / string \| null | เวลา + ชื่อคนตรวจ |
 | note | string | หมายเหตุถึงผู้สอบ |
 
 **นาฬิกายึด `startedAt` ที่เก็บไว้ ไม่ใช่ตัวนับใน React** — รีเฟรช/ปิดแท็บแล้วกลับมา เวลาเดินต่อจากเดิม ไม่ได้เวลาเพิ่ม · `QuizPanel` หยิบชุดที่ยังทำค้างกลับมาต่อเสมอ ไม่สร้างชุดใหม่ทับ (ไม่งั้นกดเริ่มซ้ำ = ได้ 100 นาทีใหม่ฟรี)
 
+**`employeeName` มาจากช่องที่ผู้สอบพิมพ์เองตอนกดเริ่ม** (ADMIN เปิดเครื่องให้พนักงานทำได้ → `uid` เป็นของ ADMIN) · `employeeId` แปลงจากชื่อนั้นด้วย `resolveExamineeId` — จับคู่ตรงตัว ชนกันหลายคนคืนค่าว่าง ไม่เดา
+
+**ยกเลิก ≠ หมดเวลา** — `isExpired` คืน `false` สำหรับชุดที่ยกเลิก (จบด้วยคนละเหตุ) · ตัวที่บอกว่า "ยังทำอยู่จริง" คือ `isInProgress`
+
 **เกณฑ์ผ่านนับจากข้อหลัก 30 ข้อเท่านั้น** (ความรู้รอบตัว 6 ข้อไม่เข้าเกณฑ์) · ตรวจไม่ครบ → `scoreAttempt` คืน `passed: null` = "ยังไม่ตัดสิน" ไม่ใช่ "ไม่ผ่าน" · logic ทั้งหมดอยู่ที่ `src/utils/quizAttempt.ts`
 
-**Read/Write:** อ่าน = admin / เจ้าของ (`uid`) · เจ้าของแก้ได้เฉพาะ `answers`/การส่ง และเฉพาะตอนยังไม่ส่ง · `grades`/`gradedAt`/`gradedBy`/`note` = admin เท่านั้น (คนทำให้คะแนนตัวเองไม่ได้)
+**Read/Write:** อ่าน = admin / เจ้าของ (`uid`) · เจ้าของแก้ได้เฉพาะ `answers`/การส่ง/การยกเลิก และเฉพาะตอนชุดยัง "เปิด" (`quizStillOpen()` = ยังไม่ส่ง **และ** ยังไม่ยกเลิก · `cancelledAt` เพิ่มทีหลัง doc เก่าไม่มี key จึงเช็ค `in` ก่อนอ่าน) · `grades`/`gradedAt`/`gradedBy`/`note` = admin เท่านั้น (คนทำให้คะแนนตัวเองไม่ได้)
 
 ## Security Rules Summary
 
@@ -495,7 +501,7 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | config/loyaltyPoints | all signed-in | admin only |
 | config/notifications | admin only | admin only — toggle 4 ตัว + `dailySummaryGroups[]` (กลุ่มปลายทางสรุปเช้า · Cloud Function seed ค่าเดิมให้ครั้งแรก) |
 | dailySummaryImages/{id} | admin only | admin only (+ Cloud Function ผ่าน Admin SDK) |
-| quizAttempts/{attemptId} | admin / owner (`uid`) | owner สร้าง (`startedAtServer == request.time` · `answers` ว่าง · ห้ามมี `grades`) + แก้ `answers`/ส่ง ได้จนกว่าจะส่ง · `grades`/`note` + delete = admin only |
+| quizAttempts/{attemptId} | admin / owner (`uid`) | owner สร้าง (`startedAtServer == request.time` · `answers` ว่าง · ห้ามมี `grades`) + แก้ `answers`/ส่ง/ยกเลิก ได้จนกว่าจะส่งหรือยกเลิก · `grades`/`note` + delete = admin only |
 | config/backupStatus | admin only | blocked (เขียนโดย Cloud Function · Admin SDK) |
 | config/* (อื่นๆ) | blocked | blocked (Functions ใช้ Admin SDK) |
 

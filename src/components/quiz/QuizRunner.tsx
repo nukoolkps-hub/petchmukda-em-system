@@ -11,10 +11,12 @@ import {
   ChevronRight as IconChevronRight,
   Clock as IconClock,
   Send as IconSend,
+  Trash2 as IconTrash,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { QuizSet } from "../../content/quiz/basicExam";
 import {
+  cancelQuizAttempt,
   saveQuizAnswers,
   submitQuizAttempt,
 } from "../../firebase/quizAttempts";
@@ -54,6 +56,7 @@ export default function QuizRunner({
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   // เก็บตัวล่าสุดไว้ให้ timer/auto-submit อ่าน โดยไม่ต้องผูกเป็น dep
   // (ผูกแล้ว effect จะ re-run ทุกตัวอักษรที่พิมพ์ → ตั้ง interval ใหม่รัว)
@@ -93,6 +96,24 @@ export default function QuizRunner({
     },
     [attempt.id, onFinished, showToast],
   );
+
+  // ยกเลิกการทำข้อสอบ — ใช้ `submittedRef` ตัวเดียวกับการส่ง เพื่อปิด
+  // autosave/auto-submit ที่ค้างอยู่ ไม่ให้เขียนทับ doc ที่เพิ่งยกเลิกไป
+  const cancel = useCallback(async () => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    try {
+      await cancelQuizAttempt(attempt.id);
+      showToast?.("ยกเลิกการทำข้อสอบแล้ว");
+      onFinished();
+    } catch (err) {
+      submittedRef.current = false;
+      showToast?.(
+        err instanceof Error ? `ยกเลิกไม่สำเร็จ: ${err.message}` : "ยกเลิกไม่สำเร็จ",
+      );
+    }
+  }, [attempt.id, onFinished, showToast]);
 
   // นาฬิกา — เดินทุกวินาที แล้วคำนวณเวลาที่เหลือจาก startedAt ใหม่ทุกครั้ง
   useEffect(() => {
@@ -148,17 +169,17 @@ export default function QuizRunner({
       {/* ── แถบนาฬิกา — ติดบนสุดไว้ ให้เห็นตลอดเวลาที่เลื่อนอ่านโจทย์ยาวๆ ── */}
       <div className="sticky top-0 z-10 -mx-1 mb-3 px-3 py-2.5 rounded-[12px] bg-maroon text-white flex items-center justify-between gap-2 shadow-md">
         <div className="flex items-center gap-2">
-          <IconClock size={18} strokeWidth={2.4} />
+          <IconClock size={22} strokeWidth={2.4} />
           <span
-            className={`font-mono text-xl font-black tabular-nums ${
+            className={`font-mono text-3xl font-black tabular-nums ${
               left <= WARN_MS ? "text-red-300" : "text-white"
             }`}
           >
             {formatCountdown(left)}
           </span>
         </div>
-        <div className="flex items-center gap-2.5 text-xs">
-          <span className="text-white/80">
+        <div className="flex items-center gap-2.5 text-sm">
+          <span className="text-white/85 font-semibold">
             ตอบแล้ว {allDone}/{questions.length}
           </span>
           {saving && <span className="text-gold-lt">กำลังบันทึก…</span>}
@@ -166,8 +187,8 @@ export default function QuizRunner({
       </div>
 
       {left <= WARN_MS && !expired && (
-        <div className="mb-3 px-3 py-2 rounded-[10px] bg-[#FDECEA] border border-[#C0392B50] text-xs text-red font-semibold flex items-center gap-1.5">
-          <IconAlertTriangle size={14} strokeWidth={2.4} className="shrink-0" />
+        <div className="mb-3 px-3 py-2.5 rounded-[10px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold flex items-center gap-1.5">
+          <IconAlertTriangle size={16} strokeWidth={2.4} className="shrink-0" />
           เหลือเวลาน้อยกว่า 5 นาที — หมดเวลาระบบจะส่งให้อัตโนมัติ
         </div>
       )}
@@ -182,7 +203,7 @@ export default function QuizRunner({
               key={item.id}
               type="button"
               onClick={() => setIdx(i)}
-              className={`w-7 h-7 rounded-[7px] text-[11px] font-bold cursor-pointer border transition-colors ${
+              className={`w-9 h-9 rounded-[8px] text-sm font-bold cursor-pointer border transition-colors ${
                 active
                   ? "bg-maroon text-white border-maroon"
                   : done
@@ -198,18 +219,20 @@ export default function QuizRunner({
 
       {/* ── โจทย์ + ช่องตอบ ── */}
       <div className="rounded-[12px] border border-bdr bg-white p-3.5 mb-3">
-        <div className="text-[11px] font-bold text-txt-soft mb-1.5">
+        <div className="text-sm font-bold text-txt-soft mb-2">
           {isGeneral
             ? `ความรู้รอบตัว ข้อ ${numberInGroup}/${quiz.general.length} · ไม่นับในเกณฑ์ผ่าน`
             : `ข้อ ${numberInGroup}/${quiz.main.length}`}
         </div>
-        <p className="text-sm text-txt leading-relaxed mb-3">{q.text}</p>
+        <p className="text-xl text-txt leading-relaxed font-semibold mb-3.5">
+          {q.text}
+        </p>
         <textarea
           value={answers[q.id] ?? ""}
           onChange={(e) => setAnswer(q.id, e.target.value)}
           placeholder="พิมพ์คำตอบ + แสดงวิธีคิดคำนวณให้ชัดเจน"
           rows={8}
-          className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-sm text-txt leading-relaxed font-[inherit] outline-none focus:border-maroon transition-colors resize-y"
+          className="w-full px-3.5 py-3 rounded-[9px] border border-bdr bg-cream/40 text-xl text-txt leading-relaxed font-[inherit] outline-none focus:border-maroon transition-colors resize-y"
         />
       </div>
 
@@ -219,34 +242,62 @@ export default function QuizRunner({
           type="button"
           onClick={() => setIdx((i) => Math.max(0, i - 1))}
           disabled={idx === 0}
-          className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
+          className="flex-1 py-3 rounded-[10px] border border-bdr bg-white text-base font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
         >
-          <IconChevronLeft size={16} strokeWidth={2.4} />
+          <IconChevronLeft size={18} strokeWidth={2.4} />
           ก่อนหน้า
         </button>
         <button
           type="button"
           onClick={() => setIdx((i) => Math.min(questions.length - 1, i + 1))}
           disabled={idx === questions.length - 1}
-          className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
+          className="flex-1 py-3 rounded-[10px] border border-bdr bg-white text-base font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
         >
           ถัดไป
-          <IconChevronRight size={16} strokeWidth={2.4} />
+          <IconChevronRight size={18} strokeWidth={2.4} />
         </button>
       </div>
 
-      {/* ── ส่งข้อสอบ ── */}
-      {confirming ? (
+      {/* ── ส่งข้อสอบ / ยกเลิก ── */}
+      {cancelling ? (
+        <div className="rounded-[12px] border-[1.5px] border-[#C0392B50] bg-[#FDECEA] p-3.5">
+          <div className="text-base font-bold text-red mb-1.5 flex items-center gap-1.5">
+            <IconAlertTriangle size={17} strokeWidth={2.4} />
+            ยกเลิกการทำข้อสอบ
+          </div>
+          <p className="text-sm text-txt-mid leading-relaxed mb-3">
+            ชุดนี้จะ<b>ไม่ถูกนับเป็นผลสอบ</b> และกลับมาทำต่อไม่ได้ ·
+            ถ้าจะทำใหม่ต้องกดเริ่มใหม่ทั้งชุด (จับเวลาใหม่ตั้งแต่ต้น)
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setCancelling(false)}
+              className="flex-1 py-3 rounded-[10px] border border-bdr bg-white text-base font-bold text-txt font-[inherit] cursor-pointer"
+            >
+              ทำต่อ
+            </button>
+            <button
+              type="button"
+              onClick={() => void cancel()}
+              className="flex-1 py-3 rounded-[10px] bg-red text-white text-base font-bold font-[inherit] cursor-pointer inline-flex items-center justify-center gap-1.5"
+            >
+              <IconTrash size={17} strokeWidth={2.4} />
+              ยืนยันยกเลิก
+            </button>
+          </div>
+        </div>
+      ) : confirming ? (
         <div className="rounded-[12px] border-[1.5px] border-amber/45 bg-amber-lt/50 p-3.5">
-          <div className="text-sm font-bold text-txt mb-1 flex items-center gap-1.5">
+          <div className="text-base font-bold text-txt mb-1.5 flex items-center gap-1.5">
             <IconAlertTriangle
-              size={15}
+              size={17}
               strokeWidth={2.4}
               className="text-amber"
             />
             ส่งข้อสอบเลยไหม
           </div>
-          <p className="text-xs text-txt-mid leading-relaxed mb-3">
+          <p className="text-sm text-txt-mid leading-relaxed mb-3">
             ตอบแล้ว {mainDone}/{quiz.main.length} ข้อหลัก
             {mainDone < quiz.main.length && " (ยังไม่ครบ)"} ·{" "}
             <b>ส่งแล้วกลับมาแก้ไม่ได้อีก</b>
@@ -255,7 +306,7 @@ export default function QuizRunner({
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer"
+              className="flex-1 py-3 rounded-[10px] border border-bdr bg-white text-base font-bold text-txt font-[inherit] cursor-pointer"
             >
               ทำต่อ
             </button>
@@ -263,9 +314,9 @@ export default function QuizRunner({
               type="button"
               onClick={() => void finish(false)}
               disabled={submitting}
-              className="flex-1 py-2.5 rounded-[10px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+              className="flex-1 py-3 rounded-[10px] bg-maroon text-white text-base font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
             >
-              <IconCheck size={16} strokeWidth={2.4} />
+              <IconCheck size={18} strokeWidth={2.4} />
               {submitting ? "กำลังส่ง…" : "ยืนยันส่ง"}
             </button>
           </div>
@@ -275,10 +326,24 @@ export default function QuizRunner({
           type="button"
           onClick={() => setConfirming(true)}
           disabled={submitting || expired}
-          className="w-full py-3 rounded-[12px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+          className="w-full py-3.5 rounded-[12px] bg-maroon text-white text-base font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
         >
-          <IconSend size={16} strokeWidth={2.4} />
+          <IconSend size={18} strokeWidth={2.4} />
           ส่งข้อสอบ
+        </button>
+      )}
+
+      {/* ── ทางออกฉุกเฉิน: เริ่มผิดคน/ผิดจังหวะแล้วติดอยู่ 100 นาที ──
+           วางไว้ท้ายสุด สีจาง + ต้องยืนยันอีกชั้น เพราะกดพลาด = งานหายทั้งชุด */}
+      {!cancelling && !confirming && (
+        <button
+          type="button"
+          onClick={() => setCancelling(true)}
+          disabled={submitting}
+          className="w-full mt-2.5 py-2.5 rounded-[10px] text-sm font-bold text-txt-soft font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5 hover:text-red transition-colors"
+        >
+          <IconTrash size={15} strokeWidth={2.4} />
+          ยกเลิกการทำข้อสอบ
         </button>
       )}
     </div>
