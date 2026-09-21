@@ -6,11 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**",
-      "!!**/dist",
-      "!!**/functions"
-    ]
+    "includes": ["**", "!!**/dist", "!!**/functions"]
   },
   "formatter": {
     "enabled": true,
