@@ -19,6 +19,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { BASIC_EXAM } from "../../content/quiz/basicExam";
 import { useAuth } from "../../contexts/AuthContext";
+import { useGoldPrice } from "../../firebase/hooks/useFirestore";
 import {
   startQuizAttempt,
   subscribeAllQuizAttempts,
@@ -42,6 +43,12 @@ interface Props {
 
 export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   const { user } = useAuth();
+  // `DEFAULT_GOLD_PRICE` เป็นค่า placeholder (50,000) ไม่ใช่ราคาจริง —
+  // ถ้าเผลอ snapshot ตอนยังโหลดไม่เสร็จ ข้อสอบทั้งใบจะอ้างอิงราคาปลอม
+  // โดยไม่มีอะไรฟ้อง → กันไว้ที่ปุ่มเริ่ม (`priceReady`)
+  const { data: gold, loading: goldLoading } = useGoldPrice();
+  const priceReady =
+    !goldLoading && gold.updatedAt > 0 && gold.pricePerBaht > 0;
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
   const [runningId, setRunningId] = useState<string | null>(null);
   const [reviewId, setReviewId] = useState<string | null>(null);
@@ -56,15 +63,10 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   );
   const myName = me?.nickname || me?.name || user?.displayName || "ADMIN";
 
-  // ชื่อผู้สอบ — เติมชื่อคนที่ login ไว้ให้เป็นค่าตั้งต้น แต่แก้ได้
-  // (ADMIN เปิดเครื่องให้พนักงานทำ = ต้องพิมพ์ชื่อพนักงานทับ)
-  const [examineeName, setExamineeName] = useState(myName);
-  const [nameTouched, setNameTouched] = useState(false);
-  // employeeDirectory มาทีหลัง (subscribe) → ค่าตั้งต้นตอน mount ยังเป็น
-  // "ADMIN" อยู่ · sync ตามจนกว่าผู้ใช้จะพิมพ์เอง แล้วหยุดแตะ
-  useEffect(() => {
-    if (!nameTouched) setExamineeName(myName);
-  }, [myName, nameTouched]);
+  // ชื่อผู้สอบ — **เริ่มว่างเสมอ ไม่เติมชื่อคนที่ login ให้**
+  // เครื่องเดียวใช้สอบหลายคน (ADMIN เปิดให้พนักงานทำ) ถ้าเติมชื่อไว้ให้
+  // คนกดเริ่มโดยไม่ทันแก้ = ผลสอบไปติดชื่อผิดคน ซึ่งเงียบสนิทจนถึงตอนตรวจ
+  const [examineeName, setExamineeName] = useState("");
   const trimmedName = examineeName.trim();
 
   // ชุดของเราที่ยังทำอยู่จริง (ยังไม่ส่ง · ยังไม่ยกเลิก · ยังไม่หมดเวลา)
@@ -92,6 +94,17 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
         uid,
         resolveExamineeId(trimmedName, employeeDirectory ?? []),
         trimmedName,
+        // ตรึงราคาไว้ตรงนี้ — ตรวจย้อนหลังต้องคิดจากราคา "วันที่สอบ"
+        {
+          goldSellPerBaht: gold.pricePerBaht,
+          goldBuyPerBaht: gold.buyPrice,
+          silverSellPerGram: gold.silverSellPerGram,
+          silverBuyPerGram: gold.silverBuyPerGram,
+          changeRates: gold.changeRates ?? {},
+          changeRatesForPrice: gold.changeRatesForPrice,
+          capturedAt: Date.now(),
+          priceUpdatedAt: gold.updatedAt,
+        },
       );
       setRunningId(id);
     } catch (err) {
@@ -171,20 +184,26 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
             <input
               type="text"
               value={examineeName}
-              onChange={(e) => {
-                setNameTouched(true);
-                setExamineeName(e.target.value);
-              }}
+              onChange={(e) => setExamineeName(e.target.value)}
               placeholder="พิมพ์ชื่อ-ชื่อเล่นของผู้ทำข้อสอบ"
               className="w-full px-3.5 py-3 rounded-[10px] border border-bdr bg-white text-lg text-txt font-[inherit] outline-none focus:border-maroon transition-colors"
             />
           </label>
         )}
 
+        {!inProgress && !priceReady && (
+          <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold">
+            ยังโหลดราคาทองไม่สำเร็จ — เริ่มสอบตอนนี้ไม่ได้ เพราะทุกข้อต้องอ้างอิงราคา ณ วันที่สอบ
+            (ถ้าค้างนาน เช็กหน้า "ความรู้ต่างๆ" ว่าราคาขึ้นไหม)
+          </div>
+        )}
+
         <button
           type="button"
           onClick={() => void handleStart()}
-          disabled={starting || !uid || (!inProgress && !trimmedName)}
+          disabled={
+            starting || !uid || (!inProgress && (!trimmedName || !priceReady))
+          }
           className="w-full py-3.5 rounded-[12px] bg-maroon text-white text-base font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
         >
           <IconPlay size={18} strokeWidth={2.6} />

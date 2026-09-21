@@ -482,6 +482,9 @@ service cloud.firestore {
         .hasOnly(['answers', 'submittedAt', 'submittedAtServer',
                   'autoSubmitted', 'cancelledAt', 'cancelledAtServer']);
     }
+    // คำตัดสินของคนเท่านั้น — `aiGrades`/`aiGradedAt`/`aiGradeError` ไม่อยู่
+    // ในลิสต์โดยตั้งใจ: เขียนได้เฉพาะ Cloud Function `gradeQuizWithAI`
+    // (Admin SDK · bypass rules) ฝั่ง client แตะไม่ได้เลย แม้เป็น admin
     function quizGradeFieldsOnly() {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['grades', 'gradedAt', 'gradedBy', 'note']);
@@ -495,8 +498,9 @@ service cloud.firestore {
         && request.resource.data.startedAtServer == request.time
         && request.resource.data.submittedAt == null
         && request.resource.data.answers.size() == 0
-        // เริ่มมาแล้วมีคะแนนติดมาด้วยไม่ได้
-        && !('grades' in request.resource.data);
+        // เริ่มมาแล้วมีคะแนนติดมาด้วยไม่ได้ (ทั้งของคนและของ AI)
+        && !('grades' in request.resource.data)
+        && !('aiGrades' in request.resource.data);
 
       // เจ้าของ: ตอบ/ส่ง/ยกเลิก ได้จนกว่าจะส่ง · admin: ให้คะแนนได้ตลอด
       allow update: if (quizOwner() && quizStillOpen()

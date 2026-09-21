@@ -66,8 +66,9 @@ export { lineWebhook } from "./line/webhook.js";
 // Maintenance
 export { cleanupOldSlips } from "./maintenance/cleanupOldSlips.js";
 export { cleanupOldTips } from "./maintenance/cleanupOldTips.js";
-// Per-employee wipe (admin only) — ลบข้อมูลของพนักงานเฉพาะคน ไม่ใช่ทั้งระบบ
 export { wipeEmployeeData } from "./maintenance/wipeEmployeeData.js";
 // One-time start-fresh utility (admin-only callable · ลบข้อมูลพนักงาน +
 // transactional data ก่อนเริ่มใช้จริง · เก็บ config/roles/duties ไว้)
 export { wipeTestData } from "./maintenance/wipeTestData.js";
+// Per-employee wipe (admin only) — ลบข้อมูลของพนักงานเฉพาะคน ไม่ใช่ทั้งระบบ
+export { gradeQuizWithAI } from "./quiz/gradeQuizWithAI.js";

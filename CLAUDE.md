@@ -118,6 +118,7 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 | logic | `src/utils/quizAttempt.ts` | pure — เวลา (`remainingMs`/`isExpired`/`formatCountdown`) + คะแนน (`scoreAttempt`) · ไม่แตะ Firebase/React |
 | data | `src/firebase/quizAttempts.ts` | `quizAttempts/{id}` — subscribe/start/save/submit/grade |
 | UI | `src/components/quiz/{QuizPanel,QuizRunner,QuizReview}.tsx` | router 3 โหมด · หน้าทำข้อสอบ · หน้าตรวจ |
+| AI ช่วยตรวจ | `functions/src/quiz/gradeQuizWithAI.ts` + `src/utils/quizGradingReference.ts` | callable (admin) → Claude อ่านคำตอบเทียบกฎ + ราคาที่ตรึงไว้ แล้วเสนอผ่าน/ไม่ผ่าน |
 
 **กฎที่พังเงียบถ้าแก้ผิด:**
 - **นาฬิกายึด `startedAt` ใน Firestore ไม่ใช่ตัวนับใน state** — นับถอยหลังด้วย state แล้วผู้ใช้รีเฟรช/สลับแท็บ (มือถือ throttle timer) จะได้เวลาเพิ่มฟรี · คำนวณ "เวลาเริ่ม + ระยะเวลา − ตอนนี้" ใหม่ทุกครั้งเสมอ
@@ -128,6 +129,14 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 - **เกณฑ์ผ่านนับจาก `quiz.main` เท่านั้น** (ความรู้รอบตัวไม่เข้าเกณฑ์) · ตรวจไม่ครบ → `passed: null` = "ยังไม่ตัดสิน" **ไม่ใช่ "ไม่ผ่าน"** — UI ต้องแยก 2 อย่างนี้ ไม่งั้นคนเพิ่งส่งจะขึ้นว่าตก
 - คำตอบเขียนลง Firestore ระหว่างพิมพ์ (debounce ~2 วิ) ไม่ใช่ตอนกดส่ง — ข้อสอบยาว 100 นาที เน็ตหลุดแล้วเสียทั้งชุดไม่ได้
 - `startedAtServer == request.time` บังคับใน `firestore.rules` — `startedAt` มาจากนาฬิกาเครื่อง ตั้งอนาคตแล้วยืดเวลาสอบเองได้
+- **ตรึงราคาทอง (`priceSnapshot`) ตอนกดเริ่มเสมอ** — กติกาข้อสอบคือ "ทุกข้ออ้างอิงราคาทองคำแท่ง ณ วันที่ทำข้อสอบ" ถ้าไม่ตรึง พอตรวจวันถัดไปเฉลยจะคิดจากราคาใหม่ → **คำตอบที่ถูกกลายเป็นผิดทั้งกระดาน** เงียบสนิท · `DEFAULT_GOLD_PRICE` เป็น placeholder (50,000) ไม่ใช่ราคาจริง → ปุ่มเริ่มต้อง disable จนกว่า `updatedAt > 0` (`priceReady`)
+
+**AI ช่วยตรวจ (`gradeQuizWithAI`) — ข้อเสนอ ไม่ใช่คำตัดสิน:**
+- ผลลง **`aiGrades` แยกจาก `grades`** ที่ ADMIN กดเอง · function ไม่เคยแตะ `grades` — ถ้าเขียนทับได้ การกดตรวจซ้ำจะลบคำตัดสินของคนทิ้งเงียบๆ · ปุ่ม "ใช้ผล AI" เติมเฉพาะข้อที่ยังไม่ตัดสิน ไม่ทับของที่ตรวจแล้ว
+- `aiGrades`/`aiGradedAt`/`aiGradeError` **ไม่อยู่ใน `quizGradeFieldsOnly()`** โดยตั้งใจ — เขียนได้เฉพาะ Cloud Function (Admin SDK) client แตะไม่ได้แม้เป็น admin
+- **เอกสารอ้างอิงประกอบฝั่ง client แล้วส่งไป** (`buildGradingReference`) เพราะ `src/content/knowledge` เป็นไฟล์ frontend (lucide icon + `compute` เป็นฟังก์ชัน) functions import ตรงไม่ได้ · copy ไปไว้อีกชุด = 2 แหล่งที่ drift หากันเงียบๆ แล้ว AI จะตรวจด้วยกฎที่เลิกใช้แล้ว
+- block ที่เป็นฟังก์ชัน (`calculator`/`live-example`) และตารางราคาสด **ข้ามทั้งหมด** — รัน compute ตรงนั้นจะได้เลขจากราคา "วันที่ตรวจ" ซึ่งผิดประเด็น · `secret` ก็ไม่ส่งออกไปกับ prompt
+- ตรวจได้เฉพาะชุดที่ **ส่งแล้ว** (ยังทำอยู่/ยกเลิก → ปฏิเสธ) · ชุดเก่าที่ไม่มี `priceSnapshot` ขึ้นกล่องเตือนว่าผลเชื่อไม่ได้
 
 schema เต็ม + สิทธิ์ → `docs/reference/firebase-collections.md` → `quizAttempts/{attemptId}`
 
