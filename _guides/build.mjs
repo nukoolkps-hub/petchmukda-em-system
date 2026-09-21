@@ -1,5 +1,5 @@
+import fs from "node:fs";
 import { Resvg } from "@resvg/resvg-js";
-import fs from "fs";
 import {
   badge,
   C,
@@ -302,7 +302,7 @@ function render(name, body, totalH) {
   const svg = svgDoc(
     W,
     totalH,
-    `<rect width="${W}" height="${totalH}" fill="${C.cream}"/>` + body,
+    `<rect width="${W}" height="${totalH}" fill="${C.cream}"/>${body}`,
   );
   const r = new Resvg(svg, {
     font: {
@@ -315,7 +315,7 @@ function render(name, body, totalH) {
   const png = r.render().asPng();
   const path = `${OUT}/${name}.png`;
   fs.writeFileSync(path, png);
-  console.log("wrote", path, (png.length / 1024).toFixed(0) + "kb");
+  console.log("wrote", path, `${(png.length / 1024).toFixed(0)}kb`);
 }
 
 // ============================================================

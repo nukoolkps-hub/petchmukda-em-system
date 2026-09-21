@@ -42,7 +42,7 @@ export function rolePieceItems(
   if (!role || role.poolGroup) return [];
   if (Array.isArray(role.pieceItems) && role.pieceItems.length > 0) {
     return role.pieceItems
-      .filter((it) => it && it.id && (it.label ?? "").trim())
+      .filter((it) => it?.id && (it.label ?? "").trim())
       .map((it) => ({ id: it.id, label: it.label.trim() }));
   }
   // legacy single label → 1 item id="default"

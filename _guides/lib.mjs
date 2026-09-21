@@ -63,7 +63,7 @@ export function wrap(str, maxW, size) {
       }
     };
     for (const word of words) {
-      const cand = line === "" ? word : line + " " + word;
+      const cand = line === "" ? word : `${line} ${word}`;
       if (textWidth(cand, size) <= maxW) {
         line = cand;
         continue;
@@ -165,7 +165,7 @@ const ICONS = {
 
 export function icon(name, x, y, size, color = "currentColor", sw = 2) {
   const body = ICONS[name];
-  if (!body) throw new Error("no icon " + name);
+  if (!body) throw new Error(`no icon ${name}`);
   const sc = size / 24;
   return `<g transform="translate(${x},${y}) scale(${sc})" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${body.replace(/currentColor/g, color)}</g>`;
 }

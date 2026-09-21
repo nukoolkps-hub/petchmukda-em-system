@@ -375,7 +375,7 @@ export default function StoreCalendarPanel({
 
   // filter by selectedMonth + แยก past/future สำหรับ render
   function partition(list: string[]) {
-    const inMonth = list.filter((d) => d.startsWith(selectedMonth + "-"));
+    const inMonth = list.filter((d) => d.startsWith(`${selectedMonth}-`));
     const sorted = [...inMonth].sort();
     return {
       upcoming: sorted.filter((d) => !isPast(d)),

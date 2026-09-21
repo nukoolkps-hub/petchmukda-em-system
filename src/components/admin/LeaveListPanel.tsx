@@ -40,7 +40,7 @@ interface LeaveListPanelProps {
   onDelete: (id: string | number) => void;
   onAddLeave: (
     leave: Omit<LeaveEntry, "id">,
-  ) => Promise<string | number | void>;
+  ) => Promise<string | number | undefined>;
   /** เดือนที่ดู (YYYY-MM) — controlled โดย AdminPanel ผ่าน prop · admin
    *  ที่เลือก ส.ค. ในแท็บค่าคอม → ไปแท็บนี้ ยังเป็น ส.ค. */
   selectedMonth: string;
