@@ -16,7 +16,7 @@
    มีไว้ให้ระบบอื่น join (เช่น ล้างข้อมูลรายคน ที่ค้นด้วย employee doc id)
 
    สิทธิ์ (firestore.rules):
-   - สร้าง/แก้คำตอบ: เจ้าของ attempt เท่านั้น และเฉพาะตอนยังไม่ส่ง
+   - สร้าง/แก้คำตอบ/ส่ง/ยกเลิก: เจ้าของ attempt เท่านั้น และเฉพาะตอนยังไม่ส่ง
    - ให้คะแนน (`grades`/`gradedAt`/`gradedBy`/`note`): admin เท่านั้น
    - อ่าน: เจ้าของ หรือ admin                                              */
 
@@ -48,6 +48,7 @@ function toAttempt(id: string, data: Record<string, unknown>): QuizAttempt {
     answers: (data.answers as Record<string, string>) ?? {},
     submittedAt: (data.submittedAt as number | null) ?? null,
     autoSubmitted: data.autoSubmitted === true,
+    cancelledAt: (data.cancelledAt as number | null) ?? null,
     grades: (data.grades as Record<string, boolean>) ?? {},
     gradedAt: (data.gradedAt as number | null) ?? null,
     gradedBy: (data.gradedBy as string | null) ?? null,
@@ -147,6 +148,18 @@ export async function submitQuizAttempt(
     submittedAt: Date.now(),
     submittedAtServer: serverTimestamp(),
     autoSubmitted: auto,
+  });
+}
+
+/** ยกเลิกการทำข้อสอบกลางคัน — ชุดนี้ไม่นับเป็นผลสอบ + ทำต่อไม่ได้
+ *
+ *  **ไม่ลบ doc ทิ้ง** — ประวัติต้องเห็นว่าเคยเริ่มแล้วเลิก ไม่ใช่หายไปเฉยๆ
+ *  เหมือนไม่เคยมีอะไรเกิดขึ้น (ข้อสอบใช้วัดคน ร่องรอยสำคัญ) · คำตอบที่พิมพ์
+ *  ไว้ยังติดอยู่ใน doc ตามเดิม เผื่อต้องย้อนดู                              */
+export async function cancelQuizAttempt(attemptId: string): Promise<void> {
+  await updateDoc(doc(col, attemptId), {
+    cancelledAt: Date.now(),
+    cancelledAtServer: serverTimestamp(),
   });
 }
 

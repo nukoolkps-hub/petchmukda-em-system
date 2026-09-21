@@ -30,6 +30,10 @@ export interface QuizAttempt {
   submittedAt: number | null;
   /** ส่งเพราะหมดเวลา (ไม่ได้กดส่งเอง) */
   autoSubmitted?: boolean;
+  /** epoch ms ตอนกด "ยกเลิกการทำข้อสอบ" · null = ไม่ได้ยกเลิก
+   *  ยกเลิกแล้วไม่นับเป็นผลสอบ + ทำต่อไม่ได้ แต่ doc ยังอยู่ (เห็นในประวัติว่า
+   *  เคยเริ่มแล้วเลิกกลางคัน — ลบทิ้งจะกลายเป็นว่าไม่เคยมีอะไรเกิดขึ้น) */
+  cancelledAt?: number | null;
 
   /* ── ADMIN ตรวจทีหลัง (อัตนัยล้วน ระบบตรวจเองไม่ได้) ── */
   /** questionId → ผ่าน/ไม่ผ่าน · เฉพาะข้อหลัก · ข้อที่ยังไม่ตรวจไม่มี key */
@@ -47,21 +51,33 @@ export function deadlineOf(attempt: {
   return attempt.startedAt + attempt.durationMinutes * 60_000;
 }
 
-/** เหลือเวลาอีกกี่ ms (ไม่ติดลบ) — ส่งแล้วถือว่าเหลือ 0 */
-export function remainingMs(
-  attempt: Pick<QuizAttempt, "startedAt" | "durationMinutes" | "submittedAt">,
-  now: number,
-): number {
-  if (attempt.submittedAt) return 0;
+/** ชุดนี้จบไปแล้วไหม — ส่งแล้ว หรือยกเลิกไปแล้ว (นาฬิกาหยุดทั้งคู่) */
+type ClockFields = Pick<
+  QuizAttempt,
+  "startedAt" | "durationMinutes" | "submittedAt" | "cancelledAt"
+>;
+
+function isClosed(attempt: ClockFields): boolean {
+  return !!attempt.submittedAt || !!attempt.cancelledAt;
+}
+
+/** เหลือเวลาอีกกี่ ms (ไม่ติดลบ) — ส่ง/ยกเลิกแล้วถือว่าเหลือ 0 */
+export function remainingMs(attempt: ClockFields, now: number): number {
+  if (isClosed(attempt)) return 0;
   return Math.max(0, deadlineOf(attempt) - now);
 }
 
-/** หมดเวลาแล้วไหม (ยังไม่ส่ง แต่เลยเส้นตาย) */
-export function isExpired(
-  attempt: Pick<QuizAttempt, "startedAt" | "durationMinutes" | "submittedAt">,
-  now: number,
-): boolean {
-  return !attempt.submittedAt && now >= deadlineOf(attempt);
+/** หมดเวลาแล้วไหม (ยังไม่ส่ง/ยังไม่ยกเลิก แต่เลยเส้นตาย)
+ *
+ *  ยกเลิกแล้ว **ไม่ใช่** "หมดเวลา" — มันจบด้วยเหตุอื่น · ถ้าเหมารวมกัน UI
+ *  จะขึ้นว่าหมดเวลาให้ชุดที่คนกดเลิกเอง ซึ่งอ่านแล้วเข้าใจผิด */
+export function isExpired(attempt: ClockFields, now: number): boolean {
+  return !isClosed(attempt) && now >= deadlineOf(attempt);
+}
+
+/** ยังทำอยู่จริงไหม (ยังไม่ส่ง · ยังไม่ยกเลิก · ยังไม่หมดเวลา) */
+export function isInProgress(attempt: ClockFields, now: number): boolean {
+  return !isClosed(attempt) && !isExpired(attempt, now);
 }
 
 /** ms → "MM:SS" หรือ "H:MM:SS" เมื่อเกิน 1 ชม. (ปัดขึ้นวินาที ไม่ให้ค้าง 0:00) */
@@ -133,4 +149,39 @@ export function scoreAttempt(
     percent,
     passed: graded < total ? null : percent >= quiz.passPercent,
   };
+}
+
+/** คนที่อาจเป็นผู้สอบ — รูปร่างขั้นต่ำที่ `resolveExamineeId` ต้องใช้ */
+export interface QuizExamineeCandidate {
+  id: string;
+  name?: string;
+  nickname?: string;
+}
+
+/** ตัดช่องว่างหัว-ท้าย + ยุบช่องว่างซ้อนให้เหลือตัวเดียว แล้วเทียบแบบไม่สนตัวพิมพ์ */
+function normalizeName(value: string): string {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/** ชื่อที่ผู้สอบพิมพ์ → id ของ doc ใน `employees` (ว่าง = จับคู่ไม่ได้)
+ *
+ *  ผู้สอบพิมพ์ชื่อตัวเองตอนกดเริ่ม (ADMIN อาจเปิดเครื่องให้ทำ — `uid` จึงเป็น
+ *  ของ ADMIN ไม่ใช่ของคนทำ) · ตัวนี้แปลงชื่อกลับเป็น `employeeId` ให้ระบบอื่น
+ *  join ได้ เช่น ล้างข้อมูลรายคน
+ *
+ *  **เทียบแบบตรงตัวเท่านั้น** (หลัง trim/ยุบช่องว่าง/ไม่สนตัวพิมพ์) และ
+ *  **ชนกันหลายคน = คืนค่าว่าง** — เดาผิดแปลว่าผลสอบไปผูกกับพนักงานผิดคน
+ *  ซึ่งแย่กว่าไม่ผูกเลย · ชื่อที่โชว์ยังเป็นสิ่งที่พิมพ์มาเสมอ ไม่ถูกเขียนทับ */
+export function resolveExamineeId(
+  typedName: string,
+  people: QuizExamineeCandidate[],
+): string {
+  const target = normalizeName(typedName);
+  if (!target) return "";
+  const hits = people.filter(
+    (p) =>
+      normalizeName(p.nickname ?? "") === target ||
+      normalizeName(p.name ?? "") === target,
+  );
+  return hits.length === 1 ? hits[0].id : "";
 }

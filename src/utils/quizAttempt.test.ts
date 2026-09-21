@@ -15,7 +15,9 @@ import {
   formatCountdown,
   isAnswered,
   isExpired,
+  isInProgress,
   remainingMs,
+  resolveExamineeId,
   scoreAttempt,
 } from "./quizAttempt";
 
@@ -153,5 +155,68 @@ describe("ชุดข้อสอบ BASIC_EXAM", () => {
     for (const q of [...BASIC_EXAM.main, ...BASIC_EXAM.general]) {
       expect(q.text.trim().length).toBeGreaterThan(10);
     }
+  });
+});
+
+describe("ยกเลิกการทำข้อสอบกลางคัน", () => {
+  const cancelled = { ...base, cancelledAt: START + 10 * MIN };
+
+  it("ยกเลิกแล้วนาฬิกาหยุด — เหลือ 0 แม้ยังไม่ถึงเส้นตาย", () => {
+    expect(remainingMs(cancelled, START + 20 * MIN)).toBe(0);
+  });
+
+  it("ยกเลิกแล้วไม่ใช่ 'หมดเวลา' — คนละเหตุผลกัน ห้ามเหมารวม", () => {
+    // เลยเส้นตายไปแล้วก็ยังไม่ใช่หมดเวลา เพราะมันจบไปตั้งแต่ตอนยกเลิก
+    expect(isExpired(cancelled, START + 200 * MIN)).toBe(false);
+    // เทียบกับชุดที่ปล่อยทิ้งจริงๆ (ไม่ได้ยกเลิก) — อันนั้นคือหมดเวลา
+    expect(isExpired(base, START + 200 * MIN)).toBe(true);
+  });
+
+  it("ยกเลิกแล้วไม่นับว่ากำลังทำอยู่ — กดเริ่มใหม่ได้ ไม่ติดชุดเดิม", () => {
+    expect(isInProgress(base, START + 10 * MIN)).toBe(true);
+    expect(isInProgress(cancelled, START + 10 * MIN)).toBe(false);
+    expect(isInProgress({ ...base, submittedAt: START + MIN }, START)).toBe(
+      false,
+    );
+    expect(isInProgress(base, START + 200 * MIN)).toBe(false); // หมดเวลา
+  });
+
+  it("doc เก่าที่ไม่มี field cancelledAt ยังทำงานเหมือนเดิม", () => {
+    expect(isInProgress(base, START + MIN)).toBe(true);
+    expect(remainingMs(base, START + MIN)).toBe(99 * MIN);
+  });
+});
+
+describe("resolveExamineeId — ชื่อที่พิมพ์ → employeeId", () => {
+  const people = [
+    { id: "emp-1", name: "สมชาย ใจดี", nickname: "ชาย" },
+    { id: "emp-2", name: "สมหญิง ขยัน", nickname: "หญิง" },
+    { id: "emp-3", name: "Somsak Jaidee", nickname: "Sak" },
+  ];
+
+  it("จับคู่ได้ทั้งชื่อเต็มและชื่อเล่น", () => {
+    expect(resolveExamineeId("สมชาย ใจดี", people)).toBe("emp-1");
+    expect(resolveExamineeId("หญิง", people)).toBe("emp-2");
+  });
+
+  it("ตัดช่องว่างหัว-ท้าย + ยุบช่องว่างซ้อน + ไม่สนตัวพิมพ์", () => {
+    expect(resolveExamineeId("  ชาย  ", people)).toBe("emp-1");
+    expect(resolveExamineeId("สมชาย    ใจดี", people)).toBe("emp-1");
+    expect(resolveExamineeId("somsak jaidee", people)).toBe("emp-3");
+  });
+
+  it("ไม่เดา — ชื่อไม่ตรงเป๊ะ/ว่าง คืนค่าว่าง", () => {
+    expect(resolveExamineeId("สมชาย", people)).toBe("");
+    expect(resolveExamineeId("คนนอก", people)).toBe("");
+    expect(resolveExamineeId("   ", people)).toBe("");
+    expect(resolveExamineeId("ชาย", [])).toBe("");
+  });
+
+  it("ชื่อชนกันหลายคน = คืนค่าว่าง (ผูกผิดคนแย่กว่าไม่ผูก)", () => {
+    const twins = [
+      { id: "emp-a", name: "สมชาย ใจดี", nickname: "ชาย" },
+      { id: "emp-b", name: "สมชาย ใจงาม", nickname: "ชาย" },
+    ];
+    expect(resolveExamineeId("ชาย", twins)).toBe("");
   });
 });

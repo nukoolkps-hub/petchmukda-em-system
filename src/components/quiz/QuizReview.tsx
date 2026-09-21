@@ -84,20 +84,28 @@ export default function QuizReview({
 
       {/* ── หัว: ใครทำ · เมื่อไหร่ · คะแนน ── */}
       <div className="rounded-[12px] border border-bdr bg-white p-3.5 mb-3">
-        <div className="text-base font-extrabold text-txt">
+        <div className="text-lg font-extrabold text-txt">
           {attempt.employeeName || "(ไม่ทราบชื่อ)"}
         </div>
-        <div className="text-xs text-txt-soft mt-0.5 flex items-center gap-1">
-          <IconClock size={12} strokeWidth={2.4} />
+        <div className="text-sm text-txt-soft mt-0.5 flex items-center gap-1">
+          <IconClock size={14} strokeWidth={2.4} />
           เริ่ม {fmtThaiDateTime(attempt.startedAt)}
           {attempt.submittedAt
             ? ` · ส่ง ${fmtThaiDateTime(attempt.submittedAt)}`
-            : " · ยังทำอยู่"}
+            : attempt.cancelledAt
+              ? ` · ยกเลิก ${fmtThaiDateTime(attempt.cancelledAt)}`
+              : " · ยังทำอยู่"}
           {attempt.autoSubmitted && " (หมดเวลา)"}
         </div>
 
+        {attempt.cancelledAt && (
+          <div className="mt-2 px-3 py-2 rounded-[8px] bg-cream-dk/70 text-sm text-txt-mid font-semibold">
+            ชุดนี้ถูกยกเลิกกลางคัน — ไม่นับเป็นผลสอบ (คำตอบที่พิมพ์ไว้ยังอยู่ให้ดูได้)
+          </div>
+        )}
+
         <div className="mt-3 pt-3 border-t border-bdr/60 flex items-center justify-between">
-          <div className="text-sm text-txt-mid">
+          <div className="text-base text-txt-mid">
             ตรวจแล้ว <b className="text-txt">{score.graded}</b>/{score.total} ·
             ผ่าน <b className="text-green">{score.correct}</b> ข้อ
           </div>
@@ -133,7 +141,7 @@ export default function QuizReview({
         },
       ].map((group) => (
         <div key={group.label} className="mb-4">
-          <div className="text-sm font-extrabold text-maroon mb-2">
+          <div className="text-base font-extrabold text-maroon mb-2">
             {group.label}
           </div>
           {group.items.map((q, i) => {
@@ -145,16 +153,16 @@ export default function QuizReview({
                 className="rounded-[10px] border border-bdr bg-white p-3 mb-2"
               >
                 <div className="flex items-start gap-2 mb-2">
-                  <span className="shrink-0 mt-[2px] w-5 h-5 rounded-full bg-maroon text-white text-[11px] font-extrabold flex items-center justify-center">
+                  <span className="shrink-0 mt-[2px] w-6 h-6 rounded-full bg-maroon text-white text-xs font-extrabold flex items-center justify-center">
                     {i + 1}
                   </span>
-                  <p className="flex-1 text-xs text-txt-mid leading-relaxed">
+                  <p className="flex-1 text-base text-txt-mid leading-relaxed">
                     {q.text}
                   </p>
                 </div>
 
                 <div
-                  className={`rounded-[8px] px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                  className={`rounded-[8px] px-3.5 py-2.5 text-lg leading-relaxed whitespace-pre-wrap ${
                     answer
                       ? "bg-cream/60 text-txt"
                       : "bg-cream-dk/60 text-txt-soft italic"
@@ -168,25 +176,25 @@ export default function QuizReview({
                     <button
                       type="button"
                       onClick={() => mark(q.id, true)}
-                      className={`flex-1 py-1.5 rounded-[8px] text-xs font-bold font-[inherit] cursor-pointer border inline-flex items-center justify-center gap-1 ${
+                      className={`flex-1 py-2 rounded-[8px] text-sm font-bold font-[inherit] cursor-pointer border inline-flex items-center justify-center gap-1 ${
                         g === true
                           ? "bg-green text-white border-green"
                           : "bg-white text-txt-soft border-bdr"
                       }`}
                     >
-                      <IconCheck size={13} strokeWidth={3} />
+                      <IconCheck size={15} strokeWidth={3} />
                       ผ่าน
                     </button>
                     <button
                       type="button"
                       onClick={() => mark(q.id, false)}
-                      className={`flex-1 py-1.5 rounded-[8px] text-xs font-bold font-[inherit] cursor-pointer border inline-flex items-center justify-center gap-1 ${
+                      className={`flex-1 py-2 rounded-[8px] text-sm font-bold font-[inherit] cursor-pointer border inline-flex items-center justify-center gap-1 ${
                         g === false
                           ? "bg-red text-white border-red"
                           : "bg-white text-txt-soft border-bdr"
                       }`}
                     >
-                      <IconX size={13} strokeWidth={3} />
+                      <IconX size={15} strokeWidth={3} />
                       ไม่ผ่าน
                     </button>
                   </div>
