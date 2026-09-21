@@ -31,6 +31,7 @@ import {
   Ticket as IconTicket,
   TrendingDown as IconTrendingDown,
   UserCheck as IconUserCheck,
+  X as IconX,
 } from "lucide-react";
 import { useState } from "react";
 import { BUSINESS_RULES, COLORS } from "../../constants";
@@ -761,10 +762,18 @@ export default function ManualModal({ onClose }) {
                   <b>ตัวอย่าง:</b> A ขายทั่วไป 100 ชิ้น · รับซื้อ 5 ชิ้น
                   <br />
                   คนที่ทำได้สูงสุดของขายทั่วไป = 120 ชิ้น → A ได้ 100/120 ={" "}
-                  <b className="text-green">83%</b> ✓ เข้ากองขายทั่วไป
+                  <b className="text-green">83%</b>{" "}
+                  <span className="inline-flex items-center gap-1 align-middle text-green">
+                    <IconCheck size={13} strokeWidth={3} />
+                    เข้ากองขายทั่วไป
+                  </span>
                   <br />
                   คนที่ทำได้สูงสุดของรับซื้อ = 50 ชิ้น → A ได้ 5/50 ={" "}
-                  <b className="text-red">10%</b> ✗ ไม่เข้ากองรับซื้อ
+                  <b className="text-red">10%</b>{" "}
+                  <span className="inline-flex items-center gap-1 align-middle text-red">
+                    <IconX size={13} strokeWidth={3} />
+                    ไม่เข้ากองรับซื้อ
+                  </span>
                 </div>
               </div>
               <p className="mt-2">

@@ -1369,8 +1369,13 @@ export default function SalaryAdminEdit({
                       </div>
                     </div>
                     {isPrimaryWhileAll && (
-                      <div className="text-[11px] text-amber mt-1.5 text-center font-semibold">
-                        ⚠ ใส่จำนวนเพื่อตรวจสอบเกณฑ์ &lt; 50% (ไม่นับเป็นค่าคอม)
+                      <div className="text-[11px] text-amber mt-1.5 font-semibold flex items-center justify-center gap-1">
+                        <IconAlertTriangle
+                          size={12}
+                          strokeWidth={2.4}
+                          className="shrink-0"
+                        />
+                        ใส่จำนวนเพื่อตรวจสอบเกณฑ์ &lt; 50% (ไม่นับเป็นค่าคอม)
                       </div>
                     )}
                   </div>

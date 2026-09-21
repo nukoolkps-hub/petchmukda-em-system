@@ -8,6 +8,7 @@
 
    Modal global (ไม่ผูกพนักงาน) — admin จัดการทุก exclusion ของเดือนได้ที่นี่    */
 import {
+  AlertTriangle as IconAlertTriangle,
   Lock as IconLock,
   Minus as IconMinus,
   Plus as IconPlus,
@@ -413,9 +414,16 @@ export default function PoolAdjustmentModal({
                 !itemsInRole(it.roleId).some((p) => p.id === it.pieceItemId);
               return roleOrphan || empOrphan || itemOrphan;
             }) && (
-              <span className="block mt-1 text-amber font-semibold">
-                ⚠ มีรายการที่อ้างถึงข้อมูลเก่า (พนักงานย้ายตำแหน่ง / รายการถูกลบ). payout
-                ของเดือนนั้นยังถูกต้องตาม snapshot · เก็บ/เปลี่ยน/ลบ row ได้
+              <span className="flex items-start gap-1.5 mt-1 text-amber font-semibold">
+                <IconAlertTriangle
+                  size={14}
+                  strokeWidth={2.4}
+                  className="shrink-0 mt-0.5"
+                />
+                <span>
+                  มีรายการที่อ้างถึงข้อมูลเก่า (พนักงานย้ายตำแหน่ง / รายการถูกลบ). payout
+                  ของเดือนนั้นยังถูกต้องตาม snapshot · เก็บ/เปลี่ยน/ลบ row ได้
+                </span>
               </span>
             )}
           </div>

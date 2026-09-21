@@ -10,6 +10,7 @@ import {
   CalendarOff as IconCalendarOff,
   CalendarPlus as IconCalendarPlus,
   Coins as IconCoins,
+  Info as IconInfo,
   Plus as IconPlus,
   Store as IconStore,
   Sun as IconSun,
@@ -504,7 +505,11 @@ export default function StoreCalendarPanel({
                 );
                 return (
                   <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-amber-50 border border-amber-300 text-xs leading-relaxed text-amber-900 flex gap-2">
-                    <span className="shrink-0">⚠</span>
+                    <IconAlertTriangle
+                      size={14}
+                      strokeWidth={2.4}
+                      className="shrink-0 mt-0.5"
+                    />
                     <div>
                       <b>มีใบลา {names.length} คนวันนี้</b> ({names.join(", ")})
                       <br />
@@ -698,7 +703,11 @@ export default function StoreCalendarPanel({
                 ];
                 return (
                   <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-emerald-50 border border-emerald-300 text-xs leading-relaxed text-emerald-900 flex gap-2">
-                    <span className="shrink-0">ℹ</span>
+                    <IconInfo
+                      size={14}
+                      strokeWidth={2.4}
+                      className="shrink-0 mt-0.5"
+                    />
                     <div>
                       <b>มีใบลา {names.length} คนในช่วงนี้</b> ({names.join(", ")})
                       <br />
@@ -837,7 +846,11 @@ export default function StoreCalendarPanel({
                 );
                 return (
                   <div className="mx-3.5 mb-3 px-3 py-2 rounded-[8px] bg-emerald-50 border border-emerald-300 text-xs leading-relaxed text-emerald-900 flex gap-2">
-                    <span className="shrink-0">ℹ</span>
+                    <IconInfo
+                      size={14}
+                      strokeWidth={2.4}
+                      className="shrink-0 mt-0.5"
+                    />
                     <div>
                       <b>มีใบลา {names.length} คนวันนี้</b> ({names.join(", ")})
                       <br />
