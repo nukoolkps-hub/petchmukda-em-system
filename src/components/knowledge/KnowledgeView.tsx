@@ -9,7 +9,10 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../../constants";
-import { KNOWLEDGE_SECTIONS } from "../../content/knowledge";
+import {
+  KNOWLEDGE_SECTIONS,
+  visibleKnowledgeSections,
+} from "../../content/knowledge";
 import GoldPriceHeader from "./GoldPriceHeader";
 import KnowledgeBlockView from "./KnowledgeBlock";
 
@@ -32,12 +35,15 @@ export default function KnowledgeView({ isAdmin, showToast }: Props) {
     else sessionStorage.removeItem(STORAGE_KEY);
   }, [openId]);
 
-  // filter section ตาม query (case-insensitive substring บน title)
+  // ตัด section ที่เป็น adminOnly ออกก่อน แล้วค่อย filter ตาม query
+  // (case-insensitive substring บน title) — ต้องตัดก่อน ไม่งั้นพนักงาน
+  // ค้นหาเจอชื่อหัวข้อได้แม้เปิดอ่านไม่ได้
   const filtered = useMemo(() => {
+    const visible = visibleKnowledgeSections(KNOWLEDGE_SECTIONS, isAdmin);
     const q = query.trim().toLowerCase();
-    if (!q) return KNOWLEDGE_SECTIONS;
-    return KNOWLEDGE_SECTIONS.filter((s) => s.title.toLowerCase().includes(q));
-  }, [query]);
+    if (!q) return visible;
+    return visible.filter((s) => s.title.toLowerCase().includes(q));
+  }, [query, isAdmin]);
 
   return (
     <div className="font-sans">

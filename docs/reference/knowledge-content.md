@@ -3,7 +3,7 @@
 สารบัญ + context ของเนื้อหา "ความรู้ต่างๆ" — **อ่านไฟล์นี้ก่อนแก้ knowledge content**
 เพื่อรู้ว่าแต่ละ section อยู่ตรงไหน ใช้ block อะไร พึ่งราคา live ไหม และต้องระวังอะไร
 
-- **เนื้อหา (source of truth):** `src/content/knowledge/index.ts` (hardcode · 30 sections · ~1,950 บรรทัด)
+- **เนื้อหา (source of truth):** `src/content/knowledge/index.ts` (hardcode · 31 sections · ~2,000 บรรทัด)
 - **block types:** `src/content/knowledge/types.ts`
 - **render:** `KnowledgeView.tsx` (accordion + search) → `KnowledgeBlock.tsx` (dispatch ตาม `block.type`)
 - **สถาปัตยกรรม component เต็ม:** ดู [`ui-components.md`](ui-components.md) → "Knowledge view" (ไฟล์นี้ไม่ duplicate)
@@ -23,8 +23,23 @@ type KnowledgeSection = {
   title: string;     // หัวข้อ (ไทย) · search box filter จาก title
   Icon: LucideIcon;  // lucide-react เท่านั้น (ห้าม emoji)
   blocks: Block[];   // เนื้อหา render ตามลำดับ
+  adminOnly?: boolean; // เห็นเฉพาะ admin — section หายทั้งอัน
 };
 ```
+
+### `adminOnly` — มี 2 ระดับ อย่าสับสน
+
+| ระดับ | ใส่ที่ | ผลกับพนักงาน |
+|---|---|---|
+| **block** | `{ type: "p" \| "h3", adminOnly: true }` | ซ่อนเฉพาะ block นั้น · **หัวข้อ section ยังโผล่** |
+| **section** | `{ id, title, …, adminOnly: true }` | section หายทั้งอันจาก accordion **และผลค้นหา** |
+
+gate ของระดับ section อยู่ที่ `visibleKnowledgeSections(sections, isAdmin)` ใน
+`index.ts` (pure · `KnowledgeView` เรียกก่อน filter ด้วย query) · `isAdmin` มาจาก
+`viewIsAdmin` ใน `App.tsx` → โหมด **"ดูมุมมองพนักงาน" ซ่อนตามให้เองอัตโนมัติ**
+
+> ต้องกรอง**ก่อน** filter query เสมอ ไม่งั้นพนักงานค้นหาเจอชื่อหัวข้อได้แม้เปิดอ่านไม่ได้
+> · guard test: `src/utils/knowledgeVisibility.test.ts` (พังเงียบ ไม่มี error ให้จับ)
 
 ## Block types (ครบทุกตัวที่ `KnowledgeBlock.tsx` render)
 
@@ -39,7 +54,7 @@ type KnowledgeSection = {
 > เพิ่ม block type ใหม่ = ต้องแก้ 2 ที่: union ใน `types.ts` + `case` ใน `KnowledgeBlock.tsx`
 > (ถ้า live ต้องผูก hook `useGoldPrice`/`useLaborCost`/ฯลฯ ใน component ของ block นั้น)
 
-## สารบัญ 30 sections (จัดกลุ่ม)
+## สารบัญ 31 sections (จัดกลุ่ม)
 
 `live?` = มี block ที่คำนวณสด/subscribe ราคา · `tone` = วัสดุ (ว่าง = ทอง/maroon default) · `line` = บรรทัดเริ่มใน `index.ts`
 
@@ -109,6 +124,15 @@ type KnowledgeSection = {
 | `measure-machine` | เครื่องตรวจ % โลหะ — การตรวจ % | steps, h3, image | — | — | 1746 |
 | `measure-machine-print` | เครื่องตรวจ % โลหะ — การพิมพ์ Report | steps, h3, image | — | — | 1807 |
 
+### ADMIN เท่านั้น
+| id | title | blocks | live? | tone | line |
+|---|---|---|---|---|---|
+| `basic-exam` | แบบทดสอบความรู้พื้นฐาน | callout, h3, list ×2, p | — | — | 2024 |
+
+> **`adminOnly: true`** — ข้อสอบจริงที่ใช้วัดพนักงาน ห้ามให้เห็นล่วงหน้า
+> · 30 ข้อหลัก (เกณฑ์ผ่าน 80%) + 6 ข้อความรู้รอบตัว (ไม่นับเกณฑ์)
+> · เนื้อหาถอดจากไฟล์ต้นฉบับ `.docx` ของห้าง — แก้โจทย์ต้องแก้ที่ `index.ts`
+
 ## วิธีแก้/เพิ่มเนื้อหา
 
 1. **แก้ข้อความ/สูตร/ตาราง:** หา section ด้วย `id`/`line` ในตารางบน → แก้ใน `index.ts` ตรงๆ
@@ -116,6 +140,8 @@ type KnowledgeSection = {
 2. **เพิ่ม section ใหม่:** เพิ่ม object `{ id, title, Icon, blocks }` ลง array ใน `index.ts`
    - `Icon` = `lucide-react` เท่านั้น (ห้าม emoji เป็น icon)
    - `id` ต้องไม่ซ้ำ (ใช้ใน search/anchor)
+   - เนื้อหาที่พนักงานไม่ควรเห็น → ใส่ `adminOnly: true` **ที่ section** (ไม่ใช่ที่ block
+     ทีละอัน · ดู "`adminOnly` — มี 2 ระดับ" ด้านบน)
 3. **Tone (วัสดุ) — ต้อง tag ให้ตรง** (scope: เฉพาะ knowledge · ส่วนอื่นของระบบคง maroon):
    - ทอง (96.5%/99.99%) → ไม่ใส่ (default `maroon`)
    - เงิน → `tone="silver"` (h3 text-only: `silver-text`)
