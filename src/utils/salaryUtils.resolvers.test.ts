@@ -275,6 +275,24 @@ describe("resolvePoolExclusionItemIds", () => {
     const buy = resolvePoolExclusionItemIds("buy", items);
     expect([...buy.excludedIds]).toEqual([LEGACY_POOL_BUY_ID]);
   });
+
+  // EmployeeEditModal ใช้ helper ตัวนี้ตัดสิน checkbox "ปิดเฉพาะรายการ" แล้ว
+  // เขียนเซ็ตกลับลง poolExclusion ตอน tick — ถ้า legacy id ที่ role ไม่มีหลุด
+  // ออกมา มันจะถูก persist ทั้งที่ไม่มี checkbox ให้เอาออก
+  it('drops legacy "sell"/"buy" ids that the role does not actually have', () => {
+    // role ที่ admin ตั้ง pool items เอง — ไม่มี normal/special/buy เลย
+    const custom = [{ id: "retail" }, { id: "wholesale" }];
+    expect(resolvePoolExclusionItemIds("sell", custom).excludedIds.size).toBe(
+      0,
+    );
+    expect(resolvePoolExclusionItemIds("buy", custom).excludedIds.size).toBe(0);
+
+    // role ที่เหลือแค่ normal (admin ลบ special ทิ้ง) → "sell" เหลือ normal ตัวเดียว
+    const partial = [{ id: LEGACY_POOL_NORMAL_ID }, { id: "retail" }];
+    const sell = resolvePoolExclusionItemIds("sell", partial);
+    expect([...sell.excludedIds]).toEqual([LEGACY_POOL_NORMAL_ID]);
+    expect(sell.isAll).toBe(false);
+  });
 });
 
 describe("roleBonusItems / resolveBonusItem*", () => {
