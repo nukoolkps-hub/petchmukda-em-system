@@ -150,4 +150,9 @@ export interface KnowledgeSection {
   title: string;
   Icon: LucideIcon;
   blocks: KnowledgeBlock[];
+  /** เห็นเฉพาะ admin — section หายไปทั้งอันจาก accordion + ผลค้นหา
+   *  ต่างจาก `adminOnly` ระดับ block ที่ซ่อนแค่ block (หัวข้อยังโผล่เป็น
+   *  กล่องว่าง) · `isAdmin` ที่ KnowledgeView ใช้มาจาก `viewIsAdmin` ใน
+   *  App.tsx → โหมด "ดูมุมมองพนักงาน" ซ่อนตามให้เองอัตโนมัติ */
+  adminOnly?: boolean;
 }
