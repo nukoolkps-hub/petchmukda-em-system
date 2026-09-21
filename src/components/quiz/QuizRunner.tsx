@@ -178,16 +178,16 @@ export default function QuizRunner({
       <div className="sticky top-0 z-10 -mx-1 mb-3">
         <div className="px-3 py-2.5 rounded-t-[12px] bg-maroon text-white flex items-center justify-between gap-2 shadow-md">
           <div className="flex items-center gap-2">
-            <IconClock size={22} strokeWidth={2.4} />
+            <IconClock size={18} strokeWidth={2.4} />
             <span
-              className={`font-mono text-3xl font-black tabular-nums ${
+              className={`font-mono text-xl font-black tabular-nums ${
                 left <= WARN_MS ? "text-red-300" : "text-white"
               }`}
             >
               {formatCountdown(left)}
             </span>
           </div>
-          <div className="flex items-center gap-2.5 text-sm">
+          <div className="flex items-center gap-2.5 text-xs">
             <span className="text-white/85 font-semibold">
               ตอบแล้ว {allDone}/{questions.length}
             </span>
@@ -199,34 +199,34 @@ export default function QuizRunner({
             (ไม่งั้นคนที่เริ่มคิดตั้งแต่ข้อแรกจะเจอราคาคนละชุดกับข้อท้าย) */}
         {price ? (
           <div className="px-3 py-2 rounded-b-[12px] bg-gold-pale border-x border-b border-[#C9973A50] shadow-md flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span className="text-sm font-bold text-maroon">ราคาทองวันที่สอบ</span>
-            <span className="text-base font-extrabold text-txt tabular-nums">
+            <span className="text-xs font-bold text-maroon">ราคาทองวันที่สอบ</span>
+            <span className="text-sm font-extrabold text-txt tabular-nums">
               ขาย{" "}
               <span className="text-green">
                 {fmtBaht(price.goldSellPerBaht)}
               </span>
             </span>
-            <span className="text-base font-extrabold text-txt tabular-nums">
+            <span className="text-sm font-extrabold text-txt tabular-nums">
               รับซื้อ{" "}
               <span className="text-red">{fmtBaht(price.goldBuyPerBaht)}</span>
             </span>
             {price.silverSellPerGram > 0 && (
-              <span className="text-sm font-semibold text-txt-mid tabular-nums">
+              <span className="text-xs font-semibold text-txt-mid tabular-nums">
                 เงิน ขาย {fmtBaht(price.silverSellPerGram)} / รับซื้อ{" "}
                 {fmtBaht(price.silverBuyPerGram)} ต่อกรัม
               </span>
             )}
           </div>
         ) : (
-          <div className="px-3 py-2 rounded-b-[12px] bg-cream-dk border-x border-b border-bdr shadow-md text-sm text-txt-soft font-semibold">
+          <div className="px-3 py-2 rounded-b-[12px] bg-cream-dk border-x border-b border-bdr shadow-md text-xs text-txt-soft font-semibold">
             ชุดนี้ไม่ได้บันทึกราคาทองไว้ — ดูราคาจากจอหน้าร้าน
           </div>
         )}
       </div>
 
       {left <= WARN_MS && !expired && (
-        <div className="mb-3 px-3 py-2.5 rounded-[10px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold flex items-center gap-1.5">
-          <IconAlertTriangle size={16} strokeWidth={2.4} className="shrink-0" />
+        <div className="mb-3 px-3 py-2.5 rounded-[10px] bg-[#FDECEA] border border-[#C0392B50] text-xs text-red font-semibold flex items-center gap-1.5">
+          <IconAlertTriangle size={14} strokeWidth={2.4} className="shrink-0" />
           เหลือเวลาน้อยกว่า 5 นาที — หมดเวลาระบบจะส่งให้อัตโนมัติ
         </div>
       )}
@@ -241,7 +241,7 @@ export default function QuizRunner({
               key={item.id}
               type="button"
               onClick={() => setIdx(i)}
-              className={`w-9 h-9 rounded-[8px] text-sm font-bold cursor-pointer border transition-colors ${
+              className={`w-8 h-8 rounded-[7px] text-xs font-bold cursor-pointer border transition-colors ${
                 active
                   ? "bg-maroon text-white border-maroon"
                   : done
@@ -257,7 +257,7 @@ export default function QuizRunner({
 
       {/* ── โจทย์ + ช่องตอบ ── */}
       <div className="rounded-[12px] border border-bdr bg-white p-3.5 mb-3">
-        <div className="text-sm font-bold text-txt-soft mb-2">
+        <div className="text-xs font-bold text-txt-soft mb-2">
           {isGeneral
             ? `ความรู้รอบตัว ข้อ ${numberInGroup}/${quiz.general.length} · ไม่นับในเกณฑ์ผ่าน`
             : `ข้อ ${numberInGroup}/${quiz.main.length}`}
@@ -270,7 +270,7 @@ export default function QuizRunner({
           onChange={(e) => setAnswer(q.id, e.target.value)}
           placeholder="พิมพ์คำตอบ + แสดงวิธีคิดคำนวณให้ชัดเจน"
           rows={8}
-          className="w-full px-3.5 py-3 rounded-[9px] border border-bdr bg-cream/40 text-xl text-txt leading-relaxed font-[inherit] outline-none focus:border-maroon transition-colors resize-y"
+          className="w-full px-3.5 py-3 rounded-[9px] border border-bdr bg-cream/40 text-base text-txt leading-relaxed font-[inherit] outline-none focus:border-maroon transition-colors resize-y"
         />
       </div>
 
@@ -280,30 +280,30 @@ export default function QuizRunner({
           type="button"
           onClick={() => setIdx((i) => Math.max(0, i - 1))}
           disabled={idx === 0}
-          className="flex-1 py-3 rounded-[10px] border border-bdr bg-white text-base font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
+          className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
         >
-          <IconChevronLeft size={18} strokeWidth={2.4} />
+          <IconChevronLeft size={16} strokeWidth={2.4} />
           ก่อนหน้า
         </button>
         <button
           type="button"
           onClick={() => setIdx((i) => Math.min(questions.length - 1, i + 1))}
           disabled={idx === questions.length - 1}
-          className="flex-1 py-3 rounded-[10px] border border-bdr bg-white text-base font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
+          className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
         >
           ถัดไป
-          <IconChevronRight size={18} strokeWidth={2.4} />
+          <IconChevronRight size={16} strokeWidth={2.4} />
         </button>
       </div>
 
       {/* ── ส่งข้อสอบ / ยกเลิก ── */}
       {cancelling ? (
         <div className="rounded-[12px] border-[1.5px] border-[#C0392B50] bg-[#FDECEA] p-3.5">
-          <div className="text-base font-bold text-red mb-1.5 flex items-center gap-1.5">
-            <IconAlertTriangle size={17} strokeWidth={2.4} />
+          <div className="text-sm font-bold text-red mb-1.5 flex items-center gap-1.5">
+            <IconAlertTriangle size={15} strokeWidth={2.4} />
             ยกเลิกการทำข้อสอบ
           </div>
-          <p className="text-sm text-txt-mid leading-relaxed mb-3">
+          <p className="text-xs text-txt-mid leading-relaxed mb-3">
             ชุดนี้จะ<b>ไม่ถูกนับเป็นผลสอบ</b> และกลับมาทำต่อไม่ได้ ·
             ถ้าจะทำใหม่ต้องกดเริ่มใหม่ทั้งชุด (จับเวลาใหม่ตั้งแต่ต้น)
           </p>
@@ -311,31 +311,31 @@ export default function QuizRunner({
             <button
               type="button"
               onClick={() => setCancelling(false)}
-              className="flex-1 py-3 rounded-[10px] border border-bdr bg-white text-base font-bold text-txt font-[inherit] cursor-pointer"
+              className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer"
             >
               ทำต่อ
             </button>
             <button
               type="button"
               onClick={() => void cancel()}
-              className="flex-1 py-3 rounded-[10px] bg-red text-white text-base font-bold font-[inherit] cursor-pointer inline-flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 rounded-[10px] bg-red text-white text-sm font-bold font-[inherit] cursor-pointer inline-flex items-center justify-center gap-1.5"
             >
-              <IconTrash size={17} strokeWidth={2.4} />
+              <IconTrash size={15} strokeWidth={2.4} />
               ยืนยันยกเลิก
             </button>
           </div>
         </div>
       ) : confirming ? (
         <div className="rounded-[12px] border-[1.5px] border-amber/45 bg-amber-lt/50 p-3.5">
-          <div className="text-base font-bold text-txt mb-1.5 flex items-center gap-1.5">
+          <div className="text-sm font-bold text-txt mb-1.5 flex items-center gap-1.5">
             <IconAlertTriangle
-              size={17}
+              size={15}
               strokeWidth={2.4}
               className="text-amber"
             />
             ส่งข้อสอบเลยไหม
           </div>
-          <p className="text-sm text-txt-mid leading-relaxed mb-3">
+          <p className="text-xs text-txt-mid leading-relaxed mb-3">
             ตอบแล้ว {mainDone}/{quiz.main.length} ข้อหลัก
             {mainDone < quiz.main.length && " (ยังไม่ครบ)"} ·{" "}
             <b>ส่งแล้วกลับมาแก้ไม่ได้อีก</b>
@@ -344,7 +344,7 @@ export default function QuizRunner({
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="flex-1 py-3 rounded-[10px] border border-bdr bg-white text-base font-bold text-txt font-[inherit] cursor-pointer"
+              className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer"
             >
               ทำต่อ
             </button>
@@ -352,9 +352,9 @@ export default function QuizRunner({
               type="button"
               onClick={() => void finish(false)}
               disabled={submitting}
-              className="flex-1 py-3 rounded-[10px] bg-maroon text-white text-base font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 rounded-[10px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
             >
-              <IconCheck size={18} strokeWidth={2.4} />
+              <IconCheck size={16} strokeWidth={2.4} />
               {submitting ? "กำลังส่ง…" : "ยืนยันส่ง"}
             </button>
           </div>
@@ -364,9 +364,9 @@ export default function QuizRunner({
           type="button"
           onClick={() => setConfirming(true)}
           disabled={submitting || expired}
-          className="w-full py-3.5 rounded-[12px] bg-maroon text-white text-base font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+          className="w-full py-3 rounded-[12px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
         >
-          <IconSend size={18} strokeWidth={2.4} />
+          <IconSend size={16} strokeWidth={2.4} />
           ส่งข้อสอบ
         </button>
       )}

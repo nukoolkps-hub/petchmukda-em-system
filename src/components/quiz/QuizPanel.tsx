@@ -188,26 +188,26 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
     <div className="font-sans">
       {/* ── กติกา + ปุ่มเริ่ม ── */}
       <div className="rounded-[12px] border-[1.5px] border-[#C9973A50] bg-gold-pale/60 p-3.5 mb-4">
-        <div className="text-lg font-extrabold text-maroon mb-2 flex items-center gap-1.5">
-          <IconClipboardCheck size={20} strokeWidth={2.4} />
+        <div className="text-base font-extrabold text-maroon mb-2 flex items-center gap-1.5">
+          <IconClipboardCheck size={18} strokeWidth={2.4} />
           {currentQuiz.title}
         </div>
         <ul className="mb-3 space-y-1">
           {currentQuiz.rules.map((rule) => (
             <li
               key={rule}
-              className="text-sm text-txt-mid leading-relaxed flex items-start gap-1.5"
+              className="text-xs text-txt-mid leading-relaxed flex items-start gap-1.5"
             >
-              <span className="shrink-0 mt-[9px] w-1.5 h-1.5 rounded-full bg-maroon" />
+              <span className="shrink-0 mt-[7px] w-1 h-1 rounded-full bg-maroon" />
               <span>{rule}</span>
             </li>
           ))}
         </ul>
 
         {inProgress ? (
-          <div className="mb-3 px-3 py-2.5 rounded-[8px] bg-amber-lt/70 border border-amber/40 text-sm text-txt font-semibold flex items-start gap-1.5">
+          <div className="mb-3 px-3 py-2.5 rounded-[8px] bg-amber-lt/70 border border-amber/40 text-xs text-txt font-semibold flex items-start gap-1.5">
             <IconClock
-              size={16}
+              size={14}
               strokeWidth={2.4}
               className="text-amber shrink-0 mt-0.5"
             />
@@ -220,7 +220,7 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
           /* ชื่อที่พิมพ์ตรงนี้คือชื่อที่จะโชว์ในประวัติ + หน้าตรวจ
              ต้องกรอกก่อนถึงจะกดเริ่มได้ — ไม่งั้นได้ใบที่ไม่รู้ว่าของใคร */
           <label className="block mb-3">
-            <span className="block text-sm font-bold text-txt mb-1.5">
+            <span className="block text-xs font-bold text-txt mb-1.5">
               ชื่อผู้ทำข้อสอบ
             </span>
             <input
@@ -228,13 +228,13 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
               value={examineeName}
               onChange={(e) => setExamineeName(e.target.value)}
               placeholder="พิมพ์ชื่อ-ชื่อเล่นของผู้ทำข้อสอบ"
-              className="w-full px-3.5 py-3 rounded-[10px] border border-bdr bg-white text-lg text-txt font-[inherit] outline-none focus:border-maroon transition-colors"
+              className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-white text-sm text-txt font-[inherit] outline-none focus:border-maroon transition-colors"
             />
           </label>
         )}
 
         {!inProgress && !priceReady && (
-          <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold">
+          <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-xs text-red font-semibold">
             ยังโหลดราคาทองไม่สำเร็จ — เริ่มสอบตอนนี้ไม่ได้ เพราะทุกข้อต้องอ้างอิงราคา ณ วันที่สอบ
             (ถ้าค้างนาน เช็กหน้า "ความรู้ต่างๆ" ว่าราคาขึ้นไหม)
           </div>
@@ -246,21 +246,21 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
           disabled={
             starting || !uid || (!inProgress && (!trimmedName || !priceReady))
           }
-          className="w-full py-3.5 rounded-[12px] bg-maroon text-white text-base font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+          className="w-full py-3 rounded-[12px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
         >
-          <IconPlay size={18} strokeWidth={2.6} />
+          <IconPlay size={16} strokeWidth={2.6} />
           {starting ? "กำลังเริ่ม…" : inProgress ? "ทำข้อสอบต่อ" : "เริ่มทำข้อสอบ"}
         </button>
       </div>
 
       {/* ── ประวัติการทำข้อสอบ ── */}
-      <div className="text-base font-extrabold text-maroon mb-2 flex items-center gap-1.5">
-        <IconFileText size={18} strokeWidth={2.4} />
+      <div className="text-sm font-extrabold text-maroon mb-2 flex items-center gap-1.5">
+        <IconFileText size={16} strokeWidth={2.4} />
         ประวัติการทำข้อสอบ
       </div>
 
       {attempts.length === 0 ? (
-        <div className="text-center text-sm text-txt-soft py-6 px-4 bg-cream/60 rounded-[10px] border border-dashed border-bdr">
+        <div className="text-center text-xs text-txt-soft py-6 px-4 bg-cream/60 rounded-[10px] border border-dashed border-bdr">
           ยังไม่มีใครทำข้อสอบ
         </div>
       ) : (
@@ -279,7 +279,7 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
                 className="text-left rounded-[10px] border border-bdr bg-white p-3 cursor-pointer hover:border-maroon/40 transition-colors"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-base font-bold text-txt">
+                  <span className="text-sm font-bold text-txt">
                     {a.employeeName || "(ไม่ทราบชื่อ)"}
                   </span>
                   {cancelled ? (
@@ -306,7 +306,7 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
                     </span>
                   )}
                 </div>
-                <div className="text-sm text-txt-soft mt-0.5">
+                <div className="text-[11px] text-txt-soft mt-0.5">
                   {fmtThaiDateTime(a.startedAt)}
                   {a.autoSubmitted && " · หมดเวลา"}
                   {!a.submittedAt && !cancelled && isExpired(a, Date.now())
