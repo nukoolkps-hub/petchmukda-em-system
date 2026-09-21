@@ -25,7 +25,7 @@ import {
   Star as IconStar,
   Ticket as IconTicket,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { COLORS } from "../../constants";
 import {
   buildLoanContext,
@@ -368,14 +368,22 @@ export default function SalaryView({
   // listen header button — ทั้ง MobileHeader และ DesktopHeader ยิง event นี้
   // เมื่อกด "ใบรับรอง" (header 2 ตัวสลับกันด้วย CSS · ต้องมีปุ่มครบทั้งคู่)
   // ใช้ window event แทน prop drilling · header ไม่ต้องรู้จัก data/state
+  //
+  // handlePrintCert ถูกสร้างใหม่ทุก render และ close over previewing /
+  // employeeInfo / showToast — dep เดิมเป็น [data] อย่างเดียว ถ้า previewing
+  // เปลี่ยนโดยที่ data ไม่เปลี่ยน (เช่น preview พนักงานที่ยังไม่มี salary doc
+  // ของเดือนนั้น · data = undefined ทั้งก่อนและหลัง) listener จะค้าง closure
+  // เก่า → กด "ใบรับรอง" จาก header ทะลุ guard "ดูมุมมองพนักงาน" ไปเดินเลข
+  // certCounters จริง · เก็บ handler ล่าสุดไว้ใน ref แล้ว attach ครั้งเดียว
+  const printCertRef = useRef(handlePrintCert);
   useEffect(() => {
-    const handler = () => handlePrintCert();
+    printCertRef.current = handlePrintCert;
+  });
+  useEffect(() => {
+    const handler = () => printCertRef.current();
     window.addEventListener("openSalaryCert", handler);
     return () => window.removeEventListener("openSalaryCert", handler);
-    // handlePrintCert ใช้ data จาก closure · re-attach ทุกครั้งที่ data เปลี่ยน
-    // เพื่อให้ event handler มี data ล่าสุด
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, []);
 
   const [issuingCert, setIssuingCert] = useState(false);
 

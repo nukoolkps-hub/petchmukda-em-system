@@ -344,14 +344,18 @@ function CreateLoanModal({
   const hasActiveLoan = !!activeLoanForEmployee;
   // ตอนเปิด modal ครั้งแรก · ถ้า default employee (คนที่ 1) มี active loan
   // → auto-switch ไปคนแรกที่ยัง "ว่าง" (กดเลือกได้ทันที · ไม่ต้องไล่หา)
+  //
+  // ตั้งใจไม่ใส่ employeeId / hasActiveLoan เป็น dep — ถ้าใส่ effect จะ
+  // re-run ทุกครั้งที่ admin เลือกคนใน dropdown แล้วเด้งออกจากคนที่มีก้อน
+  // ค้างทันที = เปิดดูคนนั้นไม่ได้เลย · ต้องการให้ auto-switch เฉพาะตอน
+  // mount + ตอน list เปลี่ยนเท่านั้น
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ใส่ employeeId/hasActiveLoan แล้ว dropdown จะเด้งออกจากคนที่มีก้อนค้าง เลือกดูไม่ได้
   useEffect(() => {
     if (!hasActiveLoan) return;
     const freeEmp = employeeDirectory.find(
       (e: any) => !activeLoanByEmployeeId.has(e.id),
     );
     if (freeEmp && freeEmp.id !== employeeId) setEmployeeId(freeEmp.id);
-    // run เฉพาะตอน mount + dropdown list เปลี่ยน · กัน loop (ใส่ dep ตามจริง)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employeeDirectory, activeLoanByEmployeeId]);
 
   async function pickSlip(file: File) {

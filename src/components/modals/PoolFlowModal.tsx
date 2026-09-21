@@ -178,6 +178,7 @@ export default function PoolFlowModal({
       poolAdjustments,
       activeGroup,
       storeCalendar,
+      roles,
     ],
   );
 
