@@ -10,7 +10,8 @@
    1. แจ้งเฉพาะคนที่กด "หลัง" สรุปเช้า — ไม่ส่งซ้ำคนที่อยู่ในกล่องเช้าแล้ว
    2. ใบลาเก่าที่ไม่มี createdAt ต้องไม่ถูกนับเป็นของใหม่ (ไม่งั้นสแปมทุกวัน
       ตลอดช่วงที่คนนั้นลายาว)
-   3. cutoff ยึด claimedAt ของสรุปเช้า · ไม่มี doc → 07:30 ของวันนั้น
+   3. cutoff ยึด claimedAt ของ "รอบล่าสุดที่ประกาศไปแล้ว" · ไม่มี doc เลย
+      → 07:30 ของวันนั้น (รอบ 09:30 นับต่อจาก 08:30 ไม่ใช่จากสรุปเช้า)
    4. ต้องเป็นใบลาที่ครอบ "วันนี้" — กดวันนี้แต่ลาสัปดาห์หน้า ไม่นับ         */
 
 import { describe, expect, it } from "vitest";
@@ -19,6 +20,7 @@ import {
   isLateLeave,
   pickLateLeaveDocs,
   resolveLateCutoffMs,
+  resolveRoundCutoffMs,
 } from "../../functions/src/dailySummary/leaveRules";
 
 const YMD = "2026-09-01";
@@ -49,6 +51,45 @@ describe("resolveLateCutoffMs", () => {
       at("07:30"),
     );
     expect(resolveLateCutoffMs(YMD, { claimedAt: 12345 })).toBe(at("07:30"));
+  });
+});
+
+describe("resolveRoundCutoffMs — รอบ 09:30 ต้องนับต่อจากรอบ 08:30", () => {
+  const morning = { claimedAt: new Date(at("07:30")).toISOString() };
+  const round0830 = { claimedAt: new Date(at("08:30")).toISOString() };
+
+  it("รอบ 08:30 ส่งไปแล้ว → รอบ 09:30 นับต่อจาก 08:30 ไม่ใช่ 07:30", () => {
+    // ถ้าพลาดไปใช้ของสรุปเช้า คนที่ถูกประกาศตอน 08:30 จะโดนประกาศซ้ำ
+    expect(resolveRoundCutoffMs(YMD, [round0830, morning])).toBe(at("08:30"));
+  });
+
+  it("รอบ 08:30 ไม่ได้ส่ง (ไม่มีใครตกหล่น = ไม่มี doc) → ตกมาใช้สรุปเช้า", () => {
+    // คนที่กดลาช่วง 07:30-09:30 ยังไม่เคยถูกประกาศ ต้องไม่ตกหล่น
+    expect(resolveRoundCutoffMs(YMD, [undefined, morning])).toBe(at("07:30"));
+    expect(resolveRoundCutoffMs(YMD, [null, morning])).toBe(at("07:30"));
+  });
+
+  it("ไม่มี doc สักตัว (ปิด toggle สรุปเช้า) → 07:30 เสมอ ไม่ใช่ 08:30", () => {
+    // ใช้ 08:30 จะทำให้คนที่กดลาช่วง 07:30-08:30 หายเงียบทั้งที่ไม่เคยประกาศ
+    expect(resolveRoundCutoffMs(YMD, [undefined, undefined])).toBe(at("07:30"));
+  });
+
+  it("doc รอบแรกมี timestamp เสีย → ข้ามไปใช้ตัวถัดไปในสาย", () => {
+    expect(resolveRoundCutoffMs(YMD, [{ claimedAt: 12345 }, morning])).toBe(
+      at("07:30"),
+    );
+    expect(resolveRoundCutoffMs(YMD, [{ claimedAt: "เสีย" }, round0830])).toBe(
+      at("08:30"),
+    );
+  });
+
+  it("resolveLateCutoffMs (รอบ 08:30) ให้ผลเท่าสายที่มีสรุปเช้าตัวเดียว", () => {
+    expect(resolveLateCutoffMs(YMD, morning)).toBe(
+      resolveRoundCutoffMs(YMD, [morning]),
+    );
+    expect(resolveLateCutoffMs(YMD, null)).toBe(
+      resolveRoundCutoffMs(YMD, [null]),
+    );
   });
 });
 

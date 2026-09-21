@@ -17,6 +17,7 @@ export {
 	isLateLeave,
 	pickLateLeaveDocs,
 	resolveLateCutoffMs,
+	resolveRoundCutoffMs,
 } from "./leaveRules.js";
 
 /** ใบลาที่ครอบวันนี้ + ถูกกดหลัง cutoff → ชื่อเล่น + ประเภทลา */

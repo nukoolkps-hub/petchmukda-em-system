@@ -12,6 +12,7 @@
    - loanCreatedEnabled     — แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ +
                               สลิปการโอน (ถ้าแนบไว้)
    - lateLeaveNoticeEnabled — ตามแจ้ง 08:30 เฉพาะคนที่กดลาหลังสรุปเช้า
+   - lateLeaveNotice0930Enabled — ตามแจ้งอีกรอบ 09:30 (นับต่อจากรอบ 08:30)
                               (ไม่มีใครตกหล่น = ไม่ส่ง)
 
    Default semantic: missing field / true = enabled (backward compat).      */
@@ -75,7 +76,8 @@ export default function LineBotNotificationsPanel({
       | "advanceRequestEnabled"
       | "advanceApprovalEnabled"
       | "loanCreatedEnabled"
-      | "lateLeaveNoticeEnabled",
+      | "lateLeaveNoticeEnabled"
+      | "lateLeaveNotice0930Enabled",
   ) {
     const next = !isOn(field);
     // Flip ทันที (optimistic) — switch เคลื่อนทันที ผู้ใช้ไม่รู้สึกหน่วง
@@ -145,6 +147,14 @@ export default function LineBotNotificationsPanel({
           enabled={isOn("lateLeaveNoticeEnabled")}
           disabled={loading}
           onToggle={() => toggle("lateLeaveNoticeEnabled")}
+        />
+        <ToggleRow
+          icon={IconUserMinus}
+          title="มีคนลาเพิ่ม 09:30"
+          description="รอบตามอีกครั้งสำหรับคนที่กดลาหลัง 08:30 · นับต่อจากรอบ 08:30 ไม่ประกาศชื่อเดิมซ้ำ · ถ้ารอบ 08:30 ไม่ได้ส่ง (ไม่มีใครตกหล่น) รอบนี้จะนับต่อจากสรุปเช้าแทน · ไม่มีใครกดลาเพิ่ม = ไม่ส่งเลย · ปิด-เปิดแยกจากรอบ 08:30 ได้"
+          enabled={isOn("lateLeaveNotice0930Enabled")}
+          disabled={loading}
+          onToggle={() => toggle("lateLeaveNotice0930Enabled")}
         />
         <ToggleRow
           icon={IconBanknote}

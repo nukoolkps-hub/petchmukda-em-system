@@ -35,23 +35,40 @@ export function isLateLeave(
 	return createdAt > cutoffMs;
 }
 
-/** cutoff ของวันนั้น — ยึดเวลาที่สรุปเช้า "claim" คิวไว้ (ก่อนไปอ่าน leaves)
+/** cutoff ของรอบตามแจ้ง — ยึด claimedAt ของ "รอบล่าสุดที่ประกาศไปแล้ว"
+ *
+ *  ส่ง docs เรียงจากรอบที่ใหม่ที่สุดไปเก่าที่สุด แล้วเอาตัวแรกที่มีเวลาจริง
+ *  - รอบ 08:30 → [สรุปเช้า]
+ *  - รอบ 09:30 → [รอบ 08:30, สรุปเช้า] · ต้องนับต่อจาก 08:30 ไม่งั้นประกาศ
+ *    ชื่อเดิมซ้ำ · แต่รอบ 08:30 สร้าง doc เฉพาะตอนมีคนตกหล่นจริง (ไม่มีใคร
+ *    = ไม่ส่ง = ไม่มี doc) จึงตกมาใช้ของสรุปเช้า ซึ่งถูกต้องเพราะคนที่กดลา
+ *    ช่วง 07:30-09:30 ยังไม่เคยถูกประกาศเลย
  *
  *  ใช้ claimedAt ไม่ใช่ sentAt เพราะ claim เกิดก่อนอ่านข้อมูล → คนที่กดลา
  *  ระหว่าง claim กับตอนอ่านอาจถูกแจ้งซ้ำ ซึ่งไม่เสียหาย · กลับกันถ้ายึด
  *  sentAt (หลังส่งเสร็จ) คนที่กดลาช่วงนั้นจะหายไปเงียบๆ = บั๊กที่กำลังแก้
  *
- *  ไม่มี doc (สรุปเช้าไม่ได้ส่ง — เสาร์/ปิด toggle) → ใช้ 07:30 ของวันนั้น  */
-export function resolveLateCutoffMs(
+ *  ไม่มี doc สักตัว (ปิด toggle สรุปเช้า/เสาร์) → 07:30 ของวันนั้นเสมอ แม้
+ *  เป็นรอบ 09:30 — ถ้าใช้ 08:30 คนที่กดลาช่วง 07:30-08:30 จะหายเงียบ       */
+export function resolveRoundCutoffMs(
 	ymd: string,
-	morningDoc?: Record<string, unknown> | null,
+	docs: (Record<string, unknown> | null | undefined)[],
 ): number {
-	const stamp = morningDoc?.claimedAt ?? morningDoc?.sentAt;
-	if (typeof stamp === "string") {
+	for (const doc of docs) {
+		const stamp = doc?.claimedAt ?? doc?.sentAt;
+		if (typeof stamp !== "string") continue;
 		const parsed = Date.parse(stamp);
 		if (Number.isFinite(parsed)) return parsed;
 	}
 	return Date.parse(`${ymd}T${MORNING_FALLBACK_TIME}+07:00`);
+}
+
+/** cutoff ของรอบ 08:30 — นับต่อจากสรุปเช้าอย่างเดียว (wrapper เดิม) */
+export function resolveLateCutoffMs(
+	ymd: string,
+	morningDoc?: Record<string, unknown> | null,
+): number {
+	return resolveRoundCutoffMs(ymd, [morningDoc]);
 }
 
 /** ใบลาที่ "ครอบวันนี้ + ถูกกดหลังสรุปเช้า" — หัวใจของรอบ 08:30 */
