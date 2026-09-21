@@ -84,6 +84,7 @@ interface PerEmployeeStats {
 	leaves: number;
 	advances: number;
 	loans: number;
+	quizAttempts: number;
 	poolSnapshotMonthsTouched: number;
 	employeeDoc: number;
 }
@@ -143,6 +144,13 @@ export const wipeEmployeeData = onCall(
 				"employeeId",
 				id,
 			);
+			// ชุดแบบทดสอบเก็บ employeeId ไว้คู่กับ uid เพื่อให้ค้นตรงนี้ได้
+			const quizAttempts = await deleteQueryByField(
+				db,
+				"quizAttempts",
+				"employeeId",
+				id,
+			);
 			const poolSnapshotMonthsTouched = await purgeEmployeeFromPoolSnapshots(
 				db,
 				id,
@@ -161,11 +169,13 @@ export const wipeEmployeeData = onCall(
 				leaves,
 				advances,
 				loans,
+				quizAttempts,
 				poolSnapshotMonthsTouched,
 				employeeDoc,
 			};
 			stats.push(s);
-			totalDeleted += months + leaves + advances + loans + employeeDoc;
+			totalDeleted +=
+				months + leaves + advances + loans + quizAttempts + employeeDoc;
 		}
 
 		console.log("[wipeEmployeeData] complete", { stats, totalDeleted });

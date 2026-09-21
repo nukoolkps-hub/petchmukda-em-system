@@ -445,6 +445,33 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 
 **Read/Write:** admin only · Cloud Function ใช้ Admin SDK (bypass rules)
 
+### quizAttempts/{attemptId}
+
+การทำ **แบบทดสอบความรู้พื้นฐาน** (`/admin → ฝึกอบรม → แบบทดสอบ`) — 1 doc = 1 ครั้งที่กด "เริ่มทำข้อสอบ" · โจทย์ไม่ได้เก็บที่นี่ (hardcode ที่ `src/content/quiz/basicExam.ts`) เก็บแค่คำตอบ + ผลตรวจ
+
+| Field | Type | Description |
+|---|---|---|
+| quizId | string | id ของชุดข้อสอบ (`"basic-2569"`) — ผูกคำตอบกับชุดที่ใช้ตอนนั้น |
+| uid | string | **auth uid (LINE user id) = เจ้าของ** · `firestore.rules` ตัดสินสิทธิ์จากตัวนี้ |
+| employeeId | string | doc id ใน `employees` · **คนละค่ากับ `uid`** — มีไว้ให้ระบบอื่น join (ล้างข้อมูลรายคน) · ว่างได้ถ้าคนทำไม่มี employee doc |
+| employeeName | string | snapshot ชื่อตอนเริ่มทำ (ให้ admin อ่านได้โดยไม่ต้องเปิด `/employees`) |
+| startedAt | number | ms epoch จากนาฬิกา**เครื่องผู้ใช้** — UI ใช้นับถอยหลัง |
+| startedAtServer | timestamp | `serverTimestamp()` · rules บังคับ `== request.time` → ปลอมเวลาเริ่มไม่ได้ |
+| durationMinutes | number | snapshot ระยะเวลาของชุดนั้น (100) — แก้ค่าในโค้ดทีหลังไม่กระทบชุดที่ทำไปแล้ว |
+| answers | map | `questionId → คำตอบ` · เขียนระหว่างทำ (debounce ~2 วิ) ไม่ใช่ตอนกดส่ง |
+| submittedAt | number \| null | ms epoch ตอนส่ง · `null` = ยังทำอยู่ |
+| submittedAtServer | timestamp | `serverTimestamp()` ตอนส่ง |
+| autoSubmitted | boolean | `true` = หมดเวลาแล้วระบบส่งให้เอง |
+| grades | map | `questionId → ผ่าน/ไม่ผ่าน` (admin เท่านั้น) · ข้อที่ยังไม่ตรวจไม่มี key |
+| gradedAt / gradedBy | number \| null / string \| null | เวลา + ชื่อคนตรวจ |
+| note | string | หมายเหตุถึงผู้สอบ |
+
+**นาฬิกายึด `startedAt` ที่เก็บไว้ ไม่ใช่ตัวนับใน React** — รีเฟรช/ปิดแท็บแล้วกลับมา เวลาเดินต่อจากเดิม ไม่ได้เวลาเพิ่ม · `QuizPanel` หยิบชุดที่ยังทำค้างกลับมาต่อเสมอ ไม่สร้างชุดใหม่ทับ (ไม่งั้นกดเริ่มซ้ำ = ได้ 100 นาทีใหม่ฟรี)
+
+**เกณฑ์ผ่านนับจากข้อหลัก 30 ข้อเท่านั้น** (ความรู้รอบตัว 6 ข้อไม่เข้าเกณฑ์) · ตรวจไม่ครบ → `scoreAttempt` คืน `passed: null` = "ยังไม่ตัดสิน" ไม่ใช่ "ไม่ผ่าน" · logic ทั้งหมดอยู่ที่ `src/utils/quizAttempt.ts`
+
+**Read/Write:** อ่าน = admin / เจ้าของ (`uid`) · เจ้าของแก้ได้เฉพาะ `answers`/การส่ง และเฉพาะตอนยังไม่ส่ง · `grades`/`gradedAt`/`gradedBy`/`note` = admin เท่านั้น (คนทำให้คะแนนตัวเองไม่ได้)
+
 ## Security Rules Summary
 
 | Collection | Read | Write |
@@ -468,6 +495,7 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | config/loyaltyPoints | all signed-in | admin only |
 | config/notifications | admin only | admin only — toggle 4 ตัว + `dailySummaryGroups[]` (กลุ่มปลายทางสรุปเช้า · Cloud Function seed ค่าเดิมให้ครั้งแรก) |
 | dailySummaryImages/{id} | admin only | admin only (+ Cloud Function ผ่าน Admin SDK) |
+| quizAttempts/{attemptId} | admin / owner (`uid`) | owner สร้าง (`startedAtServer == request.time` · `answers` ว่าง · ห้ามมี `grades`) + แก้ `answers`/ส่ง ได้จนกว่าจะส่ง · `grades`/`note` + delete = admin only |
 | config/backupStatus | admin only | blocked (เขียนโดย Cloud Function · Admin SDK) |
 | config/* (อื่นๆ) | blocked | blocked (Functions ใช้ Admin SDK) |
 

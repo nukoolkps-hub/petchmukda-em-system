@@ -146,6 +146,7 @@ export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
           let leaves = 0;
           let advances = 0;
           let loans = 0;
+          let quizAttempts = 0;
           let poolTouched = 0;
           let employees = 0;
           for (const s of res.stats) {
@@ -153,6 +154,7 @@ export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
             leaves += s.leaves;
             advances += s.advances;
             loans += s.loans;
+            quizAttempts += s.quizAttempts ?? 0;
             poolTouched += s.poolSnapshotMonthsTouched;
             employees += s.employeeDoc;
           }
@@ -162,6 +164,7 @@ export default function WipeDataPanel({ employeeDirectory, showToast }: Props) {
             { name: "ใบลา", count: leaves },
             { name: "เบิกเงินล่วงหน้า", count: advances },
             { name: "เงินกู้", count: loans },
+            { name: "แบบทดสอบ", count: quizAttempts },
             { name: "Pool snapshots (เดือนที่แก้)", count: poolTouched },
           ].filter((b) => b.count > 0);
           setResult({

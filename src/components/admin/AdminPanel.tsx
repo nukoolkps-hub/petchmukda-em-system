@@ -9,6 +9,7 @@ import {
   type AdminSectionId,
   getAdminGroupForSection,
 } from "../layout/adminNavConfig";
+import QuizPanel from "../quiz/QuizPanel";
 import SalaryAdminEdit from "../salary/SalaryAdminEdit";
 import AdminAdvancePanel from "./AdminAdvancePanel";
 import BackupPanel from "./BackupPanel";
@@ -236,6 +237,14 @@ export default function AdminPanel({
         {/* ── KNOWLEDGE section (ความรู้ต่างๆ) ── */}
         {section === "knowledge" && (
           <KnowledgeView isAdmin showToast={showToast} />
+        )}
+
+        {/* ── KNOWLEDGE > QUIZ section (แบบทดสอบความรู้พื้นฐาน) ── */}
+        {section === "knowledge-quiz" && (
+          <QuizPanel
+            employeeDirectory={employeeDirectory}
+            showToast={showToast}
+          />
         )}
 
         {/* ── STORE CALENDAR section (วันเปิด-ปิดร้าน) ── */}

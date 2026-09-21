@@ -25,6 +25,8 @@ export interface PerEmployeeWipeStats {
   leaves: number;
   advances: number;
   loans: number;
+  /** optional — function รุ่นก่อนยังไม่ส่ง field นี้กลับมา (deploy คนละรอบ) */
+  quizAttempts?: number;
   poolSnapshotMonthsTouched: number;
   employeeDoc: number;
 }
