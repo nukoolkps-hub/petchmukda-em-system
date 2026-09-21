@@ -37,6 +37,7 @@ import {
   makeQuizSetId,
   moveQuestion,
   nextQuestionId,
+  nextQuizTitle,
   validateQuizSet,
 } from "../../utils/quizSetEdit";
 
@@ -99,10 +100,16 @@ export default function QuizSettingsPanel({ showToast }: Props) {
     }
   }
 
-  /** ทำสำเนาเป็นร่างใหม่ — ใช้ทั้งกับชุดที่เผยแพร่แล้วและชุดที่ฝังมากับโค้ด */
-  async function duplicate(source: QuizSet, label: string) {
+  /** ทำสำเนาเป็นร่างใหม่ — ใช้ทั้งกับชุดที่เผยแพร่แล้วและชุดที่ฝังมากับโค้ด
+   *
+   *  ชื่อใหม่เป็น `ชื่อฐาน v<ถัดไป>` ไม่ใช่ต่อท้าย "(สำเนา)" ไปเรื่อยๆ
+   *  (ทำสำเนาจากสำเนาแล้วชื่อจะยาวขึ้นทุกครั้งจนอ่านไม่ออก) */
+  async function duplicate(source: QuizSet) {
     const now = Date.now();
-    const title = `${label} (สำเนา)`;
+    const title = nextQuizTitle(
+      source.title,
+      sets.map((s) => s.title),
+    );
     const copy = duplicateAsDraft(source, makeQuizSetId(title, now), title);
     await run("สร้างร่างใหม่แล้ว", async () => {
       await createQuizDraft(copy, who);
@@ -441,7 +448,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
           </div>
           <button
             type="button"
-            onClick={() => void duplicate(BUILT_IN_QUIZ, BUILT_IN_QUIZ.title)}
+            onClick={() => void duplicate(BUILT_IN_QUIZ)}
             disabled={busy}
             className="w-full py-2.5 rounded-[9px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
           >
@@ -480,7 +487,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => void duplicate(s, s.title)}
+              onClick={() => void duplicate(s)}
               disabled={busy}
               className="flex-1 py-2 rounded-[8px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
             >

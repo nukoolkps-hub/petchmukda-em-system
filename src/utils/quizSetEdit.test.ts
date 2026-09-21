@@ -14,6 +14,7 @@ import {
   makeQuizSetId,
   moveQuestion,
   nextQuestionId,
+  nextQuizTitle,
   validateQuizSet,
 } from "./quizSetEdit";
 
@@ -170,5 +171,43 @@ describe("makeQuizSetId", () => {
   it("ชื่อว่าง/อักขระพิเศษล้วน ก็ยังได้ id ที่ใช้ได้", () => {
     expect(makeQuizSetId("   ", NOW)).toBe(`quiz-${NOW}`);
     expect(makeQuizSetId("!!! ???", NOW)).toBe(`quiz-${NOW}`);
+  });
+});
+
+describe("nextQuizTitle — ชื่อชุดตอนทำสำเนา", () => {
+  const NAME = "แบบทดสอบความรู้พื้นฐาน";
+
+  it("สำเนาแรกได้ v2 (ตัวต้นฉบับนับเป็น v1)", () => {
+    expect(nextQuizTitle(NAME, [NAME])).toBe(`${NAME} v2`);
+  });
+
+  it("**ทำสำเนาซ้ำๆ ชื่อต้องไม่ยาวขึ้น** — ปัญหาเดิมของ (สำเนา)", () => {
+    const v2 = nextQuizTitle(NAME, [NAME]);
+    const v3 = nextQuizTitle(v2, [NAME, v2]);
+    const v4 = nextQuizTitle(v3, [NAME, v2, v3]);
+    expect(v3).toBe(`${NAME} v3`);
+    expect(v4).toBe(`${NAME} v4`);
+    // ความยาวโตแค่ตามจำนวนหลักของเลข ไม่ใช่ตามจำนวนครั้ง
+    expect(v4.length).toBe(`${NAME} v4`.length);
+  });
+
+  it("ชื่อเก่าที่ติด (สำเนา) มาแล้วต้องถูกล้างให้สะอาด", () => {
+    expect(nextQuizTitle(`${NAME} (สำเนา) (สำเนา)`, [])).toBe(`${NAME} v2`);
+  });
+
+  it("นับจากเลขสูงสุด ไม่ใช่จำนวนชุด — ลบชุดกลางทิ้งแล้วต้องไม่ชน", () => {
+    // เหลือแค่ v1 กับ v5 (v2-v4 ถูกลบ) → ตัวถัดไปต้องเป็น v6 ไม่ใช่ v3
+    expect(nextQuizTitle(NAME, [NAME, `${NAME} v5`])).toBe(`${NAME} v6`);
+  });
+
+  it("ชื่อฐานคนละอันไม่กวนเลขกัน", () => {
+    const other = "แบบทดสอบพนักงานใหม่";
+    expect(nextQuizTitle(other, [NAME, `${NAME} v7`, other])).toBe(
+      `${other} v2`,
+    );
+  });
+
+  it("ชื่อว่างก็ยังได้ชื่อที่ใช้ได้", () => {
+    expect(nextQuizTitle("   ", [])).toBe("ชุดข้อสอบ v2");
   });
 });
