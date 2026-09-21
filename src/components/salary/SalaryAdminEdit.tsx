@@ -1334,9 +1334,14 @@ export default function SalaryAdminEdit({
                           </span>
                         )}
                         {isPrimaryWhileAll && (
-                          <span className="text-[10px] px-1.5 py-1 rounded-lg text-amber font-bold bg-amber-lt/60 inline-flex items-center gap-0.5">
-                            หลัก · ใช้เช็ค 50%
-                          </span>
+                          <>
+                            <span className="text-[11px] px-1.5 py-0.5 rounded-lg text-white font-bold bg-amber inline-flex items-center">
+                              หลัก
+                            </span>
+                            <span className="text-[11px] px-1.5 py-0.5 rounded-lg text-amber font-bold bg-amber-lt border border-amber/30 inline-flex items-center">
+                              ใช้เช็ค 50%
+                            </span>
+                          </>
                         )}
                       </div>
                       <div className="text-xs text-txt-soft">
