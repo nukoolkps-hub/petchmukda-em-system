@@ -35,12 +35,50 @@ export interface QuizAttempt {
    *  เคยเริ่มแล้วเลิกกลางคัน — ลบทิ้งจะกลายเป็นว่าไม่เคยมีอะไรเกิดขึ้น) */
   cancelledAt?: number | null;
 
+  /** ราคา/ค่าแรง ณ เวลาที่กดเริ่มสอบ — **หัวใจของการตรวจย้อนหลัง**
+   *  กติกาข้อสอบคือ "ทุกข้ออ้างอิงจากราคาทองคำแท่ง ณ วันที่ทำข้อสอบ" ถ้าไม่
+   *  ตรึงไว้ พอตรวจวันถัดไปเฉลยจะคิดจากราคาใหม่ → คำตอบที่ถูกกลายเป็นผิด
+   *  ทั้งกระดาน โดยไม่มี error อะไรให้เห็น · ว่าง = ชุดเก่าก่อนมี field นี้ */
+  priceSnapshot?: QuizPriceSnapshot | null;
+
+  /** ผลตรวจที่ AI เสนอ — **แยกจาก `grades` โดยตั้งใจ** ผลตัดสินจริงคือสิ่งที่
+   *  ADMIN กดเท่านั้น · AI เขียนทับคำตัดสินของคนไม่ได้ */
+  aiGrades?: Record<string, QuizAiGrade>;
+  aiGradedAt?: number | null;
+  /** error จากรอบตรวจล่าสุด (ว่าง = ไม่มี) — ให้ UI บอกได้ว่าทำไมไม่ขึ้นผล */
+  aiGradeError?: string;
+
   /* ── ADMIN ตรวจทีหลัง (อัตนัยล้วน ระบบตรวจเองไม่ได้) ── */
   /** questionId → ผ่าน/ไม่ผ่าน · เฉพาะข้อหลัก · ข้อที่ยังไม่ตรวจไม่มี key */
   grades?: Record<string, boolean>;
   gradedAt?: number | null;
   gradedBy?: string | null;
   note?: string;
+}
+
+/** ราคา/ค่าแรงที่ตรึงไว้ตอนเริ่มสอบ — ทุกค่าที่โจทย์ต้องใช้คำนวณ */
+export interface QuizPriceSnapshot {
+  /** ราคาทองคำแท่ง 96.5% ขายออก ฿/บาท */
+  goldSellPerBaht: number;
+  /** ราคาทองคำแท่ง 96.5% รับซื้อ ฿/บาท */
+  goldBuyPerBaht: number;
+  silverSellPerGram: number;
+  silverBuyPerGram: number;
+  /** ค่าเปลี่ยน นน. เท่ากัน ตามจอราคาร้าน (key = `ChangePriceWeight.excId`) */
+  changeRates: Record<string, number>;
+  /** ราคาทองที่จอใช้คำนวณ `changeRates` ชุดนี้ */
+  changeRatesForPrice: number;
+  /** epoch ms ที่ถ่ายภาพราคาชุดนี้ (= ตอนกดเริ่มสอบ) */
+  capturedAt: number;
+  /** `updatedAt` ของ `/config/goldPrice` ตอนนั้น — ดูได้ว่าราคาค้างไหม */
+  priceUpdatedAt: number;
+}
+
+/** ผลตรวจรายข้อที่ AI เสนอ (ข้อเสนอ ไม่ใช่คำตัดสิน) */
+export interface QuizAiGrade {
+  pass: boolean;
+  /** เหตุผลสั้นๆ ภาษาไทย ให้ ADMIN อ่านแล้วตัดสินเองได้เร็วขึ้น */
+  reason: string;
 }
 
 /** เวลาที่ข้อสอบชุดนี้ "ควรจะ" หมด (epoch ms) */

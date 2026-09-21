@@ -407,6 +407,11 @@ service cloud.firestore {
       allow read:  if isAdmin();
       allow write: if false;
     }
+    // ชี้ว่าตอนนี้ใช้ชุดข้อสอบไหนสอบ — คนทำข้อสอบต้องอ่านได้
+    match /config/quizActive {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
     match /config/{document} {
       allow read, write: if false;
     }
@@ -482,10 +487,35 @@ service cloud.firestore {
         .hasOnly(['answers', 'submittedAt', 'submittedAtServer',
                   'autoSubmitted', 'cancelledAt', 'cancelledAtServer']);
     }
+    // คำตัดสินของคนเท่านั้น — `aiGrades`/`aiGradedAt`/`aiGradeError` ไม่อยู่
+    // ในลิสต์โดยตั้งใจ: เขียนได้เฉพาะ Cloud Function `gradeQuizWithAI`
+    // (Admin SDK · bypass rules) ฝั่ง client แตะไม่ได้เลย แม้เป็น admin
     function quizGradeFieldsOnly() {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['grades', 'gradedAt', 'gradedBy', 'note']);
     }
+    // ─── ชุดข้อสอบที่ admin แก้เองได้ (หน้า "ตั้งค่าข้อสอบ") ──────────
+    // **หัวใจ: เผยแพร่แล้วแก้ไม่ได้อีกเลย** — ใบที่สอบไปแล้วอ้าง
+    // `attempt.quizId` มาที่ชุดนี้ ถ้ายังแก้ได้ ผลสอบเก่าจะเปลี่ยนย้อนหลัง
+    // เงียบๆ (เพิ่มข้อ → ใบเก่ากลายเป็น "ตรวจไม่ครบ" · ขยับเกณฑ์ → ผ่าน
+    // กลายเป็นไม่ผ่าน) · จะแก้ต้องทำสำเนาเป็นชุดใหม่
+    match /quizSets/{quizId} {
+      // ทุก signed-in อ่านได้ — คนทำข้อสอบต้องโหลดโจทย์ของชุดที่ตัวเองทำ
+      allow read: if isSignedIn();
+
+      allow create: if isAdmin()
+        && request.resource.data.status == 'draft';
+
+      // แก้ได้เฉพาะตอนยังเป็นร่าง · การเผยแพร่ (draft → published) ก็เป็น
+      // update ครั้งหนึ่ง จึงผ่านเงื่อนไขนี้ได้ แล้วหลังจากนั้นล็อกถาวร
+      allow update: if isAdmin()
+        && resource.data.status == 'draft';
+
+      // ลบได้เฉพาะร่าง — ชุดที่เผยแพร่แล้วต้องอยู่ตลอดไป
+      allow delete: if isAdmin()
+        && resource.data.status == 'draft';
+    }
+
     match /quizAttempts/{attemptId} {
       allow read: if isAdmin()
         || (isSignedIn() && request.auth.uid == resource.data.uid);
@@ -495,8 +525,9 @@ service cloud.firestore {
         && request.resource.data.startedAtServer == request.time
         && request.resource.data.submittedAt == null
         && request.resource.data.answers.size() == 0
-        // เริ่มมาแล้วมีคะแนนติดมาด้วยไม่ได้
-        && !('grades' in request.resource.data);
+        // เริ่มมาแล้วมีคะแนนติดมาด้วยไม่ได้ (ทั้งของคนและของ AI)
+        && !('grades' in request.resource.data)
+        && !('aiGrades' in request.resource.data);
 
       // เจ้าของ: ตอบ/ส่ง/ยกเลิก ได้จนกว่าจะส่ง · admin: ให้คะแนนได้ตลอด
       allow update: if (quizOwner() && quizStillOpen()

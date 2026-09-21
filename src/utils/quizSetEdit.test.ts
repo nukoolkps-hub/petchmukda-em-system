@@ -1,0 +1,174 @@
+/* ─── แก้ชุดข้อสอบผ่านหน้า "ตั้งค่าข้อสอบ" ─────────────────────────────
+   พังเงียบ: id ของข้อคือ key ของคำตอบใน Firestore — ชนกันเมื่อไหร่ คำตอบ
+   สองข้อเขียนทับกันโดยไม่มี error · เผยแพร่ไปแล้วย้อนไม่ได้
+
+   invariant:
+   1. id ใหม่ต้องไล่จากเลขสูงสุดที่เคยใช้ ไม่ใช่จำนวนข้อ (ลบข้อกลางแล้วต้องไม่ชน)
+   2. เผยแพร่ไม่ได้ถ้ายังมีข้อว่าง / id ซ้ำ / เวลาหรือเกณฑ์ไม่สมเหตุสมผล
+   3. ทำสำเนาต้องคง id ของข้อไว้ครบ (ชุดใหม่มี id ชุดของตัวเอง)            */
+
+import { describe, expect, it } from "vitest";
+import type { QuizQuestion } from "../content/quiz/basicExam";
+import {
+  duplicateAsDraft,
+  makeQuizSetId,
+  moveQuestion,
+  nextQuestionId,
+  validateQuizSet,
+} from "./quizSetEdit";
+
+const q = (id: string, text = "โจทย์"): QuizQuestion => ({ id, text });
+
+describe("nextQuestionId", () => {
+  it("ไล่จากเลขสูงสุดที่เคยใช้", () => {
+    expect(nextQuestionId([q("m1"), q("m2"), q("m3")], "m")).toBe("m4");
+  });
+
+  it("**ลบข้อกลางออกแล้วต้องไม่ชนของเดิม** (เคสที่ length+1 จะพัง)", () => {
+    // ลบ m2 ทิ้ง เหลือ 2 ข้อ — ถ้าใช้ length+1 จะได้ m3 ซึ่งมีอยู่แล้ว
+    const afterDelete = [q("m1"), q("m3")];
+    expect(nextQuestionId(afterDelete, "m")).toBe("m4");
+  });
+
+  it("ว่างเปล่า → เริ่มที่ 1", () => {
+    expect(nextQuestionId([], "m")).toBe("m1");
+    expect(nextQuestionId([], "g")).toBe("g1");
+  });
+
+  it("นับเฉพาะ prefix ของตัวเอง — ข้อหลักกับความรู้รอบตัวไม่กวนกัน", () => {
+    const mixed = [q("m1"), q("m9"), q("g1"), q("g2")];
+    expect(nextQuestionId(mixed, "m")).toBe("m10");
+    expect(nextQuestionId(mixed, "g")).toBe("g3");
+  });
+
+  it("id ที่ไม่ใช่รูปแบบตัวเลขไม่ทำให้พัง", () => {
+    expect(nextQuestionId([q("m1"), q("mABC"), q("m5")], "m")).toBe("m6");
+  });
+});
+
+describe("moveQuestion", () => {
+  const items = ["a", "b", "c", "d"];
+
+  it("ย้ายขึ้น/ลงได้", () => {
+    expect(moveQuestion(items, 2, 0)).toEqual(["c", "a", "b", "d"]);
+    expect(moveQuestion(items, 0, 3)).toEqual(["b", "c", "d", "a"]);
+  });
+
+  it("ที่เดิม/นอกช่วง = คืนตัวเดิม ไม่พัง", () => {
+    expect(moveQuestion(items, 1, 1)).toBe(items);
+    expect(moveQuestion(items, -1, 2)).toBe(items);
+    expect(moveQuestion(items, 0, 9)).toBe(items);
+  });
+
+  it("ไม่แก้ array เดิม", () => {
+    const copy = [...items];
+    moveQuestion(items, 0, 2);
+    expect(items).toEqual(copy);
+  });
+});
+
+describe("validateQuizSet", () => {
+  const ok = {
+    title: "แบบทดสอบความรู้พื้นฐาน",
+    durationMinutes: 100,
+    passPercent: 80,
+    main: [q("m1")],
+    general: [q("g1")],
+  };
+
+  it("ชุดที่ถูกต้อง = ไม่มีปัญหา", () => {
+    expect(validateQuizSet(ok)).toEqual([]);
+  });
+
+  it("จับข้อที่ยังไม่มีโจทย์", () => {
+    const problems = validateQuizSet({ ...ok, main: [q("m1", "  ")] });
+    expect(problems.map((p) => p.field)).toContain("m1");
+  });
+
+  it("**จับ id ซ้ำ** — ปล่อยไปคำตอบสองข้อจะเขียนทับกัน", () => {
+    const problems = validateQuizSet({
+      ...ok,
+      main: [q("m1"), q("m1", "อีกข้อ")],
+    });
+    expect(problems.some((p) => p.message.includes("ซ้ำ"))).toBe(true);
+  });
+
+  it("id ซ้ำข้ามกลุ่ม (ข้อหลัก ↔ ความรู้รอบตัว) ก็ต้องจับ", () => {
+    const problems = validateQuizSet({
+      ...ok,
+      main: [q("x1")],
+      general: [q("x1")],
+    });
+    expect(problems.some((p) => p.message.includes("ซ้ำ"))).toBe(true);
+  });
+
+  it("เวลา / เกณฑ์ผ่าน / ชื่อ ที่ไม่สมเหตุสมผล", () => {
+    const fields = (o: Partial<typeof ok>) =>
+      validateQuizSet({ ...ok, ...o }).map((p) => p.field);
+    expect(fields({ durationMinutes: 0 })).toContain("durationMinutes");
+    expect(fields({ passPercent: 0 })).toContain("passPercent");
+    expect(fields({ passPercent: 101 })).toContain("passPercent");
+    expect(fields({ title: "   " })).toContain("title");
+    expect(fields({ main: [] })).toContain("main");
+  });
+
+  it("คืนทุกปัญหาพร้อมกัน ไม่หยุดที่อันแรก", () => {
+    const problems = validateQuizSet({
+      title: "",
+      durationMinutes: 0,
+      passPercent: 0,
+      main: [],
+      general: [],
+    });
+    expect(problems.length).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe("duplicateAsDraft", () => {
+  const source = {
+    id: "basic-2569",
+    title: "ชุดเก่า",
+    durationMinutes: 100,
+    passPercent: 80,
+    rules: ["กติกา 1"],
+    main: [q("m1"), q("m2")],
+    general: [q("g1")],
+  };
+
+  it("คง id ของข้อไว้ครบ · เปลี่ยนแค่ id/ชื่อของชุด", () => {
+    const copy = duplicateAsDraft(source, "basic-2570", "ชุดใหม่");
+    expect(copy.id).toBe("basic-2570");
+    expect(copy.title).toBe("ชุดใหม่");
+    expect(copy.main.map((x) => x.id)).toEqual(["m1", "m2"]);
+    expect(copy.general.map((x) => x.id)).toEqual(["g1"]);
+    expect(copy.durationMinutes).toBe(100);
+    expect(copy.passPercent).toBe(80);
+  });
+
+  it("แก้สำเนาแล้วต้องไม่กระทบชุดต้นฉบับ (deep copy)", () => {
+    const copy = duplicateAsDraft(source, "x", "x");
+    copy.main[0].text = "เปลี่ยนแล้ว";
+    copy.rules.push("กติกาใหม่");
+    expect(source.main[0].text).toBe("โจทย์");
+    expect(source.rules).toHaveLength(1);
+  });
+});
+
+describe("makeQuizSetId", () => {
+  const NOW = 1_700_000_000_000;
+
+  it("ชื่ออังกฤษ → slug + เวลา (ไม่ชนของเดิม)", () => {
+    expect(makeQuizSetId("Basic Exam 2570", NOW)).toBe(
+      `basic-exam-2570-${NOW}`,
+    );
+  });
+
+  it("ชื่อไทยล้วน → ตกไปใช้รูปแบบกลาง (อ่านใน log ได้)", () => {
+    expect(makeQuizSetId("แบบทดสอบความรู้พื้นฐาน", NOW)).toBe(`quiz-${NOW}`);
+  });
+
+  it("ชื่อว่าง/อักขระพิเศษล้วน ก็ยังได้ id ที่ใช้ได้", () => {
+    expect(makeQuizSetId("   ", NOW)).toBe(`quiz-${NOW}`);
+    expect(makeQuizSetId("!!! ???", NOW)).toBe(`quiz-${NOW}`);
+  });
+});

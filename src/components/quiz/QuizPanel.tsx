@@ -17,12 +17,22 @@ import {
   Play as IconPlay,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { BASIC_EXAM } from "../../content/quiz/basicExam";
+import {
+  isKnownQuizId,
+  resolveActiveQuiz,
+  resolveQuizSet,
+} from "../../content/quiz";
+import type { QuizSet } from "../../content/quiz/basicExam";
 import { useAuth } from "../../contexts/AuthContext";
+import { useGoldPrice } from "../../firebase/hooks/useFirestore";
 import {
   startQuizAttempt,
   subscribeAllQuizAttempts,
 } from "../../firebase/quizAttempts";
+import {
+  subscribeActiveQuizId,
+  subscribeQuizSets,
+} from "../../firebase/quizSets";
 import type { Employee } from "../../types";
 import { fmtThaiDateTime } from "../../utils/dateUtils";
 import {
@@ -42,12 +52,48 @@ interface Props {
 
 export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   const { user } = useAuth();
+  // `DEFAULT_GOLD_PRICE` เป็นค่า placeholder (50,000) ไม่ใช่ราคาจริง —
+  // ถ้าเผลอ snapshot ตอนยังโหลดไม่เสร็จ ข้อสอบทั้งใบจะอ้างอิงราคาปลอม
+  // โดยไม่มีอะไรฟ้อง → กันไว้ที่ปุ่มเริ่ม (`priceReady`)
+  const { data: gold, loading: goldLoading } = useGoldPrice();
+  const priceReady =
+    !goldLoading && gold.updatedAt > 0 && gold.pricePerBaht > 0;
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
   const [runningId, setRunningId] = useState<string | null>(null);
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
   useEffect(() => subscribeAllQuizAttempts(setAttempts), []);
+
+  // ชุดข้อสอบที่ admin แก้ผ่านหน้า "ตั้งค่าข้อสอบ" — ทับชุดที่ฝังมากับโค้ด
+  // (ยังโหลดไม่มา/Firestore ล่ม → ใช้ชุดที่ฝังมา ไม่ใช่จอว่าง)
+  const [remoteSets, setRemoteSets] = useState<Record<string, QuizSet>>({});
+  const [activeQuizId, setActiveQuizId] = useState("");
+  useEffect(
+    () =>
+      subscribeQuizSets((list) =>
+        setRemoteSets(
+          Object.fromEntries(
+            list
+              .filter((q) => q.status === "published")
+              .map((q) => [q.id, q as QuizSet]),
+          ),
+        ),
+      ),
+    [],
+  );
+  useEffect(() => subscribeActiveQuizId(setActiveQuizId), []);
+
+  /** ชุดที่จะใช้เมื่อกดเริ่มสอบตอนนี้ */
+  const currentQuiz = useMemo(
+    () => resolveActiveQuiz(remoteSets, activeQuizId),
+    [remoteSets, activeQuizId],
+  );
+  /** ชุดของใบนั้นๆ — ใบเก่าต้องอ่านชุดของตัวเอง ไม่ใช่ชุดที่ใช้อยู่ตอนนี้ */
+  const quizOf = useMemo(
+    () => (quizId: string) => resolveQuizSet(quizId, remoteSets, activeQuizId),
+    [remoteSets, activeQuizId],
+  );
 
   const uid = user?.uid ?? "";
   const me = useMemo(
@@ -56,15 +102,10 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   );
   const myName = me?.nickname || me?.name || user?.displayName || "ADMIN";
 
-  // ชื่อผู้สอบ — เติมชื่อคนที่ login ไว้ให้เป็นค่าตั้งต้น แต่แก้ได้
-  // (ADMIN เปิดเครื่องให้พนักงานทำ = ต้องพิมพ์ชื่อพนักงานทับ)
-  const [examineeName, setExamineeName] = useState(myName);
-  const [nameTouched, setNameTouched] = useState(false);
-  // employeeDirectory มาทีหลัง (subscribe) → ค่าตั้งต้นตอน mount ยังเป็น
-  // "ADMIN" อยู่ · sync ตามจนกว่าผู้ใช้จะพิมพ์เอง แล้วหยุดแตะ
-  useEffect(() => {
-    if (!nameTouched) setExamineeName(myName);
-  }, [myName, nameTouched]);
+  // ชื่อผู้สอบ — **เริ่มว่างเสมอ ไม่เติมชื่อคนที่ login ให้**
+  // เครื่องเดียวใช้สอบหลายคน (ADMIN เปิดให้พนักงานทำ) ถ้าเติมชื่อไว้ให้
+  // คนกดเริ่มโดยไม่ทันแก้ = ผลสอบไปติดชื่อผิดคน ซึ่งเงียบสนิทจนถึงตอนตรวจ
+  const [examineeName, setExamineeName] = useState("");
   const trimmedName = examineeName.trim();
 
   // ชุดของเราที่ยังทำอยู่จริง (ยังไม่ส่ง · ยังไม่ยกเลิก · ยังไม่หมดเวลา)
@@ -88,10 +129,21 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
     setStarting(true);
     try {
       const id = await startQuizAttempt(
-        BASIC_EXAM,
+        currentQuiz,
         uid,
         resolveExamineeId(trimmedName, employeeDirectory ?? []),
         trimmedName,
+        // ตรึงราคาไว้ตรงนี้ — ตรวจย้อนหลังต้องคิดจากราคา "วันที่สอบ"
+        {
+          goldSellPerBaht: gold.pricePerBaht,
+          goldBuyPerBaht: gold.buyPrice,
+          silverSellPerGram: gold.silverSellPerGram,
+          silverBuyPerGram: gold.silverBuyPerGram,
+          changeRates: gold.changeRates ?? {},
+          changeRatesForPrice: gold.changeRatesForPrice,
+          capturedAt: Date.now(),
+          priceUpdatedAt: gold.updatedAt,
+        },
       );
       setRunningId(id);
     } catch (err) {
@@ -106,7 +158,9 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   if (running) {
     return (
       <QuizRunner
-        quiz={BASIC_EXAM}
+        // ชุดที่ใบนี้เริ่มไว้ ไม่ใช่ชุดปัจจุบัน — ถ้ามีการออกชุดใหม่ระหว่างที่
+        // ใครทำค้างอยู่ โจทย์ต้องไม่เปลี่ยนกลางคัน
+        quiz={quizOf(running.quizId)}
         attempt={running}
         onFinished={() => {
           setRunningId(null);
@@ -120,7 +174,8 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   if (reviewing) {
     return (
       <QuizReview
-        quiz={BASIC_EXAM}
+        quiz={quizOf(reviewing.quizId)}
+        quizKnown={isKnownQuizId(reviewing.quizId, remoteSets)}
         attempt={reviewing}
         gradedBy={myName}
         onBack={() => setReviewId(null)}
@@ -135,10 +190,10 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
       <div className="rounded-[12px] border-[1.5px] border-[#C9973A50] bg-gold-pale/60 p-3.5 mb-4">
         <div className="text-lg font-extrabold text-maroon mb-2 flex items-center gap-1.5">
           <IconClipboardCheck size={20} strokeWidth={2.4} />
-          {BASIC_EXAM.title}
+          {currentQuiz.title}
         </div>
         <ul className="mb-3 space-y-1">
-          {BASIC_EXAM.rules.map((rule) => (
+          {currentQuiz.rules.map((rule) => (
             <li
               key={rule}
               className="text-sm text-txt-mid leading-relaxed flex items-start gap-1.5"
@@ -171,20 +226,26 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
             <input
               type="text"
               value={examineeName}
-              onChange={(e) => {
-                setNameTouched(true);
-                setExamineeName(e.target.value);
-              }}
+              onChange={(e) => setExamineeName(e.target.value)}
               placeholder="พิมพ์ชื่อ-ชื่อเล่นของผู้ทำข้อสอบ"
               className="w-full px-3.5 py-3 rounded-[10px] border border-bdr bg-white text-lg text-txt font-[inherit] outline-none focus:border-maroon transition-colors"
             />
           </label>
         )}
 
+        {!inProgress && !priceReady && (
+          <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold">
+            ยังโหลดราคาทองไม่สำเร็จ — เริ่มสอบตอนนี้ไม่ได้ เพราะทุกข้อต้องอ้างอิงราคา ณ วันที่สอบ
+            (ถ้าค้างนาน เช็กหน้า "ความรู้ต่างๆ" ว่าราคาขึ้นไหม)
+          </div>
+        )}
+
         <button
           type="button"
           onClick={() => void handleStart()}
-          disabled={starting || !uid || (!inProgress && !trimmedName)}
+          disabled={
+            starting || !uid || (!inProgress && (!trimmedName || !priceReady))
+          }
           className="w-full py-3.5 rounded-[12px] bg-maroon text-white text-base font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
         >
           <IconPlay size={18} strokeWidth={2.6} />
@@ -205,7 +266,9 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
       ) : (
         <div className="flex flex-col gap-2">
           {attempts.map((a) => {
-            const score = scoreAttempt(a, BASIC_EXAM);
+            // ตรวจ/คิด % ด้วยชุดของใบนั้นเอง — ออกชุดใหม่แล้วใบเก่าต้องไม่
+            // กลายเป็น "ตรวจไม่ครบ" เพราะจำนวนข้อเปลี่ยน
+            const score = scoreAttempt(a, quizOf(a.quizId));
             const cancelled = !!a.cancelledAt;
             const done = !cancelled && !isInProgress(a, Date.now());
             return (

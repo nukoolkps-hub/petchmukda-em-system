@@ -34,6 +34,11 @@ const SAVE_DEBOUNCE_MS = 2000;
 /** เหลือน้อยกว่านี้ = นาฬิกาเปลี่ยนเป็นสีแดง (5 นาที) */
 const WARN_MS = 5 * 60_000;
 
+/** ราคาบนแถบ — ใส่ comma ให้อ่านเลขหลักหมื่นได้เร็ว ไม่เอาทศนิยม */
+function fmtBaht(n: number): string {
+  return Math.round(n || 0).toLocaleString("en-US");
+}
+
 interface Props {
   quiz: QuizSet;
   attempt: QuizAttempt;
@@ -65,6 +70,7 @@ export default function QuizRunner({
   const submittedRef = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const price = attempt.priceSnapshot ?? null;
   const left = remainingMs(attempt, now);
   const expired = isExpired(attempt, now);
   const mainDone = answeredCount(
@@ -166,24 +172,56 @@ export default function QuizRunner({
 
   return (
     <div className="font-sans">
-      {/* ── แถบนาฬิกา — ติดบนสุดไว้ ให้เห็นตลอดเวลาที่เลื่อนอ่านโจทย์ยาวๆ ── */}
-      <div className="sticky top-0 z-10 -mx-1 mb-3 px-3 py-2.5 rounded-[12px] bg-maroon text-white flex items-center justify-between gap-2 shadow-md">
-        <div className="flex items-center gap-2">
-          <IconClock size={22} strokeWidth={2.4} />
-          <span
-            className={`font-mono text-3xl font-black tabular-nums ${
-              left <= WARN_MS ? "text-red-300" : "text-white"
-            }`}
-          >
-            {formatCountdown(left)}
-          </span>
+      {/* ── แถบนาฬิกา + ราคาทอง — ติดบนสุดไว้ ให้เห็นตลอดเวลาที่เลื่อนอ่าน
+           โจทย์ยาวๆ · ราคาต้องอยู่ตรงนี้เพราะ "ทุกข้ออ้างอิงราคาทองคำแท่ง
+           ณ วันที่ทำข้อสอบ" — ต้องหยิบมาใช้ได้ทุกข้อโดยไม่ต้องเลื่อนหา ── */}
+      <div className="sticky top-0 z-10 -mx-1 mb-3">
+        <div className="px-3 py-2.5 rounded-t-[12px] bg-maroon text-white flex items-center justify-between gap-2 shadow-md">
+          <div className="flex items-center gap-2">
+            <IconClock size={22} strokeWidth={2.4} />
+            <span
+              className={`font-mono text-3xl font-black tabular-nums ${
+                left <= WARN_MS ? "text-red-300" : "text-white"
+              }`}
+            >
+              {formatCountdown(left)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2.5 text-sm">
+            <span className="text-white/85 font-semibold">
+              ตอบแล้ว {allDone}/{questions.length}
+            </span>
+            {saving && <span className="text-gold-lt">กำลังบันทึก…</span>}
+          </div>
         </div>
-        <div className="flex items-center gap-2.5 text-sm">
-          <span className="text-white/85 font-semibold">
-            ตอบแล้ว {allDone}/{questions.length}
-          </span>
-          {saving && <span className="text-gold-lt">กำลังบันทึก…</span>}
-        </div>
+
+        {/* ราคาที่ตรึงไว้ตอนกดเริ่ม — ไม่ขยับตามราคาสดระหว่างทำข้อสอบ
+            (ไม่งั้นคนที่เริ่มคิดตั้งแต่ข้อแรกจะเจอราคาคนละชุดกับข้อท้าย) */}
+        {price ? (
+          <div className="px-3 py-2 rounded-b-[12px] bg-gold-pale border-x border-b border-[#C9973A50] shadow-md flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="text-sm font-bold text-maroon">ราคาทองวันที่สอบ</span>
+            <span className="text-base font-extrabold text-txt tabular-nums">
+              ขาย{" "}
+              <span className="text-green">
+                {fmtBaht(price.goldSellPerBaht)}
+              </span>
+            </span>
+            <span className="text-base font-extrabold text-txt tabular-nums">
+              รับซื้อ{" "}
+              <span className="text-red">{fmtBaht(price.goldBuyPerBaht)}</span>
+            </span>
+            {price.silverSellPerGram > 0 && (
+              <span className="text-sm font-semibold text-txt-mid tabular-nums">
+                เงิน ขาย {fmtBaht(price.silverSellPerGram)} / รับซื้อ{" "}
+                {fmtBaht(price.silverBuyPerGram)} ต่อกรัม
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="px-3 py-2 rounded-b-[12px] bg-cream-dk border-x border-b border-bdr shadow-md text-sm text-txt-soft font-semibold">
+            ชุดนี้ไม่ได้บันทึกราคาทองไว้ — ดูราคาจากจอหน้าร้าน
+          </div>
+        )}
       </div>
 
       {left <= WARN_MS && !expired && (

@@ -30,9 +30,14 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 import type { QuizSet } from "../content/quiz/basicExam";
-import type { QuizAttempt } from "../utils/quizAttempt";
-import { db } from "./config";
+import type {
+  QuizAiGrade,
+  QuizAttempt,
+  QuizPriceSnapshot,
+} from "../utils/quizAttempt";
+import { db, functions } from "./config";
 
 const col = collection(db, "quizAttempts");
 
@@ -49,6 +54,10 @@ function toAttempt(id: string, data: Record<string, unknown>): QuizAttempt {
     submittedAt: (data.submittedAt as number | null) ?? null,
     autoSubmitted: data.autoSubmitted === true,
     cancelledAt: (data.cancelledAt as number | null) ?? null,
+    priceSnapshot: (data.priceSnapshot as QuizPriceSnapshot | null) ?? null,
+    aiGrades: (data.aiGrades as Record<string, QuizAiGrade>) ?? {},
+    aiGradedAt: (data.aiGradedAt as number | null) ?? null,
+    aiGradeError: String(data.aiGradeError ?? ""),
     grades: (data.grades as Record<string, boolean>) ?? {},
     gradedAt: (data.gradedAt as number | null) ?? null,
     gradedBy: (data.gradedBy as string | null) ?? null,
@@ -110,6 +119,7 @@ export async function startQuizAttempt(
   uid: string,
   employeeId: string,
   employeeName: string,
+  priceSnapshot: QuizPriceSnapshot,
 ): Promise<string> {
   const ref = doc(col);
   await setDoc(ref, {
@@ -122,6 +132,9 @@ export async function startQuizAttempt(
     durationMinutes: quiz.durationMinutes,
     answers: {},
     submittedAt: null,
+    // ตรึงราคาไว้ตั้งแต่ตรงนี้ — ตรวจย้อนหลังต้องใช้ราคาของ "วันที่สอบ"
+    // ไม่ใช่ราคาวันที่ตรวจ (ดู QuizPriceSnapshot)
+    priceSnapshot,
   });
   return ref.id;
 }
@@ -177,4 +190,37 @@ export async function gradeQuizAttempt(
     gradedBy,
     gradedAt: Date.now(),
   });
+}
+
+/** ให้ AI ช่วยตรวจ — เรียก Cloud Function แล้วผลจะไหลกลับมาทาง onSnapshot
+ *
+ *  **เป็นแค่ข้อเสนอ** ผลลง `aiGrades` ซึ่งแยกจาก `grades` ที่ ADMIN กดเอง
+ *  ADMIN ยังต้องกดตัดสินเองทุกข้อ — ระบบไม่เคยให้คะแนนแทน
+ *
+ *  `reference` = เนื้อหา "ความรู้ต่างๆ" ที่ฝั่ง client ประกอบให้ · ส่งจาก
+ *  client เพราะ `src/content/knowledge` เป็นไฟล์ฝั่ง frontend (มี React icon)
+ *  functions import ตรงไม่ได้ · ถ้า copy ไปไว้ฝั่ง functions จะกลายเป็น 2 ชุด
+ *  ที่ drift หากันเงียบๆ — ส่งจากที่เดียวที่ render จริงปลอดภัยกว่า           */
+export interface QuizGradingQuestion {
+  id: string;
+  text: string;
+  /** นับคะแนนไหม — ความรู้รอบตัวส่งไปด้วยแต่ไม่เข้าเกณฑ์ผ่าน */
+  scored: boolean;
+}
+
+export async function requestAiGrading(
+  attemptId: string,
+  reference: string,
+  questions: QuizGradingQuestion[],
+): Promise<{ graded: number }> {
+  const call = httpsCallable<
+    {
+      attemptId: string;
+      reference: string;
+      questions: QuizGradingQuestion[];
+    },
+    { graded: number }
+  >(functions, "gradeQuizWithAI");
+  const res = await call({ attemptId, reference, questions });
+  return res.data;
 }

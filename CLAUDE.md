@@ -64,6 +64,7 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 | payroll-matrix (ตารางรวม) | `PayrollMatrixPanel` | โชว์/ซ่อนเลขบัญชี, กำลังสร้าง PDF |
 | positions | `RolesAdminPanel` | draft role |
 | knowledge-quiz (แบบทดสอบ) | `QuizPanel` → `QuizRunner` / `QuizReview` | โหมด (list/ทำ/ตรวจ), attempt ที่เปิดอยู่ |
+| knowledge-quiz-settings (ตั้งค่าข้อสอบ) | `QuizSettingsPanel` | ร่างที่กำลังแก้, ยืนยันลบ |
 
 **กฎ:** component ไม่ควรเกิน ~300-400 บรรทัด — ถ้าโตเกินให้แยก (เช่น `EmployeeEditModal` แยกจาก `EmployeeAdminPanel`)
 
@@ -114,10 +115,25 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 
 | ชั้น | ไฟล์ | หน้าที่ |
 |---|---|---|
-| เนื้อหา | `src/content/quiz/basicExam.ts` | `BASIC_EXAM` hardcode — **`question.id` คือ key ของคำตอบใน Firestore** ห้ามเปลี่ยน/สลับลำดับ · เพิ่มข้อให้ต่อท้าย (`m31`/`g7`) |
+| เนื้อหา | `src/content/quiz/basicExam.ts` | ชุดข้อสอบ 2569 — **`question.id` คือ key ของคำตอบใน Firestore** ห้ามเปลี่ยน/สลับลำดับ |
+| ทะเบียนชุด | `src/content/quiz/index.ts` | `mergeQuizSets` (Firestore ทับชุดที่ฝังมา) + `resolveQuizSet(quizId)` + `resolveActiveQuiz` |
+| แก้ข้อสอบ | `src/components/admin/QuizSettingsPanel.tsx` + `src/firebase/quizSets.ts` + `src/utils/quizSetEdit.ts` | หน้า admin แก้โจทย์/เวลา/เกณฑ์ · `quizSets/{id}` · logic ล้วน (id ถัดไป/ย้ายข้อ/validate/ทำสำเนา) |
 | logic | `src/utils/quizAttempt.ts` | pure — เวลา (`remainingMs`/`isExpired`/`formatCountdown`) + คะแนน (`scoreAttempt`) · ไม่แตะ Firebase/React |
 | data | `src/firebase/quizAttempts.ts` | `quizAttempts/{id}` — subscribe/start/save/submit/grade |
 | UI | `src/components/quiz/{QuizPanel,QuizRunner,QuizReview}.tsx` | router 3 โหมด · หน้าทำข้อสอบ · หน้าตรวจ |
+| AI ช่วยตรวจ | `functions/src/quiz/gradeQuizWithAI.ts` + `src/utils/quizGradingReference.ts` | callable (admin) → Claude อ่านคำตอบเทียบกฎ + ราคาที่ตรึงไว้ แล้วเสนอผ่าน/ไม่ผ่าน |
+
+**แก้ข้อสอบ — ร่าง → เผยแพร่ → ล็อกถาวร (`/admin → ฝึกอบรม → ตั้งค่าข้อสอบ`):**
+ชุดข้อสอบเก็บที่ `quizSets/{id}` · ตัวที่ใช้สอบชี้ด้วย `/config/quizActive` · `basicExam.ts` เหลือหน้าที่เป็น**ชุดตั้งต้น + fallback ถาวร** (Firestore ว่าง/ต่อไม่ได้ → ระบบยังเปิดข้อสอบได้)
+
+| สถานะ | แก้ได้ไหม |
+|---|---|
+| `draft` | แก้โจทย์ · เพิ่ม/ลบ/สลับข้อ · เวลา · เกณฑ์ · กติกา ได้อิสระ |
+| `published` | **แก้ไม่ได้เลย** — `firestore.rules` บล็อก `update` ทั้งหมด (ลบก็ไม่ได้) · จะแก้ต้อง "ทำสำเนาเป็นชุดใหม่" |
+
+ใบที่สอบแล้วถูกตรวจด้วย `resolveQuizSet(attempt.quizId, remoteSets, activeId)` = **ชุดที่ใช้จริงตอนนั้น** ไม่ใช่ชุดที่ใช้อยู่ตอนนี้ (หลักเดียวกับที่สลิปตรึง roleId/เรท/วันลาไว้ในเดือนนั้น) · ถ้าชุดหายไป UI ขึ้นกล่องแดงเตือนผ่าน `isKnownQuizId` ไม่เงียบ
+
+**`question.id` ยังห้ามเปลี่ยน/ใช้ซ้ำภายในชุดเดียวกัน** — `nextQuestionId` ไล่จาก**เลขสูงสุดที่เคยใช้** ไม่ใช่จำนวนข้อ (ลบข้อกลางแล้วเพิ่มใหม่ ถ้าใช้ `length+1` จะชน id เดิม → คำตอบ 2 ข้อเขียนทับกันเงียบๆ) · `validateQuizSet` บล็อก id ซ้ำก่อนเผยแพร่ · id ซ้ำ**ข้ามชุด**ไม่เป็นปัญหา เพราะอ่านผ่าน `attempt.quizId` เสมอ
 
 **กฎที่พังเงียบถ้าแก้ผิด:**
 - **นาฬิกายึด `startedAt` ใน Firestore ไม่ใช่ตัวนับใน state** — นับถอยหลังด้วย state แล้วผู้ใช้รีเฟรช/สลับแท็บ (มือถือ throttle timer) จะได้เวลาเพิ่มฟรี · คำนวณ "เวลาเริ่ม + ระยะเวลา − ตอนนี้" ใหม่ทุกครั้งเสมอ
@@ -128,6 +144,15 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 - **เกณฑ์ผ่านนับจาก `quiz.main` เท่านั้น** (ความรู้รอบตัวไม่เข้าเกณฑ์) · ตรวจไม่ครบ → `passed: null` = "ยังไม่ตัดสิน" **ไม่ใช่ "ไม่ผ่าน"** — UI ต้องแยก 2 อย่างนี้ ไม่งั้นคนเพิ่งส่งจะขึ้นว่าตก
 - คำตอบเขียนลง Firestore ระหว่างพิมพ์ (debounce ~2 วิ) ไม่ใช่ตอนกดส่ง — ข้อสอบยาว 100 นาที เน็ตหลุดแล้วเสียทั้งชุดไม่ได้
 - `startedAtServer == request.time` บังคับใน `firestore.rules` — `startedAt` มาจากนาฬิกาเครื่อง ตั้งอนาคตแล้วยืดเวลาสอบเองได้
+- **ราคาที่ตรึงไว้โชว์บนแถบ sticky ของหน้าทำข้อสอบ** (คู่กับนาฬิกา) และบนหัวหน้าตรวจ — ผู้สอบต้องหยิบมาใช้ได้ทุกข้อโดยไม่ต้องเลื่อนหา และ ADMIN ต้องตรวจด้วยราคาชุดเดียวกัน ไม่ใช่ราคาวันที่นั่งตรวจ · **ห้ามโชว์ราคาสด** ตรงนี้ ไม่งั้นข้อแรกกับข้อท้ายจะคิดคนละราคา
+- **ตรึงราคาทอง (`priceSnapshot`) ตอนกดเริ่มเสมอ** — กติกาข้อสอบคือ "ทุกข้ออ้างอิงราคาทองคำแท่ง ณ วันที่ทำข้อสอบ" ถ้าไม่ตรึง พอตรวจวันถัดไปเฉลยจะคิดจากราคาใหม่ → **คำตอบที่ถูกกลายเป็นผิดทั้งกระดาน** เงียบสนิท · `DEFAULT_GOLD_PRICE` เป็น placeholder (50,000) ไม่ใช่ราคาจริง → ปุ่มเริ่มต้อง disable จนกว่า `updatedAt > 0` (`priceReady`)
+
+**AI ช่วยตรวจ (`gradeQuizWithAI`) — ข้อเสนอ ไม่ใช่คำตัดสิน:**
+- ผลลง **`aiGrades` แยกจาก `grades`** ที่ ADMIN กดเอง · function ไม่เคยแตะ `grades` — ถ้าเขียนทับได้ การกดตรวจซ้ำจะลบคำตัดสินของคนทิ้งเงียบๆ · ปุ่ม "ใช้ผล AI" เติมเฉพาะข้อที่ยังไม่ตัดสิน ไม่ทับของที่ตรวจแล้ว
+- `aiGrades`/`aiGradedAt`/`aiGradeError` **ไม่อยู่ใน `quizGradeFieldsOnly()`** โดยตั้งใจ — เขียนได้เฉพาะ Cloud Function (Admin SDK) client แตะไม่ได้แม้เป็น admin
+- **เอกสารอ้างอิงประกอบฝั่ง client แล้วส่งไป** (`buildGradingReference`) เพราะ `src/content/knowledge` เป็นไฟล์ frontend (lucide icon + `compute` เป็นฟังก์ชัน) functions import ตรงไม่ได้ · copy ไปไว้อีกชุด = 2 แหล่งที่ drift หากันเงียบๆ แล้ว AI จะตรวจด้วยกฎที่เลิกใช้แล้ว
+- block ที่เป็นฟังก์ชัน (`calculator`/`live-example`) และตารางราคาสด **ข้ามทั้งหมด** — รัน compute ตรงนั้นจะได้เลขจากราคา "วันที่ตรวจ" ซึ่งผิดประเด็น · `secret` ก็ไม่ส่งออกไปกับ prompt
+- ตรวจได้เฉพาะชุดที่ **ส่งแล้ว** (ยังทำอยู่/ยกเลิก → ปฏิเสธ) · ชุดเก่าที่ไม่มี `priceSnapshot` ขึ้นกล่องเตือนว่าผลเชื่อไม่ได้
 
 schema เต็ม + สิทธิ์ → `docs/reference/firebase-collections.md` → `quizAttempts/{attemptId}`
 

@@ -6,20 +6,30 @@
    `scoreAttempt` จะคืน passed = null (ยังไม่ตัดสิน) จนกว่าจะครบทุกข้อ    */
 
 import {
+  AlertTriangle as IconAlertTriangle,
   Check as IconCheck,
   ChevronLeft as IconChevronLeft,
   Clock as IconClock,
   Save as IconSave,
+  Sparkles as IconSparkles,
   X as IconX,
 } from "lucide-react";
 import { useState } from "react";
+import { KNOWLEDGE_SECTIONS } from "../../content/knowledge";
 import type { QuizSet } from "../../content/quiz/basicExam";
-import { gradeQuizAttempt } from "../../firebase/quizAttempts";
+import {
+  gradeQuizAttempt,
+  requestAiGrading,
+} from "../../firebase/quizAttempts";
 import { fmtThaiDateTime } from "../../utils/dateUtils";
 import { type QuizAttempt, scoreAttempt } from "../../utils/quizAttempt";
+import { buildGradingReference } from "../../utils/quizGradingReference";
 
 interface Props {
   quiz: QuizSet;
+  /** `attempt.quizId` ตรงกับชุดที่ส่งมาไหม — false = กำลังอ่านด้วยชุดผิด
+   *  เวอร์ชัน (ชุดเดิมถูกลบออกจากทะเบียน) → เลขที่โชว์เชื่อไม่ได้ */
+  quizKnown?: boolean;
   attempt: QuizAttempt;
   gradedBy: string;
   onBack: () => void;
@@ -28,6 +38,7 @@ interface Props {
 
 export default function QuizReview({
   quiz,
+  quizKnown = true,
   attempt,
   gradedBy,
   onBack,
@@ -38,8 +49,52 @@ export default function QuizReview({
   );
   const [note, setNote] = useState(attempt.note ?? "");
   const [saving, setSaving] = useState(false);
+  const [aiRunning, setAiRunning] = useState(false);
 
   const score = scoreAttempt({ grades }, quiz);
+  const ai = attempt.aiGrades ?? {};
+  const aiCount = Object.keys(ai).length;
+
+  /** สั่งให้ AI ช่วยตรวจ — ผลไหลกลับมาทาง onSnapshot ลง `attempt.aiGrades`
+   *  ไม่แตะ `grades` ที่ ADMIN กดเอง (ดู gradeQuizWithAI) */
+  async function runAiGrading() {
+    if (aiRunning) return;
+    setAiRunning(true);
+    try {
+      const reference = buildGradingReference(
+        KNOWLEDGE_SECTIONS,
+        attempt.priceSnapshot,
+      );
+      const questions = [
+        ...quiz.main.map((q) => ({ id: q.id, text: q.text, scored: true })),
+        ...quiz.general.map((q) => ({ id: q.id, text: q.text, scored: false })),
+      ];
+      const res = await requestAiGrading(attempt.id, reference, questions);
+      showToast?.(`AI ตรวจให้แล้ว ${res.graded} ข้อ — กดยืนยันเองอีกที`);
+    } catch (err) {
+      showToast?.(
+        err instanceof Error
+          ? `ตรวจด้วย AI ไม่สำเร็จ: ${err.message}`
+          : "ตรวจด้วย AI ไม่สำเร็จ",
+      );
+    } finally {
+      setAiRunning(false);
+    }
+  }
+
+  /** ยกผลที่ AI เสนอมาเป็นค่าตั้งต้นให้ทุกข้อที่ ADMIN ยังไม่ได้ตัดสิน
+   *  **ไม่ทับข้อที่ตรวจไปแล้ว** — คำตัดสินของคนชนะเสมอ */
+  function applyAiToUngraded() {
+    setGrades((prev) => {
+      const next = { ...prev };
+      for (const q of quiz.main) {
+        if (typeof next[q.id] === "boolean") continue;
+        const suggestion = ai[q.id];
+        if (suggestion) next[q.id] = suggestion.pass;
+      }
+      return next;
+    });
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -98,6 +153,44 @@ export default function QuizReview({
           {attempt.autoSubmitted && " (หมดเวลา)"}
         </div>
 
+        {!quizKnown && (
+          <div className="mt-2 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold flex items-start gap-1.5">
+            <IconAlertTriangle
+              size={16}
+              strokeWidth={2.4}
+              className="shrink-0 mt-0.5"
+            />
+            <span>
+              ไม่พบชุดข้อสอบ <b>{attempt.quizId || "(ไม่ระบุ)"}</b> ในระบบ —
+              กำลังแสดงด้วยชุดปัจจุบันแทน โจทย์กับจำนวนข้ออาจไม่ตรงกับที่ผู้สอบทำจริง
+            </span>
+          </div>
+        )}
+
+        {/* ราคาที่ผู้สอบเห็นตอนทำ — ADMIN ต้องคิดตามด้วยชุดเดียวกัน
+            ไม่ใช่ราคาวันที่นั่งตรวจ */}
+        {attempt.priceSnapshot && (
+          <div className="mt-2 px-3 py-2 rounded-[8px] bg-gold-pale/70 border border-[#C9973A40] text-sm text-txt flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="font-bold text-maroon">ราคาทองวันที่สอบ</span>
+            <span className="font-extrabold tabular-nums">
+              ขาย{" "}
+              <span className="text-green">
+                {Math.round(
+                  attempt.priceSnapshot.goldSellPerBaht,
+                ).toLocaleString("en-US")}
+              </span>
+            </span>
+            <span className="font-extrabold tabular-nums">
+              รับซื้อ{" "}
+              <span className="text-red">
+                {Math.round(
+                  attempt.priceSnapshot.goldBuyPerBaht,
+                ).toLocaleString("en-US")}
+              </span>
+            </span>
+          </div>
+        )}
+
         {attempt.cancelledAt && (
           <div className="mt-2 px-3 py-2 rounded-[8px] bg-cream-dk/70 text-sm text-txt-mid font-semibold">
             ชุดนี้ถูกยกเลิกกลางคัน — ไม่นับเป็นผลสอบ (คำตอบที่พิมพ์ไว้ยังอยู่ให้ดูได้)
@@ -126,6 +219,68 @@ export default function QuizReview({
           )}
         </div>
       </div>
+
+      {/* ── ให้ AI ช่วยตรวจ ── */}
+      {attempt.submittedAt && (
+        <div className="rounded-[12px] border-[1.5px] border-[#C9973A50] bg-gold-pale/50 p-3.5 mb-3">
+          <div className="text-sm text-txt-mid leading-relaxed mb-2.5">
+            <b className="text-maroon">ให้ AI ช่วยตรวจ</b> — อ่านคำตอบเทียบกับกฎใน
+            "ความรู้ต่างๆ" และราคา ณ วันที่สอบ แล้วเสนอผ่าน/ไม่ผ่านรายข้อ ·{" "}
+            <b>เป็นแค่ข้อเสนอ คุณยังต้องกดตัดสินเอง</b>
+          </div>
+
+          {!attempt.priceSnapshot && (
+            <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold flex items-start gap-1.5">
+              <IconAlertTriangle
+                size={16}
+                strokeWidth={2.4}
+                className="shrink-0 mt-0.5"
+              />
+              <span>
+                ชุดนี้ไม่ได้เก็บราคาทอง ณ วันที่สอบไว้ (ทำก่อนระบบมี field นี้) — AI
+                จะไม่รู้ว่าวันนั้นทองราคาเท่าไร ผลที่เสนอจึงเชื่อไม่ได้ ตรวจมือดีกว่า
+              </span>
+            </div>
+          )}
+
+          {attempt.aiGradeError && (
+            <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold">
+              รอบที่แล้วไม่สำเร็จ: {attempt.aiGradeError}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => void runAiGrading()}
+              disabled={aiRunning}
+              className="flex-1 py-2.5 rounded-[10px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+            >
+              <IconSparkles size={16} strokeWidth={2.4} />
+              {aiRunning
+                ? "กำลังตรวจ… (ใช้เวลาสักครู่)"
+                : aiCount > 0
+                  ? "ตรวจด้วย AI อีกครั้ง"
+                  : "ตรวจด้วย AI"}
+            </button>
+            {aiCount > 0 && (
+              <button
+                type="button"
+                onClick={applyAiToUngraded}
+                className="flex-1 py-2.5 rounded-[10px] border border-maroon/40 bg-white text-sm font-bold text-maroon font-[inherit] cursor-pointer"
+              >
+                ใช้ผล AI กับข้อที่ยังไม่ตรวจ
+              </button>
+            )}
+          </div>
+
+          {aiCount > 0 && attempt.aiGradedAt && (
+            <div className="text-xs text-txt-soft mt-2">
+              AI ตรวจล่าสุด {fmtThaiDateTime(attempt.aiGradedAt)} · {aiCount} ข้อ
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── รายข้อ ── */}
       {[
@@ -170,6 +325,24 @@ export default function QuizReview({
                 >
                   {answer || "— ไม่ได้ตอบ —"}
                 </div>
+
+                {ai[q.id] && (
+                  <div
+                    className={`mt-2 px-3 py-2 rounded-[8px] text-sm leading-relaxed border ${
+                      ai[q.id].pass
+                        ? "bg-green-lt/40 border-green/30 text-txt"
+                        : "bg-[#FDECEA] border-[#C0392B30] text-txt"
+                    }`}
+                  >
+                    <span className="inline-flex items-center gap-1 font-bold mr-1">
+                      <IconSparkles size={13} strokeWidth={2.6} />
+                      AI เสนอ: {ai[q.id].pass ? "ผ่าน" : "ไม่ผ่าน"}
+                    </span>
+                    {ai[q.id].reason && (
+                      <span className="text-txt-mid">— {ai[q.id].reason}</span>
+                    )}
+                  </div>
+                )}
 
                 {group.graded && (
                   <div className="mt-2 flex gap-2">
