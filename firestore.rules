@@ -451,6 +451,57 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // ─── Quiz attempts (แบบทดสอบความรู้พื้นฐาน) ─────────────────
+    // เจ้าของ = คนที่ทำข้อสอบ (employeeId == auth.uid — ตอนนี้ ADMIN ทำเอง
+    // แต่เขียน rules เผื่อเปิดให้พนักงานทำทีหลังโดยไม่ต้องแก้)
+    //
+    // กฎที่สำคัญ:
+    // 1. **ส่งแล้วแก้คำตอบไม่ได้อีก** — ไม่งั้นกดส่ง เห็นเฉลย/คิดออกทีหลัง
+    //    แล้วย้อนมาแก้ได้ ข้อสอบไม่มีความหมาย
+    // 2. **เวลาเริ่มปลอมไม่ได้** — startedAtServer ต้อง == request.time
+    //    (startedAt มาจากนาฬิกาเครื่อง ตั้งอนาคตแล้วยืดเวลาสอบเองได้)
+    // 3. **คนทำข้อสอบให้คะแนนตัวเองไม่ได้** — grades/gradedAt/gradedBy
+    //    เขียนได้เฉพาะ admin
+    // เจ้าของตัดสินจาก `uid` (auth uid) ไม่ใช่ `employeeId` ซึ่งเป็น doc id
+    // ใน employees — คนละค่ากัน ถ้าสลับจะเปิดให้แก้ชุดของคนอื่นได้
+    function quizOwner() {
+      return isSignedIn() && request.auth.uid == resource.data.uid;
+    }
+    function quizNotSubmitted() {
+      return resource.data.submittedAt == null;
+    }
+    // คำตอบ + การส่ง เท่านั้น — ห้ามแตะ employeeId/startedAt/durationMinutes
+    // (ยืดเวลา/โอนข้อสอบให้คนอื่น) และห้ามแตะ field ฝั่งให้คะแนน
+    function quizAnswerFieldsOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['answers', 'submittedAt', 'submittedAtServer',
+                  'autoSubmitted']);
+    }
+    function quizGradeFieldsOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['grades', 'gradedAt', 'gradedBy', 'note']);
+    }
+    match /quizAttempts/{attemptId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && request.auth.uid == resource.data.uid);
+
+      allow create: if isSignedIn()
+        && request.auth.uid == request.resource.data.uid
+        && request.resource.data.startedAtServer == request.time
+        && request.resource.data.submittedAt == null
+        && request.resource.data.answers.size() == 0
+        // เริ่มมาแล้วมีคะแนนติดมาด้วยไม่ได้
+        && !('grades' in request.resource.data);
+
+      // เจ้าของ: ตอบ/ส่ง ได้จนกว่าจะส่ง · admin: ให้คะแนนได้ตลอด
+      allow update: if (quizOwner() && quizNotSubmitted()
+                        && quizAnswerFieldsOnly())
+        || (isAdmin() && quizGradeFieldsOnly());
+
+      // ลบทิ้งได้เฉพาะ admin (เช่น ลองระบบแล้วอยากล้าง)
+      allow delete: if isAdmin();
+    }
+
     // ─── LINE Login OAuth state tokens (server-side CSRF defense) ──
     // Issued by prepareLineLogin · consumed atomically by lineAuth ผ่าน
     // Admin SDK ทั้งสองทาง → client ห้ามอ่าน/เขียนเลย (ไม่ใช่ขอ token แอบเอง)

@@ -1,0 +1,286 @@
+/* ─── QuizRunner — หน้าทำข้อสอบ (จับเวลา + บันทึกอัตโนมัติ) ────────────
+   - นาฬิกาถอยหลังอิง `startedAt` ที่เก็บใน Firestore ไม่ใช่ตัวนับใน state
+     → รีเฟรช/ปิดแท็บแล้วกลับมา เวลาเดินต่อจากเดิม ไม่ได้เวลาเพิ่ม
+   - พิมพ์คำตอบแล้วบันทึกเองทุก ~2 วิ (debounce) — เน็ตหลุดกลางคันไม่เสียทั้งชุด
+   - หมดเวลา → ส่งอัตโนมัติทันที ไม่ต้องรอผู้ใช้กด                         */
+
+import {
+  AlertTriangle as IconAlertTriangle,
+  Check as IconCheck,
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
+  Clock as IconClock,
+  Send as IconSend,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { QuizSet } from "../../content/quiz/basicExam";
+import {
+  saveQuizAnswers,
+  submitQuizAttempt,
+} from "../../firebase/quizAttempts";
+import {
+  answeredCount,
+  formatCountdown,
+  isAnswered,
+  isExpired,
+  type QuizAttempt,
+  remainingMs,
+} from "../../utils/quizAttempt";
+
+/** ถี่แค่ไหนก็ได้ที่ไม่กิน Firestore write — 2 วิหลังหยุดพิมพ์ */
+const SAVE_DEBOUNCE_MS = 2000;
+/** เหลือน้อยกว่านี้ = นาฬิกาเปลี่ยนเป็นสีแดง (5 นาที) */
+const WARN_MS = 5 * 60_000;
+
+interface Props {
+  quiz: QuizSet;
+  attempt: QuizAttempt;
+  onFinished: () => void;
+  showToast?: (msg: string) => void;
+}
+
+export default function QuizRunner({
+  quiz,
+  attempt,
+  onFinished,
+  showToast,
+}: Props) {
+  const questions = [...quiz.main, ...quiz.general];
+  const [idx, setIdx] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    attempt.answers ?? {},
+  );
+  const [now, setNow] = useState(() => Date.now());
+  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  // เก็บตัวล่าสุดไว้ให้ timer/auto-submit อ่าน โดยไม่ต้องผูกเป็น dep
+  // (ผูกแล้ว effect จะ re-run ทุกตัวอักษรที่พิมพ์ → ตั้ง interval ใหม่รัว)
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
+  const submittedRef = useRef(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const left = remainingMs(attempt, now);
+  const expired = isExpired(attempt, now);
+  const mainDone = answeredCount(
+    answers,
+    quiz.main.map((q) => q.id),
+  );
+  const allDone = answeredCount(
+    answers,
+    questions.map((q) => q.id),
+  );
+
+  const finish = useCallback(
+    async (auto: boolean) => {
+      if (submittedRef.current) return;
+      submittedRef.current = true;
+      setSubmitting(true);
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      try {
+        await submitQuizAttempt(attempt.id, answersRef.current, auto);
+        showToast?.(auto ? "หมดเวลา — ส่งคำตอบให้อัตโนมัติแล้ว" : "ส่งข้อสอบแล้ว");
+        onFinished();
+      } catch (err) {
+        submittedRef.current = false;
+        setSubmitting(false);
+        showToast?.(
+          err instanceof Error ? `ส่งไม่สำเร็จ: ${err.message}` : "ส่งไม่สำเร็จ",
+        );
+      }
+    },
+    [attempt.id, onFinished, showToast],
+  );
+
+  // นาฬิกา — เดินทุกวินาที แล้วคำนวณเวลาที่เหลือจาก startedAt ใหม่ทุกครั้ง
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // หมดเวลา → ส่งเอง (เช็คแยกจาก interval เพื่อให้ยิงครั้งเดียว)
+  useEffect(() => {
+    if (expired && !submittedRef.current) void finish(true);
+  }, [expired, finish]);
+
+  // บันทึกคำตอบแบบ debounce
+  const queueSave = useCallback(
+    (next: Record<string, string>) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        if (submittedRef.current) return;
+        setSaving(true);
+        saveQuizAnswers(attempt.id, next)
+          .catch((err) => {
+            console.error("[quiz] save error:", err);
+            showToast?.("บันทึกคำตอบไม่สำเร็จ — ตรวจสัญญาณเน็ต");
+          })
+          .finally(() => setSaving(false));
+      }, SAVE_DEBOUNCE_MS);
+    },
+    [attempt.id, showToast],
+  );
+
+  // ออกจากหน้าโดยยังมีคำตอบค้างใน debounce → เขียนทันที
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (!submittedRef.current) {
+        void saveQuizAnswers(attempt.id, answersRef.current).catch(() => {});
+      }
+    };
+  }, [attempt.id]);
+
+  function setAnswer(qid: string, value: string) {
+    const next = { ...answersRef.current, [qid]: value };
+    setAnswers(next);
+    queueSave(next);
+  }
+
+  const q = questions[idx];
+  const isGeneral = idx >= quiz.main.length;
+  const numberInGroup = isGeneral ? idx - quiz.main.length + 1 : idx + 1;
+
+  return (
+    <div className="font-sans">
+      {/* ── แถบนาฬิกา — ติดบนสุดไว้ ให้เห็นตลอดเวลาที่เลื่อนอ่านโจทย์ยาวๆ ── */}
+      <div className="sticky top-0 z-10 -mx-1 mb-3 px-3 py-2.5 rounded-[12px] bg-maroon text-white flex items-center justify-between gap-2 shadow-md">
+        <div className="flex items-center gap-2">
+          <IconClock size={18} strokeWidth={2.4} />
+          <span
+            className={`font-mono text-xl font-black tabular-nums ${
+              left <= WARN_MS ? "text-red-300" : "text-white"
+            }`}
+          >
+            {formatCountdown(left)}
+          </span>
+        </div>
+        <div className="flex items-center gap-2.5 text-xs">
+          <span className="text-white/80">
+            ตอบแล้ว {allDone}/{questions.length}
+          </span>
+          {saving && <span className="text-gold-lt">กำลังบันทึก…</span>}
+        </div>
+      </div>
+
+      {left <= WARN_MS && !expired && (
+        <div className="mb-3 px-3 py-2 rounded-[10px] bg-[#FDECEA] border border-[#C0392B50] text-xs text-red font-semibold flex items-center gap-1.5">
+          <IconAlertTriangle size={14} strokeWidth={2.4} className="shrink-0" />
+          เหลือเวลาน้อยกว่า 5 นาที — หมดเวลาระบบจะส่งให้อัตโนมัติ
+        </div>
+      )}
+
+      {/* ── ตารางเลขข้อ — กดข้ามไปข้อไหนก็ได้ · ข้อที่ตอบแล้วเป็นสีทอง ── */}
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {questions.map((item, i) => {
+          const done = isAnswered(answers, item.id);
+          const active = i === idx;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setIdx(i)}
+              className={`w-7 h-7 rounded-[7px] text-[11px] font-bold cursor-pointer border transition-colors ${
+                active
+                  ? "bg-maroon text-white border-maroon"
+                  : done
+                    ? "bg-gold-pale text-maroon border-[#C9973A60]"
+                    : "bg-white text-txt-soft border-bdr"
+              }`}
+            >
+              {i < quiz.main.length ? i + 1 : `ร${i - quiz.main.length + 1}`}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── โจทย์ + ช่องตอบ ── */}
+      <div className="rounded-[12px] border border-bdr bg-white p-3.5 mb-3">
+        <div className="text-[11px] font-bold text-txt-soft mb-1.5">
+          {isGeneral
+            ? `ความรู้รอบตัว ข้อ ${numberInGroup}/${quiz.general.length} · ไม่นับในเกณฑ์ผ่าน`
+            : `ข้อ ${numberInGroup}/${quiz.main.length}`}
+        </div>
+        <p className="text-sm text-txt leading-relaxed mb-3">{q.text}</p>
+        <textarea
+          value={answers[q.id] ?? ""}
+          onChange={(e) => setAnswer(q.id, e.target.value)}
+          placeholder="พิมพ์คำตอบ + แสดงวิธีคิดคำนวณให้ชัดเจน"
+          rows={8}
+          className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-sm text-txt leading-relaxed font-[inherit] outline-none focus:border-maroon transition-colors resize-y"
+        />
+      </div>
+
+      {/* ── เลื่อนข้อ ── */}
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          type="button"
+          onClick={() => setIdx((i) => Math.max(0, i - 1))}
+          disabled={idx === 0}
+          className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
+        >
+          <IconChevronLeft size={16} strokeWidth={2.4} />
+          ก่อนหน้า
+        </button>
+        <button
+          type="button"
+          onClick={() => setIdx((i) => Math.min(questions.length - 1, i + 1))}
+          disabled={idx === questions.length - 1}
+          className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
+        >
+          ถัดไป
+          <IconChevronRight size={16} strokeWidth={2.4} />
+        </button>
+      </div>
+
+      {/* ── ส่งข้อสอบ ── */}
+      {confirming ? (
+        <div className="rounded-[12px] border-[1.5px] border-amber/45 bg-amber-lt/50 p-3.5">
+          <div className="text-sm font-bold text-txt mb-1 flex items-center gap-1.5">
+            <IconAlertTriangle
+              size={15}
+              strokeWidth={2.4}
+              className="text-amber"
+            />
+            ส่งข้อสอบเลยไหม
+          </div>
+          <p className="text-xs text-txt-mid leading-relaxed mb-3">
+            ตอบแล้ว {mainDone}/{quiz.main.length} ข้อหลัก
+            {mainDone < quiz.main.length && " (ยังไม่ครบ)"} ·{" "}
+            <b>ส่งแล้วกลับมาแก้ไม่ได้อีก</b>
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer"
+            >
+              ทำต่อ
+            </button>
+            <button
+              type="button"
+              onClick={() => void finish(false)}
+              disabled={submitting}
+              className="flex-1 py-2.5 rounded-[10px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+            >
+              <IconCheck size={16} strokeWidth={2.4} />
+              {submitting ? "กำลังส่ง…" : "ยืนยันส่ง"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          disabled={submitting || expired}
+          className="w-full py-3 rounded-[12px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+        >
+          <IconSend size={16} strokeWidth={2.4} />
+          ส่งข้อสอบ
+        </button>
+      )}
+    </div>
+  );
+}

@@ -10,6 +10,7 @@ import {
   CalendarRange as IconCalendarRange,
   Banknote as IconCashBanknote,
   BarChart3 as IconChartBar,
+  ClipboardCheck as IconClipboardCheck,
   ClipboardList as IconClipboardList,
   Coins as IconCoins,
   CreditCard as IconCreditCard,
@@ -44,7 +45,8 @@ export type AdminSectionId =
   | "linebot-daily-image"
   | "backup"
   | "wipe-data"
-  | "knowledge";
+  | "knowledge"
+  | "knowledge-quiz";
 
 export type AdminGroupId =
   | "leave"
@@ -119,11 +121,20 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     ],
   },
   {
+    // ชื่อกลุ่มต้องไม่ซ้ำกับชื่อเมนูข้างใน — เดิมเป็น "ความรู้ต่างๆ" ทั้งคู่
+    // พอมีเมนูที่ 2 เลยอ่านแล้วงง ("ความรู้ต่างๆ > ความรู้ต่างๆ")
     id: "knowledge",
-    label: "ความรู้ต่างๆ",
+    label: "ฝึกอบรม",
     defaultSection: "knowledge",
     Icon: IconBrain,
-    items: [{ id: "knowledge", label: "ความรู้ต่างๆ", Icon: IconBrain }],
+    items: [
+      { id: "knowledge", label: "ความรู้ต่างๆ", Icon: IconBrain },
+      {
+        id: "knowledge-quiz",
+        label: "แบบทดสอบ",
+        Icon: IconClipboardCheck,
+      },
+    ],
   },
   {
     id: "linebot",

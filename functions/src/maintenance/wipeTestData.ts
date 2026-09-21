@@ -29,6 +29,8 @@ const TOP_LEVEL_COLLECTIONS = [
 	"certCounters",
 	"recentTips",
 	"dailySummarySent",
+	// quizAttempts — คำตอบ/ผลตรวจแบบทดสอบรายคน (transactional ต้องล้างด้วย)
+	"quizAttempts",
 	// stats/{YYYY-MM} — leaveCount ต่อเดือน (เขียนโดย onLeaveCreated) · ต้องล้าง
 	// ไม่งั้น counter นับต่อจากของเก่าเมื่อ start fresh
 	"stats",

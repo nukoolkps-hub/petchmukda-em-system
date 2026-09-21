@@ -63,6 +63,7 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 | payroll | `PayrollSummaryPanel` | เดือนที่เลือก |
 | payroll-matrix (ตารางรวม) | `PayrollMatrixPanel` | โชว์/ซ่อนเลขบัญชี, กำลังสร้าง PDF |
 | positions | `RolesAdminPanel` | draft role |
+| knowledge-quiz (แบบทดสอบ) | `QuizPanel` → `QuizRunner` / `QuizReview` | โหมด (list/ทำ/ตรวจ), attempt ที่เปิดอยู่ |
 
 **กฎ:** component ไม่ควรเกิน ~300-400 บรรทัด — ถ้าโตเกินให้แยก (เช่น `EmployeeEditModal` แยกจาก `EmployeeAdminPanel`)
 
@@ -106,6 +107,27 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 - `live-example.step.calc` / `live-example.step.meaning` / `live-example.given`
 - `callout.text` · `p.text` · `list.items`
 - `Calculator`: `field.label` / `out.label` / `out.hint`
+
+### แบบทดสอบความรู้พื้นฐาน (Quiz) — `/admin → ฝึกอบรม → แบบทดสอบ`
+
+ข้อสอบวัดความรู้พนักงาน 30 ข้อหลัก + 6 ข้อความรู้รอบตัว · จับเวลา 100 นาที · **อัตนัยล้วน** ระบบตรวจเองไม่ได้ → ADMIN กดผ่าน/ไม่ผ่านรายข้อ แล้วระบบคิด % ให้
+
+| ชั้น | ไฟล์ | หน้าที่ |
+|---|---|---|
+| เนื้อหา | `src/content/quiz/basicExam.ts` | `BASIC_EXAM` hardcode — **`question.id` คือ key ของคำตอบใน Firestore** ห้ามเปลี่ยน/สลับลำดับ · เพิ่มข้อให้ต่อท้าย (`m31`/`g7`) |
+| logic | `src/utils/quizAttempt.ts` | pure — เวลา (`remainingMs`/`isExpired`/`formatCountdown`) + คะแนน (`scoreAttempt`) · ไม่แตะ Firebase/React |
+| data | `src/firebase/quizAttempts.ts` | `quizAttempts/{id}` — subscribe/start/save/submit/grade |
+| UI | `src/components/quiz/{QuizPanel,QuizRunner,QuizReview}.tsx` | router 3 โหมด · หน้าทำข้อสอบ · หน้าตรวจ |
+
+**กฎที่พังเงียบถ้าแก้ผิด:**
+- **นาฬิกายึด `startedAt` ใน Firestore ไม่ใช่ตัวนับใน state** — นับถอยหลังด้วย state แล้วผู้ใช้รีเฟรช/สลับแท็บ (มือถือ throttle timer) จะได้เวลาเพิ่มฟรี · คำนวณ "เวลาเริ่ม + ระยะเวลา − ตอนนี้" ใหม่ทุกครั้งเสมอ
+- **ชุดที่ทำค้างต้องหยิบกลับมาต่อ ไม่สร้างใหม่ทับ** (`QuizPanel.inProgress`) — ไม่งั้นกดเริ่มซ้ำ = 100 นาทีใหม่
+- **`uid` (auth uid) ≠ `employeeId` (doc id ใน `employees`)** — rules ตัดสินสิทธิ์จาก `uid` · `employeeId` มีไว้ให้ล้างข้อมูลรายคน join ได้ · สลับกันเมื่อไหร่ = เปิดให้แก้ชุดของคนอื่น
+- **เกณฑ์ผ่านนับจาก `quiz.main` เท่านั้น** (ความรู้รอบตัวไม่เข้าเกณฑ์) · ตรวจไม่ครบ → `passed: null` = "ยังไม่ตัดสิน" **ไม่ใช่ "ไม่ผ่าน"** — UI ต้องแยก 2 อย่างนี้ ไม่งั้นคนเพิ่งส่งจะขึ้นว่าตก
+- คำตอบเขียนลง Firestore ระหว่างพิมพ์ (debounce ~2 วิ) ไม่ใช่ตอนกดส่ง — ข้อสอบยาว 100 นาที เน็ตหลุดแล้วเสียทั้งชุดไม่ได้
+- `startedAtServer == request.time` บังคับใน `firestore.rules` — `startedAt` มาจากนาฬิกาเครื่อง ตั้งอนาคตแล้วยืดเวลาสอบเองได้
+
+schema เต็ม + สิทธิ์ → `docs/reference/firebase-collections.md` → `quizAttempts/{attemptId}`
 
 ### Data Flow
 
@@ -222,6 +244,9 @@ Frontend: `useGoldPrice()` hook + `goldPriceDefault: true` flag ใน `CalcFiel
 | `src/components/shared/MoneyInput.tsx` | ช่องกรอกเงิน reusable — drop-in แทน `<input inputMode="decimal">` · ใส่ comma ทันทีตอนพิมพ์ + คง cursor · emit raw (ไม่มี comma) กลับ parent · **คืน caret เฉพาะตอน field ถูก focus จริง** (`el === document.activeElement`) กัน cursor เด้งผิดที่เมื่อ re-render จากเหตุอื่น (live price/parent state) — Calculator ใช้ guard เดียวกัน · **ใช้กับช่อง "จำนวนเงิน" ทั้งระบบ:** EmployeeEditModal, AnnualRaiseSection, SalaryAdminEdit, AdvanceRequestModal (ขอเบิก), EmployeeLoansPanel (เงินต้น/ผ่อน), SalaryView (เงินเดือนใบรับรอง), DutyEditModal (เงินค่าแทน) · ช่อง**นับชิ้น/config** คงเป็น raw integer (ไม่มี comma → ไม่มี caret bug) |
 | `src/components/shared/calendarTheme.ts` | **Single source ของ theme ปฏิทินทั้งระบบ** (maroon+gold) — token ใช้ร่วมโดย CalendarPicker · TeamCalendar · MonthChevronNav · ThaiMonthPicker · day cell เลือก = ทอง soft · เดือน dropdown เลือก = maroon · วันนี้ = เทา · ดู `docs/reference/ui-components.md` → "Calendar theme" |
 | `src/components/shared/ThemedSelect.tsx` | dropdown ใช้แทน native `<select>` **ทุกที่** — popover ฟอนต์ Prompt + theme (selected = gold-pale/maroon) · `value`/`onChange`/`options:{value,label,disabled?}[]`/`placeholder`/`disabled`/`className` · flip-up + scroll อัตโนมัติ · ดู `docs/reference/ui-components.md` → "ห้ามใช้ native `<select>`" |
+| `src/content/quiz/basicExam.ts` | โจทย์แบบทดสอบความรู้พื้นฐาน (hardcode) — `question.id` = key คำตอบใน Firestore **ห้ามเปลี่ยน/สลับลำดับ** |
+| `src/utils/quizAttempt.ts` | **Pure module** — เวลาสอบ (อิง `startedAt` ไม่ใช่ state) + คะแนน (`scoreAttempt` · นับ `quiz.main` เท่านั้น · ตรวจไม่ครบ = `passed: null`) |
+| `src/firebase/quizAttempts.ts` + `src/components/quiz/` | `quizAttempts/{id}` CRUD + UI 3 โหมด (list/ทำข้อสอบ/ตรวจ) |
 | `src/content/knowledge/index.ts` | เนื้อหา "ความรู้ต่างๆ" hardcode 20+ sections (มาตรฐานน้ำหนัก, ค่าแรง, ขาย, รับซื้อ, จำนำ, VAT, ฯลฯ) |
 | `src/content/knowledge/types.ts` | block types: h3 · p · list · table (`colWidths`/`colAlign`) · formula · example · live-example · calculator · change-price-table · sell-price-96-table · buy-price-96-table · labor-cost-table · block-cost-table · loyalty-points-redeem-table · secret · callout · image · steps |
 | `src/components/knowledge/KnowledgeView.tsx` | Accordion render + search box (filter section.title) |

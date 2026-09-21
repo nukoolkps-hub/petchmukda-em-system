@@ -3,7 +3,7 @@
 สารบัญ + context ของเนื้อหา "ความรู้ต่างๆ" — **อ่านไฟล์นี้ก่อนแก้ knowledge content**
 เพื่อรู้ว่าแต่ละ section อยู่ตรงไหน ใช้ block อะไร พึ่งราคา live ไหม และต้องระวังอะไร
 
-- **เนื้อหา (source of truth):** `src/content/knowledge/index.ts` (hardcode · 31 sections · ~2,000 บรรทัด)
+- **เนื้อหา (source of truth):** `src/content/knowledge/index.ts` (hardcode · 30 sections · ~2,000 บรรทัด)
 - **block types:** `src/content/knowledge/types.ts`
 - **render:** `KnowledgeView.tsx` (accordion + search) → `KnowledgeBlock.tsx` (dispatch ตาม `block.type`)
 - **สถาปัตยกรรม component เต็ม:** ดู [`ui-components.md`](ui-components.md) → "Knowledge view" (ไฟล์นี้ไม่ duplicate)
@@ -54,7 +54,7 @@ gate ของระดับ section อยู่ที่ `visibleKnowledgeSec
 > เพิ่ม block type ใหม่ = ต้องแก้ 2 ที่: union ใน `types.ts` + `case` ใน `KnowledgeBlock.tsx`
 > (ถ้า live ต้องผูก hook `useGoldPrice`/`useLaborCost`/ฯลฯ ใน component ของ block นั้น)
 
-## สารบัญ 31 sections (จัดกลุ่ม)
+## สารบัญ 30 sections (จัดกลุ่ม)
 
 `live?` = มี block ที่คำนวณสด/subscribe ราคา · `tone` = วัสดุ (ว่าง = ทอง/maroon default) · `line` = บรรทัดเริ่มใน `index.ts`
 
@@ -124,14 +124,9 @@ gate ของระดับ section อยู่ที่ `visibleKnowledgeSec
 | `measure-machine` | เครื่องตรวจ % โลหะ — การตรวจ % | steps, h3, image | — | — | 1746 |
 | `measure-machine-print` | เครื่องตรวจ % โลหะ — การพิมพ์ Report | steps, h3, image | — | — | 1807 |
 
-### ADMIN เท่านั้น
-| id | title | blocks | live? | tone | line |
-|---|---|---|---|---|---|
-| `basic-exam` | แบบทดสอบความรู้พื้นฐาน | callout, h3, list ×2, p | — | — | 2024 |
-
-> **`adminOnly: true`** — ข้อสอบจริงที่ใช้วัดพนักงาน ห้ามให้เห็นล่วงหน้า
-> · 30 ข้อหลัก (เกณฑ์ผ่าน 80%) + 6 ข้อความรู้รอบตัว (ไม่นับเกณฑ์)
-> · เนื้อหาถอดจากไฟล์ต้นฉบับ `.docx` ของห้าง — แก้โจทย์ต้องแก้ที่ `index.ts`
+> **แบบทดสอบความรู้พื้นฐาน ไม่ได้อยู่ในหน้านี้แล้ว** — ย้ายไปเป็นเมนูของตัวเอง
+> `/admin → ฝึกอบรม → แบบทดสอบ` (ระบบ quiz จับเวลา + ตรวจให้คะแนน) ·
+> โจทย์อยู่ที่ `src/content/quiz/basicExam.ts` ไม่ใช่ `src/content/knowledge/index.ts`
 
 ## วิธีแก้/เพิ่มเนื้อหา
 
