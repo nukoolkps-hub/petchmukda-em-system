@@ -23,6 +23,7 @@ import LineBotCommandsPanel from "./LineBotCommandsPanel";
 import LineBotNotificationsPanel from "./LineBotNotificationsPanel";
 import PayrollMatrixPanel from "./PayrollMatrixPanel";
 import PayrollSummaryPanel from "./PayrollSummaryPanel";
+import QuizSettingsPanel from "./QuizSettingsPanel";
 import RolesAdminPanel from "./RolesAdminPanel";
 import StoreCalendarPanel from "./StoreCalendarPanel";
 import WipeDataPanel from "./WipeDataPanel";
@@ -245,6 +246,11 @@ export default function AdminPanel({
             employeeDirectory={employeeDirectory}
             showToast={showToast}
           />
+        )}
+
+        {/* ── KNOWLEDGE > QUIZ SETTINGS (ตั้งค่าข้อสอบ) ── */}
+        {section === "knowledge-quiz-settings" && (
+          <QuizSettingsPanel showToast={showToast} />
         )}
 
         {/* ── STORE CALENDAR section (วันเปิด-ปิดร้าน) ── */}

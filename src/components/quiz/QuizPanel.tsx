@@ -18,16 +18,21 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  CURRENT_QUIZ,
   isKnownQuizId,
+  resolveActiveQuiz,
   resolveQuizSet,
 } from "../../content/quiz";
+import type { QuizSet } from "../../content/quiz/basicExam";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGoldPrice } from "../../firebase/hooks/useFirestore";
 import {
   startQuizAttempt,
   subscribeAllQuizAttempts,
 } from "../../firebase/quizAttempts";
+import {
+  subscribeActiveQuizId,
+  subscribeQuizSets,
+} from "../../firebase/quizSets";
 import type { Employee } from "../../types";
 import { fmtThaiDateTime } from "../../utils/dateUtils";
 import {
@@ -59,6 +64,36 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   const [starting, setStarting] = useState(false);
 
   useEffect(() => subscribeAllQuizAttempts(setAttempts), []);
+
+  // ชุดข้อสอบที่ admin แก้ผ่านหน้า "ตั้งค่าข้อสอบ" — ทับชุดที่ฝังมากับโค้ด
+  // (ยังโหลดไม่มา/Firestore ล่ม → ใช้ชุดที่ฝังมา ไม่ใช่จอว่าง)
+  const [remoteSets, setRemoteSets] = useState<Record<string, QuizSet>>({});
+  const [activeQuizId, setActiveQuizId] = useState("");
+  useEffect(
+    () =>
+      subscribeQuizSets((list) =>
+        setRemoteSets(
+          Object.fromEntries(
+            list
+              .filter((q) => q.status === "published")
+              .map((q) => [q.id, q as QuizSet]),
+          ),
+        ),
+      ),
+    [],
+  );
+  useEffect(() => subscribeActiveQuizId(setActiveQuizId), []);
+
+  /** ชุดที่จะใช้เมื่อกดเริ่มสอบตอนนี้ */
+  const currentQuiz = useMemo(
+    () => resolveActiveQuiz(remoteSets, activeQuizId),
+    [remoteSets, activeQuizId],
+  );
+  /** ชุดของใบนั้นๆ — ใบเก่าต้องอ่านชุดของตัวเอง ไม่ใช่ชุดที่ใช้อยู่ตอนนี้ */
+  const quizOf = useMemo(
+    () => (quizId: string) => resolveQuizSet(quizId, remoteSets, activeQuizId),
+    [remoteSets, activeQuizId],
+  );
 
   const uid = user?.uid ?? "";
   const me = useMemo(
@@ -94,7 +129,7 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
     setStarting(true);
     try {
       const id = await startQuizAttempt(
-        CURRENT_QUIZ,
+        currentQuiz,
         uid,
         resolveExamineeId(trimmedName, employeeDirectory ?? []),
         trimmedName,
@@ -125,7 +160,7 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
       <QuizRunner
         // ชุดที่ใบนี้เริ่มไว้ ไม่ใช่ชุดปัจจุบัน — ถ้ามีการออกชุดใหม่ระหว่างที่
         // ใครทำค้างอยู่ โจทย์ต้องไม่เปลี่ยนกลางคัน
-        quiz={resolveQuizSet(running.quizId)}
+        quiz={quizOf(running.quizId)}
         attempt={running}
         onFinished={() => {
           setRunningId(null);
@@ -139,8 +174,8 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   if (reviewing) {
     return (
       <QuizReview
-        quiz={resolveQuizSet(reviewing.quizId)}
-        quizKnown={isKnownQuizId(reviewing.quizId)}
+        quiz={quizOf(reviewing.quizId)}
+        quizKnown={isKnownQuizId(reviewing.quizId, remoteSets)}
         attempt={reviewing}
         gradedBy={myName}
         onBack={() => setReviewId(null)}
@@ -155,10 +190,10 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
       <div className="rounded-[12px] border-[1.5px] border-[#C9973A50] bg-gold-pale/60 p-3.5 mb-4">
         <div className="text-lg font-extrabold text-maroon mb-2 flex items-center gap-1.5">
           <IconClipboardCheck size={20} strokeWidth={2.4} />
-          {CURRENT_QUIZ.title}
+          {currentQuiz.title}
         </div>
         <ul className="mb-3 space-y-1">
-          {CURRENT_QUIZ.rules.map((rule) => (
+          {currentQuiz.rules.map((rule) => (
             <li
               key={rule}
               className="text-sm text-txt-mid leading-relaxed flex items-start gap-1.5"
@@ -233,7 +268,7 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
           {attempts.map((a) => {
             // ตรวจ/คิด % ด้วยชุดของใบนั้นเอง — ออกชุดใหม่แล้วใบเก่าต้องไม่
             // กลายเป็น "ตรวจไม่ครบ" เพราะจำนวนข้อเปลี่ยน
-            const score = scoreAttempt(a, resolveQuizSet(a.quizId));
+            const score = scoreAttempt(a, quizOf(a.quizId));
             const cancelled = !!a.cancelledAt;
             const done = !cancelled && !isInProgress(a, Date.now());
             return (

@@ -14,9 +14,11 @@ import { scoreAttempt } from "../../utils/quizAttempt";
 import type { QuizSet } from "./basicExam";
 import { BASIC_EXAM } from "./basicExam";
 import {
-  CURRENT_QUIZ,
+  BUILT_IN_QUIZ,
+  BUILT_IN_QUIZ_SETS,
   isKnownQuizId,
-  QUIZ_SETS,
+  mergeQuizSets,
+  resolveActiveQuiz,
   resolveQuizSet,
 } from "./index";
 
@@ -30,29 +32,65 @@ const NEXT_YEAR: QuizSet = {
 };
 
 describe("ทะเบียนชุดข้อสอบ", () => {
-  it("key ในทะเบียนต้องตรงกับ id ของชุดนั้น (ไม่งั้น lookup หลุด)", () => {
-    for (const [key, quiz] of Object.entries(QUIZ_SETS)) {
+  it("key ของชุดที่ฝังมากับโค้ดต้องตรงกับ id ของชุดนั้น (ไม่งั้น lookup หลุด)", () => {
+    for (const [key, quiz] of Object.entries(BUILT_IN_QUIZ_SETS)) {
       expect(quiz.id).toBe(key);
     }
   });
 
-  it("ชุดปัจจุบันต้องอยู่ในทะเบียนด้วย", () => {
-    expect(QUIZ_SETS[CURRENT_QUIZ.id]).toBe(CURRENT_QUIZ);
+  it("ชุดตั้งต้นต้องอยู่ในทะเบียนที่ฝังมาด้วย", () => {
+    expect(BUILT_IN_QUIZ_SETS[BUILT_IN_QUIZ.id]).toBe(BUILT_IN_QUIZ);
   });
 
   it("resolveQuizSet คืนชุดตาม quizId", () => {
     expect(resolveQuizSet(BASIC_EXAM.id)).toBe(BASIC_EXAM);
   });
 
-  it("id ที่ไม่รู้จัก/ว่าง → ไม่พัง คืนชุดปัจจุบัน แต่บอกได้ว่าไม่รู้จัก", () => {
-    expect(resolveQuizSet("ไม่มีชุดนี้")).toBe(CURRENT_QUIZ);
-    expect(resolveQuizSet(undefined)).toBe(CURRENT_QUIZ);
-    expect(resolveQuizSet("")).toBe(CURRENT_QUIZ);
+  it("id ที่ไม่รู้จัก/ว่าง → ไม่พัง คืนชุดที่ใช้อยู่ แต่บอกได้ว่าไม่รู้จัก", () => {
+    expect(resolveQuizSet("ไม่มีชุดนี้")).toBe(BUILT_IN_QUIZ);
+    expect(resolveQuizSet(undefined)).toBe(BUILT_IN_QUIZ);
+    expect(resolveQuizSet("")).toBe(BUILT_IN_QUIZ);
 
     expect(isKnownQuizId(BASIC_EXAM.id)).toBe(true);
     expect(isKnownQuizId("ไม่มีชุดนี้")).toBe(false);
     expect(isKnownQuizId(undefined)).toBe(false);
     expect(isKnownQuizId("")).toBe(false);
+  });
+});
+
+describe("ชุดจาก Firestore (หน้าตั้งค่าข้อสอบ)", () => {
+  const remote = { [NEXT_YEAR.id]: NEXT_YEAR };
+
+  it("ชุดจาก Firestore เข้ามาอยู่ในทะเบียนร่วมกับชุดที่ฝังมากับโค้ด", () => {
+    const all = mergeQuizSets(remote);
+    expect(all[BASIC_EXAM.id]).toBe(BASIC_EXAM);
+    expect(all[NEXT_YEAR.id]).toBe(NEXT_YEAR);
+  });
+
+  it("ใบเก่ายังอ่านชุดของตัวเองได้ แม้ admin จะออกชุดใหม่ไปแล้ว", () => {
+    expect(resolveQuizSet(BASIC_EXAM.id, remote, NEXT_YEAR.id)).toBe(
+      BASIC_EXAM,
+    );
+  });
+
+  it("ชุดที่กด 'ใช้งาน' คือตัวที่ได้ตอนกดเริ่มสอบ", () => {
+    expect(resolveActiveQuiz(remote, NEXT_YEAR.id)).toBe(NEXT_YEAR);
+  });
+
+  it("Firestore ว่าง/ต่อไม่ได้ → ยังเปิดข้อสอบได้ด้วยชุดที่ฝังมากับโค้ด", () => {
+    expect(resolveActiveQuiz(null, null)).toBe(BUILT_IN_QUIZ);
+    expect(resolveActiveQuiz({}, "")).toBe(BUILT_IN_QUIZ);
+    expect(mergeQuizSets(null)[BASIC_EXAM.id]).toBe(BASIC_EXAM);
+  });
+
+  it("ชี้ไปชุดที่ถูกลบไปแล้ว → ถอยมาใช้ชุดที่ฝังมา ไม่ใช่ undefined", () => {
+    expect(resolveActiveQuiz(remote, "ชุดที่ลบไปแล้ว")).toBe(BUILT_IN_QUIZ);
+  });
+
+  it("ชุดใน Firestore ที่ id ชนกับชุดที่ฝังมา → ของ Firestore ชนะ (admin แก้ทับได้)", () => {
+    const override = { ...BASIC_EXAM, title: "แก้จากหน้า admin" };
+    const all = mergeQuizSets({ [BASIC_EXAM.id]: override });
+    expect(all[BASIC_EXAM.id].title).toBe("แก้จากหน้า admin");
   });
 });
 

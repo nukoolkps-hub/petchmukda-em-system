@@ -64,6 +64,7 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 | payroll-matrix (ตารางรวม) | `PayrollMatrixPanel` | โชว์/ซ่อนเลขบัญชี, กำลังสร้าง PDF |
 | positions | `RolesAdminPanel` | draft role |
 | knowledge-quiz (แบบทดสอบ) | `QuizPanel` → `QuizRunner` / `QuizReview` | โหมด (list/ทำ/ตรวจ), attempt ที่เปิดอยู่ |
+| knowledge-quiz-settings (ตั้งค่าข้อสอบ) | `QuizSettingsPanel` | ร่างที่กำลังแก้, ยืนยันลบ |
 
 **กฎ:** component ไม่ควรเกิน ~300-400 บรรทัด — ถ้าโตเกินให้แยก (เช่น `EmployeeEditModal` แยกจาก `EmployeeAdminPanel`)
 
@@ -115,22 +116,24 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 | ชั้น | ไฟล์ | หน้าที่ |
 |---|---|---|
 | เนื้อหา | `src/content/quiz/basicExam.ts` | ชุดข้อสอบ 2569 — **`question.id` คือ key ของคำตอบใน Firestore** ห้ามเปลี่ยน/สลับลำดับ |
-| ทะเบียนชุด | `src/content/quiz/index.ts` | `QUIZ_SETS` (ทุกเวอร์ชัน) + `CURRENT_QUIZ` + `resolveQuizSet(quizId)` |
+| ทะเบียนชุด | `src/content/quiz/index.ts` | `mergeQuizSets` (Firestore ทับชุดที่ฝังมา) + `resolveQuizSet(quizId)` + `resolveActiveQuiz` |
+| แก้ข้อสอบ | `src/components/admin/QuizSettingsPanel.tsx` + `src/firebase/quizSets.ts` + `src/utils/quizSetEdit.ts` | หน้า admin แก้โจทย์/เวลา/เกณฑ์ · `quizSets/{id}` · logic ล้วน (id ถัดไป/ย้ายข้อ/validate/ทำสำเนา) |
 | logic | `src/utils/quizAttempt.ts` | pure — เวลา (`remainingMs`/`isExpired`/`formatCountdown`) + คะแนน (`scoreAttempt`) · ไม่แตะ Firebase/React |
 | data | `src/firebase/quizAttempts.ts` | `quizAttempts/{id}` — subscribe/start/save/submit/grade |
 | UI | `src/components/quiz/{QuizPanel,QuizRunner,QuizReview}.tsx` | router 3 โหมด · หน้าทำข้อสอบ · หน้าตรวจ |
 | AI ช่วยตรวจ | `functions/src/quiz/gradeQuizWithAI.ts` + `src/utils/quizGradingReference.ts` | callable (admin) → Claude อ่านคำตอบเทียบกฎ + ราคาที่ตรึงไว้ แล้วเสนอผ่าน/ไม่ผ่าน |
 
-**แก้โจทย์ทีหลัง — ต้องทำเป็นเวอร์ชัน:**
-ใบที่สอบแล้วถูกตรวจด้วย `resolveQuizSet(attempt.quizId)` = **ชุดที่ใช้จริงตอนนั้น** ไม่ใช่ชุดปัจจุบัน (หลักเดียวกับที่สลิปตรึง roleId/เรท/วันลาไว้ในเดือนนั้น)
+**แก้ข้อสอบ — ร่าง → เผยแพร่ → ล็อกถาวร (`/admin → ฝึกอบรม → ตั้งค่าข้อสอบ`):**
+ชุดข้อสอบเก็บที่ `quizSets/{id}` · ตัวที่ใช้สอบชี้ด้วย `/config/quizActive` · `basicExam.ts` เหลือหน้าที่เป็น**ชุดตั้งต้น + fallback ถาวร** (Firestore ว่าง/ต่อไม่ได้ → ระบบยังเปิดข้อสอบได้)
 
-| แก้อะไร | ทำยังไง |
+| สถานะ | แก้ได้ไหม |
 |---|---|
-| typo / ถ้อยคำความหมายเท่าเดิม | แก้ในชุดเดิมได้เลย |
-| เปลี่ยนความหมายโจทย์ · เพิ่ม/ลบข้อ · เปลี่ยน `passPercent`/`durationMinutes` | **สร้างชุดใหม่** (id ใหม่) → เพิ่มเข้า `QUIZ_SETS` → ชี้ `CURRENT_QUIZ` ไปชุดใหม่ |
-| สลับลำดับ / เปลี่ยน `question.id` | **ห้าม** — คำตอบเก่าไปโผล่ผิดข้อ |
+| `draft` | แก้โจทย์ · เพิ่ม/ลบ/สลับข้อ · เวลา · เกณฑ์ · กติกา ได้อิสระ |
+| `published` | **แก้ไม่ได้เลย** — `firestore.rules` บล็อก `update` ทั้งหมด (ลบก็ไม่ได้) · จะแก้ต้อง "ทำสำเนาเป็นชุดใหม่" |
 
-**ห้ามลบชุดเก่าออกจากทะเบียนตราบใดที่ยังมีใบสอบอ้างถึง** — ลบแล้ว `resolveQuizSet` fallback ไปชุดปัจจุบัน (UI ขึ้นกล่องแดงเตือนผ่าน `isKnownQuizId`) ซึ่งคือปัญหาเดิมที่ทะเบียนมีไว้แก้
+ใบที่สอบแล้วถูกตรวจด้วย `resolveQuizSet(attempt.quizId, remoteSets, activeId)` = **ชุดที่ใช้จริงตอนนั้น** ไม่ใช่ชุดที่ใช้อยู่ตอนนี้ (หลักเดียวกับที่สลิปตรึง roleId/เรท/วันลาไว้ในเดือนนั้น) · ถ้าชุดหายไป UI ขึ้นกล่องแดงเตือนผ่าน `isKnownQuizId` ไม่เงียบ
+
+**`question.id` ยังห้ามเปลี่ยน/ใช้ซ้ำภายในชุดเดียวกัน** — `nextQuestionId` ไล่จาก**เลขสูงสุดที่เคยใช้** ไม่ใช่จำนวนข้อ (ลบข้อกลางแล้วเพิ่มใหม่ ถ้าใช้ `length+1` จะชน id เดิม → คำตอบ 2 ข้อเขียนทับกันเงียบๆ) · `validateQuizSet` บล็อก id ซ้ำก่อนเผยแพร่ · id ซ้ำ**ข้ามชุด**ไม่เป็นปัญหา เพราะอ่านผ่าน `attempt.quizId` เสมอ
 
 **กฎที่พังเงียบถ้าแก้ผิด:**
 - **นาฬิกายึด `startedAt` ใน Firestore ไม่ใช่ตัวนับใน state** — นับถอยหลังด้วย state แล้วผู้ใช้รีเฟรช/สลับแท็บ (มือถือ throttle timer) จะได้เวลาเพิ่มฟรี · คำนวณ "เวลาเริ่ม + ระยะเวลา − ตอนนี้" ใหม่ทุกครั้งเสมอ

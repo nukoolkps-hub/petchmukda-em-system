@@ -9,41 +9,69 @@
    `attempt.quizId` ถูกเขียนไว้ตั้งแต่ตอนกดเริ่มอยู่แล้ว ตรงนี้แค่ทำให้มัน
    ถูกใช้จริง
 
-   ─── วิธีแก้ข้อสอบ ───────────────────────────────────────────────────
-   **แก้ typo / ปรับถ้อยคำโดยความหมายเท่าเดิม** → แก้ในชุดเดิมได้เลย
+   ─── ชุดข้อสอบมาจากไหน ──────────────────────────────────────────────
+   admin แก้เองได้ที่ `/admin → ฝึกอบรม → ตั้งค่าข้อสอบ` (เก็บที่ `quizSets/{id}`)
+   ไฟล์ `basicExam.ts` เหลือหน้าที่เป็น **ชุดตั้งต้นที่ seed ลง Firestore
+   ครั้งแรก + fallback ถาวร** ถ้า Firestore ว่าง/ต่อไม่ได้
 
-   **เปลี่ยนความหมายโจทย์ · เพิ่ม/ลบข้อ · เปลี่ยนเกณฑ์ผ่าน · เปลี่ยนเวลา**
-   → **สร้างชุดใหม่** อย่าแก้ชุดที่มีคนสอบไปแล้ว:
-     1. คัดลอกไฟล์ `basicExam.ts` เป็นเวอร์ชันใหม่ (เช่น `basicExam2570.ts`)
-        แล้วตั้ง `id` ใหม่ (เช่น `"basic-2570"`)
-     2. เพิ่มเข้า `QUIZ_SETS` ด้านล่าง
-     3. ชี้ `CURRENT_QUIZ` ไปที่ชุดใหม่
-   ชุดเก่ายังอยู่ในทะเบียน → ใบเก่าอ่านโจทย์/เกณฑ์ของตัวเองได้เหมือนเดิม
-
-   **ห้ามลบชุดเก่าออกจากทะเบียนตราบใดที่ยังมีใบสอบอ้างถึง** — ลบแล้วใบนั้น
-   จะ fallback ไปใช้ชุดปัจจุบัน ซึ่งคือปัญหาเดิมที่ไฟล์นี้มีไว้แก้             */
+   ร่าง → เผยแพร่: ชุด `draft` แก้ได้อิสระ · กดเผยแพร่แล้ว **ล็อกถาวร**
+   (`firestore.rules` ไม่ให้ update ชุดที่ published) จะแก้ต้องทำสำเนาเป็น
+   ชุดใหม่ · ใบที่สอบไปแล้วจึงอ่านโจทย์/เกณฑ์ของตัวเองได้ตลอดไป              */
 
 import type { QuizSet } from "./basicExam";
 import { BASIC_EXAM } from "./basicExam";
 
-/** ทุกชุดที่เคยใช้ · key = `QuizSet.id` = `attempt.quizId` */
-export const QUIZ_SETS: Record<string, QuizSet> = {
+/** ชุดที่ฝังมากับโค้ด — **fallback ถาวร** ถ้า Firestore ว่าง/ต่อไม่ได้
+ *  ระบบต้องเปิดข้อสอบได้เสมอ ไม่ใช่จอขาวเพราะโหลด config ไม่ทัน */
+export const BUILT_IN_QUIZ_SETS: Record<string, QuizSet> = {
   [BASIC_EXAM.id]: BASIC_EXAM,
 };
 
-/** ชุดที่ใช้เมื่อกด "เริ่มทำข้อสอบ" วันนี้ */
-export const CURRENT_QUIZ: QuizSet = BASIC_EXAM;
+/** ชุดตั้งต้น — ใช้ seed ลง Firestore ครั้งแรก + fallback ตอนยังไม่มีชุดไหนถูกเลือก */
+export const BUILT_IN_QUIZ: QuizSet = BASIC_EXAM;
 
-/** ชุดนี้อยู่ในทะเบียนไหม — ใช้เตือนบน UI ว่าใบนี้กำลังอ่านชุดผิดเวอร์ชัน */
-export function isKnownQuizId(quizId: string | undefined | null): boolean {
-  return !!quizId && quizId in QUIZ_SETS;
+/** ทะเบียนที่ใช้จริง = ชุดจาก Firestore ทับชุดที่ฝังมากับโค้ด
+ *
+ *  admin แก้ผ่านหน้า "ตั้งค่าข้อสอบ" → เก็บลง `quizSets/{id}` · ตัวที่ฝังมา
+ *  กับโค้ดยังอยู่เป็นตาข่ายรองรับ ไม่ได้ถูกแทนที่ทิ้ง                        */
+export function mergeQuizSets(
+  remote: Record<string, QuizSet> | undefined | null,
+): Record<string, QuizSet> {
+  return { ...BUILT_IN_QUIZ_SETS, ...(remote ?? {}) };
+}
+
+/** ชุดนี้มีอยู่จริงไหม — ใช้เตือนบน UI ว่าใบนี้กำลังอ่านชุดผิดเวอร์ชัน */
+export function isKnownQuizId(
+  quizId: string | undefined | null,
+  remote?: Record<string, QuizSet> | null,
+): boolean {
+  return !!quizId && quizId in mergeQuizSets(remote);
 }
 
 /** `attempt.quizId` → ชุดข้อสอบของใบนั้น
  *
- *  ไม่รู้จัก id (ใบเก่ามากที่ยังไม่มี `quizId` หรือชุดถูกลบออกจากทะเบียน)
- *  → คืนชุดปัจจุบันไปก่อน เพื่อให้หน้าจอยังเปิดดูคำตอบได้ ไม่ใช่พังทั้งหน้า
+ *  ไม่รู้จัก id (ใบเก่ามากที่ยังไม่มี `quizId` หรือชุดถูกลบไปแล้ว) → คืนชุด
+ *  ที่ใช้อยู่ตอนนี้ไปก่อน เพื่อให้หน้าจอยังเปิดดูคำตอบได้ ไม่ใช่พังทั้งหน้า
  *  · คู่กับ `isKnownQuizId` ที่ UI ใช้ขึ้นคำเตือนว่าเลขที่เห็นเชื่อไม่ได้ */
-export function resolveQuizSet(quizId: string | undefined | null): QuizSet {
-  return (quizId && QUIZ_SETS[quizId]) || CURRENT_QUIZ;
+export function resolveQuizSet(
+  quizId: string | undefined | null,
+  remote?: Record<string, QuizSet> | null,
+  activeQuizId?: string | null,
+): QuizSet {
+  const all = mergeQuizSets(remote);
+  return (
+    (quizId && all[quizId]) || resolveActiveQuiz(remote, activeQuizId ?? null)
+  );
+}
+
+/** ชุดที่จะใช้เมื่อกด "เริ่มทำข้อสอบ" ตอนนี้
+ *
+ *  `activeQuizId` มาจาก `/config/quizActive` ที่ admin กดเลือก · ชี้ไปชุดที่
+ *  ไม่มีอยู่ (เผลอลบ/ยังไม่ seed) → ถอยมาใช้ชุดที่ฝังมากับโค้ด              */
+export function resolveActiveQuiz(
+  remote: Record<string, QuizSet> | undefined | null,
+  activeQuizId: string | undefined | null,
+): QuizSet {
+  const all = mergeQuizSets(remote);
+  return (activeQuizId && all[activeQuizId]) || BUILT_IN_QUIZ;
 }

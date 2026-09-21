@@ -46,7 +46,8 @@ export type AdminSectionId =
   | "backup"
   | "wipe-data"
   | "knowledge"
-  | "knowledge-quiz";
+  | "knowledge-quiz"
+  | "knowledge-quiz-settings";
 
 export type AdminGroupId =
   | "leave"
@@ -133,6 +134,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         id: "knowledge-quiz",
         label: "แบบทดสอบ",
         Icon: IconClipboardCheck,
+      },
+      {
+        id: "knowledge-quiz-settings",
+        label: "ตั้งค่าข้อสอบ",
+        Icon: IconSettings,
       },
     ],
   },
