@@ -27,6 +27,9 @@ import { buildGradingReference } from "../../utils/quizGradingReference";
 
 interface Props {
   quiz: QuizSet;
+  /** `attempt.quizId` ตรงกับชุดที่ส่งมาไหม — false = กำลังอ่านด้วยชุดผิด
+   *  เวอร์ชัน (ชุดเดิมถูกลบออกจากทะเบียน) → เลขที่โชว์เชื่อไม่ได้ */
+  quizKnown?: boolean;
   attempt: QuizAttempt;
   gradedBy: string;
   onBack: () => void;
@@ -35,6 +38,7 @@ interface Props {
 
 export default function QuizReview({
   quiz,
+  quizKnown = true,
   attempt,
   gradedBy,
   onBack,
@@ -148,6 +152,20 @@ export default function QuizReview({
               : " · ยังทำอยู่"}
           {attempt.autoSubmitted && " (หมดเวลา)"}
         </div>
+
+        {!quizKnown && (
+          <div className="mt-2 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold flex items-start gap-1.5">
+            <IconAlertTriangle
+              size={16}
+              strokeWidth={2.4}
+              className="shrink-0 mt-0.5"
+            />
+            <span>
+              ไม่พบชุดข้อสอบ <b>{attempt.quizId || "(ไม่ระบุ)"}</b> ในระบบ —
+              กำลังแสดงด้วยชุดปัจจุบันแทน โจทย์กับจำนวนข้ออาจไม่ตรงกับที่ผู้สอบทำจริง
+            </span>
+          </div>
+        )}
 
         {/* ราคาที่ผู้สอบเห็นตอนทำ — ADMIN ต้องคิดตามด้วยชุดเดียวกัน
             ไม่ใช่ราคาวันที่นั่งตรวจ */}

@@ -114,11 +114,23 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 
 | ชั้น | ไฟล์ | หน้าที่ |
 |---|---|---|
-| เนื้อหา | `src/content/quiz/basicExam.ts` | `BASIC_EXAM` hardcode — **`question.id` คือ key ของคำตอบใน Firestore** ห้ามเปลี่ยน/สลับลำดับ · เพิ่มข้อให้ต่อท้าย (`m31`/`g7`) |
+| เนื้อหา | `src/content/quiz/basicExam.ts` | ชุดข้อสอบ 2569 — **`question.id` คือ key ของคำตอบใน Firestore** ห้ามเปลี่ยน/สลับลำดับ |
+| ทะเบียนชุด | `src/content/quiz/index.ts` | `QUIZ_SETS` (ทุกเวอร์ชัน) + `CURRENT_QUIZ` + `resolveQuizSet(quizId)` |
 | logic | `src/utils/quizAttempt.ts` | pure — เวลา (`remainingMs`/`isExpired`/`formatCountdown`) + คะแนน (`scoreAttempt`) · ไม่แตะ Firebase/React |
 | data | `src/firebase/quizAttempts.ts` | `quizAttempts/{id}` — subscribe/start/save/submit/grade |
 | UI | `src/components/quiz/{QuizPanel,QuizRunner,QuizReview}.tsx` | router 3 โหมด · หน้าทำข้อสอบ · หน้าตรวจ |
 | AI ช่วยตรวจ | `functions/src/quiz/gradeQuizWithAI.ts` + `src/utils/quizGradingReference.ts` | callable (admin) → Claude อ่านคำตอบเทียบกฎ + ราคาที่ตรึงไว้ แล้วเสนอผ่าน/ไม่ผ่าน |
+
+**แก้โจทย์ทีหลัง — ต้องทำเป็นเวอร์ชัน:**
+ใบที่สอบแล้วถูกตรวจด้วย `resolveQuizSet(attempt.quizId)` = **ชุดที่ใช้จริงตอนนั้น** ไม่ใช่ชุดปัจจุบัน (หลักเดียวกับที่สลิปตรึง roleId/เรท/วันลาไว้ในเดือนนั้น)
+
+| แก้อะไร | ทำยังไง |
+|---|---|
+| typo / ถ้อยคำความหมายเท่าเดิม | แก้ในชุดเดิมได้เลย |
+| เปลี่ยนความหมายโจทย์ · เพิ่ม/ลบข้อ · เปลี่ยน `passPercent`/`durationMinutes` | **สร้างชุดใหม่** (id ใหม่) → เพิ่มเข้า `QUIZ_SETS` → ชี้ `CURRENT_QUIZ` ไปชุดใหม่ |
+| สลับลำดับ / เปลี่ยน `question.id` | **ห้าม** — คำตอบเก่าไปโผล่ผิดข้อ |
+
+**ห้ามลบชุดเก่าออกจากทะเบียนตราบใดที่ยังมีใบสอบอ้างถึง** — ลบแล้ว `resolveQuizSet` fallback ไปชุดปัจจุบัน (UI ขึ้นกล่องแดงเตือนผ่าน `isKnownQuizId`) ซึ่งคือปัญหาเดิมที่ทะเบียนมีไว้แก้
 
 **กฎที่พังเงียบถ้าแก้ผิด:**
 - **นาฬิกายึด `startedAt` ใน Firestore ไม่ใช่ตัวนับใน state** — นับถอยหลังด้วย state แล้วผู้ใช้รีเฟรช/สลับแท็บ (มือถือ throttle timer) จะได้เวลาเพิ่มฟรี · คำนวณ "เวลาเริ่ม + ระยะเวลา − ตอนนี้" ใหม่ทุกครั้งเสมอ

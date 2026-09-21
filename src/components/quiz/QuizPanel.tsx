@@ -17,7 +17,11 @@ import {
   Play as IconPlay,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { BASIC_EXAM } from "../../content/quiz/basicExam";
+import {
+  CURRENT_QUIZ,
+  isKnownQuizId,
+  resolveQuizSet,
+} from "../../content/quiz";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGoldPrice } from "../../firebase/hooks/useFirestore";
 import {
@@ -90,7 +94,7 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
     setStarting(true);
     try {
       const id = await startQuizAttempt(
-        BASIC_EXAM,
+        CURRENT_QUIZ,
         uid,
         resolveExamineeId(trimmedName, employeeDirectory ?? []),
         trimmedName,
@@ -119,7 +123,9 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   if (running) {
     return (
       <QuizRunner
-        quiz={BASIC_EXAM}
+        // ชุดที่ใบนี้เริ่มไว้ ไม่ใช่ชุดปัจจุบัน — ถ้ามีการออกชุดใหม่ระหว่างที่
+        // ใครทำค้างอยู่ โจทย์ต้องไม่เปลี่ยนกลางคัน
+        quiz={resolveQuizSet(running.quizId)}
         attempt={running}
         onFinished={() => {
           setRunningId(null);
@@ -133,7 +139,8 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   if (reviewing) {
     return (
       <QuizReview
-        quiz={BASIC_EXAM}
+        quiz={resolveQuizSet(reviewing.quizId)}
+        quizKnown={isKnownQuizId(reviewing.quizId)}
         attempt={reviewing}
         gradedBy={myName}
         onBack={() => setReviewId(null)}
@@ -148,10 +155,10 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
       <div className="rounded-[12px] border-[1.5px] border-[#C9973A50] bg-gold-pale/60 p-3.5 mb-4">
         <div className="text-lg font-extrabold text-maroon mb-2 flex items-center gap-1.5">
           <IconClipboardCheck size={20} strokeWidth={2.4} />
-          {BASIC_EXAM.title}
+          {CURRENT_QUIZ.title}
         </div>
         <ul className="mb-3 space-y-1">
-          {BASIC_EXAM.rules.map((rule) => (
+          {CURRENT_QUIZ.rules.map((rule) => (
             <li
               key={rule}
               className="text-sm text-txt-mid leading-relaxed flex items-start gap-1.5"
@@ -224,7 +231,9 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
       ) : (
         <div className="flex flex-col gap-2">
           {attempts.map((a) => {
-            const score = scoreAttempt(a, BASIC_EXAM);
+            // ตรวจ/คิด % ด้วยชุดของใบนั้นเอง — ออกชุดใหม่แล้วใบเก่าต้องไม่
+            // กลายเป็น "ตรวจไม่ครบ" เพราะจำนวนข้อเปลี่ยน
+            const score = scoreAttempt(a, resolveQuizSet(a.quizId));
             const cancelled = !!a.cancelledAt;
             const done = !cancelled && !isInProgress(a, Date.now());
             return (
