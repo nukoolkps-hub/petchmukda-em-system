@@ -149,6 +149,30 @@ export default function QuizReview({
           {attempt.autoSubmitted && " (หมดเวลา)"}
         </div>
 
+        {/* ราคาที่ผู้สอบเห็นตอนทำ — ADMIN ต้องคิดตามด้วยชุดเดียวกัน
+            ไม่ใช่ราคาวันที่นั่งตรวจ */}
+        {attempt.priceSnapshot && (
+          <div className="mt-2 px-3 py-2 rounded-[8px] bg-gold-pale/70 border border-[#C9973A40] text-sm text-txt flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="font-bold text-maroon">ราคาทองวันที่สอบ</span>
+            <span className="font-extrabold tabular-nums">
+              ขาย{" "}
+              <span className="text-green">
+                {Math.round(
+                  attempt.priceSnapshot.goldSellPerBaht,
+                ).toLocaleString("en-US")}
+              </span>
+            </span>
+            <span className="font-extrabold tabular-nums">
+              รับซื้อ{" "}
+              <span className="text-red">
+                {Math.round(
+                  attempt.priceSnapshot.goldBuyPerBaht,
+                ).toLocaleString("en-US")}
+              </span>
+            </span>
+          </div>
+        )}
+
         {attempt.cancelledAt && (
           <div className="mt-2 px-3 py-2 rounded-[8px] bg-cream-dk/70 text-sm text-txt-mid font-semibold">
             ชุดนี้ถูกยกเลิกกลางคัน — ไม่นับเป็นผลสอบ (คำตอบที่พิมพ์ไว้ยังอยู่ให้ดูได้)
