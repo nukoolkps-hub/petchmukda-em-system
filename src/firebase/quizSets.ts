@@ -9,7 +9,9 @@
    `attempt.quizId` ไปที่ชุดที่ถูกแช่แข็งไว้
 
    **ห้ามลบชุดที่เผยแพร่แล้ว** (rules บล็อกไว้) ตราบใดที่ยังมีใบสอบอ้างถึง
-   ลบแล้วใบนั้นจะอ่านชุดผิดเวอร์ชัน                                        */
+   ลบแล้วใบนั้นจะอ่านชุดผิดเวอร์ชัน · ชุดที่ไม่มีใบไหนอ้างถึงเลยลบได้ แต่ต้อง
+   ผ่าน Cloud Function `deleteQuizSet` ที่นับใบสอบให้ก่อน (rules query ข้าม
+   collection ไม่ได้ จึงเช็คในนี้ไม่ได้)                                    */
 
 import {
   collection,
@@ -20,9 +22,10 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 import type { QuizQuestion, QuizSet } from "../content/quiz/basicExam";
 import type { EditableQuizSet } from "../utils/quizSetEdit";
-import { db } from "./config";
+import { db, functions } from "./config";
 
 const COL = "quizSets";
 const ACTIVE_PATH = "config/quizActive";
@@ -152,4 +155,17 @@ export async function setActiveQuizId(
 /** ลบร่างทิ้ง — rules ไม่ให้ลบชุดที่เผยแพร่แล้ว (ใบสอบอ้างถึงอยู่) */
 export async function deleteQuizDraft(quizId: string): Promise<void> {
   await deleteDoc(doc(db, COL, quizId));
+}
+
+/** ลบชุดที่เผยแพร่แล้ว — ผ่าน Cloud Function เพราะต้องนับใบสอบก่อน
+ *
+ *  function จะปฏิเสธถ้าชุดนี้ยังใช้สอบอยู่ หรือมี `quizAttempts` ใบไหน
+ *  อ้างถึง · UI เช็คด้วย `quizSetDeletion` ไว้อีกชั้นเพื่อบอกเหตุผลก่อนกด
+ *  แต่คำตัดสินจริงอยู่ที่ฝั่ง server ซึ่งนับจาก Firestore ตรงๆ             */
+export async function deletePublishedQuizSet(quizId: string): Promise<void> {
+  const call = httpsCallable<{ quizId: string }, { deleted: boolean }>(
+    functions,
+    "deleteQuizSet",
+  );
+  await call({ quizId });
 }

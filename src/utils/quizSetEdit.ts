@@ -181,3 +181,49 @@ export function makeQuizSetId(title: string, now: number): string {
     .slice(0, 40);
   return slug ? `${slug}-${now}` : `quiz-${now}`;
 }
+
+/** จำนวนใบสอบที่อ้างถึงแต่ละชุด — key = `attempt.quizId` */
+export function countAttemptsByQuiz(
+  attempts: { quizId: string }[],
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const a of attempts) {
+    if (!a.quizId) continue;
+    counts[a.quizId] = (counts[a.quizId] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export interface QuizSetDeletion {
+  canDelete: boolean;
+  /** เหตุผลที่ลบไม่ได้ — ว่างเมื่อลบได้ */
+  reason: string;
+}
+
+/** ลบชุดนี้ได้ไหม — **ตัวเดียวกับที่ Cloud Function `deleteQuizSet` เช็คซ้ำ**
+ *
+ *  ชุดที่เผยแพร่แล้วถูกแช่แข็งไว้เพราะ `attempt.quizId` ชี้มาที่มัน · ลบทิ้ง
+ *  แล้วหน้าตรวจจะอ่านโจทย์/เกณฑ์ของใบนั้นไม่ได้อีก (ตกไปใช้ชุดปัจจุบัน
+ *  พร้อมกล่องแดงเตือน) — แต่ถ้า **ไม่มีใบไหนอ้างถึงเลย** ลบได้ ไม่มีอะไรเสีย
+ *
+ *  ฝั่ง client เช็คไว้เพื่อบอกเหตุผลก่อนกด · ตัวตัดสินจริงอยู่ที่ function
+ *  (นับจาก Firestore ตรงๆ) — ลิสต์ฝั่ง client ค้างก็ยังลบผิดไม่ได้           */
+export function quizSetDeletion(
+  quizId: string,
+  activeQuizId: string,
+  attemptCount: number,
+): QuizSetDeletion {
+  if (activeQuizId && quizId === activeQuizId) {
+    return {
+      canDelete: false,
+      reason: "ชุดนี้ใช้สอบอยู่ — เปลี่ยนไปใช้ชุดอื่นก่อนถึงจะลบได้",
+    };
+  }
+  if (attemptCount > 0) {
+    return {
+      canDelete: false,
+      reason: `มีใบสอบอ้างถึง ${attemptCount} ใบ — ลบแล้วใบพวกนั้นจะอ่านโจทย์เดิมไม่ได้`,
+    };
+  }
+  return { canDelete: true, reason: "" };
+}

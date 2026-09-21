@@ -19,10 +19,12 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { BUILT_IN_QUIZ } from "../../content/quiz";
-import type { QuizQuestion, QuizSet } from "../../content/quiz/basicExam";
+import type { QuizSet } from "../../content/quiz/basicExam";
 import { useAuth } from "../../contexts/AuthContext";
+import { subscribeAllQuizAttempts } from "../../firebase/quizAttempts";
 import {
   createQuizDraft,
+  deletePublishedQuizSet,
   deleteQuizDraft,
   publishQuizSet,
   saveQuizDraft,
@@ -32,12 +34,14 @@ import {
 } from "../../firebase/quizSets";
 import { fmtThaiDateTime } from "../../utils/dateUtils";
 import {
+  countAttemptsByQuiz,
   duplicateAsDraft,
   type EditableQuizSet,
   makeQuizSetId,
   moveQuestion,
   nextQuestionId,
   nextQuizTitle,
+  quizSetDeletion,
   validateQuizSet,
 } from "../../utils/quizSetEdit";
 
@@ -64,9 +68,21 @@ export default function QuizSettingsPanel({ showToast }: Props) {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  /** จำนวนใบสอบต่อชุด — ใช้บอกว่าชุดไหนลบได้ (ยังไม่โหลด = ยังไม่โชว์ปุ่มลบ) */
+  const [attemptCounts, setAttemptCounts] = useState<Record<
+    string,
+    number
+  > | null>(null);
 
   useEffect(() => subscribeQuizSets(setSets), []);
   useEffect(() => subscribeActiveQuizId(setActiveId), []);
+  useEffect(
+    () =>
+      subscribeAllQuizAttempts((attempts) =>
+        setAttemptCounts(countAttemptsByQuiz(attempts)),
+      ),
+    [],
+  );
 
   const who = user?.displayName || user?.uid || "admin";
   const problems = useMemo(
@@ -368,7 +384,8 @@ export default function QuizSettingsPanel({ showToast }: Props) {
         </div>
         <p className="text-xs text-txt-mid leading-relaxed">
           แก้ร่างได้อิสระ · <b>เผยแพร่แล้วล็อกถาวร</b> เพราะใบที่สอบด้วยชุดนั้นต้อง
-          อ่านโจทย์และเกณฑ์เดิมได้ตลอดไป — จะแก้ให้กด "ทำสำเนาเป็นชุดใหม่"
+          อ่านโจทย์และเกณฑ์เดิมได้ตลอดไป — จะแก้ให้กด "ทำสำเนาเป็นชุดใหม่" · ชุดเก่าที่
+          <b>ยังไม่มีใครสอบด้วย</b>ลบทิ้งได้
         </p>
         <div className="mt-2.5 text-xs text-txt">
           ใช้สอบอยู่ตอนนี้:{" "}
@@ -458,57 +475,106 @@ export default function QuizSettingsPanel({ showToast }: Props) {
         </div>
       )}
 
-      {published.map((s) => (
-        <div
-          key={s.id}
-          className={`rounded-[10px] border bg-white p-3 mb-2 ${
-            s.id === activeId ? "border-maroon" : "border-bdr"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <span className="text-sm font-bold text-txt">{s.title}</span>
-            {s.id === activeId ? (
-              <span className="text-[11px] px-2 py-0.5 rounded-lg bg-green-lt/70 text-green font-bold inline-flex items-center gap-1">
-                <IconCheckCircle size={12} strokeWidth={2.6} />
-                ใช้สอบอยู่
-              </span>
-            ) : (
-              <span className="text-[11px] px-2 py-0.5 rounded-lg bg-cream-dk text-txt-soft font-bold inline-flex items-center gap-1">
-                <IconLock size={12} strokeWidth={2.6} />
-                เก่า
-              </span>
-            )}
-          </div>
-          <div className="text-xs text-txt-soft mb-2.5">
-            {s.main.length} ข้อหลัก · {s.general.length} ความรู้รอบตัว ·{" "}
-            {s.durationMinutes} นาที · เกณฑ์ {s.passPercent}%
-            {s.publishedAt ? ` · เผยแพร่ ${fmtThaiDateTime(s.publishedAt)}` : ""}
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => void duplicate(s)}
-              disabled={busy}
-              className="flex-1 py-2 rounded-[8px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
-            >
-              <IconCopy size={15} strokeWidth={2.4} />
-              ทำสำเนาเป็นชุดใหม่
-            </button>
-            {s.id !== activeId && (
+      {published.map((s) => {
+        // ลบได้เฉพาะชุดที่ไม่มีใบสอบอ้างถึงเลย + ไม่ใช่ชุดที่ใช้สอบอยู่
+        // (ตัวตัดสินจริงอยู่ที่ Cloud Function — ตรงนี้ไว้บอกเหตุผลก่อนกด)
+        const del = quizSetDeletion(s.id, activeId, attemptCounts?.[s.id] ?? 0);
+        return (
+          <div
+            key={s.id}
+            className={`rounded-[10px] border bg-white p-3 mb-2 ${
+              s.id === activeId ? "border-maroon" : "border-bdr"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <span className="text-sm font-bold text-txt">{s.title}</span>
+              {s.id === activeId ? (
+                <span className="text-[11px] px-2 py-0.5 rounded-lg bg-green-lt/70 text-green font-bold inline-flex items-center gap-1">
+                  <IconCheckCircle size={12} strokeWidth={2.6} />
+                  ใช้สอบอยู่
+                </span>
+              ) : (
+                <span className="text-[11px] px-2 py-0.5 rounded-lg bg-cream-dk text-txt-soft font-bold inline-flex items-center gap-1">
+                  <IconLock size={12} strokeWidth={2.6} />
+                  เก่า
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-txt-soft mb-2.5">
+              {s.main.length} ข้อหลัก · {s.general.length} ความรู้รอบตัว ·{" "}
+              {s.durationMinutes} นาที · เกณฑ์ {s.passPercent}%
+              {s.publishedAt
+                ? ` · เผยแพร่ ${fmtThaiDateTime(s.publishedAt)}`
+                : ""}
+            </div>
+            {/* 3 ปุ่มบนจอ 430px แน่นไป — ให้ห่อบรรทัดแทนบีบตัวหนังสือจนขาด */}
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() =>
-                  void run("เปลี่ยนชุดที่ใช้สอบแล้ว", () => setActiveQuizId(s.id, who))
-                }
+                onClick={() => void duplicate(s)}
                 disabled={busy}
-                className="px-3 py-2 rounded-[8px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60"
+                className="flex-1 min-w-[150px] py-2 rounded-[8px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
               >
-                ใช้ชุดนี้
+                <IconCopy size={15} strokeWidth={2.4} />
+                ทำสำเนาเป็นชุดใหม่
               </button>
+              {s.id !== activeId && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void run("เปลี่ยนชุดที่ใช้สอบแล้ว", () =>
+                      setActiveQuizId(s.id, who),
+                    )
+                  }
+                  disabled={busy}
+                  className="px-3 py-2 rounded-[8px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60"
+                >
+                  ใช้ชุดนี้
+                </button>
+              )}
+              {/* ลบได้ต่อเมื่อไม่มีใบสอบอ้างถึง — รอให้ใบสอบโหลดเสร็จก่อน
+                  ไม่งั้นปุ่มจะโผล่ให้กดทั้งที่ชุดนั้นลบไม่ได้ */}
+              {attemptCounts !== null &&
+                del.canDelete &&
+                (confirmDelete === s.id ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void run("ลบชุดข้อสอบแล้ว", async () => {
+                        await deletePublishedQuizSet(s.id);
+                        setConfirmDelete(null);
+                      })
+                    }
+                    disabled={busy}
+                    className="px-3 py-2 rounded-[8px] bg-red text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60"
+                  >
+                    ยืนยันลบ
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(s.id)}
+                    disabled={busy}
+                    className="px-3 py-2 rounded-[8px] border border-bdr bg-white text-sm font-bold text-red font-[inherit] cursor-pointer disabled:opacity-60"
+                  >
+                    ลบ
+                  </button>
+                ))}
+            </div>
+            {/* ลบไม่ได้เพราะอะไร — บอกตรงนี้ ดีกว่าปล่อยให้กดแล้วเด้ง error */}
+            {attemptCounts !== null && !del.canDelete && s.id !== activeId && (
+              <div className="text-xs text-txt-soft mt-2 inline-flex items-start gap-1">
+                <IconLock
+                  size={12}
+                  strokeWidth={2.6}
+                  className="mt-0.5 shrink-0"
+                />
+                {del.reason}
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
