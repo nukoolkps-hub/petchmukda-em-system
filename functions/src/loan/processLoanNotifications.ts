@@ -111,7 +111,11 @@ async function sendLoanCreatedNotification(
 		return;
 	}
 
-	await pushLineMessage(token, employeeLineUserId, buildLoanCreatedFlex(loanId, loan));
+	await pushLineMessage(
+		token,
+		employeeLineUserId,
+		buildLoanCreatedFlex(loanId, loan),
+	);
 
 	// แนบรูปสลิปการโอน (ถ้ามี) — push เป็น image message แยก
 	let slipImagePushFailed = false;

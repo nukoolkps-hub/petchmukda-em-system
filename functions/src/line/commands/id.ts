@@ -16,8 +16,7 @@ import {
 	notMatched,
 } from "../core/types.js";
 
-const ID_COMMAND_USAGE =
-	"กรุณาใช้รูปแบบ @บอท ไอดี @ผู้ใช้ไลน์ และแท็กผู้ใช้ LINE จริงในกลุ่ม";
+const ID_COMMAND_USAGE = "กรุณาใช้รูปแบบ @บอท ไอดี @ผู้ใช้ไลน์ และแท็กผู้ใช้ LINE จริงในกลุ่ม";
 
 interface IdCommandPayload {
 	targetLineUserId: string;

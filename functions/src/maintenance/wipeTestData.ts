@@ -37,10 +37,7 @@ const TOP_LEVEL_COLLECTIONS = [
 // subcollection ของ employees/{id}/months — เก็บสลิปเงินเดือนแยกตามเดือน
 const COLLECTION_GROUPS = ["months"];
 
-async function deleteCollection(
-	db: Firestore,
-	name: string,
-): Promise<number> {
+async function deleteCollection(db: Firestore, name: string): Promise<number> {
 	const snap = await db.collection(name).get();
 	if (snap.empty) return 0;
 	const writer = db.bulkWriter();

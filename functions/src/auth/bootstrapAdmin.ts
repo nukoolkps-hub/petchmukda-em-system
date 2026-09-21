@@ -45,7 +45,7 @@ export const bootstrapAdmin = onCall(async (request) => {
 	);
 	const adminAllowlist = (lineConfig as { ADMIN_LINE_USER_ID?: string })
 		.ADMIN_LINE_USER_ID;
-	if (adminAllowlist && adminAllowlist.trim()) {
+	if (adminAllowlist?.trim()) {
 		if (!isConfiguredAdminLineUser(uid, adminAllowlist)) {
 			throw new HttpsError(
 				"permission-denied",

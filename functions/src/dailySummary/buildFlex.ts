@@ -81,7 +81,7 @@ export function buildDailySummaryFlex(input: BuildFlexInput): LinePushMessage {
 		type: "bubble",
 		size: "giga",
 		header: buildHeader(groupName, dateStr, dayName, accent, headerBg),
-		body: buildBody(events, leaves, calendarError, accent),
+		body: buildBody(events, leaves, calendarError),
 	};
 
 	if (tip) {
@@ -192,7 +192,6 @@ function buildBody(
 	events: CalendarEvent[],
 	leaves: LeaveItem[] | null,
 	calendarError: boolean,
-	accent: string,
 ): Record<string, unknown> {
 	const contents: Record<string, unknown>[] = [];
 
@@ -252,7 +251,7 @@ function buildBody(
 	// ── Leaves section (เฉพาะกลุ่มพนักงาน) ─────────────────────
 	if (leaves !== null) {
 		contents.push({ type: "separator", margin: "16px", color: GOLD_PALE });
-		contents.push(buildLeavesSection(leaves, accent));
+		contents.push(buildLeavesSection(leaves));
 	}
 
 	return {
@@ -325,10 +324,7 @@ function buildEventCard(ev: CalendarEvent) {
 	};
 }
 
-function buildLeavesSection(
-	leaves: LeaveItem[],
-	accent: string,
-): Record<string, unknown> {
+function buildLeavesSection(leaves: LeaveItem[]): Record<string, unknown> {
 	if (leaves.length === 0) {
 		return {
 			type: "box",

@@ -1,5 +1,5 @@
-import type { LineConfig } from "../../types.js";
 import { isConfiguredAdminLineUser } from "../../helpers/config.js";
+import type { LineConfig } from "../../types.js";
 
 export { isConfiguredAdminLineUser };
 

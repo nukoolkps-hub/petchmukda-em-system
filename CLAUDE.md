@@ -349,9 +349,20 @@ deploy jobs (push → `main` เท่านั้น):
 - **Firestore Rules** (`deploy-firestore-rules`)
 - **Storage Rules** (`deploy-storage-rules`)
 
-**Biome ใน CI:** ใช้ `npm run check:ci` (= `biome ci .`) ไม่ใช่ `npm run check`
-เพราะตัวหลังเป็น `--write` จะแก้ไฟล์แล้วผ่านทั้งที่ควร fail · `biome.json` ตัด
-`dist` + `functions` ออก — โค้ดใน `functions/` จึงยังไม่ถูก lint
+**Biome ใน CI:** ใช้ `check:ci` (= `biome ci .`) ไม่ใช่ `check`/`lint`/`format`
+เพราะพวกนั้นเป็น `--write` จะแก้ไฟล์ใน runner แล้วผ่านทั้งที่ควร fail
+
+**มี biome 2 ชุด แยกกันโดยตั้งใจ — แก้ config ต้องดูให้ถูกตัว:**
+
+| | root `biome.json` | `functions/biome.json` |
+|---|---|---|
+| ขอบเขต | ทั้ง repo **ยกเว้น** `dist` + `functions` | `functions/` ยกเว้น `lib` |
+| indent | **space** (width 2) | **tab** |
+| rules | recommended + ปิดบางตัว (`noExplicitAny`, `noArrayIndexKey`, `noNonNullAssertion`, a11y) | recommended ล้วน (**เข้มกว่า**) |
+| รันด้วย | `npm run check:ci` | `npm run check:ci --prefix functions` |
+
+job `test` รันทั้งคู่ · **ห้ามเอา `functions` ไปรวมใน root config** — จะ reformat
+tab → space ทั้งโฟลเดอร์และทำให้ rules หลวมลงโดยไม่จำเป็น
 
 ผู้พัฒนาทำงานผ่าน Claude Code on the web ทั้งหมด — **ไม่มี local clone**, file ทุกอย่างอยู่บน GitHub และ container ของ session นี้เท่านั้น ดังนั้นทำ deploy ด้วยมือไม่ได้ และไม่ต้องบอก user ให้รันคำสั่งบนเครื่องตัวเอง
 

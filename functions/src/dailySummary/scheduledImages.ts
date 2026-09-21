@@ -67,10 +67,7 @@ export async function markImagesSent(
 				.doc(`dailySummaryImages/${id}`)
 				.update({ sentAt: sentAtIso })
 				.catch((err) => {
-					console.error(
-						`[scheduledImages] mark sent failed for ${id}:`,
-						err,
-					);
+					console.error(`[scheduledImages] mark sent failed for ${id}:`, err);
 				}),
 		),
 	);
