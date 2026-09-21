@@ -25,9 +25,7 @@ export const cleanupOldSlips = onSchedule(
 
 		let deleted = 0;
 		for (const file of files) {
-			const match = file.name.match(
-				/salarySlips\/[^/]+\/(\d{4}-\d{2})\.pdf$/,
-			);
+			const match = file.name.match(/salarySlips\/[^/]+\/(\d{4}-\d{2})\.pdf$/);
 			if (!match) continue;
 			if (match[1] < cutoffYearMonth) {
 				try {

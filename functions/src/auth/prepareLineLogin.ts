@@ -20,9 +20,12 @@ export const prepareLineLogin = onCall(async () => {
 	const state = randomBytes(32).toString("base64url");
 	const now = Date.now();
 	const db = getAppFirestore();
-	await db.collection("loginStates").doc(state).set({
-		createdAt: now,
-		expiresAt: now + LINE_LOGIN_STATE_TTL_MS,
-	});
+	await db
+		.collection("loginStates")
+		.doc(state)
+		.set({
+			createdAt: now,
+			expiresAt: now + LINE_LOGIN_STATE_TTL_MS,
+		});
 	return { state };
 });

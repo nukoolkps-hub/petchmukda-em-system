@@ -21,8 +21,8 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { bangkokYmd } from "../dailySummary/dateUtils.js";
 import { getAppFirestore } from "../helpers/config.js";
 import {
-	computeAllDutiesForDay,
 	type CoverageEarning,
+	computeAllDutiesForDay,
 	computeCoverageEarningsForMonthAll,
 	computeCoverageForecast,
 	type Duty,

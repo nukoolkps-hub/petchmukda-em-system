@@ -16,45 +16,47 @@ import type { LineEvent, LineHttpRequest } from "./core/types.js";
 export const lineWebhook = onRequest(
 	{ serviceAccount: "petchmukda-bot@appspot.gserviceaccount.com" },
 	async (request, res) => {
-	if (request.method !== "POST") {
-		res.status(405).send("Method Not Allowed");
-		return;
-	}
-
-	try {
-		const config = await getLineConfig();
-		if (!config.LINE_CHANNEL_SECRET) {
-			console.error("LINE_CHANNEL_SECRET is not configured");
-			res.status(503).json({ ok: false, error: "webhook not configured" });
+		if (request.method !== "POST") {
+			res.status(405).send("Method Not Allowed");
 			return;
 		}
 
-		const signatureOk = verifyLineRequest(request, config);
-		if (!signatureOk) {
-			res.status(401).json({ ok: false, error: "invalid LINE signature" });
-			return;
+		try {
+			const config = await getLineConfig();
+			if (!config.LINE_CHANNEL_SECRET) {
+				console.error("LINE_CHANNEL_SECRET is not configured");
+				res.status(503).json({ ok: false, error: "webhook not configured" });
+				return;
+			}
+
+			const signatureOk = verifyLineRequest(request, config);
+			if (!signatureOk) {
+				res.status(401).json({ ok: false, error: "invalid LINE signature" });
+				return;
+			}
+
+			const body = request.body as { events?: LineEvent[] };
+			const events = Array.isArray(body.events) ? body.events : [];
+
+			for (const event of events) {
+				if (event.type !== "message" || event.message?.type !== "text")
+					continue;
+
+				await dispatchLineCommand({
+					config,
+					event,
+					text: event.message.text.trim(),
+					signatureOk,
+				});
+			}
+
+			res.json({ ok: true });
+		} catch (err) {
+			console.error("webhook error:", err);
+			res.status(500).json({ ok: false });
 		}
-
-		const body = request.body as { events?: LineEvent[] };
-		const events = Array.isArray(body.events) ? body.events : [];
-
-		for (const event of events) {
-			if (event.type !== "message" || event.message?.type !== "text") continue;
-
-			await dispatchLineCommand({
-				config,
-				event,
-				text: event.message.text.trim(),
-				signatureOk,
-			});
-		}
-
-		res.json({ ok: true });
-	} catch (err) {
-		console.error("webhook error:", err);
-		res.status(500).json({ ok: false });
-	}
-});
+	},
+);
 
 function verifyLineRequest(
 	request: LineHttpRequest,

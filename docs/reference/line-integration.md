@@ -81,6 +81,7 @@ Admin เปิด/ปิด notification รายประเภทผ่า�
 | `advanceApprovalEnabled` | true | แจ้งพนักงานเมื่อ approve/reject (+ รูปสลิป) |
 | `loanCreatedEnabled` | true | แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ (+ รูปสลิป) |
 | `lateLeaveNoticeEnabled` | true | "มีคนลาเพิ่ม" 08:30 — ตามแจ้งเฉพาะคนที่กดลาหลังสรุปเช้า (ไม่มีใคร = ไม่ส่ง) |
+| `lateLeaveNotice0930Enabled` | true | "มีคนลาเพิ่ม" 09:30 — รอบตามอีกครั้ง นับต่อจากรอบ 08:30 (ไม่ประกาศชื่อเดิมซ้ำ) |
 | `dailySummaryGroups` | (ไม่มี) | **array กลุ่มปลายทางของสรุปเช้า** — ADMIN ตั้งเองในหน้าเดียวกัน (ดูหัวข้อถัดไป) |
 
 ### กลุ่มปลายทางของสรุปเช้า (`dailySummaryGroups`)

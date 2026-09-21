@@ -194,7 +194,9 @@ function buildUserPrompt(recentTips: string[]): string {
 	if (recentTips.length > 0) {
 		lines.push("");
 		lines.push("ห้ามตอบซ้ำหรือคล้ายกับเคล็ดลับเหล่านี้ที่เคยให้ไปแล้ว:");
-		recentTips.forEach((tip) => lines.push(`- ${tip}`));
+		recentTips.forEach((tip) => {
+			lines.push(`- ${tip}`);
+		});
 	}
 	return lines.join("\n");
 }

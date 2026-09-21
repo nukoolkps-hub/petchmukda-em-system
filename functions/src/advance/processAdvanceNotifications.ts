@@ -135,7 +135,11 @@ async function sendAdvanceStatusNotification(
 	let slipImagePushFailed = false;
 	let slipImageError: string | null = null;
 	const slipImageUrl = stringValue(advance.slipImageUrl);
-	if (status === "approved" && slipImageUrl && isTrustedImageUrl(slipImageUrl)) {
+	if (
+		status === "approved" &&
+		slipImageUrl &&
+		isTrustedImageUrl(slipImageUrl)
+	) {
 		try {
 			await pushLineMessage(token, employeeLineUserId, {
 				type: "image",

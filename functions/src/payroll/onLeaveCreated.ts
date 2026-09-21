@@ -3,10 +3,7 @@
  */
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import {
-	FIRESTORE_DATABASE_ID,
-	getAppFirestore,
-} from "../helpers/config.js";
+import { FIRESTORE_DATABASE_ID, getAppFirestore } from "../helpers/config.js";
 
 export const onLeaveCreated = onDocumentCreated(
 	{ document: "leaves/{leaveId}", database: FIRESTORE_DATABASE_ID },

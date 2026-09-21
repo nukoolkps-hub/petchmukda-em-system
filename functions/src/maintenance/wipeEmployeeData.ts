@@ -120,10 +120,7 @@ export const wipeEmployeeData = onCall(
 			throw new HttpsError("invalid-argument", "employeeIds ต้องไม่ว่าง");
 		}
 		if (ids.length > 50) {
-			throw new HttpsError(
-				"invalid-argument",
-				"ลบได้ครั้งละไม่เกิน 50 คน",
-			);
+			throw new HttpsError("invalid-argument", "ลบได้ครั้งละไม่เกิน 50 คน");
 		}
 
 		const db = getAppFirestore();

@@ -37,10 +37,6 @@ export const groupIdCommand: LineCommand<void> = {
 		}
 
 		const label = event.source?.type === "room" ? "Room ID" : "Group ID";
-		await replyText(
-			config,
-			event.replyToken,
-			`${label} ของกลุ่มนี้:\n${groupId}`,
-		);
+		await replyText(config, event.replyToken, `${label} ของกลุ่มนี้:\n${groupId}`);
 	},
 };

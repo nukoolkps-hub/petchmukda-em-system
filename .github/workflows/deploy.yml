@@ -26,6 +26,12 @@ jobs:
       # biome ci = check แบบไม่เขียนไฟล์ (npm run check ใช้ --write ห้ามใช้ใน CI)
       - run: npm run check:ci
 
+      # functions มี biome.json + node_modules ของตัวเอง (tab · rules เข้มกว่า
+      # root) · root config ตัด functions ออก จึงต้องรันแยกอีกรอบ ไม่งั้นไม่มีใครตรวจ
+      - run: npm ci --prefix functions
+
+      - run: npm run check:ci --prefix functions
+
       - run: npm run typecheck
 
       - run: npm test

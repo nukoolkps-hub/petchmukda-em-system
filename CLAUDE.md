@@ -349,9 +349,20 @@ deploy jobs (push → `main` เท่านั้น):
 - **Firestore Rules** (`deploy-firestore-rules`)
 - **Storage Rules** (`deploy-storage-rules`)
 
-**Biome ใน CI:** ใช้ `npm run check:ci` (= `biome ci .`) ไม่ใช่ `npm run check`
-เพราะตัวหลังเป็น `--write` จะแก้ไฟล์แล้วผ่านทั้งที่ควร fail · `biome.json` ตัด
-`dist` + `functions` ออก — โค้ดใน `functions/` จึงยังไม่ถูก lint
+**Biome ใน CI:** ใช้ `check:ci` (= `biome ci .`) ไม่ใช่ `check`/`lint`/`format`
+เพราะพวกนั้นเป็น `--write` จะแก้ไฟล์ใน runner แล้วผ่านทั้งที่ควร fail
+
+**มี biome 2 ชุด แยกกันโดยตั้งใจ — แก้ config ต้องดูให้ถูกตัว:**
+
+| | root `biome.json` | `functions/biome.json` |
+|---|---|---|
+| ขอบเขต | ทั้ง repo **ยกเว้น** `dist` + `functions` | `functions/` ยกเว้น `lib` |
+| indent | **space** (width 2) | **tab** |
+| rules | recommended + ปิดบางตัว (`noExplicitAny`, `noArrayIndexKey`, `noNonNullAssertion`, a11y) | recommended ล้วน (**เข้มกว่า**) |
+| รันด้วย | `npm run check:ci` | `npm run check:ci --prefix functions` |
+
+job `test` รันทั้งคู่ · **ห้ามเอา `functions` ไปรวมใน root config** — จะ reformat
+tab → space ทั้งโฟลเดอร์และทำให้ rules หลวมลงโดยไม่จำเป็น
 
 ผู้พัฒนาทำงานผ่าน Claude Code on the web ทั้งหมด — **ไม่มี local clone**, file ทุกอย่างอยู่บน GitHub และ container ของ session นี้เท่านั้น ดังนั้นทำ deploy ด้วยมือไม่ได้ และไม่ต้องบอก user ให้รันคำสั่งบนเครื่องตัวเอง
 
@@ -378,16 +389,29 @@ Cloud Functions `sendDailySummary` ส่ง flex สรุปประจำว
 
 **Idempotency:** `dailySummarySent/{ymd}` claim ผ่าน transaction — กัน Cloud Scheduler ยิงซ้ำส่งสแปม
 
-### "มีคนลาเพิ่ม" (08:30) — ตามคนที่กดลาหลังสรุปเช้า
+### "มีคนลาเพิ่ม" (08:30 + 09:30) — ตามคนที่กดลาหลังสรุปเช้า
 
-`sendLateLeaveNotice` (`functions/src/dailySummary/sendLateLeaveNotice.ts`) — สรุปเช้าถ่ายภาพคนหยุด ณ 07:30 ใครกดลาหลังจากนั้น**ไม่โผล่ในกล่องเช้าเลย** ทีมเลยไม่รู้ว่าวันนี้ขาดคนเพิ่ม → รอบ 08:30 ตามแจ้งเฉพาะ **"คนที่ตกหล่น"** ไม่ใช่ส่งซ้ำทั้งหมด
+`sendLateLeaveNotice` + `sendLateLeaveNotice0930` (`functions/src/dailySummary/sendLateLeaveNotice.ts`) — สรุปเช้าถ่ายภาพคนหยุด ณ 07:30 ใครกดลาหลังจากนั้น**ไม่โผล่ในกล่องเช้าเลย** ทีมเลยไม่รู้ว่าวันนี้ขาดคนเพิ่ม → รอบตาม 08:30 และ 09:30 แจ้งเฉพาะ **"คนที่ตกหล่น"** ไม่ใช่ส่งซ้ำทั้งหมด
+
+**แต่ละรอบนับต่อจากรอบก่อนหน้า ไม่ใช่จากสรุปเช้าเสมอ** — นี่คือหัวใจ ถ้ารอบ 09:30 ไปใช้ cutoff ของสรุปเช้าจะประกาศชื่อที่รอบ 08:30 แจ้งไปแล้วซ้ำอีก · `resolveRoundCutoffMs(ymd, docs[])` รับ docs เรียงใหม่→เก่าแล้วเอาตัวแรกที่มีเวลาจริง:
+
+| รอบ | toggle | doc ที่ claim | สาย cutoff |
+|---|---|---|---|
+| 08:30 | `lateLeaveNoticeEnabled` | `lateLeaveNoticeSent/{ymd}` | สรุปเช้า → 07:30 |
+| 09:30 | `lateLeaveNotice0930Enabled` | `lateLeaveNotice0930Sent/{ymd}` | รอบ 08:30 → สรุปเช้า → 07:30 |
+
+รอบที่ไม่ได้ส่ง (ไม่มีใครตกหล่น / ปิด toggle) **จะไม่สร้าง doc** → รอบถัดไป fallback ไปใช้ของรอบเก่ากว่าเอง ซึ่งถูกต้องเพราะคนช่วงนั้นยังไม่เคยถูกประกาศ · ไม่มี doc สักตัว (ปิด toggle สรุปเช้า) → **07:30 เสมอ แม้เป็นรอบ 09:30** (ใช้ 08:30 จะทำให้คนที่กดลาช่วง 07:30-08:30 หายเงียบ) · **ปิด 08:30 เปิดแต่ 09:30 → รอบ 09:30 กวาดคนที่กดลาหลัง 07:30 มาทั้งหมดรวดเดียว**
+
+**นับเฉพาะรอบที่ "ประกาศออกไปจริง"** (`roundWasAnnounced`) — claim เกิด**ก่อน**ยิง push เสมอ (กัน scheduler ยิงซ้ำ) ดังนั้น doc มี `claimedAt` ตั้งแต่ก่อนรู้ผล · ถ้ารอบนั้นส่งไม่ออก (token เสีย/LINE ล่ม/ทุกกลุ่ม fail) แล้วรอบถัดไปยังนับว่า "ประกาศแล้ว" คนที่ควรถูกแจ้งจะ**หายเงียบทั้งวันทั้งที่ไม่เคยมีข้อความออกไปสักครั้ง** → เกณฑ์คือต้องมีอย่างน้อย 1 กลุ่มที่ `sent === true` (doc เก่าที่ไม่มี `results` แต่มี `sentAt` + ไม่มี `error` → นับว่าส่งแล้ว · migrate-on-read)
+
+**เพิ่มรอบใหม่:** ประกาศ `LateLeaveRound` ตัวใหม่ (ใส่ `prevCollections` ครบทุกรอบก่อนหน้า เรียงใหม่→เก่า) + export `onSchedule` + เพิ่ม toggle ใน `isNotificationEnabled` (functions) และ `NotificationSettings` (frontend) + แถวใน `LineBotNotificationsPanel`
 
 - **ไม่มีใครตกหล่น = ไม่ส่งเลย** (เงียบ · ไม่มีกล่อง "ไม่มีคนลาเพิ่ม" มารบกวนทุกเช้า)
 - flex สั้น **ตัวหนังสือใหญ่** (ชื่อ `xxl`) — ไม่มีภารกิจ ไม่มีเคล็ดลับ AI · ต่างจากกล่องเช้าโดยตั้งใจเพราะมันแทรกกลางวันทำงาน
 - **"ตกหล่น"** = `leave.createdAt` (epoch ms · เขียนตอน `addLeave`) **>** cutoff · cutoff = `dailySummarySent/{ymd}.claimedAt` (เวลาที่สรุปเช้าเริ่มทำงาน) · ไม่มี doc (เสาร์/ปิด toggle) → 07:30 ของวันนั้น · ใบลาเก่าที่**ไม่มี `createdAt` ถือว่าไม่ใช่ของใหม่** (ไม่งั้นสแปมชื่อเดิมทุกวันตลอดช่วงที่คนนั้นลายาว)
 - ยึด `claimedAt` ไม่ใช่ `sentAt` — claim เกิดก่อนอ่าน leaves จึงอาจแจ้งซ้ำเล็กน้อย ซึ่งดีกว่าคนหายเงียบ
-- ปลายทาง = กลุ่มที่เปิด `includeLeaves` (กลุ่มเดียวกับที่เห็นคนหยุดในกล่องเช้า) · เสาร์ปกติข้าม (กฎเดียวกัน) · toggle `lateLeaveNoticeEnabled`
-- **Idempotency:** `lateLeaveNoticeSent/{ymd}` claim ผ่าน transaction
+- ปลายทาง = กลุ่มที่เปิด `includeLeaves` (กลุ่มเดียวกับที่เห็นคนหยุดในกล่องเช้า) · เสาร์ปกติข้าม (กฎเดียวกัน) · แต่ละรอบเปิด-ปิดแยกกันได้
+- **Idempotency:** `{sentCollection}/{ymd}` claim ผ่าน transaction แยกต่อรอบ
 - **Manual test:** พิมพ์ `ทดสอบคนลาเพิ่ม` ใน LINE 1:1 — ไม่มีคนตกหล่นจริงจะใช้ข้อมูลตัวอย่างแล้วบอกให้รู้
 
 ## Reference Docs

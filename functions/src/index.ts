@@ -44,7 +44,10 @@ export { seedDailySummaryGroupsNow } from "./dailySummary/groups.js";
 // Daily summary — ภารกิจ + คนหยุด + เคล็ดลับ → ส่งเข้า LINE 07:30 ทุกวัน
 // (manual test: Cloud Scheduler "Force run" หรือ LINE command "ทดสอบแจ้งเตือน")
 export { sendDailySummary } from "./dailySummary/sendDailySummary.js";
-export { sendLateLeaveNotice } from "./dailySummary/sendLateLeaveNotice.js";
+export {
+	sendLateLeaveNotice,
+	sendLateLeaveNotice0930,
+} from "./dailySummary/sendLateLeaveNotice.js";
 // Duty assignments — server-side compute เพื่อ sync admin/พนักงาน
 // (ฝั่งพนักงานอ่าน employees/leaves ของคนอื่นไม่ได้ → compute ไม่ครบ)
 // callable: trigger หลัง CRUD · scheduled: refresh ตอนวันเปลี่ยน
