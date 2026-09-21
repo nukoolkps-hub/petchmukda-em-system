@@ -117,7 +117,8 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 |---|---|---|
 | เนื้อหา | `src/content/quiz/basicExam.ts` | ชุดข้อสอบ 2569 — **`question.id` คือ key ของคำตอบใน Firestore** ห้ามเปลี่ยน/สลับลำดับ |
 | ทะเบียนชุด | `src/content/quiz/index.ts` | `mergeQuizSets` (Firestore ทับชุดที่ฝังมา) + `resolveQuizSet(quizId)` + `resolveActiveQuiz` |
-| แก้ข้อสอบ | `src/components/admin/QuizSettingsPanel.tsx` + `src/firebase/quizSets.ts` + `src/utils/quizSetEdit.ts` | หน้า admin แก้โจทย์/เวลา/เกณฑ์ · `quizSets/{id}` · logic ล้วน (id ถัดไป/ย้ายข้อ/validate/ทำสำเนา) |
+| แก้ข้อสอบ | `src/components/admin/QuizSettingsPanel.tsx` + `src/firebase/quizSets.ts` + `src/utils/quizSetEdit.ts` | หน้า admin แก้โจทย์/เวลา/เกณฑ์ · `quizSets/{id}` · logic ล้วน (id ถัดไป/ย้ายข้อ/validate/ทำสำเนา/`quizSetDeletion`) |
+| ลบชุดเก่า | `functions/src/quiz/deleteQuizSet.ts` | callable (admin) → ลบชุดที่เผยแพร่แล้วได้เฉพาะตอนไม่ใช่ชุดที่ใช้สอบ + ไม่มีใบสอบอ้างถึง |
 | logic | `src/utils/quizAttempt.ts` | pure — เวลา (`remainingMs`/`isExpired`/`formatCountdown`) + คะแนน (`scoreAttempt`) · ไม่แตะ Firebase/React |
 | data | `src/firebase/quizAttempts.ts` | `quizAttempts/{id}` — subscribe/start/save/submit/grade |
 | UI | `src/components/quiz/{QuizPanel,QuizRunner,QuizReview}.tsx` | router 3 โหมด · หน้าทำข้อสอบ · หน้าตรวจ |
@@ -129,7 +130,9 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 | สถานะ | แก้ได้ไหม |
 |---|---|
 | `draft` | แก้โจทย์ · เพิ่ม/ลบ/สลับข้อ · เวลา · เกณฑ์ · กติกา ได้อิสระ |
-| `published` | **แก้ไม่ได้เลย** — `firestore.rules` บล็อก `update` ทั้งหมด (ลบก็ไม่ได้) · จะแก้ต้อง "ทำสำเนาเป็นชุดใหม่" |
+| `published` | **แก้ไม่ได้เลย** — `firestore.rules` บล็อก `update` ทั้งหมด · จะแก้ต้อง "ทำสำเนาเป็นชุดใหม่" · **ลบได้เฉพาะชุดที่ยังไม่มีใบสอบอ้างถึง** ผ่าน callable `deleteQuizSet` (ดูด้านล่าง) |
+
+**ลบชุดเก่า (`deleteQuizSet` · `functions/src/quiz/deleteQuizSet.ts`):** ชุดที่เผยแพร่แล้วลบจาก client ไม่ได้เลย — rules ปิดไว้ · ปุ่ม "ลบ" ในหน้าตั้งค่าข้อสอบเรียก callable (admin) ที่เช็คให้ก่อน 2 ข้อ: **(1)** ไม่ใช่ชุดที่ `/config/quizActive` ชี้อยู่ **(2)** ไม่มี `quizAttempts` ใบไหนอ้างถึง (นับด้วย `count()` · รวมใบที่ยกเลิกแล้ว) · rules query ข้าม collection ไม่ได้ เงื่อนไขข้อ 2 จึงต้องอยู่ฝั่ง server · UI เช็คด้วย `quizSetDeletion` อีกชั้นเพื่อบอกเหตุผลก่อนกด (ลิสต์ฝั่ง client ค้างก็ยังลบผิดไม่ได้ เพราะ function นับใหม่เสมอ) · **ยังมีใบสอบอ้างถึง = ลบไม่ได้** ลบแล้วหน้าตรวจของใบนั้นจะอ่านโจทย์/เกณฑ์เดิมไม่ได้ (ตกไปใช้ชุดปัจจุบัน + กล่องแดงจาก `isKnownQuizId`) ซึ่งคือปัญหาเดิมที่ทะเบียนชุดมีไว้แก้
 
 ชื่อสำเนาใช้ `nextQuizTitle` → `ชื่อฐาน v2` / `v3` · **ห้ามต่อท้าย "(สำเนา)"** เพราะทำสำเนาจากสำเนาแล้วชื่อยาวขึ้นทุกครั้ง · นับจากเลขสูงสุดที่เคยใช้กับชื่อฐานเดียวกัน (ลบชุดกลางทิ้งแล้วต้องไม่ชน) · การ์ดโชว์วันที่/จำนวนข้อ/เกณฑ์อยู่แล้ว ชื่อจึงแค่ต้องแยกให้ออก
 

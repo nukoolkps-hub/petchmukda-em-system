@@ -497,7 +497,9 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | createdAt / createdBy | number / string | ตอนสร้างร่าง |
 | publishedAt / publishedBy | number \| null / string \| null | ตอนกดเผยแพร่ |
 
-**เผยแพร่แล้วแก้ไม่ได้เลย** — `firestore.rules` ให้ `update`/`delete` เฉพาะตอน `status == "draft"` · การเผยแพร่เองคือ update ครั้งสุดท้าย (draft → published) หลังจากนั้นล็อก · เหตุผล: ใบสอบอ้าง `attempt.quizId` มาที่ชุดนี้ ถ้ายังแก้ได้ ผลสอบเก่าจะเปลี่ยนย้อนหลังเงียบๆ (เพิ่มข้อ → ใบเก่ากลายเป็น "ตรวจไม่ครบ" · ขยับเกณฑ์ → ผ่านกลายเป็นไม่ผ่าน) · จะแก้ให้ **"ทำสำเนาเป็นชุดใหม่"**
+**เผยแพร่แล้วแก้ไม่ได้เลย** — `firestore.rules` ให้ `update`/`delete` (จาก client) เฉพาะตอน `status == "draft"` · การเผยแพร่เองคือ update ครั้งสุดท้าย (draft → published) หลังจากนั้นล็อก · เหตุผล: ใบสอบอ้าง `attempt.quizId` มาที่ชุดนี้ ถ้ายังแก้ได้ ผลสอบเก่าจะเปลี่ยนย้อนหลังเงียบๆ (เพิ่มข้อ → ใบเก่ากลายเป็น "ตรวจไม่ครบ" · ขยับเกณฑ์ → ผ่านกลายเป็นไม่ผ่าน) · จะแก้ให้ **"ทำสำเนาเป็นชุดใหม่"**
+
+**ลบชุดที่เผยแพร่แล้ว** ทำได้ทางเดียวคือ callable `deleteQuizSet` (admin · `functions/src/quiz/deleteQuizSet.ts`) ซึ่งลบให้ต่อเมื่อ **(1)** ไม่ใช่ชุดที่ `config/quizActive` ชี้อยู่ และ **(2)** ไม่มี `quizAttempts` ใบไหน `quizId` ตรงกับชุดนี้ (นับด้วย `count()` · นับใบที่ยกเลิก/ยังทำอยู่ด้วย) · ทำใน rules ไม่ได้เพราะ query ข้าม collection ไม่ได้ · ยังมีใบอ้างถึงแล้วลบ = ใบนั้นอ่านโจทย์/เกณฑ์เดิมไม่ได้อีก (`resolveQuizSet` ตกไปใช้ชุดปัจจุบัน + `isKnownQuizId` ขึ้นกล่องแดง)
 
 **`question.id` ห้ามซ้ำภายในชุดเดียวกัน** (`validateQuizSet` บล็อกก่อนเผยแพร่) — ซ้ำ = คำตอบ 2 ข้อเขียนทับกัน · ซ้ำข้ามชุดไม่เป็นปัญหา
 
@@ -530,7 +532,7 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | config/loyaltyPoints | all signed-in | admin only |
 | config/notifications | admin only | admin only — toggle 4 ตัว + `dailySummaryGroups[]` (กลุ่มปลายทางสรุปเช้า · Cloud Function seed ค่าเดิมให้ครั้งแรก) |
 | dailySummaryImages/{id} | admin only | admin only (+ Cloud Function ผ่าน Admin SDK) |
-| quizSets/{quizId} | all signed-in | admin **และเฉพาะ `status == "draft"`** — เผยแพร่แล้ว update/delete ไม่ได้เลย (ใบสอบอ้างถึงอยู่) |
+| quizSets/{quizId} | all signed-in | admin **และเฉพาะ `status == "draft"`** — เผยแพร่แล้ว client update/delete ไม่ได้เลย · ลบได้ทาง callable `deleteQuizSet` เท่านั้น (ต้องไม่ใช่ชุดที่ใช้สอบ + ไม่มีใบสอบอ้างถึง) |
 | config/quizActive | all signed-in | admin only |
 | quizAttempts/{attemptId} | admin / owner (`uid`) | owner สร้าง (`startedAtServer == request.time` · `answers` ว่าง · ห้ามมี `grades`/`aiGrades`) + แก้ `answers`/ส่ง/ยกเลิก ได้จนกว่าจะส่งหรือยกเลิก · `grades`/`note` + delete = admin only · `aiGrades`/`aiGradedAt`/`aiGradeError` = **Cloud Function เท่านั้น** (client เขียนไม่ได้แม้เป็น admin) |
 | config/backupStatus | admin only | blocked (เขียนโดย Cloud Function · Admin SDK) |

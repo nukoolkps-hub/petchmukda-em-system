@@ -71,4 +71,6 @@ export { wipeEmployeeData } from "./maintenance/wipeEmployeeData.js";
 // transactional data ก่อนเริ่มใช้จริง · เก็บ config/roles/duties ไว้)
 export { wipeTestData } from "./maintenance/wipeTestData.js";
 // Per-employee wipe (admin only) — ลบข้อมูลของพนักงานเฉพาะคน ไม่ใช่ทั้งระบบ
+// แบบทดสอบ — ลบชุดข้อสอบ (เช็คก่อนว่าไม่มีใบสอบอ้างถึง) + AI ช่วยตรวจ
+export { deleteQuizSet } from "./quiz/deleteQuizSet.js";
 export { gradeQuizWithAI } from "./quiz/gradeQuizWithAI.js";

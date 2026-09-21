@@ -511,7 +511,10 @@ service cloud.firestore {
       allow update: if isAdmin()
         && resource.data.status == 'draft';
 
-      // ลบได้เฉพาะร่าง — ชุดที่เผยแพร่แล้วต้องอยู่ตลอดไป
+      // ลบได้เฉพาะร่าง · ชุดที่เผยแพร่แล้วลบผ่าน client ไม่ได้เลย —
+      // ต้องไปทาง callable `deleteQuizSet` (Admin SDK) ที่นับ `quizAttempts`
+      // ก่อนว่าไม่มีใบไหนอ้างถึง · rules query ข้าม collection ไม่ได้ จึง
+      // เช็คเงื่อนไขนั้นตรงนี้ไม่ได้ ปิดไว้ทั้งหมดปลอดภัยกว่า
       allow delete: if isAdmin()
         && resource.data.status == 'draft';
     }

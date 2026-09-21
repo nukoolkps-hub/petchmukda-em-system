@@ -10,11 +10,13 @@
 import { describe, expect, it } from "vitest";
 import type { QuizQuestion } from "../content/quiz/basicExam";
 import {
+  countAttemptsByQuiz,
   duplicateAsDraft,
   makeQuizSetId,
   moveQuestion,
   nextQuestionId,
   nextQuizTitle,
+  quizSetDeletion,
   validateQuizSet,
 } from "./quizSetEdit";
 
@@ -209,5 +211,43 @@ describe("nextQuizTitle — ชื่อชุดตอนทำสำเนา"
 
   it("ชื่อว่างก็ยังได้ชื่อที่ใช้ได้", () => {
     expect(nextQuizTitle("   ", [])).toBe("ชุดข้อสอบ v2");
+  });
+});
+
+describe("ลบชุดข้อสอบเก่า", () => {
+  const attempt = (quizId: string) => ({ quizId });
+
+  it("นับใบสอบต่อชุด · ใบที่ไม่มี quizId ไม่นับ", () => {
+    const counts = countAttemptsByQuiz([
+      attempt("a"),
+      attempt("b"),
+      attempt("a"),
+      attempt(""),
+    ]);
+    expect(counts).toEqual({ a: 2, b: 1 });
+  });
+
+  it("ชุดที่ไม่มีใบสอบอ้างถึงเลย = ลบได้", () => {
+    expect(quizSetDeletion("old", "active", 0)).toEqual({
+      canDelete: true,
+      reason: "",
+    });
+  });
+
+  it("**มีใบสอบอ้างถึง = ลบไม่ได้** — ลบแล้วใบนั้นอ่านโจทย์เดิมไม่ได้", () => {
+    const d = quizSetDeletion("old", "active", 3);
+    expect(d.canDelete).toBe(false);
+    expect(d.reason).toContain("3");
+  });
+
+  it("ชุดที่ใช้สอบอยู่ = ลบไม่ได้ แม้ยังไม่มีใครสอบ", () => {
+    const d = quizSetDeletion("active", "active", 0);
+    expect(d.canDelete).toBe(false);
+    expect(d.reason).toContain("ใช้สอบอยู่");
+  });
+
+  it("ยังไม่ได้ตั้งชุดที่ใช้สอบ (ใช้ชุดตั้งต้นในโค้ด) — id ว่างต้องไม่ล็อกทุกชุด", () => {
+    expect(quizSetDeletion("", "", 0).canDelete).toBe(true);
+    expect(quizSetDeletion("old", "", 0).canDelete).toBe(true);
   });
 });
