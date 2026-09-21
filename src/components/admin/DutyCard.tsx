@@ -6,6 +6,7 @@
    array แล้วแสดง "วันนี้" ทุกบรรทัด                                       */
 
 import {
+  AlertTriangle as IconAlertTriangle,
   CalendarClock as IconCalendarClock,
   CalendarDays as IconCalendarDays,
   CalendarX as IconCalendarX,
@@ -105,17 +106,28 @@ function TodayRow({
           : "text-txt-soft"
       }`}
     >
-      {isCoverage
-        ? assignment?.reason === "coverage_no_candidate"
-          ? `${assignment?.targetName || "เป้าหมาย"} ลา — ไม่มีคนแทนได้`
-          : assignment?.reason === "empty_target_role"
-            ? `⚠ ไม่มีคนในตำแหน่ง ${coverageRoleName} — กรุณาตรวจสอบการตั้งค่า`
-            : `${coverageRoleName}ไม่ลาวันนี้ — ไม่ต้องมีคนแทน`
-        : assignment?.reason === "all_on_leave"
-          ? "ทุกคนในกลุ่มลาวันนี้"
-          : // ไม่มี assignment วันนี้ แต่มีคนใน pool → หน้าที่หยุดวันนี้
-            // (อาทิตย์ที่ข้าม / ร้านปิด) · ไม่มีคนใน pool จริง → ยังไม่ได้ตั้ง
-            (offTodayLabel ?? "ยังไม่ได้ตั้ง pool")}
+      {isCoverage ? (
+        assignment?.reason === "coverage_no_candidate" ? (
+          `${assignment?.targetName || "เป้าหมาย"} ลา — ไม่มีคนแทนได้`
+        ) : assignment?.reason === "empty_target_role" ? (
+          <span className="inline-flex items-center gap-1.5 align-middle">
+            <IconAlertTriangle
+              size={14}
+              strokeWidth={2.4}
+              className="shrink-0"
+            />
+            ไม่มีคนในตำแหน่ง {coverageRoleName} — กรุณาตรวจสอบการตั้งค่า
+          </span>
+        ) : (
+          `${coverageRoleName}ไม่ลาวันนี้ — ไม่ต้องมีคนแทน`
+        )
+      ) : assignment?.reason === "all_on_leave" ? (
+        "ทุกคนในกลุ่มลาวันนี้"
+      ) : (
+        // ไม่มี assignment วันนี้ แต่มีคนใน pool → หน้าที่หยุดวันนี้
+        // (อาทิตย์ที่ข้าม / ร้านปิด) · ไม่มีคนใน pool จริง → ยังไม่ได้ตั้ง
+        (offTodayLabel ?? "ยังไม่ได้ตั้ง pool")
+      )}
     </div>
   );
 }

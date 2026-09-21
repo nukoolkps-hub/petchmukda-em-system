@@ -149,10 +149,10 @@ export default function Calculator({
         .map(([k, v]) => `${k}=${v}`)
         .join(",")
     : "";
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ใช้ presetKey เป็น stable signal แทน object identity
   useEffect(() => {
     if (!presetValues) return;
     setValues((prev) => ({ ...prev, ...presetValues }));
-    // biome-ignore lint/correctness/useExhaustiveDependencies: ใช้ presetKey เป็น stable signal แทน object identity
   }, [presetKey]);
 
   const outputs = useMemo(() => {

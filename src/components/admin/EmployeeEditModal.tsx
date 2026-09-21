@@ -12,7 +12,6 @@ import {
   MessageCircle as IconMessageCircle,
   Package as IconPackage,
   Pencil as IconPencil,
-  Plus as IconPlus,
   Ticket as IconTicket,
   Trash2 as IconTrash,
   User as IconUser,
@@ -904,17 +903,20 @@ export default function EmployeeEditModal({
                         // Array (รวม empty []) หรือ legacy "sell"/"buy" → some
                         return "some";
                       })();
-                      // resolve excluded ids (สำหรับ checkboxes)
-                      const excludedIds = new Set<string>();
-                      if (Array.isArray(liveExclusion)) {
-                        liveExclusion.forEach((id) => excludedIds.add(id));
-                      } else if (liveExclusion === "sell") {
-                        ["normal", "special"].forEach((id) =>
-                          excludedIds.add(id),
-                        );
-                      } else if (liveExclusion === "buy") {
-                        excludedIds.add("buy");
-                      }
+                      // resolve excluded ids (สำหรับ checkboxes) — ใช้
+                      // helper ตัวเดียวกับ calc engine · filter ตาม pool
+                      // items ของ role จริง กัน id ค้าง (รายการที่ admin ลบ
+                      // ไปแล้ว / legacy "sell" ที่ role ไม่มี normal+special)
+                      // ถูกเขียนกลับลง poolExclusion ตอน tick checkbox
+                      // mode="all" → เริ่มจากเซ็ตว่างเหมือนเดิม (สลับมา
+                      // "ปิดเฉพาะรายการ" แล้วค่อยเลือกเอง ไม่ tick ให้ก่อน)
+                      const excludedIds =
+                        mode === "all"
+                          ? new Set<string>()
+                          : resolvePoolExclusionItemIds(
+                              liveExclusion as any,
+                              poolItems,
+                            ).excludedIds;
                       const setExclusion = (next: any) =>
                         setEditingRole((prev) => ({
                           ...prev,
@@ -1085,7 +1087,7 @@ export default function EmployeeEditModal({
                           return poolItemsForRates.map((it) => {
                             const itemDisabled =
                               excIds.has(it.id) && it.kind === "pool";
-                            const valueOf = (): number | string => {
+                            const rateValue = (): number | string => {
                               if (
                                 editingPoolItemRates &&
                                 editingPoolItemRates[it.id] !== undefined
@@ -1134,7 +1136,7 @@ export default function EmployeeEditModal({
                                 </label>
                                 <MoneyInput
                                   min="0"
-                                  value={itemDisabled ? "" : valueOf()}
+                                  value={itemDisabled ? "" : rateValue()}
                                   disabled={itemDisabled}
                                   onChange={(raw) => setRate(raw)}
                                   className={`flex-1 px-3 py-[9px] rounded-[9px] text-sm leading-normal font-bold outline-none font-[inherit] text-center border-[1.5px] ${

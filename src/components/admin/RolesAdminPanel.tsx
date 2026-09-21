@@ -1,6 +1,5 @@
 import {
   Briefcase as IconBriefcase,
-  ChevronDown as IconChevronDown,
   Handshake as IconHandshake,
   Pencil as IconPencil,
   Plus as IconPlus,

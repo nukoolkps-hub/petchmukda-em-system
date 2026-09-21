@@ -194,15 +194,17 @@ export function buildSlipRowsCatalog({
     });
   }
 
-  (salaryCalculation.recurringDeductions || []).forEach((it: any, i: number) => {
-    if ((it.amount || 0) > 0) {
-      dedRows.push({
-        id: `recurring-ded:${i}`,
-        label: it.label || "หักประจำ",
-        value: it.amount,
-      });
-    }
-  });
+  (salaryCalculation.recurringDeductions || []).forEach(
+    (it: any, i: number) => {
+      if ((it.amount || 0) > 0) {
+        dedRows.push({
+          id: `recurring-ded:${i}`,
+          label: it.label || "หักประจำ",
+          value: it.amount,
+        });
+      }
+    },
+  );
 
   return { earnRows, dedRows };
 }

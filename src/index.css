@@ -115,6 +115,7 @@ body {
      element อยู่นอก .leave-app-root (เช่น modal portal, BootLoadingScreen
      หรือ React Fragment ที่ไม่มี wrapper ของตัวเอง)
      !important — กัน Tailwind preflight / browser reset เขียนทับ */
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะ Tailwind preflight / browser reset ไม่งั้นฟอนต์ Prompt ไม่ติดทั้งระบบ */
   font-family: var(--font-sans) !important;
 }
 
@@ -382,9 +383,13 @@ select {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: a11y reset ต้องชนะ animation/transition ของทุก component */
     animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: a11y reset ต้องชนะ animation/transition ของทุก component */
     animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: a11y reset ต้องชนะ animation/transition ของทุก component */
     transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: a11y reset ต้องชนะ animation/transition ของทุก component */
     scroll-behavior: auto !important;
   }
 }
@@ -626,7 +631,9 @@ select {
 .rich-text ol {
   /* default ของ list ใน editor: ไม่โชว์จุด — กัน contentEditable สร้าง
      ul/ol เองตอน indent แล้วโผล่จุดที่ admin ไม่ได้ตั้งใจ */
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะ UA style ที่ contentEditable ใส่ ul/ol เองตอน indent */
   list-style: none !important;
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะ UA style ที่ contentEditable ใส่ ul/ol เองตอน indent */
   list-style-type: none !important;
   padding-left: 1.25em;
   margin: 0.25em 0;
@@ -640,12 +647,16 @@ select {
 }
 /* bullet ที่ admin ตั้งใจกดปุ่ม "รายการ" — โชว์จุดตามปกติ */
 .rich-text ul.rt-bullet {
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะกฎ list-style: none ด้านบน + UA style */
   list-style: disc !important;
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะกฎ list-style: none ด้านบน + UA style */
   list-style-type: disc !important;
   padding-left: 1.5em;
 }
 .rich-text ol.rt-bullet {
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะกฎ list-style: none ด้านบน + UA style */
   list-style: decimal !important;
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะกฎ list-style: none ด้านบน + UA style */
   list-style-type: decimal !important;
   padding-left: 1.5em;
 }
@@ -655,8 +666,11 @@ select {
   font-size: inherit;
 }
 .rich-text blockquote {
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะ UA style ของ blockquote ให้ editor ตรงกับฝั่ง render */
   margin: 0 0 0 1.25em !important;
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะ UA style ของ blockquote ให้ editor ตรงกับฝั่ง render */
   padding: 0 !important;
+  /* biome-ignore lint/complexity/noImportantStyles: ต้องชนะ UA style ของ blockquote ให้ editor ตรงกับฝั่ง render */
   border: none !important;
 }
 .rich-text-editor:empty:before {

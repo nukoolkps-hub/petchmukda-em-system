@@ -1,12 +1,16 @@
-name: Deploy to Firebase
+name: CI + Deploy to Firebase
 
+# push main → ตรวจ + deploy · PR → ตรวจอย่างเดียว (deploy job มี guard
+# if: github.event_name == 'push' ไม่งั้น PR จะ deploy ขึ้น production)
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
 
 jobs:
   test:
-    name: Test (frontend utils)
+    name: Lint + Test (frontend)
     runs-on: ubuntu-latest
 
     steps:
@@ -19,6 +23,9 @@ jobs:
 
       - run: npm ci
 
+      # biome ci = check แบบไม่เขียนไฟล์ (npm run check ใช้ --write ห้ามใช้ใน CI)
+      - run: npm run check:ci
+
       - run: npm run typecheck
 
       - run: npm test
@@ -26,6 +33,7 @@ jobs:
   deploy-hosting:
     name: Deploy Hosting
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -64,6 +72,7 @@ jobs:
   deploy-functions:
     name: Deploy Functions
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -94,6 +103,7 @@ jobs:
   deploy-firestore-rules:
     name: Deploy Firestore Rules
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -108,6 +118,7 @@ jobs:
   deploy-storage-rules:
     name: Deploy Storage Rules
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:

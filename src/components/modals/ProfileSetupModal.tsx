@@ -3,6 +3,7 @@ import {
   Camera as IconCamera,
   Check as IconCheck,
   Landmark as IconLandmark,
+  Smile as IconSmile,
   Type as IconType,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -219,7 +220,15 @@ export default function ProfileSetupModal({
                 </span>
               ),
             },
-            { id: "emoji", label: "😊 Emoji" },
+            {
+              id: "emoji",
+              label: (
+                <span className="inline-flex items-center gap-1">
+                  <IconSmile size={13} strokeWidth={2.4} />
+                  Emoji
+                </span>
+              ),
+            },
             {
               id: "image",
               label: (
@@ -346,11 +355,7 @@ export default function ProfileSetupModal({
       {/* ── Bank info section ── */}
       <div className="mb-4 pt-4 border-t border-dashed border-bdr">
         <label className="block text-sm font-semibold text-txt-mid mb-2.5">
-          <IconLandmark
-            size={14}
-            strokeWidth={2.4}
-            className="inline mr-1"
-          />
+          <IconLandmark size={14} strokeWidth={2.4} className="inline mr-1" />
           บัญชีธนาคารสำหรับรับเงินเดือน
         </label>
 

@@ -23,12 +23,16 @@ export const C = {
 };
 
 const ZERO_W = new Set([
-  0x0e31, 0x0e34, 0x0e35, 0x0e36, 0x0e37, 0x0e38, 0x0e39, 0x0e3a,
-  0x0e47, 0x0e48, 0x0e49, 0x0e4a, 0x0e4b, 0x0e4c, 0x0e4d, 0x0e4e,
+  0x0e31, 0x0e34, 0x0e35, 0x0e36, 0x0e37, 0x0e38, 0x0e39, 0x0e3a, 0x0e47,
+  0x0e48, 0x0e49, 0x0e4a, 0x0e4b, 0x0e4c, 0x0e4d, 0x0e4e,
 ]);
 
 export function esc(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 // approximate advance width per char for Prompt
@@ -52,18 +56,31 @@ export function wrap(str, maxW, size) {
   for (const para of String(str).split("\n")) {
     const words = para.split(" ");
     let line = "";
-    const push = () => { if (line !== "") { out.push(line); line = ""; } };
+    const push = () => {
+      if (line !== "") {
+        out.push(line);
+        line = "";
+      }
+    };
     for (const word of words) {
-      const cand = line === "" ? word : line + " " + word;
-      if (textWidth(cand, size) <= maxW) { line = cand; continue; }
+      const cand = line === "" ? word : `${line} ${word}`;
+      if (textWidth(cand, size) <= maxW) {
+        line = cand;
+        continue;
+      }
       push();
-      if (textWidth(word, size) <= maxW) { line = word; continue; }
+      if (textWidth(word, size) <= maxW) {
+        line = word;
+        continue;
+      }
       // hard break long Thai token
       let cur = "";
       for (const ch of word) {
         const c2 = cur + ch;
-        if (textWidth(c2, size) > maxW && cur !== "") { out.push(cur); cur = ch; }
-        else cur = c2;
+        if (textWidth(c2, size) > maxW && cur !== "") {
+          out.push(cur);
+          cur = ch;
+        } else cur = c2;
       }
       line = cur;
     }
@@ -73,18 +90,33 @@ export function wrap(str, maxW, size) {
 }
 
 export function text(x, y, s, o = {}) {
-  const { size = 28, weight = 400, fill = C.ink, anchor = "start", spacing = "" } = o;
+  const {
+    size = 28,
+    weight = 400,
+    fill = C.ink,
+    anchor = "start",
+    spacing = "",
+  } = o;
   const ls = spacing ? ` letter-spacing="${spacing}"` : "";
   return `<text x="${x}" y="${y}" font-family="Prompt" font-weight="${weight}" font-size="${size}" fill="${fill}" text-anchor="${anchor}"${ls}>${esc(s)}</text>`;
 }
 
 // multi-line wrapped text, returns {svg, height}
 export function paragraph(x, y, s, o = {}) {
-  const { size = 26, weight = 400, fill = C.sub, lh = 1.45, maxW = 700, anchor = "start" } = o;
+  const {
+    size = 26,
+    weight = 400,
+    fill = C.sub,
+    lh = 1.45,
+    maxW = 700,
+    anchor = "start",
+  } = o;
   const lines = wrap(s, maxW, size);
   const step = size * lh;
   let svg = "";
-  lines.forEach((ln, i) => { svg += text(x, y + i * step, ln, { size, weight, fill, anchor }); });
+  lines.forEach((ln, i) => {
+    svg += text(x, y + i * step, ln, { size, weight, fill, anchor });
+  });
   return { svg, height: lines.length * step, lines: lines.length };
 }
 
@@ -133,7 +165,7 @@ const ICONS = {
 
 export function icon(name, x, y, size, color = "currentColor", sw = 2) {
   const body = ICONS[name];
-  if (!body) throw new Error("no icon " + name);
+  if (!body) throw new Error(`no icon ${name}`);
   const sc = size / 24;
   return `<g transform="translate(${x},${y}) scale(${sc})" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${body.replace(/currentColor/g, color)}</g>`;
 }
@@ -141,14 +173,31 @@ export function icon(name, x, y, size, color = "currentColor", sw = 2) {
 // numbered step badge
 export function badge(cx, cy, r, n, o = {}) {
   const { fill = C.gold, ring = C.goldPale, txt = "#FFFFFF" } = o;
-  return circle(cx, cy, r + 5, ring) + circle(cx, cy, r, fill) +
-    text(cx, cy + r * 0.34, String(n), { size: r * 1.05, weight: 700, fill: txt, anchor: "middle" });
+  return (
+    circle(cx, cy, r + 5, ring) +
+    circle(cx, cy, r, fill) +
+    text(cx, cy + r * 0.34, String(n), {
+      size: r * 1.05,
+      weight: 700,
+      fill: txt,
+      anchor: "middle",
+    })
+  );
 }
 
 export function chip(x, y, label, o = {}) {
   const { size = 22, fill = C.maroon, bg = C.goldPale, padX = 16, h = 40 } = o;
   const w = textWidth(label, size) + padX * 2;
-  return { w, svg: rrect(x, y, w, h, h / 2, bg) + text(x + padX, y + h / 2 + size * 0.34, label, { size, weight: 600, fill }) };
+  return {
+    w,
+    svg:
+      rrect(x, y, w, h, h / 2, bg) +
+      text(x + padX, y + h / 2 + size * 0.34, label, {
+        size,
+        weight: 600,
+        fill,
+      }),
+  };
 }
 
 export function svgDoc(w, h, body) {

@@ -13,6 +13,7 @@
     "lint": "biome lint --write .",
     "format": "biome format --write .",
     "check": "biome check --write .",
+    "check:ci": "biome ci .",
     "check:duty-sync": "node scripts/check-duty-sync.mjs",
     "typecheck": "tsc --noEmit && node scripts/check-duty-sync.mjs",
     "test": "vitest run",

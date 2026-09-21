@@ -22,7 +22,8 @@
 npm run dev          # Frontend + Firebase Emulators
 npm run build        # Production build (output: dist/) — copy public/fonts ด้วย
 npm run typecheck    # TypeScript check
-npm run check        # Biome lint + format
+npm run check        # Biome lint + format (--write · แก้ไฟล์ให้เลย)
+npm run check:ci     # Biome check แบบไม่เขียนไฟล์ — ตัวเดียวกับที่ CI รัน
 npm test             # Vitest — unit tests (รันครั้งเดียว)
 npm run test:watch   # Vitest watch mode
 npm run test:coverage # Vitest + coverage report (v8 · scope src/utils)
@@ -32,8 +33,8 @@ Deploy เกิดอัตโนมัติบน push เข้า `main` �
 
 **Testing:** Vitest (`vitest.config.ts` · node env · test ไฟล์อยู่ข้าง source: `*.test.ts`) ·
 โฟกัส pure business logic ใน `src/utils/` (เงินเดือน/กองกลาง/วันลา/หน้าที่/ราคาทอง) ·
-`.github/workflows/deploy.yml` มี job `test` (typecheck + `npm test`) ที่ทุก deploy job `needs:` —
-เทสต์ fail = ไม่ deploy · เขียนเทสต์เพิ่มเมื่อแก้ logic ใน `src/utils/` · กลยุทธ์เทสต์ + invariants
+`.github/workflows/deploy.yml` มี job `test` (`npm run check:ci` + typecheck + `npm test`)
+ที่ทุก deploy job `needs:` — lint/เทสต์ fail = ไม่ deploy · เขียนเทสต์เพิ่มเมื่อแก้ logic ใน `src/utils/` · กลยุทธ์เทสต์ + invariants
 (เงินไม่เพี้ยน) + idempotency ของ grace re-settle → `docs/reference/testing.md`
 
 ## Architecture
@@ -332,11 +333,25 @@ Single source: `src/utils/storeCalendar.ts` · sync helper `applicableDuties` �
 
 ## Deployment
 
-ทุกอย่าง auto deploy ผ่าน GitHub Actions (`.github/workflows/deploy.yml`) เมื่อ push เข้า `main`:
+`.github/workflows/deploy.yml` รัน 2 แบบตาม event:
+
+| event | job `test` (lint + typecheck + vitest) | deploy jobs |
+|---|---|---|
+| **PR → main** | รัน | **ไม่รัน** (guard `if: github.event_name == 'push'`) |
+| **push → main** | รัน | รันต่อเมื่อ `test` ผ่าน (`needs: test`) |
+
+PR จึงเห็นผลตรวจก่อน merge โดยไม่แตะ production · **ถ้าเพิ่ม deploy job ใหม่
+ต้องใส่ `if: github.event_name == 'push'` ด้วยเสมอ** ไม่งั้น PR จะ deploy ขึ้นจริง
+
+deploy jobs (push → `main` เท่านั้น):
 - **Hosting** (`deploy-hosting`)
 - **Functions** (`deploy-functions`) — ไม่ต้องรัน `firebase deploy` เอง
 - **Firestore Rules** (`deploy-firestore-rules`)
 - **Storage Rules** (`deploy-storage-rules`)
+
+**Biome ใน CI:** ใช้ `npm run check:ci` (= `biome ci .`) ไม่ใช่ `npm run check`
+เพราะตัวหลังเป็น `--write` จะแก้ไฟล์แล้วผ่านทั้งที่ควร fail · `biome.json` ตัด
+`dist` + `functions` ออก — โค้ดใน `functions/` จึงยังไม่ถูก lint
 
 ผู้พัฒนาทำงานผ่าน Claude Code on the web ทั้งหมด — **ไม่มี local clone**, file ทุกอย่างอยู่บน GitHub และ container ของ session นี้เท่านั้น ดังนั้นทำ deploy ด้วยมือไม่ได้ และไม่ต้องบอก user ให้รันคำสั่งบนเครื่องตัวเอง
 
