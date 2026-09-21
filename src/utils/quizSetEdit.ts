@@ -121,6 +121,53 @@ export function duplicateAsDraft(
   };
 }
 
+/** ตัดส่วนต่อท้ายที่ระบบเคยเติมออก เหลือ "ชื่อฐาน"
+ *
+ *  จับทั้ง ` v<เลข>` ที่ใช้อยู่ตอนนี้ และ ` (สำเนา)` ของเดิม (ซ้อนกี่ชั้นก็ตัด)
+ *  — ชุดที่ตั้งชื่อไว้ก่อนมีระบบเวอร์ชันจะได้กลับมาสะอาดตอนทำสำเนาครั้งถัดไป */
+function baseQuizTitle(title: string): string {
+  let base = title.trim();
+  let prev = "";
+  while (prev !== base) {
+    prev = base;
+    base = base
+      .replace(/\s*\(สำเนา\)\s*$/u, "")
+      .replace(/\s+v\d+\s*$/iu, "")
+      .trim();
+  }
+  return base;
+}
+
+/** ชื่อชุดใหม่ตอนทำสำเนา — `ชื่อฐาน v<เลขถัดไป>`
+ *
+ *  **ไม่ต่อท้ายไปเรื่อยๆ** — ของเดิมใช้ `${title} (สำเนา)` ซึ่งทำสำเนาจาก
+ *  สำเนาแล้วได้ "(สำเนา) (สำเนา) (สำเนา)" ยาวขึ้นทุกครั้งจนอ่านไม่ออก
+ *  · ความยาวคงที่ · เรียงได้ว่าอันไหนใหม่กว่า · การ์ดโชว์วันที่/จำนวนข้อ
+ *  อยู่แล้ว ชื่อจึงแค่ต้องแยกให้ออกก็พอ
+ *
+ *  นับจาก**เลขสูงสุดที่เคยใช้กับชื่อฐานเดียวกัน** ไม่ใช่จำนวนชุด — ลบชุด
+ *  กลางๆ ทิ้งแล้วต้องไม่ได้ชื่อที่ชนของเดิม (เหตุผลเดียวกับ nextQuestionId)
+ *  · ชื่อที่ยังไม่มี v = นับเป็น v1                                        */
+export function nextQuizTitle(
+  sourceTitle: string,
+  existingTitles: string[],
+): string {
+  const base = baseQuizTitle(sourceTitle) || "ชุดข้อสอบ";
+  const versionOf = (title: string): number => {
+    const m = title.trim().match(/\sv(\d+)\s*$/i);
+    return m ? Number(m[1]) : 1; // ไม่มี v = ตัวแรก
+  };
+  // เริ่มจากเวอร์ชันของตัวต้นทางเสมอ — ทำสำเนาจาก v3 ต้องไม่ได้ v2 กลับมา
+  // แม้ลิสต์ที่ส่งมาจะยังไม่มีชุดนั้น (เช่น ชุดที่ฝังมากับโค้ด)
+  let max = versionOf(sourceTitle);
+  for (const title of existingTitles) {
+    if (baseQuizTitle(title) !== base) continue;
+    const n = versionOf(title);
+    if (n > max) max = n;
+  }
+  return `${base} v${max + 1}`;
+}
+
 /** id ของชุดใหม่จากชื่อที่ตั้ง — ตัวพิมพ์เล็ก ขีดกลาง กัน id ชนของเดิม
  *
  *  ภาษาไทยใช้เป็น doc id ได้ แต่เจอใน URL/log แล้วอ่านยาก → ถ้าชื่อไม่มี
