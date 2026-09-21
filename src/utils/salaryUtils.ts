@@ -576,10 +576,6 @@ export function computePoolSharesForGroup({
   const primaryItemId = rolePrimaryPoolItemId(
     groupRole || { poolGroup: poolGroup || "_" },
   );
-  // แยก item ids ตาม kind
-  const poolItemIds = poolItemsConfig
-    .filter((it) => it.kind === "pool")
-    .map((it) => it.id);
   // map id → threshold (%) · ใช้ตรวจ eligibility แต่ละ item
   const itemThresholds: Record<string, number> = {};
   poolItemsConfig.forEach((it) => {

@@ -12,7 +12,6 @@ import {
   svgDoc,
   text,
   textWidth,
-  wrap,
 } from "./lib.mjs";
 
 const W = 1080;

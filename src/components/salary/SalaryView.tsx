@@ -20,7 +20,6 @@ import {
   Plus as IconPlus,
   Printer as IconPrinter,
   Receipt as IconReceipt,
-  RefreshCw as IconRefresh,
   ShoppingBag as IconShoppingBag,
   Sparkles as IconSparkles,
   Star as IconStar,
