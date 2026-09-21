@@ -139,11 +139,11 @@ export default function QuizReview({
 
       {/* ── หัว: ใครทำ · เมื่อไหร่ · คะแนน ── */}
       <div className="rounded-[12px] border border-bdr bg-white p-3.5 mb-3">
-        <div className="text-lg font-extrabold text-txt">
+        <div className="text-base font-extrabold text-txt">
           {attempt.employeeName || "(ไม่ทราบชื่อ)"}
         </div>
-        <div className="text-sm text-txt-soft mt-0.5 flex items-center gap-1">
-          <IconClock size={14} strokeWidth={2.4} />
+        <div className="text-xs text-txt-soft mt-0.5 flex items-center gap-1">
+          <IconClock size={12} strokeWidth={2.4} />
           เริ่ม {fmtThaiDateTime(attempt.startedAt)}
           {attempt.submittedAt
             ? ` · ส่ง ${fmtThaiDateTime(attempt.submittedAt)}`
@@ -154,9 +154,9 @@ export default function QuizReview({
         </div>
 
         {!quizKnown && (
-          <div className="mt-2 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold flex items-start gap-1.5">
+          <div className="mt-2 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-xs text-red font-semibold flex items-start gap-1.5">
             <IconAlertTriangle
-              size={16}
+              size={14}
               strokeWidth={2.4}
               className="shrink-0 mt-0.5"
             />
@@ -170,7 +170,7 @@ export default function QuizReview({
         {/* ราคาที่ผู้สอบเห็นตอนทำ — ADMIN ต้องคิดตามด้วยชุดเดียวกัน
             ไม่ใช่ราคาวันที่นั่งตรวจ */}
         {attempt.priceSnapshot && (
-          <div className="mt-2 px-3 py-2 rounded-[8px] bg-gold-pale/70 border border-[#C9973A40] text-sm text-txt flex flex-wrap items-center gap-x-3 gap-y-1">
+          <div className="mt-2 px-3 py-2 rounded-[8px] bg-gold-pale/70 border border-[#C9973A40] text-xs text-txt flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="font-bold text-maroon">ราคาทองวันที่สอบ</span>
             <span className="font-extrabold tabular-nums">
               ขาย{" "}
@@ -192,13 +192,13 @@ export default function QuizReview({
         )}
 
         {attempt.cancelledAt && (
-          <div className="mt-2 px-3 py-2 rounded-[8px] bg-cream-dk/70 text-sm text-txt-mid font-semibold">
+          <div className="mt-2 px-3 py-2 rounded-[8px] bg-cream-dk/70 text-xs text-txt-mid font-semibold">
             ชุดนี้ถูกยกเลิกกลางคัน — ไม่นับเป็นผลสอบ (คำตอบที่พิมพ์ไว้ยังอยู่ให้ดูได้)
           </div>
         )}
 
         <div className="mt-3 pt-3 border-t border-bdr/60 flex items-center justify-between">
-          <div className="text-base text-txt-mid">
+          <div className="text-sm text-txt-mid">
             ตรวจแล้ว <b className="text-txt">{score.graded}</b>/{score.total} ·
             ผ่าน <b className="text-green">{score.correct}</b> ข้อ
           </div>
@@ -223,16 +223,16 @@ export default function QuizReview({
       {/* ── ให้ AI ช่วยตรวจ ── */}
       {attempt.submittedAt && (
         <div className="rounded-[12px] border-[1.5px] border-[#C9973A50] bg-gold-pale/50 p-3.5 mb-3">
-          <div className="text-sm text-txt-mid leading-relaxed mb-2.5">
+          <div className="text-xs text-txt-mid leading-relaxed mb-2.5">
             <b className="text-maroon">ให้ AI ช่วยตรวจ</b> — อ่านคำตอบเทียบกับกฎใน
             "ความรู้ต่างๆ" และราคา ณ วันที่สอบ แล้วเสนอผ่าน/ไม่ผ่านรายข้อ ·{" "}
             <b>เป็นแค่ข้อเสนอ คุณยังต้องกดตัดสินเอง</b>
           </div>
 
           {!attempt.priceSnapshot && (
-            <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold flex items-start gap-1.5">
+            <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-xs text-red font-semibold flex items-start gap-1.5">
               <IconAlertTriangle
-                size={16}
+                size={14}
                 strokeWidth={2.4}
                 className="shrink-0 mt-0.5"
               />
@@ -244,7 +244,7 @@ export default function QuizReview({
           )}
 
           {attempt.aiGradeError && (
-            <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-sm text-red font-semibold">
+            <div className="mb-2.5 px-3 py-2 rounded-[8px] bg-[#FDECEA] border border-[#C0392B50] text-xs text-red font-semibold">
               รอบที่แล้วไม่สำเร็จ: {attempt.aiGradeError}
             </div>
           )}
@@ -296,7 +296,7 @@ export default function QuizReview({
         },
       ].map((group) => (
         <div key={group.label} className="mb-4">
-          <div className="text-base font-extrabold text-maroon mb-2">
+          <div className="text-sm font-extrabold text-maroon mb-2">
             {group.label}
           </div>
           {group.items.map((q, i) => {
@@ -308,7 +308,7 @@ export default function QuizReview({
                 className="rounded-[10px] border border-bdr bg-white p-3 mb-2"
               >
                 <div className="flex items-start gap-2 mb-2">
-                  <span className="shrink-0 mt-[2px] w-6 h-6 rounded-full bg-maroon text-white text-xs font-extrabold flex items-center justify-center">
+                  <span className="shrink-0 mt-[2px] w-5 h-5 rounded-full bg-maroon text-white text-[11px] font-extrabold flex items-center justify-center">
                     {i + 1}
                   </span>
                   <p className="flex-1 text-base text-txt-mid leading-relaxed">
@@ -317,7 +317,7 @@ export default function QuizReview({
                 </div>
 
                 <div
-                  className={`rounded-[8px] px-3.5 py-2.5 text-lg leading-relaxed whitespace-pre-wrap ${
+                  className={`rounded-[8px] px-3.5 py-2.5 text-base leading-relaxed whitespace-pre-wrap ${
                     answer
                       ? "bg-cream/60 text-txt"
                       : "bg-cream-dk/60 text-txt-soft italic"
@@ -328,7 +328,7 @@ export default function QuizReview({
 
                 {ai[q.id] && (
                   <div
-                    className={`mt-2 px-3 py-2 rounded-[8px] text-sm leading-relaxed border ${
+                    className={`mt-2 px-3 py-2 rounded-[8px] text-xs leading-relaxed border ${
                       ai[q.id].pass
                         ? "bg-green-lt/40 border-green/30 text-txt"
                         : "bg-[#FDECEA] border-[#C0392B30] text-txt"

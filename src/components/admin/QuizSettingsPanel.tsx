@@ -182,7 +182,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
               type="text"
               value={draft.title}
               onChange={(e) => patch({ title: e.target.value })}
-              className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-base text-txt font-[inherit] outline-none focus:border-maroon"
+              className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-sm text-txt font-[inherit] outline-none focus:border-maroon"
             />
           </label>
 
@@ -198,7 +198,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
                 onChange={(e) =>
                   patch({ durationMinutes: Number(e.target.value) || 0 })
                 }
-                className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-base text-txt font-[inherit] outline-none focus:border-maroon"
+                className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-sm text-txt font-[inherit] outline-none focus:border-maroon"
               />
             </label>
             <label className="flex-1">
@@ -212,7 +212,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
                 onChange={(e) =>
                   patch({ passPercent: Number(e.target.value) || 0 })
                 }
-                className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-base text-txt font-[inherit] outline-none focus:border-maroon"
+                className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-sm text-txt font-[inherit] outline-none focus:border-maroon"
               />
             </label>
           </div>
@@ -242,7 +242,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
         {(["main", "general"] as const).map((group) => (
           <div key={group} className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-base font-extrabold text-maroon">
+              <div className="text-sm font-extrabold text-maroon">
                 {group === "main"
                   ? `ข้อสอบหลัก (${draft.main.length} ข้อ · นับคะแนน)`
                   : `ความรู้รอบตัว (${draft.general.length} ข้อ · ไม่นับ)`}
@@ -263,7 +263,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
                 className="rounded-[10px] border border-bdr bg-white p-3 mb-2"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="shrink-0 w-6 h-6 rounded-full bg-maroon text-white text-xs font-extrabold flex items-center justify-center">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-maroon text-white text-[11px] font-extrabold flex items-center justify-center">
                     {i + 1}
                   </span>
                   <span className="text-xs text-txt-soft font-[Prompt,monospace]">
@@ -300,7 +300,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
                   onChange={(e) => editQuestion(group, i, e.target.value)}
                   rows={3}
                   placeholder="พิมพ์โจทย์"
-                  className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-base text-txt leading-relaxed font-[inherit] outline-none focus:border-maroon resize-y"
+                  className="w-full px-3 py-2.5 rounded-[9px] border border-bdr bg-cream/40 text-sm text-txt leading-relaxed font-[inherit] outline-none focus:border-maroon resize-y"
                 />
               </div>
             ))}
@@ -312,7 +312,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
             <div className="text-sm font-bold text-red mb-1">
               ต้องแก้ก่อนเผยแพร่
             </div>
-            <ul className="text-sm text-txt-mid space-y-0.5">
+            <ul className="text-xs text-txt-mid space-y-0.5">
               {problems.map((p) => (
                 <li key={`${p.field}-${p.message}`}>• {p.message}</li>
               ))}
@@ -325,9 +325,9 @@ export default function QuizSettingsPanel({ showToast }: Props) {
             type="button"
             onClick={() => void run("บันทึกร่างแล้ว", () => saveQuizDraft(draft))}
             disabled={busy}
-            className="flex-1 py-3 rounded-[10px] border border-bdr bg-white text-base font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+            className="flex-1 py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
           >
-            <IconSave size={17} strokeWidth={2.4} />
+            <IconSave size={15} strokeWidth={2.4} />
             บันทึกร่าง
           </button>
           <button
@@ -341,9 +341,9 @@ export default function QuizSettingsPanel({ showToast }: Props) {
               })
             }
             disabled={busy || problems.length > 0 || !editing}
-            className="flex-1 py-3 rounded-[10px] bg-maroon text-white text-base font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+            className="flex-1 py-2.5 rounded-[10px] bg-maroon text-white text-sm font-bold font-[inherit] cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
           >
-            <IconSend size={17} strokeWidth={2.4} />
+            <IconSend size={15} strokeWidth={2.4} />
             เผยแพร่ + ใช้งาน
           </button>
         </div>
@@ -362,15 +362,15 @@ export default function QuizSettingsPanel({ showToast }: Props) {
   return (
     <div className="font-sans">
       <div className="rounded-[12px] border-[1.5px] border-[#C9973A50] bg-gold-pale/60 p-3.5 mb-4">
-        <div className="text-lg font-extrabold text-maroon mb-1.5 flex items-center gap-1.5">
-          <IconClipboardCheck size={20} strokeWidth={2.4} />
+        <div className="text-base font-extrabold text-maroon mb-1.5 flex items-center gap-1.5">
+          <IconClipboardCheck size={18} strokeWidth={2.4} />
           ตั้งค่าข้อสอบ
         </div>
-        <p className="text-sm text-txt-mid leading-relaxed">
+        <p className="text-xs text-txt-mid leading-relaxed">
           แก้ร่างได้อิสระ · <b>เผยแพร่แล้วล็อกถาวร</b> เพราะใบที่สอบด้วยชุดนั้นต้อง
           อ่านโจทย์และเกณฑ์เดิมได้ตลอดไป — จะแก้ให้กด "ทำสำเนาเป็นชุดใหม่"
         </p>
-        <div className="mt-2.5 text-sm text-txt">
+        <div className="mt-2.5 text-xs text-txt">
           ใช้สอบอยู่ตอนนี้:{" "}
           <b className="text-maroon">
             {activeSet?.title ?? `${BUILT_IN_QUIZ.title} (ชุดตั้งต้นในระบบ)`}
@@ -381,7 +381,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
       {/* ── ร่าง ── */}
       {drafts.length > 0 && (
         <>
-          <div className="text-base font-extrabold text-maroon mb-2">
+          <div className="text-sm font-extrabold text-maroon mb-2">
             ร่าง ({drafts.length})
           </div>
           {drafts.map((s) => (
@@ -390,12 +390,12 @@ export default function QuizSettingsPanel({ showToast }: Props) {
               className="rounded-[10px] border border-amber/40 bg-amber-lt/30 p-3 mb-2"
             >
               <div className="flex items-center justify-between gap-2 mb-1">
-                <span className="text-base font-bold text-txt">{s.title}</span>
+                <span className="text-sm font-bold text-txt">{s.title}</span>
                 <span className="text-[11px] px-2 py-0.5 rounded-lg bg-amber-lt text-amber font-bold">
                   ร่าง
                 </span>
               </div>
-              <div className="text-sm text-txt-soft mb-2.5">
+              <div className="text-xs text-txt-soft mb-2.5">
                 {s.main.length} ข้อหลัก · {s.general.length} ความรู้รอบตัว ·{" "}
                 {s.durationMinutes} นาที · เกณฑ์ {s.passPercent}%
               </div>
@@ -436,13 +436,13 @@ export default function QuizSettingsPanel({ showToast }: Props) {
       )}
 
       {/* ── เผยแพร่แล้ว ── */}
-      <div className="text-base font-extrabold text-maroon mb-2 mt-4">
+      <div className="text-sm font-extrabold text-maroon mb-2 mt-4">
         เผยแพร่แล้ว ({published.length})
       </div>
 
       {published.length === 0 && (
         <div className="rounded-[10px] border border-dashed border-bdr bg-cream/60 p-3.5 mb-2">
-          <div className="text-sm text-txt-mid leading-relaxed mb-2.5">
+          <div className="text-xs text-txt-mid leading-relaxed mb-2.5">
             ยังไม่มีชุดใน Firestore — ตอนนี้ใช้ชุดตั้งต้นที่ฝังมากับระบบ (
             <b>{BUILT_IN_QUIZ.title}</b> · {BUILT_IN_QUIZ.main.length} ข้อหลัก)
           </div>
@@ -466,7 +466,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
           }`}
         >
           <div className="flex items-center justify-between gap-2 mb-1">
-            <span className="text-base font-bold text-txt">{s.title}</span>
+            <span className="text-sm font-bold text-txt">{s.title}</span>
             {s.id === activeId ? (
               <span className="text-[11px] px-2 py-0.5 rounded-lg bg-green-lt/70 text-green font-bold inline-flex items-center gap-1">
                 <IconCheckCircle size={12} strokeWidth={2.6} />
@@ -479,7 +479,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
               </span>
             )}
           </div>
-          <div className="text-sm text-txt-soft mb-2.5">
+          <div className="text-xs text-txt-soft mb-2.5">
             {s.main.length} ข้อหลัก · {s.general.length} ความรู้รอบตัว ·{" "}
             {s.durationMinutes} นาที · เกณฑ์ {s.passPercent}%
             {s.publishedAt ? ` · เผยแพร่ ${fmtThaiDateTime(s.publishedAt)}` : ""}
