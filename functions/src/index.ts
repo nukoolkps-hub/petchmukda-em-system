@@ -74,3 +74,9 @@ export { wipeTestData } from "./maintenance/wipeTestData.js";
 // แบบทดสอบ — ลบชุดข้อสอบ (เช็คก่อนว่าไม่มีใบสอบอ้างถึง) + AI ช่วยตรวจ
 export { deleteQuizSet } from "./quiz/deleteQuizSet.js";
 export { gradeQuizWithAI } from "./quiz/gradeQuizWithAI.js";
+// ทำข้อสอบผ่าน QR โดยไม่ต้อง login — เขียนใบสอบผ่าน Admin SDK ทั้งหมด
+export {
+	quizGuestInfo,
+	quizGuestJoin,
+	quizGuestSync,
+} from "./quiz/guestExam.js";

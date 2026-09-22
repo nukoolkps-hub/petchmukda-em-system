@@ -1,6 +1,6 @@
-import React from "react";
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
-import { HashRouter } from "react-router-dom";
+import { HashRouter, Route, Routes } from "react-router-dom";
 import "./index.css";
 import LeaveApp from "./App";
 import LoginScreen from "./components/auth/LoginScreen";
@@ -23,6 +23,13 @@ window.addEventListener("load", () => {
   // ถ้าโหลดสำเร็จ ล้าง flag เพื่อให้ครั้งหน้า reload ได้อีก
   sessionStorage.removeItem("vite-preload-reloaded");
 });
+
+/* ─── หน้าทำข้อสอบผ่าน QR — **อยู่นอก AuthGate โดยตั้งใจ** ──────────
+   พนักงานสแกน QR จากมือถือตัวเองแล้วทำข้อสอบได้โดยไม่ต้อง login · lazy
+   เพื่อไม่ให้หน้าข้อสอบ (+ QuizRunner) ถูกดึงเข้า chunk หลักของทั้งแอป */
+const GuestExamPage = React.lazy(
+  () => import("./components/quiz/GuestExamPage"),
+);
 
 /* ─── Auth Gate — show login or app based on auth state ──── */
 function AuthGate() {
@@ -51,7 +58,26 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <HashRouter>
         <AuthProvider>
-          <AuthGate />
+          <Routes>
+            {/* ไม่ต้อง login — ต้องอยู่เหนือ AuthGate ในลำดับ route */}
+            <Route
+              path="/exam"
+              element={
+                <Suspense fallback={<BootLoadingScreen autoReload={false} />}>
+                  <GuestExamPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/exam/:code"
+              element={
+                <Suspense fallback={<BootLoadingScreen autoReload={false} />}>
+                  <GuestExamPage />
+                </Suspense>
+              }
+            />
+            <Route path="*" element={<AuthGate />} />
+          </Routes>
         </AuthProvider>
       </HashRouter>
     </ErrorBoundary>

@@ -2,7 +2,12 @@
    - นาฬิกาถอยหลังอิง `startedAt` ที่เก็บใน Firestore ไม่ใช่ตัวนับใน state
      → รีเฟรช/ปิดแท็บแล้วกลับมา เวลาเดินต่อจากเดิม ไม่ได้เวลาเพิ่ม
    - พิมพ์คำตอบแล้วบันทึกเองทุก ~2 วิ (debounce) — เน็ตหลุดกลางคันไม่เสียทั้งชุด
-   - หมดเวลา → ส่งอัตโนมัติทันที ไม่ต้องรอผู้ใช้กด                         */
+   - หมดเวลา → ส่งอัตโนมัติทันที ไม่ต้องรอผู้ใช้กด
+
+   **การอ่าน/เขียนฉีดเข้ามาทาง `io` ได้** — หน้านี้ใช้ 2 ทาง: ADMIN เปิดให้ทำ
+   (เขียน Firestore ตรงๆ · ค่าตั้งต้น) และพนักงานสแกน QR ทำจากมือถือตัวเอง
+   โดยไม่ได้ login (เขียนผ่าน Cloud Function) · จอเดียวกันเป๊ะทั้งสองทาง
+   ถ้าแยกเป็น 2 ไฟล์เมื่อไหร่ อีกทางจะถูกลืมตอนแก้ UI                       */
 
 import {
   AlertTriangle as IconAlertTriangle,
@@ -13,7 +18,7 @@ import {
   Send as IconSend,
   Trash2 as IconTrash,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { QuizSet } from "../../content/quiz/basicExam";
 import {
   cancelQuizAttempt,
@@ -39,11 +44,23 @@ function fmtBaht(n: number): string {
   return Math.round(n || 0).toLocaleString("en-US");
 }
 
+/** ช่องทางเขียนคำตอบของใบสอบใบนี้ — ค่าตั้งต้นคือเขียน Firestore ตรงๆ */
+export interface QuizRunnerIO {
+  save: (answers: Record<string, string>) => Promise<void>;
+  submit: (answers: Record<string, string>, auto: boolean) => Promise<void>;
+  cancel: () => Promise<void>;
+}
+
 interface Props {
   quiz: QuizSet;
   attempt: QuizAttempt;
   onFinished: () => void;
   showToast?: (msg: string) => void;
+  /** ทางเขียนแบบอื่น (เช่น ผ่าน Cloud Function ตอนทำผ่าน QR) */
+  io?: QuizRunnerIO;
+  /** ส่วนต่างนาฬิกาเครื่องกับ server (ms) — มือถือที่ตั้งเวลาเพี้ยนต้อง
+   *  นับถอยหลังตรงกับที่ server ใช้ตัดสินว่าหมดเวลาแล้วหรือยัง */
+  clockSkewMs?: number;
 }
 
 export default function QuizRunner({
@@ -51,13 +68,15 @@ export default function QuizRunner({
   attempt,
   onFinished,
   showToast,
+  io,
+  clockSkewMs = 0,
 }: Props) {
   const questions = [...quiz.main, ...quiz.general];
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>(
     attempt.answers ?? {},
   );
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now() + clockSkewMs);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -69,6 +88,18 @@ export default function QuizRunner({
   answersRef.current = answers;
   const submittedRef = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ทางเขียนที่ใช้จริง — ค่าตั้งต้นคือเขียน Firestore ตรงๆ ด้วย id ของใบนี้
+  // (ต้อง memo ไว้ ไม่งั้น autosave/นาฬิกาถูกตั้งใหม่ทุกตัวอักษรที่พิมพ์)
+  const api = useMemo<QuizRunnerIO>(
+    () =>
+      io ?? {
+        save: (next) => saveQuizAnswers(attempt.id, next),
+        submit: (next, auto) => submitQuizAttempt(attempt.id, next, auto),
+        cancel: () => cancelQuizAttempt(attempt.id),
+      },
+    [io, attempt.id],
+  );
 
   const price = attempt.priceSnapshot ?? null;
   const left = remainingMs(attempt, now);
@@ -89,7 +120,7 @@ export default function QuizRunner({
       setSubmitting(true);
       if (saveTimer.current) clearTimeout(saveTimer.current);
       try {
-        await submitQuizAttempt(attempt.id, answersRef.current, auto);
+        await api.submit(answersRef.current, auto);
         showToast?.(auto ? "หมดเวลา — ส่งคำตอบให้อัตโนมัติแล้ว" : "ส่งข้อสอบแล้ว");
         onFinished();
       } catch (err) {
@@ -100,7 +131,7 @@ export default function QuizRunner({
         );
       }
     },
-    [attempt.id, onFinished, showToast],
+    [api, onFinished, showToast],
   );
 
   // ยกเลิกการทำข้อสอบ — ใช้ `submittedRef` ตัวเดียวกับการส่ง เพื่อปิด
@@ -110,7 +141,7 @@ export default function QuizRunner({
     submittedRef.current = true;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     try {
-      await cancelQuizAttempt(attempt.id);
+      await api.cancel();
       showToast?.("ยกเลิกการทำข้อสอบแล้ว");
       onFinished();
     } catch (err) {
@@ -119,13 +150,13 @@ export default function QuizRunner({
         err instanceof Error ? `ยกเลิกไม่สำเร็จ: ${err.message}` : "ยกเลิกไม่สำเร็จ",
       );
     }
-  }, [attempt.id, onFinished, showToast]);
+  }, [api, onFinished, showToast]);
 
   // นาฬิกา — เดินทุกวินาที แล้วคำนวณเวลาที่เหลือจาก startedAt ใหม่ทุกครั้ง
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
+    const t = setInterval(() => setNow(Date.now() + clockSkewMs), 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [clockSkewMs]);
 
   // หมดเวลา → ส่งเอง (เช็คแยกจาก interval เพื่อให้ยิงครั้งเดียว)
   useEffect(() => {
@@ -139,7 +170,8 @@ export default function QuizRunner({
       saveTimer.current = setTimeout(() => {
         if (submittedRef.current) return;
         setSaving(true);
-        saveQuizAnswers(attempt.id, next)
+        api
+          .save(next)
           .catch((err) => {
             console.error("[quiz] save error:", err);
             showToast?.("บันทึกคำตอบไม่สำเร็จ — ตรวจสัญญาณเน็ต");
@@ -147,18 +179,20 @@ export default function QuizRunner({
           .finally(() => setSaving(false));
       }, SAVE_DEBOUNCE_MS);
     },
-    [attempt.id, showToast],
+    [api, showToast],
   );
 
   // ออกจากหน้าโดยยังมีคำตอบค้างใน debounce → เขียนทันที
+  // (dep เป็น `api` ซึ่งผูกกับ id ของใบ — สลับใบเมื่อไหร่ cleanup จะวิ่งด้วย
+  //  ตัวเก่า เขียนลงใบที่ถูกต้อง ไม่ใช่ใบใหม่)
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       if (!submittedRef.current) {
-        void saveQuizAnswers(attempt.id, answersRef.current).catch(() => {});
+        void api.save(answersRef.current).catch(() => {});
       }
     };
-  }, [attempt.id]);
+  }, [api]);
 
   function setAnswer(qid: string, value: string) {
     const next = { ...answersRef.current, [qid]: value };
