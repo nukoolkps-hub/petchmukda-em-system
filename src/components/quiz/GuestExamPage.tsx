@@ -10,8 +10,8 @@
    3. ส่งแล้ว — บอกว่ารอ ADMIN ตรวจ (ผู้สอบไม่เห็นคะแนนตัวเอง)
 
    **บัตรผ่านเก็บใน localStorage** → รีเฟรช/เน็ตหลุด/เผลอปิดแท็บ กลับมาทำต่อ
-   ได้ที่เดิม พร้อมเวลาที่เหลือถูกต้อง · ใบที่จบแล้วต้องกด "เริ่มใบใหม่" ถึงจะ
-   ล้างทิ้ง ไม่ล้างเองอัตโนมัติ (มือถือเครื่องเดียวอาจส่งต่อให้คนถัดไปทำ)  */
+   ได้ที่เดิม พร้อมเวลาที่เหลือถูกต้อง · **ใบที่จบแล้วถูกล้างทิ้งตอนเปิดหน้าใหม่**
+   เพื่อให้เปิดลิงก์เดิมรอบหน้าเริ่มได้เลย ไม่ติดค้างที่จอ "ส่งคำตอบแล้ว"     */
 
 import {
   AlertTriangle as IconAlertTriangle,
@@ -76,12 +76,19 @@ export default function GuestExamPage() {
     syncGuestExam(saved, { includeQuiz: true })
       .then((res) => {
         if (!alive) return;
+        // ใบที่จบไปแล้ว (ส่ง/ยกเลิก) ไม่ต้องหยิบกลับมา — ล้างบัตรผ่านทิ้ง
+        // แล้วเริ่มหน้าใหม่ · ไม่งั้นเปิดลิงก์เดิมรอบหน้าจะติดอยู่ที่จอ
+        // "ส่งคำตอบแล้ว" ตลอดไป ออกไม่ได้เลย (ไม่มีปุ่มเริ่มใหม่แล้ว)
+        if (res.submittedAt || res.cancelledAt || !res.quiz) {
+          clearGuestTicket();
+          setPhase("intro");
+          return;
+        }
         setTicket(saved);
         setState(res);
-        setQuiz(res.quiz ?? null);
+        setQuiz(res.quiz);
         setSkew(res.serverNow - Date.now());
-        const finished = !!res.submittedAt || !!res.cancelledAt;
-        setPhase(finished || !res.quiz ? "done" : "running");
+        setPhase("running");
       })
       .catch(() => {
         // ใบเก่าถูกลบ/token ใช้ไม่ได้แล้ว → เริ่มใหม่ได้เลย ไม่ค้างหน้าโหลด
@@ -180,15 +187,6 @@ export default function GuestExamPage() {
     } finally {
       setBusy(false);
     }
-  }
-
-  function startOver() {
-    clearGuestTicket();
-    setTicket(null);
-    setState(null);
-    setQuiz(null);
-    setName("");
-    setPhase("intro");
   }
 
   return (
@@ -329,18 +327,11 @@ export default function GuestExamPage() {
             <div className="text-base font-extrabold text-txt mb-1">
               {state?.cancelledAt ? "ยกเลิกการทำข้อสอบแล้ว" : "ส่งคำตอบแล้ว"}
             </div>
-            <p className="text-xs text-txt-mid leading-relaxed mb-4">
+            <p className="text-xs text-txt-mid leading-relaxed">
               {state?.cancelledAt
                 ? "ชุดนี้ไม่ถูกนับเป็นผลสอบ"
                 : "รอ ADMIN ตรวจให้คะแนน — ผลสอบดูได้ที่ ADMIN ไม่ได้ขึ้นบนหน้านี้"}
             </p>
-            <button
-              type="button"
-              onClick={startOver}
-              className="w-full py-2.5 rounded-[10px] border border-bdr bg-white text-sm font-bold text-txt font-[inherit] cursor-pointer"
-            >
-              ให้คนถัดไปเริ่มทำข้อสอบ
-            </button>
           </div>
         )}
       </main>

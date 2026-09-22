@@ -22,6 +22,7 @@
 
 import {
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
   query,
@@ -174,6 +175,17 @@ export async function cancelQuizAttempt(attemptId: string): Promise<void> {
     cancelledAt: Date.now(),
     cancelledAtServer: serverTimestamp(),
   });
+}
+
+/** ADMIN ลบใบสอบทิ้ง — **ลบแล้วไม่มีทางกู้คืน** (คำตอบ + ผลตรวจหายทั้งใบ)
+ *
+ *  ใช้ล้างใบที่ลองระบบ/เริ่มผิดคน · ต่างจาก "ยกเลิกการทำข้อสอบ" ที่ยัง
+ *  เก็บ doc ไว้ให้เห็นว่าเคยเริ่มแล้วเลิก — อันนั้นคือประวัติ อันนี้คือลบจริง
+ *
+ *  ลบใบที่ยัง "กำลังทำ" ได้ด้วย (เครื่องผู้สอบจะเจอว่าใบหาย แล้วเด้งกลับไป
+ *  หน้ากรอกชื่อเอง) — เป็นทางออกเวลามีใบค้างที่เจ้าตัวเข้าไม่ถึงแล้ว        */
+export async function deleteQuizAttempt(attemptId: string): Promise<void> {
+  await deleteDoc(doc(col, attemptId));
 }
 
 /** ADMIN ให้คะแนน — ผ่าน/ไม่ผ่านรายข้อ + โน้ต (ตรวจไม่ครบก็บันทึกได้
