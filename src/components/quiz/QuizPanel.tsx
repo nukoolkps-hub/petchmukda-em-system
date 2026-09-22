@@ -15,6 +15,7 @@ import {
   Clock as IconClock,
   FileText as IconFileText,
   Play as IconPlay,
+  Trash2 as IconTrash,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -26,6 +27,7 @@ import type { QuizSet } from "../../content/quiz/basicExam";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGoldPrice } from "../../firebase/hooks/useFirestore";
 import {
+  deleteQuizAttempt,
   startQuizAttempt,
   subscribeAllQuizAttempts,
 } from "../../firebase/quizAttempts";
@@ -63,6 +65,9 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
   const [runningId, setRunningId] = useState<string | null>(null);
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  /** ใบที่กด "ลบ" ไว้รอยืนยัน — ลบแล้วกู้คืนไม่ได้ จึงต้องกด 2 จังหวะ */
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => subscribeAllQuizAttempts(setAttempts), []);
 
@@ -153,6 +158,22 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
       );
     } finally {
       setStarting(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await deleteQuizAttempt(id);
+      setConfirmDelete(null);
+      showToast?.("ลบใบสอบแล้ว");
+    } catch (err) {
+      showToast?.(
+        err instanceof Error ? `ลบไม่สำเร็จ: ${err.message}` : "ลบไม่สำเร็จ",
+      );
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -285,52 +306,93 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
             const score = scoreAttempt(a, quizOf(a.quizId));
             const cancelled = !!a.cancelledAt;
             const done = !cancelled && !isInProgress(a, Date.now());
+            const confirming = confirmDelete === a.id;
             return (
-              <button
+              /* แถวเดียวมี 2 ปุ่ม (เปิดดู/ลบ) จึงเป็น div ครอบ ไม่ใช่ปุ่มเดียว
+                 — ปุ่มซ้อนในปุ่มเป็น HTML ที่ไม่ถูกต้องและกดโดนกันเอง */
+              <div
                 key={a.id}
-                type="button"
-                onClick={() => setReviewId(a.id)}
-                className="text-left rounded-[10px] border border-bdr bg-white p-3 cursor-pointer hover:border-maroon/40 transition-colors"
+                className={`rounded-[10px] border bg-white flex items-stretch overflow-hidden transition-colors ${
+                  confirming
+                    ? "border-red"
+                    : "border-bdr hover:border-maroon/40"
+                }`}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-bold text-txt">
-                    {a.employeeName || "(ไม่ทราบชื่อ)"}
-                  </span>
-                  {cancelled ? (
-                    <span className="text-[11px] px-2 py-0.5 rounded-lg bg-cream-dk text-txt-soft font-bold">
-                      ยกเลิกแล้ว
+                <button
+                  type="button"
+                  onClick={() => setReviewId(a.id)}
+                  className="flex-1 min-w-0 text-left p-3 cursor-pointer font-[inherit]"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-txt">
+                      {a.employeeName || "(ไม่ทราบชื่อ)"}
                     </span>
-                  ) : !done ? (
-                    <span className="text-[11px] px-2 py-0.5 rounded-lg bg-amber-lt text-amber font-bold">
-                      กำลังทำ
-                    </span>
-                  ) : score.passed === null ? (
-                    <span className="text-[11px] px-2 py-0.5 rounded-lg bg-cream-dk text-txt-soft font-bold">
-                      รอตรวจ
-                    </span>
-                  ) : (
-                    <span
-                      className={`text-[11px] px-2 py-0.5 rounded-lg font-bold ${
-                        score.passed
-                          ? "bg-green-lt/70 text-green"
-                          : "bg-[#FDECEA] text-red"
-                      }`}
+                    {cancelled ? (
+                      <span className="text-[11px] px-2 py-0.5 rounded-lg bg-cream-dk text-txt-soft font-bold">
+                        ยกเลิกแล้ว
+                      </span>
+                    ) : !done ? (
+                      <span className="text-[11px] px-2 py-0.5 rounded-lg bg-amber-lt text-amber font-bold">
+                        กำลังทำ
+                      </span>
+                    ) : score.passed === null ? (
+                      <span className="text-[11px] px-2 py-0.5 rounded-lg bg-cream-dk text-txt-soft font-bold">
+                        รอตรวจ
+                      </span>
+                    ) : (
+                      <span
+                        className={`text-[11px] px-2 py-0.5 rounded-lg font-bold ${
+                          score.passed
+                            ? "bg-green-lt/70 text-green"
+                            : "bg-[#FDECEA] text-red"
+                        }`}
+                      >
+                        {score.percent}% · {score.passed ? "ผ่าน" : "ไม่ผ่าน"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-txt-soft mt-0.5">
+                    {fmtThaiDateTime(a.startedAt)}
+                    {a.autoSubmitted && " · หมดเวลา"}
+                    {!a.submittedAt && !cancelled && isExpired(a, Date.now())
+                      ? " · หมดเวลา (ไม่ได้ส่ง)"
+                      : ""}
+                    {done && score.graded > 0 && score.passed === null
+                      ? ` · ตรวจไป ${score.graded}/${score.total}`
+                      : ""}
+                  </div>
+                </button>
+
+                {/* ลบใบสอบ — กู้คืนไม่ได้ จึงต้องกดยืนยันอีกจังหวะ */}
+                {confirming ? (
+                  <div className="flex items-stretch">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete(null)}
+                      className="px-3 text-xs font-bold text-txt-soft font-[inherit] cursor-pointer"
                     >
-                      {score.percent}% · {score.passed ? "ผ่าน" : "ไม่ผ่าน"}
-                    </span>
-                  )}
-                </div>
-                <div className="text-[11px] text-txt-soft mt-0.5">
-                  {fmtThaiDateTime(a.startedAt)}
-                  {a.autoSubmitted && " · หมดเวลา"}
-                  {!a.submittedAt && !cancelled && isExpired(a, Date.now())
-                    ? " · หมดเวลา (ไม่ได้ส่ง)"
-                    : ""}
-                  {done && score.graded > 0 && score.passed === null
-                    ? ` · ตรวจไป ${score.graded}/${score.total}`
-                    : ""}
-                </div>
-              </button>
+                      ไม่ลบ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(a.id)}
+                      disabled={deleting}
+                      className="px-3 bg-red text-white text-xs font-bold font-[inherit] cursor-pointer disabled:opacity-60"
+                    >
+                      ยืนยันลบ
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(a.id)}
+                    aria-label={`ลบใบสอบของ ${a.employeeName || "(ไม่ทราบชื่อ)"}`}
+                    className="px-3 text-txt-soft hover:text-red cursor-pointer transition-colors"
+                  >
+                    <IconTrash size={15} strokeWidth={2.4} />
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
