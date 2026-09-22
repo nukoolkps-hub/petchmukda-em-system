@@ -452,7 +452,10 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | Field | Type | Description |
 |---|---|---|
 | quizId | string | id ของชุดข้อสอบ (`"basic-2569"`) — ผูกคำตอบกับชุดที่ใช้ตอนนั้น |
-| uid | string | **auth uid (LINE user id) = เจ้าของ** · `firestore.rules` ตัดสินสิทธิ์จากตัวนี้ |
+| uid | string | **auth uid (LINE user id) = เจ้าของ** · `firestore.rules` ตัดสินสิทธิ์จากตัวนี้ · **ใบที่ทำผ่าน QR = `""`** (คนทำไม่ได้ login) → ไม่มี client คนไหนเขียนทับได้เลย เพราะ `request.auth.uid` ไม่มีทางเท่าค่าว่าง |
+| guestToken | string | เฉพาะใบที่ทำผ่าน QR — บัตรผ่านของเครื่องผู้สอบ (เก็บใน localStorage ฝั่งเขา) · Cloud Function ใช้ตัวนี้ยืนยันว่าใครเขียนคำตอบได้ |
+| roundCode | string | เฉพาะใบที่ทำผ่าน QR — รหัสรอบที่เข้ามา (`config/quizRound.code`) |
+| viaGuestLink | boolean | `true` = ทำผ่าน QR (ไม่ได้ login) · ไม่มี field = ADMIN เปิดเครื่องให้ทำ |
 | employeeId | string | doc id ใน `employees` · **คนละค่ากับ `uid`** — มีไว้ให้ระบบอื่น join (ล้างข้อมูลรายคน) · ว่างได้ถ้าคนทำไม่มี employee doc |
 | employeeName | string | snapshot ชื่อตอนเริ่มทำ (ให้ admin อ่านได้โดยไม่ต้องเปิด `/employees`) |
 | startedAt | number | ms epoch จากนาฬิกา**เครื่องผู้ใช้** — UI ใช้นับถอยหลัง |
@@ -472,6 +475,8 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | note | string | หมายเหตุถึงผู้สอบ |
 
 **นาฬิกายึด `startedAt` ที่เก็บไว้ ไม่ใช่ตัวนับใน React** — รีเฟรช/ปิดแท็บแล้วกลับมา เวลาเดินต่อจากเดิม ไม่ได้เวลาเพิ่ม · `QuizPanel` หยิบชุดที่ยังทำค้างกลับมาต่อเสมอ ไม่สร้างชุดใหม่ทับ (ไม่งั้นกดเริ่มซ้ำ = ได้ 100 นาทีใหม่ฟรี)
+
+**ใบที่ทำผ่าน QR (`viaGuestLink`) ถูกเขียนโดย Cloud Function ทั้งหมด** (`quizGuestJoin` / `quizGuestSync` · Admin SDK) — ผู้สอบไม่มี auth จึงแตะ Firestore เองไม่ได้เลย · `startedAt`/`submittedAt`/การตัดสินว่าหมดเวลา มาจาก**นาฬิกา server** ปลอมด้วยการแก้เวลาเครื่องตัวเองไม่ได้ · ใบพวกนี้โผล่ในหน้าตรวจของ ADMIN ปนกับใบปกติ (อ่าน/ตรวจ/ลบ เหมือนกันหมด)
 
 **`employeeName` มาจากช่องที่ผู้สอบพิมพ์เองตอนกดเริ่ม** (ADMIN เปิดเครื่องให้พนักงานทำได้ → `uid` เป็นของ ADMIN) · `employeeId` แปลงจากชื่อนั้นด้วย `resolveExamineeId` — จับคู่ตรงตัว ชนกันหลายคนคืนค่าว่าง ไม่เดา
 
@@ -505,6 +510,32 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 
 **Read/Write:** อ่าน = ทุก signed-in (คนทำข้อสอบต้องโหลดโจทย์ได้) · เขียน = admin และเฉพาะตอนเป็นร่าง
 
+### config/quizRound
+
+รอบสอบที่เปิดให้พนักงาน **สแกน QR ทำข้อสอบจากมือถือตัวเอง โดยไม่ต้อง login** — มีรอบเดียวในระบบ (เปิดรอบใหม่ = ทับของเดิม)
+
+| Field | Type | Description |
+|---|---|---|
+| code | string | รหัสรอบ 6 ตัว (A-Z 2-9 · **ไม่มี I O 0 1**) ที่ฝังอยู่ใน QR · ว่าง = ยังไม่เคยเปิดรอบ |
+| quizId / quizTitle | string | ชุดข้อสอบที่**ตรึงไว้กับรอบ** — สลับชุดที่ใช้สอบกลางรอบต้องไม่ทำให้คนที่สแกนทีหลังได้คนละชุด |
+| openedAt / openedBy | number / string | เวลา + คนที่กดเปิดรอบ |
+| closesAt | number | หมดอายุอัตโนมัติ (ms epoch) |
+| closedAt | number \| null | ADMIN กดปิดเอง · `null` = ยังไม่ได้ปิด |
+
+**รอบต้องมีอายุ + ปิดได้** เพราะรหัสรอบคือสิ่งเดียวที่กั้นคนนอกอยู่ (ไม่มี login) — เปิดค้างไว้ = ใครก็เข้ามาเริ่มจับเวลาเล่นได้ตลอด · ปิดรอบแล้ว **คนที่เริ่มไปแล้วยังทำต่อจนหมดเวลาของใบตัวเอง** (นาฬิกาอิง `startedAt` ของใบนั้น ไม่ใช่ของรอบ)
+
+**คนที่สแกนไม่ได้อ่าน doc นี้เลย** — เขาไม่มี auth จึงอ่าน Firestore ไม่ได้ทั้งก้อน · ตัวที่ตัดสินว่ารอบเปิดอยู่จริงคือ callable `quizGuestJoin` (Admin SDK) · กฎฝั่ง UI อยู่ที่ `isRoundOpen` (`src/utils/quizRound.ts`) ซึ่งเขียนให้ตรงกัน
+
+**callable 3 ตัว** (`functions/src/quiz/guestExam.ts` · ไม่ต้อง login):
+
+| callable | ทำอะไร |
+|---|---|
+| `quizGuestInfo` | เช็ครหัส + คืนชื่อชุด/กติกา/เวลา · **ยังไม่สร้างใบสอบ ไม่มีโจทย์ติดไปด้วย** (กติกาต้องอ่านก่อนเวลาเริ่มเดิน) |
+| `quizGuestJoin` | สร้างใบสอบ + ตรึงเวลาเริ่ม + ตรึงราคาทอง + คืนโจทย์ & `token` |
+| `quizGuestSync` | บันทึกคำตอบ / ส่ง / ยกเลิก / ดึงสถานะกลับมาทำต่อ (ยืนยันด้วย `attemptId` + `token`) |
+
+เพดานกันสแปม: 80 ใบต่อรอบ · ชื่อ 60 ตัวอักษร · คำตอบข้อละ 4,000 ตัวอักษร · 200 คีย์
+
 ### config/quizActive
 
 `{ quizId, updatedAt, updatedBy }` — ชี้ว่าตอนนี้ใช้ชุดไหนสอบ · ชี้ไปชุดที่ไม่มีอยู่ → ถอยมาใช้ชุดที่ฝังมากับโค้ด (`resolveActiveQuiz`) · **Read:** ทุก signed-in · **Write:** admin
@@ -534,7 +565,8 @@ Cloud Function `recomputeDutyAssignments` เขียน (trigger หลัง 
 | dailySummaryImages/{id} | admin only | admin only (+ Cloud Function ผ่าน Admin SDK) |
 | quizSets/{quizId} | all signed-in | admin **และเฉพาะ `status == "draft"`** — เผยแพร่แล้ว client update/delete ไม่ได้เลย · ลบได้ทาง callable `deleteQuizSet` เท่านั้น (ต้องไม่ใช่ชุดที่ใช้สอบ + ไม่มีใบสอบอ้างถึง) |
 | config/quizActive | all signed-in | admin only |
-| quizAttempts/{attemptId} | admin / owner (`uid`) | owner สร้าง (`startedAtServer == request.time` · `answers` ว่าง · ห้ามมี `grades`/`aiGrades`) + แก้ `answers`/ส่ง/ยกเลิก ได้จนกว่าจะส่งหรือยกเลิก · `grades`/`note` + delete = admin only · `aiGrades`/`aiGradedAt`/`aiGradeError` = **Cloud Function เท่านั้น** (client เขียนไม่ได้แม้เป็น admin) |
+| config/quizRound | all signed-in | admin only (คนที่สแกน QR ไม่ได้อ่าน doc นี้ — Cloud Function อ่านให้ด้วย Admin SDK) |
+| quizAttempts/{attemptId} | admin / owner (`uid`) · ใบที่ทำผ่าน QR (`uid: ""`) = admin เท่านั้น | owner สร้าง (`startedAtServer == request.time` · `answers` ว่าง · ห้ามมี `grades`/`aiGrades`) + แก้ `answers`/ส่ง/ยกเลิก ได้จนกว่าจะส่งหรือยกเลิก · `grades`/`note` + delete = admin only · `aiGrades`/`aiGradedAt`/`aiGradeError` = **Cloud Function เท่านั้น** (client เขียนไม่ได้แม้เป็น admin) |
 | config/backupStatus | admin only | blocked (เขียนโดย Cloud Function · Admin SDK) |
 | config/* (อื่นๆ) | blocked | blocked (Functions ใช้ Admin SDK) |
 

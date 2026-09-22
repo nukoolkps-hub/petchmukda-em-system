@@ -46,6 +46,8 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
                                        ├── /salary     → SalaryView (employee salary view)
                                        ├── /knowledge  → KnowledgeView (ความรู้ต่างๆ — ราคา, สูตร, calc)
                                        └── /admin      → AdminPanel (admin-only)
+
+main.tsx → /exam/:code → GuestExamPage  (**นอก AuthGate** — สแกน QR ทำข้อสอบโดยไม่ต้อง login)
 ```
 
 ### AdminPanel — section components
@@ -119,10 +121,25 @@ main.tsx → AuthProvider → AuthGate → App.tsx (LeaveApp)
 | ทะเบียนชุด | `src/content/quiz/index.ts` | `mergeQuizSets` (Firestore ทับชุดที่ฝังมา) + `resolveQuizSet(quizId)` + `resolveActiveQuiz` |
 | แก้ข้อสอบ | `src/components/admin/QuizSettingsPanel.tsx` + `src/firebase/quizSets.ts` + `src/utils/quizSetEdit.ts` | หน้า admin แก้โจทย์/เวลา/เกณฑ์ · `quizSets/{id}` · logic ล้วน (id ถัดไป/ย้ายข้อ/validate/ทำสำเนา/`quizSetDeletion`) |
 | ลบชุดเก่า | `functions/src/quiz/deleteQuizSet.ts` | callable (admin) → ลบชุดที่เผยแพร่แล้วได้เฉพาะตอนไม่ใช่ชุดที่ใช้สอบ + ไม่มีใบสอบอ้างถึง |
+| รอบสอบ + QR | `src/utils/quizRound.ts` + `src/firebase/quizRound.ts` + `src/components/quiz/QuizRoundCard.tsx` | เปิด/ปิดรอบ · รหัสรอบ · ลิงก์ที่ฝังใน QR (`#/exam/<รหัส>`) |
+| ทำข้อสอบผ่าน QR (ไม่ต้อง login) | `functions/src/quiz/guestExam.ts` + `src/firebase/quizGuest.ts` + `src/components/quiz/GuestExamPage.tsx` | callable 3 ตัว (info/join/sync) + หน้าที่อยู่**นอก AuthGate** |
 | logic | `src/utils/quizAttempt.ts` | pure — เวลา (`remainingMs`/`isExpired`/`formatCountdown`) + คะแนน (`scoreAttempt`) · ไม่แตะ Firebase/React |
 | data | `src/firebase/quizAttempts.ts` | `quizAttempts/{id}` — subscribe/start/save/submit/grade |
 | UI | `src/components/quiz/{QuizPanel,QuizRunner,QuizReview}.tsx` | router 3 โหมด · หน้าทำข้อสอบ · หน้าตรวจ |
 | AI ช่วยตรวจ | `functions/src/quiz/gradeQuizWithAI.ts` + `src/utils/quizGradingReference.ts` | callable (admin) → Claude อ่านคำตอบเทียบกฎ + ราคาที่ตรึงไว้ แล้วเสนอผ่าน/ไม่ผ่าน |
+
+**สแกน QR ทำข้อสอบจากมือถือตัวเอง — ไม่ต้อง login (`/admin → ฝึกอบรม → แบบทดสอบ` → "เปิดรอบสอบ + สร้าง QR"):**
+ADMIN กดเปิดรอบ → ได้ **QR + รหัสรอบ 6 ตัว** · พนักงานสแกนจากมือถือตัวเอง → เห็นกติกา → พิมพ์ชื่อ → เริ่มทำได้เลย · ใบที่ได้โผล่ในหน้าตรวจปนกับใบที่ ADMIN เปิดเครื่องให้ทำ (ตรวจ/ให้ AI ช่วยตรวจ/ลบ เหมือนกันหมด)
+
+- **ทุกการอ่าน/เขียนของผู้สอบวิ่งผ่าน Cloud Function** (`quizGuestInfo`/`quizGuestJoin`/`quizGuestSync` · Admin SDK) — เขาไม่มี auth user เลย · **ตั้งใจไม่เปิด `firestore.rules` ให้คนที่ไม่ได้ login เขียน** เพราะ rules ทั้งไฟล์ตัดสินจาก "signed-in" เป็นหลัก ปลดตรงนี้ทีเดียวจะลากคนนอกเข้าไปอ่านใบลา/พนักงาน/กองกลางด้วย · rules เดิมจึงไม่ต้องแตะเลยสักบรรทัด (เพิ่มแค่ `config/quizRound`)
+- **เวลามาจากนาฬิกา server ทั้งหมด** — `startedAt` ตรึงตอน join · หมดเวลาแล้วเขียนคำตอบเพิ่มไม่ได้ ต่อให้แก้เวลาเครื่องตัวเอง · ทุก response คืน `serverNow` ให้ client หักลบเป็น `clockSkewMs` ส่ง `QuizRunner` (มือถือที่ตั้งเวลาเพี้ยนไม่งั้นนับถอยหลังมั่ว)
+- **กติกาต้องอ่านก่อนเวลาเริ่มเดิน** → `quizGuestInfo` แยกจาก `quizGuestJoin` และ**ไม่ส่งโจทย์ติดไปด้วย** (ไม่งั้นเปิดดูโจทย์ล่วงหน้าโดยไม่เริ่มจับเวลาได้)
+- **`uid: ""` + `guestToken`** — ใบพวกนี้ไม่มีเจ้าของที่เป็น auth uid จึงไม่มี client คนไหนเขียนทับได้ (`request.auth.uid` ไม่มีทางเท่าค่าว่าง) · บัตรผ่าน (`attemptId` + `token`) เก็บใน localStorage ของเครื่องผู้สอบ → รีเฟรช/เน็ตหลุด/ปิดแท็บ กลับมาทำต่อได้ที่เดิม
+- **รอบมีอายุ (2/4/8 ชม.) + ปิดเองได้** — รหัสรอบคือสิ่งเดียวที่กั้นคนนอก เปิดค้าง = ใครก็เข้ามาเริ่มจับเวลาเล่นได้ตลอด · ปิดรอบแล้วคนที่เริ่มไปแล้ว**ยังทำต่อจนหมดเวลาของใบตัวเอง** (นาฬิกาอิง `startedAt` ของใบนั้น ไม่ใช่ของรอบ)
+- **รอบตรึง `quizId` ไว้ตอนเปิด** — สลับชุดที่ใช้สอบกลางรอบต้องไม่ทำให้คนที่สแกนทีหลังได้คนละชุดกับคนที่สแกนก่อน
+- **เปิดรอบได้ต่อเมื่อมีชุดที่เผยแพร่ลง Firestore แล้ว** — ชุดตั้งต้นใน `basicExam.ts` อยู่ฝั่ง frontend, server หยิบโจทย์ส่งให้คนที่สแกนไม่ได้ (การ์ดจะบอกให้ไปทำสำเนา+เผยแพร่ก่อน)
+- **`QuizRunner` ตัวเดียวกันทั้ง 2 ทาง** — ต่างแค่ฉีด prop `io` (เขียน Firestore ตรงๆ / ผ่าน callable) · แยกเป็น 2 ไฟล์เมื่อไหร่ อีกทางจะถูกลืมตอนแก้ UI
+- หน้า `#/exam/<รหัส>` อยู่**นอก `AuthGate`** (ประกาศใน `main.tsx` เหนือ route `*`) · lazy-load เพื่อไม่ให้เข้า chunk หลัก
 
 **แก้ข้อสอบ — ร่าง → เผยแพร่ → ล็อกถาวร (`/admin → ฝึกอบรม → ตั้งค่าข้อสอบ`):**
 ชุดข้อสอบเก็บที่ `quizSets/{id}` · ตัวที่ใช้สอบชี้ด้วย `/config/quizActive` · `basicExam.ts` เหลือหน้าที่เป็น**ชุดตั้งต้น + fallback ถาวร** (Firestore ว่าง/ต่อไม่ได้ → ระบบยังเปิดข้อสอบได้)

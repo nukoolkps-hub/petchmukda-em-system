@@ -43,6 +43,7 @@ import {
   scoreAttempt,
 } from "../../utils/quizAttempt";
 import QuizReview from "./QuizReview";
+import QuizRoundCard from "./QuizRoundCard";
 import QuizRunner from "./QuizRunner";
 
 interface Props {
@@ -184,9 +185,22 @@ export default function QuizPanel({ employeeDirectory, showToast }: Props) {
     );
   }
 
+  // ชุดที่ฝังมากับโค้ดอยู่ฝั่ง frontend — Cloud Function หยิบโจทย์ส่งให้คนที่
+  // สแกน QR ไม่ได้ จึงต้องมีชุดที่เผยแพร่ลง Firestore ก่อนถึงจะเปิดรอบได้
+  const builtInOnly = !(activeQuizId && remoteSets[activeQuizId]);
+
   return (
     <div className="font-sans">
-      {/* ── กติกา + ปุ่มเริ่ม ── */}
+      {/* ── เปิดรอบสอบ + QR ให้พนักงานสแกนทำจากมือถือตัวเอง ── */}
+      <QuizRoundCard
+        quizId={activeQuizId}
+        quizTitle={currentQuiz.title}
+        builtInOnly={builtInOnly}
+        openedBy={myName}
+        showToast={showToast}
+      />
+
+      {/* ── กติกา + ปุ่มเริ่ม (ADMIN เปิดเครื่องให้ทำตรงนี้) ── */}
       <div className="rounded-[12px] border-[1.5px] border-[#C9973A50] bg-gold-pale/60 p-3.5 mb-4">
         <div className="text-base font-extrabold text-maroon mb-2 flex items-center gap-1.5">
           <IconClipboardCheck size={18} strokeWidth={2.4} />

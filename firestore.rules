@@ -412,6 +412,14 @@ service cloud.firestore {
       allow read:  if isSignedIn();
       allow write: if isAdmin();
     }
+    // รอบสอบที่เปิดให้พนักงานสแกน QR ทำจากมือถือตัวเอง (ไม่ต้อง login)
+    // **คนที่สแกนไม่ได้อ่าน doc นี้** — เขาไม่มี auth เลย จึงอ่าน Firestore
+    // ไม่ได้ทั้งก้อน · ตัวที่เช็คว่ารอบเปิดอยู่จริงคือ callable `quizGuestJoin`
+    // ที่อ่านด้วย Admin SDK · ตรงนี้เปิดให้ ADMIN คุม + พนักงานที่ login เห็น
+    match /config/quizRound {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
     match /config/{document} {
       allow read, write: if false;
     }
