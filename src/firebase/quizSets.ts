@@ -17,6 +17,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -150,6 +151,27 @@ export async function setActiveQuizId(
     updatedAt: Date.now(),
     updatedBy,
   });
+}
+
+/** เปลี่ยนชื่อชุด — **ทำได้ทั้งร่างและชุดที่เผยแพร่แล้ว**
+ *
+ *  ชื่อเป็นแค่ป้ายเรียก ไม่ใช่สิ่งที่ใช้ตรวจ (โจทย์/จำนวนข้อ/เวลา/เกณฑ์ ยัง
+ *  แช่แข็งครบตามเดิม) ผลสอบเก่าจึงไม่เปลี่ยนตาม · `firestore.rules` เปิดให้
+ *  ชุดที่ published แก้ได้เฉพาะ field `title` ตัวเดียวเท่านั้น
+ *
+ *  ถ้ารอบสอบที่เปิดค้างอยู่ใช้ชุดนี้ ต้องแก้ชื่อที่ `config/quizRound` ด้วย —
+ *  doc นั้นเก็บชื่อไว้เป็น snapshot ตอนเปิดรอบ ไม่งั้นการ์ดรอบสอบจะยังโชว์
+ *  ชื่อเก่าจนกว่าจะเปิดรอบใหม่ (ดูแล้วเหมือนเปลี่ยนชื่อไม่ติด)              */
+export async function renameQuizSet(
+  quizId: string,
+  title: string,
+): Promise<void> {
+  await updateDoc(doc(db, COL, quizId), { title });
+  const roundRef = doc(db, "config/quizRound");
+  const round = await getDoc(roundRef);
+  if (round.exists() && round.data()?.quizId === quizId) {
+    await updateDoc(roundRef, { quizTitle: title });
+  }
 }
 
 /** ลบร่างทิ้ง — rules ไม่ให้ลบชุดที่เผยแพร่แล้ว (ใบสอบอ้างถึงอยู่) */

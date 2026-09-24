@@ -17,6 +17,7 @@ import {
   nextQuestionId,
   nextQuizTitle,
   quizSetDeletion,
+  sanitizeQuizTitle,
   validateQuizSet,
 } from "./quizSetEdit";
 
@@ -249,5 +250,25 @@ describe("ลบชุดข้อสอบเก่า", () => {
   it("ยังไม่ได้ตั้งชุดที่ใช้สอบ (ใช้ชุดตั้งต้นในโค้ด) — id ว่างต้องไม่ล็อกทุกชุด", () => {
     expect(quizSetDeletion("", "", 0).canDelete).toBe(true);
     expect(quizSetDeletion("old", "", 0).canDelete).toBe(true);
+  });
+});
+
+describe("sanitizeQuizTitle — เปลี่ยนชื่อชุด", () => {
+  it("ตัดช่องว่างหัว-ท้าย + ยุบช่องว่างซ้อน", () => {
+    expect(sanitizeQuizTitle("  ชุด   A  ")).toBe("ชุด A");
+  });
+
+  it("**ชื่อที่ยุบช่องว่างแล้วต้องนับเป็นชื่อฐานเดียวกันตอนทำสำเนา**", () => {
+    const messy = sanitizeQuizTitle("แบบทดสอบ  พื้นฐาน");
+    expect(nextQuizTitle(messy, [messy])).toBe("แบบทดสอบ พื้นฐาน v2");
+  });
+
+  it("ว่าง/มีแต่ช่องว่าง → คืนค่าว่าง (UI ต้องบล็อกไม่ให้บันทึก)", () => {
+    expect(sanitizeQuizTitle("   ")).toBe("");
+    expect(sanitizeQuizTitle("")).toBe("");
+  });
+
+  it("ยาวเกินไปถูกตัด — การ์ดในหน้า admin ต้องยังอ่านออก", () => {
+    expect(sanitizeQuizTitle("ก".repeat(200))).toHaveLength(80);
   });
 });
