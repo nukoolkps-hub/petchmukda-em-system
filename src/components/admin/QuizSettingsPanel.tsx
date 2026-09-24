@@ -8,14 +8,17 @@
 import {
   ArrowDown as IconArrowDown,
   ArrowUp as IconArrowUp,
+  Check as IconCheck,
   CheckCircle2 as IconCheckCircle,
   ClipboardCheck as IconClipboardCheck,
   Copy as IconCopy,
   Lock as IconLock,
+  Pencil as IconPencil,
   Plus as IconPlus,
   Save as IconSave,
   Send as IconSend,
   Trash2 as IconTrash,
+  X as IconX,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { BUILT_IN_QUIZ } from "../../content/quiz";
@@ -27,6 +30,7 @@ import {
   deletePublishedQuizSet,
   deleteQuizDraft,
   publishQuizSet,
+  renameQuizSet,
   saveQuizDraft,
   setActiveQuizId,
   subscribeActiveQuizId,
@@ -42,6 +46,7 @@ import {
   nextQuestionId,
   nextQuizTitle,
   quizSetDeletion,
+  sanitizeQuizTitle,
   validateQuizSet,
 } from "../../utils/quizSetEdit";
 
@@ -68,6 +73,9 @@ export default function QuizSettingsPanel({ showToast }: Props) {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  /** ชุดที่กำลังเปลี่ยนชื่อ + ชื่อที่พิมพ์ค้างอยู่ */
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameText, setRenameText] = useState("");
   /** จำนวนใบสอบต่อชุด — ใช้บอกว่าชุดไหนลบได้ (ยังไม่โหลด = ยังไม่โชว์ปุ่มลบ) */
   const [attemptCounts, setAttemptCounts] = useState<Record<
     string,
@@ -170,6 +178,77 @@ export default function QuizSettingsPanel({ showToast }: Props) {
   function shift(group: "main" | "general", idx: number, by: number) {
     setDraft((d) =>
       d ? { ...d, [group]: moveQuestion(d[group], idx, idx + by) } : d,
+    );
+  }
+
+  async function saveRename(quizId: string) {
+    const title = sanitizeQuizTitle(renameText);
+    if (!title) return;
+    await run("เปลี่ยนชื่อชุดข้อสอบแล้ว", async () => {
+      await renameQuizSet(quizId, title);
+      setRenamingId(null);
+    });
+  }
+
+  /** ชื่อชุดในการ์ด + ปุ่มเปลี่ยนชื่อ — ใช้ทั้งการ์ดร่างและการ์ดที่เผยแพร่แล้ว
+   *
+   *  **เปลี่ยนชื่อชุดที่เผยแพร่แล้วได้** เพราะชื่อเป็นแค่ป้ายเรียก ไม่ใช่สิ่งที่
+   *  ใช้ตรวจ (โจทย์/จำนวนข้อ/เวลา/เกณฑ์ ยังแช่แข็งครบ ผลสอบเก่าไม่เปลี่ยนตาม)
+   *
+   *  เขียนเป็นฟังก์ชันคืน JSX ไม่ใช่ component ซ้อน — component ที่ประกาศ
+   *  ระหว่าง render จะถูก mount ใหม่ทุกตัวอักษรที่พิมพ์ (ช่องกรอกหลุด focus) */
+  function renderTitle(s: EditableQuizSet) {
+    if (renamingId === s.id) {
+      const next = sanitizeQuizTitle(renameText);
+      return (
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <input
+            type="text"
+            value={renameText}
+            onChange={(e) => setRenameText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void saveRename(s.id);
+              if (e.key === "Escape") setRenamingId(null);
+            }}
+            // กดปุ่มเปลี่ยนชื่อแล้วต้องพิมพ์ได้เลย ไม่ต้องคลิกซ้ำ
+            autoFocus
+            className="flex-1 min-w-0 px-2 py-1 rounded-[7px] border border-maroon bg-white text-sm text-txt font-[inherit] outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => void saveRename(s.id)}
+            disabled={busy || !next}
+            aria-label="บันทึกชื่อใหม่"
+            className="p-1.5 rounded-[7px] bg-maroon text-white cursor-pointer disabled:opacity-40"
+          >
+            <IconCheck size={14} strokeWidth={2.6} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setRenamingId(null)}
+            aria-label="ยกเลิกการเปลี่ยนชื่อ"
+            className="p-1.5 rounded-[7px] border border-bdr bg-white text-txt-soft cursor-pointer"
+          >
+            <IconX size={14} strokeWidth={2.6} />
+          </button>
+        </div>
+      );
+    }
+    return (
+      <span className="flex items-center gap-1.5 min-w-0">
+        <span className="text-sm font-bold text-txt truncate">{s.title}</span>
+        <button
+          type="button"
+          onClick={() => {
+            setRenamingId(s.id);
+            setRenameText(s.title);
+          }}
+          aria-label={`เปลี่ยนชื่อ ${s.title}`}
+          className="shrink-0 p-1 rounded-[6px] text-txt-soft hover:text-maroon cursor-pointer transition-colors"
+        >
+          <IconPencil size={13} strokeWidth={2.4} />
+        </button>
+      </span>
     );
   }
 
@@ -407,7 +486,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
               className="rounded-[10px] border border-amber/40 bg-amber-lt/30 p-3 mb-2"
             >
               <div className="flex items-center justify-between gap-2 mb-1">
-                <span className="text-sm font-bold text-txt">{s.title}</span>
+                {renderTitle(s)}
                 <span className="text-[11px] px-2 py-0.5 rounded-lg bg-amber-lt text-amber font-bold">
                   ร่าง
                 </span>
@@ -487,7 +566,7 @@ export default function QuizSettingsPanel({ showToast }: Props) {
             }`}
           >
             <div className="flex items-center justify-between gap-2 mb-1">
-              <span className="text-sm font-bold text-txt">{s.title}</span>
+              {renderTitle(s)}
               {s.id === activeId ? (
                 <span className="text-[11px] px-2 py-0.5 rounded-lg bg-green-lt/70 text-green font-bold inline-flex items-center gap-1">
                   <IconCheckCircle size={12} strokeWidth={2.6} />

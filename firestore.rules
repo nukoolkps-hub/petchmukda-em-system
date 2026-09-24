@@ -502,6 +502,13 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['grades', 'gradedAt', 'gradedBy', 'note']);
     }
+    // เปลี่ยนแค่ชื่อชุด — ใช้กับชุดที่เผยแพร่แล้ว (แช่แข็งทุกอย่างที่เหลือ)
+    function quizTitleOnly() {
+      return request.resource.data.diff(resource.data)
+        .affectedKeys().hasOnly(['title'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0;
+    }
     // ─── ชุดข้อสอบที่ admin แก้เองได้ (หน้า "ตั้งค่าข้อสอบ") ──────────
     // **หัวใจ: เผยแพร่แล้วแก้ไม่ได้อีกเลย** — ใบที่สอบไปแล้วอ้าง
     // `attempt.quizId` มาที่ชุดนี้ ถ้ายังแก้ได้ ผลสอบเก่าจะเปลี่ยนย้อนหลัง
@@ -516,8 +523,13 @@ service cloud.firestore {
 
       // แก้ได้เฉพาะตอนยังเป็นร่าง · การเผยแพร่ (draft → published) ก็เป็น
       // update ครั้งหนึ่ง จึงผ่านเงื่อนไขนี้ได้ แล้วหลังจากนั้นล็อกถาวร
+      //
+      // **ข้อยกเว้นเดียวของชุดที่เผยแพร่แล้ว: เปลี่ยน `title` อย่างเดียว** —
+      // ชื่อเป็นแค่ป้ายเรียก ไม่ใช่สิ่งที่ใช้ตรวจ (โจทย์/จำนวนข้อ/เวลา/เกณฑ์
+      // ยังแช่แข็งครบ) ผลสอบเก่าจึงไม่เปลี่ยนตาม · `hasOnly(['title'])`
+      // คือสิ่งที่กันไม่ให้แอบแก้ field อื่นติดไปกับการเปลี่ยนชื่อ
       allow update: if isAdmin()
-        && resource.data.status == 'draft';
+        && (resource.data.status == 'draft' || quizTitleOnly());
 
       // ลบได้เฉพาะร่าง · ชุดที่เผยแพร่แล้วลบผ่าน client ไม่ได้เลย —
       // ต้องไปทาง callable `deleteQuizSet` (Admin SDK) ที่นับ `quizAttempts`

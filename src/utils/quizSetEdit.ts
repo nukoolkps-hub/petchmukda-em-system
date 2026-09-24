@@ -227,3 +227,14 @@ export function quizSetDeletion(
   }
   return { canDelete: true, reason: "" };
 }
+
+/** ความยาวชื่อชุดที่ยอมให้ — ยาวกว่านี้การ์ดในหน้า admin อ่านไม่รู้เรื่อง */
+const MAX_TITLE_CHARS = 80;
+
+/** ชื่อที่ admin พิมพ์ → ชื่อที่บันทึกจริง (ว่าง = ใช้ไม่ได้ ห้ามบันทึก)
+ *
+ *  ยุบช่องว่างซ้อนทิ้งด้วย เพราะชื่อถูกใช้เป็นฐานคิดเลขเวอร์ชันตอนทำสำเนา
+ *  (`nextQuizTitle`) — "ชุด  A" กับ "ชุด A" ต้องนับเป็นชื่อฐานเดียวกัน      */
+export function sanitizeQuizTitle(raw: string): string {
+  return raw.trim().replace(/\s+/g, " ").slice(0, MAX_TITLE_CHARS);
+}
