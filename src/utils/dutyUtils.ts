@@ -940,6 +940,10 @@ export interface SubstituteCount {
   days: number;
   /** วันที่ไปแทน แยกตามคนที่ถูกแทน — targetEmpId → จำนวนวัน (แทนใคร กี่วัน) */
   byTarget: Map<string, number>;
+  /** **วันไหนบ้าง** (YYYY-MM-DD เรียงเก่า→ใหม่) แยกตามคนที่ถูกแทน — UI กาง
+   *  ดูรายวันได้ · จำนวนใน `byTarget` มาจากความยาวของ array นี้เสมอ
+   *  (เขียนพร้อมกันที่เดียว จึงไม่มีทางหลุดจากกัน) */
+  datesByTarget: Map<string, string[]>;
 }
 
 /** กิจกรรมรายวันของ 1 duty */
@@ -994,12 +998,26 @@ export function computeDutyDayActivity(
     const a = ensure(dutyId);
     a.primaryDays.set(empId, (a.primaryDays.get(empId) || 0) + 1);
   };
-  // คนแทน (empId) ไปแทน target (คนที่ลา/คนหลักที่ลา) กี่วัน — เก็บ byTarget
-  const bumpSub = (dutyId: string, empId: string, targetId: string) => {
+  // คนแทน (empId) ไปแทน target (คนที่ลา/คนหลักที่ลา) วันไหนบ้าง
+  // — เก็บ "วันที่" เป็นหลัก แล้วให้ `byTarget` = ความยาวของลิสต์วัน
+  // (นับแยกกันคนละที่เมื่อไหร่ เลขกับรายวันจะไม่ตรงกันโดยไม่มีอะไรฟ้อง)
+  const bumpSub = (
+    dutyId: string,
+    empId: string,
+    targetId: string,
+    ymd: string,
+  ) => {
     const a = ensure(dutyId);
-    const cur = a.substitute.get(empId) || { days: 0, byTarget: new Map() };
+    const cur = a.substitute.get(empId) || {
+      days: 0,
+      byTarget: new Map(),
+      datesByTarget: new Map(),
+    };
     cur.days += 1;
-    cur.byTarget.set(targetId, (cur.byTarget.get(targetId) || 0) + 1);
+    const dates = cur.datesByTarget.get(targetId) || [];
+    dates.push(ymd);
+    cur.datesByTarget.set(targetId, dates);
+    cur.byTarget.set(targetId, dates.length);
     a.substitute.set(empId, cur);
   };
 
@@ -1079,7 +1097,7 @@ export function computeDutyDayActivity(
             );
             if (sub) {
               subHistory.set(sub, (subHistory.get(sub) || 0) + 1);
-              bumpSub(duty.id, sub, primary);
+              bumpSub(duty.id, sub, primary, d);
             }
           }
         }
@@ -1135,7 +1153,7 @@ export function computeDutyDayActivity(
           usedToday.add(pick);
           covHistory.set(pick, (covHistory.get(pick) || 0) + 1);
           // target ของ coverage = คนในตำแหน่งเป้าหมายที่ลา
-          if (inRange) bumpSub(duty.id, pick, targetId);
+          if (inRange) bumpSub(duty.id, pick, targetId, ymd);
         }
       }
     }

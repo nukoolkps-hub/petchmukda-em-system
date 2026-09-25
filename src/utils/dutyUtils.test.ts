@@ -1274,9 +1274,18 @@ describe("computeDutyDayActivity", () => {
       employees,
     ).get("cov")?.substitute;
     if (!sub) throw new Error("no counts");
-    // แต่ละคนแทน t1 คนละ 1 วัน — byTarget เก็บว่า "แทน t1"
-    expect(sub.get("c1")).toEqual({ days: 1, byTarget: new Map([["t1", 1]]) });
-    expect(sub.get("c2")).toEqual({ days: 1, byTarget: new Map([["t1", 1]]) });
+    // แต่ละคนแทน t1 คนละ 1 วัน — byTarget เก็บว่า "แทน t1" · datesByTarget
+    // เก็บว่าวันไหน (UI กางดูรายวันได้)
+    expect(sub.get("c1")).toEqual({
+      days: 1,
+      byTarget: new Map([["t1", 1]]),
+      datesByTarget: new Map([["t1", ["2026-03-10"]]]),
+    });
+    expect(sub.get("c2")).toEqual({
+      days: 1,
+      byTarget: new Map([["t1", 1]]),
+      datesByTarget: new Map([["t1", ["2026-03-11"]]]),
+    });
   });
 
   it("substitute: รวมวันแทน target เดิมหลายวัน (byTarget)", () => {
@@ -1294,7 +1303,40 @@ describe("computeDutyDayActivity", () => {
       )
         .get("cov")
         ?.substitute.get("c1"),
-    ).toEqual({ days: 3, byTarget: new Map([["t1", 3]]) });
+    ).toEqual({
+      days: 3,
+      byTarget: new Map([["t1", 3]]),
+      // **เรียงเก่า→ใหม่** — UI เอาไปโชว์ตรงๆ ไม่ต้อง sort ซ้ำ
+      datesByTarget: new Map([
+        ["t1", ["2026-03-10", "2026-03-11", "2026-03-12"]],
+      ]),
+    });
+  });
+
+  it("**จำนวนวันใน byTarget ต้องเท่ากับจำนวนวันที่เก็บไว้เสมอ** (กันเลขกับรายวันหลุดจากกัน)", () => {
+    const one = cov({ candidateEmpIds: ["c1"] });
+    const leaves = [
+      leave("t1", "2026-03-10", "2026-03-12"),
+      leave("t1", "2026-03-20"),
+    ];
+    const sub = computeDutyDayActivity(
+      [one],
+      new Map(),
+      leaves,
+      null,
+      "2026-01-01",
+      "2026-03-31",
+      employees,
+    )
+      .get("cov")
+      ?.substitute.get("c1");
+    if (!sub) throw new Error("no counts");
+    let total = 0;
+    for (const [targetId, n] of sub.byTarget) {
+      expect(sub.datesByTarget.get(targetId)).toHaveLength(n);
+      total += n;
+    }
+    expect(total).toBe(sub.days);
   });
 
   it("นับเฉพาะที่ทำแล้ว — วันลาหลัง toYmd (ล่วงหน้า) ไม่ถูกนับ", () => {
