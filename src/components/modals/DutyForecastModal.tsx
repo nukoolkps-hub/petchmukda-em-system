@@ -11,6 +11,8 @@ import {
   CalendarClock as IconCalendarClock,
   CalendarRange as IconCalendarRange,
   CalendarX as IconCalendarX,
+  ChevronDown as IconChevronDown,
+  ChevronRight as IconChevronRight,
   UserCheck as IconUserCheck,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -20,7 +22,7 @@ import type {
   SnapshotPoolMember,
 } from "../../firebase/dutyAssignments";
 import type { Duty, Employee, LeaveEntry, StoreCalendar } from "../../types";
-import { toYMD } from "../../utils/dateUtils";
+import { formatDayListThai, toYMD } from "../../utils/dateUtils";
 import {
   type CoverageSegment,
   computeDutyCounts,
@@ -121,8 +123,15 @@ function CountRow({
   emp: SnapshotPoolMember | undefined;
   empId: string;
   primaryLabel: string | null;
-  subs: { targetId: string; targetName: string; days: number }[];
+  subs: {
+    targetId: string;
+    targetName: string;
+    days: number;
+    dates: string[];
+  }[];
 }) {
+  // บรรทัดที่กางอยู่ (targetId) — กางทีละอัน พอสำหรับ "ขอดูวันหน่อย"
+  const [openTarget, setOpenTarget] = useState<string | null>(null);
   return (
     <div className="px-3 py-2">
       <div className="flex items-center gap-2.5 text-sm">
@@ -150,19 +159,47 @@ function CountRow({
       {/* บรรทัดย่อย: ไปแทนใคร กี่วัน — เยื้องให้ตรงกับชื่อ (avatar 22 + gap 10) */}
       {subs.length > 0 && (
         <div className="mt-1 ml-8 flex flex-col gap-0.5">
-          {subs.map((s) => (
-            <div
-              key={s.targetId}
-              className="flex items-center justify-between gap-2 text-[11px]"
-            >
-              <span className="text-txt-soft truncate min-w-0">
-                แทน {s.targetName}
-              </span>
-              <span className="shrink-0 font-semibold text-maroon/80">
-                {s.days} วัน
-              </span>
-            </div>
-          ))}
+          {subs.map((s) => {
+            const open = openTarget === s.targetId;
+            return (
+              <div key={s.targetId}>
+                {/* กดเพื่อกางดูว่าไปแทน "วันไหนบ้าง" — ตัวเลขวันอย่างเดียว
+                    บอกไม่ได้ว่าตรงกับวันที่จำได้ไหม */}
+                <button
+                  type="button"
+                  onClick={() => setOpenTarget(open ? null : s.targetId)}
+                  className="w-full flex items-center justify-between gap-2 text-[11px] font-[inherit] cursor-pointer text-left"
+                >
+                  <span className="flex items-center gap-0.5 min-w-0">
+                    {open ? (
+                      <IconChevronDown
+                        size={11}
+                        strokeWidth={2.6}
+                        className="shrink-0 text-txt-soft"
+                      />
+                    ) : (
+                      <IconChevronRight
+                        size={11}
+                        strokeWidth={2.6}
+                        className="shrink-0 text-txt-soft"
+                      />
+                    )}
+                    <span className="text-txt-soft truncate min-w-0">
+                      แทน {s.targetName}
+                    </span>
+                  </span>
+                  <span className="shrink-0 font-semibold text-maroon/80">
+                    {s.days} วัน
+                  </span>
+                </button>
+                {open && s.dates.length > 0 && (
+                  <div className="ml-3.5 mt-0.5 mb-1 px-2 py-1 rounded-[6px] bg-cream/70 border border-bdr text-[11px] text-txt leading-relaxed">
+                    {formatDayListThai(s.dates)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -328,7 +365,12 @@ export default function DutyForecastModal({
             empId: string;
             primaryCount: number;
             primaryLabel: string | null;
-            subs: { targetId: string; targetName: string; days: number }[];
+            subs: {
+              targetId: string;
+              targetName: string;
+              days: number;
+              dates: string[];
+            }[];
             subDays: number;
           }
         >();
@@ -359,6 +401,8 @@ export default function DutyForecastModal({
               targetId,
               targetName: targetNick(targetId),
               days,
+              // วันที่ไปแทนจริง (เรียงเก่า→ใหม่แล้วจาก computeDutyDayActivity)
+              dates: c.datesByTarget.get(targetId) ?? [],
             })),
           );
         }
@@ -627,7 +671,7 @@ export default function DutyForecastModal({
             นับ <b>ตั้งแต่ต้นปีถึงวันนี้</b> — เฉพาะที่ทำไปแล้ว (ไม่รวมล่วงหน้า) · ตัวเลขข้างชื่อ =
             จำนวนที่เป็น <b>คนหลัก</b> (รายสัปดาห์นับเป็น <b>วัน</b> ที่อยู่ทำจริง ไม่นับวันลา ·
             รายเดือนนับเป็น <b>เดือน</b> รวมเดือนนี้ที่กำลังทำ) · บรรทัดเล็กใต้ชื่อ ={" "}
-            <b>ไปแทนใคร กี่วัน</b> (ตอนคนนั้นลา)
+            <b>ไปแทนใคร กี่วัน</b> (ตอนคนนั้นลา) · <b>กดบรรทัดนั้นเพื่อดูว่าวันไหนบ้าง</b>
             {!hasEmployees && " · ฝั่งนี้แสดงเฉพาะหน้าที่หมุนเวียน"}
             <span className="block mt-1 text-txt-soft">
               คำนวณจากสูตรหมุนเวียนด้วยรายชื่อปัจจุบัน (ไม่ใช่บันทึกเวรจริง) —
