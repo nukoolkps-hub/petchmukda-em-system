@@ -338,7 +338,7 @@ function buildLeavesSection(leaves: LeaveItem[]): Record<string, unknown> {
 					type: "text",
 					text: "👥 ไม่มีพนักงานหยุดวันนี้",
 					color: TEXT_SOFT,
-					size: "sm",
+					size: "md",
 					align: "center",
 				},
 			],
@@ -350,7 +350,9 @@ function buildLeavesSection(leaves: LeaveItem[]): Record<string, unknown> {
 			type: "text",
 			text: `👥 พนักงานหยุดวันนี้ (${leaves.length} คน)`,
 			color: MAROON,
-			size: "sm",
+			// ใหญ่กว่าหัวข้ออื่นในกล่องโดยตั้งใจ — คนหยุดคือสิ่งที่ทีมต้องเห็นก่อน
+			// (วางแผนคนหน้าร้าน) · อ่านบนมือถือแบบกวาดตาผ่าน sm เล็กเกินไป
+			size: "lg",
 			weight: "bold",
 		},
 		{ type: "separator", margin: "10px", color: GOLD_PALE },
@@ -373,7 +375,7 @@ function buildLeavesSection(leaves: LeaveItem[]): Record<string, unknown> {
 				type: "text",
 				text: inlineList,
 				color: TEXT_DK,
-				size: "sm",
+				size: "xl",
 				weight: "bold",
 				wrap: true,
 			},
