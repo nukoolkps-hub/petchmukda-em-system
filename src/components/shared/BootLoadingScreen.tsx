@@ -2,8 +2,11 @@
    ใช้ตอน Firebase auth check (AuthGate) + ตอน subscribe employees (App)
    - maroon bg + gold progress bar + percentage
    - asymptotic progress (ไม่มี progress จริง — fake ที่ค่อยขึ้น)
-     · phase 1: 0% → ~95% เร็ว (รู้สึกมี progress)
+     · phase 1: 5% → ~95% เร็ว (รู้สึกมี progress)
      · phase 2: 95% → ~99% ช้าๆ (กัน "ค้างที่ 95%")
+     · **คิดจากเวลาบนนาฬิกากลาง** (`utils/bootProgress.ts`) — จอ AuthGate →
+       App ต่อกันได้ไม่เด้งกลับ 5% · bar วาดด้วย CSS animation (compositor)
+       ไม่ใช่ setState ทุก 80ms → main thread ยุ่งตอน boot ก็ไม่กระตุก
    - หลัง 8s แสดงปุ่ม "ลองใหม่" ให้ user กดเอง
    - หลัง 10s auto-reload 1 ครั้งต่อ session (กัน Firebase handshake stuck)
    - reload ครั้งที่ 2 แล้วยังค้าง → แสดงคำแนะนำ + ปุ่ม "ล้าง cache + เข้าใหม่"
@@ -12,6 +15,15 @@
      (cold start ของ Cloud Function) reload กลางทางจะทำให้ login ล้มทั้งรอบ */
 
 import { useEffect, useRef, useState } from "react";
+import {
+  BOOT_ANIMATION_MS,
+  bootKeyframesCss,
+  bootProgressAt,
+  claimBootClock,
+  createBootClock,
+  peekBootStart,
+  releaseBootClock,
+} from "../../utils/bootProgress";
 import Diamond from "./Diamond";
 
 interface Props {
@@ -22,6 +34,11 @@ interface Props {
 }
 
 const RELOAD_KEY = "boot-auto-reloaded";
+
+const BAR_ANIMATION = "boot-progress-fill";
+const BAR_KEYFRAMES = bootKeyframesCss(BAR_ANIMATION);
+/** นาฬิกากลาง — แชร์ทุก instance (ระดับ module) ให้จอที่ขึ้นต่อกันวิ่งต่อจากเดิม */
+const bootClock = createBootClock();
 
 function hardReload() {
   // ล้าง Cache Storage + Service Worker → กัน cache เก่าค้าง
@@ -56,9 +73,19 @@ export default function BootLoadingScreen({
   message = "กำลังโหลด...",
   autoReload = true,
 }: Props) {
-  // initial 5% — กัน flash ที่ 0% ก่อน tick แรก (80ms) และให้ user เห็นทันที
-  // ว่า "เริ่มแล้ว"
-  const [progress, setProgress] = useState(5);
+  // เวลาที่ boot เริ่ม — จอก่อนหน้า (AuthGate) ยัง mount อยู่ตอน render นี้
+  // จึงได้เวลาเริ่มของมัน → bar ต่อจากเดิม ไม่เด้งกลับ 5%
+  const [startedAt] = useState(() =>
+    peekBootStart(bootClock, performance.now()),
+  );
+  // ตรึงครั้งเดียวตอน mount — เปลี่ยน animation-delay ระหว่างทาง = bar กระโดด
+  const [elapsedAtMount] = useState(() => performance.now() - startedAt);
+  const [reduced] = useState(prefersReducedMotion);
+  // เก็บเป็นจำนวนเต็ม — ค่าเท่าเดิม React ไม่ re-render (ช่วงคลาน 95→99
+  // เลขเปลี่ยนนานๆ ครั้ง ไม่ต้อง render ทุก 200ms)
+  const [percent, setPercent] = useState(() =>
+    Math.round(bootProgressAt(elapsedAtMount)),
+  );
   const [showRetry, setShowRetry] = useState(false);
   // ถ้า reload อัตโนมัติไปแล้ว → user กลับมาเจอหน้านี้อีกครั้ง = stuck จริง
   const alreadyReloaded =
@@ -68,19 +95,22 @@ export default function BootLoadingScreen({
   const reloadingRef = useRef(false);
 
   useEffect(() => {
-    const reduced = prefersReducedMotion();
-    // ถ้า reduce motion → คง progress ไว้ที่ 5% (skip animation) แต่ยังโชว์
-    // bar เป็น hint ว่ากำลังโหลด · setInterval ไม่ทำงาน
-    const progressId = reduced
-      ? null
-      : setInterval(() => {
-          // phase 1: เร็วถึง 95% · phase 2: คลานช้าจาก 95% → 99% (กัน "ค้าง")
-          setProgress((p) =>
-            p < 94
-              ? Math.min(95, p + (95 - p) * 0.06)
-              : Math.min(99, p + (99 - p) * 0.01),
-          );
-        }, 80);
+    claimBootClock(bootClock, performance.now());
+    return () => releaseBootClock(bootClock, performance.now());
+  }, []);
+
+  useEffect(() => {
+    // ตัวเลข % อัปเดตจากเวลาจริง (ไม่สะสมทีละ tick) — timer ถูกเลื่อนก็ไม่
+    // ทำให้เลขค้างแล้วกระโดด · bar ไม่ได้อาศัย interval นี้เลย (CSS วาดเอง)
+    // ถ้า reduce motion → คงค่าไว้ (bar นิ่ง) แต่ยังโชว์เป็น hint ว่ากำลังโหลด
+    if (reduced) return;
+    const id = setInterval(() => {
+      setPercent(Math.round(bootProgressAt(performance.now() - startedAt)));
+    }, 200);
+    return () => clearInterval(id);
+  }, [reduced, startedAt]);
+
+  useEffect(() => {
     // showRetry หลัง 8s — single setTimeout แทน 1s setInterval ที่ trigger
     // re-render ทุกวินาทีโดยเปล่าประโยชน์ · ระหว่าง LINE callback ให้รอนานกว่า
     // (การแลก token ช้าได้ถึง ~15s ตอน cold start · กดลองใหม่ = เริ่ม login ใหม่)
@@ -99,7 +129,6 @@ export default function BootLoadingScreen({
         }, 10000)
       : null;
     return () => {
-      if (progressId) clearInterval(progressId);
       clearTimeout(retryTimer);
       if (reloadTimer) clearTimeout(reloadTimer);
       // ล้าง flag เฉพาะตอน "โหลดสำเร็จ" (parent unmount เพราะ loading=false)
@@ -128,18 +157,26 @@ export default function BootLoadingScreen({
         <Diamond size={32} color="#5C1212" />
       </div>
       <div className="mt-4.5 text-sm font-semibold text-gold-lt">{message}</div>
+      <style>{BAR_KEYFRAMES}</style>
       <div className="mt-3 w-[220px] h-2 rounded-full bg-white/10 overflow-hidden">
-        {/* fill ด้วย transform scaleX (GPU-composited) แทน width (layout
-            ทุกเฟรม) → progress bar ลื่น ไม่กระตุก */}
+        {/* fill ด้วย CSS animation บน transform — browser วาดบน compositor
+            thread ลื่นแม้ JS ยังทำงานหนักอยู่ · delay ติดลบ = เริ่มจากจุดที่
+            จอก่อนหน้าวิ่งไปแล้ว */}
         <div
-          className="h-full w-full origin-left rounded-full bg-linear-to-r from-gold to-gold-lt transition-transform duration-100 ease-out motion-reduce:transition-none"
+          className="h-full w-full origin-left rounded-full bg-linear-to-r from-gold to-gold-lt"
           style={{
-            transform: `scaleX(${Math.max(0, Math.min(100, progress)) / 100})`,
+            transform: `scaleX(${bootProgressAt(elapsedAtMount) / 100})`,
+            ...(reduced
+              ? null
+              : {
+                  animation: `${BAR_ANIMATION} ${BOOT_ANIMATION_MS}ms linear ${-Math.round(elapsedAtMount)}ms forwards`,
+                  willChange: "transform",
+                }),
           }}
         />
       </div>
       <div className="mt-1.5 text-xs font-bold text-gold-lt/80 tabular-nums">
-        {Math.round(progress)}%
+        {percent}%
       </div>
 
       {/* ปุ่ม recovery — โผล่หลัง 8 วินาที หรือทันทีถ้า auto-reload ไปแล้ว */}
