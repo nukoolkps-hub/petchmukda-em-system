@@ -86,6 +86,7 @@ header ไม่รู้จัก data — ยิง `window.dispatchEvent(new 
 | CalendarPicker | `shared/CalendarPicker.tsx` | Date picker (Thai month) — ใช้ token จาก `calendarTheme` |
 | MonthChevronNav | `shared/MonthChevronNav.tsx` | ตัวเลือกเดือน ‹/› + popover · `months` = list เดือนที่เลือกได้ (caller ส่ง **เฉพาะเดือนที่มีข้อมูล**) |
 | ThaiMonthPicker | `shared/ThaiMonthPicker.tsx` | Dropdown เลือกเดือน (พ.ศ.) · ใช้ตั้ง anchor (range ‑monthsBack..+monthsAhead · ไม่ filter ข้อมูล) |
+| BootLoadingScreen | `shared/BootLoadingScreen.tsx` | หน้า loading ตอน boot (AuthGate "กำลังเข้าสู่ระบบ..." → App "เชื่อมต่อ Firebase...") · progress ปลอมแบบค่อยๆ เข้าใกล้ 99% · **คิดจากเวลาบนนาฬิกากลาง** (`utils/bootProgress.ts` · ระดับ module) → จอที่ขึ้นต่อกันวิ่งต่อจากเดิม **ไม่เด้งกลับ 5%** · bar วาดด้วย CSS keyframes บน `transform` + `animation-delay` ติดลบ (compositor thread · ลื่นแม้ main thread ยุ่ง) — **ห้ามกลับไปใช้ setState ทีละ tick ขับ bar** (timer ถูกเลื่อนตอน boot = bar หยุดแล้วกระโดด) |
 | Diamond | `shared/Diamond.tsx` | Diamond SVG icon (brand element) |
 | ErrorBoundary | `shared/ErrorBoundary.tsx` | React error boundary with fallback UI |
 | GoldDivider | `shared/GoldDivider.tsx` | Decorative divider with diamond center |
