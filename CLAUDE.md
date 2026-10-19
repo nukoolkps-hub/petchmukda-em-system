@@ -452,7 +452,7 @@ tab → space ทั้งโฟลเดอร์และทำให้ rules
 
 Cloud Functions `sendDailySummary` ส่ง flex สรุปประจำวันเข้ากลุ่ม LINE ที่ **admin ตั้งเองได้** ที่ `/admin → LINE BOT → การแจ้งเตือน → "กลุ่มที่รับสรุปเช้า"` (เก็บที่ `config/notifications.dailySummaryGroups` · ต่อกลุ่มตั้งได้: ชื่อ · Google Calendar ID · คนหยุดวันนี้ · เคล็ดลับ AI · รูปแนบ) — ยังไม่เคยตั้ง → ใช้ค่าเดิม `DAILY_SUMMARY_GROUPS` (`functions/src/dailySummary/config.ts`) แล้ว **seed ลง Firestore ให้ครั้งแรก** (`resolveDailySummaryGroups` ใน `dailySummary/groups.ts` · ปุ่ม "โหลดกลุ่มเริ่มต้นจากระบบ" เรียก callable `seedDailySummaryGroupsNow` ให้ทันที) · array ว่าง = ตั้งใจไม่ส่ง — มี 3 section ในกล่องเดียว:
 1. **📋 ภารกิจวันนี้** — ดึงจาก Google Calendar (3 calendars แยกตามกลุ่ม) · **ขนาดตัวหนังสือเท่าส่วนคนหยุด** (หัวข้อ `lg` · ชื่องาน `xl` bold · เวลา/รายละเอียด `sm`) — 2 ส่วนหลักต้องอ่านง่ายเท่ากัน
-2. **👥 พนักงานหยุดวันนี้** — เฉพาะกลุ่มที่ `includeLeaves: true` (we r mukda) · render เป็น **inline 1 บรรทัด** `ชื่อ(ประเภท) ชื่อ(ประเภท) ...` ไม่บอกวันที่ (PR #615) · **ตัวหนังสือใหญ่กว่าส่วนอื่นในกล่องโดยตั้งใจ** (หัวข้อ `lg` · รายชื่อ `xl`) — คนหยุดคือสิ่งที่ทีมต้องเห็นก่อนเพื่อวางคนหน้าร้าน
+2. **👥 พนักงานหยุดวันนี้** — เฉพาะกลุ่มที่ `includeLeaves: true` (we r mukda) · render เป็น **การ์ดแยกคน 2 คอลัมน์** (ชื่อ `xl` bold ด้านบน · ประเภทลา `sm` ด้านล่าง · แถวสุดท้ายไม่เต็มเติมช่องว่างให้การ์ดกว้างเท่ากัน) ไม่บอกวันที่ · **ตัวหนังสือใหญ่กว่าส่วนอื่นในกล่องโดยตั้งใจ** (หัวข้อ `lg` · ชื่อ `xl`) — คนหยุดคือสิ่งที่ทีมต้องเห็นก่อนเพื่อวางคนหน้าร้าน
 3. **💡 เคล็ดลับมืออาชีพ** — Claude API (เฉพาะ `sendAiTip: true`) + dedup ด้วย `recentTips` collection (30 ล่าสุด)
 
 **Setup ที่ต้องทำครั้งเดียวต่อ Firebase project:**

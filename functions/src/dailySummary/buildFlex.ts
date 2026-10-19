@@ -328,6 +328,41 @@ function buildEventCard(ev: CalendarEvent) {
 	};
 }
 
+const LEAVE_CARD_COLUMNS = 2;
+
+function buildLeaveCard(leave: LeaveItem): Record<string, unknown> {
+	return {
+		type: "box",
+		layout: "vertical",
+		flex: 1,
+		backgroundColor: CREAM_TINT,
+		borderColor: GOLD_PALE,
+		borderWidth: "1px",
+		cornerRadius: "10px",
+		paddingAll: "10px",
+		contents: [
+			{
+				type: "text",
+				text: leave.nickname,
+				color: TEXT_DK,
+				size: "xl",
+				weight: "bold",
+				align: "center",
+				wrap: true,
+			},
+			{
+				type: "text",
+				text: leave.kindLabel,
+				color: MAROON,
+				size: "sm",
+				align: "center",
+				wrap: true,
+				margin: "4px",
+			},
+		],
+	};
+}
+
 function buildLeavesSection(leaves: LeaveItem[]): Record<string, unknown> {
 	if (leaves.length === 0) {
 		return {
@@ -362,29 +397,22 @@ function buildLeavesSection(leaves: LeaveItem[]): Record<string, unknown> {
 		{ type: "separator", margin: "10px", color: GOLD_PALE },
 	];
 
-	// รายชื่อ inline · format: "ชื่อ(ประเภทลา) ชื่อ(ประเภทลา) ..."
-	// ไม่โชว์วันที่ (ลาหลายวัน) · กระชับใน 1 text · wrap อัตโนมัติถ้าเกิน
-	const inlineList = leaves
-		.map((leave) => `${leave.nickname}(${leave.kindLabel})`)
-		.join(" ");
-	itemContents.push({
-		type: "box",
-		layout: "vertical",
-		backgroundColor: CREAM_TINT,
-		cornerRadius: "8px",
-		paddingAll: "10px",
-		margin: "6px",
-		contents: [
-			{
-				type: "text",
-				text: inlineList,
-				color: TEXT_DK,
-				size: "xl",
-				weight: "bold",
-				wrap: true,
-			},
-		],
-	});
+	// การ์ดแยกคน 2 คอลัมน์ · ชื่อตัวใหญ่ด้านบน + ประเภทลาเล็กกว่าด้านล่าง
+	// ไม่โชว์วันที่ (ลาหลายวัน) · กวาดตานับคนได้ทันทีว่าวันนี้ขาดใครบ้าง
+	for (let i = 0; i < leaves.length; i += LEAVE_CARD_COLUMNS) {
+		const row = leaves.slice(i, i + LEAVE_CARD_COLUMNS).map(buildLeaveCard);
+		// แถวสุดท้ายไม่เต็ม → เติมช่องว่างให้การ์ดกว้างเท่าแถวอื่น
+		while (row.length < LEAVE_CARD_COLUMNS) {
+			row.push({ type: "box", layout: "vertical", flex: 1, contents: [] });
+		}
+		itemContents.push({
+			type: "box",
+			layout: "horizontal",
+			spacing: "8px",
+			margin: i === 0 ? "10px" : "8px",
+			contents: row,
+		});
+	}
 
 	return {
 		type: "box",
