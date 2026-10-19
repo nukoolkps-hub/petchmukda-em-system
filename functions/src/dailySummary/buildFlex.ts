@@ -401,9 +401,18 @@ function buildLeavesSection(leaves: LeaveItem[]): Record<string, unknown> {
 	// ไม่โชว์วันที่ (ลาหลายวัน) · กวาดตานับคนได้ทันทีว่าวันนี้ขาดใครบ้าง
 	for (let i = 0; i < leaves.length; i += LEAVE_CARD_COLUMNS) {
 		const row = leaves.slice(i, i + LEAVE_CARD_COLUMNS).map(buildLeaveCard);
-		// แถวสุดท้ายไม่เต็ม → เติมช่องว่างให้การ์ดกว้างเท่าแถวอื่น
+		// แถวสุดท้ายไม่เต็ม → เติมกล่องว่างให้การ์ดกว้างเท่าแถวอื่น · padding +
+		// ขอบต้องเท่าการ์ดจริง (ขอบโปร่งใส) ไม่งั้นแบ่งความกว้างไม่เท่ากัน
 		while (row.length < LEAVE_CARD_COLUMNS) {
-			row.push({ type: "box", layout: "vertical", flex: 1, contents: [] });
+			row.push({
+				type: "box",
+				layout: "vertical",
+				flex: 1,
+				borderColor: "#FFFFFF00",
+				borderWidth: "1px",
+				paddingAll: "10px",
+				contents: [],
+			});
 		}
 		itemContents.push({
 			type: "box",
