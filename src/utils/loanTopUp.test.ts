@@ -9,11 +9,13 @@
 import { describe, expect, it } from "vitest";
 import {
   applyTopUp,
+  isLoanOpen,
   type LoanTopUp,
   latestTopUp,
   loanBasePrincipal,
   loanHistory,
   loanMonthlyAsOf,
+  loanPaidOffMonths,
   loanPrincipalAsOf,
   loanRepaymentHistory,
   topUpUndoBlocker,
@@ -321,5 +323,60 @@ describe("ลบการกู้เพิ่มครั้งล่าสุ�
   it("ประวัติบอก id ของรายการกู้เพิ่ม (ปุ่มลบผูกกับรายการล่าสุด)", () => {
     const h = loanHistory(twice);
     expect(h.map((e) => e.topUpId)).toEqual([undefined, "t1", "t2"]);
+  });
+});
+
+describe("ผ่อนครบ — การ์ดย้ายไปกล่องผ่อนครบ · กู้ใหม่ต้องสร้างใหม่", () => {
+  const paidOff = {
+    ...base,
+    status: "paid_off",
+    repayments: { "2026-01": 4000, "2026-02": 4000, "2026-03": 2000 },
+  };
+
+  it("isLoanOpen: กำลังผ่อน = true · ผ่อนครบ / ยกเลิก / ไม่มียอดค้าง = false", () => {
+    expect(isLoanOpen(base)).toBe(true);
+    expect(isLoanOpen(paidOff)).toBe(false);
+    expect(isLoanOpen({ ...base, status: "cancelled" })).toBe(false);
+    // ข้อมูลเพี้ยน: สถานะยัง active แต่หักครบแล้ว → ถือว่าปิดแล้ว
+    expect(isLoanOpen({ ...paidOff, status: "active" })).toBe(false);
+  });
+
+  it("**ผ่อนครบแล้วกู้เพิ่มไม่ได้** — ต้องกดสร้างเงินกู้ใหม่", () => {
+    expect(
+      validateTopUp(paidOff, {
+        amount: 5000,
+        monthlyDeduction: 1000,
+        effectiveMonth: "2026-04",
+      }),
+    ).toContain("สร้างเงินกู้");
+  });
+
+  it("เดือนที่ผ่อนครบ = เดือนที่ยอดหักสะสมถึงยอดกู้", () => {
+    expect(loanPaidOffMonths(paidOff)).toEqual([
+      { yearMonth: "2026-03", total: 10000 },
+    ]);
+    expect(loanPaidOffMonths(base)).toEqual([]);
+  });
+
+  it("ประวัติต่อท้ายบรรทัด 'ผ่อนครบ' หลังรายการกู้", () => {
+    const h = loanHistory(paidOff);
+    expect(h.map((e) => e.kind)).toEqual(["initial", "paidoff"]);
+    expect(h[1]).toMatchObject({ effectiveMonth: "2026-03", amount: 10000 });
+  });
+
+  it("ข้อมูลก่อนกฎใหม่ (ผ่อนครบแล้วกู้เพิ่ม) → 'ผ่อนครบ' คั่นก่อนรายการกู้เพิ่ม", () => {
+    const reopened = {
+      ...topUp(paidOff, { effectiveMonth: "2026-05", monthlyDeduction: 2500 }),
+      repayments: { ...paidOff.repayments, "2026-05": 2500, "2026-06": 2500 },
+    };
+    const h = loanHistory(reopened);
+    expect(h.map((e) => e.kind)).toEqual([
+      "initial",
+      "paidoff",
+      "topup",
+      "paidoff",
+    ]);
+    expect(h[1].effectiveMonth).toBe("2026-03");
+    expect(h[3]).toMatchObject({ effectiveMonth: "2026-06", amount: 15000 });
   });
 });

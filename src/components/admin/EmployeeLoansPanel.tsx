@@ -4,6 +4,7 @@
    พนักงาน 1 คน = การ์ดเดียว · กู้เพิ่มใช้ปุ่ม "เพิ่มเงินกู้" บนการ์ด (ต่อท้าย
    ประวัติในก้อนเดิม · LoanTopUpModal) ไม่สร้างก้อนใหม่                         */
 import {
+  ChevronDown as IconChevronDown,
   CircleCheck as IconCircleCheck,
   HandCoins as IconHandCoins,
   Plus as IconPlus,
@@ -13,7 +14,7 @@ import {
 import { useMemo, useState } from "react";
 import { loanRemaining } from "../../firebase/employeeLoans";
 import { formatThaiNumber } from "../../utils/format";
-import { latestTopUp } from "../../utils/loanTopUp";
+import { isLoanOpen, latestTopUp } from "../../utils/loanTopUp";
 import AvatarCircle from "../shared/AvatarCircle";
 import BaseModal from "../shared/BaseModal";
 import { SkeletonRow } from "../shared/Skeleton";
@@ -53,23 +54,140 @@ export default function EmployeeLoansPanel({
   // url สลิปโอนเงินกู้ที่กำลังเปิดดู · null = ไม่เปิด
   const [viewingSlipUrl, setViewingSlipUrl] = useState<string | null>(null);
 
-  const loans = useMemo(
-    () =>
-      [...(employeeLoans || [])].sort((a, b) => {
-        // active ก่อน · แล้วเรียงใหม่→เก่า
-        const rank = (s: string) => (s === "active" ? 0 : 1);
-        if (rank(a.status) !== rank(b.status))
-          return rank(a.status) - rank(b.status);
-        return String(b.createdAt).localeCompare(String(a.createdAt));
-      }),
-    [employeeLoans],
-  );
+  // กำลังผ่อน = หน้าหลัก · ผ่อนครบ/ยกเลิก = กล่องพับไว้ล่างสุด (ประวัติยังอยู่ ·
+  // ไม่ลบ doc เพราะเป็นหลักฐานยอดที่หักเงินเดือน) · กู้ใหม่ = สร้างเงินกู้ใหม่
+  const { loans, openLoans, closedLoans } = useMemo(() => {
+    const all = [...(employeeLoans || [])].sort((a, b) =>
+      String(b.createdAt).localeCompare(String(a.createdAt)),
+    );
+    return {
+      loans: all,
+      openLoans: all.filter(isLoanOpen),
+      closedLoans: all.filter((l) => !isLoanOpen(l)),
+    };
+  }, [employeeLoans]);
+  const [showClosed, setShowClosed] = useState(false);
 
   const empOf = (id: string) => employeeDirectory.find((e) => e.id === id);
   /** live > snapshot fallback > "—" · กัน loan ของพนักงานที่ถูกลบหายชื่อหมด
    *  fallback = ชื่อ snapshot ตอนสร้าง loan (เช่น loan.employeeName)            */
   const empName = (id: string, fallback?: string) =>
     empOf(id)?.nickname || empOf(id)?.name || fallback || "—";
+
+  const renderCard = (loan: any) => {
+    const remaining = loanRemaining(loan);
+    const paid = (loan.principal || 0) - remaining;
+    const pct =
+      loan.principal > 0
+        ? Math.min(100, Math.round((paid / loan.principal) * 100))
+        : 0;
+    const done = loan.status === "paid_off" || remaining <= 0;
+    const cancelled = loan.status === "cancelled";
+    return (
+      <div
+        key={loan.id}
+        className={`bg-white rounded-[14px] p-3.5 border ${cancelled ? "border-bdr opacity-60" : "border-bdr"} shadow-[0_2px_10px_rgba(90,30,10,0.05)]`}
+      >
+        <div className="flex items-center gap-3 mb-2.5">
+          <AvatarCircle
+            avatar={empOf(loan.employeeId)?.avatar}
+            avatarType={empOf(loan.employeeId)?.avatarType}
+            avatarImageUrl={empOf(loan.employeeId)?.avatarImageUrl}
+            size={38}
+            fontSize={13}
+            border="none"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-txt text-sm truncate">
+              {empName(loan.employeeId, loan.employeeName)}
+            </div>
+            {loan.note && (
+              <div className="text-xs text-txt-soft truncate">{loan.note}</div>
+            )}
+          </div>
+          {loan.slipImageUrl && (
+            <button
+              type="button"
+              aria-label="ดูสลิปโอนเงิน"
+              title="สลิปโอนเงิน"
+              onClick={() => setViewingSlipUrl(loan.slipImageUrl ?? null)}
+              className="w-8 h-8 shrink-0 rounded-[9px] bg-maroon/10 flex items-center justify-center cursor-pointer border-[1.5px] border-maroon/20"
+            >
+              <IconReceipt
+                size={14}
+                className="text-maroon"
+                strokeWidth={2.2}
+              />
+            </button>
+          )}
+          {done ? (
+            <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-lt text-green inline-flex items-center gap-1 shrink-0">
+              <IconCircleCheck size={12} strokeWidth={2.5} />
+              ผ่อนครบแล้ว
+            </span>
+          ) : cancelled ? (
+            <span className="text-xs font-bold px-2 py-1 rounded-full bg-bdr text-txt-soft shrink-0">
+              ยกเลิก
+            </span>
+          ) : (
+            <button
+              type="button"
+              aria-label="ลบ"
+              onClick={() => setConfirmDelete(loan)}
+              className="w-8 h-8 shrink-0 rounded-[9px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
+            >
+              <IconTrash size={14} className="text-red" strokeWidth={2.2} />
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 text-center mb-2">
+          <Stat
+            label={loan.topUps?.length ? "ยอดกู้รวม" : "เงินต้น"}
+            value={loan.principal}
+          />
+          <Stat label="ผ่อนเดือนละ" value={loan.monthlyDeduction} />
+          <Stat label="คงเหลือ" value={remaining} highlight />
+        </div>
+
+        {/* progress bar */}
+        <div className="h-1.5 rounded-full bg-cream-dk overflow-hidden mb-1">
+          <div
+            className="h-full bg-maroon rounded-full"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <div className="text-[11px] text-txt-soft flex justify-between">
+          <span>เริ่มหัก {monthLabel(loan.startMonth)}</span>
+          <span>
+            ผ่อนแล้ว {formatThaiNumber(paid)} ฿ ({pct}%)
+          </span>
+        </div>
+
+        <div className="mt-2 pt-2 border-t border-bdr/60">
+          <LoanHistoryList
+            loan={loan}
+            open={openHistory.has(loan.id)}
+            onToggle={() => toggleHistory(loan.id)}
+            onViewSlip={setViewingSlipUrl}
+            onUndoTopUp={onUndoTopUp ? () => setConfirmUndo(loan) : undefined}
+            action={
+              isLoanOpen(loan) && (
+                <button
+                  type="button"
+                  onClick={() => setTopUpLoan(loan)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[9px] border-[1.5px] border-maroon/25 bg-maroon/5 text-maroon text-xs font-bold cursor-pointer font-[inherit] shrink-0"
+                >
+                  <IconPlus size={13} strokeWidth={2.6} />
+                  เพิ่มเงินกู้
+                </button>
+              )
+            }
+          />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -100,132 +218,47 @@ export default function EmployeeLoansPanel({
           ยังไม่มีเงินกู้
         </div>
       ) : (
-        <div className="flex flex-col gap-2.5">
-          {loans.map((loan) => {
-            const remaining = loanRemaining(loan);
-            const paid = (loan.principal || 0) - remaining;
-            const pct =
-              loan.principal > 0
-                ? Math.min(100, Math.round((paid / loan.principal) * 100))
-                : 0;
-            const done = loan.status === "paid_off" || remaining <= 0;
-            const cancelled = loan.status === "cancelled";
-            return (
-              <div
-                key={loan.id}
-                className={`bg-white rounded-[14px] p-3.5 border ${cancelled ? "border-bdr opacity-60" : "border-bdr"} shadow-[0_2px_10px_rgba(90,30,10,0.05)]`}
+        <>
+          {openLoans.length > 0 ? (
+            <div className="flex flex-col gap-2.5">
+              {openLoans.map(renderCard)}
+            </div>
+          ) : (
+            <div className="text-center text-txt-soft text-sm py-6 px-6 bg-white rounded-[14px] border border-dashed border-bdr">
+              ไม่มีเงินกู้ที่กำลังผ่อน
+            </div>
+          )}
+
+          {closedLoans.length > 0 && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => setShowClosed((v) => !v)}
+                aria-expanded={showClosed}
+                className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-[12px] border border-bdr bg-cream text-sm font-bold text-txt-mid cursor-pointer font-[inherit]"
               >
-                <div className="flex items-center gap-3 mb-2.5">
-                  <AvatarCircle
-                    avatar={empOf(loan.employeeId)?.avatar}
-                    avatarType={empOf(loan.employeeId)?.avatarType}
-                    avatarImageUrl={empOf(loan.employeeId)?.avatarImageUrl}
-                    size={38}
-                    fontSize={13}
-                    border="none"
+                <span className="inline-flex items-center gap-1.5">
+                  <IconCircleCheck
+                    size={15}
+                    strokeWidth={2.4}
+                    className="text-green"
                   />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-txt text-sm truncate">
-                      {empName(loan.employeeId, loan.employeeName)}
-                    </div>
-                    {loan.note && (
-                      <div className="text-xs text-txt-soft truncate">
-                        {loan.note}
-                      </div>
-                    )}
-                  </div>
-                  {loan.slipImageUrl && (
-                    <button
-                      type="button"
-                      aria-label="ดูสลิปโอนเงิน"
-                      title="สลิปโอนเงิน"
-                      onClick={() =>
-                        setViewingSlipUrl(loan.slipImageUrl ?? null)
-                      }
-                      className="w-8 h-8 shrink-0 rounded-[9px] bg-maroon/10 flex items-center justify-center cursor-pointer border-[1.5px] border-maroon/20"
-                    >
-                      <IconReceipt
-                        size={14}
-                        className="text-maroon"
-                        strokeWidth={2.2}
-                      />
-                    </button>
-                  )}
-                  {done ? (
-                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-lt text-green inline-flex items-center gap-1 shrink-0">
-                      <IconCircleCheck size={12} strokeWidth={2.5} />
-                      ผ่อนครบแล้ว
-                    </span>
-                  ) : cancelled ? (
-                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-bdr text-txt-soft shrink-0">
-                      ยกเลิก
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      aria-label="ลบ"
-                      onClick={() => setConfirmDelete(loan)}
-                      className="w-8 h-8 shrink-0 rounded-[9px] bg-red-lt flex items-center justify-center cursor-pointer border-[1.5px] border-[#C0392B30]"
-                    >
-                      <IconTrash
-                        size={14}
-                        className="text-red"
-                        strokeWidth={2.2}
-                      />
-                    </button>
-                  )}
+                  ผ่อนครบแล้ว ({closedLoans.length})
+                </span>
+                <IconChevronDown
+                  size={16}
+                  strokeWidth={2.4}
+                  className={`transition-transform ${showClosed ? "rotate-180" : ""}`}
+                />
+              </button>
+              {showClosed && (
+                <div className="flex flex-col gap-2.5 mt-2.5">
+                  {closedLoans.map(renderCard)}
                 </div>
-
-                <div className="grid grid-cols-3 gap-2 text-center mb-2">
-                  <Stat
-                    label={loan.topUps?.length ? "ยอดกู้รวม" : "เงินต้น"}
-                    value={loan.principal}
-                  />
-                  <Stat label="ผ่อนเดือนละ" value={loan.monthlyDeduction} />
-                  <Stat label="คงเหลือ" value={remaining} highlight />
-                </div>
-
-                {/* progress bar */}
-                <div className="h-1.5 rounded-full bg-cream-dk overflow-hidden mb-1">
-                  <div
-                    className="h-full bg-maroon rounded-full"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <div className="text-[11px] text-txt-soft flex justify-between">
-                  <span>เริ่มหัก {monthLabel(loan.startMonth)}</span>
-                  <span>
-                    ผ่อนแล้ว {formatThaiNumber(paid)} ฿ ({pct}%)
-                  </span>
-                </div>
-
-                <div className="mt-2 pt-2 border-t border-bdr/60">
-                  <LoanHistoryList
-                    loan={loan}
-                    open={openHistory.has(loan.id)}
-                    onToggle={() => toggleHistory(loan.id)}
-                    onViewSlip={setViewingSlipUrl}
-                    onUndoTopUp={
-                      onUndoTopUp ? () => setConfirmUndo(loan) : undefined
-                    }
-                    action={
-                      !cancelled && (
-                        <button
-                          type="button"
-                          onClick={() => setTopUpLoan(loan)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[9px] border-[1.5px] border-maroon/25 bg-maroon/5 text-maroon text-xs font-bold cursor-pointer font-[inherit] shrink-0"
-                        >
-                          <IconPlus size={13} strokeWidth={2.6} />
-                          เพิ่มเงินกู้
-                        </button>
-                      )
-                    }
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {showCreate && (

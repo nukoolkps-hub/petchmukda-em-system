@@ -1,6 +1,7 @@
 /* ─── ประวัติเงินกู้ในการ์ด — กู้เมื่อไหร่ เท่าไร + หักไปเดือนไหนบ้าง ───── */
 import {
   ChevronDown as IconChevronDown,
+  CircleCheck as IconCircleCheck,
   HandCoins as IconHandCoins,
   Plus as IconPlus,
   Receipt as IconReceipt,
@@ -48,7 +49,7 @@ export default function LoanHistoryList({
           aria-expanded={open}
           className="inline-flex items-center gap-1 text-xs font-bold text-maroon bg-transparent border-none cursor-pointer font-[inherit] px-0 py-1"
         >
-          ประวัติการกู้ ({history.length} ครั้ง)
+          ประวัติการกู้ ({history.filter((h) => h.kind !== "paidoff").length} ครั้ง)
           <IconChevronDown
             size={14}
             strokeWidth={2.4}
@@ -60,87 +61,110 @@ export default function LoanHistoryList({
 
       {open && (
         <div className="mt-2 flex flex-col gap-2">
-          {history.map((h, i) => (
-            <div
-              key={`${h.kind}-${h.at}-${i}`}
-              className="flex gap-2.5 bg-cream rounded-[10px] px-3 py-2.5"
-            >
-              <div className="w-7 h-7 shrink-0 rounded-full bg-maroon/10 flex items-center justify-center">
-                {h.kind === "initial" ? (
-                  <IconHandCoins
-                    size={14}
-                    className="text-maroon"
-                    strokeWidth={2.2}
+          {history.map((h, i) =>
+            h.kind === "paidoff" ? (
+              <div
+                key={`paidoff-${h.effectiveMonth}-${i}`}
+                className="flex items-center gap-2.5 bg-green-lt rounded-[10px] px-3 py-2"
+              >
+                <div className="w-7 h-7 shrink-0 rounded-full bg-white/70 flex items-center justify-center">
+                  <IconCircleCheck
+                    size={15}
+                    className="text-green"
+                    strokeWidth={2.4}
                   />
-                ) : (
-                  <IconPlus
-                    size={14}
-                    className="text-maroon"
-                    strokeWidth={2.6}
-                  />
-                )}
+                </div>
+                <div className="flex-1 min-w-0 flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-bold text-green">
+                    ผ่อนครบ {monthLabel(h.effectiveMonth)}
+                  </span>
+                  <span className="text-xs text-txt-mid shrink-0">
+                    ยอดกู้รวม {formatThaiNumber(h.amount)} ฿
+                  </span>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-bold text-txt">
-                    {h.kind === "initial" ? "กู้ครั้งแรก" : "กู้เพิ่ม"}{" "}
-                    <span className="text-maroon">
-                      {h.kind === "topup" ? "+" : ""}
-                      {formatThaiNumber(h.amount)} ฿
+            ) : (
+              <div
+                key={`${h.kind}-${h.at}-${i}`}
+                className="flex gap-2.5 bg-cream rounded-[10px] px-3 py-2.5"
+              >
+                <div className="w-7 h-7 shrink-0 rounded-full bg-maroon/10 flex items-center justify-center">
+                  {h.kind === "initial" ? (
+                    <IconHandCoins
+                      size={14}
+                      className="text-maroon"
+                      strokeWidth={2.2}
+                    />
+                  ) : (
+                    <IconPlus
+                      size={14}
+                      className="text-maroon"
+                      strokeWidth={2.6}
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-bold text-txt">
+                      {h.kind === "initial" ? "กู้ครั้งแรก" : "กู้เพิ่ม"}{" "}
+                      <span className="text-maroon">
+                        {h.kind === "topup" ? "+" : ""}
+                        {formatThaiNumber(h.amount)} ฿
+                      </span>
                     </span>
-                  </span>
-                  <span className="text-xs text-txt-soft shrink-0">
-                    {isoDateLabel(h.at)}
-                  </span>
-                </div>
-                <div className="text-xs text-txt-mid mt-0.5 leading-relaxed">
-                  เริ่มหัก {monthLabel(h.effectiveMonth)} · ผ่อนเดือนละ{" "}
-                  {h.prevMonthlyDeduction != null &&
-                    `${formatThaiNumber(h.prevMonthlyDeduction)} → `}
-                  {formatThaiNumber(h.monthlyDeduction)} ฿
-                  {h.kind === "topup" &&
-                    ` · ยอดกู้รวม ${formatThaiNumber(h.totalAfter)} ฿`}
-                </div>
-                {(h.note || h.slipImageUrl) && (
-                  <div className="flex items-center gap-2 mt-1">
-                    {h.note && (
-                      <span className="text-xs text-txt-soft truncate flex-1 min-w-0">
-                        {h.note}
-                      </span>
-                    )}
-                    {h.slipImageUrl && (
-                      <button
-                        type="button"
-                        onClick={() => onViewSlip(h.slipImageUrl as string)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-maroon bg-transparent border-none cursor-pointer font-[inherit] p-0 shrink-0 ml-auto"
-                      >
-                        <IconReceipt size={12} strokeWidth={2.4} />
-                        สลิป
-                      </button>
-                    )}
+                    <span className="text-xs text-txt-soft shrink-0">
+                      {isoDateLabel(h.at)}
+                    </span>
                   </div>
-                )}
-                {onUndoTopUp && h.topUpId && h.topUpId === latestId && (
-                  <div className="mt-1.5 pt-1.5 border-t border-bdr/60">
-                    {undoBlocker ? (
-                      <span className="text-[11px] text-txt-soft">
-                        {undoBlocker}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => onUndoTopUp(h.topUpId as string)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-red bg-transparent border-none cursor-pointer font-[inherit] p-0"
-                      >
-                        <IconTrash size={12} strokeWidth={2.4} />
-                        ลบรายการกู้เพิ่มนี้
-                      </button>
-                    )}
+                  <div className="text-xs text-txt-mid mt-0.5 leading-relaxed">
+                    เริ่มหัก {monthLabel(h.effectiveMonth)} · ผ่อนเดือนละ{" "}
+                    {h.prevMonthlyDeduction != null &&
+                      `${formatThaiNumber(h.prevMonthlyDeduction)} → `}
+                    {formatThaiNumber(h.monthlyDeduction)} ฿
+                    {h.kind === "topup" &&
+                      ` · ยอดกู้รวม ${formatThaiNumber(h.totalAfter)} ฿`}
                   </div>
-                )}
+                  {(h.note || h.slipImageUrl) && (
+                    <div className="flex items-center gap-2 mt-1">
+                      {h.note && (
+                        <span className="text-xs text-txt-soft truncate flex-1 min-w-0">
+                          {h.note}
+                        </span>
+                      )}
+                      {h.slipImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => onViewSlip(h.slipImageUrl as string)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-maroon bg-transparent border-none cursor-pointer font-[inherit] p-0 shrink-0 ml-auto"
+                        >
+                          <IconReceipt size={12} strokeWidth={2.4} />
+                          สลิป
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {onUndoTopUp && h.topUpId && h.topUpId === latestId && (
+                    <div className="mt-1.5 pt-1.5 border-t border-bdr/60">
+                      {undoBlocker ? (
+                        <span className="text-[11px] text-txt-soft">
+                          {undoBlocker}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onUndoTopUp(h.topUpId as string)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-red bg-transparent border-none cursor-pointer font-[inherit] p-0"
+                        >
+                          <IconTrash size={12} strokeWidth={2.4} />
+                          ลบรายการกู้เพิ่มนี้
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ),
+          )}
 
           <div className="px-1">
             <div className="text-xs font-bold text-txt-mid mb-1">

@@ -84,6 +84,16 @@ export function loanPaidTotal(loan: LoanLike): number {
   );
 }
 
+/** ยังผ่อนอยู่จริงไหม (มียอดค้าง · ไม่ได้ยกเลิก/ผ่อนครบ) — ใช้แยกการ์ด
+ *  "กำลังผ่อน" กับกล่อง "ผ่อนครบแล้ว" + ตัดสินว่ากู้เพิ่ม/สร้างใหม่ได้ไหม
+ *
+ *  กู้เพิ่มได้เฉพาะก้อนที่ยังผ่อนอยู่ · ผ่อนครบแล้วกู้ใหม่ = สร้างเงินกู้ใหม่
+ *  (การ์ดเก่าไปอยู่กล่องผ่อนครบ ประวัติไม่ปนกับก้อนใหม่) */
+export function isLoanOpen(loan: LoanLike): boolean {
+  if (loan.status === "cancelled" || loan.status === "paid_off") return false;
+  return num(loan.principal) - loanPaidTotal(loan) > 0;
+}
+
 export interface TopUpInput {
   id: string;
   amount: number;
@@ -100,6 +110,7 @@ export function validateTopUp(
   input: { amount: number; monthlyDeduction: number; effectiveMonth: string },
 ): string {
   if (loan.status === "cancelled") return "เงินกู้นี้ถูกยกเลิกแล้ว";
+  if (!isLoanOpen(loan)) return 'เงินกู้นี้ผ่อนครบแล้ว — กู้ใหม่ให้กด "สร้างเงินกู้"';
   if (!/^\d{4}-\d{2}$/.test(input.effectiveMonth || ""))
     return "กรุณาเลือกเดือนที่เริ่มหัก";
   // ห้ามเริ่มก่อนครั้งที่กู้เพิ่มล่าสุด — ยอดผ่อนย้อนหลังจะต่อกันไม่ถูก
@@ -199,7 +210,8 @@ export function undoLatestTopUp(loan: LoanLike): {
 }
 
 export interface LoanHistoryEntry {
-  kind: "initial" | "topup";
+  /** paidoff = ผ่อนครบ (ณ เดือน `effectiveMonth` · `amount` = ยอดกู้รวมที่ครบ) */
+  kind: "initial" | "topup" | "paidoff";
   /** id ของรายการกู้เพิ่ม (ครั้งแรกไม่มี) */
   topUpId?: string;
   /** ISO วันเวลาที่กู้ */
@@ -254,6 +266,40 @@ export function loanHistory(loan: LoanLike): LoanHistoryEntry[] {
       ...(t.note ? { note: t.note } : {}),
       ...(t.slipImageUrl ? { slipImageUrl: t.slipImageUrl } : {}),
     });
+  }
+  // แทรก "ผ่อนครบ" หลังรายการสุดท้ายที่เริ่มหักไม่เกินเดือนที่ครบ (กู้เพิ่ม
+  // ที่เริ่มหักทีหลังจึงตามหลังบรรทัดผ่อนครบ ถูกลำดับเหตุการณ์)
+  for (const p of loanPaidOffMonths(loan)) {
+    let pos = 0;
+    out.forEach((e, i) => {
+      if ((e.effectiveMonth || "") <= p.yearMonth) pos = i + 1;
+    });
+    out.splice(pos, 0, {
+      kind: "paidoff",
+      at: "",
+      amount: p.total,
+      effectiveMonth: p.yearMonth,
+      monthlyDeduction: 0,
+      totalAfter: p.total,
+    });
+  }
+  return out;
+}
+
+/** เดือนที่ผ่อนครบ (เก่า → ใหม่) — ไล่ยอดที่หักสะสมทีละเดือนเทียบยอดกู้
+ *  "ณ เดือนนั้น" · ครบแล้วมีกู้เพิ่ม (ข้อมูลก่อนกฎใหม่) แล้วครบอีก = 2 ครั้ง */
+export function loanPaidOffMonths(
+  loan: LoanLike,
+): { yearMonth: string; total: number }[] {
+  const out: { yearMonth: string; total: number }[] = [];
+  let paid = 0;
+  let wasDone = false;
+  for (const r of loanRepaymentHistory(loan)) {
+    paid += r.amount;
+    const owed = loanPrincipalAsOf(loan, r.yearMonth);
+    const done = owed > 0 && paid >= owed;
+    if (done && !wasDone) out.push({ yearMonth: r.yearMonth, total: owed });
+    wasDone = done;
   }
   return out;
 }

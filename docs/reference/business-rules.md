@@ -21,7 +21,7 @@ Earnings = baseSalary                  (effective = baseSalary + Σ annualRaises
 
 Deductions = overQuotaDeduction
            + advanceDeduction       (รวม approved advances ที่ month === salary.month)
-           + loanDeduction          (เงินกู้ผ่อนคืน — 1 การ์ด/คน · หักเท่าที่มี)
+           + loanDeduction          (เงินกู้ผ่อนคืน — ผ่อนอยู่ 1 ก้อน/คน · หักเท่าที่มี)
            + socialSecurity
            + Σ recurringDeductions  (รายจ่ายประจำเดือน admin ตั้งใน employee profile)
            + Σ customDeductions     (per-month admin เพิ่มเอง · ไม่เป็นประจำ)
@@ -390,13 +390,18 @@ Source: `src/data/useFirebaseAppData.ts` (`syncAutoCarryAdvance`) · `src/compon
 ต่างจากเบิกล่วงหน้า — **admin สร้างเอง** + หักจากเงินเดือนอัตโนมัติทุกเดือน
 จนครบ โดยใช้ **ledger** เก็บยอดที่หักจริงรายเดือน
 
-- **กฎสำคัญ: 1 การ์ดต่อพนักงาน** — คนที่มีเงินกู้อยู่แล้ว (`active` หรือ
-  `paid_off` · ไม่นับ `cancelled`) สร้างก้อนใหม่ไม่ได้ · UI block ใน CreateLoanModal:
+- **กฎสำคัญ: ก้อนที่ยังผ่อนอยู่ 1 ก้อนต่อพนักงาน** (`isLoanOpen` = ไม่ใช่
+  `cancelled`/`paid_off` และยังมียอดค้าง) — คนที่ยังผ่อนอยู่สร้างก้อนใหม่ไม่ได้
+  (ต้องกู้เพิ่มที่การ์ดเดิม) · UI block ใน CreateLoanModal:
   · banner แดงเตือน + ปุ่ม submit disabled
-  · dropdown พนักงาน — option ที่มีการ์ดแล้วถูก `disabled` + suffix
-    "— มีการ์ดเงินกู้แล้ว"
+  · dropdown พนักงาน — option ที่ยังผ่อนอยู่ถูก `disabled` + suffix "— กำลังผ่อนอยู่"
   · default selection auto-switch ไปคนแรกที่ "ว่าง"
-- **กู้เพิ่ม (top-up)** — ปุ่ม "เพิ่มเงินกู้" บนการ์ด (`LoanTopUpModal`) ต่อท้าย
+- **ผ่อนครบ** — การ์ดย้ายจากหน้าหลักไปกล่องพับ **"ผ่อนครบแล้ว (n)"** ล่างสุด
+  (รวมก้อนที่ยกเลิก · **ไม่ลบ doc** — เป็นหลักฐานยอดที่หักเงินเดือน) · การ์ดในกล่อง
+  ไม่มีปุ่ม "เพิ่มเงินกู้" · กู้ใหม่ = กด "สร้างเงินกู้" ได้การ์ดใหม่ · ประวัติแทรก
+  บรรทัด "ผ่อนครบ <เดือน>" (`loanPaidOffMonths` — ไล่ยอดหักสะสมเทียบยอดกู้ ณ เดือน
+  นั้น · ข้อมูลก่อนกฎนี้ที่ผ่อนครบแล้วกู้เพิ่มจะเห็น "ผ่อนครบ" คั่น 2 ครั้ง)
+- **กู้เพิ่ม (top-up)** — เฉพาะก้อนที่ยังผ่อนอยู่ · ปุ่ม "เพิ่มเงินกู้" บนการ์ด (`LoanTopUpModal`) ต่อท้าย
   `topUps[]` ใน doc เดิมผ่าน transaction (`addLoanTopUpTx`) · `principal` บวกยอด
   เพิ่ม (= ยอดกู้รวม) · `monthlyDeduction` เป็นค่าใหม่ · `paid_off` → `active` ·
   **ไม่แตะ `repayments`**

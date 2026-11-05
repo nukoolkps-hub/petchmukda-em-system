@@ -1,6 +1,6 @@
 /* ─── สร้างเงินกู้ใหม่ (Admin) ───────────────────────────────────────────
-   1 คน = 1 การ์ด · คนที่มีเงินกู้อยู่แล้ว (กำลังผ่อน/ผ่อนครบ) สร้างใหม่ไม่ได้
-   → กู้เพิ่มที่ปุ่ม "เพิ่มเงินกู้" บนการ์ดเดิม (LoanTopUpModal)               */
+   คนที่ยังผ่อนอยู่สร้างใหม่ไม่ได้ → กู้เพิ่มที่ปุ่ม "เพิ่มเงินกู้" บนการ์ดเดิม
+   (LoanTopUpModal) · ผ่อนครบแล้ว → สร้างใหม่ได้ (การ์ดเก่าไปกล่องผ่อนครบ)   */
 import {
   HandCoins as IconHandCoins,
   Upload as IconUpload,
@@ -12,6 +12,7 @@ import { uploadLoanSlip } from "../../firebase/storage";
 import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
+import { isLoanOpen } from "../../utils/loanTopUp";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
 import Spinner from "../shared/Spinner";
@@ -41,16 +42,12 @@ export default function CreateLoanModal({
   const monthlyNum = parseFloat(monthly) || 0;
   const estMonths = monthlyNum > 0 ? Math.ceil(principalNum / monthlyNum) : 0;
 
-  // กฎ "1 การ์ด/คน" — พนักงานที่มีเงินกู้อยู่แล้ว (กำลังผ่อน หรือผ่อนครบแล้ว)
-  // ห้ามสร้างก้อนใหม่ · กู้เพิ่มผ่านปุ่ม "เพิ่มเงินกู้" บนการ์ดเดิม (ประวัติรวม
-  // อยู่ใบเดียว) · cancelled ไม่นับ · ก้อนที่ยังผ่อนอยู่มาก่อนเสมอ
+  // กฎ "ก้อนที่ยังผ่อนอยู่ 1 ก้อน/คน" — ยังผ่อนไม่ครบ → ห้ามสร้างก้อนใหม่ ·
+  // กู้เพิ่มผ่านปุ่ม "เพิ่มเงินกู้" บนการ์ดเดิม · ผ่อนครบ/ยกเลิก → สร้างใหม่ได้
   const activeLoanByEmployeeId = useMemo(() => {
     const map = new Map<string, any>();
     for (const l of employeeLoans || []) {
-      if (l.status === "cancelled") continue;
-      const prev = map.get(l.employeeId);
-      if (!prev || (prev.status !== "active" && l.status === "active"))
-        map.set(l.employeeId, l);
+      if (isLoanOpen(l)) map.set(l.employeeId, l);
     }
     return map;
   }, [employeeLoans]);
@@ -87,7 +84,7 @@ export default function CreateLoanModal({
   async function submit() {
     if (!employeeId) return setErr("กรุณาเลือกพนักงาน");
     if (hasActiveLoan)
-      return setErr('พนักงานคนนี้มีการ์ดเงินกู้อยู่แล้ว · กด "เพิ่มเงินกู้" ที่การ์ดเดิม');
+      return setErr('พนักงานคนนี้ยังผ่อนเงินกู้อยู่ · กด "เพิ่มเงินกู้" ที่การ์ดเดิม');
     if (principalNum <= 0) return setErr("กรุณาระบุเงินต้น");
     if (monthlyNum <= 0) return setErr("กรุณาระบุยอดผ่อนต่อเดือน");
     if (monthlyNum > principalNum) return setErr("ยอดผ่อนต่อเดือนมากกว่าเงินต้น");
@@ -197,7 +194,7 @@ export default function CreateLoanModal({
             const blocked = activeLoanByEmployeeId.has(e.id);
             return {
               value: e.id,
-              label: `${e.name}${blocked ? "  — มีการ์ดเงินกู้แล้ว" : ""}`,
+              label: `${e.name}${blocked ? "  — กำลังผ่อนอยู่" : ""}`,
               disabled: blocked,
             };
           })}
@@ -303,11 +300,12 @@ export default function CreateLoanModal({
 
       {hasActiveLoan && (
         <div className="bg-red-lt rounded-[10px] px-3.5 py-2.5 mb-3 border border-[#C0392B40] text-sm text-red font-semibold leading-relaxed">
-          พนักงานคนนี้มีการ์ดเงินกู้อยู่แล้ว — ยอดกู้รวม ฿
+          พนักงานคนนี้ยังผ่อนเงินกู้อยู่ — ยอดกู้รวม ฿
           {formatThaiNumber(activeLoanForEmployee.principal)} · คงเหลือ ฿
           {formatThaiNumber(loanRemaining(activeLoanForEmployee))}
           <div className="text-xs font-normal text-txt-mid mt-1">
             กู้เพิ่มได้ที่ปุ่ม "เพิ่มเงินกู้" บนการ์ดเดิม · ประวัติจะรวมอยู่ใบเดียว
+            (ผ่อนครบแล้วค่อยสร้างเงินกู้ใหม่ได้)
           </div>
         </div>
       )}
@@ -342,7 +340,7 @@ export default function CreateLoanModal({
           }`}
         >
           {saving && <Spinner size={18} />}
-          {saving ? "กำลังบันทึก..." : hasActiveLoan ? "มีการ์ดเงินกู้แล้ว" : "สร้างเงินกู้"}
+          {saving ? "กำลังบันทึก..." : hasActiveLoan ? "ยังผ่อนอยู่" : "สร้างเงินกู้"}
         </button>
       </div>
     </BaseModal>
