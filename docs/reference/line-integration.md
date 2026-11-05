@@ -58,7 +58,7 @@ functions/src/line/
 | `seedLineConfigFromEnv` | Callable | Seed LINE config (emulator only) |
 | `notifyAdvanceRequest` | Callable | แจ้ง admin คำขอเบิกเงิน |
 | `processAdvanceNotifications` | Scheduled (every minute) | ส่ง LINE notification approve/reject (+ รูปสลิป) |
-| `processLoanNotifications` | Scheduled (every minute) | แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ (+ รูปสลิป) |
+| `processLoanNotifications` | Scheduled (every minute) | แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ / กู้เพิ่มเข้าก้อนเดิม (+ รูปสลิป) |
 | `onLeaveCreated` | Firestore trigger | อัพเดท leave stats |
 | `onAdvanceCreated` | Firestore trigger | แจ้ง admin advance ใหม่ |
 | `monthlyPayrollSummary` | Scheduled (28th, 23:00) | สรุปเงินเดือนรายเดือน |
@@ -79,7 +79,7 @@ Admin เปิด/ปิด notification รายประเภทผ่า�
 | `dailySummaryEnabled` | true | สรุปประจำวัน 07:30 push เข้ากลุ่มที่ตั้งไว้ใน `dailySummaryGroups` (เสาร์ปกติข้าม) |
 | `advanceRequestEnabled` | true | แจ้ง ADMIN เมื่อพนักงานยื่นเบิก (+ clipboard เลขบัญชี) |
 | `advanceApprovalEnabled` | true | แจ้งพนักงานเมื่อ approve/reject (+ รูปสลิป) |
-| `loanCreatedEnabled` | true | แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ (+ รูปสลิป) |
+| `loanCreatedEnabled` | true | แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ / กู้เพิ่ม (+ รูปสลิป) |
 | `lateLeaveNoticeEnabled` | true | "มีคนลาเพิ่ม" 08:30 — ตามแจ้งเฉพาะคนที่กดลาหลังสรุปเช้า (ไม่มีใคร = ไม่ส่ง) |
 | `lateLeaveNotice0930Enabled` | true | "มีคนลาเพิ่ม" 09:30 — รอบตามอีกครั้ง นับต่อจากรอบ 08:30 (ไม่ประกาศชื่อเดิมซ้ำ) |
 | `dailySummaryGroups` | (ไม่มี) | **array กลุ่มปลายทางของสรุปเช้า** — ADMIN ตั้งเองในหน้าเดียวกัน (ดูหัวข้อถัดไป) |

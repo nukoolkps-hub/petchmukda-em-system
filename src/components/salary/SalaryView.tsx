@@ -45,6 +45,7 @@ import {
   getOverQuotaDays,
   leaveOverlapsMonth,
 } from "../../utils/leaveUtils";
+import { loanMonthlyAsOf, loanPrincipalAsOf } from "../../utils/loanTopUp";
 import { isMonthLocked } from "../../utils/payrollLock";
 import {
   calculateSalary,
@@ -954,11 +955,14 @@ export default function SalaryView({
               </div>
               <div className="flex flex-col gap-2.5">
                 {myLoans.map((loan) => {
+                  // ยอดกู้/ยอดผ่อน ณ เดือนที่ดู — กู้เพิ่มทีหลังไม่ย้อนไปโผล่ในเดือนเก่า
+                  const principal = loanPrincipalAsOf(loan, selectedMonth);
+                  const monthly = loanMonthlyAsOf(loan, selectedMonth);
                   const remaining = loanRemainingAsOfMonth(loan, selectedMonth);
-                  const paid = (loan.principal || 0) - remaining;
+                  const paid = principal - remaining;
                   const pct =
-                    loan.principal > 0
-                      ? Math.min(100, Math.round((paid / loan.principal) * 100))
+                    principal > 0
+                      ? Math.min(100, Math.round((paid / principal) * 100))
                       : 0;
                   const thisMonth =
                     previewSalary?.loanBreakdown?.find(
@@ -1007,15 +1011,13 @@ export default function SalaryView({
                         />
                       </div>
                       <div className="flex justify-between text-xs text-txt-soft">
-                        <span>
-                          ผ่อนเดือนละ {formatThaiNumber(loan.monthlyDeduction)} ฿
-                        </span>
+                        <span>ผ่อนเดือนละ {formatThaiNumber(monthly)} ฿</span>
                         <span>
                           คงเหลือ{" "}
                           <b className="text-maroon">
                             {formatThaiNumber(remaining)} ฿
                           </b>{" "}
-                          / {formatThaiNumber(loan.principal)} ฿
+                          / {formatThaiNumber(principal)} ฿
                         </span>
                       </div>
                     </div>
@@ -1633,11 +1635,14 @@ export default function SalaryView({
               {myLoans.map((loan) => {
                 // remaining ณ สิ้นเดือนที่ดู (snapshot) — ไม่นับ repayments
                 // ของเดือนอนาคต เลื่อนดูเดือนเก่าเห็นภาพชัดเจน
+                // ยอดกู้/ยอดผ่อน ณ เดือนที่ดู — กู้เพิ่มทีหลังไม่ย้อนไปโผล่ในเดือนเก่า
+                const principal = loanPrincipalAsOf(loan, selectedMonth);
+                const monthly = loanMonthlyAsOf(loan, selectedMonth);
                 const remaining = loanRemainingAsOfMonth(loan, selectedMonth);
-                const paid = (loan.principal || 0) - remaining;
+                const paid = principal - remaining;
                 const pct =
-                  loan.principal > 0
-                    ? Math.min(100, Math.round((paid / loan.principal) * 100))
+                  principal > 0
+                    ? Math.min(100, Math.round((paid / principal) * 100))
                     : 0;
                 const thisMonth =
                   salaryCalculation.loanBreakdown?.find((b) => b.id === loan.id)
@@ -1685,15 +1690,13 @@ export default function SalaryView({
                       />
                     </div>
                     <div className="flex justify-between text-xs text-txt-soft">
-                      <span>
-                        ผ่อนเดือนละ {formatThaiNumber(loan.monthlyDeduction)} ฿
-                      </span>
+                      <span>ผ่อนเดือนละ {formatThaiNumber(monthly)} ฿</span>
                       <span>
                         คงเหลือ{" "}
                         <b className="text-maroon">
                           {formatThaiNumber(remaining)} ฿
                         </b>{" "}
-                        / {formatThaiNumber(loan.principal)} ฿
+                        / {formatThaiNumber(principal)} ฿
                       </span>
                     </div>
                   </div>

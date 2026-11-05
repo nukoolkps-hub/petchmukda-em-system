@@ -72,6 +72,8 @@ export default function AdminPanel({
   onUpdateStoreCalendar,
   onAddLoan,
   onUpdateLoan,
+  onTopUpLoan,
+  onUndoTopUp,
   onDeleteLoan,
   showToast,
   // controlled by App so the desktop Sidebar can drive section as well
@@ -346,6 +348,8 @@ export default function AdminPanel({
             employeeDirectory={employeeDirectory}
             onAddLoan={onAddLoan}
             onUpdateLoan={onUpdateLoan}
+            onTopUpLoan={onTopUpLoan}
+            onUndoTopUp={onUndoTopUp}
             onDeleteLoan={onDeleteLoan}
             showToast={showToast}
           />

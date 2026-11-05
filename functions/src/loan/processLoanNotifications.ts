@@ -5,6 +5,9 @@
  * แนบสลิปโอน → เมื่อ frontend อัปเดตเสร็จจะ set `lineNotificationStatus:"pending"`
  * บน loan doc. Worker นี้ scan ทุกนาทีจับ pending loans → push flex message +
  * slip image ไปที่ employee.lineUserId · update status เป็น "sent" / "error"
+ *
+ * `lineNotificationType: "topup"` = admin กู้เพิ่มเข้าก้อนเดิม → แจ้งยอดที่เพิ่ม
+ * + ยอดรวม/คงเหลือใหม่ · สลิปใช้ของรายการกู้เพิ่มล่าสุด (`topUps` ท้ายสุด)
  */
 
 import type { DocumentReference, Firestore } from "firebase-admin/firestore";
@@ -111,16 +114,22 @@ async function sendLoanCreatedNotification(
 		return;
 	}
 
+	const latestTopUp =
+		loan.lineNotificationType === "topup" ? lastTopUp(loan) : null;
 	await pushLineMessage(
 		token,
 		employeeLineUserId,
-		buildLoanCreatedFlex(loanId, loan),
+		latestTopUp
+			? buildLoanTopUpFlex(loanId, loan, latestTopUp)
+			: buildLoanCreatedFlex(loanId, loan),
 	);
 
 	// แนบรูปสลิปการโอน (ถ้ามี) — push เป็น image message แยก
 	let slipImagePushFailed = false;
 	let slipImageError: string | null = null;
-	const slipImageUrl = stringValue(loan.slipImageUrl);
+	const slipImageUrl = latestTopUp
+		? stringValue(latestTopUp.slipImageUrl)
+		: stringValue(loan.slipImageUrl);
 	if (slipImageUrl && isTrustedImageUrl(slipImageUrl)) {
 		try {
 			await pushLineMessage(token, employeeLineUserId, {
@@ -248,6 +257,115 @@ function buildLoanCreatedFlex(loanId: string, loan: LoanDoc): LinePushMessage {
 					{
 						type: "text",
 						text: `สร้างเมื่อ: ${formatThaiDateTime(createdAt)}`,
+						size: "xs",
+						color: "#B89A72",
+						margin: "md",
+					},
+					{
+						type: "text",
+						text: `เลขที่: ${loanId}`,
+						size: "xxs",
+						color: "#B89A72",
+					},
+				],
+			},
+		},
+	};
+}
+
+type TopUpEntry = Record<string, unknown>;
+
+/** รายการกู้เพิ่มล่าสุด (ตามเวลาที่กด) · ไม่มี/ข้อมูลเพี้ยน → null */
+function lastTopUp(loan: LoanDoc): TopUpEntry | null {
+	const list = Array.isArray(loan.topUps) ? (loan.topUps as TopUpEntry[]) : [];
+	let latest: TopUpEntry | null = null;
+	for (const t of list) {
+		if (!t || typeof t !== "object") continue;
+		if (
+			!latest ||
+			(stringValue(t.createdAt) ?? "") >= (stringValue(latest.createdAt) ?? "")
+		)
+			latest = t;
+	}
+	return latest;
+}
+
+function buildLoanTopUpFlex(
+	loanId: string,
+	loan: LoanDoc,
+	topUp: TopUpEntry,
+): LinePushMessage {
+	const employeeName = stringValue(loan.employeeName) || "-";
+	const added = numberValue(topUp.amount);
+	const total = numberValue(loan.principal);
+	const repayments =
+		loan.repayments && typeof loan.repayments === "object"
+			? Object.values(loan.repayments as Record<string, unknown>)
+			: [];
+	const paid = repayments.reduce<number>((s, v) => s + numberValue(v), 0);
+	const remaining = Math.max(0, total - paid);
+	const monthly = numberValue(topUp.monthlyDeduction);
+	const prevMonthly = numberValue(topUp.prevMonthlyDeduction);
+	const effectiveMonth = stringValue(topUp.effectiveMonth) || "-";
+	const note = stringValue(topUp.note);
+	const months = monthly > 0 ? Math.ceil(remaining / monthly) : 0;
+
+	return {
+		type: "flex",
+		altText: `💰 เพิ่มเงินกู้ ฿${formatThaiNumber(added)} · ${employeeName}`,
+		contents: {
+			type: "bubble",
+			size: "mega",
+			header: {
+				type: "box",
+				layout: "vertical",
+				backgroundColor: COLORS.maroon,
+				paddingAll: "16px",
+				contents: [
+					{
+						type: "text",
+						text: "💰 เพิ่มเงินกู้",
+						color: COLORS.goldLight,
+						weight: "bold",
+						size: "lg",
+					},
+					{
+						type: "text",
+						text: "ADMIN เพิ่มยอดเข้าเงินกู้เดิมของคุณ · ห้างเพชรทองมุกดา",
+						color: COLORS.goldLight,
+						size: "xs",
+						margin: "sm",
+						wrap: true,
+					},
+				],
+			},
+			body: {
+				type: "box",
+				layout: "vertical",
+				spacing: "md",
+				contents: [
+					{
+						type: "text",
+						text: `สวัสดี คุณ${employeeName}`,
+						size: "md",
+						weight: "bold",
+						color: COLORS.text,
+					},
+					amountBox("ยอดที่กู้เพิ่ม", added, COLORS.maroon, COLORS.goldPale),
+					kvRow("ยอดกู้รวม", `฿${formatThaiNumber(total)}`),
+					kvRow("คงเหลือ", `฿${formatThaiNumber(remaining)}`),
+					kvRow(
+						"ผ่อนเดือนละ",
+						prevMonthly > 0 && prevMonthly !== monthly
+							? `฿${formatThaiNumber(prevMonthly)} → ฿${formatThaiNumber(monthly)}`
+							: `฿${formatThaiNumber(monthly)}`,
+					),
+					kvRow("ยอดใหม่เริ่มหัก", formatMonthLabel(effectiveMonth)),
+					kvRow("ผ่อนอีกประมาณ", months > 0 ? `${months} เดือน` : "-"),
+					...(note ? [kvRow("หมายเหตุ", note)] : []),
+					{
+						type: "text",
+						text: `เพิ่มเมื่อ: ${formatThaiDateTime(stringValue(topUp.createdAt))}`,
 						size: "xs",
 						color: "#B89A72",
 						margin: "md",

@@ -246,23 +246,25 @@ interface Item {
 หักจากเงินเดือนอัตโนมัติทุกเดือนจนครบ · ใช้ **ledger** (`repayments[ym]`)
 เก็บยอดที่หักจริงแต่ละเดือน → คงเหลือแม่นยำเสมอ
 
-**กฎ: 1 active loan / พนักงาน** — UI ใน CreateLoanModal block จากที่ตั้ง
-แต่แรก · admin สร้างใหม่ได้เฉพาะเมื่อก้อนเดิม `paid_off` หรือ `cancelled`
+**กฎ: 1 การ์ด / พนักงาน** — CreateLoanModal block คนที่มีก้อนอยู่แล้ว
+(`active`/`paid_off`) · กู้เพิ่มต่อท้าย `topUps[]` ในก้อนเดิม (ดู business-rules →
+"ระบบเงินกู้ผ่อนคืน") · สร้างใหม่ได้เฉพาะคนที่ไม่มีก้อน หรือก้อนเดิม `cancelled`
 
 | Field | Type | Description |
 |---|---|---|
 | employeeId | string | id พนักงาน |
 | employeeName | string | snapshot ชื่อ (ตอนสร้าง) |
-| principal | number | เงินต้น |
-| monthlyDeduction | number | ผ่อนเดือนละกี่บาท |
+| principal | number | ยอดกู้รวม (ก้อนแรก + กู้เพิ่มทุกครั้ง) |
+| monthlyDeduction | number | ผ่อนเดือนละกี่บาท (ค่าปัจจุบัน) |
 | startMonth | string | `YYYY-MM` เดือนแรกที่เริ่มหัก |
 | note | string | เหตุผล |
 | status | `"active" \| "paid_off" \| "cancelled"` | สถานะ |
 | repayments | `Record<YYYY-MM, number>` | **ledger** — ยอดที่หักจริงแต่ละเดือน |
+| topUps | `LoanTopUp[]?` | กู้เพิ่ม (เก่า → ใหม่) · `{ id, amount, effectiveMonth, createdAt, prevMonthlyDeduction, monthlyDeduction, note?, slipImageUrl? }` · ไม่มี = กู้ครั้งเดียว · ยอด ณ เดือน M = `principal` − ยอดที่ `effectiveMonth > M` (`loanPrincipalAsOf`) |
 | slipImageUrl | string? | URL สลิปการโอนที่ admin upload (storage path `loanSlips/{loanId}/`) |
 | createdAt | string (ISO) | เวลาสร้าง |
 | lineNotificationStatus | `"pending" \| "processing" \| "sent" \| "error" \| "skipped"` | สถานะ LINE notification ตอนสร้าง · worker `processLoanNotifications` |
-| lineNotificationType | `"created"` | ประเภท notification |
+| lineNotificationType | `"created" \| "topup"` | ประเภท notification (`topup` = กู้เพิ่ม · ใช้รายการท้ายสุดของ `topUps`) |
 | lineNotification* | various | ฟิลด์ tracking ของ scheduled worker (Sent/Attempts/Error/...) |
 
 **คงเหลือ:** `principal − Σ repayments` (helper `loanRemaining()`)
