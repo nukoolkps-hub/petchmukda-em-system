@@ -356,9 +356,12 @@ function buildLoanTopUpFlex(
 					kvRow("คงเหลือ", `฿${formatThaiNumber(remaining)}`),
 					kvRow(
 						"ผ่อนเดือนละ",
-						prevMonthly > 0 && prevMonthly !== monthly
-							? `฿${formatThaiNumber(prevMonthly)} → ฿${formatThaiNumber(monthly)}`
-							: `฿${formatThaiNumber(monthly)}`,
+						// บอก "เพิ่มเท่าไร → รวมเท่าไร" ให้ชัด (แค่ 500 → 700 คนอ่านต้องลบเลขเอง)
+						prevMonthly > 0 && monthly > prevMonthly
+							? `฿${formatThaiNumber(monthly)} (เพิ่ม ฿${formatThaiNumber(monthly - prevMonthly)} จากเดิม ฿${formatThaiNumber(prevMonthly)})`
+							: prevMonthly > 0 && monthly < prevMonthly
+								? `฿${formatThaiNumber(monthly)} (ลด ฿${formatThaiNumber(prevMonthly - monthly)} จากเดิม ฿${formatThaiNumber(prevMonthly)})`
+								: `฿${formatThaiNumber(monthly)} (เท่าเดิม)`,
 					),
 					kvRow("ยอดใหม่เริ่มหัก", formatMonthLabel(effectiveMonth)),
 					kvRow("ผ่อนอีกประมาณ", months > 0 ? `${months} เดือน` : "-"),

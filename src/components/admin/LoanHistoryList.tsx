@@ -13,6 +13,7 @@ import {
   latestTopUp,
   loanHistory,
   loanRepaymentHistory,
+  topUpMonthlyChange,
   topUpUndoBlocker,
 } from "../../utils/loanTopUp";
 import { isoDateLabel, monthLabel, monthShortLabel } from "./loanFormat";
@@ -117,12 +118,17 @@ export default function LoanHistoryList({
                     </span>
                   </div>
                   <div className="text-xs text-txt-mid mt-0.5 leading-relaxed">
-                    เริ่มหัก {monthLabel(h.effectiveMonth)} · ผ่อนเดือนละ{" "}
-                    {h.prevMonthlyDeduction != null &&
-                      `${formatThaiNumber(h.prevMonthlyDeduction)} → `}
-                    {formatThaiNumber(h.monthlyDeduction)} ฿
-                    {h.kind === "topup" &&
-                      ` · ยอดกู้รวม ${formatThaiNumber(h.totalAfter)} ฿`}
+                    <div>เริ่มหัก {monthLabel(h.effectiveMonth)}</div>
+                    <div>
+                      <MonthlyLine
+                        kind={h.kind}
+                        prev={h.prevMonthlyDeduction ?? h.monthlyDeduction}
+                        next={h.monthlyDeduction}
+                      />
+                    </div>
+                    {h.kind === "topup" && (
+                      <div>ยอดกู้รวม {formatThaiNumber(h.totalAfter)} ฿</div>
+                    )}
                   </div>
                   {(h.note || h.slipImageUrl) && (
                     <div className="flex items-center gap-2 mt-1">
@@ -189,5 +195,32 @@ export default function LoanHistoryList({
         </div>
       )}
     </div>
+  );
+}
+
+/** บรรทัดยอดผ่อน — กู้เพิ่มบอก "เพิ่มเท่าไร → รวมเท่าไร" ไม่ใช่แค่ "500 → 700" */
+function MonthlyLine({
+  kind,
+  prev,
+  next,
+}: {
+  kind: string;
+  prev: number;
+  next: number;
+}) {
+  if (kind !== "topup") return <>ผ่อนเดือนละ {formatThaiNumber(next)} ฿</>;
+  const c = topUpMonthlyChange(prev, next);
+  if (c.kind === "same")
+    return <>ผ่อนเท่าเดิม เดือนละ {formatThaiNumber(c.total)} ฿</>;
+  return (
+    <>
+      {c.kind === "up" ? "ผ่อนเพิ่ม" : "ผ่อนลด"}{" "}
+      <b className="text-maroon">
+        {c.kind === "up" ? "+" : "−"}
+        {formatThaiNumber(c.delta)} ฿
+      </b>
+      /เดือน → {c.kind === "up" ? "รวม" : "เหลือ"}เดือนละ{" "}
+      <b className="text-maroon">{formatThaiNumber(c.total)} ฿</b>
+    </>
   );
 }

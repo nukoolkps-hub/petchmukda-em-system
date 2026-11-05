@@ -304,6 +304,21 @@ export function loanPaidOffMonths(
   return out;
 }
 
+/** ยอดผ่อนเปลี่ยนเท่าไรตอนกู้เพิ่ม — ประวัติ/แจ้ง LINE ต้องบอก "เพิ่มเท่าไร
+ *  → รวมเท่าไร" ให้ชัด (โชว์แค่ "500 → 700" แล้วคนอ่านต้องลบเลขเอง) ·
+ *  ข้อมูลก่อนเปลี่ยนช่องเป็น "ผ่อนเพิ่ม" อาจมียอดลดลงได้ จึงรองรับ "ลด" ด้วย */
+export function topUpMonthlyChange(
+  prev: number,
+  next: number,
+): { kind: "up" | "down" | "same"; delta: number; total: number } {
+  const delta = num(next) - num(prev);
+  return {
+    kind: delta > 0 ? "up" : delta < 0 ? "down" : "same",
+    delta: Math.abs(delta),
+    total: num(next),
+  };
+}
+
 /** ยอดที่หักแต่ละเดือน (เก่า → ใหม่ · ข้ามเดือนที่หัก 0) */
 export function loanRepaymentHistory(
   loan: LoanLike,
