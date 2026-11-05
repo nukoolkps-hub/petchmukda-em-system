@@ -106,12 +106,11 @@ export default function LoanHistoryList({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-sm font-bold text-txt">
-                      {h.kind === "initial" ? "กู้ครั้งแรก" : "กู้เพิ่ม"}{" "}
-                      <span className="text-maroon">
-                        {h.kind === "topup" ? "+" : ""}
-                        {formatThaiNumber(h.amount)} ฿
-                      </span>
+                    {/* ไม่มีป้าย "กู้ครั้งแรก/กู้เพิ่ม" — ลำดับ + วันที่บอกอยู่แล้ว
+                        · "+" นำหน้ายอดที่กู้เพิ่ม ยังบอกว่าบวกเข้าก้อนเดิม */}
+                    <span className="text-sm font-bold text-maroon">
+                      {h.kind === "topup" ? "+" : ""}
+                      {formatThaiNumber(h.amount)} ฿
                     </span>
                     <span className="text-xs text-txt-soft shrink-0">
                       {isoDateLabel(h.at)}
