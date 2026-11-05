@@ -18,6 +18,7 @@ import {
   loanPaidOffMonths,
   loanPrincipalAsOf,
   loanRepaymentHistory,
+  topUpMonthlyChange,
   topUpUndoBlocker,
   undoLatestTopUp,
   validateTopUp,
@@ -378,5 +379,27 @@ describe("ผ่อนครบ — การ์ดย้ายไปกล่�
     ]);
     expect(h[1].effectiveMonth).toBe("2026-03");
     expect(h[3]).toMatchObject({ effectiveMonth: "2026-06", amount: 15000 });
+  });
+});
+
+describe("topUpMonthlyChange — ข้อความยอดผ่อนตอนกู้เพิ่ม", () => {
+  it("ผ่อนเพิ่ม 500 → 700 = เพิ่ม 200 รวม 700", () => {
+    expect(topUpMonthlyChange(500, 700)).toEqual({
+      kind: "up",
+      delta: 200,
+      total: 700,
+    });
+  });
+
+  it("ยอดเท่าเดิม = same", () => {
+    expect(topUpMonthlyChange(500, 500).kind).toBe("same");
+  });
+
+  it("ข้อมูลเก่าที่ยอดลดลง = down (ไม่ติดลบ)", () => {
+    expect(topUpMonthlyChange(500, 200)).toEqual({
+      kind: "down",
+      delta: 300,
+      total: 200,
+    });
   });
 });
