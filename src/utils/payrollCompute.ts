@@ -16,6 +16,7 @@ import {
   getOverQuotaDays,
   leaveOverlapsMonth,
 } from "./leaveUtils";
+import { loanMonthlyAsOf, loanPrincipalAsOf } from "./loanTopUp";
 import {
   calculateSalary,
   computeExtraOpenSaturdayWorkedDates,
@@ -51,8 +52,10 @@ export function buildLoanContext(
     .filter((l) => l.employeeId === employeeId && l.status !== "cancelled")
     .map((l) => ({
       id: l.id,
-      monthlyDeduction: l.monthlyDeduction,
-      principal: l.principal,
+      // ยอด "ณ เดือนนี้" ไม่ใช่ยอดรวมปัจจุบัน — กู้เพิ่มทีหลังต้องไม่ย้อนไป
+      // เปลี่ยนยอดหักของเดือนก่อน (re-settle เดือน grace) · ดู utils/loanTopUp
+      monthlyDeduction: loanMonthlyAsOf(l, yearMonth),
+      principal: loanPrincipalAsOf(l, yearMonth),
       startMonth: l.startMonth,
       repayments: l.repayments,
     }));

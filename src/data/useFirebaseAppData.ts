@@ -36,6 +36,7 @@ import {
   computeCoverageEarningsForMonth,
   employeeHasPoolExemptDuty,
 } from "../utils/dutyUtils";
+import { formatThaiNumber } from "../utils/format";
 import {
   countWeekdayLeaves,
   getOverQuotaDays,
@@ -869,6 +870,20 @@ export default function useFirebaseAppData({
       );
     }
   }
+  /** กู้เพิ่มเข้าก้อนเดิม — ยอดเพิ่มมีผลตั้งแต่ `effectiveMonth` เท่านั้น
+   *  (เดือน grace ก่อนหน้านั้น re-settle แล้วได้ยอดหักเท่าเดิม · utils/loanTopUp) */
+  async function addEmployeeLoanTopUp(id, input) {
+    const updated = await employeeLoansAPI.addLoanTopUpTx(id, input);
+    if (!updated) throw new Error("ไม่พบเงินกู้นี้");
+    await resyncEmployeeGraceMonths(
+      updated.employeeId,
+      loansResult.data.map((l) => (l.id === id ? updated : l)),
+      [
+        `เพิ่มเงินกู้ผ่อนคืน +${formatThaiNumber(input.amount)} ฿ (รวม ${formatThaiNumber(updated.principal)} ฿ · หักเดือนละ ${formatThaiNumber(updated.monthlyDeduction)} ฿)`,
+      ],
+    );
+    return updated;
+  }
   async function deleteEmployeeLoan(id) {
     const loan = loansResult.data.find((l) => l.id === id);
     await employeeLoansAPI.deleteEmployeeLoan(id);
@@ -1080,6 +1095,7 @@ export default function useFirebaseAppData({
     updateStoreCalendar,
     addEmployeeLoan,
     updateEmployeeLoan,
+    addEmployeeLoanTopUp,
     deleteEmployeeLoan,
   };
 }

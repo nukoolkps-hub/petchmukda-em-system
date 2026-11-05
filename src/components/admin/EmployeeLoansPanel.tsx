@@ -1,6 +1,8 @@
 /* ─── Admin: Employee Loans Panel (เงินกู้ผ่อนคืน) ──────────────────
    admin สร้างเงินกู้ให้พนักงาน — กำหนดเงินต้น + ผ่อนเดือนละ X → ระบบจะหัก
-   จากเงินเดือนอัตโนมัติทุกเดือนจนครบ (Stage B). หน้านี้: list + create/cancel  */
+   จากเงินเดือนอัตโนมัติทุกเดือนจนครบ (Stage B). หน้านี้: list + create/cancel
+   พนักงาน 1 คน = การ์ดเดียว · กู้เพิ่มใช้ปุ่ม "เพิ่มเงินกู้" บนการ์ด (ต่อท้าย
+   ประวัติในก้อนเดิม · LoanTopUpModal) ไม่สร้างก้อนใหม่                         */
 import {
   CircleCheck as IconCircleCheck,
   HandCoins as IconHandCoins,
@@ -11,7 +13,6 @@ import {
   X as IconX,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { THAI_MONTH_NAMES } from "../../constants";
 import { loanRemaining } from "../../firebase/employeeLoans";
 import { uploadLoanSlip } from "../../firebase/storage";
 import { currentYearMonth } from "../../utils/dateUtils";
@@ -23,24 +24,9 @@ import MoneyInput from "../shared/MoneyInput";
 import { SkeletonRow } from "../shared/Skeleton";
 import Spinner from "../shared/Spinner";
 import ThemedSelect from "../shared/ThemedSelect";
-
-function monthLabel(ym: string) {
-  const [y, mo] = String(ym || "").split("-");
-  const name = THAI_MONTH_NAMES[parseInt(mo, 10) - 1];
-  return name ? `${name} ${parseInt(y, 10) + 543}` : ym;
-}
-
-function monthOptions(): string[] {
-  const now = new Date();
-  const out: string[] = [];
-  // เดือนปัจจุบัน + ล่วงหน้า 3 เดือน (ไม่ย้อนหลัง — กันสร้างเงินกู้ใส่เดือนเก่า
-  // ที่อาจปิดรอบไปแล้ว)
-  for (let i = 0; i <= 3; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-  }
-  return out;
-}
+import LoanHistoryList from "./LoanHistoryList";
+import LoanTopUpModal from "./LoanTopUpModal";
+import { monthLabel, monthOptions } from "./loanFormat";
 
 export default function EmployeeLoansPanel({
   employeeLoans,
@@ -48,10 +34,22 @@ export default function EmployeeLoansPanel({
   employeeDirectory,
   onAddLoan,
   onUpdateLoan,
+  onTopUpLoan,
   onDeleteLoan,
   showToast,
 }) {
   const [showCreate, setShowCreate] = useState(false);
+  // เงินกู้ที่กำลังกู้เพิ่ม · null = ไม่เปิด
+  const [topUpLoan, setTopUpLoan] = useState<any>(null);
+  // การ์ดที่กางประวัติอยู่ (หลายใบพร้อมกันได้)
+  const [openHistory, setOpenHistory] = useState<Set<string>>(new Set());
+  const toggleHistory = (id: string) =>
+    setOpenHistory((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const [confirmDelete, setConfirmDelete] = useState<any>(null);
   // url สลิปโอนเงินกู้ที่กำลังเปิดดู · null = ไม่เปิด
   const [viewingSlipUrl, setViewingSlipUrl] = useState<string | null>(null);
@@ -180,7 +178,10 @@ export default function EmployeeLoansPanel({
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center mb-2">
-                  <Stat label="เงินต้น" value={loan.principal} />
+                  <Stat
+                    label={loan.topUps?.length ? "ยอดกู้รวม" : "เงินต้น"}
+                    value={loan.principal}
+                  />
                   <Stat label="ผ่อนเดือนละ" value={loan.monthlyDeduction} />
                   <Stat label="คงเหลือ" value={remaining} highlight />
                 </div>
@@ -198,6 +199,27 @@ export default function EmployeeLoansPanel({
                     ผ่อนแล้ว {formatThaiNumber(paid)} ฿ ({pct}%)
                   </span>
                 </div>
+
+                <div className="mt-2 pt-2 border-t border-bdr/60">
+                  <LoanHistoryList
+                    loan={loan}
+                    open={openHistory.has(loan.id)}
+                    onToggle={() => toggleHistory(loan.id)}
+                    onViewSlip={setViewingSlipUrl}
+                    action={
+                      !cancelled && (
+                        <button
+                          type="button"
+                          onClick={() => setTopUpLoan(loan)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[9px] border-[1.5px] border-maroon/25 bg-maroon/5 text-maroon text-xs font-bold cursor-pointer font-[inherit] shrink-0"
+                        >
+                          <IconPlus size={13} strokeWidth={2.6} />
+                          เพิ่มเงินกู้
+                        </button>
+                      )
+                    }
+                  />
+                </div>
               </div>
             );
           })}
@@ -211,6 +233,16 @@ export default function EmployeeLoansPanel({
           onClose={() => setShowCreate(false)}
           onAddLoan={onAddLoan}
           onUpdateLoan={onUpdateLoan}
+          showToast={showToast}
+        />
+      )}
+
+      {topUpLoan && (
+        <LoanTopUpModal
+          loan={topUpLoan}
+          employeeName={empName(topUpLoan.employeeId, topUpLoan.employeeName)}
+          onClose={() => setTopUpLoan(null)}
+          onTopUpLoan={onTopUpLoan}
           showToast={showToast}
         />
       )}
@@ -330,13 +362,16 @@ function CreateLoanModal({
   const monthlyNum = parseFloat(monthly) || 0;
   const estMonths = monthlyNum > 0 ? Math.ceil(principalNum / monthlyNum) : 0;
 
-  // กฎ "1 ก้อน/คน" — ถ้าพนักงานคนนี้ยังมี active loan (ยังผ่อนไม่ครบ) →
-  // ห้ามสร้างก้อนใหม่ · ต้องรอผ่อนครบหรือ admin ยกเลิกก้อนเดิมก่อน
-  // (cancelled / paid_off ไม่นับ · สร้างใหม่ได้)
+  // กฎ "1 การ์ด/คน" — พนักงานที่มีเงินกู้อยู่แล้ว (กำลังผ่อน หรือผ่อนครบแล้ว)
+  // ห้ามสร้างก้อนใหม่ · กู้เพิ่มผ่านปุ่ม "เพิ่มเงินกู้" บนการ์ดเดิม (ประวัติรวม
+  // อยู่ใบเดียว) · cancelled ไม่นับ · ก้อนที่ยังผ่อนอยู่มาก่อนเสมอ
   const activeLoanByEmployeeId = useMemo(() => {
     const map = new Map<string, any>();
     for (const l of employeeLoans || []) {
-      if (l.status === "active") map.set(l.employeeId, l);
+      if (l.status === "cancelled") continue;
+      const prev = map.get(l.employeeId);
+      if (!prev || (prev.status !== "active" && l.status === "active"))
+        map.set(l.employeeId, l);
     }
     return map;
   }, [employeeLoans]);
@@ -373,7 +408,7 @@ function CreateLoanModal({
   async function submit() {
     if (!employeeId) return setErr("กรุณาเลือกพนักงาน");
     if (hasActiveLoan)
-      return setErr("พนักงานคนนี้มีเงินกู้ค้างผ่อนอยู่ · ต้องผ่อนครบก่อนค่อยกู้ใหม่");
+      return setErr('พนักงานคนนี้มีการ์ดเงินกู้อยู่แล้ว · กด "เพิ่มเงินกู้" ที่การ์ดเดิม');
     if (principalNum <= 0) return setErr("กรุณาระบุเงินต้น");
     if (monthlyNum <= 0) return setErr("กรุณาระบุยอดผ่อนต่อเดือน");
     if (monthlyNum > principalNum) return setErr("ยอดผ่อนต่อเดือนมากกว่าเงินต้น");
@@ -483,7 +518,7 @@ function CreateLoanModal({
             const blocked = activeLoanByEmployeeId.has(e.id);
             return {
               value: e.id,
-              label: `${e.name}${blocked ? "  — มีเงินกู้ค้าง" : ""}`,
+              label: `${e.name}${blocked ? "  — มีการ์ดเงินกู้แล้ว" : ""}`,
               disabled: blocked,
             };
           })}
@@ -589,11 +624,11 @@ function CreateLoanModal({
 
       {hasActiveLoan && (
         <div className="bg-red-lt rounded-[10px] px-3.5 py-2.5 mb-3 border border-[#C0392B40] text-sm text-red font-semibold leading-relaxed">
-          พนักงานคนนี้มีเงินกู้ค้างผ่อนอยู่ — เงินต้น ฿
+          พนักงานคนนี้มีการ์ดเงินกู้อยู่แล้ว — ยอดกู้รวม ฿
           {formatThaiNumber(activeLoanForEmployee.principal)} · คงเหลือ ฿
           {formatThaiNumber(loanRemaining(activeLoanForEmployee))}
           <div className="text-xs font-normal text-txt-mid mt-1">
-            กฎ: กู้ได้ครั้งละ 1 ก้อน · ต้องผ่อนครบก่อนค่อยกู้ใหม่
+            กู้เพิ่มได้ที่ปุ่ม "เพิ่มเงินกู้" บนการ์ดเดิม · ประวัติจะรวมอยู่ใบเดียว
           </div>
         </div>
       )}
@@ -628,7 +663,7 @@ function CreateLoanModal({
           }`}
         >
           {saving && <Spinner size={18} />}
-          {saving ? "กำลังบันทึก..." : hasActiveLoan ? "มีเงินกู้ค้างอยู่" : "สร้างเงินกู้"}
+          {saving ? "กำลังบันทึก..." : hasActiveLoan ? "มีการ์ดเงินกู้แล้ว" : "สร้างเงินกู้"}
         </button>
       </div>
     </BaseModal>

@@ -14,6 +14,12 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import {
+  applyTopUp,
+  type LoanTopUp,
+  loanPrincipalAsOf,
+  type TopUpInput,
+} from "../utils/loanTopUp";
 import { COLLECTIONS, db } from "./config";
 
 const ref = collection(db, COLLECTIONS.EMPLOYEE_LOANS);
@@ -24,12 +30,14 @@ export interface EmployeeLoan {
   id: string;
   employeeId: string;
   employeeName: string;
-  principal: number; // เงินต้น
+  principal: number; // ยอดกู้รวม (ก้อนแรก + กู้เพิ่มทุกครั้ง)
   monthlyDeduction: number; // ผ่อนเดือนละ
   startMonth: string; // "YYYY-MM" เดือนแรกที่เริ่มหัก
   note: string;
   status: LoanStatus;
   repayments?: Record<string, number>; // { "YYYY-MM": amount } — เขียนตอนยืนยันยอด
+  /** กู้เพิ่มเข้าก้อนเดิม (เก่า → ใหม่) · ไม่มี = กู้ครั้งเดียว · ดู utils/loanTopUp */
+  topUps?: LoanTopUp[];
   /** สลิปโอนเงิน — admin อัปโหลดตอนสร้างเงินกู้ · พนักงานเปิดดูได้ */
   slipImageUrl?: string;
   createdAt: string;
@@ -42,7 +50,7 @@ export interface EmployeeLoan {
     | "sent"
     | "error"
     | "skipped";
-  lineNotificationType?: "created";
+  lineNotificationType?: "created" | "topup";
   lineNotificationRequestedAt?: string;
   lineNotificationSentAt?: string;
   lineNotificationLastError?: string | null;
@@ -139,6 +147,42 @@ export async function recordLoanRepaymentTx(
   });
 }
 
+/** กู้เพิ่มเข้าก้อนเดิมแบบ atomic — อ่าน doc ล่าสุดใน transaction (state ฝั่ง
+ *  client อาจค้าง · ยืนยันยอดพร้อมกันจะเขียน repayments แทรก) แล้วต่อท้าย
+ *  `topUps` + บวกยอดกู้รวม + ตั้งแจ้ง LINE ให้พนักงาน
+ *
+ *  ถ้าแจ้ง "สร้างเงินกู้" ยังไม่ถูกส่ง (pending/processing) → คงเป็นแจ้งสร้าง
+ *  (ข้อความนั้นโชว์ยอดรวมล่าสุดอยู่แล้ว) ไม่งั้นพนักงานจะไม่เคยได้แจ้งก้อนแรก
+ *  คืน doc หลังเขียน (ใช้ re-settle เดือน grace ด้วยข้อมูลเดียวกัน) */
+export async function addLoanTopUpTx(
+  loanId: string,
+  input: Omit<TopUpInput, "createdAt">,
+): Promise<EmployeeLoan | null> {
+  const loanRef = doc(ref, loanId);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(loanRef);
+    if (!snap.exists()) return null;
+    const data = { id: snap.id, ...snap.data() } as EmployeeLoan;
+    const now = new Date().toISOString();
+    const fields = applyTopUp(data, { ...input, createdAt: now });
+    const createdStillQueued =
+      data.lineNotificationType !== "topup" &&
+      (data.lineNotificationStatus === "pending" ||
+        data.lineNotificationStatus === "processing");
+    const notify = createdStillQueued
+      ? {}
+      : {
+          lineNotificationStatus: "pending" as const,
+          lineNotificationType: "topup" as const,
+          lineNotificationRequestedAt: now,
+          lineNotificationLastError: null,
+          lineNotificationSkippedReason: null,
+        };
+    tx.update(loanRef, { ...fields, ...notify });
+    return { ...data, ...fields, ...notify };
+  });
+}
+
 /* สร้าง loanContext ให้ calculateSalary — canonical ย้ายไป utils/payrollCompute
    (pure · single source) · re-export ที่นี่ให้ component เดิมที่ import จาก
    firebase/employeeLoans ใช้ต่อได้โดยไม่ต้องแก้ */
@@ -155,7 +199,8 @@ export function loanRemaining(loan: EmployeeLoan): number {
 
 /** คงเหลือ "ณ สิ้นเดือน yearMonth" — รวมเฉพาะ repayments[ym] ที่ ym ≤ yearMonth
  *  ใช้แสดง snapshot ฝั่งพนักงานตอนเลื่อนดูเดือนเก่า (ไม่เอาเดือนอนาคต)
- *  เปรียบเทียบ string "YYYY-MM" lexicographic = chronological */
+ *  เปรียบเทียบ string "YYYY-MM" lexicographic = chronological · ยอดกู้ใช้ยอด
+ *  ณ เดือนนั้น (กู้เพิ่มทีหลังไม่ย้อนไปโผล่ในเดือนเก่า) */
 export function loanRemainingAsOfMonth(
   loan: EmployeeLoan,
   yearMonth: string,
@@ -163,5 +208,5 @@ export function loanRemainingAsOfMonth(
   const paid = Object.entries(loan.repayments || {})
     .filter(([ym]) => ym <= yearMonth)
     .reduce((s, [, v]) => s + (Number(v) || 0), 0);
-  return Math.max(0, (Number(loan.principal) || 0) - paid);
+  return Math.max(0, loanPrincipalAsOf(loan, yearMonth) - paid);
 }

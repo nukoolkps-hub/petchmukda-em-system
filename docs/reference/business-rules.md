@@ -21,7 +21,7 @@ Earnings = baseSalary                  (effective = baseSalary + Σ annualRaises
 
 Deductions = overQuotaDeduction
            + advanceDeduction       (รวม approved advances ที่ month === salary.month)
-           + loanDeduction          (เงินกู้ผ่อนคืน — 1 ก้อน/คน · หักเท่าที่มี)
+           + loanDeduction          (เงินกู้ผ่อนคืน — 1 การ์ด/คน · หักเท่าที่มี)
            + socialSecurity
            + Σ recurringDeductions  (รายจ่ายประจำเดือน admin ตั้งใน employee profile)
            + Σ customDeductions     (per-month admin เพิ่มเอง · ไม่เป็นประจำ)
@@ -390,12 +390,27 @@ Source: `src/data/useFirebaseAppData.ts` (`syncAutoCarryAdvance`) · `src/compon
 ต่างจากเบิกล่วงหน้า — **admin สร้างเอง** + หักจากเงินเดือนอัตโนมัติทุกเดือน
 จนครบ โดยใช้ **ledger** เก็บยอดที่หักจริงรายเดือน
 
-- **กฎสำคัญ: 1 active loan ต่อพนักงาน** — admin ห้ามสร้างใหม่จนกว่าก้อนเดิม
-  จะ `paid_off` หรือ `cancelled` · UI block ใน CreateLoanModal:
+- **กฎสำคัญ: 1 การ์ดต่อพนักงาน** — คนที่มีเงินกู้อยู่แล้ว (`active` หรือ
+  `paid_off` · ไม่นับ `cancelled`) สร้างก้อนใหม่ไม่ได้ · UI block ใน CreateLoanModal:
   · banner แดงเตือน + ปุ่ม submit disabled
-  · dropdown พนักงาน — option ที่มี active loan ถูก `disabled` + suffix
-    "— มีเงินกู้ค้าง"
+  · dropdown พนักงาน — option ที่มีการ์ดแล้วถูก `disabled` + suffix
+    "— มีการ์ดเงินกู้แล้ว"
   · default selection auto-switch ไปคนแรกที่ "ว่าง"
+- **กู้เพิ่ม (top-up)** — ปุ่ม "เพิ่มเงินกู้" บนการ์ด (`LoanTopUpModal`) ต่อท้าย
+  `topUps[]` ใน doc เดิมผ่าน transaction (`addLoanTopUpTx`) · `principal` บวกยอด
+  เพิ่ม (= ยอดกู้รวม) · `monthlyDeduction` เป็นค่าใหม่ · `paid_off` → `active` ·
+  **ไม่แตะ `repayments`**
+  · ยอดเพิ่ม + ยอดผ่อนใหม่มีผลตั้งแต่ `effectiveMonth` (เลือกได้ เดือนนี้ –
+    +3 เดือน · ห้ามก่อนครั้งที่กู้เพิ่มล่าสุด) · **เดือนก่อนหน้าคิดด้วยยอดเดิม**:
+    `buildLoanContext` ส่ง `loanPrincipalAsOf`/`loanMonthlyAsOf` (ไม่ใช่ยอดรวม
+    ปัจจุบัน) → re-settle เดือน grace หลังกู้เพิ่มได้ยอดหักเท่าเดิมเป๊ะ (มีเทสต์คุม
+    ผ่าน `calculateSalary` จริงใน `loanTopUp.test.ts`)
+  · ตัวอย่างที่พังถ้าใช้ยอดรวม: ก้อนเดิมเหลือ 500 เดือน 3 (หัก 500) · กู้เพิ่ม
+    10,000 เริ่มเดือน 4 · re-settle เดือน 3 ด้วยยอดรวมจะหักเต็ม 2,000 ย้อนหลัง
+  · ประวัติในการ์ด: `loanHistory` (กู้ครั้งแรก + กู้เพิ่มแต่ละครั้ง: วันที่ · ยอด ·
+    เดือนเริ่มหัก · ยอดผ่อนก่อน→หลัง · หมายเหตุ · สลิป) + `loanRepaymentHistory`
+    (ยอดที่หักแต่ละเดือน)
+  · doc เก่าไม่มี `topUps` = ยอดเดิมทุกเดือน (migrate-on-read)
 - ฟิลด์หลัก: `principal` (เงินต้น) · `monthlyDeduction` (ผ่อนเดือนละ) ·
   `startMonth` · `status` · `repayments[ym]` (ledger) · `slipImageUrl?`
   (สลิปการโอน · admin upload ตอนสร้าง)
@@ -408,10 +423,13 @@ Source: `src/data/useFirebaseAppData.ts` (`syncAutoCarryAdvance`) · `src/compon
     UI ใหม่กรอง 1 ก้อน/คน → FIFO loop รัน 1 รอบ
 - บันทึก ledger ตอน admin "ยืนยันยอด" — `repayments[ym]` เขียน
   เป็น overwrite (idempotent re-confirm) + `status = "paid_off"` เมื่อครบ
-- Status flow: `active → paid_off / cancelled`
+- Status flow: `active → paid_off / cancelled` · `paid_off → active` เมื่อกู้เพิ่ม
 - **LINE notification (ตอนสร้าง):** Cloud Function `processLoanNotifications`
   (scheduled `* * * * *`) push flex message + รูปสลิป (ถ้ามี) ไปที่
-  `employee.lineUserId` · admin toggle เปิด/ปิดผ่าน `loanCreatedEnabled`
+  `employee.lineUserId` · admin toggle เปิด/ปิดผ่าน `loanCreatedEnabled` ·
+  กู้เพิ่มตั้ง `lineNotificationType: "topup"` → flex "เพิ่มเงินกู้" (ยอดเพิ่ม ·
+  ยอดรวม · คงเหลือ · ยอดผ่อน) + สลิปของรายการกู้เพิ่มล่าสุด · ถ้าแจ้ง "สร้าง"
+  ยังไม่ถูกส่ง (pending/processing) คงเป็นแจ้งสร้าง (ข้อความโชว์ยอดรวมล่าสุดอยู่แล้ว)
 - **พนักงานเปิดดูสลิป:** ปุ่ม "สลิป" มุมขวาบน loan card ใน /salary →
   modal โชว์รูปเต็มจอ · storage rule `loanSlips/{loanId}/*` จำกัด read
   เฉพาะ admin + loan owner
