@@ -37,9 +37,11 @@ export default function LoanTopUpModal({
   const months = monthOptions(latestEffective);
 
   const [amount, setAmount] = useState("");
-  const [monthly, setMonthly] = useState(
-    String(Number(loan.monthlyDeduction) || ""),
-  );
+  // กรอก "ผ่อนเพิ่ม" แล้วบวกจากยอดเดิมให้ — เดิมเป็นช่องยอดรวมใหม่ admin พิมพ์
+  // เฉพาะส่วนที่เพิ่ม (เช่น 200 ตั้งใจให้เป็น 500 + 200) แล้วกลายเป็นผ่อนลดเหลือ
+  // 200 เงียบๆ · ว่าง/0 = ผ่อนเท่าเดิมแต่นานขึ้น · ที่เก็บลง doc ยังเป็นยอดรวม
+  const currentMonthly = Number(loan.monthlyDeduction) || 0;
+  const [extraMonthly, setExtraMonthly] = useState("");
   const [effectiveMonth, setEffectiveMonth] = useState(months[0] || "");
   const [note, setNote] = useState("");
   const [slipDataUrl, setSlipDataUrl] = useState<string | null>(null);
@@ -48,7 +50,8 @@ export default function LoanTopUpModal({
   const [err, setErr] = useState("");
 
   const amountNum = parseFloat(amount) || 0;
-  const monthlyNum = parseFloat(monthly) || 0;
+  const extraMonthlyNum = Math.max(0, parseFloat(extraMonthly) || 0);
+  const monthlyNum = currentMonthly + extraMonthlyNum;
   const totalAfter = (Number(loan.principal) || 0) + amountNum;
   const remainingAfter = currentRemaining + amountNum;
   const estMonths =
@@ -158,15 +161,25 @@ export default function LoanTopUpModal({
         </div>
         <div>
           <label className="block text-sm text-txt-mid font-semibold mb-1.5">
-            ผ่อนเดือนละ (บาท)
+            ผ่อนเพิ่มเดือนละ (บาท)
           </label>
           <MoneyInput
-            value={monthly}
-            onChange={setMonthly}
+            value={extraMonthly}
+            onChange={setExtraMonthly}
             placeholder="0"
             className={inputCls}
           />
         </div>
+      </div>
+      <div className="text-sm text-txt-mid -mt-1.5 mb-3">
+        รวมผ่อนเดือนละ {formatThaiNumber(currentMonthly)} +{" "}
+        {formatThaiNumber(extraMonthlyNum)} ={" "}
+        <b className="text-maroon whitespace-nowrap">
+          {formatThaiNumber(monthlyNum)} ฿
+        </b>
+        {extraMonthlyNum === 0 && (
+          <span className="text-xs text-txt-soft"> (ผ่อนเท่าเดิม นานขึ้น)</span>
+        )}
       </div>
 
       <label className="block text-sm text-txt-mid font-semibold mb-1.5">
