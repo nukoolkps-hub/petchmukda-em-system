@@ -28,9 +28,20 @@ import RolesAdminPanel from "./RolesAdminPanel";
 import StoreCalendarPanel from "./StoreCalendarPanel";
 import WipeDataPanel from "./WipeDataPanel";
 
-function AdminNavBadge({ count }: { count: number }) {
+/* `onCorner` = คร่อมมุมปุ่มหมวด (ชื่อยาว เช่น "เบิก / กู้เงิน" ไม่โดนบัง) ·
+   ปุ่มเมนูย่อยคงไว้ในปุ่ม — ปุ่มที่ไม่ได้เลือกไม่มีขอบ วางนอกปุ่มแล้วดูเหมือน
+   เป็นของปุ่มข้างๆ */
+function AdminNavBadge({
+  count,
+  onCorner = false,
+}: {
+  count: number;
+  onCorner?: boolean;
+}) {
   return (
-    <span className="absolute top-[3px] right-[3px] flex h-5 min-w-5 items-center justify-center rounded-full bg-red px-1.5 text-xs font-bold leading-none text-white shadow-red-glow">
+    <span
+      className={`absolute ${onCorner ? "-top-1.5 -right-1.5 z-1" : "top-[3px] right-[3px]"} flex h-5 min-w-5 items-center justify-center rounded-full bg-red px-1.5 text-xs font-bold leading-none text-white shadow-red-glow`}
+    >
       {count}
     </span>
   );
@@ -132,7 +143,7 @@ export default function AdminPanel({
             const Icon = group.Icon;
             const active = activeGroup.id === group.id;
             const pendingCount =
-              group.id === "payroll" ? pendingAdvanceCount : 0;
+              group.id === "lending" ? pendingAdvanceCount : 0;
 
             return (
               <button
@@ -150,7 +161,9 @@ export default function AdminPanel({
                 <span className="min-w-0 truncate text-sm font-bold">
                   {group.label}
                 </span>
-                {pendingCount > 0 && <AdminNavBadge count={pendingCount} />}
+                {pendingCount > 0 && (
+                  <AdminNavBadge count={pendingCount} onCorner />
+                )}
               </button>
             );
           })}
