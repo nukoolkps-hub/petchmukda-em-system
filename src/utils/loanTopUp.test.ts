@@ -10,11 +10,14 @@ import { describe, expect, it } from "vitest";
 import {
   applyTopUp,
   type LoanTopUp,
+  latestTopUp,
   loanBasePrincipal,
   loanHistory,
   loanMonthlyAsOf,
   loanPrincipalAsOf,
   loanRepaymentHistory,
+  topUpUndoBlocker,
+  undoLatestTopUp,
   validateTopUp,
 } from "./loanTopUp";
 import { buildLoanContext } from "./payrollCompute";
@@ -241,5 +244,82 @@ describe("loanRepaymentHistory", () => {
       { yearMonth: "2026-01", amount: 2000 },
       { yearMonth: "2026-03", amount: 1000 },
     ]);
+  });
+});
+
+describe("ลบการกู้เพิ่มครั้งล่าสุด", () => {
+  const once = topUp(base, {});
+  const twice = {
+    ...once,
+    ...applyTopUp(once, {
+      id: "t2",
+      amount: 4000,
+      effectiveMonth: "2026-06",
+      monthlyDeduction: 3500,
+      createdAt: "2026-05-30T05:00:00.000Z",
+    }),
+  };
+
+  it("ครั้งล่าสุด = ตามเวลาที่กด", () => {
+    expect(latestTopUp(twice)?.id).toBe("t2");
+    expect(latestTopUp(base)).toBeNull();
+  });
+
+  it("**ลบแล้วได้ doc เท่าก่อนกู้เพิ่มเป๊ะ** (ยอดกู้ · ยอดผ่อน · สถานะ · topUps)", () => {
+    const undone = { ...twice, ...undoLatestTopUp(twice) };
+    expect(undone.principal).toBe(once.principal);
+    expect(undone.monthlyDeduction).toBe(once.monthlyDeduction);
+    expect(undone.status).toBe(once.status);
+    expect(undone.topUps).toEqual(once.topUps);
+    // ลบต่ออีกครั้ง → กลับเป็นก้อนแรก
+    const back = { ...undone, ...undoLatestTopUp(undone) };
+    expect(back.principal).toBe(base.principal);
+    expect(back.monthlyDeduction).toBe(base.monthlyDeduction);
+    expect(back.topUps).toEqual([]);
+  });
+
+  it("ก้อนที่ผ่อนครบก่อนกู้เพิ่ม → ลบแล้วกลับเป็น 'ผ่อนครบแล้ว'", () => {
+    const paidOff = {
+      ...base,
+      status: "paid_off",
+      repayments: { "2026-01": 5000, "2026-02": 5000 },
+    };
+    const reopened = topUp(paidOff, {});
+    expect(reopened.status).toBe("active");
+    expect(undoLatestTopUp(reopened)?.status).toBe("paid_off");
+  });
+
+  it("ไม่แตะ repayments", () => {
+    expect("repayments" in (undoLatestTopUp(once) || {})).toBe(false);
+  });
+
+  it("ไม่มีรายการกู้เพิ่ม → null / ลบไม่ได้", () => {
+    expect(undoLatestTopUp(base)).toBeNull();
+    expect(topUpUndoBlocker(base)).not.toBe("");
+  });
+
+  it("ยังไม่เคยหักด้วยยอดใหม่ → ลบได้", () => {
+    // หักเดือน 1-2 (ก่อนเดือนเริ่มหักยอดใหม่ 2026-04) ไม่นับ
+    expect(topUpUndoBlocker(once)).toBe("");
+  });
+
+  it("**หักเงินเดือนตั้งแต่เดือนที่ยอดใหม่มีผลไปแล้ว → ลบไม่ได้**", () => {
+    const deducted = {
+      ...once,
+      repayments: { ...once.repayments, "2026-04": 3000 },
+    };
+    expect(topUpUndoBlocker(deducted)).not.toBe("");
+    // เดือนนั้นหัก 0 (เงินไม่พอ) = ยังไม่กระทบ ledger → ลบได้
+    const zero = { ...once, repayments: { ...once.repayments, "2026-04": 0 } };
+    expect(topUpUndoBlocker(zero)).toBe("");
+  });
+
+  it("เงินกู้ที่ยกเลิกแล้ว → ลบไม่ได้", () => {
+    expect(topUpUndoBlocker({ ...once, status: "cancelled" })).not.toBe("");
+  });
+
+  it("ประวัติบอก id ของรายการกู้เพิ่ม (ปุ่มลบผูกกับรายการล่าสุด)", () => {
+    const h = loanHistory(twice);
+    expect(h.map((e) => e.topUpId)).toEqual([undefined, "t1", "t2"]);
   });
 });

@@ -17,8 +17,11 @@ import {
 import {
   applyTopUp,
   type LoanTopUp,
+  latestTopUp,
   loanPrincipalAsOf,
   type TopUpInput,
+  topUpUndoBlocker,
+  undoLatestTopUp,
 } from "../utils/loanTopUp";
 import { COLLECTIONS, db } from "./config";
 
@@ -180,6 +183,50 @@ export async function addLoanTopUpTx(
         };
     tx.update(loanRef, { ...fields, ...notify });
     return { ...data, ...fields, ...notify };
+  });
+}
+
+/** ลบการกู้เพิ่มครั้งล่าสุด — เช็คกฎซ้ำกับ doc ล่าสุดใน transaction (หน้าจอ
+ *  อาจค้าง: ระหว่างนั้นมีการยืนยันยอดหักด้วยยอดใหม่ไปแล้ว หรือมีคนกู้เพิ่ม
+ *  ซ้อนเข้ามา) · `topUpId` ต้องเป็นครั้งล่าสุดจริง ไม่งั้นปฏิเสธ
+ *
+ *  แจ้ง LINE "เพิ่มเงินกู้" ที่ยังไม่ส่ง → ยกเลิก (skipped) · ส่งไปแล้วถอนไม่ได้
+ *  คืน { loan หลังลบ, ส่ง LINE ไปแล้วหรือยัง } */
+export async function undoLoanTopUpTx(
+  loanId: string,
+  topUpId: string,
+): Promise<{ loan: EmployeeLoan; removed: LoanTopUp; notified: boolean }> {
+  const loanRef = doc(ref, loanId);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(loanRef);
+    if (!snap.exists()) throw new Error("ไม่พบเงินกู้นี้");
+    const data = { id: snap.id, ...snap.data() } as EmployeeLoan;
+    const latest = latestTopUp(data);
+    if (!latest || latest.id !== topUpId)
+      throw new Error("รายการนี้ไม่ใช่การกู้เพิ่มครั้งล่าสุดแล้ว");
+    const blocker = topUpUndoBlocker(data);
+    if (blocker) throw new Error(blocker);
+    const fields = undoLatestTopUp(data);
+    if (!fields) throw new Error("ไม่มีรายการกู้เพิ่ม");
+    const topUpQueued =
+      data.lineNotificationType === "topup" &&
+      data.lineNotificationStatus === "pending";
+    const cancelNotify = topUpQueued
+      ? {
+          lineNotificationStatus: "skipped" as const,
+          lineNotificationSkippedReason: "topup_undone",
+        }
+      : {};
+    tx.update(loanRef, { ...fields, ...cancelNotify });
+    return {
+      loan: { ...data, ...fields, ...cancelNotify },
+      removed: latest,
+      // ส่งแล้ว หรือ worker กำลังส่งอยู่ → พนักงานได้/จะได้ข้อความแล้ว
+      notified:
+        data.lineNotificationType === "topup" &&
+        (data.lineNotificationStatus === "sent" ||
+          data.lineNotificationStatus === "processing"),
+    };
   });
 }
 

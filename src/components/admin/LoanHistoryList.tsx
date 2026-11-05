@@ -4,10 +4,16 @@ import {
   HandCoins as IconHandCoins,
   Plus as IconPlus,
   Receipt as IconReceipt,
+  Trash2 as IconTrash,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { formatThaiNumber } from "../../utils/format";
-import { loanHistory, loanRepaymentHistory } from "../../utils/loanTopUp";
+import {
+  latestTopUp,
+  loanHistory,
+  loanRepaymentHistory,
+  topUpUndoBlocker,
+} from "../../utils/loanTopUp";
 import { isoDateLabel, monthLabel, monthShortLabel } from "./loanFormat";
 
 export default function LoanHistoryList({
@@ -16,6 +22,7 @@ export default function LoanHistoryList({
   onToggle,
   onViewSlip,
   action,
+  onUndoTopUp,
 }: {
   loan: any;
   open: boolean;
@@ -23,8 +30,13 @@ export default function LoanHistoryList({
   onViewSlip: (url: string) => void;
   /** ปุ่มฝั่งขวาของแถวหัว (เช่น "เพิ่มเงินกู้") · ประวัติที่กางลงมากว้างเต็มการ์ด */
   action?: ReactNode;
+  /** ลบการกู้เพิ่มครั้งล่าสุด (เปิด dialog ยืนยัน) · ไม่ส่ง = ไม่มีปุ่ม */
+  onUndoTopUp?: (topUpId: string) => void;
 }) {
   const history = loanHistory(loan);
+  // ลบได้เฉพาะครั้งล่าสุด · เหตุผลที่ลบไม่ได้โชว์แทนปุ่ม (ไม่ซ่อนเงียบ)
+  const latestId = latestTopUp(loan)?.id;
+  const undoBlocker = latestId ? topUpUndoBlocker(loan) : "";
   const repayments = loanRepaymentHistory(loan);
 
   return (
@@ -104,6 +116,24 @@ export default function LoanHistoryList({
                       >
                         <IconReceipt size={12} strokeWidth={2.4} />
                         สลิป
+                      </button>
+                    )}
+                  </div>
+                )}
+                {onUndoTopUp && h.topUpId && h.topUpId === latestId && (
+                  <div className="mt-1.5 pt-1.5 border-t border-bdr/60">
+                    {undoBlocker ? (
+                      <span className="text-[11px] text-txt-soft">
+                        {undoBlocker}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onUndoTopUp(h.topUpId as string)}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-red bg-transparent border-none cursor-pointer font-[inherit] p-0"
+                      >
+                        <IconTrash size={12} strokeWidth={2.4} />
+                        ลบรายการกู้เพิ่มนี้
                       </button>
                     )}
                   </div>

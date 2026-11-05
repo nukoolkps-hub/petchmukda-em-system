@@ -151,8 +151,57 @@ export function applyTopUp(
   };
 }
 
+/** รายการกู้เพิ่มครั้งล่าสุด (ตามเวลาที่กด) · ไม่มี → null */
+export function latestTopUp(loan: LoanLike): LoanTopUp | null {
+  let latest: LoanTopUp | null = null;
+  for (const t of topUpsOf(loan)) {
+    if (!latest || (t.createdAt || "") >= (latest.createdAt || "")) latest = t;
+  }
+  return latest;
+}
+
+/** ลบการกู้เพิ่มครั้งล่าสุดได้ไหม · คืนเหตุผลที่ลบไม่ได้ (ว่าง = ลบได้)
+ *
+ *  ลบได้เฉพาะครั้งล่าสุด (ยอดผ่อนเดิมของครั้งถัดไปผูกกับครั้งนี้ ลบกลางสาย
+ *  จะต่อกันผิด) และ**ต้องยังไม่เคยหักเงินเดือนตั้งแต่เดือนที่ยอดนี้เริ่มมีผล**
+ *  — เดือนพวกนั้นคิดด้วยยอดใหม่ไปแล้ว ถ้าปิดรอบแล้วแก้ย้อนไม่ได้ ลบทิ้ง =
+ *  ledger ไม่ตรงกับยอดกู้ (เช่น หักเกินยอดกู้เดิม) แบบกู้คืนไม่ได้        */
+export function topUpUndoBlocker(loan: LoanLike): string {
+  if (loan.status === "cancelled") return "เงินกู้นี้ถูกยกเลิกแล้ว";
+  const latest = latestTopUp(loan);
+  if (!latest) return "ไม่มีรายการกู้เพิ่ม";
+  const deductedSince = Object.entries(loan.repayments || {}).some(
+    ([ym, v]) => ym >= (latest.effectiveMonth || "") && num(v) > 0,
+  );
+  if (deductedSince) return "หักเงินเดือนด้วยยอดใหม่ไปแล้ว — ลบไม่ได้";
+  return "";
+}
+
+/** field ที่ต้องเขียนเมื่อลบการกู้เพิ่มครั้งล่าสุด — คืนยอดกู้/ยอดผ่อนเป็นค่า
+ *  ก่อนกู้เพิ่ม · สถานะคิดใหม่จากยอดที่ผ่อนแล้ว (ก้อนที่ผ่อนครบก่อนกู้เพิ่ม
+ *  กลับเป็น "ผ่อนครบแล้ว") · ไม่แตะ `repayments` · ผู้เรียกต้องเช็ค
+ *  `topUpUndoBlocker` ก่อน */
+export function undoLatestTopUp(loan: LoanLike): {
+  principal: number;
+  monthlyDeduction: number;
+  status: "active" | "paid_off";
+  topUps: LoanTopUp[];
+} | null {
+  const latest = latestTopUp(loan);
+  if (!latest) return null;
+  const principal = Math.max(0, num(loan.principal) - num(latest.amount));
+  return {
+    principal,
+    monthlyDeduction: num(latest.prevMonthlyDeduction),
+    status: loanPaidTotal(loan) >= principal ? "paid_off" : "active",
+    topUps: topUpsOf(loan).filter((t) => t !== latest),
+  };
+}
+
 export interface LoanHistoryEntry {
   kind: "initial" | "topup";
+  /** id ของรายการกู้เพิ่ม (ครั้งแรกไม่มี) */
+  topUpId?: string;
   /** ISO วันเวลาที่กู้ */
   at: string;
   amount: number;
@@ -195,6 +244,7 @@ export function loanHistory(loan: LoanLike): LoanHistoryEntry[] {
     const changed = num(t.prevMonthlyDeduction) !== num(t.monthlyDeduction);
     out.push({
       kind: "topup",
+      topUpId: t.id,
       at: t.createdAt || "",
       amount: num(t.amount),
       effectiveMonth: t.effectiveMonth || "",

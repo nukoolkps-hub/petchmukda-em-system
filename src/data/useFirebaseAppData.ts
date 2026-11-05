@@ -884,6 +884,20 @@ export default function useFirebaseAppData({
     );
     return updated;
   }
+  /** ลบการกู้เพิ่มครั้งล่าสุด (พิมพ์ยอดผิด ฯลฯ) — กฎ + เช็คซ้ำอยู่ใน
+   *  transaction · re-settle เดือน grace ด้วยยอดเดิม + บันทึก changeLog */
+  async function undoEmployeeLoanTopUp(id, topUpId) {
+    const result = await employeeLoansAPI.undoLoanTopUpTx(id, topUpId);
+    const { loan } = result;
+    await resyncEmployeeGraceMonths(
+      loan.employeeId,
+      loansResult.data.map((l) => (l.id === id ? loan : l)),
+      [
+        `ลบการกู้เพิ่มครั้งล่าสุด −${formatThaiNumber(result.removed.amount)} ฿ (รวม ${formatThaiNumber(loan.principal)} ฿ · หักเดือนละ ${formatThaiNumber(loan.monthlyDeduction)} ฿)`,
+      ],
+    );
+    return result;
+  }
   async function deleteEmployeeLoan(id) {
     const loan = loansResult.data.find((l) => l.id === id);
     await employeeLoansAPI.deleteEmployeeLoan(id);
@@ -1096,6 +1110,7 @@ export default function useFirebaseAppData({
     addEmployeeLoan,
     updateEmployeeLoan,
     addEmployeeLoanTopUp,
+    undoEmployeeLoanTopUp,
     deleteEmployeeLoan,
   };
 }

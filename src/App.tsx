@@ -119,6 +119,7 @@ export default function LeaveApp() {
     addEmployeeLoan,
     updateEmployeeLoan,
     addEmployeeLoanTopUp,
+    undoEmployeeLoanTopUp,
     deleteEmployeeLoan,
     loading,
     error,
@@ -616,6 +617,7 @@ export default function LeaveApp() {
                           onAddLoan={addEmployeeLoan}
                           onUpdateLoan={updateEmployeeLoan}
                           onTopUpLoan={addEmployeeLoanTopUp}
+                          onUndoTopUp={undoEmployeeLoanTopUp}
                           onDeleteLoan={deleteEmployeeLoan}
                           onSetPayrollConfirm={setPayrollConfirm}
                           onSyncAutoCarryAdvance={syncAutoCarryAdvance}
