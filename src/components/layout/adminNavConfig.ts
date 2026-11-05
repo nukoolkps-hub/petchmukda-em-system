@@ -25,6 +25,7 @@ import {
   Tag as IconTag,
   Terminal as IconTerminal,
   Users as IconUsers,
+  Wallet as IconWallet,
 } from "lucide-react";
 
 export type AdminSectionId =
@@ -52,6 +53,7 @@ export type AdminSectionId =
 export type AdminGroupId =
   | "leave"
   | "payroll"
+  | "lending"
   | "settings"
   | "duty"
   | "calendar"
@@ -106,10 +108,20 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     Icon: IconCoins,
     items: [
       { id: "salary", label: "ค่าคอม", Icon: IconDiamond },
-      { id: "advance", label: "เบิกเงิน", Icon: IconCashBanknote },
-      { id: "loans", label: "กู้เงิน", Icon: IconHandCoins },
       { id: "payroll", label: "จ่ายเงิน", Icon: IconCreditCard },
       { id: "payroll-matrix", label: "ตารางรวม", Icon: IconTable },
+    ],
+  },
+  {
+    // เงินที่พนักงานรับไปก่อนแล้วหักคืนจากเงินเดือน — แยกจาก "เงินเดือน"
+    // (เงินที่ร้านจ่าย) ให้หาเจอง่าย · badge คำขอเบิกรอตรวจผูกกับกลุ่มนี้
+    id: "lending",
+    label: "เบิก / กู้เงิน",
+    defaultSection: "advance",
+    Icon: IconWallet,
+    items: [
+      { id: "advance", label: "เบิกเงิน", Icon: IconCashBanknote },
+      { id: "loans", label: "กู้เงิน", Icon: IconHandCoins },
     ],
   },
   {
