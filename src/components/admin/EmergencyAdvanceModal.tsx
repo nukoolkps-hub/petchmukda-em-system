@@ -20,7 +20,6 @@ import {
   advanceQuotaOfMonth,
   emergencyAdvanceRoom,
 } from "../../utils/advanceUtils";
-import { formatBankAccount } from "../../utils/bankFormat";
 import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
@@ -28,6 +27,7 @@ import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
 import ThemedSelect from "../shared/ThemedSelect";
+import BankAccountCopyRow from "./BankAccountCopyRow";
 import SlipPicker from "./SlipPicker";
 
 /** guardrail เดียวกับ firestore.rules (กันพิมพ์ศูนย์เกิน) */
@@ -224,12 +224,10 @@ export default function EmergencyAdvanceModal({
               <div className="text-xs text-txt-soft leading-snug">
                 ฐานเงินเดือน − ยอดเบิกทั้งเดือน (รวมที่รออนุมัติ)
               </div>
-              {(employee.bank || employee.bankAccountNumber) && (
-                <div className="text-xs text-txt-mid mt-1">
-                  โอนเข้า {employee.bank || "-"} ·{" "}
-                  <b>{formatBankAccount(employee.bankAccountNumber)}</b>
-                </div>
-              )}
+              <BankAccountCopyRow
+                bank={employee?.bank}
+                accountNumber={employee?.bankAccountNumber}
+              />
             </div>
           )}
         </div>

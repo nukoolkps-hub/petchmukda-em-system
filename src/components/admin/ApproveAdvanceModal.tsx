@@ -1,8 +1,8 @@
 import { CircleCheck as IconCircleCheck, X as IconX } from "lucide-react";
 import { useState } from "react";
-import { formatBankAccount } from "../../utils/bankFormat";
 import { formatThaiNumber } from "../../utils/format";
 import BaseModal from "../shared/BaseModal";
+import BankAccountCopyRow from "./BankAccountCopyRow";
 import SlipPicker from "./SlipPicker";
 
 /**
@@ -69,12 +69,10 @@ export default function ApproveAdvanceModal({
             {formatThaiNumber(request.amount)} ฿
           </span>
         </div>
-        {(employeeInfo?.bank || employeeInfo?.bankAccountNumber) && (
-          <div className="text-xs text-txt-mid mt-1.5">
-            โอนเข้า {employeeInfo.bank || "-"} ·{" "}
-            <b>{formatBankAccount(employeeInfo.bankAccountNumber)}</b>
-          </div>
-        )}
+        <BankAccountCopyRow
+          bank={employeeInfo?.bank}
+          accountNumber={employeeInfo?.bankAccountNumber}
+        />
       </div>
 
       <SlipPicker file={file} onChange={setFile} disabled={saving} />
