@@ -1,6 +1,6 @@
 /* ─── DateDiffHelper — กล่องตัวช่วยคำนวณช่วงเวลาระหว่าง 2 วันที่ ──────
    ใช้ใน "ความรู้ต่างๆ" → ดอกเบี้ยจำนำ · user กรอกวันที่เริ่ม + สิ้นสุด →
-   ระบบคำนวณ "เดือนเต็ม + วันเศษ" · **นับวันเริ่มจำนำเป็นวันแรกด้วย**
+   ระบบคำนวณ "เดือนเต็ม + วันเศษ" · เดือนเต็มแบบเดิม · **วันเศษนับวันเริ่มด้วย**
    (สูตรอยู่ที่ `utils/pawnPeriod.ts` + เทสต์) · ใช้ CalendarPicker (ไทย พ.ศ.) */
 
 import { Calendar as IconCalendar } from "lucide-react";
@@ -84,7 +84,7 @@ export default function DateDiffHelper({ onComputed, hint }: Props = {}) {
                 </span>
                 <span className="text-xs text-txt-soft"> วันเศษ</span>
                 <div className="text-[11px] text-txt-soft mt-0.5">
-                  นับวันที่เริ่มจำนำเป็นวันแรกด้วย
+                  วันเศษนับวันที่เริ่มจำนำด้วย
                 </div>
               </>
             )}
