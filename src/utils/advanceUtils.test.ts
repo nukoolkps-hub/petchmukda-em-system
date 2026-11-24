@@ -199,36 +199,66 @@ describe("เบิกฉุกเฉิน (emergency)", () => {
     expect(total).toBe(3000);
   });
 
-  it("เบิกได้อีก = เงินสุทธิประมาณการ − คำขอรออนุมัติ (ปัดลง)", () => {
+  it("เบิกได้อีก = ฐานเงินเดือน − ยอดเบิกทั้งเดือน (รออนุมัติ+อนุมัติ · rejected/เดือนอื่นไม่นับ)", () => {
+    // เคสจริง: ฐาน 12,000 · เบิกปกติครบเพดาน 50% = 6,000 → ฉุกเฉินได้อีก 6,000
     const r = emergencyAdvanceRoom({
-      netSalary: 5000.75,
+      baseSalary: 12_000,
       yearMonth: YM,
       advances: [
-        normal("p", "pending", 1200),
-        normal("x", "approved", 999), // อนุมัติแล้ว = อยู่ใน netSalary แล้ว ไม่หักซ้ำ
+        normal("a", "approved", 2000),
+        normal("b", "approved", 2000),
+        normal("c", "pending", 2000),
         normal("r", "rejected", 500),
-        { id: "o", month: "2026-10", status: "pending", amount: 700 },
+        { id: "o", month: "2026-10", status: "approved", amount: 700 },
       ],
     });
-    expect(r.pendingTotal).toBe(1200);
-    expect(r.room).toBe(3800);
+    expect(r.usedTotal).toBe(6000);
+    expect(r.room).toBe(6000);
   });
 
-  it("เงินสุทธิติดลบ → เบิกได้อีก 0 (ไม่ติดลบ)", () => {
+  it("นับฉุกเฉินก้อนก่อนหน้า + auto-carry ด้วย · ปัดลงเป็นบาท", () => {
+    const r = emergencyAdvanceRoom({
+      baseSalary: 12_345.9,
+      yearMonth: YM,
+      advances: [
+        {
+          id: "e",
+          month: YM,
+          status: "approved",
+          amount: 3000,
+          emergency: true,
+        },
+        {
+          id: "ac",
+          month: YM,
+          status: "approved",
+          amount: 1000,
+          autoCarryFromMonth: "2026-10",
+        },
+      ],
+    });
+    expect(r.room).toBe(8345);
+  });
+
+  it("เบิกเกินฐานไปแล้ว → เหลือ 0 (ไม่ติดลบ)", () => {
     expect(
-      emergencyAdvanceRoom({ netSalary: -300, yearMonth: YM, advances: [] })
-        .room,
+      emergencyAdvanceRoom({
+        baseSalary: 5000,
+        yearMonth: YM,
+        advances: [normal("a", "approved", 6000)],
+      }).room,
     ).toBe(0);
   });
 
-  it("ยังไม่มีข้อมูลเงินเดือน → ประมาณไม่ได้ (null) ไม่ใช่ 0", () => {
-    const r = emergencyAdvanceRoom({
-      netSalary: null,
-      yearMonth: YM,
-      advances: [normal("p", "pending", 100)],
-    });
-    expect(r.room).toBeNull();
-    expect(r.netSalary).toBeNull();
-    expect(r.pendingTotal).toBe(100);
+  it("ยังไม่ได้ตั้งเงินเดือน (0/null) → ไม่รู้ (null) ไม่ใช่ 0", () => {
+    for (const baseSalary of [0, null, undefined, Number.NaN]) {
+      const r = emergencyAdvanceRoom({
+        baseSalary,
+        yearMonth: YM,
+        advances: [],
+      });
+      expect(r.room).toBeNull();
+      expect(r.baseSalary).toBeNull();
+    }
   });
 });

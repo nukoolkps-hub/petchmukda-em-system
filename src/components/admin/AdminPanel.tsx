@@ -351,13 +351,6 @@ export default function AdminPanel({
             employeeDirectory={employeeDirectory}
             onUpdate={onUpdateAdvance}
             onCreateEmergency={onCreateEmergencyAdvance}
-            salaryData={salaryData}
-            allLeaves={allLeaves}
-            roles={roles}
-            employeeLoans={employeeLoans}
-            poolAdjustments={poolAdjustments}
-            payrollConfirms={payrollConfirms}
-            storeCalendar={storeCalendar}
             showToast={showToast}
           />
         )}

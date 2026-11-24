@@ -115,38 +115,41 @@ export function advanceQuotaOfMonth<T extends AdvanceLike>(
 }
 
 /* ─── เบิกฉุกเฉิน (ADMIN เบิกให้เอง) — "เบิกได้อีกกี่บาท" ──────────────
-   ข้ามทั้งโควต้าจำนวนครั้งและเพดาน % ตามอายุงาน (ADMIN ตัดสินใจเอง) ·
-   ตัวเลขที่ช่วย ADMIN ตัดสินคือ "เงินสุทธิที่ยังเหลือของเดือนนี้" =
-   เงินสุทธิประมาณการ (หักเบิกที่อนุมัติแล้วไปแล้ว) − คำขอที่ยังรออนุมัติ
-   เบิกเกินกว่านี้ = เงินสุทธิติดลบ → ตอนยืนยันยอดระบบยกไปหักเดือนถัดไป
-   (auto-carry) · จึงเตือน ไม่บล็อก — ชิ้นงาน/ค่าคอมอาจยังไม่ได้กรอกครบกลางเดือน
-   ทำให้ตัวเลขประมาณการต่ำกว่าจริง                                        */
+   ข้ามทั้งโควต้าจำนวนครั้งและเพดาน % ตามอายุงาน (ADMIN ตัดสินเอง) ·
+   ยอดที่เบิกฉุกเฉินได้อีก = **เงินเดือนพื้นฐานปัจจุบัน (100%)** − ยอดเบิกทั้งเดือน
+   (รออนุมัติ + อนุมัติแล้ว + auto-carry + ฉุกเฉินก่อนหน้า · rejected ไม่นับ)
+   อิงฐานเงินเดือนไม่ใช่เงินสุทธิ — กลางเดือนชิ้นงาน/ค่าคอมยังไม่ได้กรอก
+   เงินสุทธิประมาณไม่ได้ (ร้านใช้งานจริงแล้วเจอ "ประมาณไม่ได้" ทุกคน) ·
+   เกินยอดนี้ได้แต่ UI เตือน (ADMIN ตัดสินเอง)                              */
 export interface EmergencyAdvanceRoom {
-  /** เงินสุทธิประมาณการเดือนนี้ (หักเบิกที่อนุมัติแล้ว) · null = ยังไม่มีข้อมูลเงินเดือน */
-  netSalary: number | null;
-  /** ยอดคำขอที่ยังรออนุมัติของเดือนนี้ (จะถูกหักถ้าอนุมัติ) */
-  pendingTotal: number;
-  /** เบิกได้อีกกี่บาทก่อนเงินสุทธิติดลบ (ปัดลงเป็นบาท · ไม่ต่ำกว่า 0) · null = ประมาณไม่ได้ */
+  /** เงินเดือนพื้นฐานปัจจุบัน · null = ยังไม่ได้ตั้งเงินเดือน */
+  baseSalary: number | null;
+  /** ยอดเบิกทั้งเดือนที่ยังมีผล (pending + approved) */
+  usedTotal: number;
+  /** เบิกได้อีกกี่บาท (ปัดลง · ไม่ต่ำกว่า 0) · null = ไม่รู้ฐานเงินเดือน */
   room: number | null;
 }
 
 export function emergencyAdvanceRoom<
   T extends AdvanceLike & { amount?: number | null },
 >(args: {
-  netSalary: number | null | undefined;
+  baseSalary: number | null | undefined;
   advances: T[];
   yearMonth: string;
 }): EmergencyAdvanceRoom {
-  const pendingTotal = (args.advances || [])
-    .filter((a) => a?.month === args.yearMonth && a?.status === "pending")
-    .reduce((s, a) => s + (Number(a.amount) || 0), 0);
-  const net =
-    typeof args.netSalary === "number" && Number.isFinite(args.netSalary)
-      ? args.netSalary
+  const usedTotal = activeAdvancesOfMonth(args.advances, args.yearMonth).reduce(
+    (s, a) => s + (Number(a.amount) || 0),
+    0,
+  );
+  const base =
+    typeof args.baseSalary === "number" &&
+    Number.isFinite(args.baseSalary) &&
+    args.baseSalary > 0
+      ? args.baseSalary
       : null;
   return {
-    netSalary: net,
-    pendingTotal,
-    room: net === null ? null : Math.max(0, Math.floor(net - pendingTotal)),
+    baseSalary: base,
+    usedTotal,
+    room: base === null ? null : Math.max(0, Math.floor(base - usedTotal)),
   };
 }
