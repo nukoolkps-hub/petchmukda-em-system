@@ -250,7 +250,8 @@ export async function createEmergencyAdvance(
     amount: number;
     reason: string;
     month: string;
-    slipImageUrl?: string | null;
+    /** บังคับ — rules ปฏิเสธเบิกฉุกเฉินที่ไม่มีสลิป */
+    slipImageUrl: string;
   },
 ) {
   const now = new Date().toISOString();
@@ -264,7 +265,7 @@ export async function createEmergencyAdvance(
     emergency: true,
     submittedAt: now,
     approvedAt: now,
-    ...(request.slipImageUrl ? { slipImageUrl: request.slipImageUrl } : {}),
+    slipImageUrl: request.slipImageUrl,
     lineNotificationStatus: "pending",
     lineNotificationType: "approved",
     lineNotificationRequestedAt: now,
