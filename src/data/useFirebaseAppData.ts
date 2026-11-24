@@ -746,6 +746,23 @@ export default function useFirebaseAppData({
       });
     }
   }
+  /* ─── เบิกฉุกเฉิน (ADMIN เบิกให้เอง) ─────────────────────────
+     สร้างเป็น approved ทันที → ถ้าเดือนนั้นยืนยันยอดแล้ว (grace) ต้อง re-settle
+     เหมือนตอนอนุมัติเบิกปกติ ไม่งั้นยอดทางการไม่หักเบิกก้อนนี้                */
+  async function createEmergencyAdvance(
+    id: string,
+    request: Parameters<typeof advancesAPI.createEmergencyAdvance>[1],
+  ) {
+    const ym = request.month;
+    if (monthLocked(ym)) throw new Error(LOCK_MSG);
+    await advancesAPI.createEmergencyAdvance(id, request);
+    if (pcResult.data?.[ym]?.confirmedAt) {
+      await syncConfirmedMonth(ym, {
+        employeeName: request.employeeName,
+        changeStrings: [`เบิกฉุกเฉิน ${request.amount} ฿ (ADMIN เบิกให้)`],
+      });
+    }
+  }
   /* ─── Auto-carry advances (deficit เดือนก่อน → advance เดือนถัดไป) ──
      ใช้ตอน admin ยืนยันยอด · ถ้า salaryCalc.netSalary < 0 → สร้าง advance
      status=approved ใน month ถัดไป · idempotent (update amount ถ้าเปลี่ยน) */
@@ -1099,6 +1116,7 @@ export default function useFirebaseAppData({
     updateAdvance,
     approveAdvance,
     rejectAdvance,
+    createEmergencyAdvance,
     syncAutoCarryAdvance,
     upsertRole,
     upsertDuty,

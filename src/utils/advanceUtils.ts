@@ -60,6 +60,8 @@ export interface AdvanceLike {
   month?: string | null;
   /** advance ที่ระบบสร้างให้ตอนเงินสุทธิติดลบ (ไม่ใช่พนักงานยื่นเอง) */
   autoCarryFromMonth?: string | null;
+  /** เบิกฉุกเฉิน — ADMIN เบิกให้เอง (ไม่ใช่พนักงานยื่น) · ไม่นับโควต้าจำนวนครั้ง */
+  emergency?: boolean | null;
 }
 
 /** คำขอของเดือนนั้นที่ "ยังมีผล" (pending + approved · rejected ไม่นับ)
@@ -75,13 +77,14 @@ export function activeAdvancesOfMonth<T extends AdvanceLike>(
 
 /** คำขอที่ "พนักงานยื่นเอง" และยังมีผลในเดือนนั้น — ตัวที่นับโควต้าจำนวนครั้ง
  *  · rejected ไม่นับ (ADMIN ปฏิเสธแล้วยื่นใหม่ได้ในเดือนเดียวกัน)
- *  · auto-carry ไม่นับ (ระบบสร้างให้ตอน net ติดลบ พนักงานไม่ได้ยื่นเอง)   */
+ *  · auto-carry ไม่นับ (ระบบสร้างให้ตอน net ติดลบ พนักงานไม่ได้ยื่นเอง)
+ *  · เบิกฉุกเฉินไม่นับ (ADMIN เบิกให้เอง — มีไว้สำหรับคนที่ครบโควต้าแล้ว)    */
 export function userAdvancesOfMonth<T extends AdvanceLike>(
   advances: T[],
   yearMonth: string,
 ): T[] {
   return activeAdvancesOfMonth(advances, yearMonth).filter(
-    (a) => !a.autoCarryFromMonth,
+    (a) => !a.autoCarryFromMonth && !a.emergency,
   );
 }
 
@@ -108,5 +111,42 @@ export function advanceQuotaOfMonth<T extends AdvanceLike>(
     limit,
     left: Math.max(0, limit - used),
     reachedLimit: used >= limit,
+  };
+}
+
+/* ─── เบิกฉุกเฉิน (ADMIN เบิกให้เอง) — "เบิกได้อีกกี่บาท" ──────────────
+   ข้ามทั้งโควต้าจำนวนครั้งและเพดาน % ตามอายุงาน (ADMIN ตัดสินใจเอง) ·
+   ตัวเลขที่ช่วย ADMIN ตัดสินคือ "เงินสุทธิที่ยังเหลือของเดือนนี้" =
+   เงินสุทธิประมาณการ (หักเบิกที่อนุมัติแล้วไปแล้ว) − คำขอที่ยังรออนุมัติ
+   เบิกเกินกว่านี้ = เงินสุทธิติดลบ → ตอนยืนยันยอดระบบยกไปหักเดือนถัดไป
+   (auto-carry) · จึงเตือน ไม่บล็อก — ชิ้นงาน/ค่าคอมอาจยังไม่ได้กรอกครบกลางเดือน
+   ทำให้ตัวเลขประมาณการต่ำกว่าจริง                                        */
+export interface EmergencyAdvanceRoom {
+  /** เงินสุทธิประมาณการเดือนนี้ (หักเบิกที่อนุมัติแล้ว) · null = ยังไม่มีข้อมูลเงินเดือน */
+  netSalary: number | null;
+  /** ยอดคำขอที่ยังรออนุมัติของเดือนนี้ (จะถูกหักถ้าอนุมัติ) */
+  pendingTotal: number;
+  /** เบิกได้อีกกี่บาทก่อนเงินสุทธิติดลบ (ปัดลงเป็นบาท · ไม่ต่ำกว่า 0) · null = ประมาณไม่ได้ */
+  room: number | null;
+}
+
+export function emergencyAdvanceRoom<
+  T extends AdvanceLike & { amount?: number | null },
+>(args: {
+  netSalary: number | null | undefined;
+  advances: T[];
+  yearMonth: string;
+}): EmergencyAdvanceRoom {
+  const pendingTotal = (args.advances || [])
+    .filter((a) => a?.month === args.yearMonth && a?.status === "pending")
+    .reduce((s, a) => s + (Number(a.amount) || 0), 0);
+  const net =
+    typeof args.netSalary === "number" && Number.isFinite(args.netSalary)
+      ? args.netSalary
+      : null;
+  return {
+    netSalary: net,
+    pendingTotal,
+    room: net === null ? null : Math.max(0, Math.floor(net - pendingTotal)),
   };
 }

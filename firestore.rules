@@ -220,6 +220,42 @@ service cloud.firestore {
         && request.resource.data.status == "approved";
     }
 
+    // เบิกฉุกเฉิน — ADMIN เบิกให้พนักงานเอง (คนที่เบิกปกติครบโควต้าแล้ว) ·
+    // status="approved" ตั้งแต่แรก + `emergency == true` · แนบสลิป + ตั้ง
+    // lineNotification* (worker แจ้งพนักงาน) มาพร้อม create ได้ · เพดานจำนวน
+    // ครั้ง/% ไม่บังคับ (ADMIN ตัดสินเอง) แต่คง guardrail ยอดต่อรายการไว้
+    function validEmergencyCreate() {
+      return request.resource.data.keys().hasOnly([
+          "employeeId",
+          "employeeName",
+          "amount",
+          "reason",
+          "month",
+          "status",
+          "emergency",
+          "submittedAt",
+          "approvedAt",
+          "slipImageUrl",
+          "lineNotificationStatus",
+          "lineNotificationType",
+          "lineNotificationRequestedAt"
+        ])
+        && request.resource.data.keys().hasAll([
+          "employeeId",
+          "amount",
+          "month",
+          "status",
+          "emergency"
+        ])
+        && request.resource.data.emergency == true
+        && request.resource.data.status == "approved"
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.amount <= 200000
+        && request.resource.data.month is string
+        && request.resource.data.month.matches('^\\d{4}-\\d{2}$');
+    }
+
     // admin แก้ "ยอด" ของ auto-carry ได้ (deficit เดือนก่อนเปลี่ยนตอน re-confirm
     // ในช่วง grace) — validAdvanceUpdate ล็อก amount ไว้ จึงต้องมีทางนี้แยก ·
     // แคบสุด: เฉพาะ doc ที่เป็น auto-carry + แก้ได้เฉพาะฟิลด์ amount เท่านั้น
@@ -329,7 +365,7 @@ service cloud.firestore {
         && (
           (isEmployeeOwner(request.resource.data.employeeId)
             && validAdvanceCreate())
-          || (isAdmin() && validAutoCarryCreate())
+          || (isAdmin() && (validAutoCarryCreate() || validEmergencyCreate()))
         );
       allow update: if isAdmin()
         && !monthLocked(resource.data.month)

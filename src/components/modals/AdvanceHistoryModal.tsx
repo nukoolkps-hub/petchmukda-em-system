@@ -116,6 +116,11 @@ export default function AdvanceHistoryModal({
                         {s.label}
                       </span>
                     </div>
+                    {r.emergency && (
+                      <div className="text-xs font-semibold text-red mb-1">
+                        เบิกฉุกเฉิน · ADMIN เบิกให้
+                      </div>
+                    )}
                     <div className="text-sm text-txt-mid mb-1 leading-normal">
                       {r.reason}
                     </div>

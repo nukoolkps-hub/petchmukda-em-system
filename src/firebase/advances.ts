@@ -9,6 +9,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -228,6 +229,47 @@ export async function createAutoCarryAdvance(request) {
     approvedAt: now,
   });
   return docRef.id;
+}
+
+/* ─── เบิกฉุกเฉิน — ADMIN เบิกให้เอง (พนักงานไม่ได้ยื่น) ───────────────
+   status="approved" ตั้งแต่แรก (ADMIN คือคนอนุมัติ+โอนเอง) · `emergency: true`
+   → ไม่นับโควต้า "N ครั้ง/เดือน" + ข้ามเพดาน % ตามอายุงาน (ADMIN ตัดสินเอง)
+   แต่ยังหักจากเงินเดือนเดือนนั้นเหมือน advance ปกติ
+   สลิป (ถ้ามี) อัปโหลดก่อนสร้าง doc ด้วย id ที่จองไว้ → doc เกิดมาพร้อมสลิป
+   + `lineNotificationStatus: "pending"` ทีเดียว · worker แจ้งพนักงานพร้อมรูป
+   (ถ้าสร้างก่อนแล้วค่อยแนบสลิป worker อาจส่งไปก่อนโดยไม่มีรูป)           */
+export function newAdvanceId(): string {
+  return doc(ref).id;
+}
+
+export async function createEmergencyAdvance(
+  id: string,
+  request: {
+    employeeId: string;
+    employeeName: string;
+    amount: number;
+    reason: string;
+    month: string;
+    slipImageUrl?: string | null;
+  },
+) {
+  const now = new Date().toISOString();
+  await setDoc(doc(ref, id), {
+    employeeId: request.employeeId,
+    employeeName: request.employeeName,
+    amount: request.amount,
+    reason: request.reason,
+    month: request.month,
+    status: "approved",
+    emergency: true,
+    submittedAt: now,
+    approvedAt: now,
+    ...(request.slipImageUrl ? { slipImageUrl: request.slipImageUrl } : {}),
+    lineNotificationStatus: "pending",
+    lineNotificationType: "approved",
+    lineNotificationRequestedAt: now,
+  });
+  return id;
 }
 
 /* ─── Update auto-carry advance amount (ถ้า admin re-confirm + net เปลี่ยน) ─ */

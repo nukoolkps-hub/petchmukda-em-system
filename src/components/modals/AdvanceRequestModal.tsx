@@ -238,7 +238,8 @@ export default function AdvanceRequestModal({
             <b className="text-amber">
               เดือนนี้ยื่นครบ {quota.used}/{quota.limit} ครั้งแล้ว
             </b>{" "}
-            — เบิกได้เดือนละ {quota.limit} ครั้ง · ต้องรอเดือนถัดไป
+            — เบิกได้เดือนละ {quota.limit} ครั้ง · ต้องรอเดือนถัดไป · ถ้าจำเป็นจริง ติดต่อ
+            ADMIN เพื่อ<b>เบิกฉุกเฉิน</b>
           </div>
         </div>
       )}

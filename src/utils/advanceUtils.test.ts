@@ -4,6 +4,7 @@ import {
   activeAdvancesOfMonth,
   advanceLimitPercent,
   advanceQuotaOfMonth,
+  emergencyAdvanceRoom,
   tenureFullYears,
   userAdvancesOfMonth,
 } from "./advanceUtils";
@@ -158,5 +159,76 @@ describe("advanceQuotaOfMonth — โควต้าจำนวนครั้�
     const active = activeAdvancesOfMonth(list, YM);
     expect(active.map((a) => a.id)).toEqual(["ok"]);
     expect(active.reduce((s, a) => s + a.amount, 0)).toBe(1500);
+  });
+});
+
+describe("เบิกฉุกเฉิน (emergency)", () => {
+  const YM = "2026-11";
+  const normal = (id: string, status = "approved", amount = 1000) => ({
+    id,
+    month: YM,
+    status,
+    amount,
+  });
+
+  it("ไม่นับโควต้าจำนวนครั้ง — ครบ 3 แล้วเบิกฉุกเฉินก็ยังเป็น 3/3", () => {
+    const list = [
+      normal("a"),
+      normal("b"),
+      normal("c", "pending"),
+      { id: "e", month: YM, status: "approved", amount: 2000, emergency: true },
+    ];
+    expect(userAdvancesOfMonth(list, YM).map((a) => a.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+    const q = advanceQuotaOfMonth(list, YM);
+    expect(q.used).toBe(BUSINESS_RULES.ADVANCE_MAX_PER_MONTH);
+  });
+
+  it("แต่ยังกินวงเงินรวมของเดือน (activeAdvancesOfMonth นับด้วย)", () => {
+    const list = [
+      normal("a"),
+      { id: "e", month: YM, status: "approved", amount: 2000, emergency: true },
+    ];
+    const total = activeAdvancesOfMonth(list, YM).reduce(
+      (s, a) => s + a.amount,
+      0,
+    );
+    expect(total).toBe(3000);
+  });
+
+  it("เบิกได้อีก = เงินสุทธิประมาณการ − คำขอรออนุมัติ (ปัดลง)", () => {
+    const r = emergencyAdvanceRoom({
+      netSalary: 5000.75,
+      yearMonth: YM,
+      advances: [
+        normal("p", "pending", 1200),
+        normal("x", "approved", 999), // อนุมัติแล้ว = อยู่ใน netSalary แล้ว ไม่หักซ้ำ
+        normal("r", "rejected", 500),
+        { id: "o", month: "2026-10", status: "pending", amount: 700 },
+      ],
+    });
+    expect(r.pendingTotal).toBe(1200);
+    expect(r.room).toBe(3800);
+  });
+
+  it("เงินสุทธิติดลบ → เบิกได้อีก 0 (ไม่ติดลบ)", () => {
+    expect(
+      emergencyAdvanceRoom({ netSalary: -300, yearMonth: YM, advances: [] })
+        .room,
+    ).toBe(0);
+  });
+
+  it("ยังไม่มีข้อมูลเงินเดือน → ประมาณไม่ได้ (null) ไม่ใช่ 0", () => {
+    const r = emergencyAdvanceRoom({
+      netSalary: null,
+      yearMonth: YM,
+      advances: [normal("p", "pending", 100)],
+    });
+    expect(r.room).toBeNull();
+    expect(r.netSalary).toBeNull();
+    expect(r.pendingTotal).toBe(100);
   });
 });

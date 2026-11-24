@@ -66,6 +66,7 @@ export default function AdminPanel({
   onSaveSalary,
   advanceRequests,
   onUpdateAdvance,
+  onCreateEmergencyAdvance,
   roles,
   onUpsertRole,
   onDeleteRole,
@@ -349,6 +350,14 @@ export default function AdminPanel({
             advancesLoading={advancesLoading}
             employeeDirectory={employeeDirectory}
             onUpdate={onUpdateAdvance}
+            onCreateEmergency={onCreateEmergencyAdvance}
+            salaryData={salaryData}
+            allLeaves={allLeaves}
+            roles={roles}
+            employeeLoans={employeeLoans}
+            poolAdjustments={poolAdjustments}
+            payrollConfirms={payrollConfirms}
+            storeCalendar={storeCalendar}
             showToast={showToast}
           />
         )}
