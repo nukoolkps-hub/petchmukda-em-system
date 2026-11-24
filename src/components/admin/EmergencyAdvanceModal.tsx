@@ -1,13 +1,12 @@
 /* ─── เบิกฉุกเฉิน — ADMIN เบิกให้พนักงานเอง ─────────────────────────────
    สำหรับคนที่เบิกปกติครบ 3 ครั้ง/เดือนแล้ว · พนักงานไม่ได้ยื่น ADMIN เป็นคน
-   สร้าง (อนุมัติทันที · แนบสลิปได้) · ข้ามทั้งโควต้าจำนวนครั้งและเพดาน %
+   สร้าง (อนุมัติทันที · **บังคับแนบสลิปโอน**) · ข้ามทั้งโควต้าจำนวนครั้งและเพดาน %
    ตามอายุงาน — ตัวช่วยตัดสินคือ "เบิกได้อีกกี่บาท" (`emergencyAdvanceRoom`) =
    เงินเดือนพื้นฐานปัจจุบัน (100%) − ยอดเบิกทั้งเดือน · เกินได้แต่เตือน     */
 
 import {
   TriangleAlert as IconAlert,
   Siren as IconSiren,
-  Upload as IconUpload,
   X as IconX,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -29,6 +28,7 @@ import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
 import ThemedSelect from "../shared/ThemedSelect";
+import SlipPicker from "./SlipPicker";
 
 /** guardrail เดียวกับ firestore.rules (กันพิมพ์ศูนย์เกิน) */
 const MAX_AMOUNT = 200000;
@@ -39,7 +39,7 @@ export interface EmergencyAdvanceInput {
   amount: number;
   reason: string;
   month: string;
-  slipImageUrl?: string | null;
+  slipImageUrl: string;
 }
 
 interface Props {
@@ -60,7 +60,6 @@ export default function EmergencyAdvanceModal({
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [slipFile, setSlipFile] = useState<File | null>(null);
-  const [slipPreview, setSlipPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
@@ -109,26 +108,21 @@ export default function EmergencyAdvanceModal({
   const amountNum = Number(String(amount).replace(/,/g, "")) || 0;
   const overRoom = room.room !== null && amountNum > room.room;
 
-  function pickSlip(file: File | undefined) {
-    if (!file) return;
-    setSlipFile(file);
-    setSlipPreview(URL.createObjectURL(file));
-  }
-
   async function submit() {
     if (saving) return;
     if (!employee) return setErr("เลือกพนักงานก่อน");
     if (amountNum <= 0) return setErr("กรอกจำนวนเงิน");
+    if (!slipFile) return setErr("แนบสลิปโอนเงินก่อนยืนยัน");
     if (amountNum > MAX_AMOUNT)
       return setErr(`เบิกได้ไม่เกิน ${formatThaiNumber(MAX_AMOUNT)} ฿ ต่อครั้ง`);
     setErr("");
     setSaving(true);
     try {
       const id = newAdvanceId();
-      let slipImageUrl: string | null = null;
-      if (slipFile) {
-        slipImageUrl = await uploadAdvanceSlip(id, await resizeSlip(slipFile));
-      }
+      const slipImageUrl = await uploadAdvanceSlip(
+        id,
+        await resizeSlip(slipFile),
+      );
       await onCreate(id, {
         employeeId: employee.id,
         employeeName: employee.name || employee.nickname || "-",
@@ -281,27 +275,7 @@ export default function EmergencyAdvanceModal({
         className="w-full mb-3 px-3 py-2 rounded-[10px] border-[1.5px] border-bdr text-sm text-txt font-[inherit] outline-none bg-white focus:border-maroon resize-none"
       />
 
-      <label className="flex items-center gap-2 mb-4 px-3 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-bdr text-sm text-txt-mid cursor-pointer">
-        {slipPreview ? (
-          <img
-            src={slipPreview}
-            alt="สลิป"
-            className="w-10 h-10 object-cover rounded-md"
-          />
-        ) : (
-          <IconUpload size={16} />
-        )}
-        <span className="flex-1">
-          {slipFile ? "เปลี่ยนสลิป" : "แนบสลิปโอน (ไม่บังคับ)"}
-        </span>
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          disabled={saving}
-          onChange={(e) => pickSlip(e.target.files?.[0])}
-        />
-      </label>
+      <SlipPicker file={slipFile} onChange={setSlipFile} disabled={saving} />
 
       {err && <div className="text-sm text-red mb-3">{err}</div>}
 
@@ -317,7 +291,9 @@ export default function EmergencyAdvanceModal({
         <button
           type="button"
           onClick={submit}
-          disabled={saving || !employee || amountNum <= 0 || loadingInfo}
+          disabled={
+            saving || !employee || amountNum <= 0 || !slipFile || loadingInfo
+          }
           className="flex-[1.4] p-3 rounded-xl border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] disabled:opacity-50 disabled:cursor-default"
         >
           {saving ? "กำลังบันทึก..." : "ยืนยันเบิกฉุกเฉิน"}

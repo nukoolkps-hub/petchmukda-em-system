@@ -221,7 +221,7 @@ service cloud.firestore {
     }
 
     // เบิกฉุกเฉิน — ADMIN เบิกให้พนักงานเอง (คนที่เบิกปกติครบโควต้าแล้ว) ·
-    // status="approved" ตั้งแต่แรก + `emergency == true` · แนบสลิป + ตั้ง
+    // status="approved" ตั้งแต่แรก + `emergency == true` · **บังคับสลิป** + ตั้ง
     // lineNotification* (worker แจ้งพนักงาน) มาพร้อม create ได้ · เพดานจำนวน
     // ครั้ง/% ไม่บังคับ (ADMIN ตัดสินเอง) แต่คง guardrail ยอดต่อรายการไว้
     function validEmergencyCreate() {
@@ -245,8 +245,12 @@ service cloud.firestore {
           "amount",
           "month",
           "status",
-          "emergency"
+          "emergency",
+          "slipImageUrl"
         ])
+        // บังคับแนบสลิปโอน — ADMIN โอนเงินเองจริง ต้องมีหลักฐานให้พนักงานเห็น
+        && request.resource.data.slipImageUrl is string
+        && request.resource.data.slipImageUrl.size() > 0
         && request.resource.data.emergency == true
         && request.resource.data.status == "approved"
         && request.resource.data.amount is number

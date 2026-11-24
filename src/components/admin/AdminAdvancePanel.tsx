@@ -23,6 +23,7 @@ import BaseModal from "../shared/BaseModal";
 import { SkeletonRow } from "../shared/Skeleton";
 import ThemedSelect from "../shared/ThemedSelect";
 import AdvanceLineNotifyBadge from "./AdvanceLineNotifyBadge";
+import ApproveAdvanceModal from "./ApproveAdvanceModal";
 import EmergencyAdvanceModal from "./EmergencyAdvanceModal";
 
 type AdvanceFilter = "pending" | "approved" | "rejected";
@@ -61,9 +62,8 @@ export default function AdminAdvancePanel({
   const [confirmReject, setConfirmReject] = useState<any>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [copiedAcc, setCopiedAcc] = useState<string | null>(null); // request.id ที่เพิ่งกด copy
-  const [uploadingSlip, setUploadingSlip] = useState<string | number | null>(
-    null,
-  );
+  // คำขอที่เปิดหน้าต่าง "แนบสลิป → ยืนยันอนุมัติ" อยู่ (หรือแนบย้อนหลัง)
+  const [approving, setApproving] = useState<any>(null);
   const monthScopedResult = useAdvancesByStatusAndMonth({
     status: filter === "pending" ? null : filter,
     yearMonth: selectedMonth,
@@ -110,8 +110,8 @@ export default function AdminAdvancePanel({
   const loading = showMonthFilter ? monthScopedResult.loading : advancesLoading;
   const error = showMonthFilter ? monthScopedResult.error : null;
 
-  async function handleApproveSlip(request, file) {
-    setUploadingSlip(request.id);
+  /** คืน true = สำเร็จ (ปิดหน้าต่าง) · false = ล้ม (คงหน้าต่างไว้ให้ลองใหม่) */
+  async function handleApproveSlip(request, file): Promise<boolean> {
     try {
       const dataUrl = await resizeSlip(file);
       const slipImageUrl = await uploadAdvanceSlip(request.id, dataUrl);
@@ -120,16 +120,18 @@ export default function AdminAdvancePanel({
         {
           status: "approved",
           slipImageUrl,
-          approvedAt: new Date().toISOString(),
+          approvedAt: request.approvedAt || new Date().toISOString(),
         },
         request,
       );
-      showToast?.("อนุมัติและส่งสลิปแล้ว");
+      showToast?.(
+        request.status === "approved" ? "บันทึกสลิปแล้ว" : "อนุมัติและส่งสลิปแล้ว",
+      );
+      return true;
     } catch (err) {
       console.error("[AdminAdvancePanel] upload slip failed:", err);
       showToast?.((err as Error).message || "อัปโหลดสลิปไม่สำเร็จ");
-    } finally {
-      setUploadingSlip(null);
+      return false;
     }
   }
 
@@ -427,55 +429,45 @@ export default function AdminAdvancePanel({
                       <IconX size={14} strokeWidth={2.4} />
                       ปฏิเสธ
                     </button>
-                    <label className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-maroon)/0.25] active:scale-[0.98] transition-transform duration-100">
-                      {uploadingSlip === request.id ? (
-                        "กำลังอัปโหลด..."
-                      ) : (
-                        <>
-                          <IconUpload size={14} strokeWidth={2.4} />
-                          อัปโหลดสลิป (อนุมัติ)
-                        </>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        disabled={uploadingSlip === request.id}
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) handleApproveSlip(request, f);
-                        }}
-                        className="hidden"
-                      />
-                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setApproving(request)}
+                      className="flex-1 px-3.5 py-2.5 rounded-[10px] border-none bg-maroon text-white text-sm font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1.5 shadow-[0_3px_10px_var(--color-maroon)/0.25] active:scale-[0.98] transition-transform duration-100"
+                    >
+                      <IconUpload size={14} strokeWidth={2.4} />
+                      แนบสลิป + อนุมัติ
+                    </button>
                   </div>
                 )}
 
                 {request.status === "approved" && !slipPreview && (
-                  <label className="block px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-gold/40 bg-gold-pale text-maroon text-sm font-semibold cursor-pointer font-[inherit] text-center">
-                    {uploadingSlip === request.id ? (
-                      "กำลังอัปโหลด..."
-                    ) : (
-                      <span className="inline-flex items-center gap-1">
-                        <IconUpload size={14} strokeWidth={2.4} />
-                        อัปโหลดสลิปย้อนหลัง
-                      </span>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      disabled={uploadingSlip === request.id}
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleApproveSlip(request, f);
-                      }}
-                      className="hidden"
-                    />
-                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setApproving(request)}
+                    className="w-full block px-3.5 py-2.5 rounded-[10px] border-[1.5px] border-dashed border-gold/40 bg-gold-pale text-maroon text-sm font-semibold cursor-pointer font-[inherit] text-center"
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <IconUpload size={14} strokeWidth={2.4} />
+                      อัปโหลดสลิปย้อนหลัง
+                    </span>
+                  </button>
                 )}
               </div>
             );
           })}
         </div>
+      )}
+
+      {approving && (
+        <ApproveAdvanceModal
+          request={approving}
+          employeeInfo={employeeDirectory.find(
+            (e) => e.id === approving.employeeId,
+          )}
+          backfill={approving.status === "approved"}
+          onConfirm={(file) => handleApproveSlip(approving, file)}
+          onClose={() => setApproving(null)}
+        />
       )}
 
       {showEmergency && (

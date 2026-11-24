@@ -352,7 +352,10 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
     counter doc ต่อ (employee, เดือน) ที่ rules อ่านได้ด้วย `get()`
 - Status flow: `pending → approved / rejected`
 - Approved → **หักจากเงินเดือน "ในเดือนที่เบิก"** (ไม่ใช่เดือนถัดไป) · advance.month = ตอนยื่น · `monthApprovedAdvances` รวมเป็น `advanceDeduction` ในสลิปเดือนเดียวกัน
-- พนักงาน**ขอเอง** · admin อนุมัติ/ปฏิเสธ + แนบสลิปการโอน (storage `loanSlips/{advanceId}/`)
+- พนักงาน**ขอเอง** · admin อนุมัติ/ปฏิเสธ + แนบสลิปการโอน (storage `advanceSlips/{advanceId}/`)
+  - อนุมัติ = ปุ่ม "แนบสลิป + อนุมัติ" → `ApproveAdvanceModal`: เลือกสลิป → **ดูรูปตัวอย่าง** →
+    กด "ยืนยันอนุมัติ" (เดิมเลือกไฟล์ปุ๊บอนุมัติทันที ไม่มีจังหวะตรวจว่าหยิบสลิปถูกใบ) ·
+    ช่องแนบสลิปใช้ `SlipPicker` ตัวเดียวกับเบิกฉุกเฉิน
 - บล็อกการเบิกในวันสุดท้ายของเดือน (วันทำเงินเดือน)
 - LINE notification: แจ้ง admin เมื่อมีคำขอ, แจ้งพนักงานเมื่อ approve/reject
 - Cleanup: Cloud Function ลบ advances เกิน 6 เดือน (ทุกวันที่ 1)
@@ -362,7 +365,8 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
 สำหรับคนที่เบิกปกติครบ 3 ครั้ง/เดือนแล้วแต่จำเป็นจริง — **พนักงานยื่นเองไม่ได้** ติดต่อ ADMIN
 → `/admin → เบิกเงิน → ปุ่ม "เบิกฉุกเฉิน (ADMIN เบิกให้)"` (`EmergencyAdvanceModal`)
 
-- doc: `advances/{id}` `emergency: true` · `status: "approved"` ตั้งแต่สร้าง · แนบสลิปได้ ·
+- doc: `advances/{id}` `emergency: true` · `status: "approved"` ตั้งแต่สร้าง · **บังคับแนบสลิปโอน**
+  (UI ปิดปุ่มยืนยัน + rules `validEmergencyCreate` บังคับ `slipImageUrl`) ·
   ตั้ง `lineNotificationStatus: "pending"` มาพร้อม create → `processAdvanceNotifications`
   แจ้งพนักงาน (flex "เบิกเงินฉุกเฉิน" · ไม่เขียนว่า "ที่คุณขอ")
 - **ไม่นับโควต้าจำนวนครั้ง** (`userAdvancesOfMonth` ตัดออก) · **ข้ามเพดาน % ตามอายุงาน** ·

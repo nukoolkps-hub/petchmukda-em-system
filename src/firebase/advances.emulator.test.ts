@@ -335,7 +335,7 @@ describe.skipIf(!RUNNING)("E2E โควต้าเบิกล่วงหน�
     ).rejects.toThrow(/permission|PERMISSION/i);
   }, 30_000);
 
-  it("เบิกฉุกเฉินต้องรูปทรงตรง — ฟิลด์แปลก / status ไม่ใช่ approved ถูกบล็อก", async () => {
+  it("เบิกฉุกเฉินต้องรูปทรงตรง — ฟิลด์แปลก / status ไม่ใช่ approved / ไม่มีสลิป ถูกบล็อก", async () => {
     await expect(
       addDoc(collection(adminDb, "advances"), {
         ...emergencyDoc(),
@@ -347,6 +347,11 @@ describe.skipIf(!RUNNING)("E2E โควต้าเบิกล่วงหน�
         ...emergencyDoc(),
         status: "pending",
       }),
+    ).rejects.toThrow(/permission|PERMISSION/i);
+    // ไม่แนบสลิป → บล็อก (บังคับสลิปโอนทุกครั้ง)
+    const { slipImageUrl: _omit, ...noSlip } = emergencyDoc();
+    await expect(
+      addDoc(collection(adminDb, "advances"), noSlip),
     ).rejects.toThrow(/permission|PERMISSION/i);
   }, 30_000);
 
