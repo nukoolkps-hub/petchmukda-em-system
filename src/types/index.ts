@@ -175,6 +175,9 @@ export interface AdvanceRequest {
    *  ติดลบ (yyyy-mm ของเดือนที่ติดลบ) · status="approved" ตั้งแต่แรก ·
    *  ไม่นับในโควต้า "N ครั้ง/เดือน" (advanceQuotaOfMonth)                     */
   autoCarryFromMonth?: string;
+  /** เบิกฉุกเฉิน — ADMIN เบิกให้เอง (status="approved" ตั้งแต่สร้าง) ·
+   *  ไม่นับโควต้า "N ครั้ง/เดือน" · ข้ามเพดาน % · ยังหักเงินเดือนเดือนนั้นตามปกติ */
+  emergency?: boolean;
   lineNotificationStatus?:
     | "pending"
     | "processing"

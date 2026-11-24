@@ -4,6 +4,7 @@ import {
   CircleDollarSign as IconCircleDollarSign,
   Copy as IconCopy,
   FileText as IconFileText,
+  Siren as IconSiren,
   Upload as IconUpload,
   X as IconX,
   XCircle as IconXCircle,
@@ -22,6 +23,7 @@ import BaseModal from "../shared/BaseModal";
 import { SkeletonRow } from "../shared/Skeleton";
 import ThemedSelect from "../shared/ThemedSelect";
 import AdvanceLineNotifyBadge from "./AdvanceLineNotifyBadge";
+import EmergencyAdvanceModal from "./EmergencyAdvanceModal";
 
 type AdvanceFilter = "pending" | "approved" | "rejected";
 
@@ -50,8 +52,17 @@ export default function AdminAdvancePanel({
   advancesLoading = false,
   employeeDirectory,
   onUpdate,
+  onCreateEmergency,
+  salaryData,
+  allLeaves,
+  roles,
+  employeeLoans,
+  poolAdjustments,
+  payrollConfirms,
+  storeCalendar,
   showToast,
 }) {
+  const [showEmergency, setShowEmergency] = useState(false);
   const [filter, setFilter] = useState<AdvanceFilter>("pending");
   const [selectedMonth, setSelectedMonth] = useState(currentYearMonth);
   const [confirmReject, setConfirmReject] = useState<any>(null);
@@ -156,6 +167,16 @@ export default function AdminAdvancePanel({
 
   return (
     <div>
+      {/* เบิกฉุกเฉิน — ADMIN เบิกให้เอง (คนที่เบิกปกติครบโควต้าแล้ว) */}
+      <button
+        type="button"
+        onClick={() => setShowEmergency(true)}
+        className="w-full mb-3 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-[1.5px] border-maroon bg-white text-maroon text-sm font-bold cursor-pointer font-[inherit] active:scale-[0.98] transition-transform"
+      >
+        <IconSiren size={16} strokeWidth={2.2} />
+        เบิกฉุกเฉิน (ADMIN เบิกให้)
+      </button>
+
       {/* filter chips */}
       <div className="flex gap-1.5 mb-3.5 overflow-x-auto">
         {[
@@ -313,6 +334,11 @@ export default function AdminAdvancePanel({
                   >
                     {s.label}
                   </span>
+                  {request.emergency && (
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-[20px] whitespace-nowrap bg-red-lt text-red">
+                      ฉุกเฉิน
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between px-3 py-2.5 bg-gold-pale rounded-[10px] mb-2.5 border border-[#C9973A30]">
@@ -457,6 +483,22 @@ export default function AdminAdvancePanel({
             );
           })}
         </div>
+      )}
+
+      {showEmergency && (
+        <EmergencyAdvanceModal
+          employeeDirectory={employeeDirectory}
+          salaryData={salaryData}
+          allLeaves={allLeaves}
+          roles={roles}
+          employeeLoans={employeeLoans || []}
+          poolAdjustments={poolAdjustments}
+          payrollConfirms={payrollConfirms}
+          storeCalendar={storeCalendar}
+          onCreate={onCreateEmergency}
+          onClose={() => setShowEmergency(false)}
+          showToast={showToast}
+        />
       )}
 
       {confirmReject && (

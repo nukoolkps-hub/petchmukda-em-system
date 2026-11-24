@@ -293,6 +293,63 @@ describe.skipIf(!RUNNING)("E2E โควต้าเบิกล่วงหน�
     await deleteDoc(doc(adminDb, "advances", ref.id));
   }, 30_000);
 
+  /* ─── เบิกฉุกเฉิน (ADMIN เบิกให้เอง) ─────────────────────────────── */
+
+  /** รูปทรงที่ `createEmergencyAdvance()` เขียนจริง (ยอดเกินเพดาน 7,500 โดยตั้งใจ) */
+  const emergencyDoc = () => {
+    const now = new Date().toISOString();
+    return {
+      employeeId: EMP_ID,
+      employeeName: "พนักงานทดสอบ",
+      amount: 20_000,
+      reason: "",
+      month: YM,
+      status: "approved",
+      emergency: true,
+      submittedAt: now,
+      approvedAt: now,
+      slipImageUrl: "https://firebasestorage.googleapis.com/x.jpg",
+      lineNotificationStatus: "pending",
+      lineNotificationType: "approved",
+      lineNotificationRequestedAt: now,
+    };
+  };
+
+  it("ครบ 3 ครั้งแล้ว ADMIN ยังเบิกฉุกเฉินให้ได้ (เกินเพดาน % ได้) และไม่กินโควต้าครั้ง", async () => {
+    const limit = BUSINESS_RULES.ADVANCE_MAX_PER_MONTH;
+    for (let i = 0; i < limit; i++) {
+      await advancesAPI.submitAdvance(newRequest(500));
+    }
+    await expect(
+      setDoc(doc(collection(adminDb, "advances")), emergencyDoc()),
+    ).resolves.toBeUndefined();
+    const all = await advancesAPI.getAdvancesByEmployeeAndMonth(EMP_ID, YM);
+    expect(all).toHaveLength(limit + 1);
+    const { advanceQuotaOfMonth } = await import("../utils/advanceUtils");
+    expect(advanceQuotaOfMonth(all, YM).used).toBe(limit);
+  }, 30_000);
+
+  it("พนักงานสร้างเบิกฉุกเฉินเองไม่ได้ (rules บล็อก)", async () => {
+    await expect(
+      addDoc(collection(db, "advances"), emergencyDoc()),
+    ).rejects.toThrow(/permission|PERMISSION/i);
+  }, 30_000);
+
+  it("เบิกฉุกเฉินต้องรูปทรงตรง — ฟิลด์แปลก / status ไม่ใช่ approved ถูกบล็อก", async () => {
+    await expect(
+      addDoc(collection(adminDb, "advances"), {
+        ...emergencyDoc(),
+        extra: 1,
+      }),
+    ).rejects.toThrow(/permission|PERMISSION/i);
+    await expect(
+      addDoc(collection(adminDb, "advances"), {
+        ...emergencyDoc(),
+        status: "pending",
+      }),
+    ).rejects.toThrow(/permission|PERMISSION/i);
+  }, 30_000);
+
   it("เกินเพดาน % ของเดือน → ถูกบล็อกตอนเขียนจริง (ไม่ใช่แค่ในฟอร์ม)", async () => {
     // เพดาน = baseSalary 15,000 × 50% (อายุงาน < 3 ปี) = 7,500
     await expect(

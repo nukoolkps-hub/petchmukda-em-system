@@ -138,6 +138,7 @@ export default function LeaveApp() {
     submitAdvance: submitAdvanceAction,
     approveAdvance: approveAdvanceAction,
     rejectAdvance: rejectAdvanceAction,
+    createEmergencyAdvance,
     upsertRole,
     deleteRole,
     upsertDuty,
@@ -603,6 +604,7 @@ export default function LeaveApp() {
                           onSaveSalary={updateSalary}
                           advanceRequests={advanceRequests}
                           onUpdateAdvance={adminUpdateAdvance}
+                          onCreateEmergencyAdvance={createEmergencyAdvance}
                           roles={roles}
                           onUpsertRole={upsertRole}
                           duties={duties}

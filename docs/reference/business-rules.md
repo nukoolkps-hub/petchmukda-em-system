@@ -357,6 +357,28 @@ Source: `src/utils/storeCalendar.ts`, `src/firebase/storeCalendar.ts`, `src/comp
 - LINE notification: แจ้ง admin เมื่อมีคำขอ, แจ้งพนักงานเมื่อ approve/reject
 - Cleanup: Cloud Function ลบ advances เกิน 6 เดือน (ทุกวันที่ 1)
 
+### เบิกฉุกเฉิน (ADMIN เบิกให้เอง)
+
+สำหรับคนที่เบิกปกติครบ 3 ครั้ง/เดือนแล้วแต่จำเป็นจริง — **พนักงานยื่นเองไม่ได้** ติดต่อ ADMIN
+→ `/admin → เบิกเงิน → ปุ่ม "เบิกฉุกเฉิน (ADMIN เบิกให้)"` (`EmergencyAdvanceModal`)
+
+- doc: `advances/{id}` `emergency: true` · `status: "approved"` ตั้งแต่สร้าง · แนบสลิปได้ ·
+  ตั้ง `lineNotificationStatus: "pending"` มาพร้อม create → `processAdvanceNotifications`
+  แจ้งพนักงาน (flex "เบิกเงินฉุกเฉิน" · ไม่เขียนว่า "ที่คุณขอ")
+- **ไม่นับโควต้าจำนวนครั้ง** (`userAdvancesOfMonth` ตัดออก) · **ข้ามเพดาน % ตามอายุงาน** ·
+  แต่ยัง**กินวงเงินรวม**ของเดือน (`activeAdvancesOfMonth` นับ) และ**หักเงินเดือนเดือนนั้น**ตามปกติ
+- **"เบิกได้อีกกี่บาท"** = `emergencyAdvanceRoom` = เงินสุทธิประมาณการเดือนนี้
+  (`computeEmployeeMonthRow` ตัวเดียวกับหน้าจ่ายเงิน · หักเบิกที่อนุมัติแล้วไปแล้ว)
+  − คำขอที่ยังรออนุมัติ · ยังไม่มี salary doc เดือนนี้ = "ประมาณไม่ได้" (null ไม่ใช่ 0)
+- **เกินยอดนั้นได้ แต่เตือน** (ไม่บล็อก) — ชิ้นงาน/ค่าคอมกลางเดือนอาจยังไม่ได้กรอก
+  ตัวเลขจึงต่ำกว่าจริง · ถ้าสุดท้ายเงินสุทธิติดลบ → auto-carry ไปหักเดือนถัดไปตามกลไกเดิม
+- สลิปอัปโหลด**ก่อน**สร้าง doc ด้วย id ที่จองไว้ (`newAdvanceId`) — ไม่งั้น worker
+  อาจแจ้งพนักงานไปก่อนโดยไม่มีรูป
+- เดือน grace (ยืนยันยอดแล้ว) → `createEmergencyAdvance` ใน data layer เรียก
+  `syncConfirmedMonth` re-settle + changeLog เหมือนตอนอนุมัติเบิกปกติ
+- rules: `validEmergencyCreate()` — admin เท่านั้น · รูปทรงล็อก (`emergency == true` ·
+  `status == "approved"` · amount 1–200,000) · E2E ใน `advances.emulator.test.ts`
+
 ### Auto-carry advance (เงินสุทธิติดลบ → ยกไปเดือนถัดไป)
 
 **ปัญหาที่แก้:** ถ้า earnings - deductions < 0 ในเดือน X (เช่น advance ทุก ๆ tier + ค่าหักอื่นเกิน earnings) · เงินสุทธิ "ติดลบ" บนกระดาษ · ต้องจัดการนอกระบบ + กัน chain หนี้

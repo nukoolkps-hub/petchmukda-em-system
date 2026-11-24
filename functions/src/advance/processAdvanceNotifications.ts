@@ -197,10 +197,14 @@ function buildApprovedFlex(
 	const requestReason = stringValue(advance.reason) || "-";
 	const month = stringValue(advance.month) || "-";
 	const approvedAt = stringValue(advance.approvedAt);
+	// เบิกฉุกเฉิน = ADMIN เบิกให้เอง (พนักงานไม่ได้ยื่น) → ข้อความต้องไม่บอกว่า "ที่คุณขอ"
+	const emergency = advance.emergency === true;
 
 	return {
 		type: "flex",
-		altText: `อนุมัติเบิกเงินล่วงหน้า ฿${formatThaiNumber(amount)}`,
+		altText: emergency
+			? `เบิกเงินฉุกเฉิน ฿${formatThaiNumber(amount)}`
+			: `อนุมัติเบิกเงินล่วงหน้า ฿${formatThaiNumber(amount)}`,
 		contents: {
 			type: "bubble",
 			size: "mega",
@@ -219,7 +223,9 @@ function buildApprovedFlex(
 					},
 					{
 						type: "text",
-						text: "เบิกเงินล่วงหน้า · ห้างเพชรทองมุกดา",
+						text: emergency
+							? "เบิกเงินฉุกเฉิน · ห้างเพชรทองมุกดา"
+							: "เบิกเงินล่วงหน้า · ห้างเพชรทองมุกดา",
 						color: "#D4F0DD",
 						size: "xs",
 						margin: "sm",
@@ -240,7 +246,9 @@ function buildApprovedFlex(
 					},
 					{
 						type: "text",
-						text: "เงินที่คุณขอเบิกได้รับการอนุมัติและโอนเข้าบัญชีเรียบร้อยแล้ว",
+						text: emergency
+							? "ADMIN เบิกเงินฉุกเฉินให้และโอนเข้าบัญชีเรียบร้อยแล้ว · หักจากเงินเดือนเดือนนี้"
+							: "เงินที่คุณขอเบิกได้รับการอนุมัติและโอนเข้าบัญชีเรียบร้อยแล้ว",
 						size: "sm",
 						color: COLORS.textMedium,
 						wrap: true,
