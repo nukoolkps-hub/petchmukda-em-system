@@ -53,13 +53,6 @@ export default function AdminAdvancePanel({
   employeeDirectory,
   onUpdate,
   onCreateEmergency,
-  salaryData,
-  allLeaves,
-  roles,
-  employeeLoans,
-  poolAdjustments,
-  payrollConfirms,
-  storeCalendar,
   showToast,
 }) {
   const [showEmergency, setShowEmergency] = useState(false);
@@ -488,13 +481,6 @@ export default function AdminAdvancePanel({
       {showEmergency && (
         <EmergencyAdvanceModal
           employeeDirectory={employeeDirectory}
-          salaryData={salaryData}
-          allLeaves={allLeaves}
-          roles={roles}
-          employeeLoans={employeeLoans || []}
-          poolAdjustments={poolAdjustments}
-          payrollConfirms={payrollConfirms}
-          storeCalendar={storeCalendar}
           onCreate={onCreateEmergency}
           onClose={() => setShowEmergency(false)}
           showToast={showToast}

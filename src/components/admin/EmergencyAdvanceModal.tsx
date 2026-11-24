@@ -1,9 +1,8 @@
 /* ─── เบิกฉุกเฉิน — ADMIN เบิกให้พนักงานเอง ─────────────────────────────
    สำหรับคนที่เบิกปกติครบ 3 ครั้ง/เดือนแล้ว · พนักงานไม่ได้ยื่น ADMIN เป็นคน
    สร้าง (อนุมัติทันที · แนบสลิปได้) · ข้ามทั้งโควต้าจำนวนครั้งและเพดาน %
-   ตามอายุงาน — ตัวช่วยตัดสินคือ "เบิกได้อีกกี่บาทก่อนเงินสุทธิติดลบ"
-   (`emergencyAdvanceRoom`) ซึ่งคำนวณจาก `computeEmployeeMonthRow` ตัวเดียวกับ
-   หน้าจ่ายเงิน/สลิป → เลขตรงกัน · เกินได้แต่เตือน (ส่วนเกินยกไปหักเดือนหน้า) */
+   ตามอายุงาน — ตัวช่วยตัดสินคือ "เบิกได้อีกกี่บาท" (`emergencyAdvanceRoom`) =
+   เงินเดือนพื้นฐานปัจจุบัน (100%) − ยอดเบิกทั้งเดือน · เกินได้แต่เตือน     */
 
 import {
   TriangleAlert as IconAlert,
@@ -16,10 +15,8 @@ import {
   getAdvancesByEmployeeAndMonth,
   newAdvanceId,
 } from "../../firebase/advances";
-import { useApprovedAdvancesByMonth } from "../../firebase/hooks/useFirestore";
 import { uploadAdvanceSlip } from "../../firebase/storage";
 import {
-  activeAdvancesOfMonth,
   advanceLimitPercent,
   advanceQuotaOfMonth,
   emergencyAdvanceRoom,
@@ -28,8 +25,6 @@ import { formatBankAccount } from "../../utils/bankFormat";
 import { currentYearMonth } from "../../utils/dateUtils";
 import { formatThaiNumber } from "../../utils/format";
 import { resizeSlip } from "../../utils/imageUtils";
-import { computeEmployeeMonthRow } from "../../utils/payrollCompute";
-import { isMonthLocked } from "../../utils/payrollLock";
 import { getEffectiveBaseSalary } from "../../utils/salaryUtils";
 import BaseModal from "../shared/BaseModal";
 import MoneyInput from "../shared/MoneyInput";
@@ -49,13 +44,6 @@ export interface EmergencyAdvanceInput {
 
 interface Props {
   employeeDirectory: any[];
-  salaryData: any;
-  allLeaves: any[];
-  roles: any[];
-  employeeLoans: any[];
-  poolAdjustments: any;
-  payrollConfirms: any;
-  storeCalendar: any;
   onCreate: (id: string, input: EmergencyAdvanceInput) => Promise<void>;
   onClose: () => void;
   showToast?: (msg: string) => void;
@@ -63,13 +51,6 @@ interface Props {
 
 export default function EmergencyAdvanceModal({
   employeeDirectory,
-  salaryData,
-  allLeaves,
-  roles,
-  employeeLoans,
-  poolAdjustments,
-  payrollConfirms,
-  storeCalendar,
   onCreate,
   onClose,
   showToast,
@@ -106,65 +87,24 @@ export default function EmergencyAdvanceModal({
     };
   }, [employeeId, ym]);
 
-  const approved = useApprovedAdvancesByMonth(ym);
-
   const employees = useMemo(
     () => (employeeDirectory || []).filter((e) => !e.salaryDisabled),
     [employeeDirectory],
   );
   const employee = employees.find((e) => e.id === employeeId) || null;
 
-  // เงินสุทธิประมาณการเดือนนี้ — สูตรเดียวกับหน้าจ่ายเงิน (หักเบิกที่อนุมัติแล้ว)
-  const netSalary = useMemo(() => {
-    if (!employee) return null;
-    const row = computeEmployeeMonthRow({
-      employee,
-      yearMonth: ym,
-      salaryData,
-      allLeaves,
-      employeeDirectory,
-      roles,
-      employeeLoans,
-      monthApprovedAdvances: approved.data || [],
-      poolAdjustment: poolAdjustments?.[ym] || null,
-      storeCalendar,
-      payPersonalUnderAllExclusion: !isMonthLocked(payrollConfirms?.[ym]),
-    });
-    const net = row?.salaryCalculation?.netSalary;
-    return typeof net === "number" ? net : null;
-  }, [
-    employee,
-    ym,
-    salaryData,
-    allLeaves,
-    employeeDirectory,
-    roles,
-    employeeLoans,
-    approved.data,
-    poolAdjustments,
-    storeCalendar,
-    payrollConfirms,
-  ]);
-
   const list = monthAdvances || [];
   const quota = advanceQuotaOfMonth(list, ym);
-  const usedTotal = activeAdvancesOfMonth(list, ym).reduce(
-    (s, a) => s + (Number(a.amount) || 0),
-    0,
-  );
+  const baseSalary = employee ? getEffectiveBaseSalary(employee) : 0;
   const ceiling = employee
-    ? Math.floor(
-        getEffectiveBaseSalary(employee) *
-          advanceLimitPercent(employee.startWorkMonth),
-      )
+    ? Math.floor(baseSalary * advanceLimitPercent(employee.startWorkMonth))
     : 0;
   const room = emergencyAdvanceRoom({
-    netSalary,
+    baseSalary,
     advances: list,
     yearMonth: ym,
   });
-  const loadingInfo =
-    !!employeeId && (monthAdvances === null || approved.loading);
+  const loadingInfo = !!employeeId && monthAdvances === null;
 
   const amountNum = Number(String(amount).replace(/,/g, "")) || 0;
   const overRoom = room.room !== null && amountNum > room.room;
@@ -260,34 +200,35 @@ export default function EmergencyAdvanceModal({
                 label="เบิกปกติเดือนนี้"
                 value={`${quota.used}/${quota.limit} ครั้ง${quota.reachedLimit ? " (ครบแล้ว)" : ""}`}
               />
-              <Row
-                label="ยอดเบิกรวมเดือนนี้"
-                value={`${formatThaiNumber(usedTotal)} ฿${ceiling > 0 ? ` / เพดานปกติ ${formatThaiNumber(ceiling)} ฿` : ""}`}
-              />
-              <Row
-                label="เงินสุทธิประมาณการ"
-                value={
-                  room.netSalary === null
-                    ? "ยังไม่มีข้อมูลเงินเดือน"
-                    : `${formatThaiNumber(Math.floor(room.netSalary))} ฿`
-                }
-              />
-              {room.pendingTotal > 0 && (
+              {ceiling > 0 && (
                 <Row
-                  label="คำขอรออนุมัติ"
-                  value={`−${formatThaiNumber(room.pendingTotal)} ฿`}
+                  label="เพดานเบิกปกติ"
+                  value={`${formatThaiNumber(ceiling)} ฿`}
                 />
               )}
+              <div className="border-t border-bdr my-0.5" />
+              <Row
+                label="ฐานเงินเดือนปัจจุบัน"
+                value={
+                  room.baseSalary === null
+                    ? "ยังไม่ได้ตั้งเงินเดือน"
+                    : `${formatThaiNumber(Math.floor(room.baseSalary))} ฿`
+                }
+              />
+              <Row
+                label="เบิกไปแล้วเดือนนี้"
+                value={`−${formatThaiNumber(room.usedTotal)} ฿`}
+              />
               <div className="flex justify-between items-baseline pt-1.5 mt-0.5 border-t border-bdr">
                 <span className="font-bold text-txt">เบิกได้อีก</span>
                 <span className="font-extrabold text-maroon text-base">
                   {room.room === null
-                    ? "ประมาณไม่ได้"
+                    ? "—"
                     : `${formatThaiNumber(room.room)} ฿`}
                 </span>
               </div>
               <div className="text-xs text-txt-soft leading-snug">
-                คำนวณจากเงินเดือนที่กรอกไว้ถึงตอนนี้ (ชิ้นงาน/ค่าคอมที่ยังไม่กรอกไม่รวม)
+                ฐานเงินเดือน − ยอดเบิกทั้งเดือน (รวมที่รออนุมัติ)
               </div>
               {(employee.bank || employee.bankAccountNumber) && (
                 <div className="text-xs text-txt-mid mt-1">
@@ -322,8 +263,8 @@ export default function EmergencyAdvanceModal({
         <div className="flex items-start gap-1.5 mb-2 px-3 py-2 bg-amber-lt rounded-[10px] text-xs text-amber leading-snug">
           <IconAlert size={14} className="shrink-0 mt-px" />
           <span>
-            เกินยอดที่เบิกได้อีก {formatThaiNumber(amountNum - (room.room ?? 0))} ฿ —
-            เงินสุทธิเดือนนี้จะติดลบ · ตอนยืนยันยอดระบบจะยกส่วนที่ติดลบไปหักเดือนถัดไป
+            เกินฐานเงินเดือน {formatThaiNumber(amountNum - (room.room ?? 0))} ฿ —
+            ถ้าเงินสุทธิเดือนนี้ติดลบ ตอนยืนยันยอดระบบจะยกส่วนที่ติดลบไปหักเดือนถัดไป
           </span>
         </div>
       )}
