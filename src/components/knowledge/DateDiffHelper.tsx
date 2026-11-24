@@ -1,11 +1,12 @@
 /* ─── DateDiffHelper — กล่องตัวช่วยคำนวณช่วงเวลาระหว่าง 2 วันที่ ──────
    ใช้ใน "ความรู้ต่างๆ" → ดอกเบี้ยจำนำ · user กรอกวันที่เริ่ม + สิ้นสุด →
-   ระบบคำนวณ "เดือนเต็ม + วันเศษ" ตามกฎ calendar month (5 ม.ค. → 5 ก.พ.
-   = 1 เดือนเต็ม) · ใช้ CalendarPicker shared component (ไทย พ.ศ.)        */
+   ระบบคำนวณ "เดือนเต็ม + วันเศษ" · เดือนเต็มแบบเดิม · **วันเศษนับวันเริ่มด้วย**
+   (สูตรอยู่ที่ `utils/pawnPeriod.ts` + เทสต์) · ใช้ CalendarPicker (ไทย พ.ศ.) */
 
 import { Calendar as IconCalendar } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toYMD } from "../../utils/dateUtils";
+import { pawnPeriod } from "../../utils/pawnPeriod";
 import CalendarPicker from "../shared/CalendarPicker";
 
 interface Props {
@@ -13,38 +14,6 @@ interface Props {
   onComputed?: (months: number, days: number) => void;
   /** override ข้อความใต้กล่อง (เช่น "ระบบจะเติมให้ในเครื่องคิดเลขด้านล่างอัตโนมัติ") */
   hint?: string;
-}
-
-/** คำนวณช่วงเวลาระหว่าง 2 วันที่เป็น "เดือนเต็ม + วันเศษ"
- *  กฎ: เดือนเต็มนับจาก วันที่เดิมในเดือนถัดไป (5 ม.ค. → 5 ก.พ. = 1 เดือน)
- *  ถ้าเดือนปลายทางไม่มีวันที่นั้น (เช่น Jan 31 → Feb) → ใช้วันสุดท้ายของเดือน */
-function diffMonthsAndDays(
-  start: Date,
-  end: Date,
-): { months: number; days: number } {
-  if (end.getTime() < start.getTime()) return { months: -1, days: 0 };
-
-  // เดือนคร่าวๆ จาก calendar diff
-  let months =
-    (end.getFullYear() - start.getFullYear()) * 12 +
-    (end.getMonth() - start.getMonth());
-  // ถ้าวันที่ปลาย < วันที่ต้น → ยังไม่ครบเดือนเต็ม ลบ 1
-  if (end.getDate() < start.getDate()) months--;
-  if (months < 0) months = 0;
-
-  // หา "วันที่ที่ครบ months เดือน" — cap ที่วันสุดท้ายของเดือนถ้าวันที่ start
-  // เกินเดือนปลายทาง (เช่น 31 ม.ค. + 1 เดือน = 28/29 ก.พ.)
-  const intYear =
-    start.getFullYear() + Math.floor((start.getMonth() + months) / 12);
-  const intMonth = (start.getMonth() + months) % 12;
-  const daysInIntMonth = new Date(intYear, intMonth + 1, 0).getDate();
-  const cappedDay = Math.min(start.getDate(), daysInIntMonth);
-  const intermediate = new Date(intYear, intMonth, cappedDay);
-
-  const days = Math.round(
-    (end.getTime() - intermediate.getTime()) / 86_400_000,
-  );
-  return { months, days };
 }
 
 export default function DateDiffHelper({ onComputed, hint }: Props = {}) {
@@ -56,7 +25,7 @@ export default function DateDiffHelper({ onComputed, hint }: Props = {}) {
     const s = new Date(`${start}T00:00:00`);
     const e = new Date(`${end}T00:00:00`);
     if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
-    return diffMonthsAndDays(s, e);
+    return pawnPeriod(s, e) ?? { months: -1, days: 0 };
   }, [start, end]);
 
   // ส่งผลกลับให้ parent (ใช้กับ auto-fill calculator)
@@ -114,6 +83,9 @@ export default function DateDiffHelper({ onComputed, hint }: Props = {}) {
                   + {result.days}
                 </span>
                 <span className="text-xs text-txt-soft"> วันเศษ</span>
+                <div className="text-[11px] text-txt-soft mt-0.5">
+                  วันเศษนับวันที่เริ่มจำนำด้วย
+                </div>
               </>
             )}
           </div>
