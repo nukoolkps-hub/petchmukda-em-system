@@ -86,16 +86,25 @@ export async function isNotificationEnabled(
 	return notificationCache.settings?.[field] !== false;
 }
 
+/* ─── Admin LINE user IDs ────────────────────────────────────────
+   ADMIN_LINE_USER_ID ใส่ได้หลาย ID คั่นด้วย , หรือช่องว่าง — ใช้ทั้งเช็คสิทธิ์
+   และเป็นปลายทาง push แจ้ง admin · **push ต้องส่งทีละ ID เสมอ** ห้ามส่งค่าทั้ง
+   ช่องเป็น `to` (LINE ตอบ 400 ทันทีที่มี ID ที่ 2 → แจ้งเตือน admin ล้มทุกครั้ง) */
+export function parseAdminLineUserIds(
+	configValue: string | undefined,
+): string[] {
+	if (!configValue) return [];
+	const ids = configValue
+		.split(/[,\s]+/)
+		.map((value) => value.trim())
+		.filter(Boolean);
+	return [...new Set(ids)];
+}
+
 /* ─── Check if LINE user ID is in admin list ─────────────────── */
 export function isConfiguredAdminLineUser(
 	lineUserId: string,
 	configValue: string | undefined,
 ): boolean {
-	return (
-		configValue
-			?.split(/[,\s]+/)
-			.map((value) => value.trim())
-			.filter(Boolean)
-			.includes(lineUserId) || false
-	);
+	return parseAdminLineUserIds(configValue).includes(lineUserId);
 }
