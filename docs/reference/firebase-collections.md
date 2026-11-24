@@ -138,6 +138,8 @@ Source: `functions/src/auth/prepareLineLogin.ts` · `functions/src/auth/lineAuth
 | lineNotifyFailed | boolean? | (optional) server ตั้งเมื่อ push LINE แจ้ง **admin** (คำขอเบิกใหม่ · `notifyAdvanceRequest`) ล้มเหลว — LINE คือช่องที่พัง จึงแจ้ง admin ผ่าน badge "LINE แจ้งเตือนแอดมินไม่สำเร็จ" ใน AdminAdvancePanel แทน |
 | lineNotifyError | string? | (optional) ข้อความ error ของ push ที่ล้มเหลว (≤500 ตัว) |
 | lineNotifyFailedAt | string (ISO)? | (optional) เวลาที่ push ล้มเหลว |
+| lineNotifySentCount / lineNotifyAdminCount | number? | (optional) admin หลายคน → ส่งสำเร็จกี่คน / ทั้งหมดกี่คน (ล้มแม้คนเดียวก็ติดธง) |
+| lineNotifyResentAt | string (ISO)? | (optional) admin กด "ส่งแจ้งเตือนอีกครั้ง" สำเร็จ → server ล้างธง `lineNotifyFailed` + error fields |
 
 ### roles
 

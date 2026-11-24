@@ -124,6 +124,15 @@ LINE เป็นช่องที่อาจล้มได้ (token หม�
   **admin** เห็น badge "LINE แจ้งเตือนแอดมินไม่สำเร็จ" ใน AdminAdvancePanel (เพราะ
   LINE คือช่องที่พัง แจ้งทาง LINE ไม่ได้) · แยก `{skipped}`/`{ok}` (admin ปิด toggle/
   ไม่มี config) ออกจาก fail จริง — ไม่ถือเป็น error
+- **ป้ายบอกสาเหตุเป็นไทย** — `diagnoseLineNotifyError` (`src/utils/lineNotifyError.ts` · มีเทสต์)
+  แปล `lineNotifyError` (`LINE push failed: <status> <body>`) → Token เสีย (401) / โควต้าเดือนหมด
+  (429 monthly limit) / ส่งถี่ (429) / ID แอดมินผิด (400 `'to'`) / LINE ขัดข้อง (5xx · network) ·
+  UI: `AdvanceLineNotifyBadge`
+- **ปุ่ม "ส่งแจ้งเตือนอีกครั้ง"** → callable `retryAdvanceAdminNotify` (admin) อ่านคำขอจาก advance doc
+  (ไม่เชื่อ payload) ส่ง flex เดิมซ้ำ · สำเร็จ = ล้างธง ป้ายหายเอง · flex + การติดธงอยู่ที่
+  `functions/src/advance/adminNotify.ts` ที่เดียว (ใช้ทั้งตอนยื่นและตอนส่งซ้ำ)
+- **แอดมินหลายคน:** `ADMIN_LINE_USER_ID` คั่น `,`/ช่องว่างได้ → `parseAdminLineUserIds` + push
+  แยกทีละคน (`pushLineMessageToAll`) · **ห้ามส่งค่าทั้งช่องเป็น `to`** (LINE ตอบ 400 → แจ้งล้มทุกใบ)
 - หลักการ: ผลการส่ง LINE ที่ fail ต้อง surface ขึ้น UI เสมอ (toast หรือ badge)
 
 ## LINE Login Flow (Detail)

@@ -17,6 +17,7 @@ export { cleanupOldAdvances } from "./advance/cleanupOldAdvances.js";
 // Advance requests
 export { notifyAdvanceRequest } from "./advance/notifyRequest.js";
 export { processAdvanceNotifications } from "./advance/processAdvanceNotifications.js";
+export { retryAdvanceAdminNotify } from "./advance/retryAdminNotify.js";
 // Employee loans — แจ้งพนักงานเมื่อ admin สร้างเงินกู้ใหม่ (+ สลิปโอน)
 export { processLoanNotifications } from "./loan/processLoanNotifications.js";
 // Firestore triggers are not exported because this project's Firestore

@@ -191,6 +191,12 @@ export interface AdvanceRequest {
   lineNotifyFailed?: boolean;
   lineNotifyError?: string;
   lineNotifyFailedAt?: string;
+  /** ADMIN_LINE_USER_ID มีหลายคน → ส่งสำเร็จกี่คน / จากทั้งหมดกี่คน
+   *  (ไม่มี = ใบเก่าก่อนรองรับหลาย admin)                                       */
+  lineNotifySentCount?: number;
+  lineNotifyAdminCount?: number;
+  /** เวลาที่ admin กด "ส่งแจ้งเตือนอีกครั้ง" แล้วสำเร็จ (server ล้างธงพร้อมกัน) */
+  lineNotifyResentAt?: string;
 }
 
 /** รายการค่าคอมต่อชิ้น 1 ประเภท (เช่น "ทำบิล", "นับสต๊อก") ของตำแหน่งที่ไม่ใช่

@@ -50,6 +50,42 @@ export async function pushLineMessage(
 	}
 }
 
+export interface MultiPushResult {
+	/** จำนวนปลายทางทั้งหมด */
+	total: number;
+	/** จำนวนที่ส่งสำเร็จ */
+	sent: number;
+	/** error ของปลายทางที่ล้ม (ไม่ระบุ ID — ข้อความนี้ถูกเก็บลง doc ที่พนักงานอ่านได้) */
+	errors: string[];
+}
+
+/**
+ * Push ไปหลายปลายทาง (เช่น admin หลายคน) — ส่งทีละคนแยกกัน ให้คนหนึ่งล้ม
+ * ไม่ลากคนอื่นล้มตาม · ไม่ throw (คืนผลให้ caller ตัดสินเอง)
+ */
+export async function pushLineMessageToAll(
+	token: string,
+	recipients: string[],
+	messages: LinePushMessage | LinePushMessage[],
+): Promise<MultiPushResult> {
+	const settled = await Promise.allSettled(
+		recipients.map((to) => pushLineMessage(token, to, messages)),
+	);
+	const errors: string[] = [];
+	for (const r of settled) {
+		if (r.status === "rejected") {
+			errors.push(
+				r.reason instanceof Error ? r.reason.message : String(r.reason),
+			);
+		}
+	}
+	return {
+		total: recipients.length,
+		sent: recipients.length - errors.length,
+		errors,
+	};
+}
+
 /**
  * Reply to a LINE webhook event.
  */
