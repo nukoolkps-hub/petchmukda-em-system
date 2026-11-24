@@ -291,13 +291,15 @@ function SortableEmployeeRow({
       className={`w-full flex items-center gap-2 pr-2 rounded-2xl border transition-[box-shadow,background-color,border-color] duration-150 ${
         lifted
           ? "border-gold bg-gold-pale shadow-[0_10px_26px_rgba(123,28,28,0.22)]"
-          : "border-bdr bg-white shadow-[0_2px_8px_rgba(90,30,10,0.06)]"
+          : // hover ที่ "ทั้งการ์ด" — เดิมใส่ที่ปุ่มชื่ออย่างเดียว พื้นเปลี่ยนสีแค่ซีกซ้าย
+            // แถบปุ่มลาก + ช่องว่างข้างๆ ยังขาว → การ์ดดูเป็น 2 สี
+            "border-bdr bg-white hover:bg-cream/70 shadow-[0_2px_8px_rgba(90,30,10,0.06)]"
       }`}
     >
       <button
         type="button"
         onClick={onOpen}
-        className="flex-1 min-w-0 flex items-center gap-3 pl-3.5 py-3 cursor-pointer text-left font-[inherit] transition-[background-color,transform] duration-150 hover:bg-cream/70 active:scale-[0.99] active:bg-cream rounded-l-2xl"
+        className="flex-1 min-w-0 flex items-center gap-3 pl-3.5 py-3 cursor-pointer text-left font-[inherit] transition-transform duration-150 active:scale-[0.99] rounded-l-2xl"
       >
         <AvatarCircle
           avatar={employee.avatar}
@@ -410,7 +412,7 @@ function SortableEmployeeRow({
           (listeners as any)?.onPointerDown?.(e);
         }}
         className={`shrink-0 self-stretch px-1.5 flex items-center cursor-grab active:cursor-grabbing touch-none font-[inherit] rounded-r-2xl transition-colors duration-150 ${
-          lifted ? "text-maroon" : "text-txt-soft hover:bg-cream/70"
+          lifted ? "text-maroon" : "text-txt-soft hover:text-maroon"
         }`}
       >
         <IconGrip size={18} strokeWidth={2.2} />
