@@ -637,7 +637,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
       {
         type: "callout",
         tone: "warn",
-        text: "ทองคำแท่ง 96.5% ไม่ได้ร่วมรายการ ส่วนลด",
+        text: "ทองคำแท่ง 99.99% ไม่ได้ร่วมรายการ ส่วนลด",
       },
       { type: "h3", text: "ส่วนลด (ทอง 96.5%)" },
       {
