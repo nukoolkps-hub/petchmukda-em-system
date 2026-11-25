@@ -5,7 +5,7 @@
    - **เดือนเต็ม** = calendar month (ครบวันที่เดิมของเดือนถัดไป):
      10 พ.ย. → 10 ธ.ค. = 1 เดือน 0 วัน · 10 พ.ย. → 25 ธ.ค. = 1 เดือน 15 วัน ·
      เดือนปลายทางไม่มีวันที่นั้น (31 ม.ค. → ก.พ.) ใช้วันสุดท้ายของเดือน
-   - จำนำ-ไถ่วันเดียวกัน = 0 วัน (ดอกเบี้ยขั้นต่ำ 30 ฿ ยังใช้ตามปกติ)      */
+   - **ข้อยกเว้น:** จำนำ-ไถ่วันเดียวกัน = 1 วัน (ไม่ใช่ 0)                  */
 
 export interface PawnPeriod {
   months: number;
@@ -33,6 +33,10 @@ export function pawnPeriod(start: Date, end: Date): PawnPeriod | null {
   );
   // วันที่ผ่านไป (ไม่นับวันเริ่ม) · Math.round กัน DST/ชั่วโมงเพี้ยน
   // (ไทยไม่มี DST แต่เครื่องผู้ใช้อาจตั้งโซนอื่น)
-  const days = Math.round((e.getTime() - intermediate.getTime()) / 86_400_000);
+  const elapsed = Math.round(
+    (e.getTime() - intermediate.getTime()) / 86_400_000,
+  );
+  // จำนำ-ไถ่วันเดียวกัน คิด 1 วัน
+  const days = months === 0 && elapsed === 0 ? 1 : elapsed;
   return { months, days };
 }
